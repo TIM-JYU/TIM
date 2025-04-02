@@ -12,7 +12,7 @@ from timApp.document.docentry import DocEntry
 from timApp.gamification.badge.badges import Badge, BadgeGiven
 from timApp.timdb.sqa import db, run_sql
 from timApp.timdb.types import datetime_tz
-from timApp.user.groups import raise_group_not_found_if_none, groups
+from timApp.user.groups import raise_group_not_found_if_none
 from timApp.user.user import User
 from timApp.user.usergroup import UserGroup
 from timApp.user.usergroupmember import UserGroupMember
@@ -64,7 +64,6 @@ def log_badge_event(log_info: dict) -> None:
 def check_context_group_access(context_group: int) -> bool:
     """
     Checks whether a user has access to a context group.
-    :param user_id: Current user's ID
     :param context_group: Context group to check
     :return:
     """
@@ -265,8 +264,10 @@ def modify_badge(
     :param description: Description of the badge
     :return: ok response
     """
-    context_group_name = UserGroup.get_by_id(context_group).name
-    d = DocEntry.find_by_path(f"groups/{context_group_name}")
+    context_group_object = UserGroup.get_by_id(context_group)
+    if not context_group_object:
+        raise NotExist()
+    d = DocEntry.find_by_path(f"groups/{context_group_object.name}")
     if not d:
         raise NotExist()
     verify_teacher_access(d)
@@ -386,11 +387,12 @@ def reactivate_badge(
 
 # TODO: Check access rights.
 # TODO: Handle errors.
-@badges_blueprint.get("/groups_badges/<group_id>")
-def get_groups_badges(group_id: int) -> Response:
+@badges_blueprint.get("/groups_badges/<group_id>/<context_group>")
+def get_groups_badges(group_id: int, context_group: str) -> Response:
     """
     Fetches badges that are given to a usergroup. Sorted by given-timestamp.
     :param group_id: ID of the usergroup
+    :param context_group: Name of the context group
     :return: Badges in json response format
     """
     # in_group = check_context_group_access(group_id)
@@ -460,8 +462,15 @@ def get_groups_badges(group_id: int) -> Response:
             badgeGiven.undo_withdrawn_by,
             badgeGiven.undo_withdrawn,
         )
+    context_group_object = UserGroup.get_by_name(context_group)
     groups_badges = (
-        run_sql(select(Badge).filter_by(active=True).filter(Badge.id.in_(badge_ids)))
+        run_sql(
+            select(Badge)
+            .filter_by(active=True)
+            .filter(
+                Badge.context_group == context_group_object.id, Badge.id.in_(badge_ids)
+            )
+        )
         .scalars()
         .all()
     )
@@ -487,6 +496,63 @@ def get_groups_badges(group_id: int) -> Response:
         groups_badge_json["undo_withdrawn"] = badge_ids_badgegiven_ids_and_msgs[key][7]
         badges_json.append(groups_badge_json)
         i += 1
+    for badge_json in badges_json:
+        if badge_json["created_by"]:
+            created_by = User.get_by_id(badge_json["created_by"])
+        else:
+            created_by = None
+        if badge_json["modified_by"]:
+            modified_by = User.get_by_id(badge_json["modified_by"])
+        else:
+            modified_by = None
+        if badge_json["deleted_by"]:
+            deleted_by = User.get_by_id(badge_json["deleted_by"])
+        else:
+            deleted_by = None
+        if badge_json["restored_by"]:
+            restored_by = User.get_by_id(badge_json["restored_by"])
+        else:
+            restored_by = None
+        if badge_json["given_by"]:
+            given_by = User.get_by_id(badge_json["given_by"])
+        else:
+            given_by = None
+        if badge_json["withdrawn_by"]:
+            withdrawn_by = User.get_by_id(badge_json["withdrawn_by"])
+        else:
+            withdrawn_by = None
+        if badge_json["undo_withdrawn_by"]:
+            undo_withdrawn_by = User.get_by_id(badge_json["undo_withdrawn_by"])
+        else:
+            undo_withdrawn_by = None
+        if created_by:
+            badge_json["created_by_name"] = created_by.real_name
+        else:
+            badge_json["created_by_name"] = None
+        if modified_by:
+            badge_json["modified_by_name"] = modified_by.real_name
+        else:
+            badge_json["modified_by_name"] = None
+        if deleted_by:
+            badge_json["deleted_by_name"] = deleted_by.real_name
+        else:
+            badge_json["deleted_by_name"] = None
+        if restored_by:
+            badge_json["restored_by_name"] = restored_by.real_name
+        else:
+            badge_json["restored_by_name"] = None
+        if given_by:
+            badge_json["given_by_name"] = given_by.real_name
+        else:
+            badge_json["given_by_name"] = None
+        if withdrawn_by:
+            badge_json["withdrawn_by_name"] = withdrawn_by.real_name
+        else:
+            badge_json["withdrawn_by_name"] = None
+        if undo_withdrawn_by:
+            badge_json["undo_withdrawn_by_name"] = undo_withdrawn_by.real_name
+        else:
+            badge_json["undo_withdrawn_by_name"] = None
     return json_response(badges_json)
 
 

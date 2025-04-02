@@ -190,8 +190,13 @@ export class BadgeViewerComponent implements OnInit {
             console.error("Failed to retrieve the user's personal group ID.");
             return;
         }
+        if (!this.badgegroupContext) {
+            console.error("Failed to retrieve the context group.");
+            return;
+        }
         this.badges = await this.badgeService.getUserBadges(
-            this.personalGroup?.["1"].id
+            this.personalGroup?.["1"].id,
+            this.badgegroupContext
         );
     }
 
@@ -205,10 +210,17 @@ export class BadgeViewerComponent implements OnInit {
 
     async getGroupBadges() {
         this.groupBadgesMap.clear();
+        if (!this.badgegroupContext) {
+            console.error("Failed to retrieve the context group.");
+            return;
+        }
         for (const group of this.userSubGroups) {
             this.groupBadgesMap.set(
                 group.id,
-                await this.badgeService.getUserBadges(group.id)
+                await this.badgeService.getUserBadges(
+                    group.id,
+                    this.badgegroupContext
+                )
             );
         }
     }
