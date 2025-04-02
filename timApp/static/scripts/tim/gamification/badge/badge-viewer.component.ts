@@ -134,15 +134,15 @@ export class BadgeViewerComponent implements OnInit {
             MessageDialogComponent,
             {
                 message: `
-                <b>${badge.title}</b><br><br>
-                <b>Description:</b> ${badge.description}<br>
-                <b>Message:</b> ${badge.message}<br>
-                <b>Icon:</b>${badge.image}<br>
-                <b>Color:</b> ${badge.color}<br>
-                <b>Shape:</b> ${badge.shape}<br> 
-                <b>Given time:</b> ${badge.given}<br> 
-                <b>Created by:</b> ${badge.created_by}<br>     
-                <b>Given by:</b> ${badge.given_by}<br>                              
+                    <b>${badge.title}</b><br><br>
+                    <b>Description:</b> ${badge.description}<br>
+                    <b>Message:</b> ${badge.message}<br>
+                    <b>Icon:</b>${badge.image}<br>
+                    <b>Color:</b> ${badge.color}<br>
+                    <b>Shape:</b> ${badge.shape}<br> 
+                    <b>Given time:</b> ${badge.given}<br> 
+                    <b>Created by:</b> ${badge.created_by}<br>     
+                    <b>Given by:</b> ${badge.given_by}<br>                              
             `,
                 modal: false,
             }
