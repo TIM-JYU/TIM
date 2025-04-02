@@ -19,17 +19,18 @@ import {cons} from "fp-ts/ReadonlyNonEmptyArray";
     template: `
         <ng-container>
             <div class="current">
-                <p>Current group name: <b>{{this.groupName}}</b></p>
+                <p>Current group name: <b>{{ showFullName ? groupName : subGroup }}</b></p>
             </div>
             <div class="changeName">
+                <button (click)="toggleFullName()">Toggle parent group</button>
                 <button (click)="toggleInput()">Change group name</button>
             </div>
             <div *ngIf="showInput">
-                <input [formControl]="newName" placeholder="Enter new group name" />
+                <input [formControl]="newName" placeholder="Enter new group name"/>
                 <button (click)="saveName()" [disabled]="newName.invalid">Save</button>
                 <button (click)="toggleInput()">Cancel</button>
             </div>
-        </ng-container> 
+        </ng-container>
     `,
     styleUrls: ["./group-name.component.scss"],
 })
@@ -37,9 +38,13 @@ export class GroupNameComponent implements OnInit {
     @Input() group!: string;
     @Input() username!: string;
     groupName: string | null = null;
+    parentGroup: string | undefined;
+    subGroup: string | undefined;
     group_id: number | undefined;
     newName = new FormControl("", [Validators.required]);
+    displayedName: string | null | undefined;
     showInput: boolean = false;
+    showFullName = false;
 
     constructor(private badgeService: BadgeService) {}
 
@@ -57,10 +62,24 @@ export class GroupNameComponent implements OnInit {
                 this.group_id = fetchedGroupName.id;
             }
         }
+        this.parseParentGroup(this.groupName);
+    }
+    //Toggle -nappi main groupin näkyvyydelle?
+    parseParentGroup(groupName: string | null) {
+        if (!this.groupName) return;
+        const nameParts = this.groupName.split("-");
+        this.parentGroup = nameParts[0];
+        this.subGroup = nameParts.slice(1).join(".");
+        this.displayedName = this.subGroup;
     }
 
     toggleInput() {
         this.showInput = !this.showInput;
+    }
+
+    toggleFullName() {
+        this.showFullName = !this.showFullName;
+        this.displayedName = this.showFullName ? this.groupName : this.subGroup;
     }
 
     async saveName() {

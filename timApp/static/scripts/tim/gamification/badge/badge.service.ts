@@ -213,6 +213,7 @@ export class BadgeService {
         );
         const result = await response;
         if (result.ok) {
+            return result.result;
         }
     }
 
