@@ -252,6 +252,16 @@ export class BadgeService {
         this.updateBadgeSubject.next();
     }
 
+    public activeDialogRef: any = null; // Store the active dialog reference
+
+    // Close the active dialog if it exists
+    closeActiveDialog(): void {
+        if (this.activeDialogRef) {
+            this.activeDialogRef.close({}); // Close the current dialog
+            this.activeDialogRef = null; // Reset the reference
+        }
+    }
+
     // Näyttää mahdolliset errorit
     showError(
         alerts: any,

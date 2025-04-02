@@ -4,7 +4,10 @@ import {Component, NgModule} from "@angular/core";
 import {CommonModule} from "@angular/common";
 import {FormsModule} from "@angular/forms";
 import {HttpClient, HttpClientModule} from "@angular/common/http";
-import {BadgeModule} from "tim/gamification/badge/badge.component";
+import {
+    BadgeComponent,
+    BadgeModule,
+} from "tim/gamification/badge/badge.component";
 import {BadgeService} from "tim/gamification/badge/badge.service";
 import type {
     IBadge,
@@ -14,6 +17,9 @@ import type {
 import {Subscription} from "rxjs";
 import {Users} from "tim/user/userService";
 import type {IUser} from "tim/user/IUser";
+import {angularDialog} from "tim/ui/angulardialog/dialog.service";
+import {MessageDialogComponent} from "tim/ui/message-dialog.component";
+import {HostListener} from "@angular/core";
 
 @Component({
     selector: "tim-badge-viewer",
@@ -33,7 +39,9 @@ import type {IUser} from "tim/user/IUser";
                                 shape="{{badge.shape}}"
                                 [image]="badge.image"
                                 description="{{badge.description}}"
-                                message="{{badge.message}}">
+                                message="{{badge.message}}"
+                                [disableDialogWindow]="false"                                
+                                (click)="openDialog(badge)">
                         </tim-badge>
                     </div>
                 </div>
@@ -56,7 +64,9 @@ import type {IUser} from "tim/user/IUser";
                                         shape="{{badge.shape}}"
                                         [image]="badge.image"
                                         description="{{badge.description}}"
-                                        message="{{badge.message}}">
+                                        message="{{badge.message}}"
+                                        [disableDialogWindow]="false"
+                                        (click)="openDialog(badge)">
                                 </tim-badge>
                             </div>
                         </div>
@@ -76,8 +86,72 @@ export class BadgeViewerComponent implements OnInit {
     @Input() badgeuserContext?: string;
     private subscription: Subscription = new Subscription();
     groupBadgesMap = new Map<number, IBadge[]>();
+    disableDialogWindow?: boolean;
 
-    constructor(private http: HttpClient, private badgeService: BadgeService) {}
+    givenBadges?: IBadge[];
+
+    constructor(
+        private http: HttpClient,
+        private badgeService: BadgeService,
+        private dialogService: BadgeService
+    ) {}
+
+    @HostListener("document:keydown", ["$event"])
+    onEscapeClick(event: KeyboardEvent): void {
+        if (event.key === "Escape") {
+            this.closeDialog();
+        }
+    }
+
+    @HostListener("document:click", ["$event"])
+    onLeftClick(event: MouseEvent): void {
+        if (event.button === 0) {
+            const targetElement = event.target as HTMLElement;
+            if (targetElement.closest(".badge-card")) {
+                return;
+            }
+            this.closeDialog();
+        }
+    }
+
+    closeDialog(): void {
+        if (this.dialogService.activeDialogRef) {
+            this.dialogService.closeActiveDialog();
+        }
+    }
+
+    async openDialog(badge: IBadge): Promise<void> {
+        if (this.disableDialogWindow) {
+            this.dialogService.closeActiveDialog();
+            return;
+        }
+
+        // Close any open dialog
+        this.dialogService.closeActiveDialog();
+
+        // Open a new dialog
+        this.dialogService.activeDialogRef = await angularDialog.open(
+            MessageDialogComponent,
+            {
+                message: `
+                <b>${badge.title}</b><br><br>
+                <b>Description:</b> ${badge.description}<br>
+                <b>Message:</b> ${badge.message}<br>
+                <b>Icon:</b>${badge.image}<br>
+                <b>Color:</b> ${badge.color}<br>
+                <b>Shape:</b> ${badge.shape}<br> 
+                <b>Given time:</b> ${badge.given}<br> 
+                <b>Created by:</b> ${badge.created_by}<br>     
+                <b>Given by:</b> ${badge.given_by}<br>                              
+            `,
+                modal: false,
+            }
+        );
+
+        // Wait for the dialog to close
+        await this.dialogService.activeDialogRef.result;
+        this.dialogService.activeDialogRef = null; // Reset the reference after closing
+    }
 
     /**
      * Tyhjentää badge -taulukon ja kutsuu badge-servicen metodia joka hakee käyttäjälle kuuluvat badget.
