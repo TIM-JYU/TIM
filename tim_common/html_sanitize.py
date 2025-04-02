@@ -250,6 +250,10 @@ TIM_SAFE_ATTRS = frozenset(
         "unauthorized-text",
         "unsaved-changes-text",
         "wait-text",
+        "poll-interval",
+        "poll-text",
+        "show-direct-link-timeout",
+        "direct-link-text",
         # viz and vars:
         "usercode",
         "vizcmd",

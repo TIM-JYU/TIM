@@ -10532,6 +10532,22 @@ Separate multiple addresses with commas or write each address on a new line.</ta
           <context context-type="linenumber">389</context>
         </context-group>
       </trans-unit>
+      <trans-unit id="3872000676108698626" datatype="html">
+        <source>You will automatically be redirected when you can access the document.</source>
+        <target state="new">You will automatically be redirected when you can access the document.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/ui/goto-link.component.ts</context>
+          <context context-type="linenumber">51</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="5383176661175383422" datatype="html">
+        <source>Click here if you were not redirected.</source>
+        <target state="new">Click here if you were not redirected.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/ui/goto-link.component.ts</context>
+          <context context-type="linenumber">63</context>
+        </context-group>
+      </trans-unit>
     </body>
   </file>
 </xliff>

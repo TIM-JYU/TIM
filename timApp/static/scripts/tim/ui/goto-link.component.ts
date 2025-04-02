@@ -2,13 +2,14 @@ import type {OnInit} from "@angular/core";
 import {Component, Input} from "@angular/core";
 import type {Moment} from "moment";
 import moment from "moment";
-import {formatString, toPromise} from "tim/util/utils";
+import {formatString, timeout, toPromise} from "tim/util/utils";
 import humanizeDuration from "humanize-duration";
 import {Users} from "tim/user/userService";
 import {HttpClient} from "@angular/common/http";
 import {vctrlInstance} from "tim/document/viewctrlinstance";
 import type {IDocumentViewInfoStatus} from "tim/document/viewctrl";
 import type {IRight} from "tim/item/access-role.service";
+import {clamp} from "tim/util/math";
 
 interface GotoError {
     userMessage?: string;
@@ -18,6 +19,7 @@ interface GotoError {
 
 enum GotoLinkState {
     Ready,
+    Polling,
     Countdown,
     Goto,
     Error,
@@ -42,11 +44,24 @@ const VIEW_PATH = "/view/";
             <ng-container *ngIf="isCountdown">
                 <tim-countdown [template]="countdownText" [endTime]="openTime" (onFinish)="countdownDone()"></tim-countdown>
             </ng-container>
+            <ng-container *ngIf="isPolling">
+                <tim-loading></tim-loading>
+                <span>
+                    <ng-container *ngIf="pollText else defaultPollText">{{pollText}}</ng-container>
+                    <ng-template #defaultPollText i18n>You will automatically be redirected when you can access the document.</ng-template>
+                </span>
+            </ng-container>
             <ng-container *ngIf="isGoing">
                 <tim-loading></tim-loading>
                 <span>
                     <ng-container *ngIf="waitText else defaultWaitText">{{waitText}}</ng-container>
                     <ng-template #defaultWaitText i18n>Loading, please wait.</ng-template>
+                </span>
+                <span *ngIf="showDirectLink">
+                    <a [href]="href" [target]="target">
+                        <ng-container *ngIf="directLinkText else defaultDirectLinkText">{{directLinkText}}</ng-container>
+                        <ng-template #defaultDirectLinkText i18n>Click here if you were not redirected.</ng-template>
+                    </a>
                 </span>
             </ng-container>
         </div>
@@ -72,12 +87,17 @@ export class GotoLinkComponent implements OnInit {
     @Input() autoOpen: boolean = false;
     @Input() stopAfterCountdown: boolean = false;
     @Input() noCountdown: boolean = false;
+    @Input() pollInterval = 0;
+    @Input() pollText?: string;
+    @Input() showDirectLinkTimeout = 3;
+    @Input() directLinkText?: string;
     openTime?: Moment;
     linkDisabled = false;
     linkState = GotoLinkState.Ready;
     resetTimeout?: number;
     error?: GotoError;
     unsavedChangesChecked = false;
+    showDirectLink = false;
 
     constructor(private http: HttpClient) {}
 
@@ -93,6 +113,10 @@ export class GotoLinkComponent implements OnInit {
 
     get isCountdown() {
         return this.linkState == GotoLinkState.Countdown;
+    }
+
+    get isPolling() {
+        return this.linkState == GotoLinkState.Polling;
     }
 
     get isGoing() {
@@ -157,7 +181,7 @@ export class GotoLinkComponent implements OnInit {
 
     async start() {
         // Allow user to click during countdown or past expiration, but do nothing reasonable.
-        if (this.isCountdown) {
+        if (this.isCountdown || this.isPolling) {
             return;
         }
 
@@ -169,8 +193,21 @@ export class GotoLinkComponent implements OnInit {
         await this.startImpl(unauthorized, access);
     }
 
-    private async startImpl(unauthorized: boolean, access: IRight | undefined) {
+    private async pollAndRetry() {
+        this.linkState = GotoLinkState.Polling;
+        await timeout(this.pollInterval * 1000);
+        const {unauthorized, access} = await this.resolveAccess();
+        return this.startImpl(unauthorized, access);
+    }
+
+    private async startImpl(
+        unauthorized: boolean,
+        access: IRight | undefined
+    ): Promise<void> {
         if (unauthorized && (!access || this.noCountdown)) {
+            if (this.pollInterval > 0) {
+                return this.pollAndRetry();
+            }
             this.showError({
                 userMessage: this.unauthorizedText,
                 defaultMessage: $localize`You don't have permission to view that document.`,
@@ -283,6 +320,7 @@ export class GotoLinkComponent implements OnInit {
         this.linkState = GotoLinkState.Ready;
         this.linkDisabled = false;
         this.unsavedChangesChecked = false;
+        this.showDirectLink = false;
     }
 
     stopReset() {
@@ -300,6 +338,11 @@ export class GotoLinkComponent implements OnInit {
         this.linkState = GotoLinkState.Goto;
         const waitTime = Math.random() * Math.max(this.maxWait, 0);
         const realResetTime = Math.max(this.resetTime, waitTime);
+        const realShowDirectLinkTimeout = clamp(
+            this.showDirectLinkTimeout,
+            waitTime,
+            realResetTime
+        );
 
         window.setTimeout(() => {
             // Special case: on empty href just reload the page to mimic the behaviour of <a>
@@ -312,6 +355,11 @@ export class GotoLinkComponent implements OnInit {
                 this.reset();
             }
         }, waitTime * 1000);
+        window.setTimeout(() => {
+            if (this.isGoing) {
+                this.showDirectLink = true;
+            }
+        }, realShowDirectLinkTimeout * 1000);
 
         this.startReset(realResetTime);
     }
