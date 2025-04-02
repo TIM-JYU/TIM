@@ -2,11 +2,16 @@
 from dataclasses import dataclass
 from operator import attrgetter
 from pathlib import Path
+from urllib import request
 
 from flask import Response, current_app
 from sqlalchemy import select, or_
 
-from timApp.auth.accesshelper import AccessDenied, verify_teacher_access
+from timApp.auth.accesshelper import (
+    AccessDenied,
+    verify_teacher_access,
+    get_item_or_abort,
+)
 from timApp.auth.sessioninfo import get_current_user_object
 from timApp.document.docentry import DocEntry
 from timApp.gamification.badge.badges import Badge, BadgeGiven
@@ -756,6 +761,7 @@ def usergroups_members(doc_id: int, usergroup_name: str) -> Response:
 
 
 @badges_blueprint.get("/current_group_name/<name>")
+# TODO: päätä, käytetäänkö returnissa .human_namea, joka hakee vain descriptionin, ei id:tä
 def group_name(name: str):
     """
     Fetches group name from the database.
@@ -768,9 +774,9 @@ def group_name(name: str):
     return error_generic("there's no group with name: " + name, 404)
 
 
-@badges_blueprint.post("/new_group_name/")
-def new_group_name(group_id: int, new_name: str) -> Response:
-    # TODO: tuo nykyinen id ja uusi nimi frontista
-    group = UserGroup.get_by_id(group_id)
-
-    return ""
+@badges_blueprint.post("/update_group_name")
+def change_title(item_id: int, new_title: str) -> Response:
+    item = get_item_or_abort(item_id)
+    item.title = new_title
+    db.session.commit()
+    return ok_response()

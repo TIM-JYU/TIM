@@ -13,6 +13,8 @@ import {UserService} from "tim/user/userService";
 import {UserGroupDialogComponent} from "tim/user/user-group-dialog.component";
 import {BadgeService} from "./badge.service";
 import {cons} from "fp-ts/ReadonlyNonEmptyArray";
+import {manageglobals} from "tim/util/globals";
+import {IFolder, IFullDocument} from "tim/item/IItem";
 
 @Component({
     selector: "tim-group-name",
@@ -41,6 +43,7 @@ export class GroupNameComponent implements OnInit {
     parentGroup: string | undefined;
     subGroup: string | undefined;
     group_id: number | undefined;
+    item: IFullDocument | IFolder | undefined;
     newName = new FormControl("", [Validators.required]);
     displayedName: string | null | undefined;
     showInput: boolean = false;
@@ -49,22 +52,28 @@ export class GroupNameComponent implements OnInit {
     constructor(private badgeService: BadgeService) {}
 
     /**
-     * TODO: Saven pitää toimia oikeasti; tee routes.py:n uusi reitti (tallenna block-taulukkoon description kohtaan
+     * TODO: Kommentoitu koodin pätkä toimii, jos routes.py:ssä käytetään returnissa .human_name
      */
     async getGroupName() {
-        console.log("fetching...");
         if (this.group) {
             const fetchedGroupName = await this.badgeService.getCurrentGroup(
                 this.group
             );
             if (fetchedGroupName) {
                 this.groupName = fetchedGroupName.name;
-                this.group_id = fetchedGroupName.id;
+                this.group_id = fetchedGroupName.id; //Jos käytetään human_name(), ei saada ID:tä
+                console.log(fetchedGroupName);
             }
+            /*
+            if (fetchedGroupName) {
+                this.groupName = fetchedGroupName; // toimii, kun routessa .human_name()
+                //this.group_id = fetchedGroupName.id; //Jos käytetään human_name(), ei saada ID:tä
+                console.log(fetchedGroupName);
+            }
+             */
         }
         this.parseParentGroup(this.groupName);
     }
-    //Toggle -nappi main groupin näkyvyydelle?
     parseParentGroup(groupName: string | null) {
         if (!this.groupName) return;
         const nameParts = this.groupName.split("-");
@@ -83,16 +92,17 @@ export class GroupNameComponent implements OnInit {
     }
 
     async saveName() {
-        console.log("Nykyinen nimi: ", this.groupName);
         if (this.newName.valid) {
             this.groupName = this.newName.value;
             this.showInput = false;
         }
-        //console.log("Uusi nimi: ", this.groupName);
-        if (this.group_id && this.groupName) {
+
+        if (this.item) {
+            //console.log(this.item.id);
+            //console.log(this.item.name);
             await this.badgeService.updateGroupName(
-                this.group_id,
-                this.groupName
+                this.item.id,
+                this.item.name
             );
         }
         return "Name successfully changed to: " + this.groupName;
@@ -105,6 +115,7 @@ export class GroupNameComponent implements OnInit {
             "username:",
             this.username
         );
+        this.item = manageglobals().curr_item;
         this.getGroupName();
     }
 }

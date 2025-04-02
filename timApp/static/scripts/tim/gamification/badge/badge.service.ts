@@ -205,10 +205,11 @@ export class BadgeService {
         return null;
     }
 
-    async updateGroupName(group_id: number, newName: string) {
+    async updateGroupName(item_id: number, new_title: string) {
         const response = toPromise(
-            this.http.post<{ok: boolean}>("/new_group_name/", {
-                description: newName,
+            this.http.post<{ok: boolean}>("/update_group_name", {
+                item_id: item_id,
+                new_title: new_title,
             })
         );
         const result = await response;
