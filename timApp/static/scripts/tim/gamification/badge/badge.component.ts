@@ -55,12 +55,6 @@ export class BadgeComponent implements OnInit, OnChanges {
         12: "money",
     };
 
-    // hakee dialogServicen BadgeServicesta
-    constructor(
-        private dialogService: BadgeService,
-        private getUserBadges: BadgeService
-    ) {}
-
     ngOnInit(): void {
         this.setIcon();
     }

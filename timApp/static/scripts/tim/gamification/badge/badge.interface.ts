@@ -10,6 +10,7 @@ export interface IBadge {
     created_by: string;
     badgegiven_id: number;
     given: Date;
+    given_by: string;
 }
 
 export interface IGroup {

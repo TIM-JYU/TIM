@@ -19,6 +19,7 @@ import {Users} from "tim/user/userService";
 import type {IUser} from "tim/user/IUser";
 import {angularDialog} from "tim/ui/angulardialog/dialog.service";
 import {MessageDialogComponent} from "tim/ui/message-dialog.component";
+import {HostListener} from "@angular/core";
 
 @Component({
     selector: "tim-badge-viewer",
@@ -86,32 +87,36 @@ export class BadgeViewerComponent implements OnInit {
     private subscription: Subscription = new Subscription();
     groupBadgesMap = new Map<number, IBadge[]>();
     disableDialogWindow?: boolean;
-    givenBy?: number;
-    given?: Date;
 
     givenBadges?: IBadge[];
 
     constructor(
         private http: HttpClient,
         private badgeService: BadgeService,
-        private dialogService: BadgeService,
-        private getUserBadges: BadgeService
+        private dialogService: BadgeService
     ) {}
 
-    async showUserBadges() {
-        // Assuming you want to get the badges for a specific user, you can use `getUserBadges`
-        const badges = await this.badgeService.getUserBadges(1); // Pass the user ID as needed
+    @HostListener("document:keydown", ["$event"])
+    onEscapeClick(event: KeyboardEvent): void {
+        if (event.key === "Escape") {
+            this.closeDialog();
+        }
+    }
 
-        // Optionally, you can filter out the badges that have the 'given' and 'givenBy' properties
-        this.givenBadges = badges.filter(
-            (badge) => badge.given && badge.badgegiven_id
-        );
+    @HostListener("document:click", ["$event"])
+    onLeftClick(event: MouseEvent): void {
+        if (event.button === 0) {
+            const targetElement = event.target as HTMLElement;
+            if (targetElement.closest(".badge-card")) {
+                return;
+            }
+            this.closeDialog();
+        }
+    }
 
-        // If you need to assign the first badge's given and givenBy as an example:
-        if (this.givenBadges.length > 0) {
-            const firstBadge = this.givenBadges[0];
-            this.given = firstBadge.given;
-            this.givenBy = firstBadge.badgegiven_id;
+    closeDialog(): void {
+        if (this.dialogService.activeDialogRef) {
+            this.dialogService.closeActiveDialog();
         }
     }
 
@@ -120,7 +125,7 @@ export class BadgeViewerComponent implements OnInit {
             this.dialogService.closeActiveDialog();
             return;
         }
-        await this.showUserBadges();
+
         // Close any open dialog
         this.dialogService.closeActiveDialog();
 
@@ -135,8 +140,9 @@ export class BadgeViewerComponent implements OnInit {
                 <b>Icon:</b>${badge.image}<br>
                 <b>Color:</b> ${badge.color}<br>
                 <b>Shape:</b> ${badge.shape}<br> 
-                <b>Given:</b> ${badge.given}<br> 
-                <b>GivenBy:</b> ${badge.badgegiven_id}<br> 
+                <b>Given time:</b> ${badge.given}<br> 
+                <b>Created by:</b> ${badge.created_by}<br>     
+                <b>Given by:</b> ${badge.given_by}<br>                              
             `,
                 modal: false,
             }
