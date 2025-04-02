@@ -298,7 +298,14 @@ export class BadgeGiverComponent implements OnInit {
             console.error("Failed to retrieve the user's personal group ID.");
             return;
         }
-        this.userBadges = await this.badgeService.getUserBadges(pGroup["1"].id);
+        if (!this.badgegroupContext) {
+            console.error("Failed to retrieve the context group.");
+            return;
+        }
+        this.userBadges = await this.badgeService.getUserBadges(
+            pGroup["1"].id,
+            this.badgegroupContext
+        );
     }
 
     async fetchGroupBadges(groupId?: number) {
@@ -306,8 +313,15 @@ export class BadgeGiverComponent implements OnInit {
             console.error("groupid was undefined");
             return;
         }
+        if (!this.badgegroupContext) {
+            console.error("Failed to retrieve the context group.");
+            return;
+        }
         this.emptyBadges(this.groupBadges);
-        this.groupBadges = await this.badgeService.getUserBadges(groupId);
+        this.groupBadges = await this.badgeService.getUserBadges(
+            groupId,
+            this.badgegroupContext
+        );
     }
 
     /**

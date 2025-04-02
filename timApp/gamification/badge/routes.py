@@ -386,8 +386,8 @@ def reactivate_badge(
 
 # TODO: Check access rights.
 # TODO: Handle errors.
-@badges_blueprint.get("/groups_badges/<group_id>")
-def get_groups_badges(group_id: int) -> Response:
+@badges_blueprint.get("/groups_badges/<group_id>/<context_group>")
+def get_groups_badges(group_id: int, context_group: str) -> Response:
     """
     Fetches badges that are given to a usergroup. Sorted by given-timestamp.
     :param group_id: ID of the usergroup
@@ -460,8 +460,15 @@ def get_groups_badges(group_id: int) -> Response:
             badgeGiven.undo_withdrawn_by,
             badgeGiven.undo_withdrawn,
         )
+    context_group_object = UserGroup.get_by_name(context_group)
     groups_badges = (
-        run_sql(select(Badge).filter_by(active=True).filter(Badge.id.in_(badge_ids)))
+        run_sql(
+            select(Badge)
+            .filter_by(active=True)
+            .filter(
+                Badge.context_group == context_group_object.id, Badge.id.in_(badge_ids)
+            )
+        )
         .scalars()
         .all()
     )
