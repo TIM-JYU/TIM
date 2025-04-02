@@ -768,7 +768,9 @@ def group_name(name: str):
     return error_generic("there's no group with name: " + name, 404)
 
 
-@badges_blueprint.post("/new_group_name/<name>")
-def new_group_name(group_name: str, new_name: str):
-    # TODO: tuo vanha nimi ja uusi nimi frontista
+@badges_blueprint.post("/new_group_name/")
+def new_group_name(group_id: int, new_name: str) -> Response:
+    # TODO: tuo nykyinen id ja uusi nimi frontista
+    group = UserGroup.get_by_id(group_id)
+
     return ""

@@ -37,6 +37,7 @@ export class GroupNameComponent implements OnInit {
     @Input() group!: string;
     @Input() username!: string;
     groupName: string | null = null;
+    group_id: number | undefined;
     newName = new FormControl("", [Validators.required]);
     showInput: boolean = false;
 
@@ -53,6 +54,7 @@ export class GroupNameComponent implements OnInit {
             );
             if (fetchedGroupName) {
                 this.groupName = fetchedGroupName.name;
+                this.group_id = fetchedGroupName.id;
             }
         }
     }
@@ -62,10 +64,19 @@ export class GroupNameComponent implements OnInit {
     }
 
     async saveName() {
+        console.log("Nykyinen nimi: ", this.groupName);
         if (this.newName.valid) {
             this.groupName = this.newName.value;
             this.showInput = false;
         }
+        //console.log("Uusi nimi: ", this.groupName);
+        if (this.group_id && this.groupName) {
+            await this.badgeService.updateGroupName(
+                this.group_id,
+                this.groupName
+            );
+        }
+        return "Name successfully changed to: " + this.groupName;
     }
 
     ngOnInit(): void {
