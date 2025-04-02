@@ -96,6 +96,14 @@ export class BadgeViewerComponent implements OnInit {
         private dialogService: BadgeService
     ) {}
 
+    /**
+     * Kuuntelee "Esc"-näppäimen painallusat ja sulkee aviomen dialogin, mikäli näppäintä
+     * painetaan. Metodi on kuuntelija, ja jos Esc-näppäintä painaa, metodi kutsuu
+     * closeDialog - metodia, joka sulkee auki olevan dilaogin.
+     *
+     * @param event - tapahtuma, joka sisätlää tietoja näppäimen painalluksesta.
+     * @returns void
+     */
     @HostListener("document:keydown", ["$event"])
     onEscapeClick(event: KeyboardEvent): void {
         if (event.key === "Escape") {
@@ -103,6 +111,14 @@ export class BadgeViewerComponent implements OnInit {
         }
     }
 
+    /**
+     * Kuuntelee vasemman hiirennapin painallusta ja sulkee avoimena olevan dialogin, jos
+     * jos sellainen on auki. CloseDialog - metodia kutsutaan vain, jos käyttäjä painaa
+     * mistä tahansa muualta kuin badgesta.
+     *
+     * @param event - tapahtuma, joka sisältää tietoja näppäimen painalluksesta.
+     * @returns void
+     */
     @HostListener("document:click", ["$event"])
     onLeftClick(event: MouseEvent): void {
         if (event.button === 0) {
@@ -114,22 +130,33 @@ export class BadgeViewerComponent implements OnInit {
         }
     }
 
+    /**
+     * Sulkee avoimena olevan dialogin kutsuttaessa
+     */
     closeDialog(): void {
         if (this.dialogService.activeDialogRef) {
             this.dialogService.closeActiveDialog();
         }
     }
 
+    /**
+     * Avaa dialogin, joka näyttää tietoja badge-objektista.
+     *
+     * Tämä metodi sulkee ensin avoimet dialogit jos niitä on ja avaa sitten uuden,
+     * jossa näytetään badgen tiedot badge-objektista.
+     *
+     * @param badge - IBadge-tyyppinen objekti, sisältää tiedot näytettävästä badge-objektista.
+     * @returns Promise<void> - Metodi ei palauta mitään, mutta on asynkroninen
+     * ja odottaa dialogin sukeutumista.
+     */
     async openDialog(badge: IBadge): Promise<void> {
         if (this.disableDialogWindow) {
             this.dialogService.closeActiveDialog();
             return;
         }
 
-        // Close any open dialog
         this.dialogService.closeActiveDialog();
 
-        // Open a new dialog
         this.dialogService.activeDialogRef = await angularDialog.open(
             MessageDialogComponent,
             {
