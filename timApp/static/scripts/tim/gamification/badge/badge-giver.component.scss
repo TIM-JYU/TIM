@@ -4,15 +4,24 @@
 }
 .user-name {
   display: block;
-  margin-top: 1px;
 }
 
 .option-item {
     display: flex;
     align-items: flex-start;
+    width: 150%;
 }
-.option-item input{
-    width: 5%;
+.group-item {
+    display: flex;
+    align-items: flex-start;
+}
+
+.user-checkbox {
+  width: 10%;
+}
+
+.group-checkbox{
+  width: 5%;
 }
 
 .option-name {

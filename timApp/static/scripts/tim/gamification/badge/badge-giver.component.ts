@@ -57,9 +57,10 @@ import {TimUtilityModule} from "tim/ui/tim-utility.module";
                         </span>
                         <div class="group-users" *ngIf="selectedGroup === group">
                             <div *ngFor="let user of users" class="option-item">
-                                <input 
+                                <input class="user-checkbox"
                                     type="checkbox" 
                                     [value]="user" 
+                                    [checked]="isUserSelected(user)" 
                                     (change)="toggleUserSelection(user, $event)"
                                 />
                                 <div class="option-name" (click)="handleUserSelection(user)" [ngClass]="{'selected-option': selectedUser?.id === user.id}">
@@ -68,13 +69,12 @@ import {TimUtilityModule} from "tim/ui/tim-utility.module";
                             </div>
                         </div>
                     </div>
-                    
                 </div>
                 
                 <div *ngIf="userAssign === false" class="form-group">
                     <label>Groups</label>
-                    <div *ngFor="let group of groups" class="option-item">
-                        <input 
+                    <div *ngFor="let group of groups" class="group-item">
+                        <input class="group-checkbox"
                             type="checkbox" 
                             [value]="group" 
                             (change)="toggleGroupSelection(group, $event)"
@@ -274,10 +274,14 @@ export class BadgeGiverComponent implements OnInit {
         }
     }
 
+    isUserSelected(user: IUser) {
+        if (this.selectedUser === user) {
+            return true;
+        }
+    }
     handleUserSelection(user: IUser) {
         if (this.selectedUser === user) {
             this.selectedUser = null;
-            return;
         }
         this.selectedUser = user;
         this.fetchUserBadges(user);
