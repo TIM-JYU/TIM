@@ -121,15 +121,26 @@ export class GotoLinkComponent implements OnInit {
             path.startsWith(VIEW_PATH)
         ) {
             const docPath = path.substring(VIEW_PATH.length);
-            const accessInfo = await toPromise(
+            const accessInfo = await toPromise<
+                IDocumentViewInfoStatus,
+                {error: IDocumentViewInfoStatus; status?: number}
+            >(
                 this.http.get<IDocumentViewInfoStatus>(
                     `/docViewInfo/${docPath}`
                 )
             );
             if (accessInfo.ok) {
+                const info = accessInfo.result;
                 return {
-                    unauthorized: !accessInfo.result.can_access,
-                    access: accessInfo.result.right,
+                    unauthorized: !info.can_access,
+                    access: info.right,
+                };
+            } else if (accessInfo.result.status === 403) {
+                // docViewInfo returns info via the error when it's 403
+                const info = accessInfo.result.error;
+                return {
+                    unauthorized: !info.can_access,
+                    access: info.right,
                 };
             }
         }

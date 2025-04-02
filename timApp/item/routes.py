@@ -328,6 +328,7 @@ def doc_access_info(doc_name: str, require_valid_session: bool = True):
             "global_message": user_message,
         },
         date_conversion=True,
+        status_code=200 if can_access else 403,
     )
 
 

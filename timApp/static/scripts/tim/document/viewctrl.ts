@@ -1,4 +1,4 @@
-import type {IController, IPromise, IScope} from "angular";
+import type {IController, IHttpResponse, IPromise, IScope} from "angular";
 import $ from "jquery";
 import {timApp} from "tim/app";
 import {setActiveDocument} from "tim/document/activedocument";
@@ -482,7 +482,10 @@ export class ViewCtrl implements IController {
 
         // Check against statePollInterval to allow stopping the polling
         while (this.docViewInfoPollInterval) {
-            const r = await to(
+            const r = await to<
+                IHttpResponse<IDocumentViewInfoStatus>,
+                {data: IDocumentViewInfoStatus; status?: number}
+            >(
                 $http.get<IDocumentViewInfoStatus>(`/docViewInfo/${docPath}`, {
                     params: {
                         require_valid_session: false,
@@ -490,7 +493,8 @@ export class ViewCtrl implements IController {
                 })
             );
 
-            if (r.ok) {
+            // docViewInfo returns 403 to signal missing access, but still returns the info
+            if (r.ok || r.result.status === 403) {
                 this.emit("docViewInfoUpdate", r.result.data);
             }
 
