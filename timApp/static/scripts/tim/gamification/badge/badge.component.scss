@@ -170,12 +170,7 @@
     color: #34a297;
 }
 
-.blue {
-    background: linear-gradient(to bottom right, #4FC3F7 0%, #2196F3 100%);
-    color: #259af3;
-}
-
-.blue-dark {
+.dark-blue {
     background: linear-gradient(to bottom right, #1976D2 0%, #283593 100%);
     color: #1c68c5;
 }
@@ -185,32 +180,14 @@
     color: #7cb342;
 }
 
-.green-dark {
+.dark-green {
     background: linear-gradient(to bottom right, #4CAF50 0%, #1B5E20 100%);
     color: #00944a;
 }
-
-.gold {
-    background: linear-gradient(to bottom right, #e6ce6a 0%, #b7892b 100%);
-    color: #b7892b;
-}
-
 .gray {
     background: linear-gradient(to bottom right, #d3d3d3 0%, #a9a9a9 100%);
     color: #808080;
 }
-
-/* uudet värit */
-.cyan {
-    background: linear-gradient(to bottom right, #00bcd4 0%, #0097a7 100%);
-    color: #00838f;
-}
-
-.lime {
-    background: linear-gradient(to bottom right, #c6ff00 0%, #aeea00 100%);
-    color: #76ff03;
-}
-
 .indigo {
     background: linear-gradient(to bottom right, #3f51b5 0%, #1a237e 100%);
     color: #303f9f;
@@ -219,11 +196,6 @@
 .brown {
     background: linear-gradient(to bottom right, #8d6e63 0%, #3e2723 100%);
     color: #5d4037;
-}
-
-.amber {
-    background: linear-gradient(to bottom right, #ffbf00 0%, #ff8f00 100%);
-    color: #ff6f00;
 }
 
 .violet {
@@ -246,16 +218,93 @@
     color: #ff6f00;
 }
 
-.purple-dark {
-    background: linear-gradient(to bottom right, #7b1fa2 0%, #4a148c 40%, #311b92 100%);
-    color: #6a1b9a;
-}
-
 .wine {
     background: linear-gradient(to bottom right, #d32f2f 0%, #7a0c1e 100%);
     color: #9a1e26;
 }
 
+.coral {
+    background: linear-gradient(to bottom right, rgb(255, 127, 80) 0%, rgb(255, 99, 71) 100%);
+    color: rgb(255, 69, 0);
+}
+
+.turquoise {
+    background: linear-gradient(to bottom right, rgb(64, 224, 208) 0%, rgb(0, 206, 209) 100%);
+    color: rgb(32, 178, 170);
+}
+
+.olive {
+    background: linear-gradient(to bottom right, rgb(128, 128, 0) 0%, rgb(85, 107, 47) 100%);
+    color: rgb(107, 142, 35);
+}
+
+.navy-vibrant {
+    background: linear-gradient(to bottom right,
+        rgb(0, 0, 128) 0%,
+        rgb(25, 25, 112) 30%,
+        rgb(0, 255, 255) 60%,
+        rgb(255, 0, 255) 100%
+    );
+    color: rgb(255, 255, 0);
+}
+
+.red-vibrant {
+    background: linear-gradient(to bottom right,
+        rgb(64, 0, 0) 0%,      /* Super dark red */
+        rgb(139, 0, 0) 30%,    /* Deep red (classic "dark red") */
+        rgb(255, 0, 0) 60%,    /* Pure red */
+        rgb(255, 255, 0) 100%  /* Super bright yellow */
+    );
+    color: rgb(0, 255, 255);   /* Cyan text for strong contrast */
+}
+
+.green-vibrant {
+    background: linear-gradient(to bottom right,
+        rgb(0, 32, 0) 0%,      /* Almost black green */
+        rgb(0, 128, 0) 30%,    /* Rich dark green */
+        rgb(0, 255, 0) 60%,    /* Pure neon green */
+        rgb(0, 255, 255) 100%  /* Bright cyan for that crazy pop */
+    );
+    color: rgb(255, 0, 0);     /* Pure red text for max contrast */
+    font-weight: bold;
+    text-shadow: 2px 2px 10px rgba(255, 0, 0, 0.8); /* Glowing red text */
+}
+
+.purple-vibrant {
+    background: linear-gradient(to bottom right,
+        rgb(32, 0, 64) 0%,      /* Super dark purple */
+        rgb(75, 0, 130) 30%,    /* Deep purple (indigo-like) */
+        rgb(255, 0, 255) 60%,   /* Pure magenta (neon purple) */
+        rgb(0, 255, 255) 100%   /* Bright cyan for explosive pop */
+    );
+    color: rgb(255, 255, 0);   /* Bright yellow text for sharp contrast */
+    font-weight: bold;
+    text-shadow: 2px 2px 10px rgba(255, 255, 0, 0.8); /* Glowing yellow text */
+}
+
+.orange-vibrant {
+    background: linear-gradient(to bottom right,
+        rgb(64, 32, 0) 0%,      /* Super dark orange-brown for depth */
+        rgb(255, 69, 0) 30%,    /* Deep, fiery orange (redder side) */
+        rgb(255, 165, 0) 60%,   /* Classic bright orange */
+        rgb(255, 0, 0) 100%     /* Bold red finish for fiery intensity */
+    );
+    color: rgb(0, 0, 255);    /* Bright blue text for striking contrast */
+    font-weight: bold;
+    text-shadow: 2px 2px 10px rgba(0, 0, 255, 0.8); /* Glowing blue text */
+}
+
+.yellow-vibrant {
+    background: linear-gradient(to bottom right,
+        rgb(255, 255, 0) 0%,    /* Bright yellow for the start */
+        rgb(255, 165, 0) 30%,   /* Vibrant orange for added depth */
+        rgb(0, 255, 255) 60%,   /* Bright cyan for an intense contrast */
+        rgb(255, 0, 255) 100%   /* Neon purple for an explosive finish */
+    );
+    color: rgb(0, 255, 0);    /* Bright green text for a sharp contrast */
+    font-weight: bold;
+    text-shadow: 2px 2px 10px rgba(0, 255, 0, 0.8); /* Glowing green text */
+}
 
 .badge-container {
   position: relative;
