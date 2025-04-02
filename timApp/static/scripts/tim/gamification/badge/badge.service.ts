@@ -64,11 +64,12 @@ export class BadgeService {
     /**
      * Hakee käyttäjälle kuuluvat badget ID:n perusteella
      * @param id käyttäjän ID
+     * @param contextGroup käyttäjän kontekstiryhmä
      * @return palauttaa IBadge taulukon
      */
-    async getUserBadges(id: number) {
+    async getUserBadges(id: number, contextGroup: string) {
         const result = await toPromise(
-            this.http.get<[]>(`/groups_badges/${id}`)
+            this.http.get<[]>(`/groups_badges/${id}/${contextGroup}`)
         );
         const userBadges: IBadge[] = [];
         if (result.ok) {

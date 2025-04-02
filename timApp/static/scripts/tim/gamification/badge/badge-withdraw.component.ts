@@ -238,16 +238,27 @@ export class BadgeWithdrawComponent implements OnInit {
             console.error("Failed to retrieve the user's personal group ID.");
             return;
         }
+        if (!this.badgegroupContext) {
+            console.error("Failed to retrieve the context group.");
+            return;
+        }
         const pGroup: IPersonalGroup =
             await this.badgeService.getUserAndPersonalGroup(
                 this.selectedUser.name
             );
-        this.userBadges = await this.badgeService.getUserBadges(pGroup["1"].id);
+        this.userBadges = await this.badgeService.getUserBadges(
+            pGroup["1"].id,
+            this.badgegroupContext
+        );
     }
 
     async fetchGroupBadges(groupId?: number) {
         if (groupId == undefined) {
             console.error("groupid was undefined");
+            return;
+        }
+        if (!this.badgegroupContext) {
+            console.error("Failed to retrieve the context group.");
             return;
         }
 
@@ -256,7 +267,10 @@ export class BadgeWithdrawComponent implements OnInit {
         this.emptyBadges(this.userBadges);
         this.emptyBadges(this.groupBadges);
 
-        this.groupBadges = await this.badgeService.getUserBadges(groupId);
+        this.groupBadges = await this.badgeService.getUserBadges(
+            groupId,
+            this.badgegroupContext
+        );
     }
 
     /**
