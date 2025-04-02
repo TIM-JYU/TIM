@@ -190,6 +190,22 @@ export class BadgeService {
         }
     }
 
+    async getCurrentGroup(groupName: string | null) {
+        console.log("Fetching group name...");
+        const response = toPromise(
+            this.http.get<any>(`/current_group_name/${groupName}`)
+        );
+        const result = await response;
+
+        if (result.ok) {
+            console.log(`Fetched group's name: ${groupName}`, result.result);
+            return result.result;
+        } else {
+            console.error("Failed to fetch groups name.");
+        }
+        return null;
+    }
+
     async assignBadges(data: IData) {
         const response = toPromise(
             this.http.post<{ok: boolean}>("/give_badge", {

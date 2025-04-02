@@ -85,7 +85,7 @@
 
 h2 {
   color: black;
-  margin-bottom: 1.2em;
+  margin: 20px 0 40px 0;
 }
 
 #badgeForm {
@@ -202,11 +202,11 @@ button:hover {
     justify-content: flex-start;
     align-items: center;
     gap: 2px;
-    margin-bottom: 2em;
+    //margin-bottom: 2em;
 }
 
 .all_badges {
-  margin-top: 2em;
+  //margin-top: 2em;
 }
 
 .all_badges tim-badge {
@@ -255,7 +255,7 @@ button[type="button"]:hover {
   background-color: #ccc;
 }
 
-#createButton:hover{
+#createButton:hover, #giveBadgeButton:hover, #editButton:hover{
   background-color: #0D357A;
 }
 
@@ -379,6 +379,10 @@ button[type="button"]:hover {
   max-height: 35px;
 }
 
+.no-badges-txt {
+  color: darkgrey;
+  font-style: italic;
+}
 
 @media (max-width: 785px) {
   .badge-card {
