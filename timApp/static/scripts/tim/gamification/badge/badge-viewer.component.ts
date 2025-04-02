@@ -168,8 +168,8 @@ export class BadgeViewerComponent implements OnInit {
                     <b>Color:</b> ${badge.color}<br>
                     <b>Shape:</b> ${badge.shape}<br> 
                     <b>Given time:</b> ${badge.given}<br> 
-                    <b>Created by:</b> ${badge.created_by}<br>     
-                    <b>Given by:</b> ${badge.given_by}<br>                              
+                    <b>Created by:</b> ${badge.given_by_name}<br>     
+                    <b>Given by:</b> ${badge.created_by_name}<br>                              
             `,
                 modal: false,
             }

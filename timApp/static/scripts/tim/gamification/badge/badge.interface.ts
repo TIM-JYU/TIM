@@ -7,10 +7,10 @@ export interface IBadge {
     description: string;
     message: string;
     context_group: string;
-    created_by: string;
+    given_by_name: number;
     badgegiven_id: number;
     given: Date;
-    given_by: string;
+    created_by_name: string;
 }
 
 export interface IGroup {
