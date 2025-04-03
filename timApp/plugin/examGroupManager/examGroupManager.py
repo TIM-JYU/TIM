@@ -44,6 +44,7 @@ from timApp.user.user import User, UserInfo, manage_access_set
 from timApp.user.usergroup import UserGroup, get_groups_by_ids
 from timApp.user.usergroupdoc import UserGroupDoc
 from timApp.user.usergroupmember import UserGroupMember, membership_current
+from timApp.user.users import remove_access
 from timApp.user.userutils import grant_access, expire_access
 from timApp.util.flask.requesthelper import (
     view_ctx_with_urlmacros,
@@ -924,7 +925,7 @@ def _begin_exam(ug: UserGroup, extra: ExamGroupDataGlobal) -> None:
 def _interrupt_exam(ug: UserGroup, extra: ExamGroupDataGlobal) -> None:
     doc = _get_current_exam_doc(extra)
     for u in ug.users:  # type: User
-        expire_access(u.get_personal_group(), doc, AccessType.view)
+        remove_access(u.get_personal_group(), doc, AccessType.view)
 
     cur_u = get_current_user_object()
     log_info(
