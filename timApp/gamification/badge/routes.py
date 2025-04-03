@@ -775,8 +775,13 @@ def group_name(name: str):
 
 
 @badges_blueprint.post("/update_group_name")
-def change_title(item_id: int, new_title: str) -> Response:
-    item = get_item_or_abort(item_id)
-    item.title = new_title
-    db.session.commit()
+def change_title(item_id: int, group_name: str) -> Response:
+
+    group = UserGroup.get_by_name(group_name)
+    doc = group.admin_doc
+    doc.description =
+
+    #item = get_item_or_abort(item_id)
+    #item.title = group_name
+    #db.session.commit()
     return ok_response()

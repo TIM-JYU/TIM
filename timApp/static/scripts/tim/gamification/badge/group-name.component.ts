@@ -48,6 +48,7 @@ export class GroupNameComponent implements OnInit {
     displayedName: string | null | undefined;
     showInput: boolean = false;
     showFullName = false;
+    storedGroup: {name: string; id: number} | null = null;
 
     constructor(private badgeService: BadgeService) {}
 
@@ -56,24 +57,23 @@ export class GroupNameComponent implements OnInit {
      */
     async getGroupName() {
         if (this.group) {
-            const fetchedGroupName = await this.badgeService.getCurrentGroup(
+            const fetchedGroup = await this.badgeService.getCurrentGroup(
                 this.group
             );
-            if (fetchedGroupName) {
-                this.groupName = fetchedGroupName.name;
-                this.group_id = fetchedGroupName.id; //Jos käytetään human_name(), ei saada ID:tä
-                console.log(fetchedGroupName);
+            if (fetchedGroup) {
+                this.groupName = fetchedGroup.name;
+                this.group_id = fetchedGroup.id; // Assign ID as well
+                this.storedGroup = {
+                    name: fetchedGroup.name,
+                    id: fetchedGroup.id,
+                }; // Store fetched group
+                console.log(fetchedGroup);
             }
-            /*
-            if (fetchedGroupName) {
-                this.groupName = fetchedGroupName; // toimii, kun routessa .human_name()
-                //this.group_id = fetchedGroupName.id; //Jos käytetään human_name(), ei saada ID:tä
-                console.log(fetchedGroupName);
-            }
-             */
         }
         this.parseParentGroup(this.groupName);
     }
+
+    //TODO: placeholder input kenttään, halutaan vain aliryhmän nimi
 
     async saveName() {
         if (this.newName.valid) {
@@ -81,12 +81,16 @@ export class GroupNameComponent implements OnInit {
             this.showInput = false;
         }
 
-        if (this.item) {
-            //console.log(this.item.id);
-            //console.log(this.item.name);
+        if (this.storedGroup) {
+            // Access stored group name and ID
+            console.log(this.storedGroup.id);
+            console.log(this.storedGroup.name);
+
+            // Call your badgeService with the storedGroup information
             await this.badgeService.updateGroupName(
-                this.item.id,
-                this.item.name
+                this.storedGroup.id,
+                this.storedGroup.name,
+                this.newName.value
             );
         }
         return "Name successfully changed to: " + this.groupName;
