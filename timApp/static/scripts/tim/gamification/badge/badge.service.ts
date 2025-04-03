@@ -62,8 +62,9 @@ export class BadgeService {
     }
 
     /**
-     * Hakee käyttäjälle kuuluvat badget ID:n perusteella
-     * @param id käyttäjän ID
+     * Hakee käyttäjän ryhmälle kuuluvat badget ID:n perusteella.
+     * Ryhmä voi olla joko henkilökohtainen ryhmä, tai ryhmä, jossa jäseniä on enemmän, kuin yksi.
+     * @param id ryhmän ID
      * @param contextGroup käyttäjän kontekstiryhmä
      * @return palauttaa IBadge taulukon
      */
