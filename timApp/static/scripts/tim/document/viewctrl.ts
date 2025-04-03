@@ -108,6 +108,7 @@ export interface IDocumentViewInfoStatus {
     can_access: boolean;
     right?: IRight;
     global_message?: string;
+    is_logged_in: boolean;
 }
 
 export interface ITimComponent extends IUnsavedComponent {
@@ -459,6 +460,26 @@ export class ViewCtrl implements IController {
 
         if (this.docViewInfoPollInterval) {
             void this.startDocumentStatePolling();
+
+            if (dg.docSettings.redirectAnonymousNoRight) {
+                const url = new URL(
+                    dg.docSettings.redirectAnonymousNoRight,
+                    window.location.href
+                );
+                // Only allow redirecting to the same domain for now
+                if (url.hostname === window.location.hostname) {
+                    this.listen("docViewInfoUpdate", (s) => {
+                        if (!s.is_logged_in && !s.can_access) {
+                            // Disable any confirmation on exit
+                            window.addEventListener("beforeunload", (e) => {
+                                e.returnValue = "";
+                                return "";
+                            });
+                            window.location.href = url.href;
+                        }
+                    });
+                }
+            }
         }
 
         this.defaultAction =

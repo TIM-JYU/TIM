@@ -311,6 +311,7 @@ def doc_access_info(doc_name: str, require_valid_session: bool = True):
                 "can_access": False,
                 "right": None,
                 "global_message": user_message,
+                "is_logged_in": cur_user.logged_in,
             },
         )
 
@@ -326,6 +327,7 @@ def doc_access_info(doc_name: str, require_valid_session: bool = True):
             "can_access": can_access,
             "right": view_access,
             "global_message": user_message,
+            "is_logged_in": cur_user.logged_in,
         },
         date_conversion=True,
         status_code=200 if can_access else 403,
