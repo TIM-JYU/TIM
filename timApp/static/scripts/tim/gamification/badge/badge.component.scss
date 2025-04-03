@@ -1,10 +1,10 @@
 .material-symbols-outlined {
     font-size: 52px;
-    position: absolute;
-    margin-top: 8px;
+    position: relative;
+    margin-top: 10px;
     text-align: center;
     color: white;
-    margin-left: -26px;
+    margin-left: -6px;
     z-index: 1;
 }
 
@@ -31,6 +31,9 @@
     border-radius: 10px;
     display: inline-block;
     transition: all 0.2s ease;
+
+    filter: drop-shadow(0 0 5px var(--glow-light, rgba(255, 0, 0, 0.2)));
+    animation: pulse 6s infinite;
 }
 
 .badge.hexagon:before, .badge.hexagon:after {
@@ -55,6 +58,19 @@
     transform: rotate(-60deg);
 }
 
+/* Pulse animation */
+@keyframes pulse {
+    0% {
+        filter: drop-shadow(0 0 5px var(--glow-light, rgba(0, 123, 255, 0.2)));
+    }
+    50% {
+        filter: drop-shadow(0 0 20px var(--glow-strong, rgba(0, 123, 255, 0.8)));
+    }
+    100% {
+        filter: drop-shadow(0 0 5px var(--glow-light, rgba(0, 123, 255, 0.2)));
+    }
+}
+
 .badge.square {
     width: 7.6em;
     height: 7.6em;
@@ -62,10 +78,19 @@
     display: inline-block;
     position: relative;
     transition: all 0.2s ease;
+    // animation
+    filter: drop-shadow(0 0 5px var(--glow-light, rgba(255, 0, 0, 0.2)));
+    animation: pulse 6s infinite;
 }
 
+
 .badge.square > .ribbon{
-    bottom: 9px;
+    bottom: -21px;
+}
+
+.badge.square .material-symbols-outlined {
+  margin-top: 9px;
+  margin-left: 0px;
 }
 
 .badge.flower {
@@ -75,6 +100,9 @@
   border-radius: 229px;
   display: inline-block;
   transition: all 0.2s ease;
+
+  filter: drop-shadow(0 0 5px var(--glow-light, rgba(255, 0, 0, 0.2)));
+  animation: pulse 6s infinite;
 }
 
 
@@ -101,13 +129,27 @@
 }
 
 .badge.flower > .ribbon{
-    bottom: 22px;
+    bottom: -11px;
 }
+
+.badge.flower .material-symbols-outlined {
+  margin-top: 17px;
+  margin-left: -11px;
+}
+
 
 .badge.round {
     border-radius: 50%;
     width: 90px;
     height: 90px;
+
+    filter: drop-shadow(0 0 5px var(--glow-light, rgba(255, 0, 0, 0.2)));
+    animation: pulse 6s infinite;
+}
+
+.badge.round .material-symbols-outlined {
+  margin-top: 9px;
+  margin-left: 0px;
 }
 
 .badge:hover {
@@ -129,7 +171,7 @@
     min-width: 100px;
     z-index: 1;
     color: #fff;
-    bottom: 12px;
+    bottom: -22px;
     left: 50%;
     height: 20px;
     font-size: 13px;
@@ -143,99 +185,139 @@
 .yellow {
     background: linear-gradient(to bottom right, #ffeb3b 0%, #fbc02d 100%);
     color: #ffb300;
+    --glow-light: transparent;
+    --glow-strong: transparent;
 }
 
 .orange {
     background: linear-gradient(to bottom right, #ffc400 0%, #ff6f00 100%);
     color: #ff8f00;
+    --glow-light: transparent;
+    --glow-strong: transparent;
 }
 
 .pink {
     background: linear-gradient(to bottom right, #F48FB1 0%, #d81b60 100%);
     color: #dc306f;
+    --glow-light: transparent;
+    --glow-strong: transparent;
 }
 
 .red {
     background: linear-gradient(to bottom right, #f4511e 0%, #b71c1c 100%);
     color: #c62828;
+    --glow-light: transparent;
+    --glow-strong: transparent;
 }
 
 .purple {
     background: linear-gradient(to bottom right, #ab47bc 0%, #4527a0 100%);
     color: #7127a8;
+    --glow-light: transparent;
+    --glow-strong: transparent;
 }
 
 .teal {
     background: linear-gradient(to bottom right, #4DB6AC 0%, #00796B 100%);
     color: #34a297;
+    --glow-light: transparent;
+    --glow-strong: transparent;
 }
 
 .dark-blue {
     background: linear-gradient(to bottom right, #1976D2 0%, #283593 100%);
     color: #1c68c5;
+    --glow-light: transparent;
+    --glow-strong: transparent;
 }
 
 .green {
     background: linear-gradient(to bottom right, #cddc39 0%, #8bc34a 100%);
     color: #7cb342;
+    --glow-light: transparent;
+    --glow-strong: transparent;
 }
 
 .dark-green {
     background: linear-gradient(to bottom right, #4CAF50 0%, #1B5E20 100%);
     color: #00944a;
+    --glow-light: transparent;
+    --glow-strong: transparent;
 }
 .gray {
     background: linear-gradient(to bottom right, #d3d3d3 0%, #a9a9a9 100%);
     color: #808080;
+    --glow-light: transparent;
+    --glow-strong: transparent;
 }
 .indigo {
     background: linear-gradient(to bottom right, #3f51b5 0%, #1a237e 100%);
     color: #303f9f;
+    --glow-light: transparent;
+    --glow-strong: transparent;
 }
 
 .brown {
     background: linear-gradient(to bottom right, #8d6e63 0%, #3e2723 100%);
     color: #5d4037;
+    --glow-light: transparent;
+    --glow-strong: transparent;
 }
 
 .violet {
     background: linear-gradient(to bottom right, #9c27b0 0%, #6a1b9a 40%, #4a148c 100%);
     color: #8e24aa;
+    --glow-light: transparent;
+    --glow-strong: transparent;
 }
 
 .skyblue {
     background: linear-gradient(to bottom right, #81d4fa 0%, #0288d1 100%);
     color: #0277bd;
+    --glow-light: transparent;
+    --glow-strong: transparent;
 }
 
 .mint {
     background: linear-gradient(to bottom right, #a5d6a7 0%, #388e3c 100%);
     color: #2c6e28;
+    --glow-light: transparent;
+    --glow-strong: transparent;
 }
 
 .peach {
     background: linear-gradient(to bottom right, #ffb74d 0%, #f57c00 100%);
     color: #ff6f00;
+    --glow-light: transparent;
+    --glow-strong: transparent;
 }
 
 .wine {
     background: linear-gradient(to bottom right, #d32f2f 0%, #7a0c1e 100%);
     color: #9a1e26;
+    --glow-light: transparent;
+    --glow-strong: transparent;
 }
 
 .coral {
     background: linear-gradient(to bottom right, rgb(255, 127, 80) 0%, rgb(255, 99, 71) 100%);
     color: rgb(255, 69, 0);
+    --glow-light: transparent;
+    --glow-strong: transparent;
 }
 
 .turquoise {
     background: linear-gradient(to bottom right, rgb(64, 224, 208) 0%, rgb(0, 206, 209) 100%);
     color: rgb(32, 178, 170);
+    --glow-light: transparent;
+    --glow-strong: transparent;
 }
 
 .olive {
     background: linear-gradient(to bottom right, rgb(128, 128, 0) 0%, rgb(85, 107, 47) 100%);
     color: rgb(107, 142, 35);
+    --glow-light: transparent;
+    --glow-strong: transparent;
 }
 
 .navy-vibrant {
@@ -246,6 +328,8 @@
         rgb(255, 0, 255) 100%
     );
     color: rgb(255, 255, 0);
+    --glow-light: rgba(0, 0, 255, 0.4); /* Brighter and softer glow */
+    --glow-strong: rgba(0, 0, 255, 1);
 }
 
 .red-vibrant {
@@ -256,6 +340,8 @@
         rgb(255, 255, 0) 100%  /* Super bright yellow */
     );
     color: rgb(0, 255, 255);   /* Cyan text for strong contrast */
+    --glow-light: rgba(255, 0, 0, 0.4); /* Softer red glow */
+    --glow-strong: rgba(255, 0, 0, 1);
 }
 
 .green-vibrant {
@@ -266,8 +352,8 @@
         rgb(0, 255, 255) 100%  /* Bright cyan for that crazy pop */
     );
     color: rgb(255, 0, 0);     /* Pure red text for max contrast */
-    font-weight: bold;
-    text-shadow: 2px 2px 10px rgba(255, 0, 0, 0.8); /* Glowing red text */
+    --glow-light: rgba(0, 255, 0, 0.4); /* Softer green glow */
+    --glow-strong: rgba(0, 255, 0, 1);
 }
 
 .purple-vibrant {
@@ -278,8 +364,8 @@
         rgb(0, 255, 255) 100%   /* Bright cyan for explosive pop */
     );
     color: rgb(255, 255, 0);   /* Bright yellow text for sharp contrast */
-    font-weight: bold;
-    text-shadow: 2px 2px 10px rgba(255, 255, 0, 0.8); /* Glowing yellow text */
+    --glow-light: rgba(255, 0, 255, 0.4); /* Softer magenta glow */
+    --glow-strong: rgba(255, 0, 255, 1);
 }
 
 .orange-vibrant {
@@ -290,8 +376,8 @@
         rgb(255, 0, 0) 100%     /* Bold red finish for fiery intensity */
     );
     color: rgb(0, 0, 255);    /* Bright blue text for striking contrast */
-    font-weight: bold;
-    text-shadow: 2px 2px 10px rgba(0, 0, 255, 0.8); /* Glowing blue text */
+    --glow-light: rgba(255, 69, 0, 0.4); /* Softer orange glow */
+    --glow-strong: rgba(255, 69, 0, 1);
 }
 
 .yellow-vibrant {
@@ -302,8 +388,8 @@
         rgb(255, 0, 255) 100%   /* Neon purple for an explosive finish */
     );
     color: rgb(0, 255, 0);    /* Bright green text for a sharp contrast */
-    font-weight: bold;
-    text-shadow: 2px 2px 10px rgba(0, 255, 0, 0.8); /* Glowing green text */
+    --glow-light: rgba(255, 255, 0, 0.4); /* Softer yellow glow */
+    --glow-strong: rgba(255, 255, 0, 1);
 }
 
 .badge-container {
