@@ -195,6 +195,7 @@ export class BadgeCreatorComponent implements OnInit {
     hasPermission = true;
     badgeFormShowing = false;
     teacherPermission = false;
+    availableImages: {id: number; name: string}[] = [];
 
     clickedBadge: any = null;
     editingBadge: any = null;
@@ -225,6 +226,7 @@ export class BadgeCreatorComponent implements OnInit {
     // Initializes the component by loading badges and subscribing to form value changes.
     // It tracks changes to the context_group field and triggers a handler when the value changes.
     ngOnInit() {
+        this.availableImages = this.badgeService.getAvailableImages();
         this.selectedContextGroup = this.badgegroupContext || "";
         if (Users.isLoggedIn()) {
             this.userName = Users.getCurrent().name;
@@ -345,22 +347,6 @@ export class BadgeCreatorComponent implements OnInit {
             this.centerToComponent();
         }, 100);
     }
-
-    // Titles instead of numbers in availableImages
-    availableImages = [
-        {id: 1, name: "Trophy"},
-        {id: 2, name: "Winner"},
-        {id: 3, name: "Teamwork"},
-        {id: 4, name: "Code"},
-        {id: 5, name: "Debug"},
-        {id: 6, name: "On_fire"},
-        {id: 7, name: "Rocket"},
-        {id: 8, name: "Smile"},
-        {id: 9, name: "Terminal"},
-        {id: 10, name: "Deployed_code"},
-        {id: 11, name: "Loop"},
-        {id: 12, name: "100_points"},
-    ];
 
     shapes = [
         {label: "Hexagon", value: "hexagon"},

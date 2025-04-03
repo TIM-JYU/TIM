@@ -280,4 +280,23 @@ export class BadgeService {
     closeAlert(alerts: any, index: number) {
         alerts.splice(index, 1);
     }
+
+    private availableImages = [
+        {id: 1, name: "Trophy"},
+        {id: 2, name: "Winner"},
+        {id: 3, name: "Teamwork"},
+        {id: 4, name: "Code"},
+        {id: 5, name: "Debug"},
+        {id: 6, name: "On_fire"},
+        {id: 7, name: "Rocket"},
+        {id: 8, name: "Smile"},
+        {id: 9, name: "Terminal"},
+        {id: 10, name: "Deployed_code"},
+        {id: 11, name: "Loop"},
+        {id: 12, name: "100_points"},
+    ];
+
+    getAvailableImages() {
+        return this.availableImages;
+    }
 }
