@@ -1,12 +1,36 @@
+.group-users{
+  margin-left: 1em;
+  margin-top: 1em;
+}
+.user-name {
+  display: block;
+}
+
 .option-item {
     display: flex;
     align-items: flex-start;
+
 }
-.option-item input{
-    width: 5%;
+.group-item {
+    display: flex;
+    align-items: flex-start;
+}
+
+.user-checkbox {
+  width: 10%;
+}
+
+.selectall-checkbox {
+  width: 10%;
+}
+
+.group-checkbox{
+  width: 5%;
 }
 
 .option-name {
+    margin-top: 1px;
+    display: block;
     cursor: pointer;
 }
 
