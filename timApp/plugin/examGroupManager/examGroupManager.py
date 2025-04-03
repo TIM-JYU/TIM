@@ -106,6 +106,7 @@ class Exam:
     docId: int
     name: str
     url: str | None = None
+    disabled: str | None = None
 
 
 @dataclass

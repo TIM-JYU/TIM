@@ -120,6 +120,7 @@ const ExamT = t.type({
     name: t.string,
     docId: t.number,
     url: t.union([t.string, t.null]),
+    disabled: t.union([t.string, t.null]),
 });
 
 const ExamWithPracticeT = t.intersection([
@@ -466,7 +467,12 @@ export class ToggleComponent {
                                     To start a new exam, stop answer reviewing in section '4. Show answers to students'.
                                 </tim-alert>
                             </div>
-                            <fieldset [disabled]="!group.currentExamDoc || group.allowAccess">
+                            <div *ngIf="group.currentExamDoc && !!examByDocId.get(group.currentExamDoc)?.disabled" class="mt">
+                                <tim-alert  severity="warning">
+                                    {{examByDocId.get(group.currentExamDoc)?.disabled}}
+                                </tim-alert>
+                            </div>
+                            <fieldset [disabled]="!group.currentExamDoc || group.allowAccess || !!examByDocId.get(group.currentExamDoc)?.disabled">
                                 <h5 i18n>Hold an exam</h5>
 
                                 <p i18n>
@@ -475,7 +481,7 @@ export class ToggleComponent {
                                 </p>
                                 
                                 <div class="checklist">
-                                    <div [class.disabled]="!group.currentExamDoc || group.allowAccess">
+                                    <div [class.disabled]="!group.currentExamDoc || group.allowAccess || !!examByDocId.get(group.currentExamDoc)?.disabled">
                                         <div class="cb">
                                             <input type="checkbox" title="Mark as done" i18n-title
                                                    [checked]="group.examState > 0"
