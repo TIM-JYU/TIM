@@ -10371,7 +10371,7 @@ Ole hyvä ja luo ensin kirjautumiskoodit.</target>
       </trans-unit>
       <trans-unit id="6383743377048106825" datatype="html">
         <source> You can show answers only when they don't have an active exam running.<x id="LINE_BREAK" ctype="lb" equiv-text="&lt;br>"/> Stop the exam and disable login codes in section '3. Manage exams' to enable showing answers. </source>
-        <target state="translated"> Voit näyttää vastauksia vain silloin, kun koeryhmällä ei ole menossa olevia kokeita.<x id="LINE_BREAK" ctype="lb" equiv-text="&lt;br>"/> Pysäytä koe ja ota pois käytöstä kirjautumiskoodit kohdassa "3. Hallinnoi kokeita" ennen kuin voit näyttää vastauksia. </target>
+        <target state="translated"> Voit näyttää vastauksia vain silloin, kun koeryhmällä ei ole menossa olevia kokeita.<x id="LINE_BREAK" ctype="lb" equiv-text="&lt;br>"/> Lopeta koe ja ota kirjautumiskoodit pois käytöstä kohdassa "3. Hallinnoi kokeita," ennen kuin voit näyttää vastauksia. </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
           <context context-type="linenumber">679,680</context>
