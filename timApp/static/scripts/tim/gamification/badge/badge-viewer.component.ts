@@ -87,14 +87,11 @@ export class BadgeViewerComponent implements OnInit {
     private subscription: Subscription = new Subscription();
     groupBadgesMap = new Map<number, IBadge[]>();
     disableDialogWindow?: boolean;
+    availableImages: {id: number; name: string}[] = [];
 
     givenBadges?: IBadge[];
 
-    constructor(
-        private http: HttpClient,
-        private badgeService: BadgeService,
-        private dialogService: BadgeService
-    ) {}
+    constructor(private http: HttpClient, private badgeService: BadgeService) {}
 
     /**
      * Kuuntelee "Esc"-näppäimen painallusat ja sulkee aviomen dialogin, mikäli näppäintä
@@ -134,8 +131,8 @@ export class BadgeViewerComponent implements OnInit {
      * Sulkee avoimena olevan dialogin kutsuttaessa
      */
     closeDialog(): void {
-        if (this.dialogService.activeDialogRef) {
-            this.dialogService.closeActiveDialog();
+        if (this.badgeService.activeDialogRef) {
+            this.badgeService.closeActiveDialog();
         }
     }
 
@@ -151,20 +148,20 @@ export class BadgeViewerComponent implements OnInit {
      */
     async openDialog(badge: IBadge): Promise<void> {
         if (this.disableDialogWindow) {
-            this.dialogService.closeActiveDialog();
+            this.badgeService.closeActiveDialog();
             return;
         }
 
-        this.dialogService.closeActiveDialog();
-
-        this.dialogService.activeDialogRef = await angularDialog.open(
+        this.badgeService.closeActiveDialog();
+        const iconName = this.getImageNameById(badge.image);
+        this.badgeService.activeDialogRef = await angularDialog.open(
             MessageDialogComponent,
             {
                 message: `
                     <b>${badge.title}</b><br><br>
                     <b>Description:</b> ${badge.description}<br>
                     <b>Message:</b> ${badge.message}<br>
-                    <b>Icon:</b>${badge.image}<br>
+                    <b>Icon:</b> ${iconName}<br>
                     <b>Color:</b> ${badge.color}<br>
                     <b>Shape:</b> ${badge.shape}<br> 
                     <b>Given time:</b> ${badge.given}<br> 
@@ -176,8 +173,23 @@ export class BadgeViewerComponent implements OnInit {
         );
 
         // Wait for the dialog to close
-        await this.dialogService.activeDialogRef.result;
-        this.dialogService.activeDialogRef = null; // Reset the reference after closing
+        await this.badgeService.activeDialogRef.result;
+        this.badgeService.activeDialogRef = null; // Reset the reference after closing
+    }
+
+    /**
+     * Hakee klikatun badgen imagen nimen bagen id:n perusteella
+     * @param id - klikatun badgen image.id
+     * @returns - id:n perusteella haettu badgen imagen nimi tai "Image not found"
+     * jos sitä ei löydy
+     */
+    getImageNameById(id: number): string {
+        const selectedBadgeImageName = this.availableImages.find(
+            (img) => img.id === id
+        );
+        return selectedBadgeImageName
+            ? selectedBadgeImageName.name
+            : "Image not found";
     }
 
     /**
@@ -237,6 +249,7 @@ export class BadgeViewerComponent implements OnInit {
     }
 
     ngOnInit() {
+        this.availableImages = this.badgeService.getAvailableImages();
         if (Users.isLoggedIn()) {
             this.InitializeData().then(() => {
                 this.getBadges();
