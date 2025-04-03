@@ -74,22 +74,6 @@ export class GroupNameComponent implements OnInit {
         }
         this.parseParentGroup(this.groupName);
     }
-    parseParentGroup(groupName: string | null) {
-        if (!this.groupName) return;
-        const nameParts = this.groupName.split("-");
-        this.parentGroup = nameParts[0];
-        this.subGroup = nameParts.slice(1).join(".");
-        this.displayedName = this.subGroup;
-    }
-
-    toggleInput() {
-        this.showInput = !this.showInput;
-    }
-
-    toggleFullName() {
-        this.showFullName = !this.showFullName;
-        this.displayedName = this.showFullName ? this.groupName : this.subGroup;
-    }
 
     async saveName() {
         if (this.newName.valid) {
@@ -106,6 +90,23 @@ export class GroupNameComponent implements OnInit {
             );
         }
         return "Name successfully changed to: " + this.groupName;
+    }
+
+    parseParentGroup(groupName: string | null) {
+        if (!this.groupName) return;
+        const nameParts = this.groupName.split("-");
+        this.parentGroup = nameParts[0];
+        this.subGroup = nameParts.slice(1).join(".");
+        this.displayedName = this.subGroup;
+    }
+
+    toggleInput() {
+        this.showInput = !this.showInput;
+    }
+
+    toggleFullName() {
+        this.showFullName = !this.showFullName;
+        this.displayedName = this.showFullName ? this.groupName : this.subGroup;
     }
 
     ngOnInit(): void {
