@@ -78,7 +78,6 @@ export class BadgeService {
                 for (const alkio of result.result) {
                     userBadges.push(alkio);
                 }
-                // console.log("haettu käyttäjän " + id + " badget");
             }
         }
         return userBadges.reverse();
