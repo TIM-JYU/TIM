@@ -9,7 +9,7 @@
 .option-item {
     display: flex;
     align-items: flex-start;
-    width: 150%;
+
 }
 .group-item {
     display: flex;
@@ -17,6 +17,10 @@
 }
 
 .user-checkbox {
+  width: 10%;
+}
+
+.selectall-checkbox {
   width: 10%;
 }
 

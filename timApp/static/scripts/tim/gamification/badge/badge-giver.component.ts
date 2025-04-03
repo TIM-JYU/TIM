@@ -41,7 +41,7 @@ import {TimUtilityModule} from "tim/ui/tim-utility.module";
                 </div>
                 
                 <div class="user-group-button-container">
-                    <button (click)="handleSwap(true)" [disabled]="userAssign === true">
+                    <button (click)="handleSwap(true); fetchUsersFromGroups()" [disabled]="userAssign === true">
                         Assign badge to a user
                     </button>
                     <button (click)="handleSwap(false)" [disabled]="userAssign === false">
@@ -51,23 +51,23 @@ import {TimUtilityModule} from "tim/ui/tim-utility.module";
                 
                 <div *ngIf="userAssign === true" class="form-group">
                     <label>Users</label>
-                    <div *ngFor="let group of groups" class="option-item">
+                    <div *ngFor="let group of groups">
                         <span class="option-name" (click)="handleGroupSelection(group)" [ngClass]="{'selected-option': selectedGroup?.id === group.id}">
                             {{ prettyGroupName(group.name) }}
                         </span>
-                        <div class="group-users" *ngIf="selectedGroup === group">
-                            <div *ngFor="let user of users" class="option-item">
+                            <div><input class="selectall-checkbox" type="checkbox" (change)="toggleSelectAll(group, $event)">Select all</div>
+                            <div *ngFor="let user of groupUsersMap.get(group.id)" class="option-item">
                                 <input class="user-checkbox"
                                     type="checkbox" 
                                     [value]="user" 
-                                    [checked]="isUserSelected(user)" 
+                                    [checked]="isAllSelectedMap.get(group.id)" 
                                     (change)="toggleUserSelection(user, $event)"
                                 />
                                 <div class="option-name" (click)="handleUserSelection(user)" [ngClass]="{'selected-option': selectedUser?.id === user.id}">
                                     {{user.real_name}}
                                 </div>
                             </div>
-                        </div>
+                        
                     </div>
                 </div>
                 
@@ -188,6 +188,8 @@ export class BadgeGiverComponent implements OnInit {
     selectedGroup?: IGroup | null = null;
     selectedGroups: IGroup[] = [];
     groupBadges: IBadge[] = [];
+    groupUsersMap = new Map<number, IUser[]>();
+    isAllSelectedMap = new Map<number, boolean>();
 
     @Input() selectedBadge?: IBadge | null = null;
     @Input() badgegroupContext?: string;
@@ -212,6 +214,7 @@ export class BadgeGiverComponent implements OnInit {
             this.addListeners();
             this.fetchUsers(this.badgegroupContext);
             this.fetchGroups();
+
             if (Users.belongsToGroup("Administrators")) {
                 this.hasPermission = true; // Tarkistetaan onko käyttäjällä oikeus käyttää komponenttia
                 this.showComponent = true;
@@ -263,6 +266,25 @@ export class BadgeGiverComponent implements OnInit {
         );
     }
 
+    toggleSelectAll(group: IGroup, event: Event) {
+        const isChecked = (event.target as HTMLInputElement).checked;
+        const users = this.groupUsersMap.get(group.id);
+        if (users === undefined) {
+            return;
+        }
+        while (this.selectedUsers.length > 0) {
+            this.selectedUsers.pop();
+        }
+        if (isChecked) {
+            for (const user of users) {
+                this.selectedUsers.push(user);
+            }
+            this.isAllSelectedMap.set(group.id, true);
+            return;
+        }
+        this.isAllSelectedMap.set(group.id, false);
+    }
+
     handleSwap(bool: boolean) {
         this.userAssign = bool;
         this.selectedGroup = null;
@@ -274,11 +296,6 @@ export class BadgeGiverComponent implements OnInit {
         }
     }
 
-    isUserSelected(user: IUser) {
-        if (this.selectedUser === user) {
-            return true;
-        }
-    }
     handleUserSelection(user: IUser) {
         if (this.selectedUser === user) {
             this.selectedUser = null;
@@ -316,6 +333,17 @@ export class BadgeGiverComponent implements OnInit {
         }
     }
 
+    async fetchUsersFromGroups() {
+        this.groupUsersMap.clear();
+        for (const group of this.groups) {
+            this.groupUsersMap.set(
+                group.id,
+                await this.badgeService.getUsersFromGroup(group.name)
+            );
+            this.isAllSelectedMap.set(group.id, false);
+        }
+        console.log(this.groupUsersMap);
+    }
     /**
      * Tarkistaa onko annettu parametri undefined. Jos true niin lähdetään pois.
      * Tyhjentää this.userBadges -taulukon
