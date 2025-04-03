@@ -20,14 +20,25 @@ import type {IUser} from "tim/user/IUser";
 import {angularDialog} from "tim/ui/angulardialog/dialog.service";
 import {MessageDialogComponent} from "tim/ui/message-dialog.component";
 import {HostListener} from "@angular/core";
+import {TimUtilityModule} from "tim/ui/tim-utility.module";
+import {toPromise} from "tim/util/utils";
 
 @Component({
     selector: "tim-badge-viewer",
     template: `
+        <ng-container *ngIf="!teacherPermission">
+            <div class="viewer-container">
+                <h2 class="badge-heading">User Badges </h2>
+                <tim-alert *ngFor="let alert of alerts; let i = index" [severity]="alert.type" [closeable]="true" (closing)="badgeService.closeAlert(this.alerts, i)">
+                    <div [innerHTML]="alert.msg"></div>
+                </tim-alert>
+            </div>
+        </ng-container>
+        
+        <ng-container *ngIf="teacherPermission">
         <div class="viewer-container">
-
             <h2 class="badge-heading">User Badges ({{badgeuserContext}})</h2>
-            <ng-container *ngIf="badges.length == 0">
+            <ng-container *ngIf="badges.length === 0">
                 <p class="no-badges-txt">No user badges</p>
             </ng-container>
             <ng-container *ngIf="badges.length > 0">
@@ -74,6 +85,7 @@ import {HostListener} from "@angular/core";
                 </div>
             </ng-container>
         </div>
+        </ng-container>
     `,
     styleUrls: ["badge-viewer.component.scss"],
 })
@@ -90,8 +102,17 @@ export class BadgeViewerComponent implements OnInit {
     availableImages: {id: number; name: string}[] = [];
 
     givenBadges?: IBadge[];
+    teacherPermission: boolean = false;
+    alerts: Array<{
+        msg: string;
+        type: "warning" | "danger";
+        id?: string;
+    }> = [];
 
-    constructor(private http: HttpClient, private badgeService: BadgeService) {}
+    constructor(
+        private http: HttpClient,
+        protected badgeService: BadgeService
+    ) {}
 
     /**
      * Kuuntelee "Esc"-näppäimen painallusat ja sulkee aviomen dialogin, mikäli näppäintä
@@ -194,7 +215,6 @@ export class BadgeViewerComponent implements OnInit {
 
     /**
      * Tyhjentää badge -taulukon ja kutsuu badge-servicen metodia joka hakee käyttäjälle kuuluvat badget.
-     * @param id käyttäjän id (tällähetkellä käytetään sisäänkirjautuneen käyttäjän ID:tä)
      */
     async getBadges() {
         this.emptyBadges(this.badges);
@@ -206,10 +226,36 @@ export class BadgeViewerComponent implements OnInit {
             console.error("Failed to retrieve the context group.");
             return;
         }
-        this.badges = await this.badgeService.getUserBadges(
-            this.personalGroup?.["1"].id,
-            this.badgegroupContext
+
+        const result = await toPromise(
+            this.http.get<[]>(
+                `/groups_badges/${this.personalGroup?.["1"].id}/${this.badgegroupContext}`
+            )
         );
+        const userBadges: IBadge[] = [];
+        if (result.ok) {
+            this.teacherPermission = true;
+            if (result.result != undefined) {
+                for (const alkio of result.result) {
+                    userBadges.push(alkio);
+                }
+            }
+        }
+        if (!result.ok) {
+            this.badgeService.showError(
+                this.alerts,
+                {
+                    data: {
+                        error:
+                            result.result.error.error +
+                            " If you are a teacher of this context-group, please contact TIM admin.",
+                    },
+                },
+                "danger"
+            );
+            return;
+        }
+        this.badges = userBadges;
     }
 
     async getUserSubGroups(groupContext: string, userid: number) {
@@ -293,7 +339,13 @@ export class BadgeViewerComponent implements OnInit {
 
 @NgModule({
     declarations: [BadgeViewerComponent],
-    imports: [CommonModule, FormsModule, HttpClientModule, BadgeModule],
+    imports: [
+        CommonModule,
+        FormsModule,
+        HttpClientModule,
+        BadgeModule,
+        TimUtilityModule,
+    ],
     exports: [BadgeViewerComponent],
 })
 export class BadgeViewerModule {}
