@@ -1,10 +1,10 @@
 .material-symbols-outlined {
     font-size: 52px;
-    position: absolute;
-    margin-top: 8px;
+    position: relative;
+    margin-top: 10px;
     text-align: center;
     color: white;
-    margin-left: -26px;
+    margin-left: -6px;
     z-index: 1;
 }
 
@@ -65,7 +65,12 @@
 }
 
 .badge.square > .ribbon{
-    bottom: 9px;
+    bottom: -21pxpx;
+}
+
+.badge.square .material-symbols-outlined {
+  margin-top: 9px;
+  margin-left: 0px;
 }
 
 .badge.flower {
@@ -101,13 +106,24 @@
 }
 
 .badge.flower > .ribbon{
-    bottom: 22px;
+    bottom: -11px;
 }
+
+.badge.flower .material-symbols-outlined {
+  margin-top: 17px;
+  margin-left: -11px;
+}
+
 
 .badge.round {
     border-radius: 50%;
     width: 90px;
     height: 90px;
+}
+
+.badge.round .material-symbols-outlined {
+  margin-top: 9px;
+  margin-left: 0px;
 }
 
 .badge:hover {
@@ -129,7 +145,7 @@
     min-width: 100px;
     z-index: 1;
     color: #fff;
-    bottom: 12px;
+    bottom: -22px;
     left: 50%;
     height: 20px;
     font-size: 13px;
