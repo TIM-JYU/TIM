@@ -694,39 +694,48 @@ export class ToggleComponent {
                                 You can show answers only when they don't have an active exam running.<br>
                                 Stop the exam and disable login codes in section '3. Manage exams' to enable showing answers.
                             </tim-alert>
-                            <tim-toggle 
-                                    [(value)]="group.allowAccess"
-                                    [disabled]="group.examState > 0"
-                                    (valueChange)="toggleAllowRestrictedAccess(group)"
-                                    enabledButton="Begin showing answers to students"
-                                    i18n-enabledButton
-                                    disabledButton="End showing answers to students"
-                                    i18n-disabledButton
-                            >
-                            </tim-toggle>
-                            <p class="mt">
-                                <strong i18n>Note: You can only show the answers for the main exam ({{ examByDocId.get(group.examDocId!)?.name }}) and not for the practice exam.</strong>
-                            </p>
-                            <p>
-                                <strong class="text-success" *ngIf="group.allowAccess" i18n>
-                                    Students can access the answers to the exam '{{ examByDocId.get(group.examDocId!)?.name }}'. The access is automatically disabled
-                                    on {{toReadableDate(group.accessAnswersTo ?? '')}}.
-                                </strong>
-                            </p>
-                            <p>
-                                <strong *ngIf="!group.allowAccess" i18n>
-                                    Press the button above to allow students to review their answers for 1 hour.
-                                </strong>
-                            </p>
-                            <h5 i18n>Guide</h5>
-                            <ol>
-                                <li i18n>Make sure the exam is ended and login codes are disabled in section <i>'3. Manage exams'</i></li>
-                                <li i18n>Press the <i>'Begin showing answers to students'</i> button to allow students to review their answers for 1 hour.</li>
-                                <li i18n>Ask students to log in to the exam page using their login codes: <a [href]="getExamUrl(examByDocId.get(group.examDocId!))"><code>{{ getExamUrl(examByDocId.get(group.examDocId!)) }}</code></a></li>
-                                <li i18n>Students can open the exam using the <i>'Open exam'</i> button.</li>
-                                <li i18n>Students can now review their answers. Students cannot submit new answers but can see their answers and model answers (if they are included).</li>
-                                <li i18n>To end the view right, press the <i>'End showing answers to students button'</i>. The right is automatically disabled in 1 hour.</li>
-                            </ol>
+                            <tim-alert *ngIf="group.currentExamDoc && group.currentExamDoc !== group.examDocId" severity="warning" i18n>
+                                You can only show answers for the main exam ({{ examByDocId.get(group.examDocId!)?.name }}) and not for the practice exam.
+                                Change the exam in section '3. Manage exams' to enable showing answers.
+                            </tim-alert>
+                            <tim-alert *ngIf="!group.currentExamDoc" severity="warning" i18n>
+                                Select an exam in section '3. Manage exams' to enable showing answers.
+                            </tim-alert>
+                            <ng-container *ngIf="group.currentExamDoc === group.examDocId">
+                                <tim-toggle 
+                                        [(value)]="group.allowAccess"
+                                        [disabled]="group.examState > 0"
+                                        (valueChange)="toggleAllowRestrictedAccess(group)"
+                                        enabledButton="Begin showing answers to students"
+                                        i18n-enabledButton
+                                        disabledButton="End showing answers to students"
+                                        i18n-disabledButton
+                                >
+                                </tim-toggle>
+                                <p class="mt">
+                                    <strong i18n>Note: You can only show the answers for the main exam ({{ examByDocId.get(group.examDocId!)?.name }}) and not for the practice exam.</strong>
+                                </p>
+                                <p>
+                                    <strong class="text-success" *ngIf="group.allowAccess" i18n>
+                                        Students can access the answers to the exam '{{ examByDocId.get(group.examDocId!)?.name }}'. The access is automatically disabled
+                                        on {{toReadableDate(group.accessAnswersTo ?? '')}}.
+                                    </strong>
+                                </p>
+                                <p>
+                                    <strong *ngIf="!group.allowAccess" i18n>
+                                        Press the button above to allow students to review their answers for 1 hour.
+                                    </strong>
+                                </p>
+                                <h5 i18n>Guide</h5>
+                                <ol>
+                                    <li i18n>Make sure the exam is ended and login codes are disabled in section <i>'3. Manage exams'</i></li>
+                                    <li i18n>Press the <i>'Begin showing answers to students'</i> button to allow students to review their answers for 1 hour.</li>
+                                    <li i18n>Ask students to log in to the exam page using their login codes: <a [href]="getExamUrl(examByDocId.get(group.examDocId!))"><code>{{ getExamUrl(examByDocId.get(group.examDocId!)) }}</code></a></li>
+                                    <li i18n>Students can open the exam using the <i>'Open exam'</i> button.</li>
+                                    <li i18n>Students can now review their answers. Students cannot submit new answers but can see their answers and model answers (if they are included).</li>
+                                    <li i18n>To end the view right, press the <i>'End showing answers to students button'</i>. The right is automatically disabled in 1 hour.</li>
+                                </ol>
+                            </ng-container>
                         </tab>
                     </tabset>
                 </bootstrap-panel>

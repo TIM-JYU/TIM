@@ -10548,6 +10548,22 @@ Separate multiple addresses with commas or write each address on a new line.</ta
           <context context-type="linenumber">63</context>
         </context-group>
       </trans-unit>
+      <trans-unit id="3606771354880883563" datatype="html">
+        <source> You can only show answers for the main exam (<x id="INTERPOLATION" equiv-text="{{ examByDocId.get(group.examDocId!)?.name }}"/>) and not for the practice exam. Change the exam in section &apos;3. Manage exams&apos; to enable showing answers. </source>
+        <target state="new"> You can only show answers for the main exam (<x id="INTERPOLATION" equiv-text="{{ examByDocId.get(group.examDocId!)?.name }}"/>) and not for the practice exam. Change the exam in section &apos;3. Manage exams&apos; to enable showing answers. </target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
+          <context context-type="linenumber">698,699</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="4454548802259509672" datatype="html">
+        <source> Select an exam in section &apos;3. Manage exams&apos; to enable showing answers. </source>
+        <target state="new"> Select an exam in section &apos;3. Manage exams&apos; to enable showing answers. </target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
+          <context context-type="linenumber">702</context>
+        </context-group>
+      </trans-unit>
     </body>
   </file>
 </xliff>

@@ -10643,6 +10643,22 @@ Syötä useiden käyttäjien osoitteet allekkain tai pilkulla erotettuina.</targ
           <context context-type="linenumber">63</context>
         </context-group>
       </trans-unit>
+      <trans-unit id="3606771354880883563" datatype="html">
+        <source> You can only show answers for the main exam (<x id="INTERPOLATION" equiv-text="{{ examByDocId.get(group.examDocId!)?.name }}"/>) and not for the practice exam. Change the exam in section '3. Manage exams' to enable showing answers. </source>
+        <target state="translated"> Voit näyttää vain varsinaisen kokeen (<x id="INTERPOLATION" equiv-text="{{ examByDocId.get(group.examDocId!)?.name }}"/>) vastauksia. Harjoituskokeen vastausten näyttämistä ei vielä tueta. Vaihda koe kohdassa "3. Hallinnoi kokeita" voidaksesi näyttää vastauksia. </target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
+          <context context-type="linenumber">698,699</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="4454548802259509672" datatype="html">
+        <source> Select an exam in section '3. Manage exams' to enable showing answers. </source>
+        <target state="translated"> Valitse koe kohdassa "3. Hallinnoi kokeita" voidaksesi näyttää vastauksia. </target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
+          <context context-type="linenumber">702</context>
+        </context-group>
+      </trans-unit>
     </body>
   </file>
 </xliff>
