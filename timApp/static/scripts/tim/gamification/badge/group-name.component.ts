@@ -53,7 +53,10 @@ export class GroupNameComponent implements OnInit {
     constructor(private badgeService: BadgeService) {}
 
     /**
-     * TODO: Kommentoitu koodin pätkä toimii, jos routes.py:ssä käytetään returnissa .human_name
+     * TODO: Muuta hakemaan myös description, jota muokataan savessa
+     * TODO: korjaa nimen päivittymistä komponennttin
+     * TODO: Laita muutetut "pretty namet" päivittymään myös muihin komponentteihin, esim. giverin group valintaan
+     * TODO: oma service ja metodien siirto sinne?
      */
     async getGroupName() {
         if (!this.group) {
