@@ -774,14 +774,25 @@ def group_name(name: str):
     return error_generic("there's no group with name: " + name, 404)
 
 
-@badges_blueprint.post("/update_group_name")
-def change_title(item_id: int, group_name: str) -> Response:
-
-    group = UserGroup.get_by_name(group_name)
-    doc = group.admin_doc
-    doc.description =
-
-    #item = get_item_or_abort(item_id)
-    #item.title = group_name
-    #db.session.commit()
-    return ok_response()
+@badges_blueprint.post("/editGroupName/<group_name>/<new_name>")
+def change_group_name(group_name: str, new_name: str) -> Response:
+    """
+    Changes groups description block (pretty name)
+    :param group_name: full group name
+    :param new_name: new group name (pretty name)
+    :return: new description
+    """
+    usergroup = UserGroup.get_by_name(group_name)
+    if not usergroup:
+        return error_generic("there's no group with name: " + group_name, 404)
+    doc = usergroup.admin_doc
+    if not doc:
+        return error_generic("no rights", 404)
+    verify_teacher_access(doc)
+    doc.description = new_name
+    # doc.save()
+    db.session.commit()
+    # return ok_response()
+    return json_response(
+        {"id": usergroup.id, "name": usergroup.name, "description": doc.description}
+    )

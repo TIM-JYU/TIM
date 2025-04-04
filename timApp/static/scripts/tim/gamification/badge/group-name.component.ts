@@ -21,7 +21,7 @@ import {IFolder, IFullDocument} from "tim/item/IItem";
     template: `
         <ng-container>
             <div class="current">
-                <p>Current group name: <b>{{ showFullName ? groupName : subGroup }}</b></p>
+                <p>Current group name: <b>{{ showFullName ? displayedName : subGroup }}</b></p>
             </div>
             <div class="changeName">
                 <button (click)="toggleFullName()">Toggle parent group</button>
@@ -56,44 +56,54 @@ export class GroupNameComponent implements OnInit {
      * TODO: Kommentoitu koodin pätkä toimii, jos routes.py:ssä käytetään returnissa .human_name
      */
     async getGroupName() {
-        if (this.group) {
-            const fetchedGroup = await this.badgeService.getCurrentGroup(
-                this.group
-            );
-            if (fetchedGroup) {
-                this.groupName = fetchedGroup.name;
-                this.group_id = fetchedGroup.id; // Assign ID as well
-                this.storedGroup = {
-                    name: fetchedGroup.name,
-                    id: fetchedGroup.id,
-                }; // Store fetched group
-                console.log(fetchedGroup);
-            }
+        if (!this.group) {
+            return;
         }
-        this.parseParentGroup(this.groupName);
+
+        const fetchedGroup = await this.badgeService.getCurrentGroup(
+            this.group
+        );
+        if (fetchedGroup) {
+            // Use description (pretty name) if it exists, fallback to group name
+            this.groupName = fetchedGroup.name; // store raw name for parsing
+            this.group_id = fetchedGroup.id;
+            this.storedGroup = {
+                name: fetchedGroup.name,
+                id: fetchedGroup.id,
+            };
+
+            // Set the display name shown to users
+            this.displayedName = fetchedGroup.description || fetchedGroup.name;
+
+            // Split the raw group name to show subgroup if needed
+            this.parseParentGroup(fetchedGroup.name);
+        }
     }
 
     //TODO: placeholder input kenttään, halutaan vain aliryhmän nimi
 
     async saveName() {
-        if (this.newName.valid) {
-            this.groupName = this.newName.value;
-            this.showInput = false;
+        if (!this.newName.valid || !this.storedGroup || !this.newName.value) {
+            return;
         }
 
-        if (this.storedGroup) {
-            // Access stored group name and ID
-            console.log(this.storedGroup.id);
-            console.log(this.storedGroup.name);
-
-            // Call your badgeService with the storedGroup information
+        try {
             await this.badgeService.updateGroupName(
-                this.storedGroup.id,
-                this.storedGroup.name,
+                this.storedGroup.id, // this is okay to keep even if unused
+                this.storedGroup.name, // used in URL
                 this.newName.value
             );
+
+            // Update UI
+            this.groupName = this.newName.value;
+            this.parseParentGroup(this.groupName); // update displayed subGroup
+            this.showInput = false;
+
+            console.log("Name successfully changed to:", this.groupName);
+        } catch (error) {
+            console.error("Failed to update group name:", error);
+            alert("Could not update group name. Please try again.");
         }
-        return "Name successfully changed to: " + this.groupName;
     }
 
     parseParentGroup(groupName: string | null) {

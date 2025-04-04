@@ -211,11 +211,10 @@ export class BadgeService {
         new_name: string | null
     ) {
         const response = toPromise(
-            this.http.post<{ok: boolean}>("/update_group_name", {
-                item_id: group_id,
-                group_name: group_name,
-                description: new_name,
-            })
+            this.http.post<{ok: boolean}>(
+                `/editGroupName/${group_name}/${new_name}`,
+                {}
+            )
         );
         const result = await response;
         if (result.ok) {
