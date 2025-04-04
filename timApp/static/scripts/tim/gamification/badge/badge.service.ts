@@ -178,10 +178,6 @@ export class BadgeService {
         const result = await response;
 
         if (result.ok) {
-            console.log(
-                `Fetched personal group for user: ${userName}`,
-                result.result
-            );
             return result.result;
         } else {
             console.error(
