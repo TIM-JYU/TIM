@@ -17,6 +17,7 @@ import {BadgeModule} from "tim/gamification/badge/badge.component";
 import {BadgeService} from "tim/gamification/badge/badge.service";
 import {documentglobals} from "tim/util/globals";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
+import {cons} from "fp-ts/ReadonlyNonEmptyArray";
 
 @Component({
     selector: "timBadgeGiver",
@@ -24,7 +25,7 @@ import {TimUtilityModule} from "tim/ui/tim-utility.module";
         <ng-container *ngIf="hasPermission; else noPermissionView">
             <div *ngIf="showComponent" class="badge-giver">
                 <h2>Badge Giver</h2>
-                
+
                 <!-- Preview of the selected badge -->
                 <div *ngIf="selectedBadge" class="badge-preview">
                     <label for="preview">Preview</label>
@@ -39,7 +40,7 @@ import {TimUtilityModule} from "tim/ui/tim-utility.module";
                         </tim-badge>
                     </div>
                 </div>
-                
+
                 <div class="user-group-button-container">
                     <button (click)="handleSwap(true); fetchUsersFromGroups()" [disabled]="userAssign === true">
                         Assign badge to a user
@@ -48,73 +49,79 @@ import {TimUtilityModule} from "tim/ui/tim-utility.module";
                         Assign badge to a group
                     </button>
                 </div>
-                
+
                 <div *ngIf="userAssign === true" class="form-group">
                     <label>Users</label>
                     <div *ngFor="let group of groups">
-                        <span class="option-name" (click)="handleGroupSelection(group)" [ngClass]="{'selected-option': selectedGroup?.id === group.id}">
+                        <span class="option-name" (click)="handleGroupSelection(group)"
+                              [ngClass]="{'selected-option': selectedGroup?.id === group.id}">
                             {{ prettyGroupName(group.name) }}
                         </span>
-                            <div><input class="selectall-checkbox" type="checkbox" (change)="toggleSelectAll(group, $event)">Select all</div>
-                            <div *ngFor="let user of groupUsersMap.get(group.id)" class="option-item">
-                                <input class="user-checkbox"
-                                    type="checkbox" 
-                                    [value]="user" 
-                                    [checked]="isAllSelectedMap.get(group.id)" 
-                                    (change)="toggleUserSelection(user, $event)"
-                                />
-                                <div class="option-name" (click)="handleUserSelection(user)" [ngClass]="{'selected-option': selectedUser?.id === user.id}">
-                                    {{user.real_name}}
-                                </div>
+                        <div *ngIf="groupUsersMap.get(group.id)?.length">
+                            <input class="selectall-checkbox" type="checkbox" (change)="toggleSelectAll(group, $event)">Select
+                            all
+                        </div>
+                        <div *ngFor="let user of groupUsersMap.get(group.id)" class="option-item">
+                            <input class="user-checkbox"
+                                   type="checkbox"
+                                   [value]="user"
+                                   [checked]="isAllSelectedMap.get(group.id)"
+                                   (change)="toggleUserSelection(user, $event)"
+                            />
+                            <div class="option-name" (click)="handleUserSelection(user)"
+                                 [ngClass]="{'selected-option': selectedUser?.id === user.id}">
+                                {{ user.real_name }}
                             </div>
-                        
+                        </div>
                     </div>
                 </div>
-                
+
                 <div *ngIf="userAssign === false" class="form-group">
                     <label>Groups</label>
                     <div *ngFor="let group of groups" class="group-item">
                         <input class="group-checkbox"
-                            type="checkbox" 
-                            [value]="group" 
-                            (change)="toggleGroupSelection(group, $event)"
+                               type="checkbox"
+                               [value]="group"
+                               (change)="toggleGroupSelection(group, $event)"
                         />
-                        <span class="option-name" (click)="handleGroupSelection(group); fetchGroupBadges(group.id);" [ngClass]="{'selected-option': selectedGroup?.id === group.id}">
+                        <span class="option-name" (click)="handleGroupSelection(group); fetchGroupBadges(group.id);"
+                              [ngClass]="{'selected-option': selectedGroup?.id === group.id}">
                             {{ prettyGroupName(group.name) }}
                         </span>
                         <div class="group-users" *ngIf="selectedGroup === group">
                             <div *ngFor="let user of users">
-                                <div class="user-name">{{user.real_name}}</div>
+                                <div class="user-name">{{ user.real_name }}</div>
                             </div>
                         </div>
                     </div>
                 </div>
-                
+
                 <div *ngIf="userAssign != undefined">
                     <div class="message-container">
-                        
+
                         <!-- Message Box -->
                         <div class="message-box">
                             <label for="message">Message</label>
-                            <textarea id="message" rows="6" [(ngModel)]="message" placeholder="Enter a message..."></textarea>
+                            <textarea id="message" rows="6" [(ngModel)]="message"
+                                      placeholder="Enter a message..."></textarea>
                         </div>
-                        
+
                         <!-- Assigned Badges -->
                         <!-- Group -->
                         <div class="badges-box" *ngIf="userAssign === false">
                             <label for="user_badges">
-                                Assigned Badges {{selectedGroup ? selectedGroup.name : ''}}
+                                Assigned Badges {{ selectedGroup ? selectedGroup.name : '' }}
                             </label>
                             <ng-container *ngIf="groupBadges.length > 0 && selectedGroup">
                                 <div class="user_badges_scroll">
                                     <div class="badge-card" *ngFor="let badge of groupBadges">
                                         <tim-badge
-                                                   [title]="badge.title"
-                                                   [color]="badge.color"
-                                                   [shape]="badge.shape"
-                                                   [image]="badge.image"
-                                                   [description]="badge.description"
-                                                   [message]="badge.message">
+                                                [title]="badge.title"
+                                                [color]="badge.color"
+                                                [shape]="badge.shape"
+                                                [image]="badge.image"
+                                                [description]="badge.description"
+                                                [message]="badge.message">
                                         </tim-badge>
                                     </div>
                                 </div>
@@ -123,7 +130,7 @@ import {TimUtilityModule} from "tim/ui/tim-utility.module";
                                 <p>No assigned badges</p>
                             </ng-container>
                         </div>
-                        
+
                         <!-- User -->
                         <div class="badges-box" *ngIf="userAssign === true">
                             <label for="user_badges" *ngIf="selectedUser?.name != undefined">
@@ -134,18 +141,18 @@ import {TimUtilityModule} from "tim/ui/tim-utility.module";
                             </label>
                             <div class="viewer-container">
                                 <ng-container *ngIf="userBadges.length > 0 && selectedUser">
-                                <div class="user_badges_scroll">
-                                    <div class="badge-card" *ngFor="let badge of userBadges">
-                                        <tim-badge
-                                                   title="{{badge.title}}" 
-                                                   color="{{badge.color}}" 
-                                                   shape="{{badge.shape}}"
-                                                   [image]="badge.image"
-                                                   description="{{badge.description}}"
-                                                   message="{{badge.message}}">
-                                        </tim-badge>
+                                    <div class="user_badges_scroll">
+                                        <div class="badge-card" *ngFor="let badge of userBadges">
+                                            <tim-badge
+                                                    title="{{badge.title}}"
+                                                    color="{{badge.color}}"
+                                                    shape="{{badge.shape}}"
+                                                    [image]="badge.image"
+                                                    description="{{badge.description}}"
+                                                    message="{{badge.message}}">
+                                            </tim-badge>
+                                        </div>
                                     </div>
-                                </div>
                                 </ng-container>
                                 <ng-container *ngIf="selectedUser && userBadges.length == 0">
                                     <p>No assigned badges</p>
@@ -153,13 +160,15 @@ import {TimUtilityModule} from "tim/ui/tim-utility.module";
                             </div>
                         </div>
                     </div>
-                    
-                    <tim-alert *ngFor="let alert of alerts; let i = index" [severity]="alert.type" [closeable]="true" (closing)="badgeService.closeAlert(this.alerts, i)">
+
+                    <tim-alert *ngFor="let alert of alerts; let i = index" [severity]="alert.type" [closeable]="true"
+                               (closing)="badgeService.closeAlert(this.alerts, i)">
                         <div [innerHTML]="alert.msg"></div>
                     </tim-alert>
-                    
+
                     <div class="button-container">
-                        <button (click)="assignBadge(message)" [disabled]="selectedUsers.length === 0 && selectedGroups.length === 0">
+                        <button (click)="assignBadge(message)"
+                                [disabled]="selectedUsers.length === 0 && selectedGroups.length === 0">
                             Assign Badge
                         </button>
                         <button id="cancelGiveButton" (click)="emptyForm()">Cancel</button>
@@ -167,7 +176,7 @@ import {TimUtilityModule} from "tim/ui/tim-utility.module";
                 </div>
             </div>
         </ng-container>
-        
+
         <ng-template #noPermissionView>
             <p>Access denied for students.</p>
         </ng-template>
@@ -242,8 +251,12 @@ export class BadgeGiverComponent implements OnInit {
         this.selectedGroup = null;
         this.message = "";
         this.showComponent = false;
-        this.userBadges = [];
-        this.groupBadges = [];
+        this.emptyTable(this.userBadges);
+        this.emptyTable(this.groupBadges);
+        this.emptyTable(this.selectedUsers);
+        this.emptyTable(this.selectedGroups);
+        this.groupUsersMap.clear();
+        this.isAllSelectedMap.clear();
         this.cancelEvent.emit(); // Lähettää tiedon vanhemmalle
     }
 
@@ -251,6 +264,7 @@ export class BadgeGiverComponent implements OnInit {
         const isChecked = (event.target as HTMLInputElement).checked;
         if (isChecked) {
             this.selectedUsers.push(user);
+            console.log("single: ", this.selectedUsers);
             return;
         }
         this.selectedUsers = this.selectedUsers.filter((u) => u.id !== user.id);
@@ -268,19 +282,28 @@ export class BadgeGiverComponent implements OnInit {
 
     toggleSelectAll(group: IGroup, event: Event) {
         const isChecked = (event.target as HTMLInputElement).checked;
-        const users = this.groupUsersMap.get(group.id);
-        if (users === undefined) {
+        const groupUsers = this.groupUsersMap.get(group.id);
+        if (groupUsers === undefined) {
             return;
-        }
-        while (this.selectedUsers.length > 0) {
-            this.selectedUsers.pop();
         }
         if (isChecked) {
-            for (const user of users) {
-                this.selectedUsers.push(user);
+            for (const user of groupUsers) {
+                const hasSameUser = this.selectedUsers.some(
+                    (u) => u.id === user.id
+                );
+                if (!hasSameUser) {
+                    this.selectedUsers.push(user);
+                }
             }
             this.isAllSelectedMap.set(group.id, true);
+            console.log("selectall: ", this.selectedUsers);
             return;
+        }
+
+        for (const user of groupUsers) {
+            this.selectedUsers = this.selectedUsers.filter(
+                (u) => u.id !== user.id
+            );
         }
         this.isAllSelectedMap.set(group.id, false);
     }
@@ -288,12 +311,8 @@ export class BadgeGiverComponent implements OnInit {
     handleSwap(bool: boolean) {
         this.userAssign = bool;
         this.selectedGroup = null;
-        while (this.selectedUsers.length > 0) {
-            this.selectedUsers.pop();
-        }
-        while (this.selectedGroups.length > 0) {
-            this.selectedGroups.pop();
-        }
+        this.emptyTable(this.selectedUsers);
+        this.emptyTable(this.selectedGroups);
     }
 
     handleUserSelection(user: IUser) {
@@ -342,7 +361,6 @@ export class BadgeGiverComponent implements OnInit {
             );
             this.isAllSelectedMap.set(group.id, false);
         }
-        console.log(this.groupUsersMap);
     }
     /**
      * Tarkistaa onko annettu parametri undefined. Jos true niin lähdetään pois.
@@ -352,7 +370,7 @@ export class BadgeGiverComponent implements OnInit {
      *
      */
     async fetchUserBadges(selectedUser: IUser) {
-        this.emptyBadges(this.userBadges);
+        this.emptyTable(this.userBadges);
         if (!selectedUser) {
             console.error("Selected user was undefined");
             return;
@@ -382,7 +400,7 @@ export class BadgeGiverComponent implements OnInit {
             console.error("Failed to retrieve the context group.");
             return;
         }
-        this.emptyBadges(this.groupBadges);
+        this.emptyTable(this.groupBadges);
         this.groupBadges = await this.badgeService.getUserBadges(
             groupId,
             this.badgegroupContext
@@ -443,9 +461,9 @@ export class BadgeGiverComponent implements OnInit {
     /**
      * Tyhjentää attribuuttina annetun taulukon
      */
-    emptyBadges(badges: IBadge[]) {
-        while (badges.length > 0) {
-            badges.pop();
+    emptyTable(taulukko: any[]) {
+        while (taulukko.length > 0) {
+            taulukko.pop();
         }
     }
 
