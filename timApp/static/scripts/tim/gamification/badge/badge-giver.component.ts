@@ -264,7 +264,6 @@ export class BadgeGiverComponent implements OnInit {
         const isChecked = (event.target as HTMLInputElement).checked;
         if (isChecked) {
             this.selectedUsers.push(user);
-            console.log("single: ", this.selectedUsers);
             return;
         }
         this.selectedUsers = this.selectedUsers.filter((u) => u.id !== user.id);
@@ -296,7 +295,6 @@ export class BadgeGiverComponent implements OnInit {
                 }
             }
             this.isAllSelectedMap.set(group.id, true);
-            console.log("selectall: ", this.selectedUsers);
             return;
         }
 
