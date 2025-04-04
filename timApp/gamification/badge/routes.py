@@ -2,11 +2,16 @@
 from dataclasses import dataclass
 from operator import attrgetter
 from pathlib import Path
+from urllib import request
 
 from flask import Response, current_app
 from sqlalchemy import select, or_
 
-from timApp.auth.accesshelper import AccessDenied, verify_teacher_access
+from timApp.auth.accesshelper import (
+    AccessDenied,
+    verify_teacher_access,
+    get_item_or_abort,
+)
 from timApp.auth.sessioninfo import get_current_user_object
 from timApp.document.docentry import DocEntry
 from timApp.gamification.badge.badges import Badge, BadgeGiven
@@ -795,10 +800,39 @@ def usergroups_members(doc_id: int, usergroup_name: str) -> Response:
     return json_response(sorted(list(usergroup.users), key=attrgetter("real_name")))
 
 
-# Get current group
 @badges_blueprint.get("/current_group_name/<name>")
+# TODO: päätä, käytetäänkö returnissa .human_namea, joka hakee vain descriptionin, ei id:tä
 def group_name(name: str):
+    """
+    Fetches group name from the database.
+    :param name: Name of the group given in group changer
+    :return: group name
+    """
     group = UserGroup.get_by_name(name)
     if group:
         return json_response(group)
     return error_generic("there's no group with name: " + name, 404)
+
+
+@badges_blueprint.post("/editGroupName/<group_name>/<new_name>")
+def change_group_name(group_name: str, new_name: str) -> Response:
+    """
+    Changes groups description block (pretty name)
+    :param group_name: full group name
+    :param new_name: new group name (pretty name)
+    :return: new description
+    """
+    usergroup = UserGroup.get_by_name(group_name)
+    if not usergroup:
+        return error_generic("there's no group with name: " + group_name, 404)
+    doc = usergroup.admin_doc
+    if not doc:
+        return error_generic("no rights", 404)
+    verify_teacher_access(doc)
+    doc.description = new_name
+    # doc.save()
+    db.session.commit()
+    # return ok_response()
+    return json_response(
+        {"id": usergroup.id, "name": usergroup.name, "description": doc.description}
+    )
