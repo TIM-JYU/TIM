@@ -1,0 +1,60 @@
+:host {
+    display: block;
+    margin: 1rem 0;
+    padding: 1rem;
+    border-radius: 1rem;
+    background-color: #f5f8ff; // soft light blue
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+    transition: all 0.3s ease;
+}
+
+.current p {
+    margin: 0 0 1rem 0;
+    font-size: 1.1rem;
+    color: #333;
+
+    b {
+        color: #2a4d9b;
+    }
+}
+
+.changeName {
+    margin-bottom: 1rem;
+
+    button {
+        margin-right: 0.5rem;
+        padding: 0.4rem 0.8rem;
+        background-color: #2a4d9b;
+        color: #fff;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 0.9rem;
+        transition: background-color 0.2s;
+
+        &:hover {
+            background-color: #1e3a7a;
+        }
+    }
+}
+
+input {
+    padding: 0.4rem;
+    margin-right: 0.5rem;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    font-size: 0.95rem;
+    width: 250px;
+
+    &:focus {
+        outline: none;
+        border-color: #2a4d9b;
+        box-shadow: 0 0 0 2px rgba(42, 77, 155, 0.2);
+    }
+}
+
+button:disabled {
+    background-color: #999;
+    cursor: not-allowed;
+}
