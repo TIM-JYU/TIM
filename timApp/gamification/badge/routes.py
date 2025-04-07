@@ -6,6 +6,7 @@ from urllib import request
 
 from flask import Response, current_app
 from sqlalchemy import select, or_
+from wtforms.widgets.core import Select
 
 from timApp.auth.accesshelper import (
     AccessDenied,
@@ -548,14 +549,14 @@ def get_groups_badges(group_id: int, context_group: str) -> Response:
 
 
 # TODO: Handle errors.
-@badges_blueprint.get("/badge_holders/<badge_id>")
-def get_badge_holders(badge_id: int) -> Response:
+@badges_blueprint.get("/badge_given/<badge_id>")
+def get_badge_given(badge_id: int) -> Response:
     """
     Fetches holders of given badges.
     :param badge_id: ID of the badge
     :return: Badgegivens in json response format
     """
-    badge_holders = (
+    badge_given = (
         run_sql(
             select(BadgeGiven)
             .filter(BadgeGiven.active)
@@ -564,7 +565,34 @@ def get_badge_holders(badge_id: int) -> Response:
         .scalars()
         .all()
     )
-    return json_response(badge_holders)
+    return json_response(badge_given)
+
+
+# TODO: Do access right checks.
+@badges_blueprint.get("/badge_holders/<badge_id>")
+def get_badge_holders(badge_id: int) -> Response:
+    """
+    Fetches all usergroups that holds certain badge.
+    :param badge_id: Badge ID
+    :return: list of usergroups in json format
+    """
+    badges_given = (
+        run_sql(
+            select(BadgeGiven).filter(
+                BadgeGiven.badge_id == badge_id, BadgeGiven.active
+            )
+        )
+        .scalars()
+        .all()
+    )
+    group_ids = []
+    for badge_given in badges_given:
+        group_ids.append(badge_given.group_id)
+    unique_group_ids = list(set(group_ids))
+    user_groups = []
+    for unique_group_id in unique_group_ids:
+        user_groups.append(UserGroup.get_by_id(unique_group_id))
+    return json_response(user_groups)
 
 
 # TODO: Handle errors.

@@ -526,7 +526,7 @@ export class BadgeCreatorComponent implements OnInit {
 
     async isBadgeAssigned() {
         const response = await toPromise(
-            this.http.get<any>(`/badge_holders/${this.clickedBadge.id}`)
+            this.http.get<any>(`/badge_given/${this.clickedBadge.id}`)
         );
         if (response.result.length > 0) {
             return true;
