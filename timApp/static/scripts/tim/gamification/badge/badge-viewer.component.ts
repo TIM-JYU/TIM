@@ -193,9 +193,14 @@ export class BadgeViewerComponent implements OnInit {
             }
         );
 
-        // Wait for the dialog to close
-        await this.badgeService.activeDialogRef.result;
-        this.badgeService.activeDialogRef = null; // Reset the reference after closing
+        // Wait for the dialog to close and handle rejection when closed via the X button
+        try {
+            await this.badgeService.activeDialogRef.result;
+        } catch (error) {
+            // console.log here if needed
+        } finally {
+            this.badgeService.activeDialogRef = null;
+        }
     }
 
     /**
