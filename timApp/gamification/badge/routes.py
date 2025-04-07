@@ -681,6 +681,46 @@ def withdraw_badge(
     return ok_response()
 
 
+# TODO: Handle errors.
+@badges_blueprint.post("/withdraw_all_badges")
+def withdraw_all_badges(
+    badge_id: int, usergroup_id: int, withdrawn_by: int, context_group: str
+) -> Response:
+    """
+    Withdraws all badges of given ID from a usergroup.
+    :param usergroup_id: ID of the usergroup
+    :param context_group: Context group where the badge is included
+    :param badge_id: ID of the badge
+    :param withdrawn_by: ID of the useraccount that withdraws the badge
+    :return: ok response
+    """
+    d = DocEntry.find_by_path(f"groups/{context_group}")
+    if not d:
+        raise NotExist()
+    verify_teacher_access(d)
+    badge_given = {
+        "active": False,
+        "withdrawn_by": withdrawn_by,
+        "withdrawn": datetime_tz.now(),
+    }
+    BadgeGiven.query.filter(
+        BadgeGiven.badge_id == badge_id, BadgeGiven.group_id == usergroup_id
+    ).update(badge_given)
+    db.session.commit()
+    if current_app.config["BADGE_LOG_FILE"]:
+        log_badge_event(
+            {
+                "event": "withdraw_all_badges",
+                "timestamp": badge_given["withdrawn"],
+                "badge_id": badge_id,
+                "usergroup_id": usergroup_id,
+                "executor": badge_given["withdrawn_by"],
+                "active": badge_given["active"],
+            }
+        )
+    return ok_response()
+
+
 # TODO: Not yet in use.
 # TODO: Handle errors.
 @badges_blueprint.get("/undo_withdraw_badge")
