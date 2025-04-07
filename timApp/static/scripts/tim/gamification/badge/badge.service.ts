@@ -171,6 +171,29 @@ export class BadgeService {
         }
     }
 
+    async withdrawSelectedBadge(
+        userid: number,
+        badgeid: number,
+        giverid: number,
+        contextGroup: string
+    ) {
+        const response = toPromise(
+            this.http.post<{ok: boolean}>("/withdraw_all_badges", {
+                badge_id: badgeid,
+                usergroup_id: userid,
+                withdrawn_by: giverid,
+                context_group: contextGroup,
+            })
+        );
+        const result = await response;
+        if (result.ok) {
+            this.triggerUpdateBadgeList();
+            return {ok: true};
+        } else {
+            return {ok: false, data: result};
+        }
+    }
+
     async getUserAndPersonalGroup(userName: string | undefined) {
         const response = toPromise(
             this.http.get<any>(`/user_and_personal_group/${userName}`)
