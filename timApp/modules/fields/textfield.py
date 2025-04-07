@@ -28,7 +28,6 @@ class TextfieldMarkupModel(GenericMarkupModel):
     clearstyles: bool | Missing = missing
     cols: int | Missing = missing
     errormessage: str | Missing | None = missing
-    form: bool | Missing = missing
     rows: int | Missing = missing
     ignorestyles: bool | Missing = missing
     initword: str | Missing | None = missing
