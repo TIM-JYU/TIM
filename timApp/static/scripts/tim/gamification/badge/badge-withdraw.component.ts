@@ -17,7 +17,6 @@ import {Users} from "tim/user/userService";
 import {showConfirm} from "tim/ui/showConfirmDialog";
 import {Subscription} from "rxjs";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
-import answer from "../../../../../modules/jsrunner/server/routes/answer";
 
 @Component({
     selector: "tim-badge-withdraw",
@@ -42,8 +41,7 @@ import answer from "../../../../../modules/jsrunner/server/routes/answer";
                             {{user.real_name}}
                         </span>
                     </div>
-                
-                
+                    
                     <ng-container *ngIf="userBadges.length > 0">
                         <p *ngIf="selectedUser?.name != undefined">{{ selectedUser?.real_name }}'s badges</p>
                         <div class="user_badges" (wheel)="onScroll($event)">
@@ -96,9 +94,7 @@ import answer from "../../../../../modules/jsrunner/server/routes/answer";
                 <tim-alert *ngFor="let alert of alerts; let i = index" [severity]="alert.type" [closeable]="true" (closing)="badgeService.closeAlert(this.alerts, i)">
                     <div [innerHTML]="alert.msg"></div>
                 </tim-alert>
-
                 
-
                 <ng-container *ngIf="userAssign != undefined">
                     <div class="button-container">
                             <button id="assignButton" (click)="removeBadge(selectedBadge?.badgegiven_id)" 
