@@ -173,6 +173,17 @@ export class BadgeViewerComponent implements OnInit {
             return;
         }
 
+        const formattedBadgeTime: string = new Date(badge.given).toLocaleString(
+            "fi-FI",
+            {
+                hour: "2-digit",
+                minute: "2-digit",
+                day: "2-digit",
+                month: "2-digit",
+                year: "numeric",
+            }
+        );
+
         this.badgeService.closeActiveDialog();
         const iconName = this.getImageNameById(badge.image);
         this.badgeService.activeDialogRef = await angularDialog.open(
@@ -181,13 +192,13 @@ export class BadgeViewerComponent implements OnInit {
                 message: `
                     <b>${badge.title}</b><br><br>
                     <b>Description:</b> ${badge.description}<br>
-                    <b>Message:</b> ${badge.message}<br>
+                    <b>Message:</b> ${badge.message}<br><br>  
                     <b>Icon:</b> ${iconName}<br>
                     <b>Color:</b> ${badge.color}<br>
-                    <b>Shape:</b> ${badge.shape}<br> 
-                    <b>Given time:</b> ${badge.given}<br> 
+                    <b>Shape:</b> ${badge.shape}<br><br>  
+                    <b>Given time:</b> ${formattedBadgeTime}<br> 
                     <b>Created by:</b> ${badge.given_by_name}<br>     
-                    <b>Given by:</b> ${badge.created_by_name}<br>                              
+                    <b>Given by:</b> ${badge.created_by_name}<br>                             
             `,
                 modal: false,
             }
