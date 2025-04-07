@@ -244,6 +244,7 @@ class GenericMarkupModel(KnownMarkupFields):
     disableUnchanged: bool | Missing | None = missing
     footer: str | Missing = missing
     forceBrowser: bool | Missing | None = missing
+    form: bool | Missing = missing
     globalField: bool | Missing | None = missing
     lang: str | None | Missing = missing
     resetText: str | Missing | None = missing
