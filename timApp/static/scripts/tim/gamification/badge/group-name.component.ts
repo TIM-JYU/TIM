@@ -26,6 +26,10 @@ import {IFolder, IFullDocument} from "tim/item/IItem";
             </div>
             <div class="changeName">
                 <button (click)="toggleInput()">Change group name</button>
+                <button (click)="toggleFullName()">
+    {{ showFullName ? "Show sub-group only" : "Show full group name" }}
+</button>
+
             </div>
             <div *ngIf="showInput">
                 <input [formControl]="newName" placeholder="Enter new group name"/>
@@ -112,6 +116,15 @@ export class GroupNameComponent implements OnInit {
         this.parentGroup = nameParts[0];
         this.subGroup = nameParts.slice(1).join(".");
         this.displayedName = this.subGroup;
+    }
+
+    toggleFullName() {
+        this.showFullName = !this.showFullName;
+        if (this.showFullName) {
+            this.displayedName = this.groupName;
+        } else {
+            this.displayedName = this.subGroup;
+        }
     }
 
     toggleInput() {
