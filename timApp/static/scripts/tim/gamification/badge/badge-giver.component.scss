@@ -228,8 +228,9 @@ button:disabled {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 5px;
+  //padding: 5px;
   text-align: center;
+  padding: 0 25px;
 }
 
 .badge-card tim-badge {

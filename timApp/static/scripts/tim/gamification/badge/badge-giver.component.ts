@@ -119,9 +119,7 @@ import {cons} from "fp-ts/ReadonlyNonEmptyArray";
                                                 [title]="badge.title"
                                                 [color]="badge.color"
                                                 [shape]="badge.shape"
-                                                [image]="badge.image"
-                                                [description]="badge.description"
-                                                [message]="badge.message">
+                                                [image]="badge.image">
                                         </tim-badge>
                                     </div>
                                 </div>
@@ -147,9 +145,7 @@ import {cons} from "fp-ts/ReadonlyNonEmptyArray";
                                                     title="{{badge.title}}"
                                                     color="{{badge.color}}"
                                                     shape="{{badge.shape}}"
-                                                    [image]="badge.image"
-                                                    description="{{badge.description}}"
-                                                    message="{{badge.message}}">
+                                                    [image]="badge.image">
                                             </tim-badge>
                                         </div>
                                     </div>
