@@ -2,17 +2,11 @@
 from dataclasses import dataclass
 from operator import attrgetter
 from pathlib import Path
-from urllib import request
 
 from flask import Response, current_app
 from sqlalchemy import select, or_
-from wtforms.widgets.core import Select
 
-from timApp.auth.accesshelper import (
-    AccessDenied,
-    verify_teacher_access,
-    get_item_or_abort,
-)
+from timApp.auth.accesshelper import verify_teacher_access
 from timApp.auth.sessioninfo import get_current_user_object
 from timApp.document.docentry import DocEntry
 from timApp.gamification.badge.badges import Badge, BadgeGiven
@@ -77,20 +71,22 @@ def check_group_member(usergroup: int) -> bool:
     context_usergroup = (
         run_sql(select(UserGroup).filter(UserGroup.id == usergroup)).scalars().first()
     )
-    allowed_member = (
-        run_sql(
-            select(UserGroupMember).filter(
-                UserGroupMember.user_id == current_user.id,
-                UserGroupMember.usergroup_id == context_usergroup.id,
-                or_(
-                    UserGroupMember.membership_end > datetime_tz.now(),
-                    UserGroupMember.membership_end == None,
-                ),
+    allowed_member = None
+    if context_usergroup:
+        allowed_member = (
+            run_sql(
+                select(UserGroupMember).filter(
+                    UserGroupMember.user_id == current_user.id,
+                    UserGroupMember.usergroup_id == context_usergroup.id,
+                    or_(
+                        UserGroupMember.membership_end > datetime_tz.now(),
+                        UserGroupMember.membership_end == None,
+                    ),
+                )
             )
+            .scalars()
+            .first()
         )
-        .scalars()
-        .first()
-    )
     if allowed_member:
         return True
     else:
@@ -884,7 +880,7 @@ def usergroups_members(doc_id: int, usergroup_name: str) -> Response:
 
 
 @badges_blueprint.get("/current_group_name/<name>")
-def group_name(name: str):
+def group_name(name: str) -> Response:
     """
     Fetches group name from the database.
     :param name: Name of the group given in group changer
