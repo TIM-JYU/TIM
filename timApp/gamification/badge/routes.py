@@ -574,7 +574,7 @@ def get_badge_holders(badge_id: int) -> Response:
     """
     Fetches all usergroups that holds certain badge.
     :param badge_id: Badge ID
-    :return: list of usergroups in json format
+    :return: list of users and list of usergroups in json format
     """
     badges_given = (
         run_sql(
@@ -592,7 +592,22 @@ def get_badge_holders(badge_id: int) -> Response:
     user_groups = []
     for unique_group_id in unique_group_ids:
         user_groups.append(UserGroup.get_by_id(unique_group_id))
-    return json_response(user_groups)
+    user_accounts = []
+    non_personal_groups = []
+    for user_group in user_groups:
+        if user_group:
+            if user_group.is_personal_group:
+                user_accounts.append(User.get_by_name(user_group.name))
+            else:
+                non_personal_groups.append(user_group)
+        else:
+            NotExist()
+    return json_response(
+        (
+            sorted(list(user_accounts), key=attrgetter("real_name")),
+            sorted(list(non_personal_groups), key=attrgetter("name")),
+        )
+    )
 
 
 # TODO: Handle errors.
