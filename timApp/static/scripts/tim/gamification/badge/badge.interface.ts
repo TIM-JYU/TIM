@@ -16,6 +16,7 @@ export interface IBadge {
 export interface IGroup {
     id: number;
     name: string;
+    description: string;
 }
 
 export interface IUser {
