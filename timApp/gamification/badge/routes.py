@@ -809,8 +809,18 @@ def group_name(name: str):
     :return: group name
     """
     group = UserGroup.get_by_name(name)
+    doc = group.admin_doc
+    if not doc:
+        raise error_generic("no rights", 404)
+    pretty_name = doc.description
     if group:
-        return json_response(group)
+        return json_response(
+            {
+                "id": group.id,
+                "name": group.name,
+                "description": pretty_name,  # Add this line
+            }
+        )
     return error_generic("there's no group with name: " + name, 404)
 
 
