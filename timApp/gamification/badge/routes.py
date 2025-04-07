@@ -801,7 +801,6 @@ def usergroups_members(doc_id: int, usergroup_name: str) -> Response:
 
 
 @badges_blueprint.get("/current_group_name/<name>")
-# TODO: päätä, käytetäänkö returnissa .human_namea, joka hakee vain descriptionin, ei id:tä
 def group_name(name: str):
     """
     Fetches group name from the database.
@@ -818,7 +817,7 @@ def group_name(name: str):
             {
                 "id": group.id,
                 "name": group.name,
-                "description": pretty_name,  # Add this line
+                "description": pretty_name,
             }
         )
     return error_generic("there's no group with name: " + name, 404)
