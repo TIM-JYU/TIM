@@ -13,6 +13,7 @@
     height: auto;
     border-radius: 50%;
     object-fit: cover;
+    transition: transform 0.3s ease-in-out;
 }
 
 
@@ -75,32 +76,32 @@ body {
   border-radius: 10px;
   margin-bottom: 10px;
   padding-top: 10px;
-  transition: height 0.3s ease; /* Smooth transition for heights */
+  transition: height 0.3s ease;
 }
 
 .first .trophy {
   background: gold;
-  height: 250px; /* 1st place is the tallest */
+  height: 300px;
 }
 
 .second .trophy {
   background: silver;
-  height: 230px; /* 2nd place is a bit shorter */
+  height: 250px;
 }
 
 .third .trophy {
-  background: #cd7f32; /* Bronze */
-  height: 210px; /* 3rd place */
+  background: #cd7f32;
+  height: 200px;
 }
 
 .fourth .trophy {
-  background: #ddd; /* Gray for 4th */
-  height: 190px; /* 4th place */
+  background: #808080;
+  height: 150px;
 }
 
 .fifth .trophy {
-  background: #bbb; /* Lighter gray for 5th */
-  height: 170px; /* 5th place */
+  background: #d3d3d3;
+  height: 110px;
 }
 
 .team {
@@ -112,4 +113,8 @@ body {
 .badge-count {
   font-size: 16px;
   color: #555;
+}
+
+.icon img:hover {
+   transform: scale(5.0);
 }
