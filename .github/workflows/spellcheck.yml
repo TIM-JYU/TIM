@@ -22,6 +22,6 @@ jobs:
     if: needs.skip_check.outputs.should_skip != 'true'
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Check spelling of repository files
         uses: crate-ci/typos@v1.13.6
