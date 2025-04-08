@@ -95,6 +95,7 @@ def check_group_member(usergroup: int) -> bool:
         return False
 
 
+# TODO: Create tests for this route.
 # TODO: Not in use. Remove?
 @badges_blueprint.get("/all_badges_including_inactive")
 def all_badges_including_inactive() -> Response:
@@ -156,6 +157,7 @@ def all_badges_in_context(user_id: int, doc_id: int, context_group: str) -> Resp
     return json_response(badges_json)
 
 
+# TODO: Create tests for this route.
 # TODO: Not in use. Remove?
 @badges_blueprint.get("/badge/<badge_id>")
 def get_badge(badge_id: int) -> Response:
@@ -229,8 +231,8 @@ def create_badge(
                 "description": badge.description,
             }
         )
-    # return json_response(badge.to_json(), 200)
-    return ok_response()
+    return json_response(badge.to_json(), 200)
+    # return ok_response()
 
 
 @badges_blueprint.get("/podium/<group_name_prefix>")
@@ -262,6 +264,7 @@ def podium(group_name_prefix: str) -> Response:
     return json_response(podium_json)
 
 
+# TODO: Create tests for this route.
 # TODO: Handle errors.
 @badges_blueprint.post("/modify_badge")
 def modify_badge(
@@ -325,6 +328,7 @@ def modify_badge(
     return ok_response()
 
 
+# TODO: Create tests for this route.
 # TODO: Handle errors.
 @badges_blueprint.post("/deactivate_badge")
 def deactivate_badge(
@@ -361,6 +365,7 @@ def deactivate_badge(
     return ok_response()
 
 
+# TODO: Create tests for this route.
 # TODO: Not yet in use.
 # TODO: Handle errors.
 @badges_blueprint.post("/reactivate_badge")
@@ -398,6 +403,7 @@ def reactivate_badge(
     return ok_response()
 
 
+# TODO: Create tests for this route.
 # TODO: Check access rights.
 # TODO: Handle errors.
 @badges_blueprint.get("/groups_badges/<group_id>/<context_group>")
@@ -575,6 +581,7 @@ def get_groups_badges(group_id: int, context_group: str) -> Response:
     return json_response(badges_json)
 
 
+# TODO: Create tests for this route.
 # TODO: Handle errors.
 @badges_blueprint.get("/badge_given/<badge_id>")
 def get_badge_given(badge_id: int) -> Response:
@@ -595,6 +602,7 @@ def get_badge_given(badge_id: int) -> Response:
     return json_response(badge_given)
 
 
+# TODO: Create tests for this route.
 # TODO: Do access right checks.
 @badges_blueprint.get("/badge_holders/<badge_id>")
 def get_badge_holders(badge_id: int) -> Response:
@@ -637,6 +645,7 @@ def get_badge_holders(badge_id: int) -> Response:
     )
 
 
+# TODO: Create tests for this route.
 # TODO: Handle errors.
 @badges_blueprint.post("/give_badge")
 def give_badge(
@@ -686,6 +695,7 @@ def give_badge(
     return ok_response()
 
 
+# TODO: Create tests for this route.
 # TODO: Handle errors.
 @badges_blueprint.post("/withdraw_badge")
 def withdraw_badge(
@@ -723,6 +733,7 @@ def withdraw_badge(
     return ok_response()
 
 
+# TODO: Create tests for this route.
 # TODO: Handle errors.
 @badges_blueprint.post("/withdraw_all_badges")
 def withdraw_all_badges(
@@ -763,6 +774,7 @@ def withdraw_all_badges(
     return ok_response()
 
 
+# TODO: Create tests for this route.
 # TODO: Not yet in use.
 # TODO: Handle errors.
 @badges_blueprint.get("/undo_withdraw_badge")
@@ -801,6 +813,8 @@ def undo_withdraw_badge(
     return ok_response()
 
 
+# TODO: Create tests for this route.
+# TODO: Move this route to better place maybe.
 # TODO: Handle errors.
 @badges_blueprint.get("/subgroups/<group_name_prefix>")
 def get_subgroups(group_name_prefix: str) -> Response:
@@ -832,6 +846,8 @@ def get_subgroups(group_name_prefix: str) -> Response:
     return json_response(subgroups_json)
 
 
+# TODO: Create tests for this route.
+# TODO: Move this route to better place maybe.
 # TODO: Handle errors.
 @badges_blueprint.get("/users_subgroups/<user_id>/<group_name_prefix>")
 def get_users_subgroups(user_id: int, group_name_prefix: str) -> Response:
@@ -877,6 +893,8 @@ def get_users_subgroups(user_id: int, group_name_prefix: str) -> Response:
     return json_response(users_subgroups_json)
 
 
+# TODO: Create tests for this route.
+# TODO: Move this route to better place maybe.
 # TODO: Handle errors.
 @badges_blueprint.get("/user_and_personal_group/<name>")
 def users_personal_group(name: str) -> Response:
@@ -892,6 +910,8 @@ def users_personal_group(name: str) -> Response:
     return error_generic("there's no user with username: " + name, 404)
 
 
+# TODO: Create tests for this route.
+# TODO: Move this route to better place maybe.
 # TODO: Handle errors.
 @badges_blueprint.get("/usergroups_members/<doc_id>/<usergroup_name>")
 def usergroups_members(doc_id: int, usergroup_name: str) -> Response:
@@ -910,6 +930,8 @@ def usergroups_members(doc_id: int, usergroup_name: str) -> Response:
     return json_response(sorted(list(usergroup.users), key=attrgetter("real_name")))
 
 
+# TODO: Create tests for this route.
+# TODO: Move this route to better place maybe.
 @badges_blueprint.get("/current_group_name/<name>")
 def group_name(name: str) -> Response:
     """
@@ -933,6 +955,8 @@ def group_name(name: str) -> Response:
     return error_generic("there's no group with name: " + name, 404)
 
 
+# TODO: Create tests for this route.
+# TODO: Move this route to better place maybe.
 @badges_blueprint.post("/editGroupName/<group_name>/<new_name>")
 def change_group_name(group_name: str, new_name: str) -> Response:
     """
