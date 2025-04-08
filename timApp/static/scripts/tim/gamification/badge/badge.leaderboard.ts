@@ -63,11 +63,10 @@ import {firstValueFrom} from "rxjs";
     styleUrls: ["badge.leaderboard.scss"],
 })
 export class BadgeLeaderboardComponent implements OnInit {
-    @Input() nimi: string | undefined;
+    @Input() badgegroupContext?: string;
     top_five: {group_name: string; badge_count: number}[] = [];
 
     ngOnInit(): void {
-        this.nimi = "Seppo";
         this.getTopFive();
     }
 
@@ -80,9 +79,10 @@ export class BadgeLeaderboardComponent implements OnInit {
         try {
             const result = await firstValueFrom(
                 this.http.get<{group_name: string; badge_count: number}[]>(
-                    "/podium/it_01"
+                    `/podium/${this.badgegroupContext}`
                 )
             );
+
             this.top_five = result || [];
             console.log("Fetched top_five: ", this.top_five);
         } catch (error) {
