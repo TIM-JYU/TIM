@@ -55,7 +55,7 @@ import {cons} from "fp-ts/ReadonlyNonEmptyArray";
                     <div *ngFor="let group of groups">
                         <span class="option-name" (click)="handleGroupSelection(group)"
                               [ngClass]="{'selected-option': selectedGroup?.id === group.id}">
-                            {{ prettyGroupName(group.name) }}
+                            {{ groupPrettyNames.get(group.id) || group.name }}
                         </span>
                         <div *ngIf="groupUsersMap.get(group.id)?.length">
                             <input class="selectall-checkbox" type="checkbox" (change)="toggleSelectAll(group, $event)">Select
@@ -86,7 +86,7 @@ import {cons} from "fp-ts/ReadonlyNonEmptyArray";
                         />
                         <span class="option-name" (click)="handleGroupSelection(group); fetchGroupBadges(group.id);"
                               [ngClass]="{'selected-option': selectedGroup?.id === group.id}">
-                            {{ prettyGroupName(group.name) }}
+                            {{ groupPrettyNames.get(group.id) || group.name }}
                         </span>
                         <div class="group-users" *ngIf="selectedGroup === group">
                             <div *ngFor="let user of users">
@@ -195,6 +195,7 @@ export class BadgeGiverComponent implements OnInit {
     groupBadges: IBadge[] = [];
     groupUsersMap = new Map<number, IUser[]>();
     isAllSelectedMap = new Map<number, boolean>();
+    groupPrettyNames: Map<number, string> = new Map();
 
     @Input() selectedBadge?: IBadge | null = null;
     @Input() badgegroupContext?: string;
@@ -343,6 +344,14 @@ export class BadgeGiverComponent implements OnInit {
             this.groups = await this.badgeService.getSubGroups(
                 this.badgegroupContext
             );
+            for (const group of this.groups) {
+                const prettyName = await this.badgeService.getCurrentGroup(
+                    group.name
+                );
+                if (prettyName) {
+                    this.groupPrettyNames.set(group.id, prettyName.description);
+                }
+            }
         }
     }
 
@@ -441,16 +450,8 @@ export class BadgeGiverComponent implements OnInit {
         this.emptyForm();
     }
 
-    // Removes context group (main group) from the group's name in group listing
-    prettyGroupName(groupName: string): string {
-        if (!groupName || !this.badgegroupContext) {
-            return groupName;
-        }
-
-        return groupName.startsWith(this.badgegroupContext + "-")
-            ? groupName.slice(this.badgegroupContext.length + 1)
-            : groupName;
-    }
+    //Bring pretty group names (descriptions)
+    prettyGroupNames() {}
 
     /**
      * Tyhjentää attribuuttina annetun taulukon

@@ -21,6 +21,7 @@ import {
     BadgeModule,
 } from "tim/gamification/badge/badge.component";
 import {BadgeWithdrawModule} from "tim/gamification/badge/badge-withdraw.component";
+import {BadgeSelectedWithdrawModule} from "tim/gamification/badge/badge-selected-withdraw.component";
 import {ViewCtrl} from "tim/document/viewctrl";
 import {documentglobals} from "tim/util/globals";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
@@ -73,6 +74,10 @@ import {TimUtilityModule} from "tim/ui/tim-utility.module";
                                 <button title="Edit Badge" id="editButton" type="button" (click)="editBadge(clickedBadge)" 
                                         [disabled]="!clickedBadge" 
                                         [ngClass]="{'disabled-btn': !clickedBadge}">✍</button>
+                                  <button title="Withdraw Badge" id="giveBadgeButton" type="button"
+                                        [disabled]="!clickedBadge" 
+                                        (click)="showBadgeSelectedWithdraw(clickedBadge)"
+                                        class="right-button">-</button>
                                 <button title="Delete Badge" id="deleteButton" type="button"
                                         [disabled]="!editingBadge || showWithdraw" 
                                         (click)="deleteBadge()"
@@ -94,6 +99,10 @@ import {TimUtilityModule} from "tim/ui/tim-utility.module";
               
               <ng-container *ngIf="showWithdraw">
                   <tim-badge-withdraw (cancelEvent)="handleCancel()" [badgegroupContext]="badgegroupContext"></tim-badge-withdraw>             
+              </ng-container>
+              
+              <ng-container *ngIf="showSelectedWithdraw">
+                  <tim-badge-selected-withdraw (cancelEvent)="handleCancel()" [badgegroupContext]="badgegroupContext" [selectedBadge]="clickedBadge"></tim-badge-selected-withdraw>             
               </ng-container>
               
             <div class="upper-form-group" *ngIf="this.badgeFormShowing">
@@ -202,6 +211,7 @@ export class BadgeCreatorComponent implements OnInit {
 
     showGiver = false;
     showWithdraw = false;
+    showSelectedWithdraw = false;
     @Input() badgegroupContext?: string;
     alerts: Array<{
         msg: string;
@@ -245,19 +255,27 @@ export class BadgeCreatorComponent implements OnInit {
 
     handleCancel() {
         this.resetForm();
-        this.showWithdraw = false;
-        this.showGiver = false;
+        this.hideOtherViewsExcept(true);
 
         setTimeout(() => {
             this.centerToComponent();
         }, 100);
     }
 
+    hideOtherViewsExcept(thisView: boolean) {
+        this.showGiver = false;
+        this.showWithdraw = false;
+        this.showSelectedWithdraw = false;
+        this.badgeFormShowing = false;
+        return thisView;
+    }
     // If user has pressed the create badge button, toggles the visibility of the badge creating form
     clickCreate() {
         this.clickedBadge = null;
-        this.showGiver = false;
-        this.showWithdraw = false;
+        this.badgeFormShowing = this.hideOtherViewsExcept(
+            this.badgeFormShowing
+        );
+
         if (this.badgeFormShowing) {
             this.resetForm();
             return;
@@ -270,8 +288,10 @@ export class BadgeCreatorComponent implements OnInit {
     // Edit an existing badge, show attributes in input fields
     editBadge(badge: IBadge) {
         this.badgeFormShowing = !this.badgeFormShowing;
-        this.showGiver = false;
-        this.showWithdraw = false;
+        this.badgeFormShowing = this.hideOtherViewsExcept(
+            this.badgeFormShowing
+        );
+
         if (this.badgeFormShowing) {
             this.showEditingForm(badge);
         }
@@ -281,8 +301,7 @@ export class BadgeCreatorComponent implements OnInit {
     }
 
     showBadgeGiver(badge: IBadge) {
-        this.badgeFormShowing = false;
-        this.showWithdraw = false;
+        this.showGiver = this.hideOtherViewsExcept(this.showGiver);
         this.showGiver = !this.showGiver;
 
         this.clickedBadge = badge;
@@ -293,9 +312,18 @@ export class BadgeCreatorComponent implements OnInit {
 
     showBadgeWithdraw() {
         this.clickedBadge = null;
-        this.badgeFormShowing = false;
-        this.showGiver = false;
+        this.showWithdraw = this.hideOtherViewsExcept(this.showWithdraw);
         this.showWithdraw = !this.showWithdraw;
+        setTimeout(() => {
+            this.centerToComponent();
+        }, 100);
+    }
+
+    showBadgeSelectedWithdraw(clickedBadge: IBadge) {
+        this.showSelectedWithdraw = this.hideOtherViewsExcept(
+            this.showSelectedWithdraw
+        );
+        this.showSelectedWithdraw = !this.showSelectedWithdraw;
         setTimeout(() => {
             this.centerToComponent();
         }, 100);
@@ -626,6 +654,7 @@ export class BadgeCreatorComponent implements OnInit {
         BadgeGiverModule,
         BadgeWithdrawModule,
         TimUtilityModule,
+        BadgeSelectedWithdrawModule,
     ],
 })
 export class BadgeCreatorModule {}

@@ -16,6 +16,7 @@ export interface IBadge {
 export interface IGroup {
     id: number;
     name: string;
+    description: string;
 }
 
 export interface IUser {
@@ -28,4 +29,9 @@ export interface IUser {
 export interface IPersonalGroup {
     0: IUser;
     1: IGroup;
+}
+
+export interface IBadgeHolders {
+    0: IUser[];
+    1: IGroup[];
 }

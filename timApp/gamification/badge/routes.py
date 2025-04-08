@@ -2,17 +2,13 @@
 from dataclasses import dataclass
 from operator import attrgetter
 from pathlib import Path
-from urllib import request
 
 from flask import Response, current_app
 from sqlalchemy import select, or_, func, desc
 from wtforms.widgets.core import Select
+from sqlalchemy import select, or_
 
-from timApp.auth.accesshelper import (
-    AccessDenied,
-    verify_teacher_access,
-    get_item_or_abort,
-)
+from timApp.auth.accesshelper import verify_teacher_access
 from timApp.auth.sessioninfo import get_current_user_object
 from timApp.document.docentry import DocEntry
 from timApp.gamification.badge.badges import Badge, BadgeGiven
@@ -77,20 +73,22 @@ def check_group_member(usergroup: int) -> bool:
     context_usergroup = (
         run_sql(select(UserGroup).filter(UserGroup.id == usergroup)).scalars().first()
     )
-    allowed_member = (
-        run_sql(
-            select(UserGroupMember).filter(
-                UserGroupMember.user_id == current_user.id,
-                UserGroupMember.usergroup_id == context_usergroup.id,
-                or_(
-                    UserGroupMember.membership_end > datetime_tz.now(),
-                    UserGroupMember.membership_end == None,
-                ),
+    allowed_member = None
+    if context_usergroup:
+        allowed_member = (
+            run_sql(
+                select(UserGroupMember).filter(
+                    UserGroupMember.user_id == current_user.id,
+                    UserGroupMember.usergroup_id == context_usergroup.id,
+                    or_(
+                        UserGroupMember.membership_end > datetime_tz.now(),
+                        UserGroupMember.membership_end == None,
+                    ),
+                )
             )
+            .scalars()
+            .first()
         )
-        .scalars()
-        .first()
-    )
     if allowed_member:
         return True
     else:
@@ -603,7 +601,7 @@ def get_badge_holders(badge_id: int) -> Response:
     """
     Fetches all usergroups that holds certain badge.
     :param badge_id: Badge ID
-    :return: list of usergroups in json format
+    :return: list of users and list of usergroups in json format
     """
     badges_given = (
         run_sql(
@@ -621,7 +619,22 @@ def get_badge_holders(badge_id: int) -> Response:
     user_groups = []
     for unique_group_id in unique_group_ids:
         user_groups.append(UserGroup.get_by_id(unique_group_id))
-    return json_response(user_groups)
+    user_accounts = []
+    non_personal_groups = []
+    for user_group in user_groups:
+        if user_group:
+            if user_group.is_personal_group:
+                user_accounts.append(User.get_by_name(user_group.name))
+            else:
+                non_personal_groups.append(user_group)
+        else:
+            NotExist()
+    return json_response(
+        (
+            sorted(list(user_accounts), key=attrgetter("real_name")),
+            sorted(list(non_personal_groups), key=attrgetter("name")),
+        )
+    )
 
 
 # TODO: Handle errors.
@@ -898,8 +911,7 @@ def usergroups_members(doc_id: int, usergroup_name: str) -> Response:
 
 
 @badges_blueprint.get("/current_group_name/<name>")
-# TODO: päätä, käytetäänkö returnissa .human_namea, joka hakee vain descriptionin, ei id:tä
-def group_name(name: str):
+def group_name(name: str) -> Response:
     """
     Fetches group name from the database.
     :param name: Name of the group given in group changer
@@ -915,7 +927,7 @@ def group_name(name: str):
             {
                 "id": group.id,
                 "name": group.name,
-                "description": pretty_name,  # Add this line
+                "description": pretty_name,
             }
         )
     return error_generic("there's no group with name: " + name, 404)
