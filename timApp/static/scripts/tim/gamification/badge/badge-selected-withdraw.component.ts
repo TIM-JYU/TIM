@@ -88,7 +88,7 @@ import {showConfirm} from "tim/ui/showConfirmDialog";
                         />
                         <span class="option-name" (click)="handleGroupSelection(group)"
                               [ngClass]="{'selected-option': selectedGroup?.id === group.id}">
-                            {{ prettyGroupName(group.name) }}
+                            {{ group.name }}
                         </span>
                         <div class="group-users" *ngIf="selectedGroup === group">
                             <div *ngFor="let user of users">
@@ -282,7 +282,14 @@ export class BadgeSelectedWithdrawComponent implements OnInit {
         for (const user of holders["0"]) {
             this.users.push(user);
         }
+
         for (const group of holders["1"]) {
+            const prettyName = await this.badgeService.getCurrentGroup(
+                group.name
+            );
+            if (prettyName) {
+                group.name = prettyName.description || group.name;
+            }
             this.groups.push(group);
         }
     }
@@ -359,17 +366,6 @@ export class BadgeSelectedWithdrawComponent implements OnInit {
             }
         }
         this.emptyForm();
-    }
-
-    // Removes context group (main group) from the group's name in group listing
-    prettyGroupName(groupName: string): string {
-        if (!groupName || !this.badgegroupContext) {
-            return groupName;
-        }
-
-        return groupName.startsWith(this.badgegroupContext + "-")
-            ? groupName.slice(this.badgegroupContext.length + 1)
-            : groupName;
     }
 
     /**

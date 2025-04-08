@@ -70,7 +70,6 @@ export class GroupNameComponent implements OnInit {
             this.group
         );
         if (fetchedGroup) {
-            console.log("Ryhmän tiedot: ", fetchedGroup);
             this.groupName = fetchedGroup.name; // store raw name for parsing
             this.group_id = fetchedGroup.id;
             this.storedGroup = {
