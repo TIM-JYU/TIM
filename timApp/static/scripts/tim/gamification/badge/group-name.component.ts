@@ -107,6 +107,10 @@ export class GroupNameComponent implements OnInit {
             this.newName.setValue("");
             this.showInput = !this.showInput;
         }
+        this.badgeService.notifyGroupNameChange(
+            this.storedGroup.id,
+            newPrettyName
+        );
     }
 
     // Koko nimi on edelleen tallessa storedGroup.name:ssa tai prentGroupissa, jos käyttöä

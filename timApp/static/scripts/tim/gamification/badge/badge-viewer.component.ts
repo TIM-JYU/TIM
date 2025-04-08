@@ -329,6 +329,11 @@ export class BadgeViewerComponent implements OnInit {
             this.getBadges();
             this.getGroupBadges();
         });
+        this.subscription.add(
+            this.badgeService.groupNameUpdated$.subscribe((update) => {
+                this.groupPrettyNames.set(update.id, update.newName);
+            })
+        );
     }
 
     private async InitializeData() {
