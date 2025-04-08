@@ -1,0 +1,115 @@
+.material-symbols-outlined {
+    font-size: 52px;
+    position: relative;
+    margin-top: 10px;
+    text-align: center;
+    color: black;
+    margin-left: -6px;
+    z-index: 1;
+}
+
+.icon img {
+    width: 85px;
+    height: auto;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+
+.first .material-symbols-outlined {
+  color: orange;
+}
+
+.second .material-symbols-outlined {
+  color: silver;
+}
+
+.third .material-symbols-outlined {
+  color: burlywood;
+}
+
+.nimi {
+  color: red;
+  font-weight: bold;
+}
+
+.viewer-container {
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 30px 200px #0000cc38, 0 0 20px #0F0C0020;
+  padding: 1em;
+  border-radius: 1em;
+  margin: 2em 0;
+  width: 100%;
+  background-color: #fff;
+  z-index: 10;
+}
+
+body {
+  font-family: Arial, sans-serif;
+  background-color: #f4f4f4;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  margin: 0;
+}
+
+.leaderboard {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  font-weight: bold;
+  padding-top: 32px;
+}
+
+.position {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.trophy {
+  width: 119px;
+  border-radius: 10px;
+  margin-bottom: 10px;
+  padding-top: 10px;
+  transition: height 0.3s ease; /* Smooth transition for heights */
+}
+
+.first .trophy {
+  background: gold;
+  height: 250px; /* 1st place is the tallest */
+}
+
+.second .trophy {
+  background: silver;
+  height: 230px; /* 2nd place is a bit shorter */
+}
+
+.third .trophy {
+  background: #cd7f32; /* Bronze */
+  height: 210px; /* 3rd place */
+}
+
+.fourth .trophy {
+  background: #ddd; /* Gray for 4th */
+  height: 190px; /* 4th place */
+}
+
+.fifth .trophy {
+  background: #bbb; /* Lighter gray for 5th */
+  height: 170px; /* 5th place */
+}
+
+.team {
+  font-size: 12px;
+  font-weight: bold;
+  margin-top: 10px;
+}
+
+.badge-count {
+  font-size: 16px;
+  color: #555;
+}
