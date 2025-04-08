@@ -302,8 +302,8 @@ button[type="button"]:hover {
 
 /* Style for the left three buttons */
 #showBadgeForm, #editButton, #giveBadgeButton {
-    width: 5em;
-    height: 5em;
+    width: 4em;
+    height: 4em;
     background-color: #0F4096;
     color: white;
     font-size: 1em;
@@ -367,16 +367,16 @@ button[type="button"]:hover {
 
 .badge-buttons {
     position: absolute;
-    bottom: -40px;
+    bottom: -35px;
     left: 50%;
     transform: translateX(-50%);
     display: flex;
-    gap: 5px;
+    gap: 3px;
 }
 
 .badge-buttons button {
-  max-width: 35px;
-  max-height: 35px;
+  max-width: 30px;
+  max-height: 30px;
 }
 
 .no-badges-txt {
