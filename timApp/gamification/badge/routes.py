@@ -174,7 +174,6 @@ def get_badge(badge_id: int) -> Response:
     return json_response(badge_json)
 
 
-# TODO: Fix return to make testable.
 @badges_blueprint.post("/create_badge")
 def create_badge(
     created_by: int,
@@ -235,7 +234,6 @@ def create_badge(
     # return ok_response()
 
 
-# TODO: Create tests for this route.
 # TODO: Handle errors.
 @badges_blueprint.post("/modify_badge")
 def modify_badge(
@@ -296,10 +294,10 @@ def modify_badge(
                 "description": badge["description"],
             }
         )
-    return ok_response()
+    return json_response(badge, 200)
+    # return ok_response()
 
 
-# TODO: Create tests for this route.
 # TODO: Handle errors.
 @badges_blueprint.post("/deactivate_badge")
 def deactivate_badge(
@@ -333,7 +331,8 @@ def deactivate_badge(
                 "executor": badge["deleted_by"],
             }
         )
-    return ok_response()
+    return json_response(badge, 200)
+    # return ok_response()
 
 
 # TODO: Create tests for this route.
