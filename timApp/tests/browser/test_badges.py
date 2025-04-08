@@ -8,18 +8,20 @@ class TestBadges(BrowserTest):
         self.login_test1()
         d = self.create_doc(
             initial_par="""
-```
-auto_number_headings: 2
-form_mode: true
-```   
-"""
+            ```
+            auto_number_headings: 2
+            form_mode: true
+            ```   
+        """
         )
         dt = self.create_translation(d)
         tr_par = dt.document.get_paragraphs()[1]
         tr_par.set_markdown(
             """
-#- {allowangular=true}
-<tim-badge-creator></tim-badge-creator>
+        #- {allowangular=true}
+        <tim-badge-creator badgegroup-context="newgroup1"></tim-badge-creator>
+        
+        <tim-badge-viewer badgegroup-context="newgroup1" badgeuser-context="%%username%%"></tim-badge-viewer>
         """
         )
         tr_par.save()
