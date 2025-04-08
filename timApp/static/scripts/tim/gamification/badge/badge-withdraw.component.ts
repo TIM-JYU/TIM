@@ -292,7 +292,7 @@ export class BadgeWithdrawComponent implements OnInit {
             console.error("group_context was undefined");
             return;
         }
-        await this.badgeService
+        this.badgeService
             .withdrawBadge(
                 badgegivenID,
                 this.badgeGiver,
@@ -307,7 +307,6 @@ export class BadgeWithdrawComponent implements OnInit {
                     );
                 }
             });
-
         this.selectedBadge = null;
     }
 
