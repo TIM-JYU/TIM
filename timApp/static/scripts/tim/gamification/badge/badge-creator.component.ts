@@ -77,16 +77,16 @@ import {TimUtilityModule} from "tim/ui/tim-utility.module";
                                         [disabled]="!clickedBadge" 
                                         [ngClass]="{'disabled-btn': !clickedBadge}">
                                         <span class="material-icons">how_to_reg</span></button>
+                                <button title="Withdraw Badge" id="giveBadgeButton" type="button"
+                                        [disabled]="!clickedBadge" 
+                                        (click)="showBadgeSelectedWithdraw(clickedBadge)"
+                                        class="right-button">
+                                        <span class="material-icons">person_remove</span></button>
                                 <button title="Edit Badge" id="editButton" type="button" 
                                         (click)="editBadge(clickedBadge)" 
                                         [disabled]="!clickedBadge" 
                                         [ngClass]="{'disabled-btn': !clickedBadge}">
                                         <span class="material-icons">edit</span></button>
-                                  <button title="Withdraw Badge" id="giveBadgeButton" type="button"
-                                        [disabled]="!clickedBadge" 
-                                        (click)="showBadgeSelectedWithdraw(clickedBadge)"
-                                        class="right-button">
-                                        <span class="material-icons">person_remove</span></button>
                                 <button title="Delete Badge" id="deleteButton" type="button"
                                         [disabled]="!editingBadge || showWithdraw" 
                                         (click)="deleteBadge()"
