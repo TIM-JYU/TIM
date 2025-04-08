@@ -37,8 +37,15 @@ export class BadgeService {
     // Observable updatetapahtuman kuunteluun
     updateBadgeList$ = this.updateBadgeSubject.asObservable();
 
+    private groupNameUpdated = new Subject<{id: number; newName: string}>();
+    groupNameUpdated$ = this.groupNameUpdated.asObservable();
+
     notifyBadgeViewerUpdate() {
         this.updateBadgeSubject.next();
+    }
+
+    notifyGroupNameChange(id: number, newName: string) {
+        this.groupNameUpdated.next({id, newName});
     }
 
     constructor(private http: HttpClient) {}
