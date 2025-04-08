@@ -1,17 +1,18 @@
-import type {OnInit} from "@angular/core";
+import type {OnInit, SimpleChanges} from "@angular/core";
 import {EventEmitter, Output} from "@angular/core";
 import {Input} from "@angular/core";
-import {Component, NgModule} from "@angular/core";
+import {Component, NgModule, OnChanges} from "@angular/core";
 import {HttpClient} from "@angular/common/http";
 import {CommonModule} from "@angular/common";
 import {FormsModule} from "@angular/forms";
 import {Subscription} from "rxjs";
 import {Users} from "tim/user/userService";
+import {IBadge} from "tim/gamification/badge/badge.interface";
 import type {
-    IBadge,
     IGroup,
     IPersonalGroup,
     IUser,
+    IBadgeHolders,
 } from "tim/gamification/badge/badge.interface";
 import {BadgeModule} from "tim/gamification/badge/badge.component";
 import {BadgeService} from "tim/gamification/badge/badge.service";
@@ -53,20 +54,20 @@ import {showConfirm} from "tim/ui/showConfirmDialog";
 
                 <div *ngIf="userAssign === true" class="form-group">
                     <label>Users</label>
-                    <div *ngFor="let group of groups">
-                        <span class="option-name" (click)="handleGroupSelection(group)"
-                              [ngClass]="{'selected-option': selectedGroup?.id === group.id}">
-                            {{ prettyGroupName(group.name) }}
-                        </span>
-                        <div *ngIf="groupUsersMap.get(group.id)?.length">
-                            <input class="selectall-checkbox" type="checkbox" (change)="toggleSelectAll(group, $event)">Select
-                            all
-                        </div>
-                        <div *ngFor="let user of groupUsersMap.get(group.id)" class="option-item">
+<!--                    <div *ngFor="let group of groups">-->
+<!--                        <span class="option-name" (click)="handleGroupSelection(group)"-->
+<!--                              [ngClass]="{'selected-option': selectedGroup?.id === group.id}">-->
+<!--                            {{ prettyGroupName(group.name) }}-->
+<!--                        </span>-->
+<!--                        <div *ngIf="groupUsersMap.get(group.id)?.length">-->
+<!--                            <input class="selectall-checkbox" type="checkbox" (change)="toggleSelectAll(group, $event)">Select-->
+<!--                            all-->
+<!--                        </div>-->
+                        <div *ngFor="let user of users" class="option-item">
                             <input class="user-checkbox"
                                    type="checkbox"
                                    [value]="user"
-                                   [checked]="isAllSelectedMap.get(group.id)"
+
                                    (change)="toggleUserSelection(user, $event)"
                             />
                             <div class="option-name" (click)="handleUserSelection(user)"
@@ -74,7 +75,7 @@ import {showConfirm} from "tim/ui/showConfirmDialog";
                                 {{ user.real_name }}
                             </div>
                         </div>
-                    </div>
+<!--                    </div>-->
                 </div>
 
                 <div *ngIf="userAssign === false" class="form-group">
@@ -85,7 +86,7 @@ import {showConfirm} from "tim/ui/showConfirmDialog";
                                [value]="group"
                                (change)="toggleGroupSelection(group, $event)"
                         />
-                        <span class="option-name" (click)="handleGroupSelection(group); fetchGroupBadges(group.id);"
+                        <span class="option-name" (click)="handleGroupSelection(group)"
                               [ngClass]="{'selected-option': selectedGroup?.id === group.id}">
                             {{ prettyGroupName(group.name) }}
                         </span>
@@ -134,7 +135,7 @@ export class BadgeSelectedWithdrawComponent implements OnInit {
     groupUsersMap = new Map<number, IUser[]>();
     isAllSelectedMap = new Map<number, boolean>();
 
-    @Input() selectedBadge?: IBadge | null = null;
+    @Input() selectedBadge?: IBadge;
     @Input() badgegroupContext?: string;
 
     userAssign?: boolean = undefined;
@@ -154,10 +155,6 @@ export class BadgeSelectedWithdrawComponent implements OnInit {
 
     ngOnInit() {
         if (Users.isLoggedIn()) {
-            this.addListeners();
-            this.fetchUsers(this.badgegroupContext);
-            this.fetchGroups();
-
             if (Users.belongsToGroup("Administrators")) {
                 this.hasPermission = true; // Tarkistetaan onko käyttäjällä oikeus käyttää komponenttia
                 this.showComponent = true;
@@ -165,23 +162,15 @@ export class BadgeSelectedWithdrawComponent implements OnInit {
         }
     }
 
-    private addListeners() {
-        // Subscribe to badge update events
-        this.subscription.add(
-            this.badgeService.updateBadgeList$.subscribe(() => {
-                if (this.selectedUser?.id != undefined) {
-                    this.fetchUserBadges(this.selectedUser); // Refresh badges
-                }
-                if (this.selectedGroup?.id != undefined) {
-                    this.fetchGroupBadges(this.selectedGroup.id); // Refresh group badges
-                }
-            })
-        );
+    ngOnChanges(changes: SimpleChanges) {
+        if (changes.selectedBadge) {
+            this.fetchBadgeHolders(this.selectedBadge);
+        }
     }
 
     emptyForm() {
         this.selectedUser = null;
-        this.selectedBadge = null;
+        this.selectedBadge = undefined;
         this.selectedGroup = null;
         this.message = "";
         this.showComponent = false;
@@ -253,7 +242,6 @@ export class BadgeSelectedWithdrawComponent implements OnInit {
             return;
         }
         this.selectedUser = user;
-        this.fetchUserBadges(user);
     }
 
     handleGroupSelection(group: IGroup) {
@@ -263,26 +251,6 @@ export class BadgeSelectedWithdrawComponent implements OnInit {
             return;
         }
         this.selectedGroup = group;
-        this.fetchUsers(group.name);
-    }
-
-    /**
-     * Hakee käyttäjät, jotka kuuluvat badgegroupContext ryhmään. badgegroupContext annetaan TIM:n puolelta.
-     */
-    async fetchUsers(groupContext?: string) {
-        if (groupContext) {
-            this.users = await this.badgeService.getUsersFromGroup(
-                groupContext
-            );
-        }
-    }
-
-    async fetchGroups() {
-        if (this.badgegroupContext) {
-            this.groups = await this.badgeService.getSubGroups(
-                this.badgegroupContext
-            );
-        }
     }
 
     async fetchUsersFromGroups() {
@@ -295,49 +263,28 @@ export class BadgeSelectedWithdrawComponent implements OnInit {
             this.isAllSelectedMap.set(group.id, false);
         }
     }
-    /**
-     * Tarkistaa onko annettu parametri undefined. Jos true niin lähdetään pois.
-     * Tyhjentää this.userBadges -taulukon
-     * Kutsuu badge-servicen metodia, joka hakee käyttäjälle kuuluvat badget.
-     * @param selectedUser valittu käyttäjä
-     *
-     */
-    async fetchUserBadges(selectedUser: IUser) {
-        this.emptyTable(this.userBadges);
-        if (!selectedUser) {
-            console.error("Selected user was undefined");
-            return;
-        }
-        const pGroup: IPersonalGroup =
-            await this.badgeService.getUserAndPersonalGroup(selectedUser.name);
-        if (!pGroup) {
-            console.error("Failed to retrieve the user's personal group ID.");
-            return;
-        }
-        if (!this.badgegroupContext) {
-            console.error("Failed to retrieve the context group.");
-            return;
-        }
-        this.userBadges = await this.badgeService.getUserBadges(
-            pGroup["1"].id,
-            this.badgegroupContext
-        );
-    }
 
-    async fetchGroupBadges(groupId?: number) {
-        if (groupId == undefined) {
-            console.error("groupid was undefined");
+    async fetchBadgeHolders(selectedBadge?: IBadge) {
+        if (selectedBadge == undefined) {
+            console.error("selected badge was undefined");
             return;
         }
-        if (!this.badgegroupContext) {
-            console.error("Failed to retrieve the context group.");
+        const holders: IBadgeHolders | null =
+            await this.badgeService.getBadgeHolders(selectedBadge.id);
+
+        if (!holders) {
             return;
         }
-        this.emptyTable(this.groupBadges);
-        this.groupBadges = await this.badgeService.getUserBadges(
-            groupId,
-            this.badgegroupContext
-        );
+
+        this.emptyTable(this.users);
+        this.emptyTable(this.groups);
+
+        for (const user of holders["0"]) {
+            this.users.push(user);
+        }
+        for (const group of holders["1"]) {
+            this.groups.push(group);
+        }
     }
 
     async withdrawBadge() {
@@ -411,6 +358,7 @@ export class BadgeSelectedWithdrawComponent implements OnInit {
                     });
             }
         }
+        this.emptyForm();
     }
 
     // Removes context group (main group) from the group's name in group listing
