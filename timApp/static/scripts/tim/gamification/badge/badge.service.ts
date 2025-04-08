@@ -236,7 +236,6 @@ export class BadgeService {
         const result = await response;
 
         if (result.ok) {
-            console.log(`Fetched group's name: ${groupName}`, result.result);
             return result.result;
         } else {
             console.error("Failed to fetch groups name.");
