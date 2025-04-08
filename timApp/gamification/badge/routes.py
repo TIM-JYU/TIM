@@ -5,7 +5,7 @@ from pathlib import Path
 from urllib import request
 
 from flask import Response, current_app
-from sqlalchemy import select, or_
+from sqlalchemy import select, or_, func, desc
 from wtforms.widgets.core import Select
 
 from timApp.auth.accesshelper import (
@@ -233,6 +233,35 @@ def create_badge(
         )
     # return json_response(badge.to_json(), 200)
     return ok_response()
+
+
+@badges_blueprint.get("/podium/<group_name_prefix>")
+def podium(group_name_prefix: str) -> Response:
+    stmt = (
+        select(UserGroup.name, func.count(BadgeGiven.id).label("badge_count"))
+        .filter(
+            UserGroup.name.like(group_name_prefix + "%"),
+            UserGroup.name != group_name_prefix,
+        )
+        .join(BadgeGiven, BadgeGiven.group_id == UserGroup.id)
+        .where(BadgeGiven.active.is_(True))
+        .group_by(UserGroup.name)
+        .order_by(desc("badge_count"))
+        .limit(5)
+    )
+
+    results = run_sql(stmt).all()
+
+    podium_json = []
+    for grp_name, badge_count in results:
+        podium_json.append(
+            {
+                "group_name": grp_name,
+                "badge_count": badge_count,
+            }
+        )
+
+    return json_response(podium_json)
 
 
 # TODO: Handle errors.
