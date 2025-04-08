@@ -174,7 +174,6 @@ def get_badge(badge_id: int) -> Response:
     return json_response(badge_json)
 
 
-# TODO: Fix return to make testable.
 @badges_blueprint.post("/create_badge")
 def create_badge(
     created_by: int,
@@ -235,36 +234,6 @@ def create_badge(
     # return ok_response()
 
 
-@badges_blueprint.get("/podium/<group_name_prefix>")
-def podium(group_name_prefix: str) -> Response:
-    stmt = (
-        select(UserGroup.name, func.count(BadgeGiven.id).label("badge_count"))
-        .filter(
-            UserGroup.name.like(group_name_prefix + "%"),
-            UserGroup.name != group_name_prefix,
-        )
-        .join(BadgeGiven, BadgeGiven.group_id == UserGroup.id)
-        .where(BadgeGiven.active.is_(True))
-        .group_by(UserGroup.name)
-        .order_by(desc("badge_count"))
-        .limit(5)
-    )
-
-    results = run_sql(stmt).all()
-
-    podium_json = []
-    for grp_name, badge_count in results:
-        podium_json.append(
-            {
-                "group_name": grp_name,
-                "badge_count": badge_count,
-            }
-        )
-
-    return json_response(podium_json)
-
-
-# TODO: Create tests for this route.
 # TODO: Handle errors.
 @badges_blueprint.post("/modify_badge")
 def modify_badge(
@@ -325,10 +294,10 @@ def modify_badge(
                 "description": badge["description"],
             }
         )
-    return ok_response()
+    return json_response(badge, 200)
+    # return ok_response()
 
 
-# TODO: Create tests for this route.
 # TODO: Handle errors.
 @badges_blueprint.post("/deactivate_badge")
 def deactivate_badge(
@@ -362,7 +331,8 @@ def deactivate_badge(
                 "executor": badge["deleted_by"],
             }
         )
-    return ok_response()
+    return json_response(badge, 200)
+    # return ok_response()
 
 
 # TODO: Create tests for this route.
@@ -814,6 +784,37 @@ def undo_withdraw_badge(
 
 
 # TODO: Create tests for this route.
+# TODO: Do access right checks for this route.
+@badges_blueprint.get("/podium/<group_name_prefix>")
+def podium(group_name_prefix: str) -> Response:
+    stmt = (
+        select(UserGroup.name, func.count(BadgeGiven.id).label("badge_count"))
+        .filter(
+            UserGroup.name.like(group_name_prefix + "%"),
+            UserGroup.name != group_name_prefix,
+        )
+        .join(BadgeGiven, BadgeGiven.group_id == UserGroup.id)
+        .where(BadgeGiven.active.is_(True))
+        .group_by(UserGroup.name)
+        .order_by(desc("badge_count"))
+        .limit(5)
+    )
+
+    results = run_sql(stmt).all()
+
+    podium_json = []
+    for grp_name, badge_count in results:
+        podium_json.append(
+            {
+                "group_name": grp_name,
+                "badge_count": badge_count,
+            }
+        )
+
+    return json_response(podium_json)
+
+
+# TODO: Create tests for this route.
 # TODO: Move this route to better place maybe.
 # TODO: Handle errors.
 @badges_blueprint.get("/subgroups/<group_name_prefix>")
@@ -931,6 +932,7 @@ def usergroups_members(doc_id: int, usergroup_name: str) -> Response:
 
 
 # TODO: Create tests for this route.
+# TODO: Do access right checks for this route.
 # TODO: Move this route to better place maybe.
 @badges_blueprint.get("/current_group_name/<name>")
 def group_name(name: str) -> Response:
@@ -956,6 +958,7 @@ def group_name(name: str) -> Response:
 
 
 # TODO: Create tests for this route.
+# TODO: Do access right checks for this route.
 # TODO: Move this route to better place maybe.
 @badges_blueprint.post("/editGroupName/<group_name>/<new_name>")
 def change_group_name(group_name: str, new_name: str) -> Response:
