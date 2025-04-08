@@ -85,7 +85,7 @@
 
 
 .badge.square > .ribbon{
-    bottom: -21px;
+    bottom: 4px;
 }
 
 .badge.square .material-symbols-outlined {
@@ -129,7 +129,7 @@
 }
 
 .badge.flower > .ribbon{
-    bottom: -11px;
+    bottom: 13px;
 }
 
 .badge.flower .material-symbols-outlined {
@@ -171,7 +171,7 @@
     min-width: 100px;
     z-index: 1;
     color: #fff;
-    bottom: -22px;
+    bottom: 4px;
     left: 50%;
     height: 20px;
     font-size: 13px;
@@ -403,7 +403,7 @@
   width: 250px;
   visibility: hidden;
   position: absolute;
-  top: 130%;
+  top: 110%;
   left: 50%;
   transform: translateX(-50%);
   background-color: rgba(0, 0, 0, 0.85);
