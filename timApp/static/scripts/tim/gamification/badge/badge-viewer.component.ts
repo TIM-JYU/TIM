@@ -60,7 +60,7 @@ import {toPromise} from "tim/util/utils";
 
             <ng-container *ngIf="userSubGroups.length > 0">
                 <div class="subgroups" *ngFor="let group of userSubGroups">
-                    <h2 class="badge-heading">Group Badges ({{ group.name }})</h2>
+                    <h2 class="badge-heading">Group Badges ({{ groupPrettyNames.get(group.id) || group.name }})</h2>
 
                     <ng-container *ngIf="groupBadgesMap.get(group.id)?.length == 0">
                         <p class="no-badges-txt">No group badges</p>
@@ -98,6 +98,7 @@ export class BadgeViewerComponent implements OnInit {
     @Input() badgeuserContext?: string;
     private subscription: Subscription = new Subscription();
     groupBadgesMap = new Map<number, IBadge[]>();
+    groupPrettyNames: Map<number, string> = new Map();
     disableDialogWindow?: boolean;
     availableImages: {id: number; name: string}[] = [];
 
@@ -280,6 +281,13 @@ export class BadgeViewerComponent implements OnInit {
             userid
         );
         this.getGroupBadges();
+
+        for (const sb of this.userSubGroups) {
+            const prettyName = await this.badgeService.getCurrentGroup(sb.name);
+            if (prettyName) {
+                this.groupPrettyNames.set(sb.id, prettyName.description);
+            }
+        }
     }
 
     async getGroupBadges() {

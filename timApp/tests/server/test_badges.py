@@ -15,30 +15,24 @@ class BadgeTest(TimRouteTest):
     def test_badge(self):
         main_group = self.create_group("it_25", [self.test_user_1])
         sub_group = self.create_group("it_25-cats", [])
-        d = DocEntry.create("badge_test")
+        doc = DocEntry.create("groups/it_25", main_group)
         db.session.flush()
-        self.test_user_1.grant_access(d.block, AccessType.teacher)
+        self.test_user_1.grant_access(doc.block, AccessType.teacher)
         self.commit_db()
-
-        # TODO: Why isn't the test working without this?
-        d.block
-
+        doc.block  # TODO: Why isn't the test working without this?
         self.login_test1()
-        r1 = self.get(f"/all_badges")
-        self.assertEqual([], r1)
+        result_ab_empty = self.get(f"/all_badges")
+        self.assertEqual([], result_ab_empty)
 
-        # TODO: Test with a user that isn't included in it_25.
-
-        r2 = self.get(
-            f"/all_badges_in_context/{self.test_user_1.id}/{d.block.id}/{main_group.name}"
+        result_abic_empty = self.get(
+            f"/all_badges_in_context/{self.test_user_1.id}/{doc.block.id}/{main_group.name}"
         )
-        self.assertEqual([], r2)
-        # timestamp = datetime.now()
-        r3 = self.post(
+        self.assertEqual([], result_abic_empty)
+        result_cb_1 = self.post(
             "/create_badge",
             data={
                 "created_by": self.test_user_1.id,
-                "doc_id": d.block.id,
+                "doc_id": doc.block.id,
                 "context_group": main_group.name,
                 "title": "Coordinator",
                 "color": "blue",
@@ -51,8 +45,8 @@ class BadgeTest(TimRouteTest):
             {
                 "active": True,
                 "color": "blue",
-                "context_group": "it_25",
-                "created": r3["created"],
+                "context_group": main_group.id,
+                "created": result_cb_1["created"],
                 "created_by": 2,
                 "deleted": None,
                 "deleted_by": None,
@@ -66,16 +60,50 @@ class BadgeTest(TimRouteTest):
                 "shape": "hexagon",
                 "title": "Coordinator",
             },
-            r3,
+            result_cb_1,
         )
-        r4 = self.get(f"/all_badges")
+        result_cb_2 = self.post(
+            "/create_badge",
+            data={
+                "created_by": self.test_user_1.id,
+                "doc_id": doc.block.id,
+                "context_group": main_group.name,
+                "title": "Communicator",
+                "color": "red",
+                "shape": "circle",
+                "image": 2,
+                "description": "Great communication",
+            },
+        )
+        self.assertEqual(
+            {
+                "active": True,
+                "color": "red",
+                "context_group": main_group.id,
+                "created": result_cb_2["created"],
+                "created_by": 2,
+                "deleted": None,
+                "deleted_by": None,
+                "description": "Great communication",
+                "id": 2,
+                "image": 2,
+                "modified": None,
+                "modified_by": None,
+                "restored": None,
+                "restored_by": None,
+                "shape": "circle",
+                "title": "Communicator",
+            },
+            result_cb_2,
+        )
+        result_ab_nonempty = self.get(f"/all_badges")
         self.assertEqual(
             [
                 {
                     "active": True,
                     "color": "blue",
-                    "context_group": "it_25",
-                    "created": r3["created"],
+                    "context_group": main_group.id,
+                    "created": result_cb_1["created"],
                     "created_by": 2,
                     "deleted": None,
                     "deleted_by": None,
@@ -88,22 +116,28 @@ class BadgeTest(TimRouteTest):
                     "restored_by": None,
                     "shape": "hexagon",
                     "title": "Coordinator",
-                }
+                },
+                {
+                    "active": True,
+                    "color": "red",
+                    "context_group": main_group.id,
+                    "created": result_cb_2["created"],
+                    "created_by": 2,
+                    "deleted": None,
+                    "deleted_by": None,
+                    "description": "Great communication",
+                    "id": 2,
+                    "image": 2,
+                    "modified": None,
+                    "modified_by": None,
+                    "restored": None,
+                    "restored_by": None,
+                    "shape": "circle",
+                    "title": "Communicator",
+                },
             ],
-            r4,
+            result_ab_nonempty,
         )
 
-        # d = self.create_doc(
-        #     # settings={"auto_number_headings": 0},
-        #     initial_par="""
-        #         #- {allowangular="true"}
-        #         <tim-badge-creator badgegroup-context="it_25">
-        #         </tim-badge-creator>
-        #         <tim-badge-viewer badgegroup-context="it_25">
-        #         </tim-badge-viewer>
-        #         """,
-        # )
-        # print("vastaus:", d)
-        # url = d.get_absolute_url()
-        # url = d.get_url_for_view("")
-        # self.get(url, expect_status=404)
+        # TODO: Test routes with a user that isn't included in it_25.
+        # TODO: Test routes with a user that doesn't have teacher access.
