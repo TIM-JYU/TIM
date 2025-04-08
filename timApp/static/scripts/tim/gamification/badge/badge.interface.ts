@@ -30,3 +30,8 @@ export interface IPersonalGroup {
     0: IUser;
     1: IGroup;
 }
+
+export interface IBadgeHolders {
+    0: IUser[];
+    1: IGroup[];
+}
