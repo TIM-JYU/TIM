@@ -23,14 +23,13 @@ import {TimUtilityModule} from "tim/ui/tim-utility.module";
     template: `
         <ng-container *ngIf="hasPermission; else noPermissionView">
             <div *ngIf="showComponent" class="badge-giver">
-                <h2>Badge Withdraw</h2>
-                
+                <h2>View users or groups</h2>
                 <div class="user-group-button-container">
                     <button (click)="handleSwap(true)" [disabled]="userAssign">
-                        Withdraw badge from a user
+                        Users
                     </button>
                     <button (click)="handleSwap(false)" [disabled]="userAssign === false">
-                        Withdraw badge from a group
+                        Groups
                     </button>
                 </div>
 

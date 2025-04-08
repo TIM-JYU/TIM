@@ -29,6 +29,8 @@ import {TimUtilityModule} from "tim/ui/tim-utility.module";
 @Component({
     selector: "tim-badge-creator",
     template: `
+        <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+
         <ng-container *ngIf="!teacherPermission">
             <div class="badge-creator">
                 <div class="all_badges">
@@ -46,11 +48,13 @@ import {TimUtilityModule} from "tim/ui/tim-utility.module";
                 <fieldset>
                     <div class="otsikko">
                         <h2>{{ selectedContextGroup ? "All Badges (" + selectedContextGroup + ")" : "All Badges" }}</h2>
-                        <div class="right-buttons"></div>                        
-                          <button title="Create Badge" id="showBadgeForm" type="button" (click)="clickCreate()">Create</button>
-                          <button title="Withdraw Badge" id="withdrawButton" type="button"
-                                (click)="showBadgeWithdraw()"
-                                class="right-button withdrawButton">With- draw</button>                        
+                        <div class="right-buttons">                       
+                          <button title="Create Badge" id="showBadgeForm" type="button" (click)="clickCreate()">
+                              <span class="material-icons" style="font-size: 30px">add</span></button>
+                          <button title="View users & groups" id="showBadgeForm" type="button"
+                                (click)="showBadgeWithdraw()">
+                             <span class="material-symbols-outlined" style="font-size: 30px">patient_list</span></button>
+                        </div> 
                     </div>                 
                     
                     <div class="badge_view">
@@ -68,23 +72,29 @@ import {TimUtilityModule} from "tim/ui/tim-utility.module";
                                        (click)="selectBadge(badge);">
                             </tim-badge>
                               <div *ngIf="clickedBadge === badge" class="badge-buttons">
-                                <button title="Assign Badge" id="giveBadgeButton" type="button" (click)="showBadgeGiver(clickedBadge)" 
+                                <button title="Assign Badge" id="giveBadgeButton" type="button" 
+                                        (click)="showBadgeGiver(clickedBadge)" 
                                         [disabled]="!clickedBadge" 
-                                        [ngClass]="{'disabled-btn': !clickedBadge}">+</button>
-                                <button title="Edit Badge" id="editButton" type="button" (click)="editBadge(clickedBadge)" 
+                                        [ngClass]="{'disabled-btn': !clickedBadge}">
+                                        <span class="material-icons">how_to_reg</span></button>
+                                <button title="Edit Badge" id="editButton" type="button" 
+                                        (click)="editBadge(clickedBadge)" 
                                         [disabled]="!clickedBadge" 
-                                        [ngClass]="{'disabled-btn': !clickedBadge}">✍</button>
+                                        [ngClass]="{'disabled-btn': !clickedBadge}">
+                                        <span class="material-icons">edit</span></button>
                                   <button title="Withdraw Badge" id="giveBadgeButton" type="button"
                                         [disabled]="!clickedBadge" 
                                         (click)="showBadgeSelectedWithdraw(clickedBadge)"
-                                        class="right-button">-</button>
+                                        class="right-button">
+                                        <span class="material-icons">person_remove</span></button>
                                 <button title="Delete Badge" id="deleteButton" type="button"
                                         [disabled]="!editingBadge || showWithdraw" 
                                         (click)="deleteBadge()"
-                                        class="right-button">-</button>
+                                        class="right-button">
+                                        <span class="material-icons">delete</span></button>
                               </div>
                           </div>
-                  </ng-container>
+                      </ng-container>
                 </div>
                     
                 </fieldset>
