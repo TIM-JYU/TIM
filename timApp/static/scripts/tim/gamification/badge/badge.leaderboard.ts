@@ -16,11 +16,11 @@ import {firstValueFrom} from "rxjs";
             <div class="leaderboard">
               <div class="position fourth">
                   <div class="icon">
-                      <span class="material-symbols-outlined">delete</span>
+                      <span class="material-symbols-outlined">sentiment_stressed</span>
                   </div>
                 <div class="trophy">4th</div>   
                 <p class="team">{{ top_five[3] ? top_five[3].prettyName : "no team"}}</p>
-                <p class="badge-count">{{ top_five[3] ? top_five[3].badge_count : "no badges"}}</p>
+                <p class="badge-count">{{ top_five[3] ? top_five[3].badge_count : "nothing"}}</p>
               </div>
               <div class="position second">
                   <div class="icon">
@@ -28,7 +28,7 @@ import {firstValueFrom} from "rxjs";
                     </div>
                 <div class="trophy silver">2nd</div>
                 <p class="team">{{ top_five[1] ? top_five[1].prettyName : "no team"}}</p>
-                <p class="badge-count">{{ top_five[1] ? top_five[1].badge_count : "no badges"}}</p>
+                <p class="badge-count">{{ top_five[1] ? top_five[1].badge_count : "nothing"}}</p>
               </div>
                 <div class="position first">
                     <div class="icon">
@@ -36,7 +36,7 @@ import {firstValueFrom} from "rxjs";
                     </div>
                 <div class="trophy gold">1st</div>
                 <p class="team">{{ top_five[0] ? top_five[0].prettyName : "no team" }}</p>
-                <p class="badge-count">{{ top_five[0] ? top_five[0].badge_count : "no badges"}}</p>
+                <p class="badge-count">{{ top_five[0] ? top_five[0].badge_count : "nothing"}}</p>
               </div>
                 
               <div class="position third">
@@ -45,17 +45,16 @@ import {firstValueFrom} from "rxjs";
                   </div>
                 <div class="trophy bronze">3rd</div>
                 <p class="team">{{ top_five[2] ? top_five[2].prettyName : "no team"}}</p>
-                <p class="badge-count">{{ top_five[2] ? top_five[2].badge_count : "no badges"}}</p>
+                <p class="badge-count">{{ top_five[2] ? top_five[2].badge_count : "nothing"}}</p>
               </div>
               
               <div class="position fifth">
                   <div class="icon">
-                      <!--<span class="material-symbols-outlined">sentiment_sad</span> -->
-                      <img src="https://i.pinimg.com/236x/f1/9a/51/f19a5199180cc1f5c82bb5367fca65b8.jpg" alt="no Image">
+                      <span class="material-symbols-outlined">sentiment_very_dissatisfied</span>
                   </div>
                 <div class="trophy">5th</div>
                 <p class="team">{{ top_five[4] ? top_five[4].prettyName : "no team"}}</p>
-                <p class="badge-count">{{ top_five[4] ? top_five[4].badge_count : "no badges"}}</p>
+                <p class="badge-count">{{ top_five[4] ? top_five[4].badge_count : "nothing"}}</p>
               </div>
             </div>               
         </div>        
