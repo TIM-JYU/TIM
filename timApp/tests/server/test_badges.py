@@ -15,7 +15,9 @@ class BadgeTest(TimRouteTest):
     def test_badge(self):
         it_25 = self.create_group("it_25", [self.test_user_1, self.test_user_2])
         it_26 = self.create_group("it_26", [self.test_user_1, self.test_user_3])
-        it_25_cats = self.create_group("it_25-cats", [self.test_user_2])
+        it_25_cats = self.create_group(
+            "it_25-cats", [self.test_user_1, self.test_user_2]
+        )
         doc_it_25 = DocEntry.create("groups/it_25", it_25)
         doc_it_26 = DocEntry.create("groups/it_26", it_26)
         db.session.flush()
@@ -79,7 +81,7 @@ class BadgeTest(TimRouteTest):
                 "context_group": it_25.name,
                 "title": "Communicator",
                 "color": "red",
-                "shape": "circle",
+                "shape": "round",
                 "image": 2,
                 "description": "Great communication",
             },
@@ -122,7 +124,7 @@ class BadgeTest(TimRouteTest):
                     "modified_by": None,
                     "restored": None,
                     "restored_by": None,
-                    "shape": "circle",
+                    "shape": "round",
                     "title": "Communicator",
                 },
             ],
@@ -195,7 +197,7 @@ class BadgeTest(TimRouteTest):
                     "modified_by": None,
                     "restored": None,
                     "restored_by": None,
-                    "shape": "circle",
+                    "shape": "round",
                     "title": "Communicator",
                 },
             ],
@@ -292,5 +294,58 @@ class BadgeTest(TimRouteTest):
             result_abic_deactivated,
         )
 
+        # fetch groups badges when no badges given
+        result_grba_empty = self.get(f"/groups_badges/{it_25_cats.id}/{it_25.name}")
+        self.assertEqual([], result_grba_empty)
+
+        # check with badge_given-route is a badge given to some usergroup when no badges given
+        result_bg_empty = self.get("/badge_given/1")
+        self.assertEqual([], result_bg_empty)
+
+        # check with badge_holders-route is a badge given to some usergroup when no badges given
+        result_bg_empty = self.get("/badge_holders/1")
+        self.assertEqual([[], []], result_bg_empty)
+
+        # give 2 badges
+        result_giba_1 = self.post(
+            "/give_badge",
+            data={
+                "given_by": self.test_user_1.id,
+                "doc_id": doc_it_25.block.id,
+                "context_group": it_25.name,
+                "group_id": it_25_cats.id,
+                "badge_id": 1,
+                "message": "Great work!",
+            },
+        )
+        self.assertEqual(
+            {
+                "id": 1,
+                "active": True,
+                "given_by": self.test_user_1.id,
+                "given": result_giba_1["given"],
+                "withdrawn_by": None,
+                "withdrawn": None,
+                "undo_withdrawn_by": None,
+                "undo_withdrawn": None,
+                "group_id": it_25_cats.id,
+                "badge_id": 1,
+                "message": "Great work!",
+            },
+            result_giba_1,
+        )
+        result_giba_2 = self.post(
+            "/give_badge",
+            data={
+                "given_by": self.test_user_1.id,
+                "doc_id": doc_it_25.block.id,
+                "context_group": it_25.name,
+                "group_id": it_25_cats.id,
+                "badge_id": 1,
+                "message": "Great work again!",
+            },
+        )
+
         # TODO: Test routes with a user that isn't included in it_25.
         # TODO: Test routes with a user that doesn't have teacher access.
+        # TODO: Test routes when badges have been given to a user who is included in many groups.

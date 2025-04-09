@@ -68,7 +68,7 @@ class Badge(db.Model):
 
     def to_json(self) -> dict:
         """
-        Returns a JSON representation of the badge.
+        Returns a json representation of the badge.
         :return: badge in json format
         """
         return {
@@ -132,3 +132,22 @@ class BadgeGiven(db.Model):
 
     undo_withdrawn: Mapped[Optional[datetime_tz]] = mapped_column()
     """Timestamp when the badge withdrawal was undoed."""
+
+    def to_json(self) -> dict:
+        """
+        Returns a json representation of the badgegiven.
+        :return: badgegiven in json format
+        """
+        return {
+            "id": self.id,
+            "message": self.message,
+            "badge_id": self.badge_id,
+            "group_id": self.group_id,
+            "active": self.active,
+            "given_by": self.given_by,
+            "given": self.given,
+            "withdrawn_by": self.withdrawn_by,
+            "withdrawn": self.withdrawn,
+            "undo_withdrawn_by": self.undo_withdrawn_by,
+            "undo_withdrawn": self.undo_withdrawn,
+        }

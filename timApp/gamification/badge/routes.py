@@ -390,40 +390,6 @@ def get_groups_badges(group_id: int, context_group: str) -> Response:
         if not d:
             raise NotExist()
         verify_teacher_access(d)
-        # group = UserGroup.get_by_id(group_id)
-        # # if group is a personal group
-        # if group.is_personal_group:
-        #     user = User.get_by_name(group.name)
-        #     # fetch group memberships where user belongs
-        #     users_group_memberships = (
-        #         run_sql(
-        #             select(UserGroupMember).filter(
-        #                 UserGroupMember.user_id == user.id,
-        #                 or_(
-        #                     UserGroupMember.membership_end > datetime_tz.now(),
-        #                     UserGroupMember.membership_end == None,
-        #                 ),
-        #             )
-        #         )
-        #         .scalars()
-        #         .all()
-        #     )
-        #     # if there is at least one group in users_group_memberships
-        #     # where current user has teacher rights, then approve
-        #     for users_group_membership in users_group_memberships:
-        #         usergroup = UserGroup.get_by_id(users_group_membership.usergroup_id)
-        #         d = DocEntry.find_by_path(f"groups/{usergroup.name}")
-        #         if not d:
-        #             raise NotExist()
-        #         verify_teacher_access(
-        #             d
-        #         )  # There is a problem because of abort_if_not_access_and_required.
-        # # if group is not a personal group
-        # else:
-        #     d = DocEntry.find_by_path(f"groups/{group.name}")
-        #     if not d:
-        #         raise NotExist()
-        #     verify_teacher_access(d)
     groups_badges_given = (
         run_sql(
             select(BadgeGiven)
@@ -437,25 +403,25 @@ def get_groups_badges(group_id: int, context_group: str) -> Response:
     badge_ids = []
     badge_ids_unique = []
     badge_ids_badgegiven_ids_and_msgs: dict[str, tuple] = {}
-    for badgeGiven in groups_badges_given:
+    for badge_given in groups_badges_given:
         key_extension = 0
         while (
-            str(badgeGiven.badge_id) + "_" + str(key_extension)
+            str(badge_given.badge_id) + "_" + str(key_extension)
         ) in badge_ids_badgegiven_ids_and_msgs.keys():
             key_extension += 1
-        badge_ids.append(badgeGiven.badge_id)
-        badge_ids_unique.append((badgeGiven.badge_id, key_extension))
+        badge_ids.append(badge_given.badge_id)
+        badge_ids_unique.append((badge_given.badge_id, key_extension))
         badge_ids_badgegiven_ids_and_msgs[
-            str(badgeGiven.badge_id) + "_" + str(key_extension)
+            str(badge_given.badge_id) + "_" + str(key_extension)
         ] = (
-            badgeGiven.id,
-            badgeGiven.message,
-            badgeGiven.given_by,
-            badgeGiven.given,
-            badgeGiven.withdrawn_by,
-            badgeGiven.withdrawn,
-            badgeGiven.undo_withdrawn_by,
-            badgeGiven.undo_withdrawn,
+            badge_given.id,
+            badge_given.message,
+            badge_given.given_by,
+            badge_given.given,
+            badge_given.withdrawn_by,
+            badge_given.withdrawn,
+            badge_given.undo_withdrawn_by,
+            badge_given.undo_withdrawn,
         )
     context_group_object = UserGroup.get_by_name(context_group)
     groups_badges = (
@@ -469,6 +435,24 @@ def get_groups_badges(group_id: int, context_group: str) -> Response:
         .scalars()
         .all()
     )
+    delete_keys = []
+    for key in badge_ids_badgegiven_ids_and_msgs:
+        key_first = int(key.split("_")[0])
+        delete = True
+        for groups_badge in groups_badges:
+            if key_first == groups_badge.id:
+                delete = False
+        if delete:
+            delete_keys.append(key)
+    for key in delete_keys:
+        del badge_ids_badgegiven_ids_and_msgs[key]
+    for i in range(len(badge_ids_unique) - 1, -1, -1):
+        delete = True
+        for groups_badge in groups_badges:
+            if badge_ids_unique[i][0] == groups_badge.id:
+                delete = False
+        if delete:
+            del badge_ids_unique[i]
     groups_badges_ordered = []
     for badge_id in badge_ids:
         for groups_badge in groups_badges:
@@ -552,13 +536,15 @@ def get_groups_badges(group_id: int, context_group: str) -> Response:
 
 
 # TODO: Create tests for this route.
+# TODO: Is this an unnecessary route? Can badge_holders-route do the same?
+# TODO: Do access right checks.
 # TODO: Handle errors.
 @badges_blueprint.get("/badge_given/<badge_id>")
 def get_badge_given(badge_id: int) -> Response:
     """
-    Fetches holders of given badges.
+    Checks if a badge has been given to usergroups.
     :param badge_id: ID of the badge
-    :return: Badgegivens in json response format
+    :return: BadgeGivens in json response format
     """
     badge_given = (
         run_sql(
@@ -615,7 +601,6 @@ def get_badge_holders(badge_id: int) -> Response:
     )
 
 
-# TODO: Create tests for this route.
 # TODO: Handle errors.
 @badges_blueprint.post("/give_badge")
 def give_badge(
@@ -662,7 +647,8 @@ def give_badge(
                 "message": badge_given.message,
             }
         )
-    return ok_response()
+    return json_response(badge_given.to_json(), 200)
+    # return ok_response()
 
 
 # TODO: Create tests for this route.
