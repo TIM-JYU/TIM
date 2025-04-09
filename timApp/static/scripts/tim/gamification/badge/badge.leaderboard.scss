@@ -3,19 +3,10 @@
     position: relative;
     margin-top: 10px;
     text-align: center;
-    color: black;
+    color: gray;
     margin-left: -6px;
     z-index: 1;
 }
-
-.icon img {
-    width: 85px;
-    height: auto;
-    border-radius: 50%;
-    object-fit: cover;
-    transition: transform 0.3s ease-in-out;
-}
-
 
 .first .material-symbols-outlined {
   color: orange;
@@ -27,6 +18,14 @@
 
 .third .material-symbols-outlined {
   color: burlywood;
+}
+
+.fourth .material-symbols-outlined {
+  color: #808080;
+}
+
+.fifth .material-symbols-outlined {
+  color: #d3d3d3;
 }
 
 .nimi {
@@ -71,8 +70,24 @@ body {
   align-items: center;
 }
 
+@media (max-width: 1024px) {
+  .trophy {
+    width: 90px; /* Keskikokoiset näytöt, kuten tabletit tai kapeat selainikkunat */
+  }
+}
+
+/* Erittäin pienille näytöille */
+@media (max-width: 320px) {
+  .trophy {
+    width: clamp(50px, 20vw, 119px); /* Voit nostaa suhteellista osuutta (vw) pienentämään elementtiä */
+    margin: 0 3px 10px; /* Vähennä vaakasuuntaista marginaalia */
+    padding: 8px;      /* Pienempi padding */
+  }
+}
+
 .trophy {
-  width: 119px;
+  box-sizing: border-box;
+  width: clamp(75px, 15vw, 119px);
   border-radius: 10px;
   margin-bottom: 10px;
   padding-top: 10px;
@@ -113,8 +128,4 @@ body {
 .badge-count {
   font-size: 16px;
   color: #555;
-}
-
-.icon img:hover {
-   transform: scale(5.0);
 }
