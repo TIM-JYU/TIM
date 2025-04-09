@@ -35,28 +35,29 @@ import {TimUtilityModule} from "tim/ui/tim-utility.module";
 
                 <div *ngIf="userAssign" class="form-group">
                     <label>Users</label>
-                    <div *ngFor="let user of users" class="option-item">
-                        <span class="option-name" (click)="selectedUser = user; fetchUserBadges(user.id)" [ngClass]="{'selected-option': selectedUser?.id === user.id}">
-                            {{user.real_name}}
-                        </span>
-                    </div>
-                    
-                    <ng-container *ngIf="userBadges.length > 0">
-                        <p *ngIf="selectedUser?.name != undefined">{{ selectedUser?.real_name }}'s badges</p>
-                        <div class="user_badges" (wheel)="onScroll($event)">
-                            <div class="badge-card" *ngFor="let badge of userBadges">
-                                <tim-badge 
-                                           [ngClass]="{'selected-badge': selectedBadge === badge}"
-                                           title="{{badge.title}}"
-                                           color="{{badge.color}}"
-                                           shape="{{badge.shape}}"
-                                           [image]="badge.image"
-                                           (click)="selectBadge(badge, false, false)">
-                                </tim-badge>
-                            </div>
+                    <div class="list-scroll-container" (wheel)="onScrollList($event)">
+                        <div *ngFor="let user of users" class="option-item">
+                            <span class="option-name" (click)="selectedUser = user; fetchUserBadges(user.id)" [ngClass]="{'selected-option': selectedUser?.id === user.id}">
+                                {{user.real_name}}
+                            </span>
                         </div>
-                    </ng-container>
-                    
+                        
+                        <ng-container *ngIf="userBadges.length > 0">
+                            <p *ngIf="selectedUser?.name != undefined">{{ selectedUser?.real_name }}'s badges</p>
+                            <div class="user_badges" (wheel)="onScroll($event)">
+                                <div class="badge-card" *ngFor="let badge of userBadges">
+                                    <tim-badge 
+                                               [ngClass]="{'selected-badge': selectedBadge === badge}"
+                                               title="{{badge.title}}"
+                                               color="{{badge.color}}"
+                                               shape="{{badge.shape}}"
+                                               [image]="badge.image"
+                                               (click)="selectBadge(badge, false, false)">
+                                    </tim-badge>
+                                </div>
+                            </div>
+                        </ng-container>
+                    </div>
                     <ng-container *ngIf="userBadges.length === 0 && selectedUser">
                         <p> no assigned badges </p>
                     </ng-container>
@@ -64,27 +65,29 @@ import {TimUtilityModule} from "tim/ui/tim-utility.module";
 
                 <div *ngIf="userAssign === false" class="form-group">
                     <label>Groups</label>
-                    <div *ngFor="let group of groups" class="option-item">
-                        <span class="option-name" (click)="selectedGroup = group; fetchGroupBadges(group.id)" [ngClass]="{'selected-option': selectedGroup?.id === group.id}">
-                            {{ prettyGroupName(group.name) }}
-                        </span>
-                    </div>
-                    
-                    <ng-container *ngIf="groupBadges.length > 0">
-                        <p *ngIf="selectedGroup?.name != undefined">{{ selectedGroup?.name }} badges</p>
-                        <div class="group_badges" (wheel)="onScroll($event)">
-                            <div class="badge-card" *ngFor="let badge of groupBadges">
-                                <tim-badge
-                                           [ngClass]="{'selected-badge': selectedBadge === badge}"
-                                           title="{{badge.title}}"
-                                           color="{{badge.color}}"
-                                           shape="{{badge.shape}}"
-                                           [image]="badge.image"
-                                           (click)="selectBadge(badge, true, false)">
-                                </tim-badge>
-                            </div>
+                    <div class="list-scroll-container" (wheel)="onScrollList($event)">
+                        <div *ngFor="let group of groups" class="option-item">
+                            <span class="option-name" (click)="selectedGroup = group; fetchGroupBadges(group.id)" [ngClass]="{'selected-option': selectedGroup?.id === group.id}">
+                                {{ prettyGroupName(group.name) }}
+                            </span>
                         </div>
-                    </ng-container>
+                        
+                        <ng-container *ngIf="groupBadges.length > 0">
+                            <p *ngIf="selectedGroup?.name != undefined">{{ selectedGroup?.name }} badges</p>
+                            <div class="group_badges" (wheel)="onScroll($event)">
+                                <div class="badge-card" *ngFor="let badge of groupBadges">
+                                    <tim-badge
+                                               [ngClass]="{'selected-badge': selectedBadge === badge}"
+                                               title="{{badge.title}}"
+                                               color="{{badge.color}}"
+                                               shape="{{badge.shape}}"
+                                               [image]="badge.image"
+                                               (click)="selectBadge(badge, true, false)">
+                                    </tim-badge>
+                                </div>
+                            </div>
+                        </ng-container>
+                    </div>
                     <ng-container *ngIf="groupBadges.length === 0 && selectedGroup">
                         <p>No assigned badges</p>
                     </ng-container>
@@ -148,6 +151,17 @@ export class BadgeWithdrawComponent implements OnInit {
             const targetElement = event.currentTarget as HTMLElement;
             const scrollAmount = event.deltaY * 0.5;
             targetElement.scrollLeft += scrollAmount;
+            event.preventDefault();
+        }
+    }
+
+    onScrollList(event: WheelEvent) {
+        const element = event.currentTarget as HTMLElement;
+        const scrollable = element.scrollHeight > element.clientHeight;
+        if (scrollable) {
+            const targetElement = event.currentTarget as HTMLElement;
+            const scrollAmount = event.deltaY * 0.5;
+            targetElement.scrollTop += scrollAmount;
             event.preventDefault();
         }
     }
