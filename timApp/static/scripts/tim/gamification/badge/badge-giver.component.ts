@@ -52,25 +52,27 @@ import {cons} from "fp-ts/ReadonlyNonEmptyArray";
 
                 <div *ngIf="userAssign === true" class="form-group">
                     <label>Users</label>
-                    <div *ngFor="let group of groups">
-                        <span class="option-name" (click)="handleGroupSelection(group)"
-                              [ngClass]="{'selected-option': selectedGroup?.id === group.id}">
-                            {{ groupPrettyNames.get(group.id) || group.name }}
-                        </span>
-                        <div *ngIf="groupUsersMap.get(group.id)?.length">
-                            <input class="selectall-checkbox" type="checkbox" (change)="toggleSelectAll(group, $event)">Select
-                            all
-                        </div>
-                        <div *ngFor="let user of groupUsersMap.get(group.id)" class="option-item">
-                            <input class="user-checkbox"
-                                   type="checkbox"
-                                   [value]="user"
-                                   [checked]="isAllSelectedMap.get(group.id)"
-                                   (change)="toggleUserSelection(user, $event)"
-                            />
-                            <div class="option-name" (click)="handleUserSelection(user)"
-                                 [ngClass]="{'selected-option': selectedUser?.id === user.id}">
-                                {{ user.real_name }}
+                    <div class="list-scroll-container" (wheel)="onScrollList($event)">
+                        <div *ngFor="let group of groups">
+                            <span class="option-name" (click)="handleGroupSelection(group)"
+                                  [ngClass]="{'selected-option': selectedGroup?.id === group.id}">
+                                {{ groupPrettyNames.get(group.id) || group.name }}
+                            </span>
+                            <div *ngIf="groupUsersMap.get(group.id)?.length">
+                                <input class="selectall-checkbox" type="checkbox" (change)="toggleSelectAll(group, $event)">Select
+                                all
+                            </div>
+                            <div *ngFor="let user of groupUsersMap.get(group.id)" class="option-item">
+                                <input class="user-checkbox"
+                                       type="checkbox"
+                                       [value]="user"
+                                       [checked]="isAllSelectedMap.get(group.id)"
+                                       (change)="toggleUserSelection(user, $event)"
+                                />
+                                <div class="option-name" (click)="handleUserSelection(user)"
+                                     [ngClass]="{'selected-option': selectedUser?.id === user.id}">
+                                    {{ user.real_name }}
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -78,19 +80,21 @@ import {cons} from "fp-ts/ReadonlyNonEmptyArray";
 
                 <div *ngIf="userAssign === false" class="form-group">
                     <label>Groups</label>
-                    <div *ngFor="let group of groups" class="group-item">
-                        <input class="group-checkbox"
-                               type="checkbox"
-                               [value]="group"
-                               (change)="toggleGroupSelection(group, $event)"
-                        />
-                        <span class="option-name" (click)="handleGroupSelection(group); fetchGroupBadges(group.id);"
-                              [ngClass]="{'selected-option': selectedGroup?.id === group.id}">
-                            {{ groupPrettyNames.get(group.id) || group.name }}
-                        </span>
-                        <div class="group-users" *ngIf="selectedGroup === group">
-                            <div *ngFor="let user of users">
-                                <div class="user-name">{{ user.real_name }}</div>
+                    <div class="list-scroll-container" (wheel)="onScrollList($event)">
+                        <div *ngFor="let group of groups" class="group-item">
+                            <input class="group-checkbox"
+                                   type="checkbox"
+                                   [value]="group"
+                                   (change)="toggleGroupSelection(group, $event)"
+                            />
+                            <span class="option-name" (click)="handleGroupSelection(group); fetchGroupBadges(group.id);"
+                                  [ngClass]="{'selected-option': selectedGroup?.id === group.id}">
+                                {{ groupPrettyNames.get(group.id) || group.name }}
+                            </span>
+                            <div class="group-users" *ngIf="selectedGroup === group">
+                                <div *ngFor="let user of users">
+                                    <div class="user-name">{{ user.real_name }}</div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -313,6 +317,7 @@ export class BadgeGiverComponent implements OnInit {
     handleUserSelection(user: IUser) {
         if (this.selectedUser === user) {
             this.selectedUser = null;
+            return;
         }
         this.selectedUser = user;
         this.fetchUserBadges(user);
@@ -450,9 +455,19 @@ export class BadgeGiverComponent implements OnInit {
         this.emptyForm();
     }
 
-    //Bring pretty group names (descriptions)
+    // Bring pretty group names (descriptions)
     prettyGroupNames() {}
 
+    onScrollList(event: WheelEvent) {
+        const element = event.currentTarget as HTMLElement;
+        const scrollable = element.scrollHeight > element.clientHeight;
+        if (scrollable) {
+            const targetElement = event.currentTarget as HTMLElement;
+            const scrollAmount = event.deltaY * 0.5;
+            targetElement.scrollTop += scrollAmount;
+            event.preventDefault();
+        }
+    }
     /**
      * Tyhjentää attribuuttina annetun taulukon
      */

@@ -1,3 +1,9 @@
+.list-scroll-container{
+  max-height: 300px;
+  overflow-y: auto;
+  padding-right: 8px;
+}
+
 .user-group-button-container {
   display: flex;
   justify-content: space-between;
