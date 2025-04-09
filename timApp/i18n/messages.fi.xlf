@@ -9638,7 +9638,7 @@ Tätä toimintoa ei voi peruuttaa!
       </trans-unit>
       <trans-unit id="5847778941274205961" datatype="html">
         <source>Mark not done</source>
-        <target state="translated">Merkitse tehdyksi</target>
+        <target state="translated">Merkitse tekemättömäksi</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
           <context context-type="linenumber">519,520</context>
