@@ -234,17 +234,29 @@ export class DraggableController implements IController {
         } else {
             this.element.css("position", this.anchor);
             this.element.css("visibility", "visible");
+            if (this.slidePars) {
+                this.initSlidePars();
+            }
             void this.restoreSizeAndPosition(VisibilityFix.Full);
             this.element.removeClass("draggable-attached");
             this.element.addClass("draggable-detached");
-            // console.log("detach", this.slidePars);
-            if (this.slidePars) {
-                vctrlInstance?.addSlideParsState();
-            }
         }
         this.element.css("z-index", this.getVisibleLayer());
 
         this.detachStorage.set(!canDrag);
+    }
+
+    private initSlidePars() {
+        // Move the window to top-left corner unless it was moved previously.
+        if (!this.posStorage.get()) {
+            if (this.setLeft) {
+                this.element.css("left", 0);
+            }
+            if (this.setTop) {
+                this.element.css("top", 0);
+            }
+        }
+        vctrlInstance?.addSlideParsState();
     }
 
     /**
@@ -387,6 +399,10 @@ export class DraggableController implements IController {
 
     private async restoreSizeAndPosition(vf: VisibilityFix) {
         if (!this.posKey) {
+            return;
+        }
+        // Don't try to restore size and position if the element is not draggable.
+        if (!this.canDrag()) {
             return;
         }
         const oldSize = this.sizeStorage.get() ?? this.initialSize;
