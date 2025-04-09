@@ -72,16 +72,15 @@ body {
 
 @media (max-width: 1024px) {
   .trophy {
-    width: 90px; /* Keskikokoiset näytöt, kuten tabletit tai kapeat selainikkunat */
+    width: 90px;
   }
 }
 
-/* Erittäin pienille näytöille */
 @media (max-width: 320px) {
   .trophy {
-    width: clamp(50px, 20vw, 119px); /* Voit nostaa suhteellista osuutta (vw) pienentämään elementtiä */
-    margin: 0 3px 10px; /* Vähennä vaakasuuntaista marginaalia */
-    padding: 8px;      /* Pienempi padding */
+    width: clamp(50px, 20vw, 119px);
+    margin: 0 3px 10px;
+    padding: 8px;
   }
 }
 

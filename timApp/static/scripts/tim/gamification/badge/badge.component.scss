@@ -309,68 +309,81 @@
         rgb(255, 0, 255) 100%
     );
     color: rgb(255, 255, 0);
-    --glow-light: rgba(0, 0, 255, 0.4); /* Brighter and softer glow */
+    --glow-light: rgba(0, 0, 255, 0.4);
     --glow-strong: rgba(0, 0, 255, 1);
 }
 
 .red-vibrant {
     background: linear-gradient(to bottom right,
-        rgb(64, 0, 0) 0%,      /* Super dark red */
-        rgb(139, 0, 0) 30%,    /* Deep red (classic "dark red") */
-        rgb(255, 0, 0) 60%,    /* Pure red */
-        rgb(255, 255, 0) 100%  /* Super bright yellow */
+        rgb(64, 0, 0) 0%,
+        rgb(139, 0, 0) 30%,
+        rgb(255, 0, 0) 60%,
+        rgb(255, 255, 0) 100%
     );
-    color: rgb(0, 255, 255);   /* Cyan text for strong contrast */
-    --glow-light: rgba(255, 0, 0, 0.4); /* Softer red glow */
+    color: rgb(0, 255, 255);
+    --glow-light: rgba(255, 0, 0, 0.4);
     --glow-strong: rgba(255, 0, 0, 1);
 }
 
 .green-vibrant {
     background: linear-gradient(to bottom right,
-        rgb(0, 32, 0) 0%,      /* Almost black green */
-        rgb(0, 128, 0) 30%,    /* Rich dark green */
-        rgb(0, 255, 0) 60%,    /* Pure neon green */
-        rgb(0, 255, 255) 100%  /* Bright cyan for that crazy pop */
+        rgb(0, 32, 0) 0%,
+        rgb(0, 128, 0) 25%,
+        rgb(0, 255, 0) 50%,
+        rgb(0, 64, 0) 100%
     );
-    color: rgb(255, 0, 0);     /* Pure red text for max contrast */
-    --glow-light: rgba(0, 255, 0, 0.4); /* Softer green glow */
+    color: rgb(255, 0, 0);
+    --glow-light: rgba(0, 255, 0, 0.4);
     --glow-strong: rgba(0, 255, 0, 1);
 }
 
+
 .purple-vibrant {
     background: linear-gradient(to bottom right,
-        rgb(32, 0, 64) 0%,      /* Super dark purple */
-        rgb(75, 0, 130) 30%,    /* Deep purple (indigo-like) */
-        rgb(255, 0, 255) 60%,   /* Pure magenta (neon purple) */
-        rgb(0, 255, 255) 100%   /* Bright cyan for explosive pop */
+        rgb(32, 0, 64) 0%,
+        rgb(75, 0, 130) 30%,
+        rgb(255, 0, 255) 60%,
+        rgb(0, 255, 255) 100%
     );
-    color: rgb(255, 255, 0);   /* Bright yellow text for sharp contrast */
-    --glow-light: rgba(255, 0, 255, 0.4); /* Softer magenta glow */
+    color: rgb(255, 255, 0);
+    --glow-light: rgba(255, 0, 255, 0.4);
     --glow-strong: rgba(255, 0, 255, 1);
 }
 
 .orange-vibrant {
     background: linear-gradient(to bottom right,
-        rgb(64, 32, 0) 0%,      /* Super dark orange-brown for depth */
-        rgb(255, 69, 0) 30%,    /* Deep, fiery orange (redder side) */
-        rgb(255, 165, 0) 60%,   /* Classic bright orange */
-        rgb(255, 0, 0) 100%     /* Bold red finish for fiery intensity */
+        rgb(64, 32, 0) 0%,
+        rgb(255, 69, 0) 30%,
+        rgb(255, 165, 0) 60%,
+        rgb(255, 0, 0) 100%
     );
-    color: rgb(0, 0, 255);    /* Bright blue text for striking contrast */
-    --glow-light: rgba(255, 69, 0, 0.4); /* Softer orange glow */
+    color: rgb(0, 0, 255);
+    --glow-light: rgba(255, 69, 0, 0.4);
     --glow-strong: rgba(255, 69, 0, 1);
 }
 
 .yellow-vibrant {
     background: linear-gradient(to bottom right,
-        rgb(255, 255, 0) 0%,    /* Bright yellow for the start */
-        rgb(255, 165, 0) 30%,   /* Vibrant orange for added depth */
-        rgb(0, 255, 255) 60%,   /* Bright cyan for an intense contrast */
-        rgb(255, 0, 255) 100%   /* Neon purple for an explosive finish */
+        rgb(255, 255, 0) 0%,
+        rgb(255, 165, 0) 30%,
+        rgb(0, 255, 255) 60%,
+        rgb(255, 0, 255) 100%
     );
-    color: rgb(0, 255, 0);    /* Bright green text for a sharp contrast */
-    --glow-light: rgba(255, 255, 0, 0.4); /* Softer yellow glow */
+    color: rgb(0, 255, 0);
+    --glow-light: rgba(255, 255, 0, 0.4);
     --glow-strong: rgba(255, 255, 0, 1);
+}
+
+.black-vibrant {
+    background: linear-gradient(to bottom right,
+        rgb(0, 0, 0) 0%,
+        rgb(15, 15, 15) 20%,
+        rgb(40, 40, 40) 50%,
+        rgb(80, 80, 80) 80%,
+        rgb(20, 20, 20) 100%
+    );
+    --glow-light: rgba(50, 50, 50, 0.4);
+    --glow-strong: rgba(15, 15, 15, 1);
 }
 
 .badge-container {
