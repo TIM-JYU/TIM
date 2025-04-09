@@ -4,10 +4,7 @@ import {Component, NgModule} from "@angular/core";
 import {CommonModule} from "@angular/common";
 import {FormsModule} from "@angular/forms";
 import {HttpClient, HttpClientModule} from "@angular/common/http";
-import {
-    BadgeComponent,
-    BadgeModule,
-} from "tim/gamification/badge/badge.component";
+import {BadgeModule} from "tim/gamification/badge/badge.component";
 import {BadgeService} from "tim/gamification/badge/badge.service";
 import type {
     IBadge,
@@ -42,7 +39,7 @@ import {toPromise} from "tim/util/utils";
                 <p class="no-badges-txt">No user badges</p>
             </ng-container>
             <ng-container *ngIf="badges.length > 0">
-                <div class="user_badges" (wheel)="onScroll($event)">
+                <div class="user-badges">
                     <div class="badge-card" *ngFor="let badge of badges">
                         <tim-badge
                                 title="{{badge.title}}"
@@ -67,7 +64,7 @@ import {toPromise} from "tim/util/utils";
                     </ng-container>
 
                     <ng-container *ngIf="groupBadgesMap.get(group.id)?.length || 0 > 0">
-                        <div class="users_group_badges" (wheel)="onScroll($event)">
+                        <div class="users-group-badges">
                             <div class="badge-card" *ngFor="let badge of groupBadgesMap.get(group.id)">
                                 <tim-badge
                                         title="{{badge.title}}"
@@ -102,7 +99,6 @@ export class BadgeViewerComponent implements OnInit {
     disableDialogWindow?: boolean;
     availableImages: {id: number; name: string}[] = [];
 
-    givenBadges?: IBadge[];
     teacherPermission: boolean = false;
     alerts: Array<{
         msg: string;
@@ -304,17 +300,6 @@ export class BadgeViewerComponent implements OnInit {
                     this.badgegroupContext
                 )
             );
-        }
-    }
-
-    onScroll(event: WheelEvent) {
-        const element = event.currentTarget as HTMLElement;
-        const scrollable = element.scrollWidth > element.clientWidth;
-        if (scrollable) {
-            const targetElement = event.currentTarget as HTMLElement;
-            const scrollAmount = event.deltaY * 0.5;
-            targetElement.scrollLeft += scrollAmount;
-            event.preventDefault();
         }
     }
 
