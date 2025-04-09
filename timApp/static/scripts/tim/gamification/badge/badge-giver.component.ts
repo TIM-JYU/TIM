@@ -52,14 +52,16 @@ import {cons} from "fp-ts/ReadonlyNonEmptyArray";
 
                 <div *ngIf="userAssign === true" class="form-group">
                     <label>Users</label>
+                    <div>
+                        <input class="user-checkbox" type="checkbox" (change)="toggleSelectAllUsers($event)">Select all users
+                    </div>
                     <div class="list-scroll-container" (wheel)="onScrollList($event)">
                         <div *ngFor="let group of groups">
-                            <span class="option-name" (click)="handleGroupSelection(group)"
-                                  [ngClass]="{'selected-option': selectedGroup?.id === group.id}">
+                            <span *ngIf="groupUsersMap.get(group.id)?.length">
                                 {{ groupPrettyNames.get(group.id) || group.name }}
                             </span>
                             <div *ngIf="groupUsersMap.get(group.id)?.length">
-                                <input class="selectall-checkbox" type="checkbox" (change)="toggleSelectAll(group, $event)">Select
+                                <input class="user-checkbox" type="checkbox" (change)="toggleSelectAll(group, $event)">Select
                                 all
                             </div>
                             <div *ngFor="let user of groupUsersMap.get(group.id)" class="option-item">
@@ -80,12 +82,16 @@ import {cons} from "fp-ts/ReadonlyNonEmptyArray";
 
                 <div *ngIf="userAssign === false" class="form-group">
                     <label>Groups</label>
+                    <div>
+                        <input class="user-checkbox" type="checkbox" (change)="toggleSelectAllGroups($event)">Select all groups
+                    </div>
                     <div class="list-scroll-container" (wheel)="onScrollList($event)">
                         <div *ngFor="let group of groups" class="group-item">
                             <input class="group-checkbox"
                                    type="checkbox"
                                    [value]="group"
                                    (change)="toggleGroupSelection(group, $event)"
+                                   [checked]="isAllSelectedMap.get(group.id)"
                             />
                             <span class="option-name" (click)="handleGroupSelection(group); fetchGroupBadges(group.id);"
                                   [ngClass]="{'selected-option': selectedGroup?.id === group.id}">
@@ -305,6 +311,38 @@ export class BadgeGiverComponent implements OnInit {
             );
         }
         this.isAllSelectedMap.set(group.id, false);
+    }
+    toggleSelectAllUsers(event: Event) {
+        const isChecked = (event.target as HTMLInputElement).checked;
+        if (isChecked) {
+            this.emptyTable(this.selectedUsers);
+            for (const user of this.users) {
+                this.selectedUsers.push(user);
+            }
+            for (const group of this.groups) {
+                this.isAllSelectedMap.set(group.id, true);
+            }
+            return;
+        }
+        this.emptyTable(this.selectedUsers);
+        for (const group of this.groups) {
+            this.isAllSelectedMap.set(group.id, false);
+        }
+    }
+    toggleSelectAllGroups(event: Event) {
+        const isChecked = (event.target as HTMLInputElement).checked;
+        if (isChecked) {
+            this.emptyTable(this.selectedGroups);
+            for (const group of this.groups) {
+                this.selectedGroups.push(group);
+                this.isAllSelectedMap.set(group.id, true);
+            }
+            return;
+        }
+        this.emptyTable(this.selectedGroups);
+        for (const group of this.groups) {
+            this.isAllSelectedMap.set(group.id, false);
+        }
     }
 
     handleSwap(bool: boolean) {
