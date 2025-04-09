@@ -727,7 +727,7 @@ class Plugin:
             style = f'style="{style}"'
         eager_load_state_opt = ""
         if self.known.eagerlyLoadState:
-            eager_load_state_opt = "[eagerly-load-state]='true'"
+            eager_load_state_opt = 'eagerly-load-state="true"'
         html_task_id = (
             self.task_id.extended_or_doc_task if self.task_id else self.fake_task_id
         )
