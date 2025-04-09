@@ -410,6 +410,7 @@ export class BadgeCreatorComponent implements OnInit {
         "purple-vibrant",
         "orange-vibrant",
         "yellow-vibrant",
+        "black-vibrant",
     ];
 
     badgeForm = new FormGroup({
