@@ -41,6 +41,7 @@ import {TimUtilityModule} from "tim/ui/tim-utility.module";
                                 {{user.real_name}}
                             </span>
                         </div>
+                    </div>
                         
                         <ng-container *ngIf="userBadges.length > 0">
                             <p *ngIf="selectedUser?.name != undefined">{{ selectedUser?.real_name }}'s badges</p>
@@ -57,7 +58,7 @@ import {TimUtilityModule} from "tim/ui/tim-utility.module";
                                 </div>
                             </div>
                         </ng-container>
-                    </div>
+                    
                     <ng-container *ngIf="userBadges.length === 0 && selectedUser">
                         <p> no assigned badges </p>
                     </ng-container>
@@ -71,6 +72,7 @@ import {TimUtilityModule} from "tim/ui/tim-utility.module";
                                 {{ prettyGroupName(group.name) }}
                             </span>
                         </div>
+                    </div>
                         
                         <ng-container *ngIf="groupBadges.length > 0">
                             <p *ngIf="selectedGroup?.name != undefined">{{ selectedGroup?.name }} badges</p>
@@ -87,7 +89,7 @@ import {TimUtilityModule} from "tim/ui/tim-utility.module";
                                 </div>
                             </div>
                         </ng-container>
-                    </div>
+                    
                     <ng-container *ngIf="groupBadges.length === 0 && selectedGroup">
                         <p>No assigned badges</p>
                     </ng-container>
