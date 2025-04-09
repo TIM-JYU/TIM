@@ -9,20 +9,14 @@ import {HttpClient} from "@angular/common/http";
 import {HttpClientModule} from "@angular/common/http";
 import {BadgeViewerModule} from "tim/gamification/badge/badge-viewer.component";
 import {BadgeGiverModule} from "tim/gamification/badge/badge-giver.component";
-import {cons} from "fp-ts/ReadonlyNonEmptyArray";
-import {getFormBehavior} from "tim/plugin/util";
 import {BadgeService} from "tim/gamification/badge/badge.service";
 import type {IBadge} from "tim/gamification/badge/badge.interface";
 import {Users} from "tim/user/userService";
 import {showConfirm} from "tim/ui/showConfirmDialog";
 import {toPromise} from "tim/util/utils";
-import {
-    BadgeComponent,
-    BadgeModule,
-} from "tim/gamification/badge/badge.component";
+import {BadgeModule} from "tim/gamification/badge/badge.component";
 import {BadgeWithdrawModule} from "tim/gamification/badge/badge-withdraw.component";
 import {BadgeSelectedWithdrawModule} from "tim/gamification/badge/badge-selected-withdraw.component";
-import {ViewCtrl} from "tim/document/viewctrl";
 import {documentglobals} from "tim/util/globals";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 
@@ -33,7 +27,7 @@ import {TimUtilityModule} from "tim/ui/tim-utility.module";
 
         <ng-container *ngIf="!teacherPermission">
             <div class="badge-creator">
-                <div class="all_badges">
+                <div class="all-badges">
                     <h2>{{ selectedContextGroup ? "All Badges (" + selectedContextGroup + ")" : "All Badges" }}</h2>
                     <tim-alert *ngFor="let alert of alerts; let i = index" [severity]="alert.type" [closeable]="true" (closing)="badgeService.closeAlert(this.alerts, i)">
                         <div [innerHTML]="alert.msg"></div>
@@ -44,9 +38,9 @@ import {TimUtilityModule} from "tim/ui/tim-utility.module";
         <ng-container *ngIf="teacherPermission">
         <div class="badge-creator" [formGroup]="badgeForm" #allBadgesSection>
           <fieldset class="form-fieldset">
-            <div class="all_badges">
+            <div class="all-badges">
                 <fieldset>
-                    <div class="otsikko">
+                    <div class="creator-header">
                         <h2>{{ selectedContextGroup ? "All Badges (" + selectedContextGroup + ")" : "All Badges" }}</h2>
                         <div class="right-buttons">                       
                           <button title="Create Badge" id="showBadgeForm" type="button" (click)="clickCreate()">
@@ -57,7 +51,7 @@ import {TimUtilityModule} from "tim/ui/tim-utility.module";
                         </div> 
                     </div>                 
                     
-                    <div class="badge_view">
+                    <div class="badge-view">
                       <ng-container *ngIf="all_badges.length == 0">
                           <p class="no-badges-txt">This user/group does not have any badges yet.</p>
                       </ng-container>
@@ -117,7 +111,7 @@ import {TimUtilityModule} from "tim/ui/tim-utility.module";
               
             <div class="upper-form-group" *ngIf="this.badgeFormShowing">
                 <h2>{{ editingBadge ? 'Edit ' + editingBadge.title + ' Badge' : 'Create a Badge' }}</h2>
-                <form (ngSubmit)="onSubmit()" id="badgeForm">
+                <form (ngSubmit)="onSubmit()" id="badgeForm" class="form-group">
                   <div class="form-group">
                     <label for="title">Badge Title</label>
                     <input type="text" id="title" name="title" formControlName="title">

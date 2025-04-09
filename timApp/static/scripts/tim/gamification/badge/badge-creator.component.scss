@@ -7,14 +7,13 @@
   margin: 2em 0 2em 0;
   width: 100%;
   background-color: #fff;
-  z-index: 10;
 }
 
-.otsikko {
+.creator-header {
   display: flex;
 }
 
-.badge_view {
+.badge-view {
   display: flex;
   flex-wrap: wrap;
   gap: 20px;
@@ -44,7 +43,7 @@
   z-index: 2;
 }
 
-.badge_view::after {
+.badge-view::after {
   content: "";
   flex-grow: 9999;
   min-width: 70px;
@@ -61,8 +60,6 @@
                               #66A8C4);
   border-radius: 12px;
   font-size: 1.2em;
-  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
-  transition: all 0.3s ease;
   font-family: 'Arial', sans-serif;
   width: 100%;
   height: 100%;
@@ -82,16 +79,9 @@
   border-color: #0056b3;
 }
 
-
 h2 {
   color: black;
   margin: 20px 0 40px 0;
-}
-
-#badgeForm {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5em;
 }
 
 .form-group {
@@ -100,27 +90,15 @@ h2 {
   gap: 0.5em;
 }
 
-
-.icon-color-group {
+.icon-color-group, .shape-preview-group, .delete-edit {
   display: flex;
   justify-content: space-between;
   gap: 1.5em;
 }
 
-.icon-color-group .form-group {
-  flex: 1;  /* Asettaa kentän täyttämään jäljelle jäävän tilan */
-  max-width: 50%;  /* Kenttä täyttää 50% leveyksistä */
-}
-
-.shape-preview-group {
-  display: flex;
-  justify-content: space-between;
-  gap: 1.5em;
-}
-
-.shape-preview-group .form-group {
-  flex: 1;  /* Asettaa kentän täyttämään jäljelle jäävän tilan */
-  max-width: 50%;  /* Kenttä täyttää 50% leveyksistä */
+.icon-color-group .form-group, .shape-preview-group .form-group {
+  flex: 1;
+  max-width: 50%;
 }
 
 label {
@@ -183,7 +161,6 @@ button:hover {
   display: flex;
   flex-direction: column;
   gap: 0.5em;
-
   padding: 0.8em;
   border: 1px solid #0F4096;
   border-radius: 0.5em;
@@ -196,28 +173,22 @@ button:hover {
   margin-right: 10px;
 }
 
-.badge_view {
+.badge-view {
     display: flex;
     flex-wrap: wrap;
     justify-content: flex-start;
     align-items: center;
     gap: 2px;
-    //margin-bottom: 2em;
 }
 
-.all_badges {
-  //margin-top: 2em;
-}
-
-.all_badges tim-badge {
+.all-badges tim-badge {
   cursor: pointer;
   transition: transform 0.2s ease;
 }
 
-.all_badges tim-badge:hover {
+.all-badges tim-badge:hover {
   transform: scale(1.05);
 }
-
 
 button[type="button"]:hover {
   background-color: #9b1212;
@@ -240,12 +211,6 @@ button[type="button"]:hover {
   background-color: #7A9BCD;
 }
 
-.delete-edit {
-  display: flex;
-  justify-content: space-between;
-  gap: 1.5em;
-}
-
 #cancelButton {
   background-color: #6c757d;
   color: #fff;
@@ -263,10 +228,9 @@ button[type="button"]:hover {
   background-color: #5a6268;
 }
 
-
 .delete-edit .button-group {
-  flex: 1;  /* Asettaa kentän täyttämään jäljelle jäävän tilan */
-  max-width: 50%;  /* Kenttä täyttää 50% leveyksistä */
+  flex: 1;
+  max-width: 50%;
 }
 
 #createButton {
@@ -281,26 +245,23 @@ button[type="button"]:hover {
   transition: background-color 0.3s ease;
 }
 
-
 .button-group {
     display: flex;
-    align-items: center;  /* Adjust as needed */
+    align-items: center;
     width: 100%;
 }
 
 .left-buttons {
     display: flex;
     gap: 10px;
-    //margin-left: 10px;
 }
 
 .right-buttons {
     display: flex;
     gap: 10px;
-    margin-left: auto;  /* This pushes the entire group to the right */
+    margin-left: auto;
 }
 
-/* Style for the left three buttons */
 #showBadgeForm, #editButton, #giveBadgeButton {
     width: 4em;
     height: 4em;
@@ -317,7 +278,6 @@ button[type="button"]:hover {
     transition: background-color 0.2s ease;
 }
 
-/* Style for the delete button on the right */
 .right-button {
     font-size: medium;
     font-weight: bold;
@@ -332,20 +292,8 @@ button[type="button"]:hover {
     border-radius: 0.8em;
 }
 
-.withdrawButton {
-    background-color: #FF8C00; /* Oranssi väri */
-    color: white; /* Tekstin väri */
-    transition: background-color 0.2s ease;
-    margin-left: 10px;
-}
-.withdrawButton:hover {
-    background-color: #FF6A00 !important; /* Hover-väri */
-}
-
-
-/* Hover-tila muuttaa napin taustaväriä */
 #showBadgeForm:hover {
-    background-color: #0D357A;  /* Tummempi väri hover-tilassa */
+    background-color: #0D357A;
 }
 
 .disabled-btn {
@@ -385,48 +333,61 @@ button[type="button"]:hover {
 }
 
 @media (max-width: 785px) {
+
   .badge-card {
     margin: -15px -15px 10px -15px;
   }
-  .badge_view {
+
+  .badge-view {
     gap: 2px;
   }
+
   .badge-card tim-badge {
     transform: scale(clamp(0.5, 0.7, 0.7));
   }
+
   .badge-card tim-badge:hover {
     transform: scale(0.8);
   }
+
   .badge-buttons {
     bottom: -20px;
   }
+
   .badge-buttons button {
     max-width: 30px;
     max-height: 30px;
   }
+
 }
 
 @media (max-width: 550px) {
+
   .badge-card {
     width: 130px;
     height: 130px;
     margin: -15px -15px 10px -15px;
   }
-  .badge_view {
+
+  .badge-view {
     gap: 0;
   }
+
   .badge-card tim-badge {
     transform: scale(clamp(0.4, 0.6, 0.6));
   }
+
   .badge-card tim-badge:hover {
     transform: scale(0.7);
   }
+
   .badge-buttons {
     bottom: -10px;
   }
+
   .badge-buttons button {
     max-width: 25px;
     max-height: 25px;
   }
-}
 
+}

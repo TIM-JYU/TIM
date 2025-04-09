@@ -31,12 +31,11 @@
     border-radius: 10px;
     display: inline-block;
     transition: all 0.2s ease;
-
     filter: drop-shadow(0 0 5px var(--glow-light, rgba(255, 0, 0, 0.2)));
     animation: pulse 6s infinite;
 }
 
-.badge.hexagon:before, .badge.hexagon:after {
+.badge.hexagon:before, .badge.hexagon:after, .badge.flower:before, .badge.flower:after {
     position: absolute;
     width: inherit;
     height: inherit;
@@ -83,14 +82,13 @@
     animation: pulse 6s infinite;
 }
 
-
 .badge.square > .ribbon{
     bottom: 4px;
 }
 
 .badge.square .material-symbols-outlined {
   margin-top: 9px;
-  margin-left: 0px;
+  margin-left: 0;
 }
 
 .badge.flower {
@@ -103,21 +101,6 @@
 
   filter: drop-shadow(0 0 5px var(--glow-light, rgba(255, 0, 0, 0.2)));
   animation: pulse 6s infinite;
-}
-
-
-.badge.flower:before, .badge.flower:after {
-    position: absolute;
-    width: inherit;
-    height: inherit;
-    border-radius: inherit;
-    background: inherit;
-    content: "";
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    margin: auto;
 }
 
 .badge.flower:before {
@@ -137,31 +120,27 @@
   margin-left: -11px;
 }
 
-
 .badge.round {
     border-radius: 50%;
     width: 90px;
     height: 90px;
-
     filter: drop-shadow(0 0 5px var(--glow-light, rgba(255, 0, 0, 0.2)));
     animation: pulse 6s infinite;
 }
 
 .badge.round .material-symbols-outlined {
   margin-top: 9px;
-  margin-left: 0px;
+  margin-left: 0;
 }
 
 .badge:hover {
     top: -4px;
 }
 
-
 .badge .font {
     display: inline-block;
     margin-top: 1em;
 }
-
 
 .badge .ribbon {
     position: absolute;
@@ -244,12 +223,14 @@
     --glow-light: transparent;
     --glow-strong: transparent;
 }
+
 .gray {
     background: linear-gradient(to bottom right, #d3d3d3 0%, #a9a9a9 100%);
     color: #808080;
     --glow-light: transparent;
     --glow-strong: transparent;
 }
+
 .indigo {
     background: linear-gradient(to bottom right, #3f51b5 0%, #1a237e 100%);
     color: #303f9f;
@@ -393,8 +374,6 @@
 }
 
 .badge-container {
-  position: relative;
-  display: inline-block;
   padding: 10px;
   cursor: pointer;
 }
@@ -428,7 +407,6 @@
     border-color: transparent transparent rgba(0, 0, 0, 0.85) transparent;
 }
 
-/* Show the tooltip when hovering over the badge */
 .badge-container:hover .tooltip {
   visibility: visible;
   opacity: 1;
