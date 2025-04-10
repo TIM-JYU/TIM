@@ -68,7 +68,7 @@ import {cons} from "fp-ts/ReadonlyNonEmptyArray";
                                 <input class="user-checkbox"
                                        type="checkbox"
                                        [value]="user"
-                                       [checked]="isAllSelectedMap.get(group.id)"
+                                       [checked]="isUserSelected(user)"
                                        (change)="toggleUserSelection(user, $event)"
                                 />
                                 <div class="option-name" (click)="handleUserSelection(user)"
@@ -91,7 +91,7 @@ import {cons} from "fp-ts/ReadonlyNonEmptyArray";
                                    type="checkbox"
                                    [value]="group"
                                    (change)="toggleGroupSelection(group, $event)"
-                                   [checked]="isAllSelectedMap.get(group.id)"
+                                   [checked]="isGroupSelected(group)"
                             />
                             <span class="option-name" (click)="handleGroupSelection(group); fetchGroupBadges(group.id);"
                                   [ngClass]="{'selected-option': selectedGroup?.id === group.id}">
@@ -204,7 +204,6 @@ export class BadgeGiverComponent implements OnInit {
     selectedGroups: IGroup[] = [];
     groupBadges: IBadge[] = [];
     groupUsersMap = new Map<number, IUser[]>();
-    isAllSelectedMap = new Map<number, boolean>();
     groupPrettyNames: Map<number, string> = new Map();
 
     @Input() selectedBadge?: IBadge | null = null;
@@ -252,22 +251,37 @@ export class BadgeGiverComponent implements OnInit {
         );
     }
 
-    emptyForm() {
-        this.selectedUser = null;
-        this.selectedBadge = null;
-        this.selectedGroup = null;
-        this.message = "";
-        this.showComponent = false;
-        this.emptyTable(this.userBadges);
-        this.emptyTable(this.groupBadges);
-        this.emptyTable(this.selectedUsers);
-        this.emptyTable(this.selectedGroups);
-        this.groupUsersMap.clear();
-        this.isAllSelectedMap.clear();
-        this.cancelEvent.emit(); // Lähettää tiedon vanhemmalle
+    handleUserSelection(user: IUser) {
+        if (this.selectedUser === user) {
+            this.selectedUser = null;
+            this.toggleUserSelection(user);
+            return;
+        }
+        this.selectedUser = user;
+        this.toggleUserSelection(user);
+        this.fetchUserBadges(user);
     }
 
-    toggleUserSelection(user: IUser, event: Event) {
+    handleGroupSelection(group: IGroup) {
+        this.selectedUser = null;
+        if (this.selectedGroup === group) {
+            this.selectedGroup = null;
+            this.toggleGroupSelection(group);
+            return;
+        }
+        this.selectedGroup = group;
+        this.toggleGroupSelection(group);
+        this.fetchUsers(group.name);
+    }
+
+    toggleUserSelection(user: IUser, event?: Event) {
+        if (!event) {
+            const isUserSelected = this.selectedUsers.includes(user);
+            if (!isUserSelected) {
+                this.selectedUsers.push(user);
+            }
+            return;
+        }
         const isChecked = (event.target as HTMLInputElement).checked;
         if (isChecked) {
             this.selectedUsers.push(user);
@@ -275,7 +289,14 @@ export class BadgeGiverComponent implements OnInit {
         }
         this.selectedUsers = this.selectedUsers.filter((u) => u.id !== user.id);
     }
-    toggleGroupSelection(group: IGroup, event: Event) {
+    toggleGroupSelection(group: IGroup, event?: Event) {
+        if (!event) {
+            const isGroupSelected = this.selectedGroups.includes(group);
+            if (!isGroupSelected) {
+                this.selectedGroups.push(group);
+            }
+            return;
+        }
         const isChecked = (event.target as HTMLInputElement).checked;
         if (isChecked) {
             this.selectedGroups.push(group);
@@ -301,7 +322,6 @@ export class BadgeGiverComponent implements OnInit {
                     this.selectedUsers.push(user);
                 }
             }
-            this.isAllSelectedMap.set(group.id, true);
             return;
         }
 
@@ -310,7 +330,6 @@ export class BadgeGiverComponent implements OnInit {
                 (u) => u.id !== user.id
             );
         }
-        this.isAllSelectedMap.set(group.id, false);
     }
     toggleSelectAllUsers(event: Event) {
         const isChecked = (event.target as HTMLInputElement).checked;
@@ -319,15 +338,9 @@ export class BadgeGiverComponent implements OnInit {
             for (const user of this.users) {
                 this.selectedUsers.push(user);
             }
-            for (const group of this.groups) {
-                this.isAllSelectedMap.set(group.id, true);
-            }
             return;
         }
         this.emptyTable(this.selectedUsers);
-        for (const group of this.groups) {
-            this.isAllSelectedMap.set(group.id, false);
-        }
     }
     toggleSelectAllGroups(event: Event) {
         const isChecked = (event.target as HTMLInputElement).checked;
@@ -335,14 +348,28 @@ export class BadgeGiverComponent implements OnInit {
             this.emptyTable(this.selectedGroups);
             for (const group of this.groups) {
                 this.selectedGroups.push(group);
-                this.isAllSelectedMap.set(group.id, true);
             }
             return;
         }
         this.emptyTable(this.selectedGroups);
-        for (const group of this.groups) {
-            this.isAllSelectedMap.set(group.id, false);
+    }
+
+    isUserSelected(user: IUser) {
+        for (const selectedUser of this.selectedUsers) {
+            if (selectedUser.id === user.id) {
+                return true;
+            }
         }
+        return false;
+    }
+
+    isGroupSelected(group: IGroup) {
+        for (const selectedGroup of this.selectedGroups) {
+            if (selectedGroup.id === group.id) {
+                return true;
+            }
+        }
+        return false;
     }
 
     handleSwap(bool: boolean) {
@@ -352,23 +379,18 @@ export class BadgeGiverComponent implements OnInit {
         this.emptyTable(this.selectedGroups);
     }
 
-    handleUserSelection(user: IUser) {
-        if (this.selectedUser === user) {
-            this.selectedUser = null;
-            return;
-        }
-        this.selectedUser = user;
-        this.fetchUserBadges(user);
-    }
-
-    handleGroupSelection(group: IGroup) {
+    emptyForm() {
         this.selectedUser = null;
-        if (this.selectedGroup === group) {
-            this.selectedGroup = null;
-            return;
-        }
-        this.selectedGroup = group;
-        this.fetchUsers(group.name);
+        this.selectedBadge = null;
+        this.selectedGroup = null;
+        this.message = "";
+        this.showComponent = false;
+        this.emptyTable(this.userBadges);
+        this.emptyTable(this.groupBadges);
+        this.emptyTable(this.selectedUsers);
+        this.emptyTable(this.selectedGroups);
+        this.groupUsersMap.clear();
+        this.cancelEvent.emit(); // Lähettää tiedon vanhemmalle
     }
 
     /**
@@ -405,7 +427,6 @@ export class BadgeGiverComponent implements OnInit {
                 group.id,
                 await this.badgeService.getUsersFromGroup(group.name)
             );
-            this.isAllSelectedMap.set(group.id, false);
         }
     }
     /**
