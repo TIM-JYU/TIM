@@ -24,7 +24,7 @@ import {cons} from "fp-ts/ReadonlyNonEmptyArray";
     template: `
         <ng-container *ngIf="hasPermission; else noPermissionView">
             <div *ngIf="showComponent" class="badge-giver">
-                <h2>Badge Giver</h2>
+                <h2>Assign {{ selectedBadge?.title }} to user(s) or group(s)</h2>
 
                 <!-- Preview of the selected badge -->
                 <div *ngIf="selectedBadge" class="badge-preview">
@@ -43,17 +43,18 @@ import {cons} from "fp-ts/ReadonlyNonEmptyArray";
 
                 <div class="user-group-button-container">
                     <button (click)="handleSwap(true); fetchUsersFromGroups()" [disabled]="userAssign === true">
-                        Assign badge to a user
+                        View users
                     </button>
                     <button (click)="handleSwap(false)" [disabled]="userAssign === false">
-                        Assign badge to a group
+                        View groups
                     </button>
                 </div>
 
                 <div *ngIf="userAssign === true" class="form-group">
                     <label>Users</label>
                     <div>
-                        <input class="user-checkbox" type="checkbox" (change)="toggleSelectAllUsers($event)">Select all users
+                        <input class="user-checkbox" type="checkbox" (change)="toggleSelectAllUsers($event)">Select all
+                        users
                     </div>
                     <div class="list-scroll-container" (wheel)="onScrollList($event)">
                         <div *ngFor="let group of groups">
@@ -83,7 +84,8 @@ import {cons} from "fp-ts/ReadonlyNonEmptyArray";
                 <div *ngIf="userAssign === false" class="form-group">
                     <label>Groups</label>
                     <div>
-                        <input class="user-checkbox" type="checkbox" (change)="toggleSelectAllGroups($event)">Select all groups
+                        <input class="user-checkbox" type="checkbox" (change)="toggleSelectAllGroups($event)">Select all
+                        groups
                     </div>
                     <div class="list-scroll-container" (wheel)="onScrollList($event)">
                         <div *ngFor="let group of groups" class="group-item">

@@ -45,8 +45,9 @@
 }
 
 .selected-option {
-    border: 2px solid blue;
-    background-color: rgba(0, 0, 255, 0.1);
+    font-weight: bold;
+    color: #000;
+    border: none;
 }
 
 .border {
