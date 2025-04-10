@@ -7,6 +7,7 @@ import type {IBadge, IGroup} from "tim/gamification/badge/badge.interface";
 import {HttpClient, HttpClientModule} from "@angular/common/http";
 import {BadgeService} from "tim/gamification/badge/badge.service";
 import {firstValueFrom} from "rxjs";
+import {Subscription} from "rxjs";
 
 @Component({
     selector: "tim-badge-leaderboard",
@@ -14,48 +15,15 @@ import {firstValueFrom} from "rxjs";
         <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
         <div class="viewer-container">
             <div class="leaderboard">
-              <div class="position fourth">
-                  <div class="icon">
-                      <span class="material-symbols-outlined">sentiment_stressed</span>
-                  </div>
-                <div class="trophy">4th</div>   
-                <p class="team">{{ top_five[3] ? top_five[3].prettyName : "no team"}}</p>
-                <p class="badge-count">{{ top_five[3] ? top_five[3].badge_count : "nothing"}}</p>
-              </div>
-              <div class="position second">
-                  <div class="icon">
-                        <span class="material-symbols-outlined">counter_2</span>
-                    </div>
-                <div class="trophy silver">2nd</div>
-                <p class="team">{{ top_five[1] ? top_five[1].prettyName : "no team"}}</p>
-                <p class="badge-count">{{ top_five[1] ? top_five[1].badge_count : "nothing"}}</p>
-              </div>
-                <div class="position first">
+                <div *ngFor="let team of top_five; let i = index" class="position" [ngClass]="getPositionClass(i)">
                     <div class="icon">
-                        <span class="material-symbols-outlined">trophy</span>
+                      <span class="material-symbols-outlined">{{ getIcon(i) }}</span>
                     </div>
-                <div class="trophy gold">1st</div>
-                <p class="team">{{ top_five[0] ? top_five[0].prettyName : "no team" }}</p>
-                <p class="badge-count">{{ top_five[0] ? top_five[0].badge_count : "nothing"}}</p>
-              </div>
-                
-              <div class="position third">
-                  <div class="icon">
-                      <span class="material-symbols-outlined">counter_3</span>
-                  </div>
-                <div class="trophy bronze">3rd</div>
-                <p class="team">{{ top_five[2] ? top_five[2].prettyName : "no team"}}</p>
-                <p class="badge-count">{{ top_five[2] ? top_five[2].badge_count : "nothing"}}</p>
-              </div>
-              
-              <div class="position fifth">
-                  <div class="icon">
-                      <span class="material-symbols-outlined">sentiment_very_dissatisfied</span>
-                  </div>
-                <div class="trophy">5th</div>
-                <p class="team">{{ top_five[4] ? top_five[4].prettyName : "no team"}}</p>
-                <p class="badge-count">{{ top_five[4] ? top_five[4].badge_count : "nothing"}}</p>
-              </div>
+                    <div class="trophy" [ngStyle]="{'height': calculateHeight(team.badge_count) }">{{ getPosition(i) }}</div>
+                    <p class="team">{{ team.prettyName }}</p>
+                    <p class="badge-count">{{ team.badge_count || 0 }}</p>
+                </div>              
+               
             </div>               
         </div>        
     `,
@@ -63,11 +31,20 @@ import {firstValueFrom} from "rxjs";
 })
 export class BadgeLeaderboardComponent implements OnInit {
     @Input() badgegroupContext?: string;
-    top_five: {group_name: string; badge_count: number; prettyName: string}[] =
-        [];
+    top_five: {
+        group_name: string;
+        badge_count?: number;
+        prettyName: string;
+    }[] = [];
+    baseHeight: number = 25;
+    scaleFactor: number = 10;
+    private subscription: Subscription = new Subscription();
 
     ngOnInit(): void {
         this.getTopFive();
+        this.subscription = this.badgeService.updateBadgeList$.subscribe(() => {
+            this.getTopFive();
+        });
     }
 
     constructor(
@@ -88,6 +65,7 @@ export class BadgeLeaderboardComponent implements OnInit {
             );
 
             this.top_five = result || [];
+            console.log("top5: ", this.top_five);
 
             for (const team of this.top_five) {
                 const pretty = await this.badgeService.getCurrentGroup(
@@ -101,6 +79,67 @@ export class BadgeLeaderboardComponent implements OnInit {
             console.error("Error fetching top five:", error);
             this.top_five = [];
         }
+    }
+
+    getPositionClass(index: number): string {
+        switch (index) {
+            case 0:
+                return "first";
+            case 1:
+                return "second";
+            case 2:
+                return "third";
+            case 3:
+                return "fourth";
+            case 4:
+                return "fifth";
+            default:
+                return "";
+        }
+    }
+
+    getIcon(index: number): string {
+        switch (index) {
+            case 0:
+                return "trophy"; // 1st place
+            case 1:
+                return "counter_2"; // 2nd place
+            case 2:
+                return "counter_3"; // 3rd place
+            case 3:
+                return "sentiment_stressed"; // 4th place
+            case 4:
+                return "sentiment_very_dissatisfied"; // 5th place
+            default:
+                return "";
+        }
+    }
+
+    getPosition(index: number): string {
+        switch (index) {
+            case 0:
+                return "1st";
+            case 1:
+                return "2nd";
+            case 2:
+                return "3rd";
+            case 3:
+                return "4th";
+            case 4:
+                return "5th";
+            default:
+                return "";
+        }
+    }
+
+    calculateHeight(badgeCount?: number): string {
+        const count = badgeCount || 0;
+        const height = this.baseHeight + count * this.scaleFactor;
+        return `${height}px`;
+    }
+
+    ngOnDestroy() {
+        this.subscription.unsubscribe();
     }
 }
 

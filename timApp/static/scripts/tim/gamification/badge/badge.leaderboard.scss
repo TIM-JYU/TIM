@@ -86,42 +86,41 @@ body {
 
 .trophy {
   box-sizing: border-box;
-  width: clamp(75px, 15vw, 119px);
+  width: clamp(80px, 15vw, 119px);
   border-radius: 10px;
   margin-bottom: 10px;
   padding-top: 10px;
   transition: height 0.3s ease;
+  align-items: flex-end;
 }
 
 .first .trophy {
   background: gold;
-  height: 300px;
 }
 
 .second .trophy {
   background: silver;
-  height: 250px;
 }
 
 .third .trophy {
   background: #cd7f32;
-  height: 200px;
 }
 
 .fourth .trophy {
   background: #808080;
-  height: 150px;
 }
 
 .fifth .trophy {
   background: #d3d3d3;
-  height: 110px;
 }
 
 .team {
   font-size: 12px;
+  height: 30px;
   font-weight: bold;
-  margin-top: 10px;
+  max-width: 100px;         // Adjust to a suitable max width for your layout
+  white-space: normal;      // Allow the text to break
+  overflow-wrap: break-word;
 }
 
 .badge-count {
