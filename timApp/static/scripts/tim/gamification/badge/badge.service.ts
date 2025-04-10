@@ -231,7 +231,7 @@ export class BadgeService {
 
     async getCurrentGroup(groupName: string | null) {
         const response = toPromise(
-            this.http.get<any>(`/current_group_name/${groupName}`)
+            this.http.get<any>(`/groups/current_group_name/${groupName}`)
         );
         const result = await response;
 
@@ -250,7 +250,7 @@ export class BadgeService {
     ) {
         const response = toPromise(
             this.http.post<{ok: boolean}>(
-                `/editGroupName/${group_name}/${new_name}`,
+                `/groups/editGroupName/${group_name}/${new_name}`,
                 {}
             )
         );
