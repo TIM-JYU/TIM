@@ -95,8 +95,7 @@ def check_group_member(usergroup: int) -> bool:
         return False
 
 
-# TODO: Create tests for this route.
-# TODO: Not in use. Remove?
+# TODO: Not yet in use. If going to use this route, create tests for it and handle errors.
 @badges_blueprint.get("/all_badges_including_inactive")
 def all_badges_including_inactive() -> Response:
     """
@@ -137,7 +136,7 @@ def all_badges_in_context(user_id: int, doc_id: int, context_group: str) -> Resp
     :param context_group: Context group to get badges from
     :return: Badges in json response format
     """
-    d = DocEntry.find_by_path(f"groups/{context_group}")
+    d = DocEntry.find_by_path(f"groups/{context_group}")  # TODO: Make this unambiguous.
     if not d:
         raise NotExist()
     context_usergroup = UserGroup.get_by_name(context_group)
@@ -157,8 +156,7 @@ def all_badges_in_context(user_id: int, doc_id: int, context_group: str) -> Resp
     return json_response(badges_json)
 
 
-# TODO: Create tests for this route.
-# TODO: Not in use. Remove?
+# TODO: Not yet in use. If going to use this route, create tests for it and handle errors.
 @badges_blueprint.get("/badge/<badge_id>")
 def get_badge(badge_id: int) -> Response:
     """
@@ -197,7 +195,7 @@ def create_badge(
     :param description: Description of the badge
     :return: ok response
     """
-    d = DocEntry.find_by_path(f"groups/{context_group}")
+    d = DocEntry.find_by_path(f"groups/{context_group}")  # TODO: Make this unambiguous.
     if not d:
         raise NotExist()
     verify_teacher_access(d)
@@ -263,7 +261,9 @@ def modify_badge(
     context_group_object = UserGroup.get_by_id(context_group)
     if not context_group_object:
         raise NotExist()
-    d = DocEntry.find_by_path(f"groups/{context_group_object.name}")
+    d = DocEntry.find_by_path(
+        f"groups/{context_group_object.name}"
+    )  # TODO: Make this unambiguous.
     if not d:
         raise NotExist()
     verify_teacher_access(d)
@@ -311,7 +311,7 @@ def deactivate_badge(
     :param deleted_by: ID of the useraccount who deactivates the badge
     :return: ok response
     """
-    d = DocEntry.find_by_path(f"groups/{context_group}")
+    d = DocEntry.find_by_path(f"groups/{context_group}")  # TODO: Make this unambiguous.
     if not d:
         raise NotExist()
     verify_teacher_access(d)
@@ -335,9 +335,7 @@ def deactivate_badge(
     # return ok_response()
 
 
-# TODO: Create tests for this route.
-# TODO: Not yet in use.
-# TODO: Handle errors.
+# TODO: Not yet in use. If going to use this route, create tests for it and handle errors.
 @badges_blueprint.post("/reactivate_badge")
 def reactivate_badge(
     badge_id: int, restored_by: int, doc_id: int, context_group: str
@@ -350,7 +348,7 @@ def reactivate_badge(
     :param restored_by: ID of the useraccount who reactivates the badge
     :return: ok response
     """
-    d = DocEntry.find_by_path(f"groups/{context_group}")
+    d = DocEntry.find_by_path(f"groups/{context_group}")  # TODO: Make this unambiguous.
     if not d:
         raise NotExist()
     verify_teacher_access(d)
@@ -373,7 +371,6 @@ def reactivate_badge(
     return ok_response()
 
 
-# TODO: Create tests for this route.
 # TODO: Check access rights.
 # TODO: Handle errors.
 @badges_blueprint.get("/groups_badges/<group_id>/<context_group>")
@@ -386,7 +383,9 @@ def get_groups_badges(group_id: int, context_group: str) -> Response:
     """
     in_group = check_group_member(group_id)
     if not in_group:
-        d = DocEntry.find_by_path(f"groups/{context_group}")
+        d = DocEntry.find_by_path(
+            f"groups/{context_group}"
+        )  # TODO: Make this unambiguous.
         if not d:
             raise NotExist()
         verify_teacher_access(d)
@@ -535,7 +534,6 @@ def get_groups_badges(group_id: int, context_group: str) -> Response:
     return json_response(badges_json)
 
 
-# TODO: Create tests for this route.
 # TODO: Is this an unnecessary route? Can badge_holders-route do the same?
 # TODO: Do access right checks.
 # TODO: Handle errors.
@@ -558,7 +556,6 @@ def get_badge_given(badge_id: int) -> Response:
     return json_response(badge_given)
 
 
-# TODO: Create tests for this route.
 # TODO: Do access right checks.
 @badges_blueprint.get("/badge_holders/<badge_id>")
 def get_badge_holders(badge_id: int) -> Response:
@@ -621,7 +618,7 @@ def give_badge(
     :param message: Message to give to the usergroup when the badge is given
     :return: ok response
     """
-    d = DocEntry.find_by_path(f"groups/{context_group}")
+    d = DocEntry.find_by_path(f"groups/{context_group}")  # TODO: Make this unambiguous.
     if not d:
         raise NotExist()
     verify_teacher_access(d)
@@ -651,7 +648,6 @@ def give_badge(
     # return ok_response()
 
 
-# TODO: Create tests for this route.
 # TODO: Handle errors.
 @badges_blueprint.post("/withdraw_badge")
 def withdraw_badge(
@@ -665,7 +661,7 @@ def withdraw_badge(
     :param withdrawn_by: ID of the useraccount that withdraws the badge
     :return: ok response
     """
-    d = DocEntry.find_by_path(f"groups/{context_group}")
+    d = DocEntry.find_by_path(f"groups/{context_group}")  # TODO: Make this unambiguous.
     if not d:
         raise NotExist()
     verify_teacher_access(d)
@@ -686,10 +682,10 @@ def withdraw_badge(
                 "active": badge_given["active"],
             }
         )
-    return ok_response()
+    return json_response(badge_given, 200)
+    # return ok_response()
 
 
-# TODO: Create tests for this route.
 # TODO: Handle errors.
 @badges_blueprint.post("/withdraw_all_badges")
 def withdraw_all_badges(
@@ -703,7 +699,7 @@ def withdraw_all_badges(
     :param withdrawn_by: ID of the useraccount that withdraws the badge
     :return: ok response
     """
-    d = DocEntry.find_by_path(f"groups/{context_group}")
+    d = DocEntry.find_by_path(f"groups/{context_group}")  # TODO: Make this unambiguous.
     if not d:
         raise NotExist()
     verify_teacher_access(d)
@@ -727,12 +723,11 @@ def withdraw_all_badges(
                 "active": badge_given["active"],
             }
         )
-    return ok_response()
+    return json_response(badge_given, 200)
+    # return ok_response()
 
 
-# TODO: Create tests for this route.
-# TODO: Not yet in use.
-# TODO: Handle errors.
+# TODO: Not yet in use. If going to use this route, create tests for it and handle errors.
 @badges_blueprint.get("/undo_withdraw_badge")
 def undo_withdraw_badge(
     badge_given_id: int, undo_withdrawn_by: int, doc_id: int, context_group: str
@@ -745,7 +740,7 @@ def undo_withdraw_badge(
     :param undo_withdrawn_by: ID of the useraccount that undoes the badge withdrawal
     :return: ok response
     """
-    d = DocEntry.find_by_path(f"groups/{context_group}")
+    d = DocEntry.find_by_path(f"groups/{context_group}")  # TODO: Make this unambiguous.
     if not d:
         raise NotExist()
     verify_teacher_access(d)
@@ -811,7 +806,9 @@ def get_subgroups(group_name_prefix: str) -> Response:
     :param group_name_prefix: Prefix of the usergroups
     :return: List of usergroups
     """
-    d = DocEntry.find_by_path(f"groups/{group_name_prefix}")
+    d = DocEntry.find_by_path(
+        f"groups/{group_name_prefix}"
+    )  # TODO: Make this unambiguous.
     if not d:
         raise NotExist()
     verify_teacher_access(d)
@@ -910,7 +907,9 @@ def usergroups_members(doc_id: int, usergroup_name: str) -> Response:
     """
     usergroup = UserGroup.get_by_name(usergroup_name)
     raise_group_not_found_if_none(usergroup_name, usergroup)
-    d = DocEntry.find_by_path(f"groups/{usergroup_name}")
+    d = DocEntry.find_by_path(
+        f"groups/{usergroup_name}"
+    )  # TODO: Make this unambiguous.
     if not d:
         raise NotExist()
     verify_teacher_access(d)
