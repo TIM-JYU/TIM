@@ -26,7 +26,7 @@ import {showConfirm} from "tim/ui/showConfirmDialog";
     template: `
         <ng-container *ngIf="hasPermission; else noPermissionView">
             <div *ngIf="showComponent" class="badge-giver">
-                <h2>Withdraw selected badge</h2>
+                <h2>Withdraw {{ selectedBadge?.title }} from user(s) or group(s)</h2>
 
                 <!-- Preview of the selected badge -->
                 <div *ngIf="selectedBadge" class="badge-preview">
@@ -43,66 +43,76 @@ import {showConfirm} from "tim/ui/showConfirmDialog";
                     </div>
                 </div>
 
-                <div class="user-group-button-container">
-                    <button (click)="handleSwap(true); fetchUsersFromGroups()" [disabled]="userAssign === true">
-                        Withdraw badge from a user
-                    </button>
-                    <button (click)="handleSwap(false)" [disabled]="userAssign === false">
-                        Withdraw badge from a group
-                    </button>
-                </div>
+                <ng-container *ngIf="groups.length === 0 && users.length === 0">
+                    <span>Selected badge is not assigned to anyone</span>
+                </ng-container>
 
-                <div *ngIf="userAssign === true" class="form-group">
-                    <label>Users</label>
-                    <div class="list-scroll-container" (wheel)="onScrollList($event)">
-                        <div *ngFor="let user of users" class="option-item">
-                            <input class="user-checkbox"
-                                   type="checkbox"
-                                   [value]="user"
-                                   (change)="toggleUserSelection(user, $event)"
-                            />
-                            <div class="option-name" (click)="handleUserSelection(user)"
-                                 [ngClass]="{'selected-option': selectedUser?.id === user.id}">
-                                {{ user.real_name }}
-                            </div>
-                        </div>
+                <ng-container *ngIf="groups.length > 0 || users.length > 0">
+                    <div class="user-group-button-container">
+                        <button (click)="handleSwap(true); fetchUsersFromGroups()"
+                                [disabled]="userAssign === true || users.length === 0">
+                            View users
+                        </button>
+                        <button (click)="handleSwap(false)" [disabled]="userAssign === false || groups.length === 0">
+                            View groups
+                        </button>
                     </div>
-                </div>
 
-                <div *ngIf="userAssign === false" class="form-group">
-                    <label>Groups</label>
-                    <div class="list-scroll-container" (wheel)="onScrollList($event)">
-                        <div *ngFor="let group of groups" class="group-item">
-                            <input class="group-checkbox"
-                                   type="checkbox"
-                                   [value]="group"
-                                   (change)="toggleGroupSelection(group, $event)"
-                            />
-                            <span class="option-name" (click)="handleGroupSelection(group)"
-                                  [ngClass]="{'selected-option': selectedGroup?.id === group.id}">
-                                {{ group.name }}
-                            </span>
-                            <div class="group-users" *ngIf="selectedGroup === group">
-                                <div *ngFor="let user of users">
-                                    <div class="user-name">{{ user.real_name }}</div>
+                    <div *ngIf="userAssign === true" class="form-group">
+                        <label>Users</label>
+                        <div class="list-scroll-container" (wheel)="onScrollList($event)">
+                            <div *ngFor="let user of users" class="option-item">
+                                <input class="user-checkbox"
+                                       type="checkbox"
+                                       [value]="user"
+                                       (change)="toggleUserSelection(user, $event)"
+                                />
+                                <div class="option-name" (click)="handleUserSelection(user)"
+                                     [ngClass]="{'selected-option': selectedUser?.id === user.id}">
+                                    {{ user.real_name }}
                                 </div>
                             </div>
                         </div>
                     </div>
-                </div>
-                
-                <tim-alert *ngFor="let alert of alerts; let i = index" [severity]="alert.type" [closeable]="true"
-                           (closing)="badgeService.closeAlert(this.alerts, i)">
-                    <div [innerHTML]="alert.msg"></div>
-                </tim-alert>
 
-                <div class="button-container">
-                    <button (click)="withdrawBadge()"
-                            [disabled]="selectedUsers.length === 0 && selectedGroups.length === 0">
-                        Withdraw badge
-                    </button>
-                    <button id="cancelGiveButton" (click)="emptyForm()">Cancel</button>
-                </div>
+                    <div *ngIf="userAssign === false" class="form-group">
+                        <label>Groups</label>
+                        <div class="list-scroll-container" (wheel)="onScrollList($event)">
+                            <div *ngFor="let group of groups" class="group-item">
+                                <input class="group-checkbox"
+                                       type="checkbox"
+                                       [value]="group"
+                                       (change)="toggleGroupSelection(group, $event)"
+                                />
+                                <span class="option-name" (click)="handleGroupSelection(group)"
+                                      [ngClass]="{'selected-option': selectedGroup?.id === group.id}">
+                                    {{ group.name }}
+                                </span>
+                                <div class="group-users" *ngIf="selectedGroup === group">
+                                    <div *ngFor="let user of users">
+                                        <div class="user-name">{{ user.real_name }}</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div *ngIf="userAssign != undefined">
+                        <tim-alert *ngFor="let alert of alerts; let i = index" [severity]="alert.type"
+                                   [closeable]="true"
+                                   (closing)="badgeService.closeAlert(this.alerts, i)">
+                            <div [innerHTML]="alert.msg"></div>
+                        </tim-alert>
+
+                        <div class="button-container">
+                            <button (click)="withdrawBadge()"
+                                    [disabled]="selectedUsers.length === 0 && selectedGroups.length === 0">
+                                Withdraw badge
+                            </button>
+                            <button id="cancelGiveButton" (click)="emptyForm()">Cancel</button>
+                        </div>
+                    </div>
+                </ng-container>
             </div>
         </ng-container>
         <ng-template #noPermissionView>
