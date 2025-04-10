@@ -506,32 +506,6 @@ def get_usernames(usernames: list[str]):
 
 # TODO: Create tests for this route.
 # TODO: Do access right checks for this route.
-# TODO: Move this route to better place maybe.
-@groups.post("/editGroupName/<group_name>/<new_name>")
-def change_group_name(group_name: str, new_name: str) -> Response:
-    """
-    Changes groups description block (pretty name)
-    :param group_name: full group name
-    :param new_name: new group name (pretty name)
-    :return: new description
-    """
-    usergroup = UserGroup.get_by_name(group_name)
-    if not usergroup:
-        return json_response("there's no group with name: " + group_name)
-    doc = usergroup.admin_doc
-    if not doc:
-        return json_response("no rights")
-    verify_teacher_access(doc)
-    doc.description = new_name
-    db.session.commit()
-    return json_response(
-        {"id": usergroup.id, "name": usergroup.name, "description": doc.description}
-    )
-
-
-# TODO: Create tests for this route.
-# TODO: Do access right checks for this route.
-# TODO: Move this route to better place maybe.
 @groups.get("/current_group_name/<name>")
 def group_name(name: str) -> Response:
     """
@@ -542,7 +516,8 @@ def group_name(name: str) -> Response:
     group = UserGroup.get_by_name(name)
     doc = group.admin_doc
     if not doc:
-        raise json_response("no rights")
+        raise RouteException("no rights")
+    verify_teacher_access(doc)
     pretty_name = doc.description
     if group:
         return json_response(
@@ -553,3 +528,27 @@ def group_name(name: str) -> Response:
             }
         )
     return json_response("there's no group with name: " + name)
+
+
+# TODO: Create tests for this route.
+# TODO: Do access right checks for this route.
+@groups.post("/editGroupName/<group_name>/<new_name>")
+def change_group_name(group_name: str, new_name: str) -> Response:
+    """
+    Changes groups description block (pretty name)
+    :param group_name: full group name
+    :param new_name: new group name (pretty name)
+    :return: new description
+    """
+    usergroup = UserGroup.get_by_name(group_name)
+    if not usergroup:
+        raise RouteException("There's no group with name: " + group_name)
+    doc = usergroup.admin_doc
+    if not doc:
+        raise RouteException("no rights")
+    verify_teacher_access(doc)
+    usergroup.admin_doc.description = new_name
+    db.session.commit()
+    return json_response(
+        {"id": usergroup.id, "name": usergroup.name, "description": doc.description}
+    )
