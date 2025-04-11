@@ -418,7 +418,10 @@ export class BadgeCreatorComponent implements OnInit {
         image: new FormControl(0, [Validators.required]),
         title: new FormControl("", [Validators.required]),
         icon: new FormControl(""),
-        description: new FormControl("", [Validators.required]),
+        description: new FormControl("", [
+            Validators.required,
+            Validators.maxLength(200),
+        ]),
         color: new FormControl("gray", [Validators.required]),
         shape: new FormControl("hexagon", [Validators.required]),
         context_group: new FormControl("", [Validators.required]),
