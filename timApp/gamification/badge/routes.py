@@ -795,7 +795,6 @@ def podium(group_name_prefix: str) -> Response:
     return json_response(podium_json)
 
 
-# TODO: Create tests for this route.
 # TODO: Move this route to better place maybe.
 # TODO: Handle errors.
 @badges_blueprint.get("/subgroups/<group_name_prefix>")
@@ -830,7 +829,6 @@ def get_subgroups(group_name_prefix: str) -> Response:
     return json_response(subgroups_json)
 
 
-# TODO: Create tests for this route.
 # TODO: Move this route to better place maybe.
 # TODO: Handle errors.
 @badges_blueprint.get("/users_subgroups/<user_id>/<group_name_prefix>")
@@ -877,7 +875,6 @@ def get_users_subgroups(user_id: int, group_name_prefix: str) -> Response:
     return json_response(users_subgroups_json)
 
 
-# TODO: Create tests for this route.
 # TODO: Move this route to better place maybe.
 # TODO: Handle errors.
 @badges_blueprint.get("/user_and_personal_group/<name>")
@@ -894,7 +891,6 @@ def users_personal_group(name: str) -> Response:
     return error_generic("there's no user with username: " + name, 404)
 
 
-# TODO: Create tests for this route.
 # TODO: Move this route to better place maybe.
 # TODO: Handle errors.
 @badges_blueprint.get("/usergroups_members/<doc_id>/<usergroup_name>")
