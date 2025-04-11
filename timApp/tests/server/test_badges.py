@@ -18,13 +18,17 @@ class BadgeTest(TimRouteTest):
         it_25_cats = self.create_group(
             "it_25-cats", [self.test_user_1, self.test_user_2]
         )
+        it_25_dogs = self.create_group("it_25-dogs", [self.test_user_1])
         doc_it_25 = DocEntry.create("groups/it_25", it_25)
+        doc_it_25_cats = DocEntry.create("groups/it_25-cats", it_25_cats)
         doc_it_26 = DocEntry.create("groups/it_26", it_26)
         db.session.flush()
         self.test_user_1.grant_access(doc_it_25.block, AccessType.teacher)
+        self.test_user_1.grant_access(doc_it_25_cats.block, AccessType.teacher)
         self.test_user_1.grant_access(doc_it_26.block, AccessType.teacher)
         self.commit_db()
         doc_it_25.block  # TODO: Why isn't the test working without this?
+        doc_it_25_cats.block  # TODO: Why isn't the test working without this?
         doc_it_26.block  # TODO: Why isn't the test working without this?
         self.login_test1()
 
@@ -525,7 +529,79 @@ class BadgeTest(TimRouteTest):
         result_grba_empty_2 = self.get(f"/groups_badges/{it_25_cats.id}/{it_25.name}")
         self.assertEqual([], result_grba_empty_2)
 
+        # fetch subgroups when there are not any
+        result_sg_empty = self.get(f"/subgroups/{it_26.name}")
+        self.assertEqual([], result_sg_empty)
+
+        # fetch subgroups when there are 2 of them
+        result_sg_nonempty = self.get(f"/subgroups/{it_25.name}")
+        self.assertEqual(
+            [
+                {"id": it_25_cats.id, "name": it_25_cats.name},
+                {"id": it_25_dogs.id, "name": it_25_dogs.name},
+            ],
+            result_sg_nonempty,
+        )
+
+        # fetch users subgroups when there are not any
+        result_usg_empty = self.get(
+            f"/users_subgroups/{self.test_user_3.id}/{it_25.name}"
+        )
+        self.assertEqual([], result_usg_empty)
+
+        # fetch users subgroups when there is one
+        result_usg_empty = self.get(
+            f"/users_subgroups/{self.test_user_2.id}/{it_25.name}"
+        )
+        self.assertEqual(
+            [
+                {"id": it_25_cats.id, "name": it_25_cats.name},
+            ],
+            result_usg_empty,
+        )
+
+        # fetch user and his/her personal usergroup
+        result_uapg = self.get(f"/user_and_personal_group/{self.test_user_2.name}")
+        self.assertEqual(
+            [
+                {
+                    "id": self.test_user_2.id,
+                    "name": self.test_user_2.name,
+                    "real_name": self.test_user_2.real_name,
+                    "email": self.test_user_2.email,
+                },
+                {
+                    "id": self.test_user_2.get_personal_group().id,
+                    "name": self.test_user_2.get_personal_group().name,
+                },
+            ],
+            result_uapg,
+        )
+
+        # fetch usergroup's members
+        result_ugm = self.get(
+            f"/usergroups_members/{doc_it_25_cats.block}/{it_25_cats.name}"
+        )
+        self.assertEqual(
+            [
+                {
+                    "id": self.test_user_1.id,
+                    "name": self.test_user_1.name,
+                    "real_name": self.test_user_1.real_name,
+                    "email": self.test_user_1.email,
+                },
+                {
+                    "id": self.test_user_2.id,
+                    "name": self.test_user_2.name,
+                    "real_name": self.test_user_2.real_name,
+                    "email": self.test_user_2.email,
+                },
+            ],
+            result_ugm,
+        )
+
         # TODO: Test badge_holders after given badge to a user.
         # TODO: Test routes with a user that isn't included in it_25.
         # TODO: Test routes with a user that doesn't have teacher access.
         # TODO: Test routes when badges have been given to a user who is included in many groups.
+        # TODO: Test routes with broken data.
