@@ -53,7 +53,7 @@ import {cons} from "fp-ts/ReadonlyNonEmptyArray";
                 <div *ngIf="userAssign === true" class="form-group">
                     <label>Users</label>
                     <div>
-                        <input class="user-checkbox" type="checkbox" (change)="toggleSelectAllUsers($event)">Select all
+                        <input class="user-checkbox" type="checkbox" (change)="toggleSelectAllItems($event, selectedUsers, users)">Select all
                         users
                     </div>
                     <div class="list-scroll-container" (wheel)="onScrollList($event)">
@@ -69,8 +69,8 @@ import {cons} from "fp-ts/ReadonlyNonEmptyArray";
                                 <input class="user-checkbox"
                                        type="checkbox"
                                        [value]="user"
-                                       [checked]="isUserSelected(user)"
                                        (change)="toggleUserSelection(user, $event)"
+                                       [checked]="isSelected(user, selectedUsers)"
                                 />
                                 <div class="option-name" (click)="handleUserSelection(user)"
                                      [ngClass]="{'selected-option': selectedUser?.id === user.id}">
@@ -84,7 +84,7 @@ import {cons} from "fp-ts/ReadonlyNonEmptyArray";
                 <div *ngIf="userAssign === false" class="form-group">
                     <label>Groups</label>
                     <div>
-                        <input class="user-checkbox" type="checkbox" (change)="toggleSelectAllGroups($event)">Select all
+                        <input class="user-checkbox" type="checkbox" (change)="toggleSelectAllItems($event, selectedGroups, groups)">Select all
                         groups
                     </div>
                     <div class="list-scroll-container" (wheel)="onScrollList($event)">
@@ -93,7 +93,7 @@ import {cons} from "fp-ts/ReadonlyNonEmptyArray";
                                    type="checkbox"
                                    [value]="group"
                                    (change)="toggleGroupSelection(group, $event)"
-                                   [checked]="isGroupSelected(group)"
+                                   [checked]="isSelected(group, selectedGroups)"
                             />
                             <span class="option-name" (click)="handleGroupSelection(group); fetchGroupBadges(group.id);"
                                   [ngClass]="{'selected-option': selectedGroup?.id === group.id}">
@@ -256,7 +256,9 @@ export class BadgeGiverComponent implements OnInit {
     handleUserSelection(user: IUser) {
         if (this.selectedUser === user) {
             this.selectedUser = null;
-            this.toggleUserSelection(user);
+            this.selectedUsers = this.selectedUsers.filter(
+                (u) => u.id !== user.id
+            );
             return;
         }
         this.selectedUser = user;
@@ -276,36 +278,38 @@ export class BadgeGiverComponent implements OnInit {
         this.fetchUsers(group.name);
     }
 
-    toggleUserSelection(user: IUser, event?: Event) {
+    toggleItemSelection<T extends {id: number}>(
+        item: T,
+        selectedItems: T[],
+        event?: Event
+    ): T[] {
         if (!event) {
-            const isUserSelected = this.selectedUsers.includes(user);
+            const isUserSelected = selectedItems.includes(item);
             if (!isUserSelected) {
-                this.selectedUsers.push(user);
+                selectedItems.push(item);
             }
-            return;
+            return selectedItems;
         }
         const isChecked = (event.target as HTMLInputElement).checked;
         if (isChecked) {
-            this.selectedUsers.push(user);
-            return;
+            selectedItems.push(item);
+            return selectedItems;
         }
-        this.selectedUsers = this.selectedUsers.filter((u) => u.id !== user.id);
+        return selectedItems.filter((u) => u.id !== item.id);
+    }
+
+    toggleUserSelection(user: IUser, event?: Event) {
+        this.selectedUsers = this.toggleItemSelection(
+            user,
+            this.selectedUsers,
+            event
+        );
     }
     toggleGroupSelection(group: IGroup, event?: Event) {
-        if (!event) {
-            const isGroupSelected = this.selectedGroups.includes(group);
-            if (!isGroupSelected) {
-                this.selectedGroups.push(group);
-            }
-            return;
-        }
-        const isChecked = (event.target as HTMLInputElement).checked;
-        if (isChecked) {
-            this.selectedGroups.push(group);
-            return;
-        }
-        this.selectedGroups = this.selectedGroups.filter(
-            (g) => g.id !== group.id
+        this.selectedGroups = this.toggleItemSelection(
+            group,
+            this.selectedGroups,
+            event
         );
     }
 
@@ -333,45 +337,28 @@ export class BadgeGiverComponent implements OnInit {
             );
         }
     }
-    toggleSelectAllUsers(event: Event) {
+
+    toggleSelectAllItems<T>(
+        event: Event,
+        selectedItems: T[],
+        itemList: T[]
+    ): void {
         const isChecked = (event.target as HTMLInputElement).checked;
         if (isChecked) {
-            this.emptyTable(this.selectedUsers);
-            for (const user of this.users) {
-                this.selectedUsers.push(user);
+            this.emptyTable(selectedItems);
+            for (const item of itemList) {
+                selectedItems.push(item);
             }
             return;
         }
-        this.emptyTable(this.selectedUsers);
-    }
-    toggleSelectAllGroups(event: Event) {
-        const isChecked = (event.target as HTMLInputElement).checked;
-        if (isChecked) {
-            this.emptyTable(this.selectedGroups);
-            for (const group of this.groups) {
-                this.selectedGroups.push(group);
-            }
-            return;
-        }
-        this.emptyTable(this.selectedGroups);
+        this.emptyTable(selectedItems);
     }
 
-    isUserSelected(user: IUser) {
-        for (const selectedUser of this.selectedUsers) {
-            if (selectedUser.id === user.id) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    isGroupSelected(group: IGroup) {
-        for (const selectedGroup of this.selectedGroups) {
-            if (selectedGroup.id === group.id) {
-                return true;
-            }
-        }
-        return false;
+    isSelected<Valinta extends {id: number}>(
+        item: Valinta,
+        selectedItems: Valinta[]
+    ): boolean {
+        return selectedItems.some((i) => i.id === item.id);
     }
 
     handleSwap(bool: boolean) {
