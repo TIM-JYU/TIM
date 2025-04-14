@@ -25,10 +25,10 @@
     font-size: 1.2em;
 }
 
-.badge-logo {
-    width: 24px; /* or any size that fits your design */
-    height: 24px;
-    margin-right: 5px;
-    vertical-align: middle;
+.badge {
+    background-color: transparent;
+    margin: 1em;
+    border: none;
+    box-shadow: none;
 }
 

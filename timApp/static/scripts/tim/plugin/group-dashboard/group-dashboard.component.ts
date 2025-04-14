@@ -5,6 +5,7 @@ import {manageglobals} from "tim/util/globals";
 import {IFolder, IFullDocument} from "tim/item/IItem";
 import {GroupNameModule} from "tim/gamification/badge/group-name.component";
 import {IBadge, IUser} from "tim/gamification/badge/badge.interface";
+import {BadgeModule} from "tim/gamification/badge/badge.component";
 
 interface Member extends IUser {
     badges?: IBadge[];
@@ -23,12 +24,18 @@ interface Member extends IUser {
                 <span class="member-name">{{ member.name }}</span>
 
                 <div class="badges">
-                    <span *ngFor="let badge of member.badges" class="badge">
-                        <!-- Display the badge logo (assuming badge.logo contains the image URL) -->
-                        <img *ngIf="badge.logo" [src]="badge.logo" alt="{{ badge.name }}" class="badge-logo">
-                        🏅 {{ badge.name }}
-                    </span>
-                </div>
+                            <span *ngFor="let badge of member.badges" class="badge">
+                                <tim-badge
+                                        title="{{badge.title}}"
+                                        color="{{badge.color}}"
+                                        shape="{{badge.shape}}"
+                                        [image]="badge.image"
+                                        description="{{badge.description}}"
+                                        message="{{badge.message}}">
+                                </tim-badge>
+                            </span>
+                        </div>
+                
             </div>
         </div>
     </div>
@@ -117,6 +124,6 @@ export class GroupDashboardComponent implements OnInit {
 @NgModule({
     declarations: [GroupDashboardComponent],
     exports: [GroupDashboardComponent],
-    imports: [CommonModule, GroupNameModule],
+    imports: [CommonModule, GroupNameModule, BadgeModule],
 })
 export class GroupDashboardModule {}
