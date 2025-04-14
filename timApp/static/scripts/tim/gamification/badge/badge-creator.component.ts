@@ -110,37 +110,60 @@ import {TimUtilityModule} from "tim/ui/tim-utility.module";
               </ng-container>
               
             <div class="upper-form-group" *ngIf="this.badgeFormShowing">
-                <h2>{{ editingBadge ? 'Edit ' + editingBadge.title + ' Badge' : 'Create a Badge' }}</h2>
+                <h2>{{ editingBadge ? 'Edit "' + editingBadge.title + '" Badge' : 'Create a Badge' }}</h2>
+                
+                <p class="form-note">
+                  Fields marked with <span class="required-asterisk">*</span> are required.
+                </p>
+                
                 <form (ngSubmit)="onSubmit()" id="badgeForm" class="form-group">
                   <div class="form-group">
-                    <label for="title">Badge Title</label>
-                    <input type="text" id="title" name="title" formControlName="title">
+                      <label for="title">Badge Title <span class="required">*</span></label>
+                      <input type="text" id="title" name="title" formControlName="title" [class.invalid]="badgeForm.controls.title.invalid && badgeForm.controls.title.touched">
+                      <div *ngIf="badgeForm.controls.title.invalid && badgeForm.controls.title.touched" class="error-message">
+                          <p *ngIf="badgeForm.controls.title.hasError('required')">Title is required.</p>
+                      </div>
                   </div>
     
                   <div class="form-group">
-                    <label for="description">Description</label>
-                    <textarea rows="3" cols="" id="description" formControlName="description"> </textarea>
+                      <label for="description">Description <span class="required">*</span></label>
+                      <textarea rows="3" cols="" maxlength="200" id="description" formControlName="description"></textarea>
+                      
+                      <div class="char-counter">
+                        {{ badgeForm.get('description')?.value?.length || 0 }} / 200 characters
+                      </div>
+                      
+                      <div *ngIf="badgeForm.controls.description.invalid && badgeForm.controls.description.touched" class="error-message">
+                          <p *ngIf="badgeForm.controls.description.hasError('required')">Description is required.</p>
+                          <p *ngIf="badgeForm.controls.description.hasError('maxlength')">Description is too long (max 200 characters).</p>
+                      </div>
                   </div>
     
                   <div class="icon-color-group">
                     <div class="form-group">
-                      <label for="image">Icon</label>
-                      <select id="image" formControlName="image">
-                        <option *ngFor="let image of availableImages" [value]="image.id">{{ image.name }}</option>
-                      </select>
+                        <label for="image">Icon <span class="required">*</span></label>
+                        <select id="image" formControlName="image">
+                            <option *ngFor="let image of availableImages" [value]="image.id">{{ image.name }}</option>
+                        </select>
+                        <div *ngIf="badgeForm.controls.image.invalid && badgeForm.controls.image.touched" class="error-message">
+                            <p *ngIf="badgeForm.controls.image.hasError('required')">Icon is required.</p>
+                        </div>
                     </div>
     
                     <div class="form-group">
-                      <label for="color">Color</label>
-                      <select id="color" formControlName="color">
-                        <option *ngFor="let color of availableColors" [value]="color">{{ color }}</option>
-                      </select>
+                        <label for="color">Color <span class="required">*</span></label>
+                        <select id="color" formControlName="color">
+                            <option *ngFor="let color of availableColors" [value]="color">{{ color }}</option>
+                        </select>
+                        <div *ngIf="badgeForm.controls.color.invalid && badgeForm.controls.color.touched" class="error-message">
+                            <p>Color is required.</p>
+                        </div>
                     </div>
     
                   </div>
                     <div class="shape-preview-group">
                         <div class="form-group">
-                            <label>Shape</label>
+                            <label>Shape <span class="required">*</span></label>
                             <div class="shape">
                               <label *ngFor="let shape of shapes">
                                 <input type="radio" [id]="shape.value" formControlName="shape" [value]="shape.value" [checked]="shape.value === 'hexagon'"> {{ shape.label }}
@@ -587,7 +610,7 @@ export class BadgeCreatorComponent implements OnInit {
         let confirmMessage = `Are you sure you want to delete "${this.editingBadge.title}" badge?`;
 
         if (await this.isBadgeAssigned()) {
-            confirmMessage = `!!!WARNING!!! This badge has been assigned to users, are you sure you want to delete "${this.editingBadge.title}" badge?`;
+            confirmMessage = `WARNING<br><br>This badge has been assigned to users, are you sure you want to delete "${this.editingBadge.title}" badge?`;
         }
         if (
             await showConfirm(
