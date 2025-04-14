@@ -332,6 +332,37 @@ button[type="button"]:hover {
   font-style: italic;
 }
 
+.char-counter {
+  font-size: 0.8em;
+  color: #555;
+  text-align: right;
+  margin-top: 0.25em;
+}
+
+.required {
+  color: red;
+}
+
+.error-message {
+  color: red;
+  font-size: 0.8em;
+}
+
+.form-note {
+  font-size: 0.6em;
+  color: #555;
+  margin-bottom: 3.5em;
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+}
+
+.required-asterisk {
+  color: red;
+  font-weight: bold;
+  margin: 0 0.4rem;
+}
+
 @media (max-width: 785px) {
 
   .badge-card {

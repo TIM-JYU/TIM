@@ -114,8 +114,14 @@ import {cons} from "fp-ts/ReadonlyNonEmptyArray";
                         <!-- Message Box -->
                         <div class="message-box">
                             <label for="message">Message</label>
-                            <textarea id="message" rows="6" [(ngModel)]="message"
-                                      placeholder="Enter a message..."></textarea>
+                            <textarea id="message" 
+                                      rows="4" 
+                                      maxlength="200"
+                                      [(ngModel)]="message">
+                            </textarea>
+                            <div class="char-counter">
+                              {{ message.length }} / 200 characters
+                            </div>
                         </div>
 
                         <!-- Assigned Badges -->
