@@ -17,7 +17,6 @@ import {BadgeModule} from "tim/gamification/badge/badge.component";
 import {BadgeService} from "tim/gamification/badge/badge.service";
 import {documentglobals} from "tim/util/globals";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
-import {cons} from "fp-ts/ReadonlyNonEmptyArray";
 
 @Component({
     selector: "timBadgeGiver",
@@ -270,7 +269,9 @@ export class BadgeGiverComponent implements OnInit {
         this.selectedUser = null;
         if (this.selectedGroup === group) {
             this.selectedGroup = null;
-            this.toggleGroupSelection(group);
+            this.selectedGroups = this.selectedGroups.filter(
+                (g) => g.id !== group.id
+            );
             return;
         }
         this.selectedGroup = group;
@@ -519,9 +520,9 @@ export class BadgeGiverComponent implements OnInit {
     /**
      * Tyhjentää attribuuttina annetun taulukon
      */
-    emptyTable(taulukko: any[]) {
-        while (taulukko.length > 0) {
-            taulukko.pop();
+    emptyTable<T>(table: T[]) {
+        while (table.length > 0) {
+            table.pop();
         }
     }
 

@@ -199,8 +199,8 @@ export class BadgeWithdrawComponent implements OnInit {
         this.selectedBadge = null;
         this.selectedGroup = null;
         this.showComponent = false;
-        this.emptyBadges(this.userBadges);
-        this.emptyBadges(this.userBadges);
+        this.emptyTable(this.userBadges);
+        this.emptyTable(this.userBadges);
         this.cancelEvent.emit();
     }
 
@@ -242,8 +242,8 @@ export class BadgeWithdrawComponent implements OnInit {
 
         this.selectedGroup = null;
         this.selectedBadge = null;
-        this.emptyBadges(this.groupBadges);
-        this.emptyBadges(this.userBadges);
+        this.emptyTable(this.groupBadges);
+        this.emptyTable(this.userBadges);
 
         if (!this.selectedUser) {
             console.error("Failed to retrieve the user's personal group ID.");
@@ -275,8 +275,8 @@ export class BadgeWithdrawComponent implements OnInit {
 
         this.selectedUser = null;
         this.selectedBadge = null;
-        this.emptyBadges(this.userBadges);
-        this.emptyBadges(this.groupBadges);
+        this.emptyTable(this.userBadges);
+        this.emptyTable(this.groupBadges);
 
         this.groupBadges = await this.badgeService.getUserBadges(
             groupId,
@@ -352,9 +352,9 @@ export class BadgeWithdrawComponent implements OnInit {
             : groupName;
     }
 
-    emptyBadges(badge: IBadge[]) {
-        while (badge.length > 0) {
-            badge.pop();
+    emptyTable<T>(table: T[]) {
+        while (table.length > 0) {
+            table.pop();
         }
     }
 
