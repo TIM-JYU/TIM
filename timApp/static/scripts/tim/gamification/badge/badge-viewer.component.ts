@@ -230,7 +230,7 @@ export class BadgeViewerComponent implements OnInit {
      * Tyhjentää badge -taulukon ja kutsuu badge-servicen metodia joka hakee käyttäjälle kuuluvat badget.
      */
     async getBadges() {
-        this.emptyBadges(this.badges);
+        this.emptyTable(this.badges);
         if (!this.personalGroup) {
             console.error("Failed to retrieve the user's personal group ID.");
             return;
@@ -344,9 +344,9 @@ export class BadgeViewerComponent implements OnInit {
     /**
      * Tyhjentää attribuuttina annetun taulukon
      */
-    emptyBadges(badges: IBadge[]) {
-        while (badges.length > 0) {
-            badges.pop();
+    emptyTable<T>(table: T[]) {
+        while (table.length > 0) {
+            table.pop();
         }
     }
 }
