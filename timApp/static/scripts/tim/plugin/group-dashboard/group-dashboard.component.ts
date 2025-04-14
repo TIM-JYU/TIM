@@ -24,6 +24,8 @@ interface Member extends IUser {
 
                 <div class="badges">
                     <span *ngFor="let badge of member.badges" class="badge">
+                        <!-- Display the badge logo (assuming badge.logo contains the image URL) -->
+                        <img *ngIf="badge.logo" [src]="badge.logo" alt="{{ badge.name }}" class="badge-logo">
                         🏅 {{ badge.name }}
                     </span>
                 </div>
@@ -78,19 +80,31 @@ export class GroupDashboardComponent implements OnInit {
     }
 
     async fetchUserBadges() {
-        console.log("Fetching user badges...");
-        const badgePromises = this.members.map(async (member) => {
-            const badges = await this.badgeService.getUserBadges(
-                this.groupId!,
-                this.contextGroup!
-            );
-            console.log(`Badges for ${member.name}`, badges);
-            return {
-                ...member,
-                badges,
-            };
+        const badgePromises = this.members.map(async (user) => {
+            try {
+                const personalGroup =
+                    await this.badgeService.getUserAndPersonalGroup(user.name);
+
+                if (personalGroup[1].id) {
+                    const badges = await this.badgeService.getUserBadges(
+                        personalGroup[1].id,
+                        this.contextGroup!
+                    );
+
+                    if (badges.length > 0) {
+                        user.badges = badges;
+                    }
+                } else {
+                    console.error(
+                        `No personal group ID found for ${user.name}`
+                    );
+                }
+            } catch (error) {
+                console.error(`Error fetching badges for ${user.name}:`, error);
+            }
         });
-        this.members = await Promise.all(badgePromises);
+
+        await Promise.all(badgePromises);
     }
 
     onContextGroupChange(context: string) {
