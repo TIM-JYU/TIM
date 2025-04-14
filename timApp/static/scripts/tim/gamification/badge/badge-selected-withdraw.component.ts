@@ -385,9 +385,9 @@ export class BadgeSelectedWithdrawComponent implements OnInit {
     /**
      * Tyhjentää attribuuttina annetun taulukon
      */
-    emptyTable(taulukko: any[]) {
-        while (taulukko.length > 0) {
-            taulukko.pop();
+    emptyTable<T>(table: T[]) {
+        while (table.length > 0) {
+            table.pop();
         }
     }
 
