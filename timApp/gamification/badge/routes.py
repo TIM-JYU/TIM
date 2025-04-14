@@ -2,12 +2,8 @@
 from dataclasses import dataclass
 from operator import attrgetter
 from pathlib import Path
-
 from flask import Response, current_app
 from sqlalchemy import select, or_, func, desc
-from wtforms.widgets.core import Select
-from sqlalchemy import select, or_
-
 from timApp.auth.accesshelper import verify_teacher_access
 from timApp.auth.sessioninfo import get_current_user_object
 from timApp.document.docentry import DocEntry
@@ -126,6 +122,7 @@ def get_badges() -> Response:
     return json_response(badges_json)
 
 
+# TODO: Remove unnecessary parameters and fix frontend according to that.
 # TODO: Handle errors.
 @badges_blueprint.get("/all_badges_in_context/<user_id>/<doc_id>/<context_group>")
 def all_badges_in_context(user_id: int, doc_id: int, context_group: str) -> Response:
@@ -167,11 +164,12 @@ def get_badge(badge_id: int) -> Response:
     badge = run_sql(select(Badge).filter_by(id=badge_id)).scalars().first()
     if badge is None:
         raise NotExist()
-        # return error_generic("there's no badge with id: " + str(badge_id), 404)
     badge_json = badge.to_json()
     return json_response(badge_json)
 
 
+# TODO: Remove created_by parameter, use get_current_user_object() and fix frontend according to that.
+# TODO: Remove unnecessary parameters and fix frontend according to that.
 @badges_blueprint.post("/create_badge")
 def create_badge(
     created_by: int,
@@ -229,9 +227,10 @@ def create_badge(
             }
         )
     return json_response(badge.to_json(), 200)
-    # return ok_response()
 
 
+# TODO: Remove modified_by parameter, use get_current_user_object() and fix frontend according to that.
+# TODO: Remove unnecessary parameters and fix frontend according to that.
 # TODO: Handle errors.
 @badges_blueprint.post("/modify_badge")
 def modify_badge(
@@ -295,9 +294,10 @@ def modify_badge(
             }
         )
     return json_response(badge, 200)
-    # return ok_response()
 
 
+# TODO: Remove deleted_by parameter, use get_current_user_object() and fix frontend according to that.
+# TODO: Remove unnecessary parameters and fix frontend according to that.
 # TODO: Handle errors.
 @badges_blueprint.post("/deactivate_badge")
 def deactivate_badge(
@@ -332,9 +332,10 @@ def deactivate_badge(
             }
         )
     return json_response(badge, 200)
-    # return ok_response()
 
 
+# TODO: Remove deleted_by parameter and use get_current_user_object().
+# TODO: Remove unnecessary parameters.
 # TODO: Not yet in use. If going to use this route, create tests for it and handle errors.
 @badges_blueprint.post("/reactivate_badge")
 def reactivate_badge(
@@ -371,7 +372,7 @@ def reactivate_badge(
     return ok_response()
 
 
-# TODO: Check access rights.
+# TODO: Check access rights and create tests for that.
 # TODO: Handle errors.
 @badges_blueprint.get("/groups_badges/<group_id>/<context_group>")
 def get_groups_badges(group_id: int, context_group: str) -> Response:
@@ -535,7 +536,7 @@ def get_groups_badges(group_id: int, context_group: str) -> Response:
 
 
 # TODO: Is this an unnecessary route? Can badge_holders-route do the same?
-# TODO: Do access right checks.
+# TODO: Do access right checks and create tests for that.
 # TODO: Handle errors.
 @badges_blueprint.get("/badge_given/<badge_id>")
 def get_badge_given(badge_id: int) -> Response:
@@ -556,7 +557,7 @@ def get_badge_given(badge_id: int) -> Response:
     return json_response(badge_given)
 
 
-# TODO: Do access right checks.
+# TODO: Do access right checks and create tests for that.
 @badges_blueprint.get("/badge_holders/<badge_id>")
 def get_badge_holders(badge_id: int) -> Response:
     """
@@ -598,6 +599,8 @@ def get_badge_holders(badge_id: int) -> Response:
     )
 
 
+# TODO: Remove given_by parameter, use get_current_user_object() and fix frontend according to that.
+# TODO: Remove unnecessary parameters and fix frontend according to that.
 # TODO: Handle errors.
 @badges_blueprint.post("/give_badge")
 def give_badge(
@@ -645,9 +648,10 @@ def give_badge(
             }
         )
     return json_response(badge_given.to_json(), 200)
-    # return ok_response()
 
 
+# TODO: Remove withdrawn_by parameter, use get_current_user_object() and fix frontend according to that.
+# TODO: Remove unnecessary parameters and fix frontend according to that.
 # TODO: Handle errors.
 @badges_blueprint.post("/withdraw_badge")
 def withdraw_badge(
@@ -683,9 +687,9 @@ def withdraw_badge(
             }
         )
     return json_response(badge_given, 200)
-    # return ok_response()
 
 
+# TODO: Remove withdrawn_by parameter, use get_current_user_object() and fix frontend according to that.
 # TODO: Handle errors.
 @badges_blueprint.post("/withdraw_all_badges")
 def withdraw_all_badges(
@@ -724,9 +728,10 @@ def withdraw_all_badges(
             }
         )
     return json_response(badge_given, 200)
-    # return ok_response()
 
 
+# TODO: Remove undo_withdrawn_by parameter and use get_current_user_object().
+# TODO: Remove unnecessary parameters.
 # TODO: Not yet in use. If going to use this route, create tests for it and handle errors.
 @badges_blueprint.get("/undo_withdraw_badge")
 def undo_withdraw_badge(
@@ -829,6 +834,7 @@ def get_subgroups(group_name_prefix: str) -> Response:
     return json_response(subgroups_json)
 
 
+# TODO: Maybe do access right checks and create tests for that.
 # TODO: Move this route to better place maybe.
 # TODO: Handle errors.
 @badges_blueprint.get("/users_subgroups/<user_id>/<group_name_prefix>")
@@ -888,9 +894,12 @@ def users_personal_group(name: str) -> Response:
     user_account = User.get_by_name(name)
     if personal_group and user_account:
         return json_response((user_account, personal_group))
+
+    # TODO: Use error from requesthelper (NotExist()).
     return error_generic("there's no user with username: " + name, 404)
 
 
+# TODO: Remove unnecessary parameters and fix frontend according to that.
 # TODO: Move this route to better place maybe.
 # TODO: Handle errors.
 @badges_blueprint.get("/usergroups_members/<doc_id>/<usergroup_name>")
