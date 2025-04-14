@@ -16,43 +16,50 @@ interface Member extends IUser {
     template: `
         <ng-container>
     <h1>{{ displayName }}'s Dashboard</h1>
-    <div class="details">
-        <h2>Group details</h2>
+
+    <div class="dashboard-section">
+        <h2 class="section-title">Group details</h2>
         <ul>
             <li>Graphs</li>
             <li>Points</li>
             <li>Totals</li>
         </ul>
     </div>
-    <div class="member-list">
-        <h3>Members:</h3>
-        <div class="member-card" *ngFor="let member of members">
-            <div class="member-info">
-                <span class="member-name">{{ member.name }}</span>
 
-                <div class="badges">
-                            <span *ngFor="let badge of member.badges" class="badge">
-                                <tim-badge
-                                        title="{{badge.title}}"
-                                        color="{{badge.color}}"
-                                        shape="{{badge.shape}}"
-                                        [image]="badge.image"
-                                        description="{{badge.description}}"
-                                        message="{{badge.message}}">
-                                </tim-badge>
-                            </span>
-                        </div>
-                
+    <div class="dashboard-section">
+        <h2 class="section-title">Members</h2>
+        <div class="member-list">
+            <div class="member-card" *ngFor="let member of members">
+                <div class="member-info">
+                    <span class="member-name">{{ member.name }}</span>
+                    <div class="badges">
+                        <span *ngFor="let badge of member.badges" class="badge">
+                            <tim-badge
+                                title="{{badge.title}}"
+                                color="{{badge.color}}"
+                                shape="{{badge.shape}}"
+                                [image]="badge.image"
+                                description="{{badge.description}}"
+                                message="{{badge.message}}">
+                            </tim-badge>
+                        </span>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
-    <div class="settings">
-        <h2>Settings</h2>
-        <h3>Change group name:</h3>
-        <tim-group-name *ngIf="group" [group]="group" (contextGroupChange)="onContextGroupChange($event)"
-></tim-group-name>
-    </div>            
-</ng-container>`,
+
+    <div class="dashboard-section">
+        <h2 class="section-title">Settings</h2>
+        <b>Change group name:</b>
+        <tim-group-name
+            *ngIf="group"
+            [group]="group"
+            (contextGroupChange)="onContextGroupChange($event)">
+        </tim-group-name>
+    </div>
+</ng-container>
+`,
     styleUrls: ["./group-dashboard.component.scss"],
 })
 export class GroupDashboardComponent implements OnInit {
