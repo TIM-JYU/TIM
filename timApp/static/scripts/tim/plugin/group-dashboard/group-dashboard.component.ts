@@ -16,7 +16,14 @@ interface Member extends IUser {
     template: `
         <ng-container>
     <h1>{{ displayName }}'s Dashboard</h1>
-
+    <div class="details">
+        <h2>Group details</h2>
+        <ul>
+            <li>Graphs</li>
+            <li>Points</li>
+            <li>Totals</li>
+        </ul>
+    </div>
     <div class="member-list">
         <h3>Members:</h3>
         <div class="member-card" *ngFor="let member of members">
@@ -113,6 +120,9 @@ export class GroupDashboardComponent implements OnInit {
 
         await Promise.all(badgePromises);
     }
+
+    //TODO: hae ryhmän yhteiset badget ja näytä nekin omassa ikkunassa
+    //TODO: luo selkeät jaot eri osioille (esim. Ryhmän tiedot, jäsenet, asetukset)
 
     onContextGroupChange(context: string) {
         this.contextGroup = context;
