@@ -1,9 +1,14 @@
 import {Component, Input, NgModule, OnInit} from "@angular/core";
 import {CommonModule} from "@angular/common";
 import {BadgeService} from "tim/gamification/badge/badge.service";
-import {IManageGlobals, manageglobals} from "tim/util/globals";
+import {manageglobals} from "tim/util/globals";
 import {IFolder, IFullDocument} from "tim/item/IItem";
 import {GroupNameModule} from "tim/gamification/badge/group-name.component";
+import {IBadge, IUser} from "tim/gamification/badge/badge.interface";
+
+interface Member extends IUser {
+    badges?: IBadge[];
+}
 
 @Component({
     selector: "tim-group-dashboard",
@@ -12,6 +17,7 @@ import {GroupNameModule} from "tim/gamification/badge/group-name.component";
     <h1>{{ displayName }}'s Dashboard</h1>
 
     <div class="member-list">
+        <h3>Members:</h3>
         <div class="member-card" *ngFor="let member of members">
             <div class="member-info">
                 <span class="member-name">{{ member.name }}</span>
@@ -27,7 +33,8 @@ import {GroupNameModule} from "tim/gamification/badge/group-name.component";
     <div class="settings">
         <h2>Settings</h2>
         <h3>Change group name:</h3>
-        <tim-group-name [group]="group"></tim-group-name>
+        <tim-group-name *ngIf="group" [group]="group" (contextGroupChange)="onContextGroupChange($event)"
+></tim-group-name>
     </div>            
 </ng-container>`,
     styleUrls: ["./group-dashboard.component.scss"],
@@ -39,12 +46,15 @@ export class GroupDashboardComponent implements OnInit {
     private item: IFullDocument | IFolder | undefined;
     displayName: string | undefined;
     groupId: number | undefined;
+    contextGroup: string | undefined;
     members: any[] = [];
     title: string | undefined;
+
     ngOnInit(): void {
         if (this.group) {
             this.getGroupName();
             this.fetchMembers();
+            this.fetchUserBadges();
         }
         this.item = manageglobals().curr_item;
     }
@@ -55,6 +65,7 @@ export class GroupDashboardComponent implements OnInit {
         );
         if (fetchedGroup) {
             this.displayName = fetchedGroup.description || "";
+            this.groupId = fetchedGroup.id;
         }
     }
 
@@ -62,9 +73,30 @@ export class GroupDashboardComponent implements OnInit {
         const members = await this.badgeService.getUsersFromGroup(this.group);
 
         if (members) {
-            console.log("Jäsenet: ", members);
             this.members = members;
         }
+    }
+
+    async fetchUserBadges() {
+        console.log("Fetching user badges...");
+        const badgePromises = this.members.map(async (member) => {
+            const badges = await this.badgeService.getUserBadges(
+                this.groupId!,
+                this.contextGroup!
+            );
+            console.log(`Badges for ${member.name}`, badges);
+            return {
+                ...member,
+                badges,
+            };
+        });
+        this.members = await Promise.all(badgePromises);
+    }
+
+    onContextGroupChange(context: string) {
+        this.contextGroup = context;
+        console.log("Context group received:", context);
+        this.fetchUserBadges();
     }
 }
 
