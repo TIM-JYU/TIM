@@ -45,9 +45,6 @@ import {TimUtilityModule} from "tim/ui/tim-utility.module";
                         <div class="right-buttons">                       
                           <button title="Create Badge" id="showBadgeForm" type="button" (click)="clickCreate()">
                               <span class="material-icons" style="font-size: 30px">add</span></button>
-                          <button title="View users & groups" id="showBadgeForm" type="button"
-                                (click)="showBadgeWithdraw()">
-                             <span class="material-symbols-outlined" style="font-size: 30px">patient_list</span></button>
                         </div> 
                     </div>                 
                     
@@ -82,7 +79,7 @@ import {TimUtilityModule} from "tim/ui/tim-utility.module";
                                         [ngClass]="{'disabled-btn': !clickedBadge}">
                                         <span class="material-icons">edit</span></button>
                                 <button title="Delete Badge" id="deleteButton" type="button"
-                                        [disabled]="!editingBadge || showWithdraw" 
+                                        [disabled]="!editingBadge" 
                                         (click)="deleteBadge()"
                                         class="right-button">
                                         <span class="material-icons">delete</span></button>
@@ -99,10 +96,6 @@ import {TimUtilityModule} from "tim/ui/tim-utility.module";
               
               <ng-container *ngIf="showGiver">
                   <timBadgeGiver (cancelEvent)="handleCancel()" [badgegroupContext]="badgegroupContext" [selectedBadge]="clickedBadge"></timBadgeGiver>                        
-              </ng-container>
-              
-              <ng-container *ngIf="showWithdraw">
-                  <tim-badge-withdraw (cancelEvent)="handleCancel()" [badgegroupContext]="badgegroupContext"></tim-badge-withdraw>             
               </ng-container>
               
               <ng-container *ngIf="showSelectedWithdraw">
@@ -218,7 +211,6 @@ export class BadgeCreatorComponent implements OnInit {
     editingBadge: any = null;
 
     showGiver = false;
-    showWithdraw = false;
     showSelectedWithdraw = false;
     @Input() badgegroupContext?: string;
     alerts: Array<{
@@ -229,7 +221,6 @@ export class BadgeCreatorComponent implements OnInit {
 
     // Method called when a badge is clicked
     selectBadge(badge: IBadge) {
-        this.showWithdraw = false;
         if (this.clickedBadge === badge) {
             this.clickedBadge = null;
             this.emptyForm();
@@ -272,7 +263,6 @@ export class BadgeCreatorComponent implements OnInit {
 
     hideOtherViewsExcept(thisView: boolean) {
         this.showGiver = false;
-        this.showWithdraw = false;
         this.showSelectedWithdraw = false;
         this.badgeFormShowing = false;
         return thisView;
@@ -313,15 +303,6 @@ export class BadgeCreatorComponent implements OnInit {
         this.showGiver = !this.showGiver;
 
         this.clickedBadge = badge;
-        setTimeout(() => {
-            this.centerToComponent();
-        }, 100);
-    }
-
-    showBadgeWithdraw() {
-        this.clickedBadge = null;
-        this.showWithdraw = this.hideOtherViewsExcept(this.showWithdraw);
-        this.showWithdraw = !this.showWithdraw;
         setTimeout(() => {
             this.centerToComponent();
         }, 100);
