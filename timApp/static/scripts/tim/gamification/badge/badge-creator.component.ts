@@ -176,7 +176,11 @@ import {TimUtilityModule} from "tim/ui/tim-utility.module";
                           {{ editingBadge ? 'Save Changes' : 'Create Badge' }}
                       </button>
                       <div class="button-group">
-                          <button id="cancelButton" type="button" [disabled]="!isFormChanged" (click)="onCancel()">Cancel</button>
+                          <button id="cancelButton" 
+                                  title="Cancel and return without saving" 
+                                  type="button" (click)="onCancel()">
+                              Cancel
+                          </button>
                       </div>
                     </div>
                 </form>
@@ -413,6 +417,10 @@ export class BadgeCreatorComponent implements OnInit {
         "black-vibrant",
     ];
 
+    disallowGrayColor(control: FormControl) {
+        return control.value === "gray" ? {grayNotAllowed: true} : null;
+    }
+
     badgeForm = new FormGroup({
         id: new FormControl(0),
         image: new FormControl(0, [Validators.required]),
@@ -422,7 +430,10 @@ export class BadgeCreatorComponent implements OnInit {
             Validators.required,
             Validators.maxLength(200),
         ]),
-        color: new FormControl("gray", [Validators.required]),
+        color: new FormControl("gray", [
+            Validators.required,
+            this.disallowGrayColor,
+        ]),
         shape: new FormControl("hexagon", [Validators.required]),
         context_group: new FormControl("", [Validators.required]),
     });
