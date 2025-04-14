@@ -338,7 +338,7 @@ class BadgeTest(TimRouteTest):
             },
             result_giba_1,
         )
-        result_giba_2 = self.post(
+        self.post(
             "/give_badge",
             data={
                 "given_by": self.test_user_1.id,
@@ -600,8 +600,276 @@ class BadgeTest(TimRouteTest):
             result_ugm,
         )
 
-        # TODO: Test badge_holders after given badge to a user.
-        # TODO: Test routes with a user that isn't included in it_25.
-        # TODO: Test routes with a user that doesn't have teacher access.
-        # TODO: Test routes when badges have been given to a user who is included in many groups.
+        self.login_test3()
+
+        # fetch all badges in context when user doesn't have teacher access to the context group
+        self.get(
+            f"/all_badges_in_context/{self.test_user_3.id}/{doc_it_25.block.id}/{it_25.name}",
+            expect_content="Sorry, you don't have permission to use this resource.",
+            expect_status=403,
+        )
+
+        # create a badge when user doesn't have teacher access to the context group
+        self.post(
+            f"/create_badge",
+            data={
+                "created_by": self.test_user_3.id,
+                "doc_id": doc_it_25.block.id,
+                "context_group": it_25.name,
+                "title": "The Boss",
+                "color": "gold",
+                "shape": "hexagon",
+                "image": "4",
+                "description": "You are the boss!",
+            },
+            expect_content="Sorry, you don't have permission to use this resource.",
+            expect_status=403,
+        )
+
+        # modify a badge when user doesn't have teacher access to the context group
+        self.post(
+            f"/modify_badge",
+            data={
+                "badge_id": 1,
+                "modified_by": self.test_user_3.id,
+                "doc_id": doc_it_25.block.id,
+                "active": True,
+                "context_group": it_25.id,
+                "title": "MVP",
+                "color": "yellow",
+                "shape": "hexagon",
+                "image": 3,
+                "description": "Most valuable player",
+            },
+            expect_content="Sorry, you don't have permission to use this resource.",
+            expect_status=403,
+        )
+
+        # delete a badge when user doesn't have teacher access to the context group
+        self.post(
+            f"/deactivate_badge",
+            data={
+                "badge_id": 1,
+                "deleted_by": self.test_user_3.id,
+                "doc_id": doc_it_25.block.id,
+                "context_group": it_25.name,
+            },
+            expect_content="Sorry, you don't have permission to use this resource.",
+            expect_status=403,
+        )
+
+        # fetch groups badges when user doesn't have teacher access to the context group
+        # and is not included in the context group
+        self.get(
+            f"/groups_badges/{it_25_cats.id}/{it_25.name}",
+            expect_content="Sorry, you don't have permission to use this resource.",
+            expect_status=403,
+        )
+
+        self.login_test2()
+
+        # fetch groups badges when user doesn't have teacher access to the context group
+        # and is included in the subgroup
+        self.get(
+            f"/groups_badges/{it_25_cats.id}/{it_25.name}",
+            expect_content=[],
+            expect_status=200,
+        )
+
+        self.test_user_3.grant_access(doc_it_25.block, AccessType.teacher)
+        self.login_test3()
+
+        # fetch groups badges when user has teacher access to the context group
+        # and is not included in the context group
+        self.get(
+            f"/groups_badges/{it_25_cats.id}/{it_25.name}",
+            expect_content="Sorry, you don't have permission to use this resource.",
+            expect_status=403,
+        )
+
+        self.test_user_3.remove_access(doc_it_25.block.id, "teacher")
+
+        # give a badge when user doesn't have teacher access to the context group
+        self.post(
+            f"/give_badge",
+            data={
+                "given_by": self.test_user_3.id,
+                "doc_id": doc_it_25.block.id,
+                "context_group": it_25.name,
+                "group_id": it_25_cats.id,
+                "badge_id": 1,
+                "message": "Awesome!",
+            },
+            expect_content="Sorry, you don't have permission to use this resource.",
+            expect_status=403,
+        )
+
+        self.login_test1()
+
+        # give a badge
+        self.post(
+            f"/give_badge",
+            data={
+                "given_by": self.test_user_1.id,
+                "doc_id": doc_it_25.block.id,
+                "context_group": it_25.name,
+                "group_id": it_25_cats.id,
+                "badge_id": 1,
+                "message": "Awesome!",
+            },
+            expect_status=200,
+        )
+
+        self.login_test3()
+
+        # withdraw a badge when user doesn't have teacher access to the context group
+        self.post(
+            f"/withdraw_badge",
+            data={
+                "badge_given_id": 4,
+                "withdrawn_by": self.test_user_3.id,
+                "doc_id": doc_it_25.block.id,
+                "context_group": it_25.name,
+            },
+            expect_content="Sorry, you don't have permission to use this resource.",
+            expect_status=403,
+        )
+
+        # withdraw all badges with id=1 from it_25-cats when user doesn't have teacher access to the context group
+        self.post(
+            f"/withdraw_all_badges",
+            data={
+                "badge_id": 1,
+                "usergroup_id": it_25_cats.id,
+                "withdrawn_by": self.test_user_3.id,
+                "context_group": it_25.name,
+            },
+            expect_content="Sorry, you don't have permission to use this resource.",
+            expect_status=403,
+        )
+
+        # fetch subgroups when user doesn't have teacher access to the context group
+        self.get(
+            f"/subgroups/{it_25.name}",
+            expect_content="Sorry, you don't have permission to use this resource.",
+            expect_status=403,
+        )
+
+        # fetch usergroup's members when user doesn't have teacher access to the context group
+        self.get(
+            f"/usergroups_members/{doc_it_25.block.id}/{it_25.name}",
+            expect_content="Sorry, you don't have permission to use this resource.",
+            expect_status=403,
+        )
+
+        self.login_test1()
+
+        # give 2 badges from different context groups to testuser1
+        result_giba_4 = self.post(
+            f"/give_badge",
+            data={
+                "given_by": self.test_user_1.id,
+                "doc_id": doc_it_25.block.id,
+                "context_group": it_25.name,
+                "group_id": self.test_user_1.get_personal_group().id,
+                "badge_id": 1,
+                "message": "Yippee!",
+            },
+            expect_status=200,
+        )
+        result_giba_5 = self.post(
+            f"/give_badge",
+            data={
+                "given_by": self.test_user_1.id,
+                "doc_id": doc_it_26.block.id,
+                "context_group": it_26.name,
+                "group_id": self.test_user_1.get_personal_group().id,
+                "badge_id": 3,
+                "message": "Yahoo!",
+            },
+            expect_status=200,
+        )
+
+        # fetch personal groups badges of testuser1 from context group it_25
+        self.get(
+            f"/groups_badges/{self.test_user_1.get_personal_group().id}/{it_25.name}",
+            expect_content=[
+                {
+                    "id": 1,
+                    "message": "Yippee!",
+                    "badgegiven_id": 5,
+                    "active": True,
+                    "given_by": self.test_user_1.id,
+                    "given_by_name": self.test_user_1.real_name,
+                    "given": result_giba_4["given"],
+                    "withdrawn_by": None,
+                    "withdrawn_by_name": None,
+                    "withdrawn": None,
+                    "undo_withdrawn_by": None,
+                    "undo_withdrawn_by_name": None,
+                    "undo_withdrawn": None,
+                    "color": "gold",
+                    "context_group": it_25.id,
+                    "created": result_cb_1["created"],
+                    "created_by": self.test_user_1.id,
+                    "created_by_name": self.test_user_1.real_name,
+                    "deleted": None,
+                    "deleted_by": None,
+                    "deleted_by_name": None,
+                    "description": "Most valuable player",
+                    "image": 3,
+                    "modified": result_mb["modified"],
+                    "modified_by": self.test_user_1.id,
+                    "modified_by_name": self.test_user_1.real_name,
+                    "restored": None,
+                    "restored_by": None,
+                    "restored_by_name": None,
+                    "shape": "hexagon",
+                    "title": "MVP",
+                }
+            ],
+            expect_status=200,
+        )
+
+        # fetch personal groups badges of testuser1 from context group it_26
+        self.get(
+            f"/groups_badges/{self.test_user_1.get_personal_group().id}/{it_26.name}",
+            expect_content=[
+                {
+                    "id": 3,
+                    "message": "Yahoo!",
+                    "badgegiven_id": 6,
+                    "active": True,
+                    "given_by": self.test_user_1.id,
+                    "given_by_name": self.test_user_1.real_name,
+                    "given": result_giba_5["given"],
+                    "withdrawn_by": None,
+                    "withdrawn_by_name": None,
+                    "withdrawn": None,
+                    "undo_withdrawn_by": None,
+                    "undo_withdrawn_by_name": None,
+                    "undo_withdrawn": None,
+                    "color": "orange",
+                    "context_group": it_26.id,
+                    "created": result_cb_3["created"],
+                    "created_by": self.test_user_1.id,
+                    "created_by_name": self.test_user_1.real_name,
+                    "deleted": None,
+                    "deleted_by": None,
+                    "deleted_by_name": None,
+                    "description": "Very fast",
+                    "image": 4,
+                    "modified": None,
+                    "modified_by": None,
+                    "modified_by_name": None,
+                    "restored": None,
+                    "restored_by": None,
+                    "restored_by_name": None,
+                    "shape": "rectangle",
+                    "title": "Quick",
+                }
+            ],
+            expect_status=200,
+        )
+
         # TODO: Test routes with broken data.
