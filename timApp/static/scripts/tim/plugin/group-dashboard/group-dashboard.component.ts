@@ -19,6 +19,19 @@ interface Member extends IUser {
 
     <div class="dashboard-section">
         <h2 class="section-title">Group details</h2>
+        <div class="group-badges">
+            <div *ngIf="groupBadges.length === 0">No group badges yet.</div>
+    <span *ngFor="let badge of groupBadges" class="badge">
+        <tim-badge
+            [title]="badge.title"
+            [color]="badge.color"
+            [shape]="badge.shape"
+            [image]="badge.image"
+            [description]="badge.description"
+            [message]="badge.message">
+        </tim-badge>
+    </span>
+</div>
         <ul>
             <li>Graphs</li>
             <li>Points</li>
@@ -72,12 +85,12 @@ export class GroupDashboardComponent implements OnInit {
     contextGroup: string | undefined;
     members: any[] = [];
     title: string | undefined;
+    groupBadges: IBadge[] = [];
 
     ngOnInit(): void {
         if (this.group) {
             this.getGroupName();
             this.fetchMembers();
-            this.fetchUserBadges();
         }
         this.item = manageglobals().curr_item;
     }
@@ -128,6 +141,21 @@ export class GroupDashboardComponent implements OnInit {
         await Promise.all(badgePromises);
     }
 
+    async fetchGroupBadges() {
+        try {
+            const groupBadges = await this.badgeService.getUserBadges(
+                this.groupId!,
+                this.contextGroup!
+            );
+            if (groupBadges) {
+                this.groupBadges = groupBadges;
+                console.log("Fetched group mutual badges:", this.groupBadges);
+            }
+        } catch (error) {
+            console.error("Error fetching group mutual badges:", error);
+        }
+    }
+
     //TODO: hae ryhmän yhteiset badget ja näytä nekin omassa ikkunassa
     //TODO: luo selkeät jaot eri osioille (esim. Ryhmän tiedot, jäsenet, asetukset)
 
@@ -135,6 +163,7 @@ export class GroupDashboardComponent implements OnInit {
         this.contextGroup = context;
         console.log("Context group received:", context);
         this.fetchUserBadges();
+        this.fetchGroupBadges();
     }
 }
 
