@@ -227,11 +227,7 @@ export class BadgeWithdrawComponent implements OnInit {
      */
     private async fetchUsers() {
         const result = await toPromise(
-            this.http.get<[]>(
-                `/usergroups_members/${documentglobals().curr_item.id}/${
-                    this.badgegroupContext
-                }`
-            )
+            this.http.get<[]>(`/usergroups_members/${this.badgegroupContext}`)
         );
         const users: IUser[] = [];
         if (result.ok) {
