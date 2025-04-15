@@ -1,3 +1,20 @@
+.users-list {
+    background-color: #f0f4ff;
+    border: 2px solid #0F4096;
+    border-radius: 0.5em;
+    padding-left: 0.5em;
+}
+
+.badges-preview {
+  width: 100%;
+  height: 200px;
+  border: 2px solid #0F4096;
+  border-radius: 0.5em;
+  background-color: #f0f4ff;
+  padding-left: 0.5em;
+  margin-top: 2em;
+}
+
 .list-scroll-container{
   max-height: 300px;
   overflow-y: auto;
@@ -15,15 +32,21 @@
     display: flex;
     align-items: flex-start;
 }
-.option-item input{
-    width: 5%;
+
+.user-name {
+    cursor: pointer;
+    margin-left: 5em;
 }
 
-.option-name {
+.group-name {
     cursor: pointer;
 }
 
-.option-name:hover {
+.user-name:hover {
+    text-decoration: underline; /* Korostaa nimeä hoverilla */
+}
+
+.group-name:hover {
     text-decoration: underline; /* Korostaa nimeä hoverilla */
 }
 
@@ -90,7 +113,7 @@
   overflow-y: hidden;
   gap: 20px;
   align-items: center;
-  padding: 1.5em 0;
+  align-items: center;
 }
 
 .no-users:hover {
