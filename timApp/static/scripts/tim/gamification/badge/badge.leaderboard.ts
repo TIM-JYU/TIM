@@ -52,6 +52,7 @@ export class BadgeLeaderboardComponent implements OnInit {
         protected badgeService: BadgeService
     ) {}
 
+    // Gets the top five groups with most badges
     async getTopFive() {
         try {
             const result = await firstValueFrom(
@@ -81,6 +82,7 @@ export class BadgeLeaderboardComponent implements OnInit {
         }
     }
 
+    // Places the position of the group based on the number of badges
     getPositionClass(index: number): string {
         switch (index) {
             case 0:
@@ -98,6 +100,7 @@ export class BadgeLeaderboardComponent implements OnInit {
         }
     }
 
+    // The icon of the position
     getIcon(index: number): string {
         switch (index) {
             case 0:
@@ -115,6 +118,7 @@ export class BadgeLeaderboardComponent implements OnInit {
         }
     }
 
+    // The number of the position
     getPosition(index: number): string {
         switch (index) {
             case 0:
@@ -132,6 +136,7 @@ export class BadgeLeaderboardComponent implements OnInit {
         }
     }
 
+    // Calculate the height of the columns
     calculateHeight(badgeCount?: number): string {
         const count = badgeCount || 0;
         const height = this.baseHeight + count * this.scaleFactor;

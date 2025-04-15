@@ -229,6 +229,7 @@ export class BadgeService {
         }
     }
 
+    // Gets the current selected group
     async getCurrentGroup(groupName: string | null) {
         const response = toPromise(
             this.http.get<any>(`/groups/current_group_name/${groupName}`)
@@ -243,6 +244,7 @@ export class BadgeService {
         return null;
     }
 
+    // Changes the groups name into the
     async updateGroupName(
         group_id: number,
         group_name: string,
@@ -292,16 +294,16 @@ export class BadgeService {
 
     private dialogOpen = false;
 
-    // Tarkistetaan, onko dialogi-ikkuna auki
+    // Checks, if dialog-window is open
     isDialogOpen(): boolean {
         return this.dialogOpen;
     }
-    // Asetetaan dialogin tila
+    // Sets the dialog-window as "open"
     setDialogOpen(isOpen: boolean): void {
         this.dialogOpen = isOpen;
     }
 
-    // Funktio updatetapahtuman lähettämiseen kun luodaan uusi badge creatorilla, se päivitetään giver listaan.
+    // Send a request to update viewer, when a new badge is created
     triggerUpdateBadgeList() {
         this.updateBadgeSubject.next();
     }
@@ -316,7 +318,7 @@ export class BadgeService {
         }
     }
 
-    // Näyttää mahdolliset errorit
+    // Show errors
     showError(
         alerts: any,
         response: {data: {error: string}},
@@ -329,11 +331,12 @@ export class BadgeService {
         alerts.push({msg, type});
     }
 
-    // Poistaa error-viestin alerts-listasta
+    // Removes an error-message from alerts-list
     closeAlert(alerts: any, index: number) {
         alerts.splice(index, 1);
     }
 
+    // The available icons for badges
     private availableImages = [
         {id: 1, name: "Trophy"},
         {id: 2, name: "Winner"},
