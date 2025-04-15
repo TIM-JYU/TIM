@@ -263,7 +263,7 @@ export class BadgeViewerComponent implements OnInit {
                     data: {
                         error:
                             result.result.error.error +
-                            ` If you are a teacher of ${this.badgegroupContext}, please contact TIM admin.`,
+                            `. If you are a teacher of ${this.badgegroupContext}, please contact TIM admin.`,
                     },
                 },
                 "danger"

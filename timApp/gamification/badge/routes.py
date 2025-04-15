@@ -132,7 +132,7 @@ def all_badges_in_context(context_group: str) -> Response:
     """
     d = DocEntry.find_by_path(f"groups/{context_group}")  # TODO: Make this unambiguous.
     if not d:
-        raise NotExist()
+        raise NotExist(f'User group "{context_group}" not found')
     context_usergroup = UserGroup.get_by_name(context_group)
     verify_teacher_access(d)
     badges = (
@@ -160,7 +160,7 @@ def get_badge(badge_id: int) -> Response:
     """
     badge = run_sql(select(Badge).filter_by(id=badge_id)).scalars().first()
     if badge is None:
-        raise NotExist()
+        raise NotExist(f'Badge of id "{badge_id}" not found')
     badge_json = badge.to_json()
     return json_response(badge_json)
 
@@ -186,7 +186,7 @@ def create_badge(
     """
     d = DocEntry.find_by_path(f"groups/{context_group}")  # TODO: Make this unambiguous.
     if not d:
-        raise NotExist()
+        raise NotExist(f'User group "{context_group}" not found')
     verify_teacher_access(d)
     context_usergroup = UserGroup.get_by_name(context_group)
     badge = Badge(
@@ -244,12 +244,12 @@ def modify_badge(
     """
     context_group_object = UserGroup.get_by_id(context_group)
     if not context_group_object:
-        raise NotExist()
+        raise NotExist(f"User group of id {context_group} not found")
     d = DocEntry.find_by_path(
         f"groups/{context_group_object.name}"
     )  # TODO: Make this unambiguous.
     if not d:
-        raise NotExist()
+        raise NotExist(f'User group "{context_group_object.name}" not found')
     verify_teacher_access(d)
     badge = {
         "context_group": context_group,
@@ -292,7 +292,7 @@ def deactivate_badge(badge_id: int, context_group: str) -> Response:
     """
     d = DocEntry.find_by_path(f"groups/{context_group}")  # TODO: Make this unambiguous.
     if not d:
-        raise NotExist()
+        raise NotExist(f'User group "{context_group}" not found')
     verify_teacher_access(d)
     badge = {
         "active": False,
@@ -324,7 +324,7 @@ def reactivate_badge(badge_id: int, context_group: str) -> Response:
     """
     d = DocEntry.find_by_path(f"groups/{context_group}")  # TODO: Make this unambiguous.
     if not d:
-        raise NotExist()
+        raise NotExist(f'User group "{context_group}" not found')
     verify_teacher_access(d)
     badge = {
         "active": True,
@@ -362,7 +362,7 @@ def get_groups_badges(group_id: int, context_group: str) -> Response:
             f"groups/{context_group}"
         )  # TODO: Make this unambiguous.
         if not d:
-            raise NotExist()
+            raise NotExist(f'User group "{context_group}" not found')
         verify_teacher_access(d)
     groups_badges_given = (
         run_sql(
@@ -398,6 +398,7 @@ def get_groups_badges(group_id: int, context_group: str) -> Response:
             badge_given.undo_withdrawn,
         )
     context_group_object = UserGroup.get_by_name(context_group)
+    raise_group_not_found_if_none(context_group, context_group_object)
     groups_badges = (
         run_sql(
             select(Badge)
@@ -564,7 +565,7 @@ def get_badge_holders(badge_id: int) -> Response:
             else:
                 non_personal_groups.append(user_group)
         else:
-            NotExist()
+            NotExist(f"User group not found")
     return json_response(
         (
             sorted(list(user_accounts), key=attrgetter("real_name")),
@@ -591,7 +592,7 @@ def give_badge(
     """
     d = DocEntry.find_by_path(f"groups/{context_group}")  # TODO: Make this unambiguous.
     if not d:
-        raise NotExist()
+        raise NotExist(f'User group "{context_group}" not found')
     verify_teacher_access(d)
     badge_given = BadgeGiven(
         active=True,
@@ -629,7 +630,7 @@ def withdraw_badge(badge_given_id: int, context_group: str) -> Response:
     """
     d = DocEntry.find_by_path(f"groups/{context_group}")  # TODO: Make this unambiguous.
     if not d:
-        raise NotExist()
+        raise NotExist(f'User group "{context_group}" not found')
     verify_teacher_access(d)
     badge_given = {
         "active": False,
@@ -665,7 +666,7 @@ def withdraw_all_badges(
     """
     d = DocEntry.find_by_path(f"groups/{context_group}")  # TODO: Make this unambiguous.
     if not d:
-        raise NotExist()
+        raise NotExist(f'User group "{context_group}" not found')
     verify_teacher_access(d)
     badge_given = {
         "active": False,
@@ -701,7 +702,7 @@ def undo_withdraw_badge(badge_given_id: int, context_group: str) -> Response:
     """
     d = DocEntry.find_by_path(f"groups/{context_group}")  # TODO: Make this unambiguous.
     if not d:
-        raise NotExist()
+        raise NotExist(f'User group "{context_group}" not found')
     verify_teacher_access(d)
     badge_given = {
         "active": True,
@@ -768,7 +769,7 @@ def get_subgroups(group_name_prefix: str) -> Response:
         f"groups/{group_name_prefix}"
     )  # TODO: Make this unambiguous.
     if not d:
-        raise NotExist()
+        raise NotExist(f'User group "{group_name_prefix}" not found')
     verify_teacher_access(d)
     subgroups = (
         run_sql(
@@ -848,9 +849,7 @@ def users_personal_group(name: str) -> Response:
     user_account = User.get_by_name(name)
     if personal_group and user_account:
         return json_response((user_account, personal_group))
-
-    # TODO: Use error from requesthelper (NotExist()).
-    return error_generic("there's no user with username: " + name, 404)
+    raise NotExist(f'User "{name}" not found')
 
 
 # TODO: Move this route to better place maybe.
@@ -868,6 +867,6 @@ def usergroups_members(usergroup_name: str) -> Response:
         f"groups/{usergroup_name}"
     )  # TODO: Make this unambiguous.
     if not d:
-        raise NotExist()
+        raise NotExist(f'User group "{usergroup_name}" not found')
     verify_teacher_access(d)
     return json_response(sorted(list(usergroup.users), key=attrgetter("real_name")))
