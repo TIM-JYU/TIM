@@ -7,19 +7,19 @@ import {GroupNameModule} from "tim/gamification/badge/group-name.component";
 import {IBadge, IUser} from "tim/gamification/badge/badge.interface";
 import {BadgeModule} from "tim/gamification/badge/badge.component";
 
-interface Member extends IUser {
-    badges?: IBadge[];
-}
-
 @Component({
     selector: "tim-group-dashboard",
     template: `
         <ng-container>
-    <h1>{{ displayName }}'s Dashboard</h1>
+    <h1 class="name-header">
+    {{ displayName }}'s Dashboard
+    <span *ngIf="nameJustUpdated" class="name-updated-icon">✔️</span>
+</h1>
 
     <div class="dashboard-section">
         <h2 class="section-title">Group details</h2>
         <div class="group-badges">
+            <h3>{{displayName}}'s badges</h3>
             <div *ngIf="groupBadges.length === 0">No group badges yet.</div>
     <span *ngFor="let badge of groupBadges" class="badge">
         <tim-badge
@@ -68,7 +68,8 @@ interface Member extends IUser {
         <tim-group-name
             *ngIf="group"
             [group]="group"
-            (contextGroupChange)="onContextGroupChange($event)">
+            (contextGroupChange)="onContextGroupChange($event)"
+            (groupNameChange)="onGroupNameChange($event)">
         </tim-group-name>
     </div>
 </ng-container>
@@ -86,6 +87,7 @@ export class GroupDashboardComponent implements OnInit {
     members: any[] = [];
     title: string | undefined;
     groupBadges: IBadge[] = [];
+    nameJustUpdated = false;
 
     ngOnInit(): void {
         if (this.group) {
@@ -149,7 +151,6 @@ export class GroupDashboardComponent implements OnInit {
             );
             if (groupBadges) {
                 this.groupBadges = groupBadges;
-                console.log("Fetched group mutual badges:", this.groupBadges);
             }
         } catch (error) {
             console.error("Error fetching group mutual badges:", error);
@@ -161,9 +162,17 @@ export class GroupDashboardComponent implements OnInit {
 
     onContextGroupChange(context: string) {
         this.contextGroup = context;
-        console.log("Context group received:", context);
         this.fetchUserBadges();
         this.fetchGroupBadges();
+    }
+
+    onGroupNameChange(newName: string) {
+        this.displayName = newName;
+        this.nameJustUpdated = true;
+
+        setTimeout(() => {
+            this.nameJustUpdated = false;
+        }, 1500);
     }
 }
 

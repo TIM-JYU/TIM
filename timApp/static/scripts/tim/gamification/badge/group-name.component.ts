@@ -46,6 +46,7 @@ export class GroupNameComponent implements OnInit {
     @Input() group!: string;
     @Input() username!: string;
     @Output() contextGroupChange = new EventEmitter<string>();
+    @Output() groupNameChange = new EventEmitter<string>();
     groupName: string | null = null;
     prettyName: string | null = null;
     parentGroup: string | undefined;
@@ -113,6 +114,7 @@ export class GroupNameComponent implements OnInit {
             this.storedGroup.id,
             newPrettyName
         );
+        this.groupNameChange.emit(this.prettyName!);
     }
 
     // Koko nimi on edelleen tallessa storedGroup.name:ssa tai prentGroupissa, jos käyttöä
