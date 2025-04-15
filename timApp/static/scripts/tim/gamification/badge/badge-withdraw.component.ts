@@ -17,7 +17,6 @@ import {showConfirm} from "tim/ui/showConfirmDialog";
 import {Subscription} from "rxjs";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {toPromise} from "tim/util/utils";
-import {documentglobals} from "tim/util/globals";
 import {GroupService} from "tim/plugin/group-dashboard/group.service";
 
 @Component({
@@ -35,7 +34,7 @@ import {GroupService} from "tim/plugin/group-dashboard/group.service";
                 
                 <ng-container *ngIf="teacherPermission">
                     <div class="user-group-button-container">
-                        <button (click)="handleSwap(true)" [disabled]="userAssign || users.length === 0" [title]="users.length === 0 && userAssign == undefined ? 'No users available' : ''">
+                        <button (click)="handleSwap(true); fetchUsersFromGroups()" [disabled]="userAssign || users.length === 0" [title]="users.length === 0 && userAssign == undefined ? 'No users available' : ''">
                             Users
                         </button>
                         <button (click)="handleSwap(false)" [disabled]="userAssign === false || groups.length === 0" [title]="groups.length === 0 && userAssign == undefined ? 'No groups available' : ''">
@@ -48,10 +47,15 @@ import {GroupService} from "tim/plugin/group-dashboard/group.service";
                             <label>Users</label>
                             
                             <div class="list-scroll-container" (wheel)="onScrollList($event)">
-                                <div *ngFor="let user of users" class="option-item">
-                                    <span class="option-name" (click)="selectedUser = user; fetchUserBadges(user.id)" [ngClass]="{'selected-option': selectedUser?.id === user.id}">
-                                        {{user.real_name}}
+                                <div *ngFor="let group of groups">
+                                    <span *ngIf="groupUsersMap.get(group.id)?.length">
+                                        {{group.name}}
                                     </span>
+                                    <div *ngFor="let user of groupUsersMap.get(group.id)" class="option-item">
+                                        <span class="user-name" (click)="selectedUser = user; fetchUserBadges(user.id)" [ngClass]="{'selected-option': selectedUser?.id === user.id}">
+                                            {{user.real_name}}
+                                        </span>
+                                    </div>
                                 </div>
                             </div>
                             
@@ -80,7 +84,7 @@ import {GroupService} from "tim/plugin/group-dashboard/group.service";
                             
                             <div class="list-scroll-container" (wheel)="onScrollList($event)">
                                 <div *ngFor="let group of groups" class="option-item">
-                                    <span class="option-name" (click)="selectedGroup = group; fetchGroupBadges(group.id)" [ngClass]="{'selected-option': selectedGroup?.id === group.id}">
+                                    <span class="group-name" (click)="selectedGroup = group; fetchGroupBadges(group.id)" [ngClass]="{'selected-option': selectedGroup?.id === group.id}">
                                         {{ group.name }}
                                     </span>
                                 </div>
@@ -137,17 +141,23 @@ export class BadgeWithdrawComponent implements OnInit {
 
     userAssign?: boolean = undefined;
     teacherPermission = false;
-    users: IUser[] = [];
-    badges: any = [];
-    selectedUser?: IUser | null = null;
-    userBadges: IBadge[] = [];
-    selectedBadge?: IBadge | null = null;
     hasPermission: boolean = true;
     showComponent: boolean = true;
+
+    users: IUser[] = [];
+    selectedUser?: IUser | null = null;
+    userBadges: IBadge[] = [];
+
+    badges: any = [];
+    selectedBadge?: IBadge | null = null;
+
     @Input() badgegroupContext?: string;
+
     groups: IGroup[] = [];
     selectedGroup?: IGroup | null = null;
     groupBadges: IBadge[] = [];
+    groupUsersMap = new Map<number, IUser[]>();
+
     alerts: Array<{
         msg: string;
         type: "warning" | "danger";
@@ -216,6 +226,7 @@ export class BadgeWithdrawComponent implements OnInit {
         this.userAssign = undefined;
         this.emptyTable(this.userBadges);
         this.emptyTable(this.userBadges);
+        this.groupUsersMap.clear();
     }
 
     handleSwap(bool: boolean) {
@@ -224,6 +235,15 @@ export class BadgeWithdrawComponent implements OnInit {
         this.userAssign = bool;
     }
 
+    async fetchUsersFromGroups() {
+        this.groupUsersMap.clear();
+        for (const group of this.groups) {
+            this.groupUsersMap.set(
+                group.id,
+                await this.groupService.getUsersFromGroup(group.name)
+            );
+        }
+    }
     /**
      * Hakee käyttäjät, jotka kuuluvat badgegroupContext ryhmään. badgegroupContext annetaan TIM:n puolelta.
      */

@@ -15,15 +15,21 @@
     display: flex;
     align-items: flex-start;
 }
-.option-item input{
-    width: 5%;
+
+.user-name {
+    cursor: pointer;
+    margin-left: 5em;
 }
 
-.option-name {
+.group-name {
     cursor: pointer;
 }
 
-.option-name:hover {
+.user-name:hover {
+    text-decoration: underline; /* Korostaa nimeä hoverilla */
+}
+
+.group-name:hover {
     text-decoration: underline; /* Korostaa nimeä hoverilla */
 }
 
