@@ -5,6 +5,8 @@ import {
     NgModule,
     OnInit,
     SimpleChanges,
+    EventEmitter,
+    Output,
 } from "@angular/core";
 import {CommonModule} from "@angular/common";
 import {FormControl, ReactiveFormsModule, Validators} from "@angular/forms";
@@ -43,6 +45,8 @@ import {IFolder, IFullDocument} from "tim/item/IItem";
 export class GroupNameComponent implements OnInit {
     @Input() group!: string;
     @Input() username!: string;
+    @Output() contextGroupChange = new EventEmitter<string>();
+    @Output() groupNameChange = new EventEmitter<string>();
     groupName: string | null = null;
     prettyName: string | null = null;
     parentGroup: string | undefined;
@@ -110,6 +114,7 @@ export class GroupNameComponent implements OnInit {
             this.storedGroup.id,
             newPrettyName
         );
+        this.groupNameChange.emit(this.prettyName!);
     }
 
     // Koko nimi on edelleen tallessa storedGroup.name:ssa tai prentGroupissa, jos käyttöä
@@ -119,6 +124,7 @@ export class GroupNameComponent implements OnInit {
         this.parentGroup = nameParts[0];
         this.subGroup = nameParts.slice(1).join(".");
         this.displayedName = this.subGroup;
+        this.contextGroupChange.emit(this.parentGroup);
     }
 
     toggleFullName() {
