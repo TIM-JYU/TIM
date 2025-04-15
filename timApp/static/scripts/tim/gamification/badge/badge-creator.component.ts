@@ -262,6 +262,7 @@ export class BadgeCreatorComponent implements OnInit {
         });
     }
 
+    // The handle for canceling an event conserning badge-creator.
     handleCancel() {
         this.resetForm();
         this.hideOtherViewsExcept(true);
@@ -271,12 +272,14 @@ export class BadgeCreatorComponent implements OnInit {
         }, 100);
     }
 
+    // Hides the other components when cancel is pressed
     hideOtherViewsExcept(thisView: boolean) {
         this.showGiver = false;
         this.showSelectedWithdraw = false;
         this.badgeFormShowing = false;
         return thisView;
     }
+
     // If user has pressed the create badge button, toggles the visibility of the badge creating form
     clickCreate() {
         this.clickedBadge = null;
@@ -308,6 +311,7 @@ export class BadgeCreatorComponent implements OnInit {
         }, 100);
     }
 
+    // Opens badge-giver from creator
     showBadgeGiver(badge: IBadge) {
         this.showGiver = this.hideOtherViewsExcept(this.showGiver);
         this.showGiver = !this.showGiver;
@@ -375,12 +379,14 @@ export class BadgeCreatorComponent implements OnInit {
         }, 100);
     }
 
+    // The available shapes for badges
     shapes = [
         {label: "Hexagon", value: "hexagon"},
         {label: "Flower", value: "flower"},
         {label: "Circle", value: "round"},
         {label: "Square", value: "square"},
     ];
+
     // color list for forms
     availableColors = [
         "yellow",
@@ -408,10 +414,12 @@ export class BadgeCreatorComponent implements OnInit {
         "black-vibrant",
     ];
 
+    // Ensures that preset grey cannot be chosen as a color
     disallowGrayColor(control: FormControl) {
         return control.value === "gray" ? {grayNotAllowed: true} : null;
     }
 
+    // The values of a badge
     badgeForm = new FormGroup({
         id: new FormControl(0),
         image: new FormControl(0, [Validators.required]),
@@ -480,7 +488,7 @@ export class BadgeCreatorComponent implements OnInit {
         }, 100);
     }
 
-    // Get all badges depending on if context group is selected
+    // Get all badges depending on if context group is selected. Fails if not teacher.
     private async getBadges() {
         let response;
         if (this.selectedContextGroup) {
@@ -557,6 +565,7 @@ export class BadgeCreatorComponent implements OnInit {
         }
     }
 
+    // Check if badge has been assigned to user_group
     async isBadgeAssigned() {
         const response = await toPromise(
             this.http.get<any>(`/badge_given/${this.clickedBadge.id}`)
@@ -568,7 +577,7 @@ export class BadgeCreatorComponent implements OnInit {
         }
     }
 
-    // Delete badge
+    // Delete a badge from use
     async deleteBadge() {
         let confirmMessage = `Are you sure you want to delete "${this.editingBadge.title}" badge?`;
 
@@ -601,8 +610,8 @@ export class BadgeCreatorComponent implements OnInit {
                         this.resetForm();
                         this.clickedBadge = false;
                         this.isFormChanged = false;
-                        // Lähetetään signaali onnistuneesta deletoinnista
-                        this.badgeService.triggerUpdateBadgeList(); // Lähetetään signaali BadgeService:lle
+                        // Send a signel to badgeservice about succesful delete-action
+                        this.badgeService.triggerUpdateBadgeList();
                     } else {
                         this.badgeService.showError(
                             this.alerts,
@@ -618,7 +627,7 @@ export class BadgeCreatorComponent implements OnInit {
         }
     }
 
-    // Siirretään käyttäjän näkymä takasin komponentin alkuun
+    // Moves the screen back to the top, when other components are closed.
     centerToComponent() {
         if (this.allBadgesSection) {
             const element = this.allBadgesSection.nativeElement;

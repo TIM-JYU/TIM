@@ -181,6 +181,7 @@ export class BadgeViewerComponent implements OnInit {
             }
         );
 
+        // Creates a dialog-window about the data of a badge
         this.badgeService.closeActiveDialog();
         const iconName = this.getImageNameById(badge.image);
         this.badgeService.activeDialogRef = await angularDialog.open(
@@ -271,6 +272,7 @@ export class BadgeViewerComponent implements OnInit {
         this.badges = userBadges;
     }
 
+    // Gets the usergroups under the specified maingroup
     async getUserSubGroups(groupContext: string, userid: number) {
         this.userSubGroups = await this.badgeService.getUserSubGroups(
             groupContext,
@@ -286,6 +288,7 @@ export class BadgeViewerComponent implements OnInit {
         }
     }
 
+    // Retrieves the badges of a group
     async getGroupBadges() {
         this.groupBadgesMap.clear();
         if (!this.badgegroupContext) {
@@ -303,6 +306,7 @@ export class BadgeViewerComponent implements OnInit {
         }
     }
 
+    // Finds and presents the badges of the user and their assigned group
     ngOnInit() {
         this.availableImages = this.badgeService.getAvailableImages();
         if (Users.isLoggedIn()) {
@@ -321,6 +325,7 @@ export class BadgeViewerComponent implements OnInit {
         );
     }
 
+    //
     private async InitializeData() {
         if (!this.badgeuserContext || !this.badgegroupContext) {
             return;
@@ -337,6 +342,7 @@ export class BadgeViewerComponent implements OnInit {
         );
     }
 
+    //
     ngOnDestroy() {
         this.subscription.unsubscribe();
     }

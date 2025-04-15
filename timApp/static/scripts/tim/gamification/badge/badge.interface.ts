@@ -1,3 +1,4 @@
+// Interface representing a badge and its associated details
 export interface IBadge {
     id: number;
     title: string;
@@ -13,12 +14,14 @@ export interface IBadge {
     created_by_name: string;
 }
 
+// Interface representing a group with a name and description
 export interface IGroup {
     id: number;
     name: string;
     description: string;
 }
 
+// Interface representing a user
 export interface IUser {
     id: number;
     name: string;
@@ -26,11 +29,13 @@ export interface IUser {
     email: string;
 }
 
+// Interface representing a tuple containing a user and a group
 export interface IPersonalGroup {
     0: IUser;
     1: IGroup;
 }
 
+// Interface representing badge holders, with lists of users and groups
 export interface IBadgeHolders {
     0: IUser[];
     1: IGroup[];
