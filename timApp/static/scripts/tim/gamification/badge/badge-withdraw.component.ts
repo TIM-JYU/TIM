@@ -16,6 +16,8 @@ import {Users} from "tim/user/userService";
 import {showConfirm} from "tim/ui/showConfirmDialog";
 import {Subscription} from "rxjs";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
+import {toPromise} from "tim/util/utils";
+import {documentglobals} from "tim/util/globals";
 
 @Component({
     selector: "tim-badge-withdraw",
@@ -24,11 +26,13 @@ import {TimUtilityModule} from "tim/ui/tim-utility.module";
             <div class="badge-withdraw">
                 <h2>View users or groups</h2>
                 
-                <ng-container *ngIf="groups.length === 0 && users.length === 0">
-                    <span>No users or groups found for {{badgegroupContext}}</span>
+                <ng-container *ngIf="!teacherPermission">
+                    <tim-alert *ngFor="let alert of alerts; let i = index" [severity]="alert.type" [closeable]="true" (closing)="badgeService.closeAlert(this.alerts, i)">
+                        <div [innerHTML]="alert.msg"></div>
+                    </tim-alert>
                 </ng-container>
                 
-                <ng-container *ngIf="groups.length > 0 || users.length > 0">
+                <ng-container *ngIf="teacherPermission">
                     <div class="user-group-button-container">
                         <button (click)="handleSwap(true)" [disabled]="userAssign || users.length === 0" [title]="users.length === 0 && userAssign == undefined ? 'No users available' : ''">
                             Users
@@ -131,7 +135,7 @@ export class BadgeWithdrawComponent implements OnInit {
     private subscription: Subscription = new Subscription();
 
     userAssign?: boolean = undefined;
-
+    teacherPermission = false;
     users: IUser[] = [];
     badges: any = [];
     selectedUser?: IUser | null = null;
@@ -223,11 +227,37 @@ export class BadgeWithdrawComponent implements OnInit {
      * Hakee käyttäjät, jotka kuuluvat badgegroupContext ryhmään. badgegroupContext annetaan TIM:n puolelta.
      */
     private async fetchUsers() {
-        if (this.badgegroupContext) {
-            this.users = await this.badgeService.getUsersFromGroup(
-                this.badgegroupContext
-            );
+        const result = await toPromise(
+            this.http.get<[]>(
+                `/usergroups_members/${documentglobals().curr_item.id}/${
+                    this.badgegroupContext
+                }`
+            )
+        );
+        const users: IUser[] = [];
+        if (result.ok) {
+            this.teacherPermission = true;
+            if (result.result != undefined) {
+                for (const alkio of result.result) {
+                    users.push(alkio);
+                }
+            }
         }
+        if (!result.ok) {
+            this.badgeService.showError(
+                this.alerts,
+                {
+                    data: {
+                        error:
+                            result.result.error.error +
+                            ` If you are a teacher of ${this.badgegroupContext}, please contact TIM admin.`,
+                    },
+                },
+                "danger"
+            );
+            return;
+        }
+        this.users = users;
     }
 
     private async fetchGroups() {
