@@ -49,7 +49,7 @@ import {GroupService} from "tim/plugin/group-dashboard/group.service";
                                 <div class="list-scroll-container" (wheel)="onScrollList($event)">
                                     <div *ngFor="let group of groups">
                                         <span *ngIf="groupUsersMap.get(group.id)?.length">
-                                            {{group.name}}
+                                            {{group.description}}
                                         </span>
                                         <div *ngFor="let user of groupUsersMap.get(group.id)" class="option-item">
                                             <span class="user-name" (click)="selectedUser = user; fetchUserBadges(user.id)" [ngClass]="{'selected-option': selectedUser?.id === user.id}">
@@ -87,7 +87,7 @@ import {GroupService} from "tim/plugin/group-dashboard/group.service";
                             <div class="list-scroll-container" (wheel)="onScrollList($event)">
                                 <div *ngFor="let group of groups" class="option-item">
                                     <span class="group-name" (click)="selectedGroup = group; fetchGroupBadges(group.id)" [ngClass]="{'selected-option': selectedGroup?.id === group.id}">
-                                        {{ group.name }}
+                                        {{ group.description }}
                                     </span>
                                 </div>
                             </div>
@@ -288,17 +288,18 @@ export class BadgeWithdrawComponent implements OnInit {
                 this.badgegroupContext
             );
         }
-        const updatedGroups = [];
+
+        const updatesGroups = [];
         for (const group of this.groups) {
             const prettyName = await this.groupService.getCurrentGroup(
                 group.name
             );
             if (prettyName) {
-                group.name = prettyName.description || group.name;
+                group.description = prettyName.description || group.name;
+                updatesGroups.push(group);
             }
-            updatedGroups.push(group);
         }
-        this.groups = updatedGroups;
+        this.groups = updatesGroups;
     }
 
     /**
