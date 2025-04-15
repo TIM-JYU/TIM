@@ -137,7 +137,6 @@ export class BadgeWithdrawComponent implements OnInit {
     selectedUser?: IUser | null = null;
     userBadges: IBadge[] = [];
     selectedBadge?: IBadge | null = null;
-    badgeGiver = 0;
     hasPermission: boolean = true;
     showComponent: boolean = true;
     @Input() badgegroupContext?: string;
@@ -299,7 +298,6 @@ export class BadgeWithdrawComponent implements OnInit {
      * @param badgegivenID ID, jonka perustella badgesgiven taulukosta voidaan ottaa pois käyttäjälle annettu badge
      */
     async removeBadge(badgegivenID?: number) {
-        this.badgeGiver = Users.getCurrent().id;
         if (badgegivenID == undefined) {
             console.error("badgegived id was undefined");
             return;
@@ -319,11 +317,7 @@ export class BadgeWithdrawComponent implements OnInit {
             return;
         }
         this.badgeService
-            .withdrawBadge(
-                badgegivenID,
-                this.badgeGiver,
-                this.badgegroupContext
-            )
+            .withdrawBadge(badgegivenID, this.badgegroupContext)
             .then((r) => {
                 if (!r.ok) {
                     this.badgeService.showError(

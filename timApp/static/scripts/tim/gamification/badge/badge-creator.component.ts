@@ -214,18 +214,14 @@ import {TimUtilityModule} from "tim/ui/tim-utility.module";
 export class BadgeCreatorComponent implements OnInit {
     @ViewChild("allBadgesSection") allBadgesSection!: ElementRef;
 
-    private userName?: string;
-    private userID?: number;
     constructor(
         private http: HttpClient,
         protected badgeService: BadgeService
     ) {}
 
-    currentDocumentID = documentglobals().curr_item.id;
     isFormChanged = false; // Flag to track form changes
     all_badges: IBadge[] = [];
     selectedContextGroup: string = "";
-    hasPermission = true;
     badgeFormShowing = false;
     teacherPermission = false;
     availableImages: {id: number; name: string}[] = [];
@@ -260,15 +256,6 @@ export class BadgeCreatorComponent implements OnInit {
     ngOnInit() {
         this.availableImages = this.badgeService.getAvailableImages();
         this.selectedContextGroup = this.badgegroupContext || "";
-        if (Users.isLoggedIn()) {
-            this.userName = Users.getCurrent().name;
-            this.userID = Users.getCurrent().id;
-
-            if (Users.belongsToGroup("Administrators")) {
-                this.hasPermission = true;
-            }
-        }
-
         this.getBadges();
         this.badgeForm.valueChanges.subscribe(() => {
             this.isFormChanged = true;
@@ -447,11 +434,8 @@ export class BadgeCreatorComponent implements OnInit {
     async onSubmit() {
         if (this.badgeForm.valid) {
             this.newBadge = this.badgeForm.value;
-            this.newBadge.created_by = this.userID;
             const response = toPromise(
                 this.http.post<{ok: boolean}>("/create_badge", {
-                    created_by: this.newBadge.created_by,
-                    doc_id: this.currentDocumentID,
                     context_group: this.selectedContextGroup,
                     title: this.newBadge.title,
                     color: this.newBadge.color,
@@ -502,7 +486,7 @@ export class BadgeCreatorComponent implements OnInit {
         if (this.selectedContextGroup) {
             response = toPromise(
                 this.http.get<[]>(
-                    `/all_badges_in_context/${this.userID}/${this.currentDocumentID}/${this.selectedContextGroup}`
+                    `/all_badges_in_context/${this.selectedContextGroup}`
                 )
             );
         } else {
@@ -542,8 +526,6 @@ export class BadgeCreatorComponent implements OnInit {
             const response = toPromise(
                 this.http.post<{ok: boolean}>("/modify_badge", {
                     badge_id: this.editingBadge.id,
-                    modified_by: this.userID,
-                    doc_id: this.currentDocumentID,
                     context_group: this.editingBadge.context_group,
                     title: this.editingBadge.title,
                     color: this.editingBadge.color,
@@ -604,8 +586,6 @@ export class BadgeCreatorComponent implements OnInit {
                     const response = await toPromise(
                         this.http.post<{ok: boolean}>("/deactivate_badge", {
                             badge_id: this.editingBadge.id,
-                            deleted_by: this.userID,
-                            doc_id: this.currentDocumentID,
                             context_group: this.selectedContextGroup,
                         })
                     );
