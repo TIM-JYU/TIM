@@ -514,6 +514,7 @@ def group_name(name: str) -> Response:
     :return: group name
     """
     group = UserGroup.get_by_name(name)
+    raise_group_not_found_if_none(name, group)
     doc = group.admin_doc
     if not doc:
         raise RouteException("no rights")
