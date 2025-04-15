@@ -81,7 +81,7 @@ import {GroupService} from "tim/plugin/group-dashboard/group.service";
                             <div class="list-scroll-container" (wheel)="onScrollList($event)">
                                 <div *ngFor="let group of groups" class="option-item">
                                     <span class="option-name" (click)="selectedGroup = group; fetchGroupBadges(group.id)" [ngClass]="{'selected-option': selectedGroup?.id === group.id}">
-                                        {{ prettyGroupName(group.name) }}
+                                        {{ group.name }}
                                     </span>
                                 </div>
                             </div>
@@ -263,6 +263,17 @@ export class BadgeWithdrawComponent implements OnInit {
                 this.badgegroupContext
             );
         }
+        const updatedGroups = [];
+        for (const group of this.groups) {
+            const prettyName = await this.groupService.getCurrentGroup(
+                group.name
+            );
+            if (prettyName) {
+                group.name = prettyName.description || group.name;
+            }
+            updatedGroups.push(group);
+        }
+        this.groups = updatedGroups;
     }
 
     /**
@@ -382,16 +393,6 @@ export class BadgeWithdrawComponent implements OnInit {
                 this.selectedGroup = null;
             }
         }
-    }
-
-    prettyGroupName(groupName: string): string {
-        if (!groupName || !this.badgegroupContext) {
-            return groupName;
-        }
-
-        return groupName.startsWith(this.badgegroupContext + "-")
-            ? groupName.slice(this.badgegroupContext.length + 1)
-            : groupName;
     }
 
     emptyTable<T>(table: T[]) {
