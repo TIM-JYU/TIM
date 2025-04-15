@@ -11,12 +11,10 @@ import {
 import {CommonModule} from "@angular/common";
 import {FormControl, ReactiveFormsModule, Validators} from "@angular/forms";
 import {HttpClient} from "@angular/common/http";
-import {UserService} from "tim/user/userService";
-import {UserGroupDialogComponent} from "tim/user/user-group-dialog.component";
-import {BadgeService} from "./badge.service";
-import {cons} from "fp-ts/ReadonlyNonEmptyArray";
+import {BadgeService} from "tim/gamification/badge/badge.service";
 import {manageglobals} from "tim/util/globals";
 import {IFolder, IFullDocument} from "tim/item/IItem";
+import {GroupService} from "tim/plugin/group-dashboard/group.service";
 
 @Component({
     selector: "tim-group-name",
@@ -59,7 +57,10 @@ export class GroupNameComponent implements OnInit {
     showFullName = false;
     storedGroup: {name: string; id: number} | null = null;
 
-    constructor(private badgeService: BadgeService) {}
+    constructor(
+        private badgeService: BadgeService,
+        private groupService: GroupService
+    ) {}
 
     /**
      * TODO: Laita muutetut "pretty namet" päivittymään myös muihin komponentteihin, esim. giverin group valintaan
@@ -70,7 +71,7 @@ export class GroupNameComponent implements OnInit {
             return;
         }
 
-        const fetchedGroup = await this.badgeService.getCurrentGroup(
+        const fetchedGroup = await this.groupService.getCurrentGroup(
             this.group
         );
         if (fetchedGroup) {
@@ -99,7 +100,7 @@ export class GroupNameComponent implements OnInit {
         const newPrettyName = this.newName.value;
 
         if (this.storedGroup) {
-            await this.badgeService.updateGroupName(
+            await this.groupService.updateGroupName(
                 this.storedGroup.id,
                 this.storedGroup.name,
                 newPrettyName
@@ -110,7 +111,7 @@ export class GroupNameComponent implements OnInit {
             this.newName.setValue("");
             this.showInput = !this.showInput;
         }
-        this.badgeService.notifyGroupNameChange(
+        this.groupService.notifyGroupNameChange(
             this.storedGroup.id,
             newPrettyName
         );

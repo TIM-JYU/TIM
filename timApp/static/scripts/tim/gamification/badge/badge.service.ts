@@ -42,27 +42,7 @@ export class BadgeService {
         this.updateBadgeSubject.next();
     }
 
-    notifyGroupNameChange(id: number, newName: string) {
-        this.groupNameUpdated.next({id, newName});
-    }
-
     constructor(private http: HttpClient) {}
-    async getAllBadges(): Promise<IBadge[]> {
-        try {
-            // Create an HTTP request and wait for response
-            const response = this.http.get<IBadge[]>("/all_badges");
-
-            // Transform Observable to a Promise and wait for data
-            const result = await lastValueFrom(response);
-
-            // Return fetched data or an empty array if database is empty
-            return result ?? [];
-        } catch (error) {
-            // console.error("Error fetching badges:", error);
-            // Return an empty array in case of an error
-            return [];
-        }
-    }
 
     /**
      * Hakee käyttäjän ryhmälle kuuluvat badget ID:n perusteella.
@@ -84,64 +64,6 @@ export class BadgeService {
             }
         }
         return userBadges.reverse();
-    }
-
-    /**
-     * Hakee kaikki käyttäjät, jotka kuuluvat parametrina annettuun ryhmään.
-     * @param group ryhmä, jonka käyttäjiä haetaan.
-     */
-    async getUsersFromGroup(group: string) {
-        const result = await toPromise(
-            this.http.get<[]>(`/usergroups_members/${group}`)
-        );
-        const users: IUser[] = [];
-        if (result.ok) {
-            if (result.result != undefined) {
-                for (const alkio of result.result) {
-                    users.push(alkio);
-                }
-            }
-        }
-        return users;
-    }
-
-    /**
-     * Hakee kaikki "aliryhmät", jotka alkaa annetulla <group> parametrilla.
-     * @param group ryhmä, jonka avulla aliryhmät haetaan
-     */
-    async getSubGroups(group: string) {
-        const result = await toPromise(
-            this.http.get<[]>(`/subgroups/${group}`)
-        );
-        const subGroups: IGroup[] = [];
-        if (result.ok) {
-            if (result.result != undefined) {
-                for (const alkio of result.result) {
-                    subGroups.push(alkio);
-                }
-            }
-        }
-        return subGroups;
-    }
-
-    /**
-     * Hakee kaikki "aliryhmät", johon käyttäjä kuuluu.
-     * @param group ryhmä, jonka avulla aliryhmät haetaan
-     * @param userid käyttäjän id
-     */
-    async getUserSubGroups(group: string, userid: number) {
-        const result = await toPromise(
-            this.http.get<[]>(`/users_subgroups/${userid}/${group}`)
-        );
-        const userSubGroups: IGroup[] = [];
-        if (result.ok) {
-            if (result.result != undefined) {
-                for (const alkio of result.result) {
-                    userSubGroups.push(alkio);
-                }
-            }
-        }
-        return userSubGroups;
     }
 
     /**
@@ -195,55 +117,6 @@ export class BadgeService {
             return result.result;
         }
         return null;
-    }
-
-    async getUserAndPersonalGroup(userName: string | undefined) {
-        const response = toPromise(
-            this.http.get<any>(`/user_and_personal_group/${userName}`)
-        );
-        const result = await response;
-
-        if (result.ok) {
-            return result.result;
-        } else {
-            console.error(
-                `Failed to fetch personal group for user: ${userName}`
-            );
-            return null;
-        }
-    }
-
-    // Gets the current selected group
-    async getCurrentGroup(groupName: string | null) {
-        const response = toPromise(
-            this.http.get<any>(`/groups/current_group_name/${groupName}`)
-        );
-        const result = await response;
-
-        if (result.ok) {
-            return result.result;
-        } else {
-            console.error("Failed to fetch groups name.");
-        }
-        return null;
-    }
-
-    // Changes the groups name into the
-    async updateGroupName(
-        group_id: number,
-        group_name: string,
-        new_name: string | null
-    ) {
-        const response = toPromise(
-            this.http.post<{ok: boolean}>(
-                `/groups/editGroupName/${group_name}/${new_name}`,
-                {}
-            )
-        );
-        const result = await response;
-        if (result.ok) {
-            return result.result;
-        }
     }
 
     async assignBadges(data: IData) {

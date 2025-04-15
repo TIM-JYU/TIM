@@ -18,6 +18,7 @@ import {Subscription} from "rxjs";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {toPromise} from "tim/util/utils";
 import {documentglobals} from "tim/util/globals";
+import {GroupService} from "tim/plugin/group-dashboard/group.service";
 
 @Component({
     selector: "tim-badge-withdraw",
@@ -155,7 +156,8 @@ export class BadgeWithdrawComponent implements OnInit {
 
     constructor(
         private http: HttpClient,
-        protected badgeService: BadgeService
+        protected badgeService: BadgeService,
+        private groupService: GroupService
     ) {}
 
     onScroll(event: WheelEvent) {
@@ -257,7 +259,7 @@ export class BadgeWithdrawComponent implements OnInit {
 
     private async fetchGroups() {
         if (this.badgegroupContext) {
-            this.groups = await this.badgeService.getSubGroups(
+            this.groups = await this.groupService.getSubGroups(
                 this.badgegroupContext
             );
         }
@@ -289,7 +291,7 @@ export class BadgeWithdrawComponent implements OnInit {
             return;
         }
         const pGroup: IPersonalGroup =
-            await this.badgeService.getUserAndPersonalGroup(
+            await this.groupService.getUserAndPersonalGroup(
                 this.selectedUser.name
             );
         this.userBadges = await this.badgeService.getUserBadges(

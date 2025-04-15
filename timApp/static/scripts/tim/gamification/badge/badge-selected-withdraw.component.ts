@@ -20,6 +20,7 @@ import {documentglobals} from "tim/util/globals";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {cons} from "fp-ts/ReadonlyNonEmptyArray";
 import {showConfirm} from "tim/ui/showConfirmDialog";
+import {GroupService} from "tim/plugin/group-dashboard/group.service";
 
 @Component({
     selector: "tim-badge-selected-withdraw",
@@ -153,7 +154,8 @@ export class BadgeSelectedWithdrawComponent implements OnInit {
 
     constructor(
         private http: HttpClient,
-        protected badgeService: BadgeService
+        protected badgeService: BadgeService,
+        private groupService: GroupService
     ) {}
 
     ngOnInit() {
@@ -272,7 +274,7 @@ export class BadgeSelectedWithdrawComponent implements OnInit {
         for (const group of this.groups) {
             this.groupUsersMap.set(
                 group.id,
-                await this.badgeService.getUsersFromGroup(group.name)
+                await this.groupService.getUsersFromGroup(group.name)
             );
             this.isAllSelectedMap.set(group.id, false);
         }
@@ -298,7 +300,7 @@ export class BadgeSelectedWithdrawComponent implements OnInit {
         }
 
         for (const group of holders["1"]) {
-            const prettyName = await this.badgeService.getCurrentGroup(
+            const prettyName = await this.groupService.getCurrentGroup(
                 group.name
             );
             if (prettyName) {
@@ -330,7 +332,7 @@ export class BadgeSelectedWithdrawComponent implements OnInit {
         if (this.selectedUsers.length > 0) {
             for (const user of this.selectedUsers) {
                 const pGroup: IPersonalGroup =
-                    await this.badgeService.getUserAndPersonalGroup(user.name);
+                    await this.groupService.getUserAndPersonalGroup(user.name);
 
                 await this.badgeService
                     .withdrawSelectedBadge(
