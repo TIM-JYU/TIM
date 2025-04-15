@@ -39,8 +39,20 @@ import {toPromise} from "tim/util/utils";
                 <p class="no-badges-txt">No user badges</p>
             </ng-container>
             <ng-container *ngIf="badges.length > 0">
+                
+                <div class="sort-select">
+                    <label for="user-sort-select">Sort badges by: </label>
+                    
+                    <select id="user-sort-select" [(ngModel)]="selectedSort" (ngModelChange)="onSortChange($event)">
+                      <option value="newest">Newest</option>
+                      <option value="oldest">Oldest</option>
+                      <option value="az">A-Z</option>
+                      <option value="za">Z-A</option>
+                    </select>
+                </div>
+                
                 <div class="user-badges">
-                    <div class="badge-card" *ngFor="let badge of badges">
+                    <div class="badge-card" *ngFor="let badge of sortedBadges">
                         <tim-badge
                                 title="{{badge.title}}"
                                 color="{{badge.color}}"
@@ -64,6 +76,19 @@ import {toPromise} from "tim/util/utils";
                     </ng-container>
 
                     <ng-container *ngIf="groupBadgesMap.get(group.id)?.length || 0 > 0">
+                        <div class="sort-select">
+                            <label for="group-sort-{{group.id}}">Sort badges by: </label>
+                            <select
+                                [id]="'group-sort-' + group.id"
+                                [ngModel]="groupSortMap.get(group.id) || 'newest'"
+                                (ngModelChange)="onGroupSortChange(group.id, $event)"
+                            >
+                                <option value="newest">Newest</option>
+                                <option value="oldest">Oldest</option>
+                                <option value="az">A-Z</option>
+                                <option value="za">Z-A</option>
+                            </select>
+                        </div>
                         <div class="users-group-badges">
                             <div class="badge-card" *ngFor="let badge of groupBadgesMap.get(group.id)">
                                 <tim-badge
@@ -98,6 +123,9 @@ export class BadgeViewerComponent implements OnInit {
     groupPrettyNames: Map<number, string> = new Map();
     disableDialogWindow?: boolean;
     availableImages: {id: number; name: string}[] = [];
+    selectedSort: string = "newest";
+    sortedBadges: IBadge[] = [];
+    groupSortMap: Map<number, string> = new Map();
 
     teacherPermission: boolean = false;
     alerts: Array<{
@@ -269,6 +297,7 @@ export class BadgeViewerComponent implements OnInit {
             return;
         }
         this.badges = userBadges;
+        this.onSortChange(this.selectedSort);
     }
 
     async getUserSubGroups(groupContext: string, userid: number) {
@@ -348,6 +377,73 @@ export class BadgeViewerComponent implements OnInit {
         while (table.length > 0) {
             table.pop();
         }
+    }
+
+    onSortChange(sortType: string) {
+        this.sortedBadges = [...this.badges];
+
+        switch (sortType) {
+            case "az":
+                this.sortedBadges.sort((a, b) =>
+                    a.title.localeCompare(b.title)
+                );
+                break;
+            case "za":
+                this.sortedBadges.sort((a, b) =>
+                    b.title.localeCompare(a.title)
+                );
+                break;
+            case "newest":
+                this.sortedBadges.sort(
+                    (a, b) =>
+                        new Date(b.given).getTime() -
+                        new Date(a.given).getTime()
+                );
+                break;
+            case "oldest":
+                this.sortedBadges.sort(
+                    (a, b) =>
+                        new Date(a.given).getTime() -
+                        new Date(b.given).getTime()
+                );
+                break;
+            default:
+                this.sortedBadges = [...this.badges];
+        }
+    }
+
+    onGroupSortChange(groupId: number, sortType: string) {
+        this.groupSortMap.set(groupId, sortType);
+
+        const originalBadges = this.groupBadgesMap.get(groupId) || [];
+        const sorted = [...originalBadges];
+
+        switch (sortType) {
+            case "az":
+                sorted.sort((a, b) => a.title.localeCompare(b.title));
+                break;
+            case "za":
+                sorted.sort((a, b) => b.title.localeCompare(a.title));
+                break;
+            case "newest":
+                sorted.sort(
+                    (a, b) =>
+                        new Date(b.given).getTime() -
+                        new Date(a.given).getTime()
+                );
+                break;
+            case "oldest":
+                sorted.sort(
+                    (a, b) =>
+                        new Date(a.given).getTime() -
+                        new Date(b.given).getTime()
+                );
+                break;
+            default:
+                return;
+        }
+
+        this.groupBadgesMap.set(groupId, sorted);
     }
 }
 
