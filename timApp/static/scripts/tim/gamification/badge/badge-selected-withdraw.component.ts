@@ -336,7 +336,6 @@ export class BadgeSelectedWithdrawComponent implements OnInit {
                     .withdrawSelectedBadge(
                         pGroup["1"].id,
                         this.selectedBadge?.id,
-                        Users.getCurrent().id,
                         this.badgegroupContext
                     )
                     .then((r) => {
@@ -361,7 +360,6 @@ export class BadgeSelectedWithdrawComponent implements OnInit {
                     .withdrawSelectedBadge(
                         group.id,
                         this.selectedBadge?.id,
-                        Users.getCurrent().id,
                         this.badgegroupContext
                     )
                     .then((r) => {

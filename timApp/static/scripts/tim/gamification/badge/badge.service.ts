@@ -13,8 +13,6 @@ import type {
 import {documentglobals} from "tim/util/globals";
 
 interface IData {
-    given_by: number;
-    doc_id: number;
     context_group?: string;
     group_id: number;
     badge_id?: number;
@@ -49,9 +47,6 @@ export class BadgeService {
     }
 
     constructor(private http: HttpClient) {}
-
-    currentDocumentID = documentglobals().curr_item.id;
-
     async getAllBadges(): Promise<IBadge[]> {
         try {
             // Create an HTTP request and wait for response
@@ -97,9 +92,7 @@ export class BadgeService {
      */
     async getUsersFromGroup(group: string) {
         const result = await toPromise(
-            this.http.get<[]>(
-                `/usergroups_members/${this.currentDocumentID}/${group}`
-            )
+            this.http.get<[]>(`/usergroups_members/${group}`)
         );
         const users: IUser[] = [];
         if (result.ok) {
@@ -154,18 +147,11 @@ export class BadgeService {
     /**
      * Ottaa valitun badgen pois käytöstä käyttäjältä.
      * @param badgegivenID badgegiven -tietokantataulukon id, jonka avulla valittu badge poistetaan käytöstä
-     * @param giverID käyttäjän id, joka poistaa badgen käytöstä.
      */
-    async withdrawBadge(
-        badgegivenID: number,
-        giverID: number,
-        context_group: string
-    ) {
+    async withdrawBadge(badgegivenID: number, context_group: string) {
         const response = toPromise(
             this.http.post<{ok: boolean}>("/withdraw_badge", {
                 badge_given_id: badgegivenID,
-                withdrawn_by: giverID,
-                doc_id: this.currentDocumentID,
                 context_group: context_group,
             })
         );
@@ -182,14 +168,12 @@ export class BadgeService {
     async withdrawSelectedBadge(
         userid: number,
         badgeid: number,
-        giverid: number,
         contextGroup: string
     ) {
         const response = toPromise(
             this.http.post<{ok: boolean}>("/withdraw_all_badges", {
                 badge_id: badgeid,
                 usergroup_id: userid,
-                withdrawn_by: giverid,
                 context_group: contextGroup,
             })
         );
@@ -263,8 +247,6 @@ export class BadgeService {
     async assignBadges(data: IData) {
         const response = toPromise(
             this.http.post<{ok: boolean}>("/give_badge", {
-                given_by: data.given_by,
-                doc_id: this.currentDocumentID,
                 context_group: data.context_group,
                 group_id: data.group_id,
                 badge_id: data.badge_id,

@@ -475,19 +475,11 @@ export class BadgeGiverComponent implements OnInit {
      * @param message viesti, joka antamisen yhteydessä voidaan antaa
      */
     async assignBadge(message: string) {
-        let givenByID = 0;
-        const currentDocumentID = documentglobals().curr_item.id;
-        if (Users.isLoggedIn()) {
-            givenByID = Users.getCurrent().id;
-        }
-
         if (this.selectedUsers.length > 0) {
             for (const user of this.selectedUsers) {
                 const pGroup: IPersonalGroup =
                     await this.badgeService.getUserAndPersonalGroup(user.name);
                 await this.badgeService.assignBadges({
-                    given_by: givenByID,
-                    doc_id: currentDocumentID,
                     context_group: this.badgegroupContext,
                     group_id: pGroup["1"].id,
                     badge_id: this.selectedBadge?.id,
@@ -498,8 +490,6 @@ export class BadgeGiverComponent implements OnInit {
         if (this.selectedGroups.length > 0) {
             for (const group of this.selectedGroups) {
                 await this.badgeService.assignBadges({
-                    given_by: givenByID,
-                    doc_id: currentDocumentID,
                     context_group: this.badgegroupContext,
                     group_id: group.id,
                     badge_id: this.selectedBadge?.id,
