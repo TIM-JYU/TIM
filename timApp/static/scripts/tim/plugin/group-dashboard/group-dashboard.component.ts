@@ -3,7 +3,7 @@ import {CommonModule} from "@angular/common";
 import {BadgeService} from "tim/gamification/badge/badge.service";
 import {manageglobals} from "tim/util/globals";
 import {IFolder, IFullDocument} from "tim/item/IItem";
-import {GroupNameModule} from "tim/gamification/badge/group-name.component";
+import {GroupNameModule} from "tim/plugin/group-dashboard/group-name.component";
 import {IBadge, IUser} from "tim/gamification/badge/badge.interface";
 import {BadgeModule} from "tim/gamification/badge/badge.component";
 
@@ -12,7 +12,7 @@ import {BadgeModule} from "tim/gamification/badge/badge.component";
     template: `
         <ng-container>
     <h1 class="name-header">
-    {{ displayName }}'s Dashboard
+    {{ displayName }}'s dashboard
     <span *ngIf="nameJustUpdated" class="name-updated-icon">✔️</span>
 </h1>
 

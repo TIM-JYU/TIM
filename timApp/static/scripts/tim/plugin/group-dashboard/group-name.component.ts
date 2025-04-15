@@ -11,10 +11,7 @@ import {
 import {CommonModule} from "@angular/common";
 import {FormControl, ReactiveFormsModule, Validators} from "@angular/forms";
 import {HttpClient} from "@angular/common/http";
-import {UserService} from "tim/user/userService";
-import {UserGroupDialogComponent} from "tim/user/user-group-dialog.component";
-import {BadgeService} from "./badge.service";
-import {cons} from "fp-ts/ReadonlyNonEmptyArray";
+import {BadgeService} from "tim/gamification/badge/badge.service";
 import {manageglobals} from "tim/util/globals";
 import {IFolder, IFullDocument} from "tim/item/IItem";
 
