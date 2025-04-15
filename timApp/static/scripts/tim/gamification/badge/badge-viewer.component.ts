@@ -34,7 +34,7 @@ import {toPromise} from "tim/util/utils";
         
         <ng-container *ngIf="teacherPermission">
         <div class="viewer-container">
-            <h2 class="badge-heading">User Badges ({{badgeuserContext}})</h2>
+            <h2 class="badge-heading">User Badges ({{realName}})</h2>
             <ng-container *ngIf="badges.length === 0">
                 <p class="no-badges-txt">No user badges</p>
             </ng-container>
@@ -88,6 +88,7 @@ import {toPromise} from "tim/util/utils";
 })
 export class BadgeViewerComponent implements OnInit {
     personalGroup?: IPersonalGroup;
+    realName: string | null = null;
     selectedUser?: IUser | null = null;
     badges: IBadge[] = [];
     userSubGroups: IGroup[] = [];
@@ -336,6 +337,7 @@ export class BadgeViewerComponent implements OnInit {
         if (!this.personalGroup) {
             return;
         }
+        this.realName = this.personalGroup["0"].real_name;
         this.getUserSubGroups(
             this.badgegroupContext,
             this.personalGroup?.["0"].id
