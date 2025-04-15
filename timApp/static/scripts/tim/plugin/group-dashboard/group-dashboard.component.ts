@@ -6,6 +6,7 @@ import {IFolder, IFullDocument} from "tim/item/IItem";
 import {GroupNameModule} from "tim/plugin/group-dashboard/group-name.component";
 import {IBadge, IUser} from "tim/gamification/badge/badge.interface";
 import {BadgeModule} from "tim/gamification/badge/badge.component";
+import {GroupService} from "tim/plugin/group-dashboard/group.service";
 
 @Component({
     selector: "tim-group-dashboard",
@@ -77,7 +78,10 @@ import {BadgeModule} from "tim/gamification/badge/badge.component";
     styleUrls: ["./group-dashboard.component.scss"],
 })
 export class GroupDashboardComponent implements OnInit {
-    constructor(private badgeService: BadgeService) {}
+    constructor(
+        private groupService: GroupService,
+        private badgeService: BadgeService
+    ) {}
 
     @Input() group!: string;
     private item: IFullDocument | IFolder | undefined;
@@ -89,16 +93,18 @@ export class GroupDashboardComponent implements OnInit {
     groupBadges: IBadge[] = [];
     nameJustUpdated = false;
 
-    ngOnInit(): void {
+    async ngOnInit(): Promise<void> {
         if (this.group) {
-            this.getGroupName();
-            this.fetchMembers();
+            await this.getGroupName();
+            await this.fetchMembers();
+            await this.fetchUserBadges();
+            await this.fetchGroupBadges();
         }
         this.item = manageglobals().curr_item;
     }
 
     async getGroupName() {
-        const fetchedGroup = await this.badgeService.getCurrentGroup(
+        const fetchedGroup = await this.groupService.getCurrentGroup(
             this.group
         );
         if (fetchedGroup) {
@@ -108,7 +114,7 @@ export class GroupDashboardComponent implements OnInit {
     }
 
     async fetchMembers() {
-        const members = await this.badgeService.getUsersFromGroup(this.group);
+        const members = await this.groupService.getUsersFromGroup(this.group);
 
         if (members) {
             this.members = members;
@@ -119,7 +125,7 @@ export class GroupDashboardComponent implements OnInit {
         const badgePromises = this.members.map(async (user) => {
             try {
                 const personalGroup =
-                    await this.badgeService.getUserAndPersonalGroup(user.name);
+                    await this.groupService.getUserAndPersonalGroup(user.name);
 
                 if (personalGroup[1].id) {
                     const badges = await this.badgeService.getUserBadges(
@@ -157,13 +163,8 @@ export class GroupDashboardComponent implements OnInit {
         }
     }
 
-    //TODO: hae ryhmän yhteiset badget ja näytä nekin omassa ikkunassa
-    //TODO: luo selkeät jaot eri osioille (esim. Ryhmän tiedot, jäsenet, asetukset)
-
     onContextGroupChange(context: string) {
         this.contextGroup = context;
-        this.fetchUserBadges();
-        this.fetchGroupBadges();
     }
 
     onGroupNameChange(newName: string) {

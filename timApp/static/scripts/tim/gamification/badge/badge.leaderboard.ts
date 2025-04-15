@@ -8,6 +8,7 @@ import {HttpClient, HttpClientModule} from "@angular/common/http";
 import {BadgeService} from "tim/gamification/badge/badge.service";
 import {firstValueFrom} from "rxjs";
 import {Subscription} from "rxjs";
+import {GroupService} from "tim/plugin/group-dashboard/group.service";
 
 @Component({
     selector: "tim-badge-leaderboard",
@@ -49,7 +50,8 @@ export class BadgeLeaderboardComponent implements OnInit {
 
     constructor(
         private http: HttpClient,
-        protected badgeService: BadgeService
+        protected badgeService: BadgeService,
+        private groupService: GroupService
     ) {}
 
     // Gets the top five groups with most badges
@@ -69,7 +71,7 @@ export class BadgeLeaderboardComponent implements OnInit {
             console.log("top5: ", this.top_five);
 
             for (const team of this.top_five) {
-                const pretty = await this.badgeService.getCurrentGroup(
+                const pretty = await this.groupService.getCurrentGroup(
                     team.group_name
                 );
                 team.prettyName = pretty?.description || team.group_name; // fallback

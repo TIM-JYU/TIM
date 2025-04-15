@@ -19,6 +19,7 @@ import {MessageDialogComponent} from "tim/ui/message-dialog.component";
 import {HostListener} from "@angular/core";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {toPromise} from "tim/util/utils";
+import {GroupService} from "tim/plugin/group-dashboard/group.service";
 
 @Component({
     selector: "tim-badge-viewer",
@@ -108,7 +109,8 @@ export class BadgeViewerComponent implements OnInit {
 
     constructor(
         private http: HttpClient,
-        protected badgeService: BadgeService
+        protected badgeService: BadgeService,
+        private groupService: GroupService
     ) {}
 
     /**
@@ -274,14 +276,14 @@ export class BadgeViewerComponent implements OnInit {
 
     // Gets the usergroups under the specified maingroup
     async getUserSubGroups(groupContext: string, userid: number) {
-        this.userSubGroups = await this.badgeService.getUserSubGroups(
+        this.userSubGroups = await this.groupService.getUserSubGroups(
             groupContext,
             userid
         );
         this.getGroupBadges();
 
         for (const sb of this.userSubGroups) {
-            const prettyName = await this.badgeService.getCurrentGroup(sb.name);
+            const prettyName = await this.groupService.getCurrentGroup(sb.name);
             if (prettyName) {
                 this.groupPrettyNames.set(sb.id, prettyName.description);
             }
@@ -330,7 +332,7 @@ export class BadgeViewerComponent implements OnInit {
         if (!this.badgeuserContext || !this.badgegroupContext) {
             return;
         }
-        this.personalGroup = await this.badgeService.getUserAndPersonalGroup(
+        this.personalGroup = await this.groupService.getUserAndPersonalGroup(
             this.badgeuserContext
         );
         if (!this.personalGroup) {
