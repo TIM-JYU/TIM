@@ -16,6 +16,8 @@ import {Users} from "tim/user/userService";
 import {showConfirm} from "tim/ui/showConfirmDialog";
 import {Subscription} from "rxjs";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
+import {toPromise} from "tim/util/utils";
+import {GroupService} from "tim/plugin/group-dashboard/group.service";
 
 @Component({
     selector: "tim-badge-withdraw",
@@ -24,13 +26,15 @@ import {TimUtilityModule} from "tim/ui/tim-utility.module";
             <div class="badge-withdraw">
                 <h2>View users or groups</h2>
                 
-                <ng-container *ngIf="groups.length === 0 && users.length === 0">
-                    <span>No users or groups found for {{badgegroupContext}}</span>
+                <ng-container *ngIf="!teacherPermission">
+                    <tim-alert *ngFor="let alert of alerts; let i = index" [severity]="alert.type" [closeable]="true" (closing)="badgeService.closeAlert(this.alerts, i)">
+                        <div [innerHTML]="alert.msg"></div>
+                    </tim-alert>
                 </ng-container>
                 
-                <ng-container *ngIf="groups.length > 0 || users.length > 0">
+                <ng-container *ngIf="teacherPermission">
                     <div class="user-group-button-container">
-                        <button (click)="handleSwap(true)" [disabled]="userAssign || users.length === 0" [title]="users.length === 0 && userAssign == undefined ? 'No users available' : ''">
+                        <button (click)="handleSwap(true); fetchUsersFromGroups()" [disabled]="userAssign || users.length === 0" [title]="users.length === 0 && userAssign == undefined ? 'No users available' : ''">
                             Users
                         </button>
                         <button (click)="handleSwap(false)" [disabled]="userAssign === false || groups.length === 0" [title]="groups.length === 0 && userAssign == undefined ? 'No groups available' : ''">
@@ -41,32 +45,39 @@ import {TimUtilityModule} from "tim/ui/tim-utility.module";
                     <div *ngIf="showComponent">
                         <div *ngIf="userAssign" class="form-group">
                             <label>Users</label>
-                            
-                            <div class="list-scroll-container" (wheel)="onScrollList($event)">
-                                <div *ngFor="let user of users" class="option-item">
-                                    <span class="option-name" (click)="selectedUser = user; fetchUserBadges(user.id)" [ngClass]="{'selected-option': selectedUser?.id === user.id}">
-                                        {{user.real_name}}
-                                    </span>
+                            <div class="users-list">
+                                <div class="list-scroll-container" (wheel)="onScrollList($event)">
+                                    <div *ngFor="let group of groups">
+                                        <span *ngIf="groupUsersMap.get(group.id)?.length">
+                                            {{group.name}}
+                                        </span>
+                                        <div *ngFor="let user of groupUsersMap.get(group.id)" class="option-item">
+                                            <span class="user-name" (click)="selectedUser = user; fetchUserBadges(user.id)" [ngClass]="{'selected-option': selectedUser?.id === user.id}">
+                                                {{user.real_name}}
+                                            </span>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
-                            
                             <ng-container *ngIf="userBadges.length > 0">
-                                <p *ngIf="selectedUser?.name != undefined">{{ selectedUser?.real_name }}'s badges</p>
-                                <div class="user_badges" (wheel)="onScroll($event)">
-                                    <div class="badge-card" *ngFor="let badge of userBadges">
-                                        <tim-badge 
-                                                   [ngClass]="{'selected-badge': selectedBadge === badge}"
-                                                   title="{{badge.title}}"
-                                                   color="{{badge.color}}"
-                                                   shape="{{badge.shape}}"
-                                                   [image]="badge.image"
-                                                   (click)="selectBadge(badge, false, false)">
-                                        </tim-badge>
+                                <div *ngIf="selectedUser?.name != undefined" class="badges-preview">
+                                    <p>{{ selectedUser?.real_name }}'s badges</p>
+                                    <div class="user_badges" (wheel)="onScroll($event)">
+                                        <div class="badge-card" *ngFor="let badge of userBadges">
+                                            <tim-badge 
+                                                       [ngClass]="{'selected-badge': selectedBadge === badge}"
+                                                       title="{{badge.title}}"
+                                                       color="{{badge.color}}"
+                                                       shape="{{badge.shape}}"
+                                                       [image]="badge.image"
+                                                       (click)="selectBadge(badge, false, false)">
+                                            </tim-badge>
+                                        </div>
                                     </div>
                                 </div>
                             </ng-container>
                             <ng-container *ngIf="userBadges.length === 0 && selectedUser">
-                                <p> no assigned badges </p>
+                                <p class="badges-preview"> no assigned badges </p>
                             </ng-container>
                         </div>
     
@@ -75,30 +86,31 @@ import {TimUtilityModule} from "tim/ui/tim-utility.module";
                             
                             <div class="list-scroll-container" (wheel)="onScrollList($event)">
                                 <div *ngFor="let group of groups" class="option-item">
-                                    <span class="option-name" (click)="selectedGroup = group; fetchGroupBadges(group.id)" [ngClass]="{'selected-option': selectedGroup?.id === group.id}">
-                                        {{ prettyGroupName(group.name) }}
+                                    <span class="group-name" (click)="selectedGroup = group; fetchGroupBadges(group.id)" [ngClass]="{'selected-option': selectedGroup?.id === group.id}">
+                                        {{ group.name }}
                                     </span>
                                 </div>
                             </div>
-                            
                                 <ng-container *ngIf="groupBadges.length > 0">
-                                    <p *ngIf="selectedGroup?.name != undefined">{{ selectedGroup?.name }} badges</p>
-                                    <div class="group_badges" (wheel)="onScroll($event)">
-                                        <div class="badge-card" *ngFor="let badge of groupBadges">
-                                            <tim-badge
-                                                       [ngClass]="{'selected-badge': selectedBadge === badge}"
-                                                       title="{{badge.title}}"
-                                                       color="{{badge.color}}"
-                                                       shape="{{badge.shape}}"
-                                                       [image]="badge.image"
-                                                       (click)="selectBadge(badge, true, false)">
-                                            </tim-badge>
+                                    <div *ngIf="selectedGroup?.name != undefined" class="badges-preview">
+                                        <p>{{ selectedGroup?.name }} badges</p>
+                                        <div class="group_badges" (wheel)="onScroll($event)">
+                                            <div class="badge-card" *ngFor="let badge of groupBadges">
+                                                <tim-badge
+                                                           [ngClass]="{'selected-badge': selectedBadge === badge}"
+                                                           title="{{badge.title}}"
+                                                           color="{{badge.color}}"
+                                                           shape="{{badge.shape}}"
+                                                           [image]="badge.image"
+                                                           (click)="selectBadge(badge, true, false)">
+                                                </tim-badge>
+                                            </div>
                                         </div>
                                     </div>
                                 </ng-container>
                         
                             <ng-container *ngIf="groupBadges.length === 0 && selectedGroup">
-                                <p>No assigned badges</p>
+                                <p class="badges-preview">No assigned badges</p>
                             </ng-container>
                             
                         </div>
@@ -131,19 +143,24 @@ export class BadgeWithdrawComponent implements OnInit {
     private subscription: Subscription = new Subscription();
 
     userAssign?: boolean = undefined;
-
-    users: IUser[] = [];
-    badges: any = [];
-    selectedUser?: IUser | null = null;
-    userBadges: IBadge[] = [];
-    selectedBadge?: IBadge | null = null;
-    badgeGiver = 0;
+    teacherPermission = false;
     hasPermission: boolean = true;
     showComponent: boolean = true;
+
+    users: IUser[] = [];
+    selectedUser?: IUser | null = null;
+    userBadges: IBadge[] = [];
+
+    badges: any = [];
+    selectedBadge?: IBadge | null = null;
+
     @Input() badgegroupContext?: string;
+
     groups: IGroup[] = [];
     selectedGroup?: IGroup | null = null;
     groupBadges: IBadge[] = [];
+    groupUsersMap = new Map<number, IUser[]>();
+
     alerts: Array<{
         msg: string;
         type: "warning" | "danger";
@@ -152,7 +169,8 @@ export class BadgeWithdrawComponent implements OnInit {
 
     constructor(
         private http: HttpClient,
-        protected badgeService: BadgeService
+        protected badgeService: BadgeService,
+        private groupService: GroupService
     ) {}
 
     onScroll(event: WheelEvent) {
@@ -211,31 +229,76 @@ export class BadgeWithdrawComponent implements OnInit {
         this.userAssign = undefined;
         this.emptyTable(this.userBadges);
         this.emptyTable(this.userBadges);
+        this.groupUsersMap.clear();
     }
 
     handleSwap(bool: boolean) {
         this.showComponent = true;
+        this.selectedGroup = null;
+        this.selectedUser = null;
         this.selectedBadge = null;
         this.userAssign = bool;
     }
 
+    async fetchUsersFromGroups() {
+        this.groupUsersMap.clear();
+        for (const group of this.groups) {
+            this.groupUsersMap.set(
+                group.id,
+                await this.groupService.getUsersFromGroup(group.name)
+            );
+        }
+    }
     /**
      * Hakee käyttäjät, jotka kuuluvat badgegroupContext ryhmään. badgegroupContext annetaan TIM:n puolelta.
      */
     private async fetchUsers() {
-        if (this.badgegroupContext) {
-            this.users = await this.badgeService.getUsersFromGroup(
-                this.badgegroupContext
-            );
+        const result = await toPromise(
+            this.http.get<[]>(`/usergroups_members/${this.badgegroupContext}`)
+        );
+        const users: IUser[] = [];
+        if (result.ok) {
+            this.teacherPermission = true;
+            if (result.result != undefined) {
+                for (const alkio of result.result) {
+                    users.push(alkio);
+                }
+            }
         }
+        if (!result.ok) {
+            this.badgeService.showError(
+                this.alerts,
+                {
+                    data: {
+                        error:
+                            result.result.error.error +
+                            `. If you are a teacher of ${this.badgegroupContext}, please contact TIM admin.`,
+                    },
+                },
+                "danger"
+            );
+            return;
+        }
+        this.users = users;
     }
 
     private async fetchGroups() {
         if (this.badgegroupContext) {
-            this.groups = await this.badgeService.getSubGroups(
+            this.groups = await this.groupService.getSubGroups(
                 this.badgegroupContext
             );
         }
+        const updatedGroups = [];
+        for (const group of this.groups) {
+            const prettyName = await this.groupService.getCurrentGroup(
+                group.name
+            );
+            if (prettyName) {
+                group.name = prettyName.description || group.name;
+            }
+            updatedGroups.push(group);
+        }
+        this.groups = updatedGroups;
     }
 
     /**
@@ -264,7 +327,7 @@ export class BadgeWithdrawComponent implements OnInit {
             return;
         }
         const pGroup: IPersonalGroup =
-            await this.badgeService.getUserAndPersonalGroup(
+            await this.groupService.getUserAndPersonalGroup(
                 this.selectedUser.name
             );
         this.userBadges = await this.badgeService.getUserBadges(
@@ -299,7 +362,6 @@ export class BadgeWithdrawComponent implements OnInit {
      * @param badgegivenID ID, jonka perustella badgesgiven taulukosta voidaan ottaa pois käyttäjälle annettu badge
      */
     async removeBadge(badgegivenID?: number) {
-        this.badgeGiver = Users.getCurrent().id;
         if (badgegivenID == undefined) {
             console.error("badgegived id was undefined");
             return;
@@ -319,11 +381,7 @@ export class BadgeWithdrawComponent implements OnInit {
             return;
         }
         this.badgeService
-            .withdrawBadge(
-                badgegivenID,
-                this.badgeGiver,
-                this.badgegroupContext
-            )
+            .withdrawBadge(badgegivenID, this.badgegroupContext)
             .then((r) => {
                 if (!r.ok) {
                     this.badgeService.showError(
@@ -360,16 +418,6 @@ export class BadgeWithdrawComponent implements OnInit {
                 this.selectedGroup = null;
             }
         }
-    }
-
-    prettyGroupName(groupName: string): string {
-        if (!groupName || !this.badgegroupContext) {
-            return groupName;
-        }
-
-        return groupName.startsWith(this.badgegroupContext + "-")
-            ? groupName.slice(this.badgegroupContext.length + 1)
-            : groupName;
     }
 
     emptyTable<T>(table: T[]) {

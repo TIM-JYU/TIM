@@ -37,17 +37,13 @@ class BadgeTest(TimRouteTest):
         self.assertEqual([], result_ab_empty)
 
         # fetch all badges in context when no badges created
-        result_abic_empty = self.get(
-            f"/all_badges_in_context/{self.test_user_1.id}/{doc_it_25.block.id}/{it_25.name}"
-        )
+        result_abic_empty = self.get(f"/all_badges_in_context/{it_25.name}")
         self.assertEqual([], result_abic_empty)
 
         # create 2 badges
         result_cb_1 = self.post(
             "/create_badge",
             data={
-                "created_by": self.test_user_1.id,
-                "doc_id": doc_it_25.block.id,
                 "context_group": it_25.name,
                 "title": "Coordinator",
                 "color": "blue",
@@ -80,8 +76,6 @@ class BadgeTest(TimRouteTest):
         result_cb_2 = self.post(
             "/create_badge",
             data={
-                "created_by": self.test_user_1.id,
-                "doc_id": doc_it_25.block.id,
                 "context_group": it_25.name,
                 "title": "Communicator",
                 "color": "red",
@@ -140,8 +134,6 @@ class BadgeTest(TimRouteTest):
             "/modify_badge",
             data={
                 "badge_id": 1,
-                "modified_by": self.test_user_1.id,
-                "doc_id": doc_it_25.block.id,
                 "context_group": it_25.id,
                 "title": "MVP",
                 "color": "gold",
@@ -213,8 +205,6 @@ class BadgeTest(TimRouteTest):
             "/deactivate_badge",
             data={
                 "badge_id": 2,
-                "deleted_by": self.test_user_1.id,
-                "doc_id": doc_it_25.block.id,
                 "context_group": it_25.name,
             },
         )
@@ -228,9 +218,7 @@ class BadgeTest(TimRouteTest):
         )
 
         # fetch all badges in context after 2 badges created and the other one deleted
-        result_abic_deactivated = self.get(
-            f"/all_badges_in_context/{self.test_user_1.id}/{doc_it_25.block.id}/{it_25.name}"
-        )
+        result_abic_deactivated = self.get(f"/all_badges_in_context/{it_25.name}")
         self.assertEqual(
             [
                 {
@@ -259,8 +247,6 @@ class BadgeTest(TimRouteTest):
         result_cb_3 = self.post(
             "/create_badge",
             data={
-                "created_by": self.test_user_1.id,
-                "doc_id": doc_it_26.block.id,
                 "context_group": it_26.name,
                 "title": "Quick",
                 "color": "orange",
@@ -271,9 +257,7 @@ class BadgeTest(TimRouteTest):
         )
 
         # fetch all badges in context after creating a badge in different context group
-        result_abic_deactivated = self.get(
-            f"/all_badges_in_context/{self.test_user_1.id}/{doc_it_25.block.id}/{it_25.name}"
-        )
+        result_abic_deactivated = self.get(f"/all_badges_in_context/{it_25.name}")
         self.assertEqual(
             [
                 {
@@ -314,8 +298,6 @@ class BadgeTest(TimRouteTest):
         result_giba_1 = self.post(
             "/give_badge",
             data={
-                "given_by": self.test_user_1.id,
-                "doc_id": doc_it_25.block.id,
                 "context_group": it_25.name,
                 "group_id": it_25_cats.id,
                 "badge_id": 1,
@@ -341,8 +323,6 @@ class BadgeTest(TimRouteTest):
         self.post(
             "/give_badge",
             data={
-                "given_by": self.test_user_1.id,
-                "doc_id": doc_it_25.block.id,
                 "context_group": it_25.name,
                 "group_id": it_25_cats.id,
                 "badge_id": 1,
@@ -352,8 +332,6 @@ class BadgeTest(TimRouteTest):
         result_giba_3 = self.post(
             "/give_badge",
             data={
-                "given_by": self.test_user_1.id,
-                "doc_id": doc_it_25.block.id,
                 "context_group": it_25.name,
                 "group_id": it_25_cats.id,
                 "badge_id": 1,
@@ -366,8 +344,6 @@ class BadgeTest(TimRouteTest):
             "/withdraw_badge",
             data={
                 "badge_given_id": 2,
-                "withdrawn_by": self.test_user_1.id,
-                "doc_id": doc_it_25.block.id,
                 "context_group": it_25.name,
             },
         )
@@ -512,7 +488,6 @@ class BadgeTest(TimRouteTest):
             data={
                 "badge_id": 1,
                 "usergroup_id": it_25_cats.id,
-                "withdrawn_by": self.test_user_1.id,
                 "context_group": it_25.name,
             },
         )
@@ -579,9 +554,7 @@ class BadgeTest(TimRouteTest):
         )
 
         # fetch usergroup's members
-        result_ugm = self.get(
-            f"/usergroups_members/{doc_it_25_cats.block}/{it_25_cats.name}"
-        )
+        result_ugm = self.get(f"/usergroups_members/{it_25_cats.name}")
         self.assertEqual(
             [
                 {
@@ -604,7 +577,7 @@ class BadgeTest(TimRouteTest):
 
         # fetch all badges in context when user doesn't have teacher access to the context group
         self.get(
-            f"/all_badges_in_context/{self.test_user_3.id}/{doc_it_25.block.id}/{it_25.name}",
+            f"/all_badges_in_context/{it_25.name}",
             expect_content="Sorry, you don't have permission to use this resource.",
             expect_status=403,
         )
@@ -613,8 +586,6 @@ class BadgeTest(TimRouteTest):
         self.post(
             f"/create_badge",
             data={
-                "created_by": self.test_user_3.id,
-                "doc_id": doc_it_25.block.id,
                 "context_group": it_25.name,
                 "title": "The Boss",
                 "color": "gold",
@@ -631,8 +602,6 @@ class BadgeTest(TimRouteTest):
             f"/modify_badge",
             data={
                 "badge_id": 1,
-                "modified_by": self.test_user_3.id,
-                "doc_id": doc_it_25.block.id,
                 "active": True,
                 "context_group": it_25.id,
                 "title": "MVP",
@@ -650,8 +619,6 @@ class BadgeTest(TimRouteTest):
             f"/deactivate_badge",
             data={
                 "badge_id": 1,
-                "deleted_by": self.test_user_3.id,
-                "doc_id": doc_it_25.block.id,
                 "context_group": it_25.name,
             },
             expect_content="Sorry, you don't have permission to use this resource.",
@@ -693,8 +660,6 @@ class BadgeTest(TimRouteTest):
         self.post(
             f"/give_badge",
             data={
-                "given_by": self.test_user_3.id,
-                "doc_id": doc_it_25.block.id,
                 "context_group": it_25.name,
                 "group_id": it_25_cats.id,
                 "badge_id": 1,
@@ -710,8 +675,6 @@ class BadgeTest(TimRouteTest):
         self.post(
             f"/give_badge",
             data={
-                "given_by": self.test_user_1.id,
-                "doc_id": doc_it_25.block.id,
                 "context_group": it_25.name,
                 "group_id": it_25_cats.id,
                 "badge_id": 1,
@@ -727,8 +690,6 @@ class BadgeTest(TimRouteTest):
             f"/withdraw_badge",
             data={
                 "badge_given_id": 4,
-                "withdrawn_by": self.test_user_3.id,
-                "doc_id": doc_it_25.block.id,
                 "context_group": it_25.name,
             },
             expect_content="Sorry, you don't have permission to use this resource.",
@@ -741,7 +702,6 @@ class BadgeTest(TimRouteTest):
             data={
                 "badge_id": 1,
                 "usergroup_id": it_25_cats.id,
-                "withdrawn_by": self.test_user_3.id,
                 "context_group": it_25.name,
             },
             expect_content="Sorry, you don't have permission to use this resource.",
@@ -757,7 +717,7 @@ class BadgeTest(TimRouteTest):
 
         # fetch usergroup's members when user doesn't have teacher access to the context group
         self.get(
-            f"/usergroups_members/{doc_it_25.block.id}/{it_25.name}",
+            f"/usergroups_members/{it_25.name}",
             expect_content="Sorry, you don't have permission to use this resource.",
             expect_status=403,
         )
@@ -768,8 +728,6 @@ class BadgeTest(TimRouteTest):
         result_giba_4 = self.post(
             f"/give_badge",
             data={
-                "given_by": self.test_user_1.id,
-                "doc_id": doc_it_25.block.id,
                 "context_group": it_25.name,
                 "group_id": self.test_user_1.get_personal_group().id,
                 "badge_id": 1,
@@ -780,8 +738,6 @@ class BadgeTest(TimRouteTest):
         result_giba_5 = self.post(
             f"/give_badge",
             data={
-                "given_by": self.test_user_1.id,
-                "doc_id": doc_it_26.block.id,
                 "context_group": it_26.name,
                 "group_id": self.test_user_1.get_personal_group().id,
                 "badge_id": 3,

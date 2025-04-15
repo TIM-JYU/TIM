@@ -13,8 +13,6 @@ import type {
 import {documentglobals} from "tim/util/globals";
 
 interface IData {
-    given_by: number;
-    doc_id: number;
     context_group?: string;
     group_id: number;
     badge_id?: number;
@@ -44,30 +42,7 @@ export class BadgeService {
         this.updateBadgeSubject.next();
     }
 
-    notifyGroupNameChange(id: number, newName: string) {
-        this.groupNameUpdated.next({id, newName});
-    }
-
     constructor(private http: HttpClient) {}
-
-    currentDocumentID = documentglobals().curr_item.id;
-
-    async getAllBadges(): Promise<IBadge[]> {
-        try {
-            // Create an HTTP request and wait for response
-            const response = this.http.get<IBadge[]>("/all_badges");
-
-            // Transform Observable to a Promise and wait for data
-            const result = await lastValueFrom(response);
-
-            // Return fetched data or an empty array if database is empty
-            return result ?? [];
-        } catch (error) {
-            // console.error("Error fetching badges:", error);
-            // Return an empty array in case of an error
-            return [];
-        }
-    }
 
     /**
      * Hakee käyttäjän ryhmälle kuuluvat badget ID:n perusteella.
@@ -92,80 +67,13 @@ export class BadgeService {
     }
 
     /**
-     * Hakee kaikki käyttäjät, jotka kuuluvat parametrina annettuun ryhmään.
-     * @param group ryhmä, jonka käyttäjiä haetaan.
-     */
-    async getUsersFromGroup(group: string) {
-        const result = await toPromise(
-            this.http.get<[]>(
-                `/usergroups_members/${this.currentDocumentID}/${group}`
-            )
-        );
-        const users: IUser[] = [];
-        if (result.ok) {
-            if (result.result != undefined) {
-                for (const alkio of result.result) {
-                    users.push(alkio);
-                }
-            }
-        }
-        return users;
-    }
-
-    /**
-     * Hakee kaikki "aliryhmät", jotka alkaa annetulla <group> parametrilla.
-     * @param group ryhmä, jonka avulla aliryhmät haetaan
-     */
-    async getSubGroups(group: string) {
-        const result = await toPromise(
-            this.http.get<[]>(`/subgroups/${group}`)
-        );
-        const subGroups: IGroup[] = [];
-        if (result.ok) {
-            if (result.result != undefined) {
-                for (const alkio of result.result) {
-                    subGroups.push(alkio);
-                }
-            }
-        }
-        return subGroups;
-    }
-
-    /**
-     * Hakee kaikki "aliryhmät", johon käyttäjä kuuluu.
-     * @param group ryhmä, jonka avulla aliryhmät haetaan
-     * @param userid käyttäjän id
-     */
-    async getUserSubGroups(group: string, userid: number) {
-        const result = await toPromise(
-            this.http.get<[]>(`/users_subgroups/${userid}/${group}`)
-        );
-        const userSubGroups: IGroup[] = [];
-        if (result.ok) {
-            if (result.result != undefined) {
-                for (const alkio of result.result) {
-                    userSubGroups.push(alkio);
-                }
-            }
-        }
-        return userSubGroups;
-    }
-
-    /**
      * Ottaa valitun badgen pois käytöstä käyttäjältä.
      * @param badgegivenID badgegiven -tietokantataulukon id, jonka avulla valittu badge poistetaan käytöstä
-     * @param giverID käyttäjän id, joka poistaa badgen käytöstä.
      */
-    async withdrawBadge(
-        badgegivenID: number,
-        giverID: number,
-        context_group: string
-    ) {
+    async withdrawBadge(badgegivenID: number, context_group: string) {
         const response = toPromise(
             this.http.post<{ok: boolean}>("/withdraw_badge", {
                 badge_given_id: badgegivenID,
-                withdrawn_by: giverID,
-                doc_id: this.currentDocumentID,
                 context_group: context_group,
             })
         );
@@ -182,14 +90,12 @@ export class BadgeService {
     async withdrawSelectedBadge(
         userid: number,
         badgeid: number,
-        giverid: number,
         contextGroup: string
     ) {
         const response = toPromise(
             this.http.post<{ok: boolean}>("/withdraw_all_badges", {
                 badge_id: badgeid,
                 usergroup_id: userid,
-                withdrawn_by: giverid,
                 context_group: contextGroup,
             })
         );
@@ -213,58 +119,9 @@ export class BadgeService {
         return null;
     }
 
-    async getUserAndPersonalGroup(userName: string | undefined) {
-        const response = toPromise(
-            this.http.get<any>(`/user_and_personal_group/${userName}`)
-        );
-        const result = await response;
-
-        if (result.ok) {
-            return result.result;
-        } else {
-            console.error(
-                `Failed to fetch personal group for user: ${userName}`
-            );
-            return null;
-        }
-    }
-
-    async getCurrentGroup(groupName: string | null) {
-        const response = toPromise(
-            this.http.get<any>(`/groups/current_group_name/${groupName}`)
-        );
-        const result = await response;
-
-        if (result.ok) {
-            return result.result;
-        } else {
-            console.error("Failed to fetch groups name.");
-        }
-        return null;
-    }
-
-    async updateGroupName(
-        group_id: number,
-        group_name: string,
-        new_name: string | null
-    ) {
-        const response = toPromise(
-            this.http.post<{ok: boolean}>(
-                `/groups/editGroupName/${group_name}/${new_name}`,
-                {}
-            )
-        );
-        const result = await response;
-        if (result.ok) {
-            return result.result;
-        }
-    }
-
     async assignBadges(data: IData) {
         const response = toPromise(
             this.http.post<{ok: boolean}>("/give_badge", {
-                given_by: data.given_by,
-                doc_id: this.currentDocumentID,
                 context_group: data.context_group,
                 group_id: data.group_id,
                 badge_id: data.badge_id,
@@ -292,16 +149,16 @@ export class BadgeService {
 
     private dialogOpen = false;
 
-    // Tarkistetaan, onko dialogi-ikkuna auki
+    // Checks, if dialog-window is open
     isDialogOpen(): boolean {
         return this.dialogOpen;
     }
-    // Asetetaan dialogin tila
+    // Sets the dialog-window as "open"
     setDialogOpen(isOpen: boolean): void {
         this.dialogOpen = isOpen;
     }
 
-    // Funktio updatetapahtuman lähettämiseen kun luodaan uusi badge creatorilla, se päivitetään giver listaan.
+    // Send a request to update viewer, when a new badge is created
     triggerUpdateBadgeList() {
         this.updateBadgeSubject.next();
     }
@@ -316,7 +173,7 @@ export class BadgeService {
         }
     }
 
-    // Näyttää mahdolliset errorit
+    // Show errors
     showError(
         alerts: any,
         response: {data: {error: string}},
@@ -329,11 +186,12 @@ export class BadgeService {
         alerts.push({msg, type});
     }
 
-    // Poistaa error-viestin alerts-listasta
+    // Removes an error-message from alerts-list
     closeAlert(alerts: any, index: number) {
         alerts.splice(index, 1);
     }
 
+    // The available icons for badges
     private availableImages = [
         {id: 1, name: "Trophy"},
         {id: 2, name: "Winner"},

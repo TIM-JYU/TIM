@@ -59,13 +59,13 @@ def log_badge_event(log_info: dict) -> None:
         f.write(to_json_str(log_info) + "\n")
 
 
-def check_group_member(usergroup: int) -> bool:
+def check_group_member(current_user: User, usergroup: int) -> bool:
     """
     Checks whether logged in user is a member of usergroup.
+    :param current_user: logged in user
     :param usergroup: usergroup to check
     :return: true if user is member of usergroup, false otherwise
     """
-    current_user = get_current_user_object()
     context_usergroup = (
         run_sql(select(UserGroup).filter(UserGroup.id == usergroup)).scalars().first()
     )
@@ -122,20 +122,17 @@ def get_badges() -> Response:
     return json_response(badges_json)
 
 
-# TODO: Remove unnecessary parameters and fix frontend according to that.
 # TODO: Handle errors.
-@badges_blueprint.get("/all_badges_in_context/<user_id>/<doc_id>/<context_group>")
-def all_badges_in_context(user_id: int, doc_id: int, context_group: str) -> Response:
+@badges_blueprint.get("/all_badges_in_context/<context_group>")
+def all_badges_in_context(context_group: str) -> Response:
     """
     Fetches all badges in specific context_group. Sorted by created-timestamp.
-    :param doc_id: Current document's ID
-    :param user_id: Current user's ID
     :param context_group: Context group to get badges from
     :return: Badges in json response format
     """
     d = DocEntry.find_by_path(f"groups/{context_group}")  # TODO: Make this unambiguous.
     if not d:
-        raise NotExist()
+        raise NotExist(f'User group "{context_group}" not found')
     context_usergroup = UserGroup.get_by_name(context_group)
     verify_teacher_access(d)
     badges = (
@@ -163,17 +160,13 @@ def get_badge(badge_id: int) -> Response:
     """
     badge = run_sql(select(Badge).filter_by(id=badge_id)).scalars().first()
     if badge is None:
-        raise NotExist()
+        raise NotExist(f'Badge of id "{badge_id}" not found')
     badge_json = badge.to_json()
     return json_response(badge_json)
 
 
-# TODO: Remove created_by parameter, use get_current_user_object() and fix frontend according to that.
-# TODO: Remove unnecessary parameters and fix frontend according to that.
 @badges_blueprint.post("/create_badge")
 def create_badge(
-    created_by: int,
-    doc_id: int,
     context_group: str,
     title: str,
     color: str,
@@ -183,8 +176,6 @@ def create_badge(
 ) -> Response:
     """
     Creates a new badge.
-    :param doc_id: Current document's ID
-    :param created_by: ID of the useraccount who creates the badge
     :param context_group: Context group where the badge will be included
     :param title: Title of the badge
     :param color: Color of the badge
@@ -195,7 +186,7 @@ def create_badge(
     """
     d = DocEntry.find_by_path(f"groups/{context_group}")  # TODO: Make this unambiguous.
     if not d:
-        raise NotExist()
+        raise NotExist(f'User group "{context_group}" not found')
     verify_teacher_access(d)
     context_usergroup = UserGroup.get_by_name(context_group)
     badge = Badge(
@@ -206,7 +197,7 @@ def create_badge(
         shape=shape,
         image=image,
         description=description,
-        created_by=created_by,
+        created_by=get_current_user_object().id,
         created=datetime_tz.now(),
     )
     db.session.add(badge)
@@ -229,14 +220,10 @@ def create_badge(
     return json_response(badge.to_json(), 200)
 
 
-# TODO: Remove modified_by parameter, use get_current_user_object() and fix frontend according to that.
-# TODO: Remove unnecessary parameters and fix frontend according to that.
 # TODO: Handle errors.
 @badges_blueprint.post("/modify_badge")
 def modify_badge(
     badge_id: int,
-    modified_by: int,
-    doc_id: int,
     context_group: int,
     title: str,
     color: str,
@@ -246,9 +233,7 @@ def modify_badge(
 ) -> Response:
     """
     Modifies a badge.
-    :param doc_id: Current document's ID
     :param badge_id: ID of the badge
-    :param modified_by: ID of the useraccount who modifies the badge
     :param context_group: Context group where the badge will be included
     :param title: Title of the badge
     :param color: Color of the badge
@@ -259,12 +244,12 @@ def modify_badge(
     """
     context_group_object = UserGroup.get_by_id(context_group)
     if not context_group_object:
-        raise NotExist()
+        raise NotExist(f"User group of id {context_group} not found")
     d = DocEntry.find_by_path(
         f"groups/{context_group_object.name}"
     )  # TODO: Make this unambiguous.
     if not d:
-        raise NotExist()
+        raise NotExist(f'User group "{context_group_object.name}" not found')
     verify_teacher_access(d)
     badge = {
         "context_group": context_group,
@@ -273,7 +258,7 @@ def modify_badge(
         "shape": shape,
         "image": image,
         "description": description,
-        "modified_by": modified_by,
+        "modified_by": get_current_user_object().id,
         "modified": datetime_tz.now(),
     }
     Badge.query.filter_by(id=badge_id).update(badge)
@@ -296,28 +281,22 @@ def modify_badge(
     return json_response(badge, 200)
 
 
-# TODO: Remove deleted_by parameter, use get_current_user_object() and fix frontend according to that.
-# TODO: Remove unnecessary parameters and fix frontend according to that.
 # TODO: Handle errors.
 @badges_blueprint.post("/deactivate_badge")
-def deactivate_badge(
-    badge_id: int, deleted_by: int, doc_id: int, context_group: str
-) -> Response:
+def deactivate_badge(badge_id: int, context_group: str) -> Response:
     """
     Deactivates a badge.
-    :param doc_id: Current document's ID
     :param context_group: Context group where the badge is included
     :param badge_id: ID of the badge
-    :param deleted_by: ID of the useraccount who deactivates the badge
     :return: ok response
     """
     d = DocEntry.find_by_path(f"groups/{context_group}")  # TODO: Make this unambiguous.
     if not d:
-        raise NotExist()
+        raise NotExist(f'User group "{context_group}" not found')
     verify_teacher_access(d)
     badge = {
         "active": False,
-        "deleted_by": deleted_by,
+        "deleted_by": get_current_user_object().id,
         "deleted": datetime_tz.now(),
     }
     Badge.query.filter_by(id=badge_id).update(badge)
@@ -334,28 +313,22 @@ def deactivate_badge(
     return json_response(badge, 200)
 
 
-# TODO: Remove deleted_by parameter and use get_current_user_object().
-# TODO: Remove unnecessary parameters.
 # TODO: Not yet in use. If going to use this route, create tests for it and handle errors.
 @badges_blueprint.post("/reactivate_badge")
-def reactivate_badge(
-    badge_id: int, restored_by: int, doc_id: int, context_group: str
-) -> Response:
+def reactivate_badge(badge_id: int, context_group: str) -> Response:
     """
     Reactivates a badge.
-    :param doc_id: Current document's ID
     :param context_group: Context group where the badge is included
     :param badge_id: ID of the badge
-    :param restored_by: ID of the useraccount who reactivates the badge
     :return: ok response
     """
     d = DocEntry.find_by_path(f"groups/{context_group}")  # TODO: Make this unambiguous.
     if not d:
-        raise NotExist()
+        raise NotExist(f'User group "{context_group}" not found')
     verify_teacher_access(d)
     badge = {
         "active": True,
-        "restored_by": restored_by,
+        "restored_by": get_current_user_object().id,
         "restored": datetime_tz.now(),
     }
     Badge.query.filter_by(id=badge_id).update(badge)
@@ -382,13 +355,14 @@ def get_groups_badges(group_id: int, context_group: str) -> Response:
     :param context_group: Name of the context group
     :return: Badges in json response format
     """
-    in_group = check_group_member(group_id)
+    current_user = get_current_user_object()
+    in_group = check_group_member(current_user, group_id)
     if not in_group:
         d = DocEntry.find_by_path(
             f"groups/{context_group}"
         )  # TODO: Make this unambiguous.
         if not d:
-            raise NotExist()
+            raise NotExist(f'User group "{context_group}" not found')
         verify_teacher_access(d)
     groups_badges_given = (
         run_sql(
@@ -424,6 +398,7 @@ def get_groups_badges(group_id: int, context_group: str) -> Response:
             badge_given.undo_withdrawn,
         )
     context_group_object = UserGroup.get_by_name(context_group)
+    raise_group_not_found_if_none(context_group, context_group_object)
     groups_badges = (
         run_sql(
             select(Badge)
@@ -590,7 +565,7 @@ def get_badge_holders(badge_id: int) -> Response:
             else:
                 non_personal_groups.append(user_group)
         else:
-            NotExist()
+            NotExist(f"User group not found")
     return json_response(
         (
             sorted(list(user_accounts), key=attrgetter("real_name")),
@@ -599,13 +574,9 @@ def get_badge_holders(badge_id: int) -> Response:
     )
 
 
-# TODO: Remove given_by parameter, use get_current_user_object() and fix frontend according to that.
-# TODO: Remove unnecessary parameters and fix frontend according to that.
 # TODO: Handle errors.
 @badges_blueprint.post("/give_badge")
 def give_badge(
-    given_by: int,
-    doc_id: int,
     context_group: str,
     group_id: int,
     badge_id: int,
@@ -613,9 +584,7 @@ def give_badge(
 ) -> Response:
     """
     Gives a badge to a usergroup.
-    :param doc_id: Current document's ID
     :param context_group: Context group where the badge is included
-    :param given_by: ID of the useraccount who gives the badge
     :param group_id: ID of the usergroup that the badge is given
     :param badge_id: ID of the badge that is given to the usergroup
     :param message: Message to give to the usergroup when the badge is given
@@ -623,14 +592,14 @@ def give_badge(
     """
     d = DocEntry.find_by_path(f"groups/{context_group}")  # TODO: Make this unambiguous.
     if not d:
-        raise NotExist()
+        raise NotExist(f'User group "{context_group}" not found')
     verify_teacher_access(d)
     badge_given = BadgeGiven(
         active=True,
         group_id=group_id,
         badge_id=badge_id,
         message=message,
-        given_by=given_by,
+        given_by=get_current_user_object().id,
         given=datetime_tz.now(),
     )
     db.session.add(badge_given)
@@ -650,28 +619,22 @@ def give_badge(
     return json_response(badge_given.to_json(), 200)
 
 
-# TODO: Remove withdrawn_by parameter, use get_current_user_object() and fix frontend according to that.
-# TODO: Remove unnecessary parameters and fix frontend according to that.
 # TODO: Handle errors.
 @badges_blueprint.post("/withdraw_badge")
-def withdraw_badge(
-    badge_given_id: int, withdrawn_by: int, doc_id: int, context_group: str
-) -> Response:
+def withdraw_badge(badge_given_id: int, context_group: str) -> Response:
     """
     Withdraws a badge from a usergroup.
-    :param doc_id: Current document's ID
     :param context_group: Context group where the badge is included
     :param badge_given_id: ID of the badgegiven
-    :param withdrawn_by: ID of the useraccount that withdraws the badge
     :return: ok response
     """
     d = DocEntry.find_by_path(f"groups/{context_group}")  # TODO: Make this unambiguous.
     if not d:
-        raise NotExist()
+        raise NotExist(f'User group "{context_group}" not found')
     verify_teacher_access(d)
     badge_given = {
         "active": False,
-        "withdrawn_by": withdrawn_by,
+        "withdrawn_by": get_current_user_object().id,
         "withdrawn": datetime_tz.now(),
     }
     BadgeGiven.query.filter_by(id=badge_given_id).update(badge_given)
@@ -689,27 +652,25 @@ def withdraw_badge(
     return json_response(badge_given, 200)
 
 
-# TODO: Remove withdrawn_by parameter, use get_current_user_object() and fix frontend according to that.
 # TODO: Handle errors.
 @badges_blueprint.post("/withdraw_all_badges")
 def withdraw_all_badges(
-    badge_id: int, usergroup_id: int, withdrawn_by: int, context_group: str
+    badge_id: int, usergroup_id: int, context_group: str
 ) -> Response:
     """
     Withdraws all badges of given ID from a usergroup.
     :param usergroup_id: ID of the usergroup
     :param context_group: Context group where the badge is included
     :param badge_id: ID of the badge
-    :param withdrawn_by: ID of the useraccount that withdraws the badge
     :return: ok response
     """
     d = DocEntry.find_by_path(f"groups/{context_group}")  # TODO: Make this unambiguous.
     if not d:
-        raise NotExist()
+        raise NotExist(f'User group "{context_group}" not found')
     verify_teacher_access(d)
     badge_given = {
         "active": False,
-        "withdrawn_by": withdrawn_by,
+        "withdrawn_by": get_current_user_object().id,
         "withdrawn": datetime_tz.now(),
     }
     BadgeGiven.query.filter(
@@ -730,28 +691,22 @@ def withdraw_all_badges(
     return json_response(badge_given, 200)
 
 
-# TODO: Remove undo_withdrawn_by parameter and use get_current_user_object().
-# TODO: Remove unnecessary parameters.
 # TODO: Not yet in use. If going to use this route, create tests for it and handle errors.
 @badges_blueprint.get("/undo_withdraw_badge")
-def undo_withdraw_badge(
-    badge_given_id: int, undo_withdrawn_by: int, doc_id: int, context_group: str
-) -> Response:
+def undo_withdraw_badge(badge_given_id: int, context_group: str) -> Response:
     """
     Undoes a badge withdrawal from a usergroup.
-    :param doc_id: Current document's ID
     :param context_group: Context group where the badge is included
     :param badge_given_id: ID of the badgegiven
-    :param undo_withdrawn_by: ID of the useraccount that undoes the badge withdrawal
     :return: ok response
     """
     d = DocEntry.find_by_path(f"groups/{context_group}")  # TODO: Make this unambiguous.
     if not d:
-        raise NotExist()
+        raise NotExist(f'User group "{context_group}" not found')
     verify_teacher_access(d)
     badge_given = {
         "active": True,
-        "undo_withdrawn_by": undo_withdrawn_by,
+        "undo_withdrawn_by": get_current_user_object().id,
         "undo_withdrawn": datetime_tz.now(),
     }
     BadgeGiven.query.filter_by(id=badge_given_id).update(badge_given)
@@ -814,7 +769,7 @@ def get_subgroups(group_name_prefix: str) -> Response:
         f"groups/{group_name_prefix}"
     )  # TODO: Make this unambiguous.
     if not d:
-        raise NotExist()
+        raise NotExist(f'User group "{group_name_prefix}" not found')
     verify_teacher_access(d)
     subgroups = (
         run_sql(
@@ -894,19 +849,15 @@ def users_personal_group(name: str) -> Response:
     user_account = User.get_by_name(name)
     if personal_group and user_account:
         return json_response((user_account, personal_group))
-
-    # TODO: Use error from requesthelper (NotExist()).
-    return error_generic("there's no user with username: " + name, 404)
+    raise NotExist(f'User "{name}" not found')
 
 
-# TODO: Remove unnecessary parameters and fix frontend according to that.
 # TODO: Move this route to better place maybe.
 # TODO: Handle errors.
-@badges_blueprint.get("/usergroups_members/<doc_id>/<usergroup_name>")
-def usergroups_members(doc_id: int, usergroup_name: str) -> Response:
+@badges_blueprint.get("/usergroups_members/<usergroup_name>")
+def usergroups_members(usergroup_name: str) -> Response:
     """
     Fetches usergroup's members.
-    :param doc_id: Current document's ID
     :param usergroup_name: usergroup's name
     :return: List of users
     """
@@ -916,6 +867,6 @@ def usergroups_members(doc_id: int, usergroup_name: str) -> Response:
         f"groups/{usergroup_name}"
     )  # TODO: Make this unambiguous.
     if not d:
-        raise NotExist()
+        raise NotExist(f'User group "{usergroup_name}" not found')
     verify_teacher_access(d)
     return json_response(sorted(list(usergroup.users), key=attrgetter("real_name")))

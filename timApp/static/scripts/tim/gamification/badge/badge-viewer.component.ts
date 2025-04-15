@@ -19,6 +19,7 @@ import {MessageDialogComponent} from "tim/ui/message-dialog.component";
 import {HostListener} from "@angular/core";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {toPromise} from "tim/util/utils";
+import {GroupService} from "tim/plugin/group-dashboard/group.service";
 
 @Component({
     selector: "tim-badge-viewer",
@@ -34,7 +35,7 @@ import {toPromise} from "tim/util/utils";
         
         <ng-container *ngIf="teacherPermission">
         <div class="viewer-container">
-            <h2 class="badge-heading">User Badges ({{badgeuserContext}})</h2>
+            <h2 class="badge-heading">User Badges ({{realName}})</h2>
             <ng-container *ngIf="badges.length === 0">
                 <p class="no-badges-txt">No user badges</p>
             </ng-container>
@@ -113,6 +114,7 @@ import {toPromise} from "tim/util/utils";
 })
 export class BadgeViewerComponent implements OnInit {
     personalGroup?: IPersonalGroup;
+    realName: string | null = null;
     selectedUser?: IUser | null = null;
     badges: IBadge[] = [];
     userSubGroups: IGroup[] = [];
@@ -136,7 +138,8 @@ export class BadgeViewerComponent implements OnInit {
 
     constructor(
         private http: HttpClient,
-        protected badgeService: BadgeService
+        protected badgeService: BadgeService,
+        private groupService: GroupService
     ) {}
 
     /**
@@ -209,6 +212,7 @@ export class BadgeViewerComponent implements OnInit {
             }
         );
 
+        // Creates a dialog-window about the data of a badge
         this.badgeService.closeActiveDialog();
         const iconName = this.getImageNameById(badge.image);
         this.badgeService.activeDialogRef = await angularDialog.open(
@@ -289,7 +293,7 @@ export class BadgeViewerComponent implements OnInit {
                     data: {
                         error:
                             result.result.error.error +
-                            " If you are a teacher of this context-group, please contact TIM admin.",
+                            `. If you are a teacher of ${this.badgegroupContext}, please contact TIM admin.`,
                     },
                 },
                 "danger"
@@ -300,21 +304,23 @@ export class BadgeViewerComponent implements OnInit {
         this.onSortChange(this.selectedSort);
     }
 
+    // Gets the usergroups under the specified maingroup
     async getUserSubGroups(groupContext: string, userid: number) {
-        this.userSubGroups = await this.badgeService.getUserSubGroups(
+        this.userSubGroups = await this.groupService.getUserSubGroups(
             groupContext,
             userid
         );
         this.getGroupBadges();
 
         for (const sb of this.userSubGroups) {
-            const prettyName = await this.badgeService.getCurrentGroup(sb.name);
+            const prettyName = await this.groupService.getCurrentGroup(sb.name);
             if (prettyName) {
                 this.groupPrettyNames.set(sb.id, prettyName.description);
             }
         }
     }
 
+    // Retrieves the badges of a group
     async getGroupBadges() {
         this.groupBadgesMap.clear();
         if (!this.badgegroupContext) {
@@ -332,6 +338,7 @@ export class BadgeViewerComponent implements OnInit {
         }
     }
 
+    // Finds and presents the badges of the user and their assigned group
     ngOnInit() {
         this.availableImages = this.badgeService.getAvailableImages();
         if (Users.isLoggedIn()) {
@@ -350,22 +357,25 @@ export class BadgeViewerComponent implements OnInit {
         );
     }
 
+    //
     private async InitializeData() {
         if (!this.badgeuserContext || !this.badgegroupContext) {
             return;
         }
-        this.personalGroup = await this.badgeService.getUserAndPersonalGroup(
+        this.personalGroup = await this.groupService.getUserAndPersonalGroup(
             this.badgeuserContext
         );
         if (!this.personalGroup) {
             return;
         }
+        this.realName = this.personalGroup["0"].real_name;
         this.getUserSubGroups(
             this.badgegroupContext,
             this.personalGroup?.["0"].id
         );
     }
 
+    //
     ngOnDestroy() {
         this.subscription.unsubscribe();
     }

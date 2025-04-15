@@ -34,8 +34,9 @@ import {BadgeCreatorComponent} from "tim/gamification/badge/badge-creator.compon
 import {BadgeGiverComponent} from "tim/gamification/badge/badge-giver.component";
 import {BadgeWithdrawComponent} from "tim/gamification/badge/badge-withdraw.component";
 import {BadgeLeaderboardComponent} from "tim/gamification/badge/badge.leaderboard";
-import {GroupNameComponent} from "tim/gamification/badge/group-name.component";
+import {GroupNameComponent} from "tim/plugin/group-dashboard/group-name.component";
 import {BadgeSelectedWithdrawComponent} from "tim/gamification/badge/badge-selected-withdraw.component";
+import {GroupDashboardComponent} from "tim/plugin/group-dashboard/group-dashboard.component";
 import {HeaderComponent} from "tim/header/header.component";
 import {CreateItemComponent} from "tim/item/create-item.component";
 import {TimAlertComponent} from "tim/ui/tim-alert.component";
@@ -172,6 +173,7 @@ function createDowngradedAppModule() {
     doDowngrade(dg, "timGroupName", GroupNameComponent);
     doDowngrade(dg, "timBadgeLeaderboard", BadgeLeaderboardComponent);
     doDowngrade(dg, "timBadgeSelectedWithdraw", BadgeSelectedWithdrawComponent);
+    doDowngrade(dg, "timGroupDashboard", GroupDashboardComponent);
     return dg;
 }
 

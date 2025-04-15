@@ -126,6 +126,7 @@ TIM_SAFE_TAGS = [
     "tim-badge-withdraw",
     "tim-badge-leaderboard",
     "tim-group-name",
+    "tim-group-dashboard",
 ]
 
 TIM_SAFE_ATTRS_MAP = {

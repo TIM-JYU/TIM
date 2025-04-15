@@ -17,6 +17,7 @@ import {BadgeModule} from "tim/gamification/badge/badge.component";
 import {BadgeService} from "tim/gamification/badge/badge.service";
 import {documentglobals} from "tim/util/globals";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
+import {GroupService} from "tim/plugin/group-dashboard/group.service";
 
 @Component({
     selector: "timBadgeGiver",
@@ -228,7 +229,8 @@ export class BadgeGiverComponent implements OnInit {
 
     constructor(
         private http: HttpClient,
-        protected badgeService: BadgeService
+        protected badgeService: BadgeService,
+        private groupService: GroupService
     ) {}
 
     ngOnInit() {
@@ -394,7 +396,7 @@ export class BadgeGiverComponent implements OnInit {
      */
     async fetchUsers(groupContext?: string) {
         if (groupContext) {
-            this.users = await this.badgeService.getUsersFromGroup(
+            this.users = await this.groupService.getUsersFromGroup(
                 groupContext
             );
         }
@@ -402,11 +404,11 @@ export class BadgeGiverComponent implements OnInit {
 
     async fetchGroups() {
         if (this.badgegroupContext) {
-            this.groups = await this.badgeService.getSubGroups(
+            this.groups = await this.groupService.getSubGroups(
                 this.badgegroupContext
             );
             for (const group of this.groups) {
-                const prettyName = await this.badgeService.getCurrentGroup(
+                const prettyName = await this.groupService.getCurrentGroup(
                     group.name
                 );
                 if (prettyName) {
@@ -421,7 +423,7 @@ export class BadgeGiverComponent implements OnInit {
         for (const group of this.groups) {
             this.groupUsersMap.set(
                 group.id,
-                await this.badgeService.getUsersFromGroup(group.name)
+                await this.groupService.getUsersFromGroup(group.name)
             );
         }
     }
@@ -439,7 +441,7 @@ export class BadgeGiverComponent implements OnInit {
             return;
         }
         const pGroup: IPersonalGroup =
-            await this.badgeService.getUserAndPersonalGroup(selectedUser.name);
+            await this.groupService.getUserAndPersonalGroup(selectedUser.name);
         if (!pGroup) {
             console.error("Failed to retrieve the user's personal group ID.");
             return;
@@ -475,19 +477,11 @@ export class BadgeGiverComponent implements OnInit {
      * @param message viesti, joka antamisen yhteydessä voidaan antaa
      */
     async assignBadge(message: string) {
-        let givenByID = 0;
-        const currentDocumentID = documentglobals().curr_item.id;
-        if (Users.isLoggedIn()) {
-            givenByID = Users.getCurrent().id;
-        }
-
         if (this.selectedUsers.length > 0) {
             for (const user of this.selectedUsers) {
                 const pGroup: IPersonalGroup =
-                    await this.badgeService.getUserAndPersonalGroup(user.name);
+                    await this.groupService.getUserAndPersonalGroup(user.name);
                 await this.badgeService.assignBadges({
-                    given_by: givenByID,
-                    doc_id: currentDocumentID,
                     context_group: this.badgegroupContext,
                     group_id: pGroup["1"].id,
                     badge_id: this.selectedBadge?.id,
@@ -498,8 +492,6 @@ export class BadgeGiverComponent implements OnInit {
         if (this.selectedGroups.length > 0) {
             for (const group of this.selectedGroups) {
                 await this.badgeService.assignBadges({
-                    given_by: givenByID,
-                    doc_id: currentDocumentID,
                     context_group: this.badgegroupContext,
                     group_id: group.id,
                     badge_id: this.selectedBadge?.id,
