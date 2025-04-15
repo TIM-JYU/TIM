@@ -52,6 +52,7 @@ import {
     jsonSerializer,
     NewAnnotation,
 } from "tim/velp/velptypes";
+import type {IDocSettings} from "tim/document/IDocSettings";
 
 /**
  * The controller handles the logic related to adding and removing annotations. It also handles the way how
@@ -113,6 +114,7 @@ export class ReviewController {
     private velpBadgePar?: ParContext;
     private velpSelection?: VelpSelectionController; // initialized through onInit
     private lastOpenedAnnotation = 0;
+    private docSettings: IDocSettings;
 
     public peerReviews: PeerReview[];
 
@@ -121,6 +123,7 @@ export class ReviewController {
         this.velpMode = documentglobals().velpMode;
         this.teacherMode = documentglobals().teacherMode;
         this.item = documentglobals().curr_item;
+        this.docSettings = documentglobals().docSettings;
         this.annotations = [];
         this.peerReviews = [];
         this.zIndex = 3;
@@ -1671,6 +1674,15 @@ export class ReviewController {
         coord: IAnnotationInterval,
         velp: IVelp
     ) {
+        if (
+            newAnnotation.answer_id === null &&
+            this.docSettings.nonAnswerAnnotationsDisabled !== undefined
+        ) {
+            await showMessageDialog(
+                this.docSettings.nonAnswerAnnotationsDisabled
+            );
+            throw Error("Adding non-answer annotations is disabled in UI.");
+        }
         const json = await to(
             $http.post<Record<string, unknown>>("/add_annotation", {
                 answer_id: newAnnotation.answer_id,

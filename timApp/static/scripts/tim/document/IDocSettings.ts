@@ -57,6 +57,7 @@ export interface IDocSettings {
     pollDocumentViewInfoJitter?: number;
     redirectAnonymousNoRight?: string;
     disable_answer?: string;
+    nonAnswerAnnotationsDisabled?: string;
 }
 
 export interface ISlideDocSettings extends IDocSettings {
