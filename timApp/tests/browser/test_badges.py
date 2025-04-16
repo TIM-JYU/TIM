@@ -1,14 +1,21 @@
 from timApp.tests.browser.browsertest import BrowserTest
-from timApp.static.scripts.tim.gamification.badge import *
+from selenium.webdriver import ActionChains
+from selenium.webdriver.common.by import By
+from selenium.webdriver.remote.webelement import WebElement
+from selenium.common.exceptions import (
+    ElementClickInterceptedException,
+    ElementNotInteractableException,
+    NoSuchElementException,
+)
 
 
 class TestBadges(BrowserTest):
     def setUp(self):
-        # Login steps common for all tests:
+        super().setUp()
+        # Log in quickly as Test User 1.
         self.login_browser_quick_test1()
-        self.login_test1()
 
-        # Create a document including the badge components.
+        # Create a document that includes our badge components.
         d = self.create_doc(
             initial_par="""
             ```
@@ -29,97 +36,140 @@ class TestBadges(BrowserTest):
         tr_par.save()
         self.goto_document(d)
 
+    def tearDown(self):
+        super().tearDown()
+
+    # --- Helper Methods ---
+    def find_elements_by_tag_name(self, tagname: str, parent: WebElement | None = None):
+        """Helper method to find elements by tag name."""
+        root = parent if parent is not None else self.drv
+        return root.find_elements(By.TAG_NAME, tagname)
+
     def open_badge_form(self):
-        # Open the badge creation form by clicking the button.
-        self.wait_until_present_and_vis("#showBadgeForm")
-        open_creator = self.find_element_and_move_to("#showBadgeForm")
-        open_creator.click()
-        # Wait until the title input is visible to confirm the form is open.
+        """Opens the badge creation form by clicking the showBadgeForm button."""
+        self.wait_until_present_and_vis("button#showBadgeForm")
+        open_button = self.find_element_and_move_to("button#showBadgeForm")
+        open_button.click()
+        # Wait for the form to appear by checking the title input.
         self.wait_until_present_and_vis("input#title")
 
     def fill_badge_form(
-        self, title, description, image_index=0, color_index=0, shape="hexagon"
+        self,
+        title: str,
+        description: str,
+        image_index: int = 0,
+        color_index: int = 0,
+        shape: str = "hexagon",
     ):
-        # Enter text into title and description fields.
+        """Fills in the badge form using provided data."""
+        # Fill in the title.
         title_input = self.find_element("input#title")
         title_input.clear()
         title_input.send_keys(title)
 
-        description_input = self.find_element("textarea#description")
-        description_input.clear()
-        description_input.send_keys(description)
+        # Fill in the description.
+        desc_input = self.find_element("textarea#description")
+        desc_input.clear()
+        desc_input.send_keys(description)
 
-        # For select elements, choose an option by index.
+        # Choose an image from the select.
         image_select = self.find_element("select#image")
-        image_options = image_select.find_elements_by_tag_name("option")
+        image_options = self.find_elements_by_tag_name("option", parent=image_select)
         if len(image_options) > image_index:
             image_options[image_index].click()
 
+        # Choose a color from the select.
         color_select = self.find_element("select#color")
-        color_options = color_select.find_elements_by_tag_name("option")
+        color_options = self.find_elements_by_tag_name("option", parent=color_select)
         if len(color_options) > color_index:
             color_options[color_index].click()
 
-        # For shape, select the radio button. Adjust selector if necessary.
+        # Choose the shape radio button.
         shape_radio = self.find_element(f"input[type='radio'][value='{shape}']")
         shape_radio.click()
 
-        # Wait for the preview to update.
+        # Wait for the badge preview to update.
         self.wait_until_present(".preview tim-badge")
 
     def submit_badge_form(self):
-        # Ensure the submit button is enabled before clicking.
+        """Submits the badge form by clicking the create/save button."""
         create_button = self.find_element("#createButton")
         self.assertTrue(
             create_button.is_enabled(),
-            "Submit button should be enabled when form is valid.",
+            "Submit button should be enabled for a valid form",
         )
         create_button.click()
 
     def get_latest_badge_card(self):
-        # Wait for and return the first badge card element.
-        self.wait_until_present(".badge-card")
-        return self.find_element(".badge-card")
+        """Waits for and returns a badge card element.
+        Since the badge title is contained in the tim-badge element inside the card,
+        we retrieve the first badge card and then its contained tim-badge's title attribute.
+        """
+        self.wait_until_present("div.badge-card")
+        badge_card = self.find_element("div.badge-card")
+        # Optionally, retrieve child tim-badge if needed:
+        badge_component = badge_card.find_element(By.CSS_SELECTOR, "tim-badge")
+        return badge_component
 
+    def dismiss_alerts(self):
+        """Dismiss any visible alerts by clicking their close buttons.
+        The alert uses a tim-alert component with a close button.
+        """
+        alert_close_buttons = self.drv.find_elements(
+            By.CSS_SELECTOR, "tim-alert .close"
+        )
+        for btn in alert_close_buttons:
+            try:
+                btn.click()
+            except (
+                ElementClickInterceptedException,
+                ElementNotInteractableException,
+            ) as _:
+                # Optionally log the error or take alternative action
+                continue
+
+    # --- Test Methods ---
     def test_badge_creation_valid(self):
-        """Test creating a valid badge."""
+        """Test that a valid badge is created successfully."""
         self.open_badge_form()
         self.fill_badge_form(
-            title="Test Badge", description="This is a test badge description."
+            title="Test Badge", description="This is a valid test badge description."
         )
         self.submit_badge_form()
 
-        # Verify that a badge card appears containing the badge title.
-        created_badge = self.get_latest_badge_card()
-        badge_title = created_badge.get_attribute("title") or created_badge.text
+        # Verify that the newly created badge appears.
+        badge_component = self.get_latest_badge_card()
+        badge_title = badge_component.get_attribute("title") or badge_component.text
         self.assertIn(
             "Test Badge",
             badge_title,
-            "Badge list should include the created badge titled 'Test Badge'.",
+            "The badge should display the created badge with the title 'Test Badge'.",
         )
 
     def test_badge_creation_missing_required(self):
-        """Test form validation by attempting to submit without providing required information."""
+        """Test that form validation prevents submitting the badge form without required data."""
         self.open_badge_form()
-
-        # Fill only description leaving title blank.
-        # NOTE: This assumes that the form marks the title as required.
+        # Leave title empty to trigger required-field validation.
         self.fill_badge_form(
-            title="", description="Description provided but title is missing."
+            title="", description="Badge description provided but title is missing."
         )
-        # Instead of submitting, check for visible error messages.
-        # You might need to trigger blur events to make Angular show validation errors.
+
+        # Trigger blur to force validation.
         title_input = self.find_element("input#title")
         title_input.click()
         title_input.send_keys(" ")
-        title_input.clear()  # Trigger a change event
+        title_input.clear()
 
-        # Check for an error message under the title field.
-        self.wait_until_present(".error-message")
-        error_msg = self.find_element(".error-message").text
-        self.assertIn("Title is required", error_msg)
+        # Wait for a visible error message.
+        self.wait_until_present("div.error-message")
+        error_text = self.find_element("div.error-message").text
+        self.assertIn(
+            "Title is required",
+            error_text,
+            "Error message should indicate that title is required.",
+        )
 
-        # Confirm that the submit button is disabled.
+        # Verify that the submit button is disabled.
         create_button = self.find_element("#createButton")
         self.assertFalse(
             create_button.is_enabled(),
@@ -127,73 +177,149 @@ class TestBadges(BrowserTest):
         )
 
     def test_cancel_badge_creation(self):
-        """Test that cancelling badge creation does not create a badge."""
+        """Test that cancelling badge creation does not add the badge."""
         self.open_badge_form()
         self.fill_badge_form(
-            title="Unwanted Badge", description="Badge creation will be cancelled."
+            title="Unwanted Badge", description="This badge creation will be cancelled."
         )
-        # Instead of submitting, click the cancel button.
         cancel_button = self.find_element("#cancelButton")
         cancel_button.click()
+        # Wait for the form (id="badgeForm") to disappear.
+        self.wait_until_hidden("form#badgeForm")
 
-        # Wait a short moment for the form to close.
-        self.wait_until_not_present("form#badgeForm", timeout=5)
-
-        # Verify that no new badge card with the title "Unwanted Badge" exists.
-        # Depending on how your app refreshes, you might need to search for all badge cards.
-        badge_cards = self.find_elements(".badge-card")
+        # Verify that no badge card contains the title "Unwanted Badge".
+        badge_cards = self.drv.find_elements(By.CSS_SELECTOR, "div.badge-card")
         for card in badge_cards:
-            card_title = card.get_attribute("title") or card.text
-            self.assertNotIn(
-                "Unwanted Badge",
-                card_title,
-                "Cancelled badge should not be present in the badge list.",
-            )
+            try:
+                # Look inside for the tim-badge element that has a title attribute.
+                badge_component = card.find_element(By.CSS_SELECTOR, "tim-badge")
+                card_title = (
+                    badge_component.get_attribute("title") or badge_component.text
+                )
+                self.assertNotIn(
+                    "Unwanted Badge",
+                    card_title,
+                    "A cancelled badge creation should not appear in the badge list.",
+                )
+            except NoSuchElementException:
+                # If the tim-badge element isn't found, skip this card.
+                continue
 
     def test_badge_editing(self):
-        """Test editing an existing badge.
-
-        This example assumes that once a badge is created, it can be selected
-        and then edited using an 'Edit Badge' button.
-        """
-        # Create an initial badge.
+        """Test that an existing badge can be edited."""
+        # Create a badge to be edited.
         self.open_badge_form()
-        self.fill_badge_form(title="Badge To Edit", description="Initial description.")
+        self.fill_badge_form(
+            title="Badge To Edit", description="Initial badge description."
+        )
         self.submit_badge_form()
 
-        # Select the badge from the list
-        self.wait_until_present(".badge-card")
-        badge_card = self.get_latest_badge_card()
-        badge_card.click()  # This should mark it as selected.
+        # Select the badge by clicking its tim-badge element.
+        badge_component = self.get_latest_badge_card()
+        ActionChains(self.drv).move_to_element(badge_component).click().perform()
 
-        # Click the Edit button
-        self.wait_until_present_and_vis("#editButton")
-        edit_button = self.find_element("#editButton")
+        # Click the Edit Badge button.
+        self.wait_until_present_and_vis("button#editButton")
+        edit_button = self.find_element("button#editButton")
         edit_button.click()
 
-        # Wait until the editing form appears with existing badge data.
+        # Wait until the form loads with current badge data.
         self.wait_until_present_and_vis("input#title")
 
-        # Update the title and description.
+        # Update the badge details.
         self.fill_badge_form(
-            title="Edited Badge Title", description="Edited description."
+            title="Edited Badge Title", description="Updated badge description."
         )
+        self.submit_badge_form()
 
-        # Submit the changes.
-        # This button might be the same as the 'create' button but now with different text.
-        create_button = self.find_element("#createButton")
-        self.assertTrue(
-            create_button.is_enabled(),
-            "Submit button should be enabled when editing a valid badge.",
+        # Verify that the badge card now reflects the updated badge title.
+        updated_component = self.get_latest_badge_card()
+        updated_title = (
+            updated_component.get_attribute("title") or updated_component.text
         )
-        create_button.click()
-
-        # Verify that the badge card displays the updated title.
-        self.wait_until_present(".badge-card")
-        updated_badge = self.get_latest_badge_card()
-        updated_title = updated_badge.get_attribute("title") or updated_badge.text
         self.assertIn(
             "Edited Badge Title",
             updated_title,
-            "Badge list should display the updated badge title.",
+            "The badge list should display the updated badge title after editing.",
+        )
+
+    def test_alert_dismissal(self):
+        """Test that alerts can be dismissed by the user."""
+        # Trigger a validation error by leaving the title blank.
+        self.open_badge_form()
+        self.fill_badge_form(title="", description="Missing title to trigger alert.")
+        title_input = self.find_element("input#title")
+        title_input.click()
+        title_input.send_keys(" ")
+        title_input.clear()
+
+        # Wait for the error alert to appear (using the tim-alert component).
+        self.wait_until_present("tim-alert")
+        alert_elem = self.find_element("tim-alert")
+        alert_text = alert_elem.text
+        self.assertTrue(alert_text, "An alert message should be displayed.")
+
+        # Dismiss alerts.
+        self.dismiss_alerts()
+        # Verify that no tim-alert element is present.
+        self.should_not_exist("tim-alert")
+
+    def test_give_badge(self):
+        """Test the badge assignment interface.
+
+        This simulates selecting a badge and clicking the 'Assign Badge' button,
+        then verifies that the badge giver component appears.
+        """
+        # Create a badge for assignment.
+        self.open_badge_form()
+        self.fill_badge_form(
+            title="Badge For Assignment", description="Badge to be assigned."
+        )
+        self.submit_badge_form()
+
+        # Select the created badge.
+        badge_component = self.get_latest_badge_card()
+        ActionChains(self.drv).move_to_element(badge_component).click().perform()
+
+        # Click the 'Assign Badge' button using its title attribute.
+        self.wait_until_present_and_vis("button[title='Assign Badge']")
+        assign_button = self.find_element("button[title='Assign Badge']")
+        assign_button.click()
+
+        # Wait for the badge giver component to appear.
+        self.wait_until_present("timBadgeGiver")
+        giver_component = self.find_element("timBadgeGiver")
+        self.assertIsNotNone(
+            giver_component,
+            "Badge giver component should be visible after clicking assign.",
+        )
+
+    def test_withdraw_badge(self):
+        """Test the badge withdrawal interface.
+
+        This simulates selecting a badge and clicking the 'Withdraw Badge' button,
+        then verifies that the withdrawal component appears.
+        """
+        # Create a badge for withdrawal.
+        self.open_badge_form()
+        self.fill_badge_form(
+            title="Badge For Withdrawal", description="Badge to be withdrawn."
+        )
+        self.submit_badge_form()
+
+        # Select the created badge.
+        badge_component = self.get_latest_badge_card()
+        ActionChains(self.drv).move_to_element(badge_component).click().perform()
+
+        # Click the 'Withdraw Badge' button using its title attribute.
+        self.wait_until_present_and_vis("button[title='Withdraw Badge']")
+        withdraw_button = self.find_element("button[title='Withdraw Badge']")
+        withdraw_button.click()
+
+        # Wait for the withdrawal component to appear.
+        self.wait_until_present("tim-badge-selected-withdraw")
+        withdraw_component = self.find_element("tim-badge-selected-withdraw")
+        self.assertIsNotNone(
+            withdraw_component,
+            "Badge withdrawal component should be visible after clicking withdraw.",
         )
