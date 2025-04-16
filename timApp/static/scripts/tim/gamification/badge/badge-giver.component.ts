@@ -57,7 +57,7 @@ import {GroupService} from "tim/plugin/group-dashboard/group.service";
                         users
                     </div>
                     <div class="list-scroll-container" (wheel)="onScrollList($event)">
-                        <div *ngFor="let group of groups">
+                        <div *ngFor="let group of groups" class="group">
                             <span *ngIf="groupUsersMap.get(group.id)?.length">
                                 {{ groupPrettyNames.get(group.id) || group.name }}
                             </span>
@@ -80,13 +80,15 @@ import {GroupService} from "tim/plugin/group-dashboard/group.service";
                         </div>
                     </div>
                 </div>
-
+                
+               
                 <div *ngIf="userAssign === false" class="form-group">
                     <label>Groups</label>
                     <div>
-                        <input class="user-checkbox" type="checkbox" (change)="toggleSelectAllItems($event, selectedGroups, groups)">Select all
+                        <input class="group-checkbox" type="checkbox" (change)="toggleSelectAllItems($event, selectedGroups, groups)">Select all 
                         groups
                     </div>
+                    
                     <div class="list-scroll-container" (wheel)="onScrollList($event)">
                         <div *ngFor="let group of groups" class="group-item">
                             <input class="group-checkbox"
@@ -99,17 +101,27 @@ import {GroupService} from "tim/plugin/group-dashboard/group.service";
                                   [ngClass]="{'selected-option': selectedGroup?.id === group.id}">
                                 {{ groupPrettyNames.get(group.id) || group.name }}
                             </span>
-                            <div class="group-users" *ngIf="selectedGroup === group">
-                                <div *ngFor="let user of users">
-                                    <div class="user-name">{{ user.real_name }}</div>
-                                </div>
-                            </div>
                         </div>
                     </div>
-                </div>
-
-                <div *ngIf="userAssign != undefined">
+            
+                     <div class="group-users">
+                        <ng-container *ngIf="selectedGroup">
+                            <p>{{selectedGroup.name}}</p>
+                            <div *ngFor="let user of users">
+                                <div class="user-name">{{ user.real_name }}</div>
+                            </div>
+                        </ng-container>
+                        <ng-container *ngIf="selectedGroup && users.length === 0">
+                            <p class="user-name">No users found</p>
+                        </ng-container>
+                        <ng-container *ngIf="!selectedGroup">
+                            <p>Select group to view users</p>
+                        </ng-container>
+                     </div>
                     
+                </div>
+                <div *ngIf="userAssign != undefined">
+                   
                     <!-- Message Box -->
                     <div class="message-box">
                         <label for="message">Message</label>
@@ -303,6 +315,7 @@ export class BadgeGiverComponent implements OnInit {
         const isChecked = (event.target as HTMLInputElement).checked;
         if (isChecked) {
             this.emptyTable(selectedItems);
+            console.log("items: ", itemList);
             for (const item of itemList) {
                 selectedItems.push(item);
             }
@@ -323,6 +336,8 @@ export class BadgeGiverComponent implements OnInit {
         this.selectedGroup = null;
         this.emptyTable(this.selectedUsers);
         this.emptyTable(this.selectedGroups);
+        this.emptyTable(this.users);
+        this.fetchUsers(this.badgegroupContext);
     }
 
     emptyForm() {
