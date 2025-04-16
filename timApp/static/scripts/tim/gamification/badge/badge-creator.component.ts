@@ -19,6 +19,7 @@ import {BadgeWithdrawModule} from "tim/gamification/badge/badge-withdraw.compone
 import {BadgeSelectedWithdrawModule} from "tim/gamification/badge/badge-selected-withdraw.component";
 import {documentglobals} from "tim/util/globals";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
+import {FormsModule} from "@angular/forms";
 
 @Component({
     selector: "tim-badge-creator",
@@ -36,7 +37,7 @@ import {TimUtilityModule} from "tim/ui/tim-utility.module";
             </div>
         </ng-container>
         <ng-container *ngIf="teacherPermission">
-        <div class="badge-creator" [formGroup]="badgeForm" #allBadgesSection>
+        <div class="badge-creator" #allBadgesSection>
           <fieldset class="form-fieldset">
             <div class="all-badges">
                 <fieldset>
@@ -48,12 +49,23 @@ import {TimUtilityModule} from "tim/ui/tim-utility.module";
                         </div> 
                     </div>                 
                     
+                    <div class="sort-select">
+                      <label for="sort-sel">Sort badges by: </label>
+                            
+                      <select id="sort-sel" [(ngModel)]="selectedSort" (ngModelChange)="onSortChange($event)">
+                        <option value="newest">Newest</option>
+                        <option value="oldest">Oldest</option>
+                        <option value="az">A-Z</option>
+                        <option value="za">Z-A</option>
+                      </select>
+                    </div>
+                    
                     <div class="badge-view">
                       <ng-container *ngIf="all_badges.length == 0">
                           <p class="no-badges-txt">This user/group does not have any badges yet.</p>
                       </ng-container>
                       <ng-container *ngIf="all_badges.length > 0">
-                          <div class="badge-card" *ngFor="let badge of all_badges">
+                          <div class="badge-card" *ngFor="let badge of sortedBadges">
                             <tim-badge
                                [ngClass]="{'selected-badge': clickedBadge === badge}"
                                        title="{{badge.title}}"
@@ -109,7 +121,7 @@ import {TimUtilityModule} from "tim/ui/tim-utility.module";
                   Fields marked with <span class="required-asterisk">*</span> are required.
                 </p>
                 
-                <form (ngSubmit)="onSubmit()" id="badgeForm" class="form-group">
+                <form [formGroup]="badgeForm" (ngSubmit)="editingBadge ? saveBadgeChanges() : onSubmit()" id="badgeForm" class="form-group">
                   <div class="form-group">
                       <label for="title">Badge Title <span class="required">*</span></label>
                       <input type="text" id="title" name="title" formControlName="title" [class.invalid]="badgeForm.controls.title.invalid && badgeForm.controls.title.touched">
@@ -159,7 +171,8 @@ import {TimUtilityModule} from "tim/ui/tim-utility.module";
                             <label>Shape <span class="required">*</span></label>
                             <div class="shape">
                               <label *ngFor="let shape of shapes">
-                                <input type="radio" [id]="shape.value" formControlName="shape" [value]="shape.value" [checked]="shape.value === 'hexagon'"> {{ shape.label }}
+                                <input type="radio" [id]="shape.value" formControlName="shape" [value]="shape.value">
+                                {{ shape.label }}
                               </label>
                             </div>
                           </div>
@@ -187,8 +200,7 @@ import {TimUtilityModule} from "tim/ui/tim-utility.module";
                       <button id="createButton"
                               type="submit"
                               [attr.title]="!badgeForm.valid ? 'Fill all the required fields' : null"
-                              [disabled]="!badgeForm.valid"
-                              (click)="editingBadge ? saveBadgeChanges() : onSubmit()">
+                              [disabled]="!badgeForm.valid">
                           {{ editingBadge ? 'Save Changes' : 'Create Badge' }}
                       </button>
                       <div class="button-group">
@@ -237,6 +249,8 @@ export class BadgeCreatorComponent implements OnInit {
         type: "warning" | "danger";
         id?: string;
     }> = [];
+    selectedSort: string = "newest";
+    sortedBadges: IBadge[] = [];
 
     // Method called when a badge is clicked
     selectBadge(badge: IBadge) {
@@ -509,6 +523,7 @@ export class BadgeCreatorComponent implements OnInit {
                 const badges: IBadge[] = result.result;
                 this.all_badges = badges;
                 this.all_badges.reverse();
+                this.onSortChange(this.selectedSort);
             }
         }
         if (!result.ok) {
@@ -652,6 +667,42 @@ export class BadgeCreatorComponent implements OnInit {
             }
         }
     }
+
+    // Update the sortedBadges array based on the chosen sort type.
+    // "az" and "za" sort the badges alphabetically by title.
+    // "newest" and "oldest" sort the badges by the created date.
+    onSortChange(sortType: any) {
+        this.sortedBadges = [...this.all_badges];
+
+        switch (sortType) {
+            case "az":
+                this.sortedBadges.sort((a, b) =>
+                    a.title.localeCompare(b.title)
+                );
+                break;
+            case "za":
+                this.sortedBadges.sort((a, b) =>
+                    b.title.localeCompare(a.title)
+                );
+                break;
+            case "newest":
+                this.sortedBadges.sort(
+                    (a, b) =>
+                        new Date(b.created).getTime() -
+                        new Date(a.created).getTime()
+                );
+                break;
+            case "oldest":
+                this.sortedBadges.sort(
+                    (a, b) =>
+                        new Date(a.created).getTime() -
+                        new Date(b.created).getTime()
+                );
+                break;
+            default:
+                this.sortedBadges = [...this.all_badges];
+        }
+    }
 }
 
 @NgModule({
@@ -667,6 +718,7 @@ export class BadgeCreatorComponent implements OnInit {
         BadgeWithdrawModule,
         TimUtilityModule,
         BadgeSelectedWithdrawModule,
+        FormsModule,
     ],
 })
 export class BadgeCreatorModule {}

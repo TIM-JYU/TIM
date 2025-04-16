@@ -363,6 +363,44 @@ button[type="button"]:hover {
   margin: 0 0.4rem;
 }
 
+
+.sort-select {
+  margin: 0 0 1rem 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 1.2rem;
+
+  label {
+    font-weight: 600;
+    color: #333;
+    line-height: 1.2;
+    margin-bottom: 0;
+  }
+
+  select {
+    padding: 0.55rem 1.2rem;
+    font-size: 0.95rem;
+    line-height: 1.2;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    background-color: #fff;
+    color: #333;
+    transition: border-color 0.2s ease-in-out, box-shadow 0.2s;
+
+    &:hover {
+      border-color: #888;
+    }
+
+    &:focus {
+      outline: none;
+      border-color: #4285f4;
+      box-shadow: 0 0 0 2px rgba(66, 133, 244, 0.2);
+    }
+  }
+}
+
+
 @media (max-width: 785px) {
 
   .badge-card {

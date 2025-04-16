@@ -12,6 +12,7 @@ export interface IBadge {
     badgegiven_id: number;
     given: Date;
     created_by_name: string;
+    created: Date;
 }
 
 // Interface representing a group with a name and description
