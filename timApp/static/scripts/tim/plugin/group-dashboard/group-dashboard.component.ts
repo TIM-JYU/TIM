@@ -12,6 +12,7 @@ import {GroupService} from "tim/plugin/group-dashboard/group.service";
     selector: "tim-group-dashboard",
     template: `
         <ng-container>
+            <div class="tim-dashboard">
     <h1 class="name-header">
     {{ displayName }}'s dashboard
     <span *ngIf="nameJustUpdated" class="name-updated-icon">✔️</span>
@@ -19,11 +20,11 @@ import {GroupService} from "tim/plugin/group-dashboard/group.service";
 
     <div class="dashboard-section">
         <h2 class="section-title">Group details</h2>
+        <h3>{{displayName}}'s badges</h3>
         <div class="group-badges">
-            <h3>{{displayName}}'s badges</h3>
             <div *ngIf="groupBadges.length === 0">No group badges yet.</div>
     <span *ngFor="let badge of groupBadges" class="badge">
-        <tim-badge
+        <tim-badge class
             [title]="badge.title"
             [color]="badge.color"
             [shape]="badge.shape"
@@ -33,11 +34,16 @@ import {GroupService} from "tim/plugin/group-dashboard/group.service";
         </tim-badge>
     </span>
 </div>
-        <ul>
-            <li>Graphs</li>
-            <li>Points</li>
-            <li>Totals</li>
-        </ul>
+        <h3>Statistics</h3>
+<div class="stat-summary">
+    <p><strong>Total members:</strong> {{ totalMembers }}</p>
+    <p><strong>Total badges (group + user):</strong> {{ totalBadges }}</p>
+</div>
+
+<div class="stat-visuals">
+    <p><em>Graphs TBA</em></p>
+    <p><em>Points TBA</em></p>
+</div>
     </div>
 
     <div class="dashboard-section">
@@ -73,6 +79,7 @@ import {GroupService} from "tim/plugin/group-dashboard/group.service";
             (groupNameChange)="onGroupNameChange($event)">
         </tim-group-name>
     </div>
+                </div>
 </ng-container>
 `,
     styleUrls: ["./group-dashboard.component.scss"],
@@ -92,7 +99,11 @@ export class GroupDashboardComponent implements OnInit {
     title: string | undefined;
     groupBadges: IBadge[] = [];
     nameJustUpdated = false;
+    totalMembers: number = 0;
+    totalBadges: number = 0;
 
+    //TODO: total badges in group details
+    //TODO: total members in group
     async ngOnInit(): Promise<void> {
         if (this.group) {
             await this.getGroupName();
@@ -118,10 +129,12 @@ export class GroupDashboardComponent implements OnInit {
 
         if (members) {
             this.members = members;
+            this.totalMembers = members.length;
         }
     }
 
     async fetchUserBadges() {
+        let badgeCount = 0;
         const badgePromises = this.members.map(async (user) => {
             try {
                 const personalGroup =
@@ -135,6 +148,7 @@ export class GroupDashboardComponent implements OnInit {
 
                     if (badges.length > 0) {
                         user.badges = badges;
+                        badgeCount += badges.length;
                     }
                 } else {
                     console.error(
@@ -147,6 +161,7 @@ export class GroupDashboardComponent implements OnInit {
         });
 
         await Promise.all(badgePromises);
+        this.totalBadges += badgeCount;
     }
 
     async fetchGroupBadges() {
@@ -157,6 +172,7 @@ export class GroupDashboardComponent implements OnInit {
             );
             if (groupBadges) {
                 this.groupBadges = groupBadges;
+                this.totalBadges += groupBadges.length;
             }
         } catch (error) {
             console.error("Error fetching group mutual badges:", error);
