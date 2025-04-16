@@ -829,3 +829,4 @@ class BadgeTest(TimRouteTest):
         )
 
         # TODO: Test routes with broken data.
+        # TODO: Test groups_badges after given badges to user and then deleting badges.
