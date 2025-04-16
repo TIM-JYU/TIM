@@ -728,20 +728,20 @@ def undo_withdraw_badge(badge_given_id: int, context_group: str) -> Response:
 # TODO: Do access right checks for this route.
 @badges_blueprint.get("/podium/<group_name_prefix>")
 def podium(group_name_prefix: str) -> Response:
-    stmt = (
+    results = run_sql(
         select(UserGroup.name, func.count(BadgeGiven.id).label("badge_count"))
         .filter(
             UserGroup.name.like(group_name_prefix + "%"),
             UserGroup.name != group_name_prefix,
         )
-        .join(BadgeGiven, BadgeGiven.group_id == UserGroup.id)
+        .outerjoin(BadgeGiven, BadgeGiven.group_id == UserGroup.id)
         .where(BadgeGiven.active.is_(True))
-        .group_by(UserGroup.name)
+        .outerjoin(Badge, Badge.id == BadgeGiven.badge_id)
+        .where(Badge.active.is_(True))
+        .group_by(UserGroup.id, UserGroup.name)
         .order_by(desc("badge_count"))
         .limit(5)
-    )
-
-    results = run_sql(stmt).all()
+    ).all()
 
     podium_json = []
     for grp_name, badge_count in results:
