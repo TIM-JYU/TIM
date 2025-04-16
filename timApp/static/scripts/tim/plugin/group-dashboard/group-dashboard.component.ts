@@ -12,7 +12,7 @@ import {GroupService} from "tim/plugin/group-dashboard/group.service";
     selector: "tim-group-dashboard",
     template: `
         <ng-container>
-            <div class="tim-dashboard-header">
+            <div class="tim-dashboard">
     <h1 class="name-header">
     {{ displayName }}'s dashboard
     <span *ngIf="nameJustUpdated" class="name-updated-icon">✔️</span>
@@ -20,11 +20,11 @@ import {GroupService} from "tim/plugin/group-dashboard/group.service";
 
     <div class="dashboard-section">
         <h2 class="section-title">Group details</h2>
+        <h3>{{displayName}}'s badges</h3>
         <div class="group-badges">
-            <h3>{{displayName}}'s badges</h3>
             <div *ngIf="groupBadges.length === 0">No group badges yet.</div>
     <span *ngFor="let badge of groupBadges" class="badge">
-        <tim-badge
+        <tim-badge class
             [title]="badge.title"
             [color]="badge.color"
             [shape]="badge.shape"
