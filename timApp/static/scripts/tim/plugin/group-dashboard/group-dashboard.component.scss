@@ -50,13 +50,23 @@
     margin-right: 10px;
 }
 
+.group-badges {
+    display: inline-flex;
+    height: 16px;
+    margin: 0;
+    justify-content: center;
+    align-items: last baseline;
+}
+
 .badges {
     display: flex;
+    align-items: last baseline;
 }
 
 .badge {
     background-color: transparent;
-    margin: 5px;
+    margin: 0 -5px;
+    padding: 0;
     border: none;
     box-shadow: none;
     transform: scale(0.3);
