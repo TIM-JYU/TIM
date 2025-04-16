@@ -52,6 +52,25 @@ import {GroupService} from "tim/plugin/group-dashboard/group.service";
 
                 <div *ngIf="userAssign === true" class="form-group">
                     <label>Users</label>
+                    
+                    <div class="search-wrapper" style="position: relative;">
+                      <div class="search-users">
+                        <label for="user-search">Search user:</label>
+                        <input type="search" id="user-search" name="q"
+                               [(ngModel)]="userSearchTerm"
+                               (ngModelChange)="filterUsers()" />
+                      </div>
+                    
+                      <div *ngIf="searchingUsers" class="search-results">
+                        <div *ngFor="let user of searchResults" class="option-item">
+                          <input type="checkbox"
+                                 [checked]="isSelected(user, selectedUsers)"
+                                 (change)="toggleUserSelection(user, $event)" />
+                          <span class="searched-name">{{ user.real_name }}</span>
+                        </div>
+                      </div>
+                    </div>
+                    
                     <div>
                         <input class="user-checkbox" type="checkbox" (change)="toggleSelectAllItems($event, selectedUsers, users)">Select all
                         users
@@ -227,6 +246,10 @@ export class BadgeGiverComponent implements OnInit {
     private subscription: Subscription = new Subscription();
     @Output() cancelEvent = new EventEmitter<void>();
 
+    userSearchTerm: string = "";
+    filteredUsersByGroup = new Map<number, IUser[]>();
+    searchingUsers = false;
+
     constructor(
         private http: HttpClient,
         protected badgeService: BadgeService,
@@ -244,6 +267,26 @@ export class BadgeGiverComponent implements OnInit {
                 this.showComponent = true;
             }
         }
+    }
+
+    filterUsers() {
+        this.filteredUsersByGroup.clear();
+
+        const searchTerm = this.userSearchTerm.trim().toLowerCase();
+        this.searchingUsers = searchTerm.length > 0;
+
+        for (const [groupId, users] of this.groupUsersMap.entries()) {
+            const filtered = users.filter((user) =>
+                user.real_name!.toLowerCase().includes(searchTerm)
+            );
+            if (filtered.length > 0 || searchTerm === "") {
+                this.filteredUsersByGroup.set(groupId, filtered);
+            }
+        }
+    }
+
+    get searchResults(): IUser[] {
+        return Array.from(this.filteredUsersByGroup.values()).flat();
     }
 
     private addListeners() {
@@ -426,6 +469,7 @@ export class BadgeGiverComponent implements OnInit {
                 await this.groupService.getUsersFromGroup(group.name)
             );
         }
+        this.filterUsers();
     }
     /**
      * Tarkistaa onko annettu parametri undefined. Jos true niin lähdetään pois.

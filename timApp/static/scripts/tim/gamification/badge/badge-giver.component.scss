@@ -258,3 +258,63 @@ button:disabled {
   text-align: right;
   margin: 0.5em 0;
 }
+
+.search-users {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  position: relative;
+  width: 100%;
+  margin-bottom: 0.5rem;
+
+  label {
+    white-space: nowrap;
+    line-height: 1;
+    height: 100%;
+    display: flex;
+    align-items: center;
+  }
+
+  input[type="search"] {
+    flex: 1;
+    padding: 0.4rem;
+    box-sizing: border-box;
+  }
+}
+
+.search-results {
+  position: absolute;
+  background: white;
+  border: 1px solid #ccc;
+  z-index: 10;
+  margin-top: 0.25rem;
+  width: 100%;
+
+  .option-item {
+    display: flex;
+    align-items: center;
+    padding: 0.5rem;
+    border-top: 1px solid #eee;
+    width: 100%;
+
+    input[type="checkbox"] {
+      margin-right: 0.5rem;
+      flex-shrink: 0;
+      width: auto;
+      height: 16px;
+    }
+
+    .searched-name {
+      margin: 0;
+      text-align: left;
+      flex: 1;
+      height: 16px;
+      display: flex;
+      align-items: center;
+    }
+
+    &:first-child {
+      border-top: none;
+    }
+  }
+}
