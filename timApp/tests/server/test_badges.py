@@ -5,14 +5,15 @@ from timApp.timdb.sqa import db
 from timApp.user.usergroup import UserGroup
 
 
-class BadgeTest(TimRouteTest):
+class BadgeTestMain(TimRouteTest):
     def create_group(self, name: str, users: list) -> UserGroup:
         ug = UserGroup.create(name)
         for u in users:
             ug.users.append(u)
         return ug
 
-    def test_badge(self):
+    def test_badge_main(self):
+        # initialization
         it_25 = self.create_group("it_25", [self.test_user_1, self.test_user_2])
         it_26 = self.create_group("it_26", [self.test_user_1, self.test_user_3])
         it_25_cats = self.create_group(
@@ -828,5 +829,135 @@ class BadgeTest(TimRouteTest):
             expect_status=200,
         )
 
-        # TODO: Test routes with broken data.
-        # TODO: Test groups_badges after given badges to user and then deleting badges.
+        # delete already given badge and check that it's not given anymore
+        self.post(
+            f"/deactivate_badge",
+            data={
+                "badge_id": 3,
+                "context_group": it_26.name,
+            },
+            expect_status=200,
+        )
+        self.get(
+            f"/groups_badges/{self.test_user_1.get_personal_group().id}/{it_26.name}",
+            expect_content=[],
+            expect_status=200,
+        )
+
+
+class BadgeTestErroneousData(TimRouteTest):
+    def create_group(self, name: str, users: list) -> UserGroup:
+        ug = UserGroup.create(name)
+        for u in users:
+            ug.users.append(u)
+        return ug
+
+    def test_badge_erroneous_data(self):
+        # initialization
+        it_27 = self.create_group("it_27", [self.test_user_1])
+        doc_it_27 = DocEntry.create("groups/it_27", it_27)
+        db.session.flush()
+        self.test_user_1.grant_access(doc_it_27.block, AccessType.teacher)
+        self.commit_db()
+        doc_it_27.block  # TODO: Why isn't the test working without this?
+        self.login_test1()
+        self.post(
+            f"/create_badge",
+            data={
+                "context_group": "it_27",
+                "title": "Coordinator",
+                "color": "blue",
+                "shape": "hexagon",
+                "image": 1,
+                "description": "Great coordination",
+            },
+            expect_status=200,
+        )
+
+        # fetch all badges in context with erroneous data
+        self.get(
+            f"/all_badges_in_context/nonexistent_group",
+            expect_status=404,
+            expect_content='User group "nonexistent_group" not found',
+        )
+
+        # create a badge with erroneous data
+        self.post(
+            f"/create_badge",
+            data={
+                "context_group": "nonexistent_group",
+                "title": "Coordinator",
+                "color": "blue",
+                "shape": "hexagon",
+                "image": 1,
+                "description": "Great coordination",
+            },
+            expect_status=404,
+            expect_content='User group "nonexistent_group" not found',
+        )
+
+        # modify a badge with different erroneous data
+        self.post(
+            f"/modify_badge",
+            data={
+                "badge_id": 2,
+                "context_group": it_27.id,
+                "title": "Coordinator",
+                "color": "blue",
+                "shape": "hexagon",
+                "image": 1,
+                "description": "Great coordination",
+            },
+            expect_status=404,
+            expect_content='Badge of id "2" not found',
+        )
+        self.post(
+            f"/modify_badge",
+            data={
+                "badge_id": 1,
+                "context_group": 100,
+                "title": "Coordinator",
+                "color": "blue",
+                "shape": "hexagon",
+                "image": 1,
+                "description": "Great coordination",
+            },
+            expect_status=404,
+            expect_content='User group of id "100" not found',
+        )
+
+        # delete a badge with different erroneous data
+        self.post(
+            f"/deactivate_badge",
+            data={
+                "badge_id": 2,
+                "context_group": it_27.name,
+            },
+            expect_status=404,
+            expect_content='Badge of id "2" not found',
+        )
+        self.post(
+            f"/deactivate_badge",
+            data={
+                "badge_id": 1,
+                "context_group": 100,
+            },
+            expect_status=404,
+            expect_content='User group of id "100" not found',
+        )
+
+    # TODO: Test these routes with erroneous data
+    #   groups_badges
+    #   badge_given
+    #   badge_holders
+    #   give_badge
+    #   withdraw_badge
+    #   withdraw_all_badges
+    #   undo_withdraw_badge
+    #   podium
+    #   subgroups
+    #   users_subgroups
+    #   user_and_personal_group
+    #   usergroups_members
+    #   current_group_name
+    #   editGroupName

@@ -18,7 +18,6 @@ from timApp.util.flask.requesthelper import NotExist
 from timApp.util.flask.responsehelper import (
     ok_response,
     json_response,
-    error_generic,
     to_json_str,
 )
 from timApp.util.flask.typedblueprint import TypedBlueprint
@@ -46,7 +45,6 @@ class BadgeModel:
     restored: datetime_tz | None
 
 
-# TODO: Fix context_group maybe.
 def log_badge_event(log_info: dict) -> None:
     """
     Logs all events that modifies badge or badgegiven tables. Log file can be
@@ -55,7 +53,7 @@ def log_badge_event(log_info: dict) -> None:
     :return:
     """
     path = Path(current_app.config["BADGE_LOG_PATH"])
-    with path.open("a") as f:
+    with path.open("a", encoding="utf-8") as f:
         f.write(to_json_str(log_info) + "\n")
 
 
@@ -122,7 +120,6 @@ def get_badges() -> Response:
     return json_response(badges_json)
 
 
-# TODO: Handle errors.
 @badges_blueprint.get("/all_badges_in_context/<context_group>")
 def all_badges_in_context(context_group: str) -> Response:
     """
@@ -220,7 +217,6 @@ def create_badge(
     return json_response(badge.to_json(), 200)
 
 
-# TODO: Handle errors.
 @badges_blueprint.post("/modify_badge")
 def modify_badge(
     badge_id: int,
@@ -244,14 +240,14 @@ def modify_badge(
     """
     context_group_object = UserGroup.get_by_id(context_group)
     if not context_group_object:
-        raise NotExist(f"User group of id {context_group} not found")
+        raise NotExist(f'User group of id "{context_group}" not found')
     d = DocEntry.find_by_path(
         f"groups/{context_group_object.name}"
     )  # TODO: Make this unambiguous.
     if not d:
         raise NotExist(f'User group "{context_group_object.name}" not found')
     verify_teacher_access(d)
-    badge = {
+    new_badge = {
         "context_group": context_group,
         "title": title,
         "color": color,
@@ -261,27 +257,29 @@ def modify_badge(
         "modified_by": get_current_user_object().id,
         "modified": datetime_tz.now(),
     }
-    Badge.query.filter_by(id=badge_id).update(badge)
+    old_badge = run_sql(select(Badge).filter_by(id=badge_id)).scalars().first()
+    if old_badge is None:
+        raise NotExist(f'Badge of id "{badge_id}" not found')
+    Badge.query.filter_by(id=badge_id).update(new_badge)
     db.session.commit()
     if current_app.config["BADGE_LOG_FILE"]:
         log_badge_event(
             {
                 "event": "modify_badge",
-                "timestamp": badge["modified"],
+                "timestamp": new_badge["modified"],
                 "id": badge_id,
-                "executor": badge["modified_by"],
-                "context_group": badge["context_group"],
-                "title": badge["title"],
-                "color": badge["color"],
-                "shape": badge["shape"],
-                "image": badge["image"],
-                "description": badge["description"],
+                "executor": new_badge["modified_by"],
+                "context_group": new_badge["context_group"],
+                "title": new_badge["title"],
+                "color": new_badge["color"],
+                "shape": new_badge["shape"],
+                "image": new_badge["image"],
+                "description": new_badge["description"],
             }
         )
-    return json_response(badge, 200)
+    return json_response(new_badge, 200)
 
 
-# TODO: Handle errors.
 @badges_blueprint.post("/deactivate_badge")
 def deactivate_badge(badge_id: int, context_group: str) -> Response:
     """
@@ -292,25 +290,28 @@ def deactivate_badge(badge_id: int, context_group: str) -> Response:
     """
     d = DocEntry.find_by_path(f"groups/{context_group}")  # TODO: Make this unambiguous.
     if not d:
-        raise NotExist(f'User group "{context_group}" not found')
+        raise NotExist(f'User group of id "{context_group}" not found')
     verify_teacher_access(d)
-    badge = {
+    new_badge = {
         "active": False,
         "deleted_by": get_current_user_object().id,
         "deleted": datetime_tz.now(),
     }
-    Badge.query.filter_by(id=badge_id).update(badge)
+    old_badge = run_sql(select(Badge).filter_by(id=badge_id)).scalars().first()
+    if old_badge is None:
+        raise NotExist(f'Badge of id "{badge_id}" not found')
+    Badge.query.filter_by(id=badge_id).update(new_badge)
     db.session.commit()
     if current_app.config["BADGE_LOG_FILE"]:
         log_badge_event(
             {
                 "event": "delete_badge",
-                "timestamp": badge["deleted"],
+                "timestamp": new_badge["deleted"],
                 "id": badge_id,
-                "executor": badge["deleted_by"],
+                "executor": new_badge["deleted_by"],
             }
         )
-    return json_response(badge, 200)
+    return json_response(new_badge, 200)
 
 
 # TODO: Not yet in use. If going to use this route, create tests for it and handle errors.
