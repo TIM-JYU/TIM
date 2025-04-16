@@ -52,7 +52,6 @@
 
 .group-badges {
     display: inline-flex;
-    height: 16px;
     margin: 0;
     justify-content: center;
     align-items: last baseline;
@@ -102,6 +101,22 @@
     color: green;
     animation: popIn 0.4s ease-out;
 }
+
+.stat-summary {
+    margin-bottom: 1rem;
+    font-size: 1.5rem;
+    line-height: 1.6;
+}
+
+.stat-summary p {
+    margin: 0.25rem 0;
+}
+
+.stat-visuals {
+    opacity: 0.7;
+    font-style: italic;
+}
+
 
 @keyframes popIn {
     0% {

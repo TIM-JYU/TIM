@@ -34,11 +34,16 @@ import {GroupService} from "tim/plugin/group-dashboard/group.service";
         </tim-badge>
     </span>
 </div>
-        <ul>
-            <li>Graphs</li>
-            <li>Points</li>
-            <li>Totals</li>
-        </ul>
+        <h3>Statistics</h3>
+<div class="stat-summary">
+    <p><strong>Total members:</strong> {{ totalMembers }}</p>
+    <p><strong>Total badges (group + user):</strong> {{ totalBadges }}</p>
+</div>
+
+<div class="stat-visuals">
+    <p><em>Graphs TBA</em></p>
+    <p><em>Points TBA</em></p>
+</div>
     </div>
 
     <div class="dashboard-section">
@@ -94,6 +99,8 @@ export class GroupDashboardComponent implements OnInit {
     title: string | undefined;
     groupBadges: IBadge[] = [];
     nameJustUpdated = false;
+    totalMembers: number = 0;
+    totalBadges: number = 0;
 
     //TODO: total badges in group details
     //TODO: total members in group
@@ -122,10 +129,12 @@ export class GroupDashboardComponent implements OnInit {
 
         if (members) {
             this.members = members;
+            this.totalMembers = members.length;
         }
     }
 
     async fetchUserBadges() {
+        let badgeCount = 0;
         const badgePromises = this.members.map(async (user) => {
             try {
                 const personalGroup =
@@ -139,6 +148,7 @@ export class GroupDashboardComponent implements OnInit {
 
                     if (badges.length > 0) {
                         user.badges = badges;
+                        badgeCount += badges.length;
                     }
                 } else {
                     console.error(
@@ -151,6 +161,7 @@ export class GroupDashboardComponent implements OnInit {
         });
 
         await Promise.all(badgePromises);
+        this.totalBadges += badgeCount;
     }
 
     async fetchGroupBadges() {
@@ -161,6 +172,7 @@ export class GroupDashboardComponent implements OnInit {
             );
             if (groupBadges) {
                 this.groupBadges = groupBadges;
+                this.totalBadges += groupBadges.length;
             }
         } catch (error) {
             console.error("Error fetching group mutual badges:", error);
