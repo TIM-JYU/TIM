@@ -95,6 +95,8 @@ export class GroupDashboardComponent implements OnInit {
     groupBadges: IBadge[] = [];
     nameJustUpdated = false;
 
+    //TODO: total badges in group details
+    //TODO: total members in group
     async ngOnInit(): Promise<void> {
         if (this.group) {
             await this.getGroupName();
