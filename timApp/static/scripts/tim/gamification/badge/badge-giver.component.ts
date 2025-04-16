@@ -109,77 +109,25 @@ import {GroupService} from "tim/plugin/group-dashboard/group.service";
                 </div>
 
                 <div *ngIf="userAssign != undefined">
-                    <div class="message-container">
-
-                        <!-- Message Box -->
-                        <div class="message-box">
-                            <label for="message">Message</label>
-                            <textarea id="message" 
-                                      rows="4" 
-                                      maxlength="200"
-                                      [(ngModel)]="message">
-                            </textarea>
-                            <div class="char-counter">
-                              {{ message.length }} / 200 characters
-                            </div>
-                        </div>
-
-                        <!-- Assigned Badges -->
-                        <!-- Group -->
-                        <div class="badges-box" *ngIf="userAssign === false">
-                            <label for="user_badges">
-                                Assigned Badges {{ selectedGroup ? selectedGroup.name : '' }}
-                            </label>
-                            <ng-container *ngIf="groupBadges.length > 0 && selectedGroup">
-                                <div class="user_badges_scroll">
-                                    <div class="badge-card" *ngFor="let badge of groupBadges">
-                                        <tim-badge
-                                                [title]="badge.title"
-                                                [color]="badge.color"
-                                                [shape]="badge.shape"
-                                                [image]="badge.image">
-                                        </tim-badge>
-                                    </div>
-                                </div>
-                            </ng-container>
-                            <ng-container *ngIf="groupBadges.length == 0 && selectedGroup">
-                                <p>No assigned badges</p>
-                            </ng-container>
-                        </div>
-
-                        <!-- User -->
-                        <div class="badges-box" *ngIf="userAssign === true">
-                            <label for="user_badges" *ngIf="selectedUser?.name != undefined">
-                                Assigned Badges {{ selectedUser?.real_name }}
-                            </label>
-                            <label for="user_badges" *ngIf="selectedUser?.name == undefined">
-                                Assigned Badges
-                            </label>
-                            <div class="viewer-container">
-                                <ng-container *ngIf="userBadges.length > 0 && selectedUser">
-                                    <div class="user_badges_scroll">
-                                        <div class="badge-card" *ngFor="let badge of userBadges">
-                                            <tim-badge
-                                                    title="{{badge.title}}"
-                                                    color="{{badge.color}}"
-                                                    shape="{{badge.shape}}"
-                                                    [image]="badge.image">
-                                            </tim-badge>
-                                        </div>
-                                    </div>
-                                </ng-container>
-                                <ng-container *ngIf="selectedUser && userBadges.length == 0">
-                                    <p>No assigned badges</p>
-                                </ng-container>
-                            </div>
+                    
+                    <!-- Message Box -->
+                    <div class="message-box">
+                        <label for="message">Message</label>
+                        <textarea id="message" 
+                                  rows="4" 
+                                  maxlength="200"
+                                  [(ngModel)]="message">
+                        </textarea>
+                        <div class="char-counter">
+                          {{ message.length }} / 200 characters
                         </div>
                     </div>
-
+                    
                     <tim-alert *ngFor="let alert of alerts; let i = index" [severity]="alert.type" [closeable]="true"
                                (closing)="badgeService.closeAlert(this.alerts, i)">
                         <div [innerHTML]="alert.msg"></div>
                     </tim-alert>
-
+    
                     <div class="button-container">
                         <button (click)="assignBadge(message)"
                                 [disabled]="selectedUsers.length === 0 && selectedGroups.length === 0">
