@@ -47,11 +47,11 @@ class TestBadges(BrowserTest):
 
     def open_badge_form(self):
         """Opens the badge creation form by clicking the showBadgeForm button."""
-        self.wait_until_present_and_vis("button#showBadgeForm")
-        open_button = self.find_element_and_move_to("button#showBadgeForm")
+        self.wait_until_present_and_vis("#button showBadgeForm")
+        open_button = self.find_element_and_move_to("#button showBadgeForm")
         open_button.click()
         # Wait for the form to appear by checking the title input.
-        self.wait_until_present_and_vis("input#title")
+        self.wait_until_present_and_vis("#input title")
 
     def fill_badge_form(
         self,
@@ -63,23 +63,23 @@ class TestBadges(BrowserTest):
     ):
         """Fills in the badge form using provided data."""
         # Fill in the title.
-        title_input = self.find_element("input#title")
+        title_input = self.find_element("#input title")
         title_input.clear()
         title_input.send_keys(title)
 
         # Fill in the description.
-        desc_input = self.find_element("textarea#description")
+        desc_input = self.find_element("#textarea description")
         desc_input.clear()
         desc_input.send_keys(description)
 
         # Choose an image from the select.
-        image_select = self.find_element("select#image")
+        image_select = self.find_element("#select image")
         image_options = self.find_elements_by_tag_name("option", parent=image_select)
         if len(image_options) > image_index:
             image_options[image_index].click()
 
         # Choose a color from the select.
-        color_select = self.find_element("select#color")
+        color_select = self.find_element("#select color")
         color_options = self.find_elements_by_tag_name("option", parent=color_select)
         if len(color_options) > color_index:
             color_options[color_index].click()
@@ -155,7 +155,7 @@ class TestBadges(BrowserTest):
         )
 
         # Trigger blur to force validation.
-        title_input = self.find_element("input#title")
+        title_input = self.find_element("#input title")
         title_input.click()
         title_input.send_keys(" ")
         title_input.clear()
@@ -185,7 +185,7 @@ class TestBadges(BrowserTest):
         cancel_button = self.find_element("#cancelButton")
         cancel_button.click()
         # Wait for the form (id="badgeForm") to disappear.
-        self.wait_until_hidden("form#badgeForm")
+        self.wait_until_hidden("#form badgeForm")
 
         # Verify that no badge card contains the title "Unwanted Badge".
         badge_cards = self.drv.find_elements(By.CSS_SELECTOR, "div.badge-card")
@@ -219,12 +219,12 @@ class TestBadges(BrowserTest):
         ActionChains(self.drv).move_to_element(badge_component).click().perform()
 
         # Click the Edit Badge button.
-        self.wait_until_present_and_vis("button#editButton")
-        edit_button = self.find_element("button#editButton")
+        self.wait_until_present_and_vis("#button editButton")
+        edit_button = self.find_element("#button editButton")
         edit_button.click()
 
         # Wait until the form loads with current badge data.
-        self.wait_until_present_and_vis("input#title")
+        self.wait_until_present_and_vis("#input title")
 
         # Update the badge details.
         self.fill_badge_form(
@@ -248,7 +248,7 @@ class TestBadges(BrowserTest):
         # Trigger a validation error by leaving the title blank.
         self.open_badge_form()
         self.fill_badge_form(title="", description="Missing title to trigger alert.")
-        title_input = self.find_element("input#title")
+        title_input = self.find_element("#input title")
         title_input.click()
         title_input.send_keys(" ")
         title_input.clear()
