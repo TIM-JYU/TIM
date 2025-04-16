@@ -12,6 +12,7 @@ import {GroupService} from "tim/plugin/group-dashboard/group.service";
     selector: "tim-group-dashboard",
     template: `
         <ng-container>
+            <div class="tim-dashboard-header">
     <h1 class="name-header">
     {{ displayName }}'s dashboard
     <span *ngIf="nameJustUpdated" class="name-updated-icon">✔️</span>
@@ -73,6 +74,7 @@ import {GroupService} from "tim/plugin/group-dashboard/group.service";
             (groupNameChange)="onGroupNameChange($event)">
         </tim-group-name>
     </div>
+                </div>
 </ng-container>
 `,
     styleUrls: ["./group-dashboard.component.scss"],
