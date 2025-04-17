@@ -287,7 +287,15 @@ export class BadgeGiverComponent implements OnInit {
     }
 
     get searchResults(): IUser[] {
-        return Array.from(this.filteredUsersByGroup.values()).flat();
+        const seen = new Map<number, IUser>();
+        for (const users of this.filteredUsersByGroup.values()) {
+            for (const user of users) {
+                if (!seen.has(user.id)) {
+                    seen.set(user.id, user);
+                }
+            }
+        }
+        return Array.from(seen.values());
     }
 
     private addListeners() {
