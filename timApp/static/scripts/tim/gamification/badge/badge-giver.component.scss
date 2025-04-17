@@ -1,32 +1,42 @@
 .group-users{
-  margin-left: 1em;
-  margin-top: 1em;
+  border: 2px solid #0F4096;
+  border-radius: 0.5em;
+  background-color: #f0f4ff;
+  padding-left: 2px;
+  min-height: 100px;
 }
 
 .list-scroll-container{
   max-height: 300px;
   overflow-y: auto;
   padding-right: 8px;
-  border: 1px black solid;
+  border: 2px solid #0F4096;
+  border-radius: 0.5em;
+  background-color: #f0f4ff;
   padding-left: 2px;
 }
 
 .user-name {
   display: block;
+  padding-left: 1em;
 }
 
 .option-item {
     display: flex;
     align-items: flex-start;
-
+    padding-left: 1.5em;
 }
 .group-item {
     display: flex;
     align-items: flex-start;
 }
 
+.group {
+  margin-bottom: 1em;
+}
+
 .user-checkbox {
-  width: 10%;
+  width: 5%;
 }
 
 .group-checkbox{
@@ -78,11 +88,11 @@ h2, h3 {
   margin-bottom: 1em;
 }
 
-.message-container {
-  display: flex;
-  gap: 20px;
-  align-items: flex-start;
-}
+//.message-container {
+//  display: flex;
+//  gap: 20px;
+//  align-items: flex-start;
+//}
 
 .message-container > * {
   flex: 1;
@@ -90,9 +100,9 @@ h2, h3 {
   min-width: 200px;
 }
 
-.message-box, .badges-box {
-  flex: 1;
-}
+//.message-box, .badges-box {
+//  flex: 1;
+//}
 
 textarea {
   width: 100%;
@@ -211,6 +221,13 @@ button:disabled {
   align-items: center;
   background-color: #f0f4ff;
   margin-bottom: 2em;
+}
+
+.badges-preview {
+    border: 2px solid #0F4096;
+    border-radius: 0.5em;
+    background-color: #f0f4ff;
+    padding-left: 0.5em;
 }
 
 .viewer-container {

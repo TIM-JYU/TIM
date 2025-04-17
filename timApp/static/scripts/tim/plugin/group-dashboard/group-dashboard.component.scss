@@ -1,3 +1,14 @@
+.tim-dashboard {
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 30px 200px #0000cc38, 0 0 20px #0F0C0020;
+    padding: 1em;
+    border-radius: 1em;
+    margin: 2em 0 2em 0;
+    width: 100%;
+    background-color: #fff;
+}
+
 .member-list {
     display: flex;
     flex-direction: column;
@@ -9,11 +20,12 @@
     max-height: 60px;
     overflow: visible;
     padding: 10px;
+    margin-bottom: 2em;
     display: flex;
     align-items: center;
-    background-color: #f9f9f9;
-    border: 2px solid lightskyblue;
-    border-radius: 10px;
+    background-color: #f0f4ff;
+    border: 2px solid #0F4096;
+    border-radius: 0.5em;
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
     transition: transform 0.2s, box-shadow 0.2s; /* Member card's hovering effect */
     position: relative;
@@ -38,13 +50,22 @@
     margin-right: 10px;
 }
 
+.group-badges {
+    display: inline-flex;
+    margin: 0;
+    justify-content: center;
+    align-items: last baseline;
+}
+
 .badges {
     display: flex;
+    align-items: last baseline;
 }
 
 .badge {
     background-color: transparent;
-    margin: 5px;
+    margin: 0 -5px;
+    padding: 0;
     border: none;
     box-shadow: none;
     transform: scale(0.3);
@@ -60,8 +81,7 @@
 
 .dashboard-section {
     background: #ffffff;
-    border: 2px solid darkblue;
-    border-left: 3px solid darkblue;
+    border: 2px solid #0F4096;
     border-radius: 12px;
     padding: 1.5rem;
     margin-bottom: 2rem;
@@ -81,6 +101,22 @@
     color: green;
     animation: popIn 0.4s ease-out;
 }
+
+.stat-summary {
+    margin-bottom: 1rem;
+    font-size: 1.5rem;
+    line-height: 1.6;
+}
+
+.stat-summary p {
+    margin: 0.25rem 0;
+}
+
+.stat-visuals {
+    opacity: 0.7;
+    font-style: italic;
+}
+
 
 @keyframes popIn {
     0% {
