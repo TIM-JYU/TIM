@@ -136,6 +136,7 @@ input:focus, select:focus, textarea:focus {
   justify-content: space-between;
   gap: 1em;
   margin-top: 1.5em;
+  font-weight: bold;
 }
 
 button {
@@ -209,6 +210,7 @@ button:disabled {
   justify-content: space-between;
   gap: 1em;
   margin-bottom: 1em;
+  font-weight: bold;
 }
 
 .preview {

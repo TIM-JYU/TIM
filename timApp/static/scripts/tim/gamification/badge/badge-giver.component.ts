@@ -182,7 +182,7 @@ import {GroupService} from "tim/plugin/group-dashboard/group.service";
                     <div class="button-container">
                         <button (click)="assignBadge(message)"
                                 [disabled]="selectedUsers.length === 0 && selectedGroups.length === 0">
-                            Assign Badge
+                            Assign
                         </button>
                         <button id="cancelGiveButton" (click)="emptyForm()">Cancel</button>
                     </div>
