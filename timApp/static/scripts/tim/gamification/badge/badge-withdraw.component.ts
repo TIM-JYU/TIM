@@ -24,7 +24,7 @@ import {GroupService} from "tim/plugin/group-dashboard/group.service";
     template: `
         <ng-container *ngIf="hasPermission; else noPermissionView">
             <div class="badge-withdraw">
-                <h2>View users or groups</h2>
+                <h2>View users or groups ({{badgegroupContext}})</h2>
                 
                 <ng-container *ngIf="!teacherPermission">
                     <tim-alert *ngFor="let alert of alerts; let i = index" [severity]="alert.type" [closeable]="true" (closing)="badgeService.closeAlert(this.alerts, i)">
@@ -77,7 +77,7 @@ import {GroupService} from "tim/plugin/group-dashboard/group.service";
                                         </div>
                                     </div>
                                 </ng-container>
-                                <ng-container *ngIf="userBadges.length === 0 && selectedUser">
+                                <ng-container *ngIf="!hasBadges && selectedUser">
                                     <p>{{selectedUser.real_name}}</p>
                                     <p>No badges assigned</p>
                                 </ng-container>
@@ -119,7 +119,7 @@ import {GroupService} from "tim/plugin/group-dashboard/group.service";
                                     </div>
                                 </ng-container>
                         
-                                <ng-container *ngIf="groupBadges.length === 0 && selectedGroup">
+                                <ng-container *ngIf="!hasBadges && selectedGroup">
                                     <p>{{selectedGroup.name}}</p>
                                     <p>No badges assigned</p>
                                 </ng-container>
@@ -163,7 +163,7 @@ export class BadgeWithdrawComponent implements OnInit {
     teacherPermission = false;
     hasPermission: boolean = true;
     showComponent: boolean = true;
-
+    hasBadges: boolean = false;
     users: IUser[] = [];
     selectedUser?: IUser | null = null;
     userBadges: IBadge[] = [];
@@ -254,6 +254,7 @@ export class BadgeWithdrawComponent implements OnInit {
         this.selectedGroup = null;
         this.selectedUser = null;
         this.selectedBadge = null;
+        this.hasBadges = false;
         this.userAssign = bool;
     }
 
@@ -328,6 +329,7 @@ export class BadgeWithdrawComponent implements OnInit {
     async fetchUserBadges(userId?: number) {
         if (userId == undefined) {
             console.error("userid was undefined");
+            this.hasBadges = false;
             return;
         }
 
@@ -338,10 +340,12 @@ export class BadgeWithdrawComponent implements OnInit {
 
         if (!this.selectedUser) {
             console.error("Failed to retrieve the user's personal group ID.");
+            this.hasBadges = false;
             return;
         }
         if (!this.badgegroupContext) {
             console.error("Failed to retrieve the context group.");
+            this.hasBadges = false;
             return;
         }
         const pGroup: IPersonalGroup =
@@ -352,15 +356,18 @@ export class BadgeWithdrawComponent implements OnInit {
             pGroup["1"].id,
             this.badgegroupContext
         );
+        this.hasBadges = this.userBadges.length > 0;
     }
 
     async fetchGroupBadges(groupId?: number) {
         if (groupId == undefined) {
             console.error("groupid was undefined");
+            this.hasBadges = false;
             return;
         }
         if (!this.badgegroupContext) {
             console.error("Failed to retrieve the context group.");
+            this.hasBadges = false;
             return;
         }
 
@@ -373,6 +380,7 @@ export class BadgeWithdrawComponent implements OnInit {
             groupId,
             this.badgegroupContext
         );
+        this.hasBadges = this.groupBadges.length > 0;
     }
 
     /**
