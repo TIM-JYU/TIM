@@ -53,7 +53,7 @@ import {GroupService} from "tim/plugin/group-dashboard/group.service";
                 <div *ngIf="userAssign === true" class="form-group">
                     <label>Users</label>
                     
-                    <div class="search-wrapper" style="position: relative;">
+                    <div class="search-wrapper">
                       <div class="search-users">
                         <label for="user-search">Search user:</label>
                         <input type="search" id="user-search" name="q"
@@ -102,6 +102,26 @@ import {GroupService} from "tim/plugin/group-dashboard/group.service";
 
                 <div *ngIf="userAssign === false" class="form-group">
                     <label>Groups</label>
+                    
+                    <div class="search-wrapper">
+                      <div class="search-groups">
+                        <label for="group-search">Search group:</label>
+                        <input type="search" id="group-search" name="q"
+                               [(ngModel)]="groupSearchTerm"
+                               (ngModelChange)="filterGroups()" />
+                      </div>
+                    
+                      <div *ngIf="searchingGroups" class="search-results">
+                          <div *ngFor="let group of filteredGroups" class="option-item">
+                            <input type="checkbox"
+                                   [checked]="isSelected(group, selectedGroups)"
+                                   (change)="toggleGroupSelection(group, $event)" />
+                            <span class="searched-name">{{ groupPrettyNames.get(group.id) || group.name }}</span>
+                          </div>
+                      </div>
+                        
+                    </div>
+                    
                     <div>
                         <input class="user-checkbox" type="checkbox" (change)="toggleSelectAllItems($event, selectedGroups, groups)">Select all
                         groups
@@ -145,6 +165,7 @@ import {GroupService} from "tim/plugin/group-dashboard/group.service";
 
                         <!-- Assigned Badges -->
                         <!-- Group -->
+                        <!--
                         <div class="badges-box" *ngIf="userAssign === false">
                             <label for="user_badges">
                                 Assigned Badges {{ selectedGroup ? selectedGroup.name : '' }}
@@ -165,8 +186,9 @@ import {GroupService} from "tim/plugin/group-dashboard/group.service";
                                 <p>No assigned badges</p>
                             </ng-container>
                         </div>
-
+                        -->
                         <!-- User -->
+                        <!--
                         <div class="badges-box" *ngIf="userAssign === true">
                             <label for="user_badges" *ngIf="selectedUser?.name != undefined">
                                 Assigned Badges {{ selectedUser?.real_name }}
@@ -192,6 +214,7 @@ import {GroupService} from "tim/plugin/group-dashboard/group.service";
                                 </ng-container>
                             </div>
                         </div>
+                        -->
                     </div>
 
                     <tim-alert *ngFor="let alert of alerts; let i = index" [severity]="alert.type" [closeable]="true"
@@ -249,6 +272,9 @@ export class BadgeGiverComponent implements OnInit {
     userSearchTerm: string = "";
     filteredUsersByGroup = new Map<number, IUser[]>();
     searchingUsers = false;
+    groupSearchTerm: string = "";
+    searchingGroups = false;
+    filteredGroups: IGroup[] = [];
 
     constructor(
         private http: HttpClient,
@@ -282,6 +308,24 @@ export class BadgeGiverComponent implements OnInit {
             if (filtered.length > 0 || searchTerm === "") {
                 this.filteredUsersByGroup.set(groupId, filtered);
             }
+        }
+    }
+
+    filterGroups() {
+        const searchTerm = this.groupSearchTerm.trim().toLowerCase();
+        this.searchingGroups = searchTerm.length > 0;
+
+        if (searchTerm === "") {
+            this.filteredGroups = [...this.groups];
+        } else {
+            this.filteredGroups = this.groups.filter(
+                (group) =>
+                    group.name.toLowerCase().includes(searchTerm) ||
+                    this.groupPrettyNames
+                        .get(group.id)
+                        ?.toLowerCase()
+                        .includes(searchTerm)
+            );
         }
     }
 

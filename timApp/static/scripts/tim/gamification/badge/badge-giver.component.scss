@@ -259,7 +259,11 @@ button:disabled {
   margin: 0.5em 0;
 }
 
-.search-users {
+.search-wrapper {
+  position: relative;
+}
+
+.search-users, .search-groups {
   display: flex;
   align-items: center;
   gap: 0.5rem;
