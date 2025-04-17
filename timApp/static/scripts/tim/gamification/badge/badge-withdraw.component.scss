@@ -1,3 +1,7 @@
+.group {
+  margin-bottom: 1em;
+}
+
 .users-list {
     background-color: #f0f4ff;
     border: 2px solid #0F4096;
@@ -26,6 +30,7 @@
   justify-content: space-between;
   gap: 1em;
   margin-bottom: 1em;
+  font-weight: bold;
 }
 
 .option-item {
@@ -256,4 +261,5 @@ button:disabled, #cancelButton:disabled, #cancelButton:disabled:hover {
   justify-content: space-between;
   gap: 1em;
   margin-top: 1.5em;
+  font-weight: bold;
 }

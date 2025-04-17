@@ -47,7 +47,8 @@ import {GroupService} from "tim/plugin/group-dashboard/group.service";
                             <label>Users</label>
                             <div class="users-list">
                                 <div class="list-scroll-container" (wheel)="onScrollList($event)">
-                                    <div *ngFor="let group of groups">
+                                    
+                                    <div *ngFor="let group of groups" class="group">
                                         <span *ngIf="groupUsersMap.get(group.id)?.length">
                                             {{group.description}}
                                         </span>
@@ -57,6 +58,14 @@ import {GroupService} from "tim/plugin/group-dashboard/group.service";
                                             </span>
                                         </div>
                                     </div>
+                                    
+                                    <span>Users with no group</span>
+                                    <div *ngFor="let user of filteredUsers" class="option-item">
+                                        <span class="user-name" (click)="selectedUser = user; fetchUserBadges(user.id)" [ngClass]="{'selected-option': selectedUser?.id === user.id}">
+                                            {{user.real_name}}
+                                        </span>
+                                    </div>
+                                    
                                 </div>
                             </div>
                             <div class="badges-preview">
@@ -141,7 +150,7 @@ import {GroupService} from "tim/plugin/group-dashboard/group.service";
                                     <button id="assignButton" (click)="removeBadge(selectedBadge?.badgegiven_id)" 
                                             [disabled]="isWithdrawButtonDisabled()"
                                             [title]="isWithdrawButtonDisabled() ? 'Select badge to withdraw' : ''">
-                                            Withdraw Badge
+                                            Withdraw
                                     </button>
                                 <button id="cancelButton" (click)="emptyForm()">Cancel</button>
                             </div>
@@ -164,8 +173,10 @@ export class BadgeWithdrawComponent implements OnInit {
     hasPermission: boolean = true;
     showComponent: boolean = true;
     hasBadges: boolean = false;
+
     users: IUser[] = [];
     selectedUser?: IUser | null = null;
+    filteredUsers: IUser[] = [];
     userBadges: IBadge[] = [];
 
     badges: any = [];
@@ -266,6 +277,15 @@ export class BadgeWithdrawComponent implements OnInit {
                 await this.groupService.getUsersFromGroup(group.name)
             );
         }
+
+        const groupedUserIds = new Set<number>(
+            Array.from(this.groupUsersMap.values())
+                .flat()
+                .map((user) => user.id)
+        );
+        this.filteredUsers = this.users.filter(
+            (user) => !groupedUserIds.has(user.id)
+        );
     }
     /**
      * Hakee käyttäjät, jotka kuuluvat badgegroupContext ryhmään. badgegroupContext annetaan TIM:n puolelta.
