@@ -52,6 +52,25 @@ import {GroupService} from "tim/plugin/group-dashboard/group.service";
 
                 <div *ngIf="userAssign === true" class="form-group">
                     <label>Users</label>
+                    
+                    <div class="search-wrapper">
+                      <div class="search-users">
+                        <label for="user-search">Search user:</label>
+                        <input type="search" id="user-search" name="q"
+                               [(ngModel)]="userSearchTerm"
+                               (ngModelChange)="filterUsers()" />
+                      </div>
+                    
+                      <div *ngIf="searchingUsers" class="search-results">
+                        <div *ngFor="let user of searchResults" class="option-item">
+                          <input type="checkbox"
+                                 [checked]="isSelected(user, selectedUsers)"
+                                 (change)="toggleUserSelection(user, $event)" />
+                          <span class="searched-name">{{ user.real_name }}</span>
+                        </div>
+                      </div>
+                    </div>
+                    
                     <div>
                         <input class="user-checkbox" type="checkbox" (change)="toggleSelectAllItems($event, selectedUsers, users)">Select all
                         users
@@ -84,6 +103,26 @@ import {GroupService} from "tim/plugin/group-dashboard/group.service";
                
                 <div *ngIf="userAssign === false" class="form-group">
                     <label>Groups</label>
+                    
+                    <div class="search-wrapper">
+                      <div class="search-groups">
+                        <label for="group-search">Search group:</label>
+                        <input type="search" id="group-search" name="q"
+                               [(ngModel)]="groupSearchTerm"
+                               (ngModelChange)="filterGroups()" />
+                      </div>
+                    
+                      <div *ngIf="searchingGroups" class="search-results">
+                          <div *ngFor="let group of filteredGroups" class="option-item">
+                            <input type="checkbox"
+                                   [checked]="isSelected(group, selectedGroups)"
+                                   (change)="toggleGroupSelection(group, $event)" />
+                            <span class="searched-name">{{ groupPrettyNames.get(group.id) || group.name }}</span>
+                          </div>
+                      </div>
+                        
+                    </div>
+                    
                     <div>
                         <input class="group-checkbox" type="checkbox" (change)="toggleSelectAllItems($event, selectedGroups, groups)">Select all 
                         groups
@@ -187,6 +226,13 @@ export class BadgeGiverComponent implements OnInit {
     private subscription: Subscription = new Subscription();
     @Output() cancelEvent = new EventEmitter<void>();
 
+    userSearchTerm: string = "";
+    filteredUsersByGroup = new Map<number, IUser[]>();
+    searchingUsers = false;
+    groupSearchTerm: string = "";
+    searchingGroups = false;
+    filteredGroups: IGroup[] = [];
+
     constructor(
         private http: HttpClient,
         protected badgeService: BadgeService,
@@ -204,6 +250,44 @@ export class BadgeGiverComponent implements OnInit {
                 this.showComponent = true;
             }
         }
+    }
+
+    filterUsers() {
+        this.filteredUsersByGroup.clear();
+
+        const searchTerm = this.userSearchTerm.trim().toLowerCase();
+        this.searchingUsers = searchTerm.length > 0;
+
+        for (const [groupId, users] of this.groupUsersMap.entries()) {
+            const filtered = users.filter((user) =>
+                user.real_name!.toLowerCase().includes(searchTerm)
+            );
+            if (filtered.length > 0 || searchTerm === "") {
+                this.filteredUsersByGroup.set(groupId, filtered);
+            }
+        }
+    }
+
+    filterGroups() {
+        const searchTerm = this.groupSearchTerm.trim().toLowerCase();
+        this.searchingGroups = searchTerm.length > 0;
+
+        if (searchTerm === "") {
+            this.filteredGroups = [...this.groups];
+        } else {
+            this.filteredGroups = this.groups.filter(
+                (group) =>
+                    group.name.toLowerCase().includes(searchTerm) ||
+                    this.groupPrettyNames
+                        .get(group.id)
+                        ?.toLowerCase()
+                        .includes(searchTerm)
+            );
+        }
+    }
+
+    get searchResults(): IUser[] {
+        return Array.from(this.filteredUsersByGroup.values()).flat();
     }
 
     private addListeners() {
@@ -315,7 +399,6 @@ export class BadgeGiverComponent implements OnInit {
         const isChecked = (event.target as HTMLInputElement).checked;
         if (isChecked) {
             this.emptyTable(selectedItems);
-            console.log("items: ", itemList);
             for (const item of itemList) {
                 selectedItems.push(item);
             }
@@ -389,6 +472,7 @@ export class BadgeGiverComponent implements OnInit {
                 await this.groupService.getUsersFromGroup(group.name)
             );
         }
+        this.filterUsers();
     }
     /**
      * Tarkistaa onko annettu parametri undefined. Jos true niin lähdetään pois.
