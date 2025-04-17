@@ -157,7 +157,7 @@ def get_badge(badge_id: int) -> Response:
     """
     badge = run_sql(select(Badge).filter_by(id=badge_id)).scalars().first()
     if badge is None:
-        raise NotExist(f'Badge of id "{badge_id}" not found')
+        raise NotExist(f'Badge with id "{badge_id}" not found')
     badge_json = badge.to_json()
     return json_response(badge_json)
 
@@ -240,7 +240,7 @@ def modify_badge(
     """
     context_group_object = UserGroup.get_by_id(context_group)
     if not context_group_object:
-        raise NotExist(f'User group of id "{context_group}" not found')
+        raise NotExist(f'User group with id "{context_group}" not found')
     d = DocEntry.find_by_path(
         f"groups/{context_group_object.name}"
     )  # TODO: Make this unambiguous.
@@ -259,7 +259,7 @@ def modify_badge(
     }
     old_badge = run_sql(select(Badge).filter_by(id=badge_id)).scalars().first()
     if old_badge is None:
-        raise NotExist(f'Badge of id "{badge_id}" not found')
+        raise NotExist(f'Badge with id "{badge_id}" not found')
     Badge.query.filter_by(id=badge_id).update(new_badge)
     db.session.commit()
     if current_app.config["BADGE_LOG_FILE"]:
@@ -290,7 +290,7 @@ def deactivate_badge(badge_id: int, context_group: str) -> Response:
     """
     d = DocEntry.find_by_path(f"groups/{context_group}")  # TODO: Make this unambiguous.
     if not d:
-        raise NotExist(f'User group of id "{context_group}" not found')
+        raise NotExist(f'User group with id "{context_group}" not found')
     verify_teacher_access(d)
     new_badge = {
         "active": False,
@@ -299,7 +299,7 @@ def deactivate_badge(badge_id: int, context_group: str) -> Response:
     }
     old_badge = run_sql(select(Badge).filter_by(id=badge_id)).scalars().first()
     if old_badge is None:
-        raise NotExist(f'Badge of id "{badge_id}" not found')
+        raise NotExist(f'Badge with id "{badge_id}" not found')
     Badge.query.filter_by(id=badge_id).update(new_badge)
     db.session.commit()
     if current_app.config["BADGE_LOG_FILE"]:
@@ -347,7 +347,6 @@ def reactivate_badge(badge_id: int, context_group: str) -> Response:
 
 
 # TODO: Check access rights and create tests for that.
-# TODO: Handle errors.
 @badges_blueprint.get("/groups_badges/<group_id>/<context_group>")
 def get_groups_badges(group_id: int, context_group: str) -> Response:
     """
@@ -356,6 +355,9 @@ def get_groups_badges(group_id: int, context_group: str) -> Response:
     :param context_group: Name of the context group
     :return: Badges in json response format
     """
+    usergroup = UserGroup.get_by_id(group_id)
+    if not usergroup:
+        raise NotExist(f'User group with id "{group_id}" not found')
     current_user = get_current_user_object()
     in_group = check_group_member(current_user, group_id)
     if not in_group:
@@ -513,7 +515,6 @@ def get_groups_badges(group_id: int, context_group: str) -> Response:
 
 # TODO: Is this an unnecessary route? Can badge_holders-route do the same?
 # TODO: Do access right checks and create tests for that.
-# TODO: Handle errors.
 @badges_blueprint.get("/badge_given/<badge_id>")
 def get_badge_given(badge_id: int) -> Response:
     """
@@ -521,6 +522,9 @@ def get_badge_given(badge_id: int) -> Response:
     :param badge_id: ID of the badge
     :return: BadgeGivens in json response format
     """
+    badge = Badge.get_by_id(badge_id)
+    if not badge:
+        raise NotExist(f'Badge with id "{badge_id}" not found')
     badge_given = (
         run_sql(
             select(BadgeGiven)
@@ -541,6 +545,9 @@ def get_badge_holders(badge_id: int) -> Response:
     :param badge_id: Badge ID
     :return: list of users and list of usergroups in json format
     """
+    badge = Badge.get_by_id(badge_id)
+    if not badge:
+        raise NotExist(f'Badge with id "{badge_id}" not found')
     badges_given = (
         run_sql(
             select(BadgeGiven).filter(
@@ -575,7 +582,6 @@ def get_badge_holders(badge_id: int) -> Response:
     )
 
 
-# TODO: Handle errors.
 @badges_blueprint.post("/give_badge")
 def give_badge(
     context_group: str,
@@ -591,6 +597,12 @@ def give_badge(
     :param message: Message to give to the usergroup when the badge is given
     :return: ok response
     """
+    badge = Badge.get_by_id(badge_id)
+    if not badge:
+        raise NotExist(f'Badge with id "{badge_id}" not found')
+    usergroup = UserGroup.get_by_id(group_id)
+    if not usergroup:
+        raise NotExist(f'User group with id "{group_id}" not found')
     d = DocEntry.find_by_path(f"groups/{context_group}")  # TODO: Make this unambiguous.
     if not d:
         raise NotExist(f'User group "{context_group}" not found')
@@ -620,7 +632,6 @@ def give_badge(
     return json_response(badge_given.to_json(), 200)
 
 
-# TODO: Handle errors.
 @badges_blueprint.post("/withdraw_badge")
 def withdraw_badge(badge_given_id: int, context_group: str) -> Response:
     """
@@ -629,6 +640,9 @@ def withdraw_badge(badge_given_id: int, context_group: str) -> Response:
     :param badge_given_id: ID of the badgegiven
     :return: ok response
     """
+    badge_given = BadgeGiven.get_by_id(badge_given_id)
+    if not badge_given:
+        raise NotExist(f'Given badge with id "{badge_given_id}" not found')
     d = DocEntry.find_by_path(f"groups/{context_group}")  # TODO: Make this unambiguous.
     if not d:
         raise NotExist(f'User group "{context_group}" not found')
@@ -653,7 +667,6 @@ def withdraw_badge(badge_given_id: int, context_group: str) -> Response:
     return json_response(badge_given, 200)
 
 
-# TODO: Handle errors.
 @badges_blueprint.post("/withdraw_all_badges")
 def withdraw_all_badges(
     badge_id: int, usergroup_id: int, context_group: str
@@ -665,6 +678,12 @@ def withdraw_all_badges(
     :param badge_id: ID of the badge
     :return: ok response
     """
+    badge = Badge.get_by_id(badge_id)
+    if not badge:
+        raise NotExist(f'Badge with id "{badge_id}" not found')
+    usergroup = UserGroup.get_by_id(usergroup_id)
+    if not usergroup:
+        raise NotExist(f'User group with id "{usergroup_id}" not found')
     d = DocEntry.find_by_path(f"groups/{context_group}")  # TODO: Make this unambiguous.
     if not d:
         raise NotExist(f'User group "{context_group}" not found')
@@ -726,6 +745,7 @@ def undo_withdraw_badge(badge_given_id: int, context_group: str) -> Response:
 
 
 # TODO: Create tests for this route.
+# TODO: Handle errors
 # TODO: Do access right checks for this route.
 @badges_blueprint.get("/podium/<group_name_prefix>")
 def podium(group_name_prefix: str) -> Response:
@@ -757,7 +777,6 @@ def podium(group_name_prefix: str) -> Response:
 
 
 # TODO: Move this route to better place maybe.
-# TODO: Handle errors.
 @badges_blueprint.get("/subgroups/<group_name_prefix>")
 def get_subgroups(group_name_prefix: str) -> Response:
     """
@@ -792,7 +811,6 @@ def get_subgroups(group_name_prefix: str) -> Response:
 
 # TODO: Maybe do access right checks and create tests for that.
 # TODO: Move this route to better place maybe.
-# TODO: Handle errors.
 @badges_blueprint.get("/users_subgroups/<user_id>/<group_name_prefix>")
 def get_users_subgroups(user_id: int, group_name_prefix: str) -> Response:
     """
@@ -802,6 +820,12 @@ def get_users_subgroups(user_id: int, group_name_prefix: str) -> Response:
     :param group_name_prefix: Prefix of the usergroups
     :return: List of usergroups
     """
+    user = User.get_by_id(user_id)
+    if not user:
+        raise NotExist(f'User with id "{user_id}" not found')
+    usergroup = UserGroup.get_by_name(group_name_prefix)
+    if not usergroup:
+        raise NotExist(f'User group "{group_name_prefix}" not found')
     usergroup_memberships = (
         run_sql(
             select(UserGroupMember).filter(
@@ -838,7 +862,6 @@ def get_users_subgroups(user_id: int, group_name_prefix: str) -> Response:
 
 
 # TODO: Move this route to better place maybe.
-# TODO: Handle errors.
 @badges_blueprint.get("/user_and_personal_group/<name>")
 def users_personal_group(name: str) -> Response:
     """
@@ -854,7 +877,6 @@ def users_personal_group(name: str) -> Response:
 
 
 # TODO: Move this route to better place maybe.
-# TODO: Handle errors.
 @badges_blueprint.get("/usergroups_members/<usergroup_name>")
 def usergroups_members(usergroup_name: str) -> Response:
     """

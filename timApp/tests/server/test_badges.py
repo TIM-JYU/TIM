@@ -873,6 +873,16 @@ class BadgeTestErroneousData(TimRouteTest):
             },
             expect_status=200,
         )
+        self.post(
+            f"/give_badge",
+            data={
+                "context_group": "it_27",
+                "group_id": self.test_user_1.get_personal_group().id,
+                "badge_id": 1,
+                "message": "Congratulations!",
+            },
+            expect_status=200,
+        )
 
         # fetch all badges in context with erroneous data
         self.get(
@@ -909,7 +919,7 @@ class BadgeTestErroneousData(TimRouteTest):
                 "description": "Great coordination",
             },
             expect_status=404,
-            expect_content='Badge of id "2" not found',
+            expect_content='Badge with id "2" not found',
         )
         self.post(
             f"/modify_badge",
@@ -923,7 +933,7 @@ class BadgeTestErroneousData(TimRouteTest):
                 "description": "Great coordination",
             },
             expect_status=404,
-            expect_content='User group of id "100" not found',
+            expect_content='User group with id "100" not found',
         )
 
         # delete a badge with different erroneous data
@@ -934,7 +944,7 @@ class BadgeTestErroneousData(TimRouteTest):
                 "context_group": it_27.name,
             },
             expect_status=404,
-            expect_content='Badge of id "2" not found',
+            expect_content='Badge with id "2" not found',
         )
         self.post(
             f"/deactivate_badge",
@@ -943,21 +953,151 @@ class BadgeTestErroneousData(TimRouteTest):
                 "context_group": 100,
             },
             expect_status=404,
-            expect_content='User group of id "100" not found',
+            expect_content='User group with id "100" not found',
         )
 
-    # TODO: Test these routes with erroneous data
-    #   groups_badges
-    #   badge_given
-    #   badge_holders
-    #   give_badge
-    #   withdraw_badge
-    #   withdraw_all_badges
-    #   undo_withdraw_badge
-    #   podium
-    #   subgroups
-    #   users_subgroups
-    #   user_and_personal_group
-    #   usergroups_members
-    #   current_group_name
-    #   editGroupName
+        # fetch groups badges with different erroneous data
+        self.get(
+            f"/groups_badges/100/{it_27.name}",
+            expect_status=404,
+            expect_content='User group with id "100" not found',
+        )
+        self.get(
+            f"/groups_badges/{self.test_user_1.get_personal_group().id}/nonexistent_group",
+            expect_status=400,
+            expect_content='User group "nonexistent_group" not found',
+        )
+
+        # use badge_given-route with erroneous data
+        self.get(
+            "/badge_given/100",
+            expect_status=404,
+            expect_content='Badge with id "100" not found',
+        )
+
+        # use badge_holders-route with erroneous data
+        self.get(
+            "/badge_holders/100",
+            expect_status=404,
+            expect_content='Badge with id "100" not found',
+        )
+
+        # give a badge with different erroneous data
+        self.post(
+            f"/give_badge",
+            data={
+                "context_group": "nonexistent_group",
+                "group_id": self.test_user_1.get_personal_group().id,
+                "badge_id": 1,
+                "message": "You've done your best!",
+            },
+            expect_status=404,
+            expect_content='User group "nonexistent_group" not found',
+        )
+        self.post(
+            f"/give_badge",
+            data={
+                "context_group": it_27.name,
+                "group_id": 100,
+                "badge_id": 1,
+                "message": "You've done your best!",
+            },
+            expect_status=404,
+            expect_content='User group with id "100" not found',
+        )
+        self.post(
+            f"/give_badge",
+            data={
+                "context_group": it_27.name,
+                "group_id": self.test_user_1.get_personal_group().id,
+                "badge_id": 100,
+                "message": "You've done your best!",
+            },
+            expect_status=404,
+            expect_content='Badge with id "100" not found',
+        )
+
+        # withdraw a badge with different erroneous data
+        self.post(
+            f"/withdraw_badge",
+            data={
+                "badge_given_id": 100,
+                "context_group": it_27.name,
+            },
+            expect_status=404,
+            expect_content='Given badge with id "100" not found',
+        )
+        self.post(
+            f"/withdraw_badge",
+            data={
+                "badge_given_id": 1,
+                "context_group": "nonexistent_group",
+            },
+            expect_status=404,
+            expect_content='User group "nonexistent_group" not found',
+        )
+
+        # withdraw all badges with different erroneous data
+        self.post(
+            "/withdraw_all_badges",
+            data={
+                "badge_id": 100,
+                "usergroup_id": self.test_user_1.get_personal_group().id,
+                "context_group": it_27.name,
+            },
+            expect_status=404,
+            expect_content='Badge with id "100" not found',
+        )
+        self.post(
+            "/withdraw_all_badges",
+            data={
+                "badge_id": 1,
+                "usergroup_id": 100,
+                "context_group": it_27.name,
+            },
+            expect_status=404,
+            expect_content='User group with id "100" not found',
+        )
+        self.post(
+            "/withdraw_all_badges",
+            data={
+                "badge_id": 1,
+                "usergroup_id": self.test_user_1.get_personal_group().id,
+                "context_group": "nonexistent_group",
+            },
+            expect_status=404,
+            expect_content='User group "nonexistent_group" not found',
+        )
+
+        # fetch subgroups with erroneous data
+        self.get(
+            f"/subgroups/nonexistent_group",
+            expect_status=404,
+            expect_content='User group "nonexistent_group" not found',
+        )
+
+        # fetch users subgroups with different erroneous data
+        self.get(
+            f"/users_subgroups/100/{it_27.name}",
+            expect_status=404,
+            expect_content='User with id "100" not found',
+        )
+        self.get(
+            f"/users_subgroups/{self.test_user_1.id}/nonexistent_group",
+            expect_status=404,
+            expect_content='User group "nonexistent_group" not found',
+        )
+
+        # fetch user and his/her personal usergroup with erroneous data
+        self.get(
+            f"/user_and_personal_group/nonexistent_user",
+            expect_status=404,
+            expect_content='User "nonexistent_user" not found',
+        )
+
+        # fetch usergroup's members with erroneous data
+        self.get(
+            f"/usergroups_members/nonexistent_group",
+            expect_status=400,
+            expect_content='User group "nonexistent_group" not found',
+        )
