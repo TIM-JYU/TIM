@@ -61,13 +61,32 @@ import {GroupService} from "tim/plugin/group-dashboard/group.service";
 
                     <div *ngIf="userAssign === true" class="form-group">
                         <label>Users</label>
+                        
+                        <div class="search-wrapper">
+                          <div class="search-users">
+                            <label for="user-search">Search user:</label>
+                            <input type="search" id="user-search" name="q"
+                                   [(ngModel)]="searchTerm"
+                                   (ngModelChange)="onSearchChange($event)" />
+                          </div>
+                        
+                          <div *ngIf="searchingUsers" class="search-results">
+                            <div *ngFor="let user of searchResults" class="option-item">
+                              <input type="checkbox"
+                                       [checked]="isChecked(user)"
+                                       (change)="toggleUserSelection(user, $event)" />
+                              <span class="searched-name">{{ user.real_name }}</span>
+                            </div>
+                          </div>
+                        </div>
+                        
                         <div class="list-scroll-container" (wheel)="onScrollList($event)">
                             <div *ngFor="let user of users" class="option-item">
                                 <input class="user-checkbox"
                                        type="checkbox"
                                        [value]="user"
-                                       (change)="toggleUserSelection(user, $event)"
-                                />
+                                       [checked]="isChecked(user)"
+                                       (change)="toggleUserSelection(user, $event)" />
                                 <div class="option-name" (click)="handleUserSelection(user)"
                                      [ngClass]="{'selected-option': selectedUser?.id === user.id}">
                                     {{ user.real_name }}
@@ -78,13 +97,31 @@ import {GroupService} from "tim/plugin/group-dashboard/group.service";
 
                     <div *ngIf="userAssign === false" class="form-group">
                         <label>Groups</label>
+                        
+                        <div class="search-wrapper">
+                          <div class="search-groups">
+                            <label for="group-search">Search group:</label>
+                            <input type="search" id="group-search" name="q"
+                                   [(ngModel)]="groupSearchTerm"
+                                   (ngModelChange)="onGroupSearchChange($event)" />
+                          </div>
+                        
+                          <div *ngIf="searchingGroups" class="search-results">
+                                <div *ngFor="let group of groupSearchResults" class="option-item">
+                                    <input type="checkbox"
+                                           [checked]="isGroupChecked(group)"
+                                           (change)="toggleGroupSelection(group, $event)" />
+                                    <span class="searched-name">{{ group.name }}</span>
+                                </div>
+                          </div>
+                        </div>
+                        
                         <div class="list-scroll-container" (wheel)="onScrollList($event)">
                             <div *ngFor="let group of groups" class="group-item">
                                 <input class="group-checkbox"
                                        type="checkbox"
-                                       [value]="group"
-                                       (change)="toggleGroupSelection(group, $event)"
-                                />
+                                       [checked]="isGroupChecked(group)"
+                                       (change)="toggleGroupSelection(group, $event)" />
                                 <span class="option-name" (click)="handleGroupSelection(group)"
                                       [ngClass]="{'selected-option': selectedGroup?.id === group.id}">
                                     {{ group.name }}
@@ -144,6 +181,15 @@ export class BadgeSelectedWithdrawComponent implements OnInit {
 
     userAssign?: boolean = undefined;
 
+    searchTerm: string = "";
+    searchResults: IUser[] = [];
+    searchingUsers: boolean = false;
+    userSelectionMap = new Map<number, boolean>();
+    groupSearchTerm: string = "";
+    groupSearchResults: IGroup[] = [];
+    searchingGroups: boolean = false;
+    groupSelectionMap = new Map<number, boolean>();
+
     alerts: Array<{
         msg: string;
         type: "warning" | "danger";
@@ -173,6 +219,44 @@ export class BadgeSelectedWithdrawComponent implements OnInit {
         }
     }
 
+    onSearchChange(term: string) {
+        this.searchTerm = term;
+        if (!term.trim()) {
+            this.searchResults = [];
+            this.searchingUsers = false;
+            return;
+        }
+
+        this.searchingUsers = true;
+        const termLower = term.toLowerCase();
+        this.searchResults = this.users.filter((user) =>
+            user.real_name!.toLowerCase().includes(termLower)
+        );
+    }
+
+    isSelected<T extends {id: number}>(item: T, list: T[]): boolean {
+        return list.some((i) => i.id === item.id);
+    }
+
+    onGroupSearchChange(term: string) {
+        this.groupSearchTerm = term;
+        if (!term.trim()) {
+            this.groupSearchResults = [];
+            this.searchingGroups = false;
+            return;
+        }
+
+        this.searchingGroups = true;
+        const termLower = term.toLowerCase();
+        this.groupSearchResults = this.groups.filter((group) =>
+            group.name.toLowerCase().includes(termLower)
+        );
+    }
+
+    isGroupChecked(group: IGroup): boolean {
+        return this.selectedGroups.some((g) => g.id === group.id);
+    }
+
     onScrollList(event: WheelEvent) {
         const element = event.currentTarget as HTMLElement;
         const scrollable = element.scrollHeight > element.clientHeight;
@@ -199,23 +283,39 @@ export class BadgeSelectedWithdrawComponent implements OnInit {
         this.cancelEvent.emit(); // Lähettää tiedon vanhemmalle
     }
 
+    isChecked(user: IUser): boolean {
+        return this.userSelectionMap.get(user.id) ?? false;
+    }
+
     toggleUserSelection(user: IUser, event: Event) {
         const isChecked = (event.target as HTMLInputElement).checked;
+
+        this.userSelectionMap.set(user.id, isChecked);
+
         if (isChecked) {
-            this.selectedUsers.push(user);
-            return;
+            this.selectedUsers = [...this.selectedUsers, user];
+        } else {
+            this.selectedUsers = this.selectedUsers.filter(
+                (u) => u.id !== user.id
+            );
         }
-        this.selectedUsers = this.selectedUsers.filter((u) => u.id !== user.id);
     }
+
     toggleGroupSelection(group: IGroup, event: Event) {
         const isChecked = (event.target as HTMLInputElement).checked;
+
         if (isChecked) {
-            this.selectedGroups.push(group);
-            return;
+            const alreadySelected = this.selectedGroups.some(
+                (g) => g.id === group.id
+            );
+            if (!alreadySelected) {
+                this.selectedGroups.push(group);
+            }
+        } else {
+            this.selectedGroups = this.selectedGroups.filter(
+                (g) => g.id !== group.id
+            );
         }
-        this.selectedGroups = this.selectedGroups.filter(
-            (g) => g.id !== group.id
-        );
     }
 
     toggleSelectAll(group: IGroup, event: Event) {
