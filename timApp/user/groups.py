@@ -532,6 +532,7 @@ def group_name(name: str) -> Response:
 
 
 # TODO: Create tests for this route.
+# TODO: Handle errors
 # TODO: Do access right checks for this route.
 @groups.post("/editGroupName/<group_name>/<new_name>")
 def change_group_name(group_name: str, new_name: str) -> Response:

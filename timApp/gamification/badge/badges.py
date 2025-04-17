@@ -90,6 +90,12 @@ class Badge(db.Model):
             "restored": self.restored,
         }
 
+    @staticmethod
+    def get_by_id(
+        badge_id: int,
+    ):  # TODO: Add " -> Badge | None", but why isn't Badge defined?
+        return db.session.get(Badge, badge_id)
+
 
 class BadgeGiven(db.Model):
     """
@@ -151,3 +157,9 @@ class BadgeGiven(db.Model):
             "undo_withdrawn_by": self.undo_withdrawn_by,
             "undo_withdrawn": self.undo_withdrawn,
         }
+
+    @staticmethod
+    def get_by_id(
+        badge_given_id: int,
+    ):  # TODO: Add " -> BadgeGiven | None", but why isn't BadgeGiven defined?
+        return db.session.get(BadgeGiven, badge_given_id)
