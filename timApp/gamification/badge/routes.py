@@ -513,30 +513,6 @@ def get_groups_badges(group_id: int, context_group: str) -> Response:
     return json_response(badges_json)
 
 
-# TODO: Is this an unnecessary route? Can badge_holders-route do the same?
-# TODO: Do access right checks and create tests for that.
-@badges_blueprint.get("/badge_given/<badge_id>")
-def get_badge_given(badge_id: int) -> Response:
-    """
-    Checks if a badge has been given to usergroups.
-    :param badge_id: ID of the badge
-    :return: BadgeGivens in json response format
-    """
-    badge = Badge.get_by_id(badge_id)
-    if not badge:
-        raise NotExist(f'Badge with id "{badge_id}" not found')
-    badge_given = (
-        run_sql(
-            select(BadgeGiven)
-            .filter(BadgeGiven.active)
-            .filter(BadgeGiven.badge_id == badge_id)
-        )
-        .scalars()
-        .all()
-    )
-    return json_response(badge_given)
-
-
 # TODO: Do access right checks and create tests for that.
 @badges_blueprint.get("/badge_holders/<badge_id>")
 def get_badge_holders(badge_id: int) -> Response:

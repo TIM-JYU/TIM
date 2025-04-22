@@ -287,11 +287,7 @@ class BadgeTestMain(TimRouteTest):
         result_grba_empty_1 = self.get(f"/groups_badges/{it_25_cats.id}/{it_25.name}")
         self.assertEqual([], result_grba_empty_1)
 
-        # check with badge_given-route is a badge given to some usergroup when no badges given
-        result_bg_empty = self.get("/badge_given/1")
-        self.assertEqual([], result_bg_empty)
-
-        # check with badge_holders-route is a badge given to some usergroup when no badges given
+        # check if a badge is given to some usergroup when no badges given
         result_bg_empty = self.get("/badge_holders/1")
         self.assertEqual([[], []], result_bg_empty)
 
@@ -431,43 +427,7 @@ class BadgeTestMain(TimRouteTest):
             result_grba_nonempty,
         )
 
-        # check with badge_given-route is a badge given to some usergroup
-        # after 3 badges given and one of them withdrawn
-        result_bg_nonempty = self.get("/badge_given/1")
-        self.assertEqual(
-            [
-                {
-                    "id": 1,
-                    "message": "Great work!",
-                    "badge_id": 1,
-                    "group_id": it_25_cats.id,
-                    "active": True,
-                    "given_by": self.test_user_1.id,
-                    "given": result_giba_1["given"],
-                    "withdrawn_by": None,
-                    "withdrawn": None,
-                    "undo_withdrawn_by": None,
-                    "undo_withdrawn": None,
-                },
-                {
-                    "id": 3,
-                    "message": "Great work again! Yeah!",
-                    "badge_id": 1,
-                    "group_id": it_25_cats.id,
-                    "active": True,
-                    "given_by": self.test_user_1.id,
-                    "given": result_giba_3["given"],
-                    "withdrawn_by": None,
-                    "withdrawn": None,
-                    "undo_withdrawn_by": None,
-                    "undo_withdrawn": None,
-                },
-            ],
-            result_bg_nonempty,
-        )
-
-        # check with badge_holders-route is a badge given to some usergroup
-        # after 3 badges given and one of them withdrawn
+        # check if a badge is given to some usergroup after 3 badges given and one of them withdrawn
         result_bg_nonempty = self.get("/badge_holders/1")
         self.assertEqual(
             [
@@ -968,14 +928,7 @@ class BadgeTestErroneousData(TimRouteTest):
             expect_content='User group "nonexistent_group" not found',
         )
 
-        # use badge_given-route with erroneous data
-        self.get(
-            "/badge_given/100",
-            expect_status=404,
-            expect_content='Badge with id "100" not found',
-        )
-
-        # use badge_holders-route with erroneous data
+        # check with erroneous data if a badge is given to someone
         self.get(
             "/badge_holders/100",
             expect_status=404,
