@@ -284,9 +284,7 @@ export class BadgeViewerComponent implements OnInit {
                 this.alerts,
                 {
                     data: {
-                        error:
-                            result.result.error.error +
-                            `. If you are a teacher of ${this.badgegroupContext}, please contact TIM admin.`,
+                        error: result.result.error.error,
                     },
                 },
                 "danger"
@@ -354,15 +352,6 @@ export class BadgeViewerComponent implements OnInit {
     private async InitializeData() {
         if (!this.badgeuserContext || !this.badgegroupContext) {
             return;
-        }
-
-        const result = await toPromise(
-            this.http.get<any>(
-                `/user_and_personal_group/${this.badgeuserContext}`
-            )
-        );
-        if (result.ok) {
-            this.personalGroup = result.result;
         }
 
         this.personalGroup = await this.groupService.getUserAndPersonalGroup(
