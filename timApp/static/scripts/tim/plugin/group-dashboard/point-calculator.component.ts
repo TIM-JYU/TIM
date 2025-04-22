@@ -23,6 +23,7 @@ import {FormsModule} from "@angular/forms";
         placeholder="Enter points"
       />
     </div>
+            <button (click)="savePoints()">Save changes</button>
         </div>
     </ng-container>`,
     styleUrls: ["./point-calculator.component.scss"],
@@ -44,8 +45,6 @@ export class PointCalculatorComponent implements OnInit {
         if (this.group) {
             const groups = await this.groupService.getSubGroups(this.group);
             if (groups) {
-                // Get pretty names
-
                 this.subGroups = groups.map((g: any) => ({
                     name: typeof g === "string" ? g : g.name,
                     points: 0,
@@ -60,6 +59,10 @@ export class PointCalculatorComponent implements OnInit {
                 }
             }
         }
+    }
+
+    savePoints() {
+        console.log("höhöö");
     }
 }
 
