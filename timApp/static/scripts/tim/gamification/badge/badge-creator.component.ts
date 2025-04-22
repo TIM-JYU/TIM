@@ -50,7 +50,7 @@ import {FormsModule} from "@angular/forms";
                     </div>                 
                     
                     <div class="sort-select">
-                      <label for="sort-sel">Sort badges by: </label>
+<!--                      <label for="sort-sel">Sort badges by: </label>-->
                             
                       <select id="sort-sel" [(ngModel)]="selectedSort" (ngModelChange)="onSortChange($event)">
                         <option value="newest">Newest</option>
@@ -79,12 +79,12 @@ import {FormsModule} from "@angular/forms";
                                         (click)="showBadgeGiver(clickedBadge)" 
                                         [disabled]="!clickedBadge" 
                                         [ngClass]="{'disabled-btn': !clickedBadge}">
-                                        <span class="material-icons">how_to_reg</span></button>
-                                <button title="Withdraw Badge" id="giveBadgeButton" type="button"
-                                        [disabled]="!clickedBadge" 
-                                        (click)="showBadgeSelectedWithdraw(clickedBadge)"
-                                        class="right-button">
-                                        <span class="material-icons">person_remove</span></button>
+                                        <span class="material-icons">add</span></button>
+<!--                                <button title="Withdraw Badge" id="giveBadgeButton" type="button"-->
+<!--                                        [disabled]="!clickedBadge" -->
+<!--                                        (click)="showBadgeSelectedWithdraw(clickedBadge)"-->
+<!--                                        class="right-button">-->
+<!--                                        <span class="material-icons">person_remove</span></button>-->
                                 <button title="Edit Badge" id="editButton" type="button" 
                                         (click)="editBadge(clickedBadge)" 
                                         [disabled]="!clickedBadge" 
@@ -201,7 +201,7 @@ import {FormsModule} from "@angular/forms";
                               type="submit"
                               [attr.title]="!badgeForm.valid ? 'Fill all the required fields' : null"
                               [disabled]="!badgeForm.valid">
-                          {{ editingBadge ? 'Save Changes' : 'Create Badge' }}
+                          {{ editingBadge ? 'Save Changes' : 'Create' }}
                       </button>
                       <div class="button-group">
                           <button id="cancelButton" 
