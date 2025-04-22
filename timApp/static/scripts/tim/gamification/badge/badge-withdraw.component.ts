@@ -407,9 +407,7 @@ export class BadgeWithdrawComponent implements OnInit {
                 this.alerts,
                 {
                     data: {
-                        error:
-                            result.result.error.error +
-                            `. If you are a teacher of ${this.badgegroupContext}, please contact TIM admin.`,
+                        error: result.result.error.error,
                     },
                 },
                 "danger"
