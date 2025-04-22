@@ -91,6 +91,7 @@ import {genericglobals, isErrorGlobals} from "tim/util/globals";
 import {ParCompiler} from "tim/editor/parCompiler";
 import {PrintButtonComponent} from "tim/ui/print-button.component";
 import {FormulaEditorLoaderComponent} from "../../../modules/cs/js/editor/math-editor/formula-editor-loader.component";
+import {PointCalculatorComponent} from "tim/plugin/group-dashboard/point-calculator.component";
 
 BackspaceDisabler.disable();
 
@@ -174,6 +175,7 @@ function createDowngradedAppModule() {
     doDowngrade(dg, "timBadgeLeaderboard", BadgeLeaderboardComponent);
     doDowngrade(dg, "timBadgeSelectedWithdraw", BadgeSelectedWithdrawComponent);
     doDowngrade(dg, "timGroupDashboard", GroupDashboardComponent);
+    doDowngrade(dg, "timPointCalculator", PointCalculatorComponent);
     return dg;
 }
 
