@@ -5,6 +5,7 @@ import {BadgeService} from "../../gamification/badge/badge.service";
 import {GroupNameModule} from "./group-name.component";
 import {BadgeModule} from "../../gamification/badge/badge.component";
 import {FormsModule} from "@angular/forms";
+import {PointService} from "tim/plugin/group-dashboard/point.service";
 
 @Component({
     selector: "tim-point-calculator",
@@ -31,11 +32,12 @@ import {FormsModule} from "@angular/forms";
 export class PointCalculatorComponent implements OnInit {
     constructor(
         private groupService: GroupService,
-        private badgeService: BadgeService
+        private badgeService: BadgeService,
+        private pointService: PointService
     ) {}
 
     @Input() group!: string;
-    subGroups: {name: string; points?: number}[] = [];
+    subGroups: {name: string; points?: number; id?: number}[] = [];
 
     async ngOnInit() {
         await this.fetchSubGroups();
@@ -55,31 +57,31 @@ export class PointCalculatorComponent implements OnInit {
                     group.name
                 );
                 if (prettyGroup) {
-                    console.log(prettyGroup);
                     group.name = prettyGroup.description || group.name;
+                    group.id = prettyGroup.id;
                 }
             }
 
-            const saved = localStorage.getItem(`points-${this.group}`);
-            if (saved) {
-                const savedPoints = JSON.parse(saved);
+            const savedPoints = this.pointService.getPoints(this.group);
+            if (savedPoints) {
                 this.subGroups.forEach((group) => {
-                    if (savedPoints[group.name] != null) {
-                        group.points = savedPoints[group.name];
+                    if (group.id != null && savedPoints[group.id] != null) {
+                        group.points = savedPoints[group.id];
                     }
                 });
             }
         }
     }
-
+    //TODO: väläytä pistekenttää esim. vihreänä - indikoi tallentamista
+    // tuo pisteet servicen kautta group dashboardiin näkyviin
     savePoints() {
-        const pointsMap = this.subGroups.reduce((acc, group) => {
-            acc[group.name] = group.points || 0;
-            return acc;
-        }, {} as Record<string, number>);
-
-        localStorage.setItem(`points-${this.group}`, JSON.stringify(pointsMap));
-        console.log("Points saved to localStorage:", pointsMap);
+        const pointsMap: Record<number, number> = {};
+        this.subGroups.forEach((group) => {
+            if (group.id != null) {
+                pointsMap[group.id] = group.points || 0;
+            }
+        });
+        this.pointService.setPoints(this.group, pointsMap);
     }
 }
 

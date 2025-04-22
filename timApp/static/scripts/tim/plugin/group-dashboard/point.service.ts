@@ -1,3 +1,8 @@
+import {Injectable} from "@angular/core";
+
+@Injectable({
+    providedIn: "root",
+})
 export class PointService {
     getPoints(group: string): Record<string, number> | null {
         const item = localStorage.getItem(`points-${group}`);
