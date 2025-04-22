@@ -44,12 +44,20 @@ export class PointCalculatorComponent implements OnInit {
         if (this.group) {
             const groups = await this.groupService.getSubGroups(this.group);
             if (groups) {
-                //console.log(groups);
+                // Get pretty names
 
                 this.subGroups = groups.map((g: any) => ({
                     name: typeof g === "string" ? g : g.name,
                     points: 0,
                 }));
+            }
+            for (const group of this.subGroups) {
+                const prettyGroup = await this.groupService.getCurrentGroup(
+                    group.name
+                );
+                if (prettyGroup) {
+                    group.name = prettyGroup.description || group.name;
+                }
             }
         }
     }
