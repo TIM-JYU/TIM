@@ -356,15 +356,6 @@ export class BadgeViewerComponent implements OnInit {
             return;
         }
 
-        const result = await toPromise(
-            this.http.get<any>(
-                `/user_and_personal_group/${this.badgeuserContext}`
-            )
-        );
-        if (result.ok) {
-            this.personalGroup = result.result;
-        }
-
         this.personalGroup = await this.groupService.getUserAndPersonalGroup(
             this.badgeuserContext
         );
