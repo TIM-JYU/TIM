@@ -7,6 +7,7 @@ import {GroupNameModule} from "tim/plugin/group-dashboard/group-name.component";
 import {IBadge, IUser} from "tim/gamification/badge/badge.interface";
 import {BadgeModule} from "tim/gamification/badge/badge.component";
 import {GroupService} from "tim/plugin/group-dashboard/group.service";
+import {PointService} from "tim/plugin/group-dashboard/point.service";
 
 @Component({
     selector: "tim-group-dashboard",
@@ -87,11 +88,13 @@ import {GroupService} from "tim/plugin/group-dashboard/group.service";
 export class GroupDashboardComponent implements OnInit {
     constructor(
         private groupService: GroupService,
-        private badgeService: BadgeService
+        private badgeService: BadgeService,
+        private pointService: PointService
     ) {}
 
     @Input() group!: string;
     private item: IFullDocument | IFolder | undefined;
+    totalPoints: number = 0;
     displayName: string | undefined;
     groupId: number | undefined;
     contextGroup: string | undefined;
@@ -110,6 +113,7 @@ export class GroupDashboardComponent implements OnInit {
             await this.fetchMembers();
             await this.fetchUserBadges();
             await this.fetchGroupBadges();
+            this.totalPoints = this.pointService.getTotalPoints(this.group);
         }
         this.item = manageglobals().curr_item;
     }

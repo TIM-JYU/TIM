@@ -55,14 +55,31 @@ export class PointCalculatorComponent implements OnInit {
                     group.name
                 );
                 if (prettyGroup) {
+                    console.log(prettyGroup);
                     group.name = prettyGroup.description || group.name;
                 }
+            }
+
+            const saved = localStorage.getItem(`points-${this.group}`);
+            if (saved) {
+                const savedPoints = JSON.parse(saved);
+                this.subGroups.forEach((group) => {
+                    if (savedPoints[group.name] != null) {
+                        group.points = savedPoints[group.name];
+                    }
+                });
             }
         }
     }
 
     savePoints() {
-        console.log("höhöö");
+        const pointsMap = this.subGroups.reduce((acc, group) => {
+            acc[group.name] = group.points || 0;
+            return acc;
+        }, {} as Record<string, number>);
+
+        localStorage.setItem(`points-${this.group}`, JSON.stringify(pointsMap));
+        console.log("Points saved to localStorage:", pointsMap);
     }
 }
 
