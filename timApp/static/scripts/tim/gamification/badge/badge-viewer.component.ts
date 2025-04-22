@@ -42,7 +42,7 @@ import {GroupService} from "tim/plugin/group-dashboard/group.service";
             <ng-container *ngIf="badges.length > 0">
                 
                 <div class="sort-select">
-                    <label for="user-sort-select">Sort badges by: </label>
+<!--                    <label for="user-sort-select">Sort badges by: </label>-->
                     
                     <select id="user-sort-select" [(ngModel)]="selectedSort" (ngModelChange)="onSortChange($event)">
                       <option value="newest">Newest</option>
@@ -78,7 +78,7 @@ import {GroupService} from "tim/plugin/group-dashboard/group.service";
 
                     <ng-container *ngIf="groupBadgesMap.get(group.id)?.length || 0 > 0">
                         <div class="sort-select">
-                            <label for="group-sort-{{group.id}}">Sort badges by: </label>
+<!--                            <label for="group-sort-{{group.id}}">Sort badges by: </label>-->
                             <select
                                 [id]="'group-sort-' + group.id"
                                 [ngModel]="groupSortMap.get(group.id) || 'newest'"
@@ -263,14 +263,7 @@ export class BadgeViewerComponent implements OnInit {
      */
     async getBadges() {
         this.emptyTable(this.badges);
-        if (!this.personalGroup) {
-            console.error("Failed to retrieve the user's personal group ID.");
-            return;
-        }
-        if (!this.badgegroupContext) {
-            console.error("Failed to retrieve the context group.");
-            return;
-        }
+        this.emptyTable(this.badges);
 
         const result = await toPromise(
             this.http.get<[]>(
@@ -362,6 +355,16 @@ export class BadgeViewerComponent implements OnInit {
         if (!this.badgeuserContext || !this.badgegroupContext) {
             return;
         }
+
+        const result = await toPromise(
+            this.http.get<any>(
+                `/user_and_personal_group/${this.badgeuserContext}`
+            )
+        );
+        if (result.ok) {
+            this.personalGroup = result.result;
+        }
+
         this.personalGroup = await this.groupService.getUserAndPersonalGroup(
             this.badgeuserContext
         );
