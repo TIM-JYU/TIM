@@ -4,14 +4,25 @@ import {GroupService} from "./group.service";
 import {BadgeService} from "../../gamification/badge/badge.service";
 import {GroupNameModule} from "./group-name.component";
 import {BadgeModule} from "../../gamification/badge/badge.component";
+import {FormsModule} from "@angular/forms";
 
 @Component({
     selector: "tim-point-calculator",
     template: `
     <ng-container>
-        <h1>Groups</h1>
+        <h1 class="heading-with-info">
+    Groups
+    <span class="info-icon" title="Displaying subgroups of main group (context group) {{this.group!}}">?</span>
+  </h1>
         <div class="point-calculator">
-            <!-- Fetch all subgroups, create name label and points field for every group -->
+            <div *ngFor="let subgroup of subGroups" class="group-entry">
+      <label class="group-label">{{ subgroup.name }}</label>
+      <input
+        type="number"
+        [(ngModel)]="subgroup.points"
+        placeholder="Enter points"
+      />
+    </div>
         </div>
     </ng-container>`,
     styleUrls: ["./point-calculator.component.scss"],
@@ -23,6 +34,7 @@ export class PointCalculatorComponent implements OnInit {
     ) {}
 
     @Input() group!: string;
+    subGroups: {name: string; points?: number}[] = [];
 
     async ngOnInit() {
         await this.fetchSubGroups();
@@ -32,7 +44,12 @@ export class PointCalculatorComponent implements OnInit {
         if (this.group) {
             const groups = await this.groupService.getSubGroups(this.group);
             if (groups) {
-                console.log(groups);
+                //console.log(groups);
+
+                this.subGroups = groups.map((g: any) => ({
+                    name: typeof g === "string" ? g : g.name,
+                    points: 0,
+                }));
             }
         }
     }
@@ -41,6 +58,6 @@ export class PointCalculatorComponent implements OnInit {
 @NgModule({
     declarations: [PointCalculatorComponent],
     exports: [PointCalculatorComponent],
-    imports: [CommonModule, GroupNameModule, BadgeModule],
+    imports: [CommonModule, GroupNameModule, BadgeModule, FormsModule],
 })
 export class PointCalculatorModule {}

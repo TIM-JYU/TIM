@@ -1,0 +1,55 @@
+.point-calculator {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem; // spacing between rows
+  max-width: 500px;
+  margin-top: 1rem;
+}
+
+.group-entry {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #f9f9f9;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.group-label {
+  font-weight: 500;
+  font-size: 1rem;
+}
+
+.points-input {
+  width: 100px;
+  padding: 0.25rem 0.5rem;
+  font-size: 1rem;
+  text-align: right;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+.heading-with-info {
+  display: inline-block;
+  position: relative;
+  font-size: 1.5rem;
+}
+
+.info-icon {
+  font-size: 0.65rem;
+  vertical-align: super;
+  margin-left: 4px;
+  background-color: #ccc;
+  color: #000;
+  border-radius: 50%;
+  width: 14px;
+  height: 14px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  cursor: pointer;
+  position: relative;
+}
+
