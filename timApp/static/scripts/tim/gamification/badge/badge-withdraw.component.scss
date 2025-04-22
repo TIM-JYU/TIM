@@ -263,3 +263,69 @@ button:disabled, #cancelButton:disabled, #cancelButton:disabled:hover {
   margin-top: 1.5em;
   font-weight: bold;
 }
+
+.search-users,
+.search-groups {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  position: relative;
+  width: 100%;
+  margin-bottom: 0.5rem;
+
+  label {
+    white-space: nowrap;
+    line-height: 1;
+    height: 100%;
+    display: flex;
+    align-items: center;
+  }
+
+  input[type="search"] {
+    flex: 1;
+    padding: 0.4rem;
+    box-sizing: border-box;
+  }
+}
+
+.search-wrapper {
+  position: relative;
+
+  .search-groups {
+    position: relative;
+    z-index: 1;
+  }
+
+  .search-results {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    z-index: 10;
+    background: white;
+    border: 1px solid #ccc;
+    border-radius: 0 0 0.375rem 0.375rem;
+    max-height: 200px;
+    overflow-y: auto;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+
+    .option-item {
+      padding: 0.5rem 0.75rem;
+      cursor: pointer;
+      transition: background 0.2s;
+
+      &:hover {
+        background-color: #f0f4ff;
+      }
+
+      &.selected-option {
+        background-color: #ebf0ff;
+        font-weight: 500;
+      }
+
+      &:not(:last-child) {
+        border-bottom: 1px solid #eee;
+      }
+    }
+  }
+}

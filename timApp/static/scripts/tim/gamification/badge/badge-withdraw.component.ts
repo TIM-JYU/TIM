@@ -1,6 +1,7 @@
 import type {OnInit} from "@angular/core";
 import {Input} from "@angular/core";
 import {Component, NgModule} from "@angular/core";
+import {HostListener, ElementRef} from "@angular/core";
 import {CommonModule} from "@angular/common";
 import {FormsModule} from "@angular/forms";
 import {HttpClient, HttpClientModule} from "@angular/common/http";
@@ -45,6 +46,25 @@ import {GroupService} from "tim/plugin/group-dashboard/group.service";
                     <div *ngIf="showComponent">
                         <div *ngIf="userAssign" class="form-group">
                             <label>Users</label>
+                            
+                            <div class="search-wrapper">
+                              <div class="search-groups">
+                                <label for="group-search">Search user:</label>
+                                <input type="search" id="group-search" name="q"
+                                       [(ngModel)]="searchTerm"
+                                       (ngModelChange)="onUserSearchChange()" />
+                              </div>
+                            
+                              <div *ngIf="userSearchResults.length > 0" class="search-results">
+                                <div *ngFor="let user of userSearchResults"
+                                     class="option-item"
+                                     [ngClass]="{'selected-option': selectedUser?.id === user.id}"
+                                     (click)="selectUserFromSearch(user)">
+                                  <span class="searched-name">{{ user.real_name }}</span>
+                                </div>
+                              </div>
+                            </div>
+                            
                             <div class="users-list">
                                 <div class="list-scroll-container" (wheel)="onScrollList($event)">
                                     
@@ -99,6 +119,25 @@ import {GroupService} from "tim/plugin/group-dashboard/group.service";
     
                         <div *ngIf="userAssign === false" class="form-group">
                             <label>Groups</label>
+                            
+                            <div class="search-wrapper">
+                                <div class="search-groups">
+                                    <label for="group-search">Search group:</label>
+                                    <input type="search" id="group-search" name="q"
+                                           [(ngModel)]="groupSearchTerm"
+                                           (ngModelChange)="onGroupSearchChange()" />
+                                </div>
+                        
+                                <div *ngIf="groupSearchResults.length > 0" class="search-results">
+                                    <div *ngFor="let group of groupSearchResults"
+                                         class="option-item"
+                                         [ngClass]="{'selected-option': selectedGroup?.id === group.id}"
+                                         (click)="selectGroupFromSearch(group)">
+                                        <span class="searched-name">{{ group.description }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                            
                             <div class="users-list">
                                 <div class="list-scroll-container" (wheel)="onScrollList($event)">
                                     <div *ngFor="let group of groups" class="option-item">
@@ -189,6 +228,11 @@ export class BadgeWithdrawComponent implements OnInit {
     groupBadges: IBadge[] = [];
     groupUsersMap = new Map<number, IUser[]>();
 
+    searchTerm = "";
+    userSearchResults: IUser[] = [];
+    groupSearchTerm = "";
+    groupSearchResults: IGroup[] = [];
+
     alerts: Array<{
         msg: string;
         type: "warning" | "danger";
@@ -198,8 +242,63 @@ export class BadgeWithdrawComponent implements OnInit {
     constructor(
         private http: HttpClient,
         protected badgeService: BadgeService,
-        private groupService: GroupService
+        private groupService: GroupService,
+        private elRef: ElementRef
     ) {}
+
+    onUserSearchChange() {
+        const term = this.searchTerm.toLowerCase().trim();
+        if (!term) {
+            this.userSearchResults = [];
+            return;
+        }
+
+        this.userSearchResults = this.users.filter((user) =>
+            user.real_name!.toLowerCase().includes(term)
+        );
+    }
+
+    onGroupSearchChange() {
+        const term = this.groupSearchTerm.toLowerCase().trim();
+        if (!term) {
+            this.groupSearchResults = [];
+            return;
+        }
+
+        this.groupSearchResults = this.groups.filter((group) =>
+            group.description.toLowerCase().includes(term)
+        );
+    }
+
+    selectUserFromSearch(user: IUser) {
+        this.selectedUser = user;
+        this.searchTerm = "";
+        this.userSearchResults = [];
+        this.fetchUserBadges(user.id);
+    }
+
+    selectGroupFromSearch(group: IGroup) {
+        this.selectedGroup = group;
+        this.groupSearchTerm = "";
+        this.groupSearchResults = [];
+        this.fetchGroupBadges(group.id);
+    }
+
+    @HostListener("document:click", ["$event"])
+    onDocumentClick(event: MouseEvent): void {
+        const searchResults =
+            this.elRef.nativeElement.querySelector(".search-results");
+        const searchWrapper =
+            this.elRef.nativeElement.querySelector(".search-wrapper");
+
+        if (
+            searchResults &&
+            searchWrapper &&
+            !searchWrapper.contains(event.target)
+        ) {
+            this.userSearchResults = [];
+        }
+    }
 
     onScroll(event: WheelEvent) {
         const element = event.currentTarget as HTMLElement;
