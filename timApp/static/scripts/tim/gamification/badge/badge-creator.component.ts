@@ -583,9 +583,9 @@ export class BadgeCreatorComponent implements OnInit {
     // Check if badge has been assigned to user_group
     async isBadgeAssigned() {
         const response = await toPromise(
-            this.http.get<any>(`/badge_given/${this.clickedBadge.id}`)
+            this.http.get<any>(`/badge_holders/${this.clickedBadge.id}`)
         );
-        if (response.result.length > 0) {
+        if (response.result[0].length > 0 || response.result[1].length > 0) {
             return true;
         } else {
             return false;

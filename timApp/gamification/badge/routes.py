@@ -89,7 +89,6 @@ def check_group_member(current_user: User, usergroup: int) -> bool:
         return False
 
 
-# TODO: Not yet in use. If going to use this route, create tests for it and handle errors.
 @badges_blueprint.get("/all_badges_including_inactive")
 def all_badges_including_inactive() -> Response:
     """
@@ -131,6 +130,9 @@ def all_badges_in_context(context_group: str) -> Response:
     if not d:
         raise NotExist(f'User group "{context_group}" not found')
     context_usergroup = UserGroup.get_by_name(context_group)
+    # TODO: Add attribute message=f"Sorry, you don't have permission to use this resource.
+    #       If you are a teacher of context_group, please contact TIM admin."
+    #       and remove corresponding error message generation from frontend.
     verify_teacher_access(d)
     badges = (
         run_sql(
@@ -147,7 +149,6 @@ def all_badges_in_context(context_group: str) -> Response:
     return json_response(badges_json)
 
 
-# TODO: Not yet in use. If going to use this route, create tests for it and handle errors.
 @badges_blueprint.get("/badge/<badge_id>")
 def get_badge(badge_id: int) -> Response:
     """
@@ -184,6 +185,9 @@ def create_badge(
     d = DocEntry.find_by_path(f"groups/{context_group}")  # TODO: Make this unambiguous.
     if not d:
         raise NotExist(f'User group "{context_group}" not found')
+    # TODO: Add attribute message=f"Sorry, you don't have permission to use this resource.
+    #       If you are a teacher of context_group, please contact TIM admin."
+    #       and remove corresponding error message generation from frontend.
     verify_teacher_access(d)
     context_usergroup = UserGroup.get_by_name(context_group)
     badge = Badge(
@@ -246,6 +250,9 @@ def modify_badge(
     )  # TODO: Make this unambiguous.
     if not d:
         raise NotExist(f'User group "{context_group_object.name}" not found')
+    # TODO: Add attribute message=f"Sorry, you don't have permission to use this resource.
+    #       If you are a teacher of context_group, please contact TIM admin."
+    #       and remove corresponding error message generation from frontend.
     verify_teacher_access(d)
     new_badge = {
         "context_group": context_group,
@@ -291,6 +298,9 @@ def deactivate_badge(badge_id: int, context_group: str) -> Response:
     d = DocEntry.find_by_path(f"groups/{context_group}")  # TODO: Make this unambiguous.
     if not d:
         raise NotExist(f'User group with id "{context_group}" not found')
+    # TODO: Add attribute message=f"Sorry, you don't have permission to use this resource.
+    #       If you are a teacher of context_group, please contact TIM admin."
+    #       and remove corresponding error message generation from frontend.
     verify_teacher_access(d)
     new_badge = {
         "active": False,
@@ -314,7 +324,6 @@ def deactivate_badge(badge_id: int, context_group: str) -> Response:
     return json_response(new_badge, 200)
 
 
-# TODO: Not yet in use. If going to use this route, create tests for it and handle errors.
 @badges_blueprint.post("/reactivate_badge")
 def reactivate_badge(badge_id: int, context_group: str) -> Response:
     """
@@ -326,24 +335,30 @@ def reactivate_badge(badge_id: int, context_group: str) -> Response:
     d = DocEntry.find_by_path(f"groups/{context_group}")  # TODO: Make this unambiguous.
     if not d:
         raise NotExist(f'User group "{context_group}" not found')
+    # TODO: Add attribute message=f"Sorry, you don't have permission to use this resource.
+    #       If you are a teacher of context_group, please contact TIM admin."
+    #       and remove corresponding error message generation from frontend.
     verify_teacher_access(d)
-    badge = {
+    new_badge = {
         "active": True,
         "restored_by": get_current_user_object().id,
         "restored": datetime_tz.now(),
     }
-    Badge.query.filter_by(id=badge_id).update(badge)
+    old_badge = run_sql(select(Badge).filter_by(id=badge_id)).scalars().first()
+    if old_badge is None:
+        raise NotExist(f'Badge with id "{badge_id}" not found')
+    Badge.query.filter_by(id=badge_id).update(new_badge)
     db.session.commit()
     if current_app.config["BADGE_LOG_FILE"]:
         log_badge_event(
             {
                 "event": "restore_badge",
-                "timestamp": badge["restored"],
+                "timestamp": new_badge["restored"],
                 "id": badge_id,
-                "executor": badge["restored_by"],
+                "executor": new_badge["restored_by"],
             }
         )
-    return ok_response()
+    return json_response(new_badge, 200)
 
 
 # TODO: Check access rights and create tests for that.
@@ -355,6 +370,8 @@ def get_groups_badges(group_id: int, context_group: str) -> Response:
     :param context_group: Name of the context group
     :return: Badges in json response format
     """
+    if group_id == "undefined":
+        raise NotExist(f"User group not found")
     usergroup = UserGroup.get_by_id(group_id)
     if not usergroup:
         raise NotExist(f'User group with id "{group_id}" not found')
@@ -366,6 +383,9 @@ def get_groups_badges(group_id: int, context_group: str) -> Response:
         )  # TODO: Make this unambiguous.
         if not d:
             raise NotExist(f'User group "{context_group}" not found')
+        # TODO: Add attribute message=f"Sorry, you don't have permission to use this resource.
+        #       If you are a teacher of context_group, please contact TIM admin."
+        #       and remove corresponding error message generation from frontend.
         verify_teacher_access(d)
     groups_badges_given = (
         run_sql(
@@ -513,30 +533,6 @@ def get_groups_badges(group_id: int, context_group: str) -> Response:
     return json_response(badges_json)
 
 
-# TODO: Is this an unnecessary route? Can badge_holders-route do the same?
-# TODO: Do access right checks and create tests for that.
-@badges_blueprint.get("/badge_given/<badge_id>")
-def get_badge_given(badge_id: int) -> Response:
-    """
-    Checks if a badge has been given to usergroups.
-    :param badge_id: ID of the badge
-    :return: BadgeGivens in json response format
-    """
-    badge = Badge.get_by_id(badge_id)
-    if not badge:
-        raise NotExist(f'Badge with id "{badge_id}" not found')
-    badge_given = (
-        run_sql(
-            select(BadgeGiven)
-            .filter(BadgeGiven.active)
-            .filter(BadgeGiven.badge_id == badge_id)
-        )
-        .scalars()
-        .all()
-    )
-    return json_response(badge_given)
-
-
 # TODO: Do access right checks and create tests for that.
 @badges_blueprint.get("/badge_holders/<badge_id>")
 def get_badge_holders(badge_id: int) -> Response:
@@ -606,6 +602,9 @@ def give_badge(
     d = DocEntry.find_by_path(f"groups/{context_group}")  # TODO: Make this unambiguous.
     if not d:
         raise NotExist(f'User group "{context_group}" not found')
+    # TODO: Add attribute message=f"Sorry, you don't have permission to use this resource.
+    #       If you are a teacher of context_group, please contact TIM admin."
+    #       and remove corresponding error message generation from frontend.
     verify_teacher_access(d)
     badge_given = BadgeGiven(
         active=True,
@@ -646,6 +645,9 @@ def withdraw_badge(badge_given_id: int, context_group: str) -> Response:
     d = DocEntry.find_by_path(f"groups/{context_group}")  # TODO: Make this unambiguous.
     if not d:
         raise NotExist(f'User group "{context_group}" not found')
+    # TODO: Add attribute message=f"Sorry, you don't have permission to use this resource.
+    #       If you are a teacher of context_group, please contact TIM admin."
+    #       and remove corresponding error message generation from frontend.
     verify_teacher_access(d)
     badge_given = {
         "active": False,
@@ -687,6 +689,9 @@ def withdraw_all_badges(
     d = DocEntry.find_by_path(f"groups/{context_group}")  # TODO: Make this unambiguous.
     if not d:
         raise NotExist(f'User group "{context_group}" not found')
+    # TODO: Add attribute message=f"Sorry, you don't have permission to use this resource.
+    #       If you are a teacher of context_group, please contact TIM admin."
+    #       and remove corresponding error message generation from frontend.
     verify_teacher_access(d)
     badge_given = {
         "active": False,
@@ -711,8 +716,7 @@ def withdraw_all_badges(
     return json_response(badge_given, 200)
 
 
-# TODO: Not yet in use. If going to use this route, create tests for it and handle errors.
-@badges_blueprint.get("/undo_withdraw_badge")
+@badges_blueprint.post("/undo_withdraw_badge")
 def undo_withdraw_badge(badge_given_id: int, context_group: str) -> Response:
     """
     Undoes a badge withdrawal from a usergroup.
@@ -720,9 +724,15 @@ def undo_withdraw_badge(badge_given_id: int, context_group: str) -> Response:
     :param badge_given_id: ID of the badgegiven
     :return: ok response
     """
+    badge_given = BadgeGiven.get_by_id(badge_given_id)
+    if not badge_given:
+        raise NotExist(f'Given badge with id "{badge_given_id}" not found')
     d = DocEntry.find_by_path(f"groups/{context_group}")  # TODO: Make this unambiguous.
     if not d:
         raise NotExist(f'User group "{context_group}" not found')
+    # TODO: Add attribute message=f"Sorry, you don't have permission to use this resource.
+    #       If you are a teacher of context_group, please contact TIM admin."
+    #       and remove corresponding error message generation from frontend.
     verify_teacher_access(d)
     badge_given = {
         "active": True,
@@ -741,7 +751,7 @@ def undo_withdraw_badge(badge_given_id: int, context_group: str) -> Response:
                 "active": badge_given["active"],
             }
         )
-    return ok_response()
+    return json_response(badge_given, 200)
 
 
 # TODO: Create tests for this route.
@@ -790,6 +800,9 @@ def get_subgroups(group_name_prefix: str) -> Response:
     )  # TODO: Make this unambiguous.
     if not d:
         raise NotExist(f'User group "{group_name_prefix}" not found')
+    # TODO: Add attribute message=f"Sorry, you don't have permission to use this resource.
+    #       If you are a teacher of context_group, please contact TIM admin."
+    #       and remove corresponding error message generation from frontend.
     verify_teacher_access(d)
     subgroups = (
         run_sql(
@@ -891,5 +904,8 @@ def usergroups_members(usergroup_name: str) -> Response:
     )  # TODO: Make this unambiguous.
     if not d:
         raise NotExist(f'User group "{usergroup_name}" not found')
+    # TODO: Add attribute message=f"Sorry, you don't have permission to use this resource.
+    #       If you are a teacher of context_group, please contact TIM admin."
+    #       and remove corresponding error message generation from frontend.
     verify_teacher_access(d)
     return json_response(sorted(list(usergroup.users), key=attrgetter("real_name")))
