@@ -4,7 +4,7 @@ from operator import attrgetter
 from pathlib import Path
 from flask import Response, current_app
 from sqlalchemy import select, or_, func, desc
-from timApp.auth.accesshelper import verify_teacher_access
+from timApp.auth.accesshelper import verify_teacher_access, AccessDenied
 from timApp.auth.sessioninfo import get_current_user_object
 from timApp.document.docentry import DocEntry
 from timApp.gamification.badge.badges import Badge, BadgeGiven
@@ -130,10 +130,10 @@ def all_badges_in_context(context_group: str) -> Response:
     if not d:
         raise NotExist(f'User group "{context_group}" not found')
     context_usergroup = UserGroup.get_by_name(context_group)
-    # TODO: Add attribute message=f"Sorry, you don't have permission to use this resource.
-    #       If you are a teacher of context_group, please contact TIM admin."
-    #       and remove corresponding error message generation from frontend.
-    verify_teacher_access(d)
+    verify_teacher_access(
+        d,
+        message=f"Sorry, you don't have permission to use this resource. If you are a teacher of {context_group}, please contact TIM admin.",
+    )
     badges = (
         run_sql(
             select(Badge)
@@ -185,10 +185,10 @@ def create_badge(
     d = DocEntry.find_by_path(f"groups/{context_group}")  # TODO: Make this unambiguous.
     if not d:
         raise NotExist(f'User group "{context_group}" not found')
-    # TODO: Add attribute message=f"Sorry, you don't have permission to use this resource.
-    #       If you are a teacher of context_group, please contact TIM admin."
-    #       and remove corresponding error message generation from frontend.
-    verify_teacher_access(d)
+    verify_teacher_access(
+        d,
+        message=f"Sorry, you don't have permission to use this resource. If you are a teacher of {context_group}, please contact TIM admin.",
+    )
     context_usergroup = UserGroup.get_by_name(context_group)
     badge = Badge(
         active=True,
@@ -250,10 +250,10 @@ def modify_badge(
     )  # TODO: Make this unambiguous.
     if not d:
         raise NotExist(f'User group "{context_group_object.name}" not found')
-    # TODO: Add attribute message=f"Sorry, you don't have permission to use this resource.
-    #       If you are a teacher of context_group, please contact TIM admin."
-    #       and remove corresponding error message generation from frontend.
-    verify_teacher_access(d)
+    verify_teacher_access(
+        d,
+        message=f"Sorry, you don't have permission to use this resource. If you are a teacher of {context_group_object.name}, please contact TIM admin.",
+    )
     new_badge = {
         "context_group": context_group,
         "title": title,
@@ -298,10 +298,10 @@ def deactivate_badge(badge_id: int, context_group: str) -> Response:
     d = DocEntry.find_by_path(f"groups/{context_group}")  # TODO: Make this unambiguous.
     if not d:
         raise NotExist(f'User group with id "{context_group}" not found')
-    # TODO: Add attribute message=f"Sorry, you don't have permission to use this resource.
-    #       If you are a teacher of context_group, please contact TIM admin."
-    #       and remove corresponding error message generation from frontend.
-    verify_teacher_access(d)
+    verify_teacher_access(
+        d,
+        message=f"Sorry, you don't have permission to use this resource. If you are a teacher of {context_group}, please contact TIM admin.",
+    )
     new_badge = {
         "active": False,
         "deleted_by": get_current_user_object().id,
@@ -335,10 +335,10 @@ def reactivate_badge(badge_id: int, context_group: str) -> Response:
     d = DocEntry.find_by_path(f"groups/{context_group}")  # TODO: Make this unambiguous.
     if not d:
         raise NotExist(f'User group "{context_group}" not found')
-    # TODO: Add attribute message=f"Sorry, you don't have permission to use this resource.
-    #       If you are a teacher of context_group, please contact TIM admin."
-    #       and remove corresponding error message generation from frontend.
-    verify_teacher_access(d)
+    verify_teacher_access(
+        d,
+        message=f"Sorry, you don't have permission to use this resource. If you are a teacher of {context_group}, please contact TIM admin.",
+    )
     new_badge = {
         "active": True,
         "restored_by": get_current_user_object().id,
@@ -383,10 +383,10 @@ def get_groups_badges(group_id: int, context_group: str) -> Response:
         )  # TODO: Make this unambiguous.
         if not d:
             raise NotExist(f'User group "{context_group}" not found')
-        # TODO: Add attribute message=f"Sorry, you don't have permission to use this resource.
-        #       If you are a teacher of context_group, please contact TIM admin."
-        #       and remove corresponding error message generation from frontend.
-        verify_teacher_access(d)
+        verify_teacher_access(
+            d,
+            message=f"Sorry, you don't have permission to use this resource. If you are a teacher of {context_group}, please contact TIM admin.",
+        )
     groups_badges_given = (
         run_sql(
             select(BadgeGiven)
@@ -602,10 +602,10 @@ def give_badge(
     d = DocEntry.find_by_path(f"groups/{context_group}")  # TODO: Make this unambiguous.
     if not d:
         raise NotExist(f'User group "{context_group}" not found')
-    # TODO: Add attribute message=f"Sorry, you don't have permission to use this resource.
-    #       If you are a teacher of context_group, please contact TIM admin."
-    #       and remove corresponding error message generation from frontend.
-    verify_teacher_access(d)
+    verify_teacher_access(
+        d,
+        message=f"Sorry, you don't have permission to use this resource. If you are a teacher of {context_group}, please contact TIM admin.",
+    )
     badge_given = BadgeGiven(
         active=True,
         group_id=group_id,
@@ -645,10 +645,10 @@ def withdraw_badge(badge_given_id: int, context_group: str) -> Response:
     d = DocEntry.find_by_path(f"groups/{context_group}")  # TODO: Make this unambiguous.
     if not d:
         raise NotExist(f'User group "{context_group}" not found')
-    # TODO: Add attribute message=f"Sorry, you don't have permission to use this resource.
-    #       If you are a teacher of context_group, please contact TIM admin."
-    #       and remove corresponding error message generation from frontend.
-    verify_teacher_access(d)
+    verify_teacher_access(
+        d,
+        message=f"Sorry, you don't have permission to use this resource. If you are a teacher of {context_group}, please contact TIM admin.",
+    )
     badge_given = {
         "active": False,
         "withdrawn_by": get_current_user_object().id,
@@ -689,10 +689,10 @@ def withdraw_all_badges(
     d = DocEntry.find_by_path(f"groups/{context_group}")  # TODO: Make this unambiguous.
     if not d:
         raise NotExist(f'User group "{context_group}" not found')
-    # TODO: Add attribute message=f"Sorry, you don't have permission to use this resource.
-    #       If you are a teacher of context_group, please contact TIM admin."
-    #       and remove corresponding error message generation from frontend.
-    verify_teacher_access(d)
+    verify_teacher_access(
+        d,
+        message=f"Sorry, you don't have permission to use this resource. If you are a teacher of {context_group}, please contact TIM admin.",
+    )
     badge_given = {
         "active": False,
         "withdrawn_by": get_current_user_object().id,
@@ -730,10 +730,10 @@ def undo_withdraw_badge(badge_given_id: int, context_group: str) -> Response:
     d = DocEntry.find_by_path(f"groups/{context_group}")  # TODO: Make this unambiguous.
     if not d:
         raise NotExist(f'User group "{context_group}" not found')
-    # TODO: Add attribute message=f"Sorry, you don't have permission to use this resource.
-    #       If you are a teacher of context_group, please contact TIM admin."
-    #       and remove corresponding error message generation from frontend.
-    verify_teacher_access(d)
+    verify_teacher_access(
+        d,
+        message=f"Sorry, you don't have permission to use this resource. If you are a teacher of {context_group}, please contact TIM admin.",
+    )
     badge_given = {
         "active": True,
         "undo_withdrawn_by": get_current_user_object().id,
@@ -754,11 +754,15 @@ def undo_withdraw_badge(badge_given_id: int, context_group: str) -> Response:
     return json_response(badge_given, 200)
 
 
-# TODO: Create tests for this route.
-# TODO: Handle errors
-# TODO: Do access right checks for this route.
 @badges_blueprint.get("/podium/<group_name_prefix>")
 def podium(group_name_prefix: str) -> Response:
+    usergroup = UserGroup.get_by_name(group_name_prefix)
+    if not usergroup:
+        raise NotExist(f'User group "{group_name_prefix}" not found')
+    current_user = get_current_user_object()
+    in_group = check_group_member(current_user, usergroup.id)
+    if not in_group:
+        raise AccessDenied(f'You are not part of user group "{group_name_prefix}"')
     results = run_sql(
         select(UserGroup.name, func.count(BadgeGiven.id).label("badge_count"))
         .filter(
@@ -800,10 +804,10 @@ def get_subgroups(group_name_prefix: str) -> Response:
     )  # TODO: Make this unambiguous.
     if not d:
         raise NotExist(f'User group "{group_name_prefix}" not found')
-    # TODO: Add attribute message=f"Sorry, you don't have permission to use this resource.
-    #       If you are a teacher of context_group, please contact TIM admin."
-    #       and remove corresponding error message generation from frontend.
-    verify_teacher_access(d)
+    verify_teacher_access(
+        d,
+        message=f"Sorry, you don't have permission to use this resource. If you are a teacher of {group_name_prefix}, please contact TIM admin.",
+    )
     subgroups = (
         run_sql(
             select(UserGroup)
@@ -904,8 +908,8 @@ def usergroups_members(usergroup_name: str) -> Response:
     )  # TODO: Make this unambiguous.
     if not d:
         raise NotExist(f'User group "{usergroup_name}" not found')
-    # TODO: Add attribute message=f"Sorry, you don't have permission to use this resource.
-    #       If you are a teacher of context_group, please contact TIM admin."
-    #       and remove corresponding error message generation from frontend.
-    verify_teacher_access(d)
+    verify_teacher_access(
+        d,
+        message=f"Sorry, you don't have permission to use this resource. If you are a teacher of {usergroup_name}, please contact TIM admin.",
+    )
     return json_response(sorted(list(usergroup.users), key=attrgetter("real_name")))

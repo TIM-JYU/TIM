@@ -627,7 +627,7 @@ class BadgeTestMain(TimRouteTest):
         # fetch all badges in context when user doesn't have teacher access to the context group
         self.get(
             f"/all_badges_in_context/{it_25.name}",
-            expect_content="Sorry, you don't have permission to use this resource.",
+            expect_content=f"Sorry, you don't have permission to use this resource. If you are a teacher of {it_25.name}, please contact TIM admin.",
             expect_status=403,
         )
 
@@ -642,7 +642,7 @@ class BadgeTestMain(TimRouteTest):
                 "image": "4",
                 "description": "You are the boss!",
             },
-            expect_content="Sorry, you don't have permission to use this resource.",
+            expect_content=f"Sorry, you don't have permission to use this resource. If you are a teacher of {it_25.name}, please contact TIM admin.",
             expect_status=403,
         )
 
@@ -659,7 +659,7 @@ class BadgeTestMain(TimRouteTest):
                 "image": 3,
                 "description": "Most valuable player",
             },
-            expect_content="Sorry, you don't have permission to use this resource.",
+            expect_content=f"Sorry, you don't have permission to use this resource. If you are a teacher of {it_25.name}, please contact TIM admin.",
             expect_status=403,
         )
 
@@ -670,7 +670,7 @@ class BadgeTestMain(TimRouteTest):
                 "badge_id": 1,
                 "context_group": it_25.name,
             },
-            expect_content="Sorry, you don't have permission to use this resource.",
+            expect_content=f"Sorry, you don't have permission to use this resource. If you are a teacher of {it_25.name}, please contact TIM admin.",
             expect_status=403,
         )
 
@@ -681,7 +681,7 @@ class BadgeTestMain(TimRouteTest):
                 "badge_id": 2,
                 "context_group": it_25.name,
             },
-            expect_content="Sorry, you don't have permission to use this resource.",
+            expect_content=f"Sorry, you don't have permission to use this resource. If you are a teacher of {it_25.name}, please contact TIM admin.",
             expect_status=403,
         )
 
@@ -764,7 +764,7 @@ class BadgeTestMain(TimRouteTest):
         # and is not included in the context group
         self.get(
             f"/groups_badges/{it_25_cats.id}/{it_25.name}",
-            expect_content="Sorry, you don't have permission to use this resource.",
+            expect_content=f"Sorry, you don't have permission to use this resource. If you are a teacher of {it_25.name}, please contact TIM admin.",
             expect_status=403,
         )
 
@@ -785,7 +785,7 @@ class BadgeTestMain(TimRouteTest):
         # and is not included in the context group
         self.get(
             f"/groups_badges/{it_25_cats.id}/{it_25.name}",
-            expect_content="Sorry, you don't have permission to use this resource.",
+            expect_content=f"Sorry, you don't have permission to use this resource. If you are a teacher of {it_25.name}, please contact TIM admin.",
             expect_status=403,
         )
 
@@ -800,7 +800,7 @@ class BadgeTestMain(TimRouteTest):
                 "badge_id": 1,
                 "message": "Awesome!",
             },
-            expect_content="Sorry, you don't have permission to use this resource.",
+            expect_content=f"Sorry, you don't have permission to use this resource. If you are a teacher of {it_25.name}, please contact TIM admin.",
             expect_status=403,
         )
 
@@ -827,7 +827,7 @@ class BadgeTestMain(TimRouteTest):
                 "badge_given_id": 4,
                 "context_group": it_25.name,
             },
-            expect_content="Sorry, you don't have permission to use this resource.",
+            expect_content=f"Sorry, you don't have permission to use this resource. If you are a teacher of {it_25.name}, please contact TIM admin.",
             expect_status=403,
         )
 
@@ -838,7 +838,7 @@ class BadgeTestMain(TimRouteTest):
                 "badge_given_id": 3,
                 "context_group": it_25.name,
             },
-            expect_content="Sorry, you don't have permission to use this resource.",
+            expect_content=f"Sorry, you don't have permission to use this resource. If you are a teacher of {it_25.name}, please contact TIM admin.",
             expect_status=403,
         )
 
@@ -850,21 +850,21 @@ class BadgeTestMain(TimRouteTest):
                 "usergroup_id": it_25_cats.id,
                 "context_group": it_25.name,
             },
-            expect_content="Sorry, you don't have permission to use this resource.",
+            expect_content=f"Sorry, you don't have permission to use this resource. If you are a teacher of {it_25.name}, please contact TIM admin.",
             expect_status=403,
         )
 
         # fetch subgroups when user doesn't have teacher access to the context group
         self.get(
             f"/subgroups/{it_25.name}",
-            expect_content="Sorry, you don't have permission to use this resource.",
+            expect_content=f"Sorry, you don't have permission to use this resource. If you are a teacher of {it_25.name}, please contact TIM admin.",
             expect_status=403,
         )
 
         # fetch usergroup's members when user doesn't have teacher access to the context group
         self.get(
             f"/usergroups_members/{it_25.name}",
-            expect_content="Sorry, you don't have permission to use this resource.",
+            expect_content=f"Sorry, you don't have permission to use this resource. If you are a teacher of {it_25.name}, please contact TIM admin.",
             expect_status=403,
         )
 
@@ -985,6 +985,331 @@ class BadgeTestMain(TimRouteTest):
         )
         self.get(
             f"/groups_badges/{self.test_user_1.get_personal_group().id}/{it_26.name}",
+            expect_content=[],
+            expect_status=200,
+        )
+
+
+class BadgeTestPodium(TimRouteTest):
+    def create_group(self, name: str, users: list) -> UserGroup:
+        ug = UserGroup.create(name)
+        for u in users:
+            ug.users.append(u)
+        return ug
+
+    def test_badge_podium(self):
+        # initialization
+        it_29 = self.create_group("it_29", [self.test_user_1])
+        doc_it_29 = DocEntry.create("groups/it_29", it_29)
+        db.session.flush()
+        self.test_user_1.grant_access(doc_it_29.block, AccessType.teacher)
+        self.commit_db()
+        doc_it_29.block  # TODO: Why isn't the test working without this?
+        self.login_test1()
+
+        # get podium when no subgroups in context group
+        self.get(f"/podium/{it_29.name}", expect_content=[], expect_status=200)
+
+        # create 6 subgroups in it_29
+        it_29_cats = self.create_group("it_29-cats", [self.test_user_1])
+        it_29_dogs = self.create_group("it_29-dogs", [self.test_user_1])
+        it_29_bats = self.create_group("it_29-bats", [self.test_user_1])
+        it_29_pigs = self.create_group("it_29-pigs", [self.test_user_1])
+        it_29_lions = self.create_group("it_29-lions", [self.test_user_1])
+        it_29_wolves = self.create_group("it_29-wolves", [self.test_user_1])
+        doc_it_29_cats = DocEntry.create("groups/it_29-cats", it_29_cats)
+        doc_it_29_dogs = DocEntry.create("groups/it_29-dogs", it_29_dogs)
+        doc_it_29_bats = DocEntry.create("groups/it_29-bats", it_29_bats)
+        doc_it_29_pigs = DocEntry.create("groups/it_29-pigs", it_29_pigs)
+        doc_it_29_lions = DocEntry.create("groups/it_29-lions", it_29_lions)
+        doc_it_29_wolves = DocEntry.create("groups/it_29-wolves", it_29_wolves)
+        db.session.flush()
+        self.test_user_1.grant_access(doc_it_29_cats.block, AccessType.teacher)
+        self.test_user_1.grant_access(doc_it_29_dogs.block, AccessType.teacher)
+        self.test_user_1.grant_access(doc_it_29_bats.block, AccessType.teacher)
+        self.test_user_1.grant_access(doc_it_29_pigs.block, AccessType.teacher)
+        self.test_user_1.grant_access(doc_it_29_lions.block, AccessType.teacher)
+        self.test_user_1.grant_access(doc_it_29_wolves.block, AccessType.teacher)
+        self.commit_db()
+        doc_it_29_cats.block  # TODO: Why isn't the test working without this?
+        doc_it_29_dogs.block  # TODO: Why isn't the test working without this?
+        doc_it_29_bats.block  # TODO: Why isn't the test working without this?
+        doc_it_29_pigs.block  # TODO: Why isn't the test working without this?
+        doc_it_29_lions.block  # TODO: Why isn't the test working without this?
+        doc_it_29_wolves.block  # TODO: Why isn't the test working without this?
+        self.login_test1()
+
+        # create a badge and give it 2 times to cats and once to bats
+        self.post(
+            f"/create_badge",
+            data={
+                "context_group": "it_29",
+                "title": "Coordinator",
+                "color": "blue",
+                "shape": "hexagon",
+                "image": 1,
+                "description": "Great coordination",
+            },
+            expect_status=200,
+        )
+        self.post(
+            f"/give_badge",
+            data={
+                "context_group": "it_29",
+                "group_id": it_29_cats.id,
+                "badge_id": 1,
+                "message": "Congratulations!",
+            },
+            expect_status=200,
+        )
+        self.post(
+            f"/give_badge",
+            data={
+                "context_group": "it_29",
+                "group_id": it_29_cats.id,
+                "badge_id": 1,
+                "message": "Congratulations!",
+            },
+            expect_status=200,
+        )
+        self.post(
+            f"/give_badge",
+            data={
+                "context_group": "it_29",
+                "group_id": it_29_bats.id,
+                "badge_id": 1,
+                "message": "Congratulations!",
+            },
+            expect_status=200,
+        )
+
+        # get podium after 6 subgroups created and badges given to some of them
+        self.get(
+            f"/podium/{it_29.name}",
+            expect_content=[
+                {"badge_count": 2, "group_name": it_29_cats.name},
+                {"badge_count": 1, "group_name": it_29_bats.name},
+            ],
+            expect_status=200,
+        )
+
+        # give badges so that all of 6 subgroups have some
+        self.post(
+            f"/give_badge",
+            data={
+                "context_group": "it_29",
+                "group_id": it_29_dogs.id,
+                "badge_id": 1,
+                "message": "Congratulations!",
+            },
+            expect_status=200,
+        )
+        self.post(
+            f"/give_badge",
+            data={
+                "context_group": "it_29",
+                "group_id": it_29_dogs.id,
+                "badge_id": 1,
+                "message": "Congratulations!",
+            },
+            expect_status=200,
+        )
+        self.post(
+            f"/give_badge",
+            data={
+                "context_group": "it_29",
+                "group_id": it_29_dogs.id,
+                "badge_id": 1,
+                "message": "Congratulations!",
+            },
+            expect_status=200,
+        )
+        self.post(
+            f"/give_badge",
+            data={
+                "context_group": "it_29",
+                "group_id": it_29_wolves.id,
+                "badge_id": 1,
+                "message": "Congratulations!",
+            },
+            expect_status=200,
+        )
+        self.post(
+            f"/give_badge",
+            data={
+                "context_group": "it_29",
+                "group_id": it_29_wolves.id,
+                "badge_id": 1,
+                "message": "Congratulations!",
+            },
+            expect_status=200,
+        )
+        self.post(
+            f"/give_badge",
+            data={
+                "context_group": "it_29",
+                "group_id": it_29_wolves.id,
+                "badge_id": 1,
+                "message": "Congratulations!",
+            },
+            expect_status=200,
+        )
+        self.post(
+            f"/give_badge",
+            data={
+                "context_group": "it_29",
+                "group_id": it_29_wolves.id,
+                "badge_id": 1,
+                "message": "Congratulations!",
+            },
+            expect_status=200,
+        )
+        self.post(
+            f"/give_badge",
+            data={
+                "context_group": "it_29",
+                "group_id": it_29_lions.id,
+                "badge_id": 1,
+                "message": "Congratulations!",
+            },
+            expect_status=200,
+        )
+        self.post(
+            f"/give_badge",
+            data={
+                "context_group": "it_29",
+                "group_id": it_29_lions.id,
+                "badge_id": 1,
+                "message": "Congratulations!",
+            },
+            expect_status=200,
+        )
+        self.post(
+            f"/give_badge",
+            data={
+                "context_group": "it_29",
+                "group_id": it_29_lions.id,
+                "badge_id": 1,
+                "message": "Congratulations!",
+            },
+            expect_status=200,
+        )
+        self.post(
+            f"/give_badge",
+            data={
+                "context_group": "it_29",
+                "group_id": it_29_lions.id,
+                "badge_id": 1,
+                "message": "Congratulations!",
+            },
+            expect_status=200,
+        )
+        self.post(
+            f"/give_badge",
+            data={
+                "context_group": "it_29",
+                "group_id": it_29_lions.id,
+                "badge_id": 1,
+                "message": "Congratulations!",
+            },
+            expect_status=200,
+        )
+        self.post(
+            f"/give_badge",
+            data={
+                "context_group": "it_29",
+                "group_id": it_29_pigs.id,
+                "badge_id": 1,
+                "message": "Congratulations!",
+            },
+            expect_status=200,
+        )
+        self.post(
+            f"/give_badge",
+            data={
+                "context_group": "it_29",
+                "group_id": it_29_pigs.id,
+                "badge_id": 1,
+                "message": "Congratulations!",
+            },
+            expect_status=200,
+        )
+        self.post(
+            f"/give_badge",
+            data={
+                "context_group": "it_29",
+                "group_id": it_29_pigs.id,
+                "badge_id": 1,
+                "message": "Congratulations!",
+            },
+            expect_status=200,
+        )
+        self.post(
+            f"/give_badge",
+            data={
+                "context_group": "it_29",
+                "group_id": it_29_pigs.id,
+                "badge_id": 1,
+                "message": "Congratulations!",
+            },
+            expect_status=200,
+        )
+        self.post(
+            f"/give_badge",
+            data={
+                "context_group": "it_29",
+                "group_id": it_29_pigs.id,
+                "badge_id": 1,
+                "message": "Congratulations!",
+            },
+            expect_status=200,
+        )
+        self.post(
+            f"/give_badge",
+            data={
+                "context_group": "it_29",
+                "group_id": it_29_pigs.id,
+                "badge_id": 1,
+                "message": "Congratulations!",
+            },
+            expect_status=200,
+        )
+
+        # get podium after badges given to all of 6 subgroups
+        self.get(
+            f"/podium/{it_29.name}",
+            expect_content=[
+                {"badge_count": 6, "group_name": it_29_pigs.name},
+                {"badge_count": 5, "group_name": it_29_lions.name},
+                {"badge_count": 4, "group_name": it_29_wolves.name},
+                {"badge_count": 3, "group_name": it_29_dogs.name},
+                {"badge_count": 2, "group_name": it_29_cats.name},
+            ],
+            expect_status=200,
+        )
+
+        self.login_test2()
+
+        # get podium when user is not a part of the context group
+        self.get(
+            f"/podium/{it_29.name}",
+            expect_content=f'You are not part of user group "{it_29.name}"',
+            expect_status=403,
+        )
+
+        self.login_test1()
+
+        # delete an already given badge and get podium after that
+        self.post(
+            f"/deactivate_badge",
+            data={
+                "badge_id": 1,
+                "context_group": it_29.name,
+            },
+            expect_status=200,
+        )
+        self.get(
+            f"/podium/{it_29.name}",
             expect_content=[],
             expect_status=200,
         )
@@ -1268,6 +1593,13 @@ class BadgeTestErroneousData(TimRouteTest):
                 "usergroup_id": self.test_user_1.get_personal_group().id,
                 "context_group": "nonexistent_group",
             },
+            expect_status=404,
+            expect_content='User group "nonexistent_group" not found',
+        )
+
+        # get podium with erroneous data
+        self.get(
+            f"/podium/nonexistent_group",
             expect_status=404,
             expect_content='User group "nonexistent_group" not found',
         )
