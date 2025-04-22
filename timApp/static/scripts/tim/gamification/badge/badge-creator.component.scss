@@ -214,6 +214,7 @@ button[type="button"]:hover {
 #cancelButton {
   background-color: #6c757d;
   color: #fff;
+  font-weight: bold;
 }
 
 #cancelButton[disabled]:hover {
@@ -241,6 +242,7 @@ button[type="button"]:hover {
   background-color: #0F4096;
   color: #fff;
   font-size: 1.1em;
+  font-weight: bold;
   cursor: pointer;
   transition: background-color 0.3s ease;
 }
