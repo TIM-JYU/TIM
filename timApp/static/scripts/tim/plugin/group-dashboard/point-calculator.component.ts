@@ -72,7 +72,6 @@ export class PointCalculatorComponent implements OnInit {
 
                     if (savedPoints && group.id) {
                         group.points = savedPoints[group.id];
-                        console.log(group);
                     }
                 }
             }
