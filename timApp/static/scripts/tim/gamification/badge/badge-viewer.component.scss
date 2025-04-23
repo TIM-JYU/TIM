@@ -37,6 +37,12 @@
   z-index: 2;
 }
 
+.badge-dialog-window {
+  padding-left: 20px;
+  padding-top: 15px;
+  padding-bottom: 15px;
+}
+
 .user-badges::after {
   content: "";
   flex-grow: 9999;
