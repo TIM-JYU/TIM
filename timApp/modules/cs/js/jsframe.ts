@@ -90,13 +90,6 @@ const JsframeAll = t.intersection([
     }),
 ]);
 
-/*
-interface JSFrameData {
-    c: unknown;
-    message?: string;
-}
-*/
-
 interface JSFrameBase {
     message?: string;
     fielddata?: unknown;
@@ -108,7 +101,7 @@ interface CFrame extends JSFrameBase {
 
 interface UserCodeFrame extends JSFrameBase {
     usercode: unknown;
-    [key: string]: unknown; // sallii lisäkentät
+    [key: string]: unknown;
 }
 
 type JSFrameData = CFrame | UserCodeFrame;
