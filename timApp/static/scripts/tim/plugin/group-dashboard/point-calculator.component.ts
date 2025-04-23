@@ -18,7 +18,7 @@ import {showConfirm} from "tim/ui/showConfirmDialog";
   </h1>
         <div class="point-calculator">
             <div *ngFor="let subgroup of subGroups" class="group-entry">
-      <label class="group-label">{{ subgroup.description }}</label>
+      <label class="group-label" [title]="subgroup.name">{{ subgroup.description }}</label>
       <input
         type="number"
         [(ngModel)]="subgroup.points"
@@ -78,7 +78,6 @@ export class PointCalculatorComponent implements OnInit {
         }
     }
     //TODO: väläytä pistekenttää esim. vihreänä - indikoi tallentamista
-    // tuo pisteet servicen kautta group dashboardiin näkyviin
     savePoints() {
         this.subGroups.forEach((group) => {
             if (group.id != null && group.name) {
