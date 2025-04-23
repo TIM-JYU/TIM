@@ -53,3 +53,31 @@
   position: relative;
 }
 
+.save {
+  width: 40%;
+  padding: 0.8em;
+  border: none;
+  border-radius: 0.5em;
+  background-color: #0F4096;
+  color: #fff;
+  font-size: 1.1em;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.reset {
+  width: 40%;
+  padding: 0.8em;
+  border: none;
+  border-radius: 0.5em;
+  background-color: #9b1212;
+  color: #fff;
+  font-size: 1.1em;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.buttons {
+  display: flex;
+  gap: 1em;
+}

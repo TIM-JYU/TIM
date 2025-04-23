@@ -6,6 +6,7 @@ import {GroupNameModule} from "./group-name.component";
 import {BadgeModule} from "../../gamification/badge/badge.component";
 import {FormsModule} from "@angular/forms";
 import {PointService} from "tim/plugin/group-dashboard/point.service";
+import {showConfirm} from "tim/ui/showConfirmDialog";
 
 @Component({
     selector: "tim-point-calculator",
@@ -24,7 +25,10 @@ import {PointService} from "tim/plugin/group-dashboard/point.service";
         placeholder="Enter points"
       />
     </div>
-            <button (click)="savePoints()">Save changes</button>
+            <div class="buttons">
+            <button class="save" (click)="savePoints()">Save changes</button>
+            <button class="reset" (click)="resetPoints()">Reset points</button>
+                </div>
         </div>
     </ng-container>`,
     styleUrls: ["./point-calculator.component.scss"],
@@ -32,7 +36,6 @@ import {PointService} from "tim/plugin/group-dashboard/point.service";
 export class PointCalculatorComponent implements OnInit {
     constructor(
         private groupService: GroupService,
-        private badgeService: BadgeService,
         private pointService: PointService
     ) {}
 
@@ -79,6 +82,31 @@ export class PointCalculatorComponent implements OnInit {
         this.subGroups.forEach((group) => {
             if (group.id != null) {
                 pointsMap[group.id] = group.points || 0;
+            }
+        });
+        this.pointService.setPoints(this.group, pointsMap);
+    }
+
+    async resetPoints() {
+        const confirmed = await showConfirm(
+            "Confirm Reset",
+            "Are you sure you want to reset all points? This cannot be undone."
+        );
+
+        if (!confirmed) {
+            return;
+        }
+
+        this.subGroups.forEach((group) => {
+            if (group.id != null) {
+                group.points = 0;
+            }
+        });
+
+        const pointsMap: Record<number, number> = {};
+        this.subGroups.forEach((group) => {
+            if (group.id) {
+                pointsMap[group.id] = 0;
             }
         });
         this.pointService.setPoints(this.group, pointsMap);
