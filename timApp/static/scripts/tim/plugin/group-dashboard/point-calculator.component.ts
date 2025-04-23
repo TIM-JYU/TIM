@@ -18,7 +18,7 @@ import {showConfirm} from "tim/ui/showConfirmDialog";
   </h1>
         <div class="point-calculator">
             <div *ngFor="let subgroup of subGroups" class="group-entry">
-      <label class="group-label">{{ subgroup.name }}</label>
+      <label class="group-label">{{ subgroup.description }}</label>
       <input
         type="number"
         [(ngModel)]="subgroup.points"
@@ -40,7 +40,12 @@ export class PointCalculatorComponent implements OnInit {
     ) {}
 
     @Input() group!: string;
-    subGroups: {name: string; points?: number; id?: number}[] = [];
+    subGroups: {
+        name: string;
+        points?: number;
+        id?: number;
+        description?: string;
+    }[] = [];
 
     async ngOnInit() {
         await this.fetchSubGroups();
@@ -60,31 +65,28 @@ export class PointCalculatorComponent implements OnInit {
                     group.name
                 );
                 if (prettyGroup) {
-                    group.name = prettyGroup.description || group.name;
+                    group.description = prettyGroup.description || group.name;
                     group.id = prettyGroup.id;
-                }
-            }
 
-            const savedPoints = this.pointService.getPoints(this.group);
-            if (savedPoints) {
-                this.subGroups.forEach((group) => {
-                    if (group.id != null && savedPoints[group.id] != null) {
+                    const savedPoints = this.pointService.getPoints(group.name);
+
+                    if (savedPoints && group.id) {
                         group.points = savedPoints[group.id];
+                        console.log(group);
                     }
-                });
+                }
             }
         }
     }
     //TODO: väläytä pistekenttää esim. vihreänä - indikoi tallentamista
     // tuo pisteet servicen kautta group dashboardiin näkyviin
     savePoints() {
-        const pointsMap: Record<number, number> = {};
         this.subGroups.forEach((group) => {
-            if (group.id != null) {
-                pointsMap[group.id] = group.points || 0;
+            if (group.id != null && group.name) {
+                const points = group.points || 0;
+                this.pointService.setPoints(group.name, {[group.id]: points});
             }
         });
-        this.pointService.setPoints(this.group, pointsMap);
     }
 
     async resetPoints() {

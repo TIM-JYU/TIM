@@ -1,9 +1,13 @@
 import {Injectable} from "@angular/core";
+import {BehaviorSubject} from "rxjs";
 
 @Injectable({
     providedIn: "root",
 })
 export class PointService {
+    private pointsUpdated = new BehaviorSubject<void>(undefined);
+    pointsUpdated$ = this.pointsUpdated.asObservable();
+
     getPoints(group: string): Record<string, number> | null {
         const item = localStorage.getItem(`points-${group}`);
         return item ? JSON.parse(item) : null;
