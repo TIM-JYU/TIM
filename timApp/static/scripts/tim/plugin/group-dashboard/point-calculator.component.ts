@@ -23,6 +23,7 @@ import {showConfirm} from "tim/ui/showConfirmDialog";
         type="number"
         [(ngModel)]="subgroup.points"
         placeholder="Enter points"
+        [ngClass]="{'flashing': modifiedGroups.has(subgroup.id ?? 0)}"
       />
     </div>
             <div class="buttons">
@@ -46,6 +47,7 @@ export class PointCalculatorComponent implements OnInit {
         id?: number;
         description?: string;
     }[] = [];
+    modifiedGroups: Set<number> = new Set();
 
     async ngOnInit() {
         await this.fetchSubGroups();
@@ -83,8 +85,17 @@ export class PointCalculatorComponent implements OnInit {
             if (group.id != null && group.name) {
                 const points = group.points || 0;
                 this.pointService.setPoints(group.name, {[group.id]: points});
+
+                this.modifiedGroups.add(group.id);
+                this.flashField(group.id);
             }
         });
+    }
+
+    flashField(groupId: number) {
+        setTimeout(() => {
+            this.modifiedGroups.delete(groupId);
+        }, 2000);
     }
 
     async resetPoints() {
