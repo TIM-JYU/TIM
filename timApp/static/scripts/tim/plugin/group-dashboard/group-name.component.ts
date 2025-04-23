@@ -54,7 +54,7 @@ export class GroupNameComponent implements OnInit {
     newName = new FormControl("", [Validators.required]);
     displayedName: string | null | undefined;
     showInput: boolean = false;
-    showFullName = false;
+    showFullName = true;
     storedGroup: {name: string; id: number} | null = null;
 
     constructor(
@@ -84,7 +84,9 @@ export class GroupNameComponent implements OnInit {
 
             this.prettyName = fetchedGroup.description || "";
             // Set the display name shown to users
-            this.displayedName = this.groupName;
+            this.displayedName = this.showFullName
+                ? this.groupName
+                : this.subGroup;
 
             this.parseParentGroup(this.groupName);
         }
@@ -124,7 +126,7 @@ export class GroupNameComponent implements OnInit {
         const nameParts = this.groupName.split("-");
         this.parentGroup = nameParts[0];
         this.subGroup = nameParts.slice(1).join(".");
-        this.displayedName = this.subGroup;
+        this.displayedName = this.groupName;
         this.contextGroupChange.emit(this.parentGroup);
     }
 
