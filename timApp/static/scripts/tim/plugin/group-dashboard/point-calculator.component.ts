@@ -1,9 +1,8 @@
 import {Component, Input, NgModule, OnInit} from "@angular/core";
 import {CommonModule} from "@angular/common";
 import {GroupService} from "./group.service";
-import {BadgeService} from "../../gamification/badge/badge.service";
 import {GroupNameModule} from "./group-name.component";
-import {BadgeModule} from "../../gamification/badge/badge.component";
+import {BadgeModule} from "tim/gamification/badge/badge.component";
 import {FormsModule} from "@angular/forms";
 import {PointService} from "tim/plugin/group-dashboard/point.service";
 import {showConfirm} from "tim/ui/showConfirmDialog";
@@ -13,8 +12,8 @@ import {showConfirm} from "tim/ui/showConfirmDialog";
     template: `
     <ng-container>
         <h1 class="heading-with-info">
-    Groups
-    <span class="info-icon" title="Displaying subgroups of main group (context group) {{this.group!}}">?</span>
+    Groups of {{this.group}}
+    <span class="info-icon" title="Displaying subgroups of context group {{this.group!}}">?</span>
   </h1>
         <div class="point-calculator">
             <div *ngFor="let subgroup of subGroups" class="group-entry">
