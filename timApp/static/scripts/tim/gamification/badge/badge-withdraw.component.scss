@@ -63,18 +63,20 @@
 
 
 .badge-card {
-  width: 150px; /* Aseta kortin koko */
-  height: 150px; /* Aseta kortin korkeus */
+  //width: 250px;
+  height: 100%;
   display: flex;
   align-items: center;
   justify-content: center;
-  //padding: 10px;
   text-align: center;
 }
 
 .badge-card tim-badge {
-  max-width: 100%;
-  max-height: 100%;
+  width: 150px;
+  height: 150px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 
@@ -117,7 +119,6 @@
   overflow-x: auto;
   overflow-y: hidden;
   gap: 20px;
-  align-items: center;
   align-items: center;
 }
 
