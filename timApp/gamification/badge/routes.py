@@ -361,7 +361,6 @@ def reactivate_badge(badge_id: int, context_group: str) -> Response:
     return json_response(new_badge, 200)
 
 
-# TODO: Check access rights and create tests for that.
 @badges_blueprint.get("/groups_badges/<group_id>/<context_group>")
 def get_groups_badges(group_id: int, context_group: str) -> Response:
     """
@@ -533,7 +532,6 @@ def get_groups_badges(group_id: int, context_group: str) -> Response:
     return json_response(badges_json)
 
 
-# TODO: Do access right checks and create tests for that.
 @badges_blueprint.get("/badge_holders/<badge_id>")
 def get_badge_holders(badge_id: int) -> Response:
     """
@@ -544,6 +542,16 @@ def get_badge_holders(badge_id: int) -> Response:
     badge = Badge.get_by_id(badge_id)
     if not badge:
         raise NotExist(f'Badge with id "{badge_id}" not found')
+    context_group = UserGroup.get_by_id(badge.context_group)
+    d = DocEntry.find_by_path(
+        f"groups/{context_group.name}"
+    )  # TODO: Make this unambiguous.
+    if not d:
+        raise NotExist(f'User group "{context_group.name}" not found')
+    verify_teacher_access(
+        d,
+        message=f"Sorry, you don't have permission to use this resource. If you are a teacher of {context_group.name}, please contact TIM admin.",
+    )
     badges_given = (
         run_sql(
             select(BadgeGiven).filter(
@@ -826,7 +834,6 @@ def get_subgroups(group_name_prefix: str) -> Response:
     return json_response(subgroups_json)
 
 
-# TODO: Maybe do access right checks and create tests for that.
 # TODO: Move this route to better place maybe.
 @badges_blueprint.get("/users_subgroups/<user_id>/<group_name_prefix>")
 def get_users_subgroups(user_id: int, group_name_prefix: str) -> Response:
@@ -843,6 +850,17 @@ def get_users_subgroups(user_id: int, group_name_prefix: str) -> Response:
     usergroup = UserGroup.get_by_name(group_name_prefix)
     if not usergroup:
         raise NotExist(f'User group "{group_name_prefix}" not found')
+    current_user = get_current_user_object()
+    if current_user.id != int(user_id):
+        d = DocEntry.find_by_path(
+            f"groups/{group_name_prefix}"
+        )  # TODO: Make this unambiguous.
+        if not d:
+            raise NotExist(f'User group "{group_name_prefix}" not found')
+        verify_teacher_access(
+            d,
+            message=f"Sorry, you don't have permission to use this resource. If you are a teacher of {group_name_prefix}, please contact TIM admin.",
+        )
     usergroup_memberships = (
         run_sql(
             select(UserGroupMember).filter(

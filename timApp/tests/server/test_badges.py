@@ -441,7 +441,7 @@ class BadgeTestMain(TimRouteTest):
             },
         )
 
-        # fetch groups badges after 3 badges given, two of them withdrawn and one of withdraws undid
+        # fetch groups badges after 3 badges given, two of them withdrawn and one of the withdrawals undid
         result_grba_nonempty = self.get(f"/groups_badges/{it_25_cats.id}/{it_25.name}")
         self.assertEqual(
             [
@@ -791,6 +791,13 @@ class BadgeTestMain(TimRouteTest):
 
         self.test_user_3.remove_access(doc_it_25.block.id, "teacher")
 
+        # fetch all usergroups that holds certain badge when user doesn't have teacher access to the context group
+        self.get(
+            "badge_holders/1",
+            expect_content=f"Sorry, you don't have permission to use this resource. If you are a teacher of it_25, please contact TIM admin.",
+            expect_status=403,
+        )
+
         # give a badge when user doesn't have teacher access to the context group
         self.post(
             f"/give_badge",
@@ -860,6 +867,38 @@ class BadgeTestMain(TimRouteTest):
             expect_content=f"Sorry, you don't have permission to use this resource. If you are a teacher of {it_25.name}, please contact TIM admin.",
             expect_status=403,
         )
+
+        self.login_test3()
+
+        # fetch users subgroups when user doesn't have teacher access to the context group
+        # and is not the user with given user id
+        self.get(
+            f"/users_subgroups/{self.test_user_1.id}/{it_25.name}",
+            expect_content=f"Sorry, you don't have permission to use this resource. If you are a teacher of {it_25.name}, please contact TIM admin.",
+            expect_status=403,
+        )
+
+        self.login_test2()
+
+        # fetch users subgroups when user doesn't have teacher access to the context group
+        # and is the user with given user id
+        self.get(
+            f"/users_subgroups/{self.test_user_2.id}/{it_25.name}",
+            expect_content=[{"id": it_25_cats.id, "name": it_25_cats.name}],
+            expect_status=200,
+        )
+
+        self.login_test1()
+
+        # fetch users subgroups when user has teacher access to the context group
+        # and is not the user with given user id
+        self.get(
+            f"/users_subgroups/{self.test_user_2.id}/{it_25.name}",
+            expect_content=[{"id": it_25_cats.id, "name": it_25_cats.name}],
+            expect_status=200,
+        )
+
+        self.login_test3()
 
         # fetch usergroup's members when user doesn't have teacher access to the context group
         self.get(
