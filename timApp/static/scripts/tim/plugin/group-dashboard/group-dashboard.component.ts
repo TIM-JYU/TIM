@@ -7,6 +7,8 @@ import {GroupNameModule} from "tim/plugin/group-dashboard/group-name.component";
 import {IBadge, IUser} from "tim/gamification/badge/badge.interface";
 import {BadgeModule} from "tim/gamification/badge/badge.component";
 import {GroupService} from "tim/plugin/group-dashboard/group.service";
+import {PointService} from "tim/plugin/group-dashboard/point.service";
+import {Subscription} from "rxjs";
 
 @Component({
     selector: "tim-group-dashboard",
@@ -38,11 +40,11 @@ import {GroupService} from "tim/plugin/group-dashboard/group.service";
 <div class="stat-summary">
     <p><strong>Total members:</strong> {{ totalMembers }}</p>
     <p><strong>Total badges (group + user):</strong> {{ totalBadges }}</p>
+    <p><strong>Total points: {{totalPoints}}</strong></p>
 </div>
 
 <div class="stat-visuals">
     <p><em>Graphs TBA</em></p>
-    <p><em>Points TBA</em></p>
 </div>
     </div>
 
@@ -87,11 +89,14 @@ import {GroupService} from "tim/plugin/group-dashboard/group.service";
 export class GroupDashboardComponent implements OnInit {
     constructor(
         private groupService: GroupService,
-        private badgeService: BadgeService
+        private badgeService: BadgeService,
+        private pointService: PointService
     ) {}
 
     @Input() group!: string;
     private item: IFullDocument | IFolder | undefined;
+    private pointSub?: Subscription;
+    totalPoints: number = 0;
     displayName: string | undefined;
     groupId: number | undefined;
     contextGroup: string | undefined;
@@ -104,14 +109,23 @@ export class GroupDashboardComponent implements OnInit {
 
     //TODO: total badges in group details
     //TODO: total members in group
-    async ngOnInit(): Promise<void> {
+    ngOnInit() {
         if (this.group) {
-            await this.getGroupName();
-            await this.fetchMembers();
-            await this.fetchUserBadges();
-            await this.fetchGroupBadges();
+            this.loadData();
         }
+    }
+
+    async loadData() {
+        await this.getGroupName();
+        await this.fetchMembers();
+        await this.fetchUserBadges();
+        await this.fetchGroupBadges();
+        this.refreshTotalPoints();
+
         this.item = manageglobals().curr_item;
+        this.pointSub = this.pointService.pointsUpdated$.subscribe(() => {
+            this.refreshTotalPoints();
+        });
     }
 
     async getGroupName() {
@@ -190,6 +204,14 @@ export class GroupDashboardComponent implements OnInit {
         setTimeout(() => {
             this.nameJustUpdated = false;
         }, 1500);
+    }
+
+    private refreshTotalPoints() {
+        this.totalPoints = this.pointService.getTotalPoints(this.group);
+    }
+
+    ngOnDestroy(): void {
+        this.pointSub?.unsubscribe();
     }
 }
 
