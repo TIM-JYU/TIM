@@ -11,11 +11,12 @@ import {showConfirm} from "tim/ui/showConfirmDialog";
     selector: "tim-point-calculator",
     template: `
     <ng-container>
+        <div class="point-component">
         <h1 class="heading-with-info">
     Groups of {{this.group}}
     <span class="info-icon" title="Displaying subgroups of context group {{this.group!}}">?</span>
   </h1>
-        <div class="point-calculator">
+        <div class="groups-list">
             <div *ngFor="let subgroup of subGroups" class="group-entry">
       <label class="group-label" [title]="subgroup.name">{{ subgroup.description }}</label>
       <input
@@ -30,6 +31,7 @@ import {showConfirm} from "tim/ui/showConfirmDialog";
             <button class="reset" (click)="resetPoints()">Reset points</button>
                 </div>
         </div>
+            </div>
     </ng-container>`,
     styleUrls: ["./point-calculator.component.scss"],
 })

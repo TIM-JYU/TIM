@@ -1,8 +1,18 @@
-.point-calculator {
+.point-component {
+      display: flex;
+    flex-direction: column;
+    box-shadow: 0 30px 200px #0000cc38, 0 0 20px #0F0C0020;
+    padding: 1em;
+    border-radius: 1em;
+    margin: 2em 0 2em 0;
+    width: auto;
+    background-color: #fff;
+}
+
+.groups-list {
   display: flex;
   flex-direction: column;
-  gap: 0.75rem; // spacing between rows
-  max-width: 500px;
+  gap: 0.75rem;
   margin-top: 1rem;
 }
 
@@ -31,7 +41,7 @@
 }
 
 .heading-with-info {
-  display: inline-block;
+  display: flex;
   position: relative;
   font-size: 3.5rem;
 }
