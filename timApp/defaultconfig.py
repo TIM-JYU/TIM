@@ -223,7 +223,7 @@ LOG_HOST = False
 
 MAX_ANSWER_CONTENT_SIZE = 200 * 1024  # bytes
 
-SCIM_ALLOWED_IP = "127.0.0.1"
+SCIM_ALLOWED_IP = {"127.0.0.1"}
 
 # Whether to allow creation of messages lists via GUI. At this moment requires Mailman to be configured.
 MESSAGE_LISTS_ENABLED = False
