@@ -287,6 +287,18 @@ export class BadgeViewerComponent implements OnInit {
             }
         }
         if (!result.ok) {
+            if (result.result.error.error == undefined) {
+                this.badgeService.showError(
+                    this.alerts,
+                    {
+                        data: {
+                            error: "Unexpected error. Check your internet connection.",
+                        },
+                    },
+                    "danger"
+                );
+                return;
+            }
             this.badgeService.showError(
                 this.alerts,
                 {

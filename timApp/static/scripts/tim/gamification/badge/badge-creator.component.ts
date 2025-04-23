@@ -481,6 +481,18 @@ export class BadgeCreatorComponent implements OnInit {
                 this.centerToComponent();
             }
             if (!result.ok) {
+                if (result.result.error.error == undefined) {
+                    this.badgeService.showError(
+                        this.alerts,
+                        {
+                            data: {
+                                error: "Unexpected error. Check your internet connection.",
+                            },
+                        },
+                        "danger"
+                    );
+                    return;
+                }
                 this.badgeService.showError(
                     this.alerts,
                     {data: {error: result.result.error.error}},
@@ -527,6 +539,18 @@ export class BadgeCreatorComponent implements OnInit {
             }
         }
         if (!result.ok) {
+            if (result.result.error.error == undefined) {
+                this.badgeService.showError(
+                    this.alerts,
+                    {
+                        data: {
+                            error: "Unexpected error. Check your internet connection.",
+                        },
+                    },
+                    "danger"
+                );
+                return;
+            }
             this.badgeService.showError(
                 this.alerts,
                 {
@@ -564,6 +588,18 @@ export class BadgeCreatorComponent implements OnInit {
                 await this.getBadges();
             }
             if (!result.ok) {
+                if (result.result.error.error == undefined) {
+                    this.badgeService.showError(
+                        this.alerts,
+                        {
+                            data: {
+                                error: "Unexpected error. Check your internet connection.",
+                            },
+                        },
+                        "danger"
+                    );
+                    return;
+                }
                 this.badgeService.showError(
                     this.alerts,
                     {data: {error: result.result.error.error}},
@@ -626,9 +662,21 @@ export class BadgeCreatorComponent implements OnInit {
                         // Send a signel to badgeservice about succesful delete-action
                         this.badgeService.triggerUpdateBadgeList();
                     } else {
+                        if (response.result.error.error == undefined) {
+                            this.badgeService.showError(
+                                this.alerts,
+                                {
+                                    data: {
+                                        error: "Unexpected error. Check your internet connection.",
+                                    },
+                                },
+                                "danger"
+                            );
+                            return;
+                        }
                         this.badgeService.showError(
                             this.alerts,
-                            {data: {error: "Failed to delete badge"}},
+                            {data: {error: response.result.error.error}},
                             "danger"
                         );
                         return;
