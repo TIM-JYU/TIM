@@ -46,6 +46,7 @@ export class PointCalculatorComponent implements OnInit {
         points?: number;
         id?: number;
         description?: string;
+        previousPoints?: number;
     }[] = [];
     modifiedGroups: Set<number> = new Set();
 
@@ -60,6 +61,7 @@ export class PointCalculatorComponent implements OnInit {
                 this.subGroups = groups.map((g: any) => ({
                     name: typeof g === "string" ? g : g.name,
                     points: 0,
+                    previousPoints: 0,
                 }));
             }
             for (const group of this.subGroups) {
@@ -74,20 +76,29 @@ export class PointCalculatorComponent implements OnInit {
 
                     if (savedPoints && group.id) {
                         group.points = savedPoints[group.id];
+                        group.previousPoints = savedPoints[group.id];
                     }
                 }
             }
         }
     }
-    //TODO: väläytä pistekenttää esim. vihreänä - indikoi tallentamista
+
     savePoints() {
         this.subGroups.forEach((group) => {
             if (group.id != null && group.name) {
                 const points = group.points || 0;
-                this.pointService.setPoints(group.name, {[group.id]: points});
 
-                this.modifiedGroups.add(group.id);
-                this.flashField(group.id);
+                // Only save and mark for flashing if the points have changed
+                if (group.previousPoints !== points) {
+                    this.pointService.setPoints(group.name, {
+                        [group.id]: points,
+                    });
+                    this.modifiedGroups.add(group.id);
+                    this.flashField(group.id);
+
+                    // Update the previousPoints to reflect the new value
+                    group.previousPoints = points;
+                }
             }
         });
     }
@@ -111,6 +122,7 @@ export class PointCalculatorComponent implements OnInit {
         this.subGroups.forEach((group) => {
             if (group.id != null) {
                 group.points = 0;
+                group.previousPoints = 0;
             }
         });
 
