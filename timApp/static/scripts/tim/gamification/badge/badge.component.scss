@@ -407,6 +407,7 @@
   transition: opacity 0.3s ease;
   white-space: normal;
   z-index: 99999;
+  word-wrap: break-word;
 }
 
 .tooltip::after {

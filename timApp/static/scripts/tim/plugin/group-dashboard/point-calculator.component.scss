@@ -1,0 +1,99 @@
+.point-component {
+      display: flex;
+    flex-direction: column;
+    box-shadow: 0 30px 200px #0000cc38, 0 0 20px #0F0C0020;
+    padding: 1em;
+    border-radius: 1em;
+    margin: 2em 0 2em 0;
+    width: auto;
+    background-color: #fff;
+}
+
+.groups-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.group-entry {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #f9f9f9;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.group-label {
+  font-weight: 500;
+  font-size: 1.5rem;
+}
+
+.points-input {
+  width: 100px;
+  padding: 0.25rem 0.5rem;
+  font-size: 1rem;
+  text-align: right;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+.heading-with-info {
+  display: flex;
+  position: relative;
+  font-size: 3.5rem;
+}
+
+.info-icon {
+  font-size: 0.65rem;
+  vertical-align: super;
+  margin-left: 4px;
+  background-color: #ccc;
+  color: #000;
+  border-radius: 50%;
+  width: 14px;
+  height: 14px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  cursor: pointer;
+  position: relative;
+}
+
+.save {
+  width: 40%;
+  padding: 0.8em;
+  border: none;
+  border-radius: 0.5em;
+  background-color: #0F4096;
+  color: #fff;
+  font-size: 1.1em;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.reset {
+  width: 40%;
+  padding: 0.8em;
+  border: none;
+  border-radius: 0.5em;
+  background-color: #9b1212;
+  color: #fff;
+  font-size: 1.1em;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.buttons {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.flashing {
+    background-color: lightgreen; /* Flashing color */
+    transition: background-color 0.5s ease-in-out; /* Smooth transition */
+}
