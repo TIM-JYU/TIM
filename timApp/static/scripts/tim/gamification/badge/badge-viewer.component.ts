@@ -1,6 +1,6 @@
 import type {OnInit} from "@angular/core";
 import {Input} from "@angular/core";
-import {Component, NgModule} from "@angular/core";
+import {Component, NgModule, ViewEncapsulation} from "@angular/core";
 import {CommonModule} from "@angular/common";
 import {FormsModule} from "@angular/forms";
 import {HttpClient, HttpClientModule} from "@angular/common/http";
@@ -111,6 +111,7 @@ import {GroupService} from "tim/plugin/group-dashboard/group.service";
         </ng-container>
     `,
     styleUrls: ["badge-viewer.component.scss"],
+    encapsulation: ViewEncapsulation.None,
 })
 export class BadgeViewerComponent implements OnInit {
     personalGroup?: IPersonalGroup;
@@ -172,6 +173,9 @@ export class BadgeViewerComponent implements OnInit {
             if (targetElement.closest(".badge-card")) {
                 return;
             }
+            if (targetElement.closest(".badge-dialog-window")) {
+                return;
+            }
             this.closeDialog();
         }
     }
@@ -215,19 +219,22 @@ export class BadgeViewerComponent implements OnInit {
         // Creates a dialog-window about the data of a badge
         this.badgeService.closeActiveDialog();
         const iconName = this.getImageNameById(badge.image);
+
         this.badgeService.activeDialogRef = await angularDialog.open(
             MessageDialogComponent,
             {
                 message: `
-                    <b>${badge.title}</b><br><br>
-                    <b>Description:</b> ${badge.description}<br>
-                    <b>Message:</b> ${badge.message}<br><br>
-                    <b>Icon:</b> ${iconName}<br>
-                    <b>Color:</b> ${badge.color}<br>
-                    <b>Shape:</b> ${badge.shape}<br><br>
-                    <b>Given time:</b> ${formattedBadgeTime}<br>
-                    <b>Created by:</b> ${badge.created_by_name}<br>
-                    <b>Given by:</b> ${badge.given_by_name}<br>                             
+                    <div class="badge-dialog-window">
+                        <b>${badge.title}</b><br><br>
+                        <b>Description:</b> ${badge.description}<br>
+                        <b>Message:</b> ${badge.message}<br><br>
+                        <b>Icon:</b> ${iconName}<br>
+                        <b>Color:</b> ${badge.color}<br>
+                        <b>Shape:</b> ${badge.shape}<br><br>
+                        <b>Given time:</b> ${formattedBadgeTime}<br>
+                        <b>Created by:</b> ${badge.created_by_name}<br>
+                        <b>Given by:</b> ${badge.given_by_name}<br>                     
+                    </div>                                                
             `,
                 modal: false,
             }
