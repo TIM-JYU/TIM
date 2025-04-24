@@ -15,17 +15,21 @@ import {GroupService} from "tim/plugin/group-dashboard/group.service";
     template: `
         <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
         <div class="viewer-container">
-            <h2>Leaderboard</h2>
-            <div class="leaderboard">
-                <div *ngFor="let team of top_five; let i = index" class="position" [ngClass]="getPositionClass(i)">
-                    <div class="icon">
-                      <span class="material-symbols-outlined">{{ getIcon(i) }}</span>
+            <h2>{{badgegroupContext}} top5 Leaderboard</h2>
+            <div class="leaderboard">        
+                <ng-container *ngIf="top_five.length > 0; else noTeams">
+                    <div *ngFor="let team of top_five; let i = index" class="position" [ngClass]="getPositionClass(i)">
+                        <div class="icon">
+                          <span class="material-symbols-outlined">{{ getIcon(i) }}</span>
+                        </div>
+                        <div class="trophy" [ngStyle]="{'height': calculateHeight(team.badge_count) }">{{ getPosition(i) }}</div>
+                        <p class="team">{{ team.prettyName }}</p>
+                        <p class="badge-count">{{ team.badge_count || 0 }}</p>
                     </div>
-                    <div class="trophy" [ngStyle]="{'height': calculateHeight(team.badge_count) }">{{ getPosition(i) }}</div>
-                    <p class="team">{{ team.prettyName }}</p>
-                    <p class="badge-count">{{ team.badge_count || 0 }}</p>
-                </div>              
-               
+                </ng-container>
+                <ng-template #noTeams>
+                    <p class="no-badges-txt">No teams in the selected context group</p>
+                </ng-template>               
             </div>               
         </div>        
     `,
