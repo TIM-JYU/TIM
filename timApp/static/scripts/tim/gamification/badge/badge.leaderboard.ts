@@ -15,6 +15,7 @@ import {GroupService} from "tim/plugin/group-dashboard/group.service";
     template: `
         <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
         <div class="viewer-container">
+            <h2>Leaderboard</h2>
             <div class="leaderboard">
                 <div *ngFor="let team of top_five; let i = index" class="position" [ngClass]="getPositionClass(i)">
                     <div class="icon">
