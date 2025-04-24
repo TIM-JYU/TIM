@@ -1,4 +1,4 @@
-import type {OnInit} from "@angular/core";
+import {OnInit, ViewChild} from "@angular/core";
 import {Input} from "@angular/core";
 import {Component, NgModule} from "@angular/core";
 import {HostListener, ElementRef} from "@angular/core";
@@ -24,7 +24,7 @@ import {GroupService} from "tim/plugin/group-dashboard/group.service";
     selector: "tim-badge-withdraw",
     template: `
         <ng-container *ngIf="hasPermission; else noPermissionView">
-            <div class="badge-withdraw">
+            <div class="badge-withdraw" #startSection>
                 <h2>View users or groups ({{ badgegroupContext }})</h2>
 
                 <ng-container *ngIf="!teacherPermission">
@@ -160,7 +160,7 @@ import {GroupService} from "tim/plugin/group-dashboard/group.service";
 
                                 <ng-container *ngIf="groupBadges.length > 0">
                                     <div *ngIf="selectedGroup?.name != undefined">
-                                        <p>{{ selectedGroup?.name }}</p>
+                                        <p>{{ selectedGroup?.description }}</p>
                                         <div class="group_badges" (wheel)="onScroll($event)">
                                             <div class="badge-card" *ngFor="let badge of groupBadges">
                                                 <tim-badge
@@ -244,6 +244,7 @@ export class BadgeWithdrawComponent implements OnInit {
     selectedBadge?: IBadge | null = null;
 
     @Input() badgegroupContext?: string;
+    @ViewChild("startSection") startSection!: ElementRef;
 
     groups: IGroup[] = [];
     selectedGroup?: IGroup | null = null;
@@ -379,6 +380,9 @@ export class BadgeWithdrawComponent implements OnInit {
         this.emptyTable(this.userBadges);
         this.emptyTable(this.userBadges);
         this.groupUsersMap.clear();
+        setTimeout(() => {
+            this.centerToComponent();
+        }, 100);
     }
 
     handleSwap(bool: boolean) {
@@ -588,6 +592,31 @@ export class BadgeWithdrawComponent implements OnInit {
     emptyTable<T>(table: T[]) {
         while (table.length > 0) {
             table.pop();
+        }
+    }
+
+    centerToComponent() {
+        if (this.startSection) {
+            const element = this.startSection.nativeElement;
+            const rect = element.getBoundingClientRect();
+
+            const isVisible =
+                rect.top >= 0 &&
+                rect.left >= 0 &&
+                rect.bottom <=
+                    (window.innerHeight ||
+                        document.documentElement.clientHeight) &&
+                rect.right <=
+                    (window.innerWidth || document.documentElement.clientWidth);
+
+            if (!isVisible) {
+                const offset = -100;
+                const position = rect.top + window.scrollY + offset;
+                window.scrollTo({
+                    top: position,
+                    behavior: "smooth",
+                });
+            }
         }
     }
 
