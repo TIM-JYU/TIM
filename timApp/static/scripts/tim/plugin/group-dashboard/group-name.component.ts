@@ -15,6 +15,7 @@ import {BadgeService} from "tim/gamification/badge/badge.service";
 import {manageglobals} from "tim/util/globals";
 import {IFolder, IFullDocument} from "tim/item/IItem";
 import {GroupService} from "tim/plugin/group-dashboard/group.service";
+import {ICurrentUser, IUser} from "tim/user/IUser";
 
 @Component({
     selector: "tim-group-name",
@@ -56,16 +57,19 @@ export class GroupNameComponent implements OnInit {
     showInput: boolean = false;
     showFullName = true;
     storedGroup: {name: string; id: number} | null = null;
+    user: ICurrentUser | null = null;
+    doc: IFullDocument | IFolder | undefined;
 
     constructor(
         private badgeService: BadgeService,
         private groupService: GroupService
     ) {}
 
-    /**
-     * TODO: Laita muutetut "pretty namet" päivittymään myös muihin komponentteihin, esim. giverin group valintaan
-     * TODO: oma service ja metodien siirto sinne?
-     */
+    ngOnInit(): void {
+        this.item = manageglobals().curr_item;
+        this.getGroupName();
+    }
+
     async getGroupName() {
         if (!this.group) {
             return;
@@ -83,7 +87,6 @@ export class GroupNameComponent implements OnInit {
             };
 
             this.prettyName = fetchedGroup.description || "";
-            // Set the display name shown to users
             this.displayedName = this.showFullName
                 ? this.groupName
                 : this.subGroup;
@@ -91,8 +94,6 @@ export class GroupNameComponent implements OnInit {
             this.parseParentGroup(this.groupName);
         }
     }
-
-    //TODO: placeholder input kenttään, halutaan vain aliryhmän nimi
 
     async saveName() {
         if (!this.newName.valid || !this.storedGroup || !this.newName.value) {
@@ -141,11 +142,6 @@ export class GroupNameComponent implements OnInit {
 
     toggleInput() {
         this.showInput = !this.showInput;
-    }
-
-    ngOnInit(): void {
-        this.item = manageglobals().curr_item;
-        this.getGroupName();
     }
 }
 
