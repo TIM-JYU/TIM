@@ -107,8 +107,9 @@ export class GroupDashboardComponent implements OnInit {
     totalMembers: number = 0;
     totalBadges: number = 0;
 
-    //TODO: total badges in group details
-    //TODO: total members in group
+    //TODO: scrollbar ja skaalaus, kun badgeja on paljon
+    //TODO: real name jäsenten nimien tilalla
+
     ngOnInit() {
         if (this.group) {
             this.loadData();
