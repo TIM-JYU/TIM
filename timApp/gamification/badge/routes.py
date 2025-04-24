@@ -542,6 +542,8 @@ def get_badge_holders(badge_id: int) -> Response:
     if not badge:
         raise NotExist(f'Badge with id "{badge_id}" not found')
     context_group = UserGroup.get_by_id(badge.context_group)
+    if not context_group:
+        raise NotExist(f'User group with id "{badge.context_group}" not found')
     d = DocEntry.find_by_path(
         f"groups/{context_group.name}"
     )  # TODO: Make this unambiguous.
@@ -926,8 +928,13 @@ def usergroups_members(usergroup_name: str) -> Response:
     )  # TODO: Make this unambiguous.
     if not d:
         raise NotExist(f'User group "{usergroup_name}" not found')
-    verify_teacher_access(
-        d,
-        message=f"Sorry, you don't have permission to use this resource. If you are a teacher of {usergroup_name}, please contact TIM admin.",
-    )
+
+    current_user = get_current_user_object()
+    in_group = check_group_member(current_user, usergroup.id)
+    if not in_group:
+        verify_teacher_access(
+            d,
+            message=f"Sorry, you don't have permission to use this resource. If you are a teacher of {usergroup_name}, please contact TIM admin.",
+        )
+
     return json_response(sorted(list(usergroup.users), key=attrgetter("real_name")))
