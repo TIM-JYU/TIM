@@ -14,26 +14,20 @@ class TestBadges(BrowserTest):
         super().setUp()
         # Log in quickly as Test User 1.
         self.login_browser_quick_test1()
-
+        self.login_test1()
         # Create a document that includes our badge components.
         d = self.create_doc(
             initial_par="""
-            ```
-            auto_number_headings: 2
-            form_mode: true
-            ```
+
+            #- {allowangular=true}
+            <tim-badge-creator badgegroup-context="newgroup1"></tim-badge-creator>
+            
+            <tim-badge-viewer badgegroup-context="newgroup1" badgeuser-context="%%username%%"></tim-badge-viewer>
+            
             """
         )
         dt = self.create_translation(d)
-        tr_par = dt.document.get_paragraphs()[1]
-        tr_par.set_markdown(
-            """
-        #- {allowangular=true}
-        <tim-badge-creator badgegroup-context="newgroup1"></tim-badge-creator>
-        <tim-badge-viewer badgegroup-context="newgroup1" badgeuser-context="%%username%%"></tim-badge-viewer>
-        """
-        )
-        tr_par.save()
+
         self.goto_document(d)
 
     def tearDown(self):
