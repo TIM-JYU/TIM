@@ -53,7 +53,7 @@ import {Subscription} from "rxjs";
         <div class="member-list">
             <div class="member-card" *ngFor="let member of members">
                 <div class="member-info">
-                    <span class="member-name">{{ member.name }}</span>
+                    <span class="member-name">{{ member.real_name }}</span>
                     <div class="badges">
                         <span *ngFor="let badge of member.badges" class="badge">
                             <tim-badge
@@ -107,8 +107,9 @@ export class GroupDashboardComponent implements OnInit {
     totalMembers: number = 0;
     totalBadges: number = 0;
 
-    //TODO: total badges in group details
-    //TODO: total members in group
+    //TODO: scrollbar ja skaalaus, kun badgeja on paljon
+    //TODO: real name jäsenten nimien tilalla
+
     ngOnInit() {
         if (this.group) {
             this.loadData();
