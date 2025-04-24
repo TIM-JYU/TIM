@@ -9,6 +9,7 @@ import {BadgeService} from "tim/gamification/badge/badge.service";
 import {firstValueFrom} from "rxjs";
 import {Subscription} from "rxjs";
 import {GroupService} from "tim/plugin/group-dashboard/group.service";
+import {TimUtilityModule} from "tim/ui/tim-utility.module";
 
 @Component({
     selector: "tim-badge-leaderboard",
@@ -16,20 +17,18 @@ import {GroupService} from "tim/plugin/group-dashboard/group.service";
         <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
         <div class="viewer-container">
             <h2>{{badgegroupContext}} top5 Leaderboard</h2>
-            <div class="leaderboard">        
-                <ng-container *ngIf="top_five.length > 0; else noTeams">
-                    <div *ngFor="let team of top_five; let i = index" class="position" [ngClass]="getPositionClass(i)">
-                        <div class="icon">
-                          <span class="material-symbols-outlined">{{ getIcon(i) }}</span>
-                        </div>
-                        <div class="trophy" [ngStyle]="{'height': calculateHeight(team.badge_count) }">{{ getPosition(i) }}</div>
-                        <p class="team">{{ team.prettyName }}</p>
-                        <p class="badge-count">{{ team.badge_count || 0 }}</p>
+            <tim-alert *ngFor="let alert of alerts; let i = index" [severity]="alert.type" [closeable]="true" (closing)="badgeService.closeAlert(this.alerts, i)">
+                <div [innerHTML]="alert.msg"></div>
+            </tim-alert>
+            <div class="leaderboard">                  
+                <div *ngFor="let team of top_five; let i = index" class="position" [ngClass]="getPositionClass(i)">
+                    <div class="icon">
+                        <span class="material-symbols-outlined">{{ getIcon(i) }}</span>
                     </div>
-                </ng-container>
-                <ng-template #noTeams>
-                    <p class="no-badges-txt">No teams in the selected context group</p>
-                </ng-template>               
+                    <div class="trophy" [ngStyle]="{'height': calculateHeight(team.badge_count) }">{{ getPosition(i) }}</div>
+                    <p class="team">{{ team.prettyName }}</p>
+                    <p class="badge-count">{{ team.badge_count || 0 }}</p>
+                </div>            
             </div>               
         </div>        
     `,
@@ -44,6 +43,11 @@ export class BadgeLeaderboardComponent implements OnInit {
     }[] = [];
     baseHeight: number = 25;
     scaleFactor: number = 10;
+    alerts: Array<{
+        msg: string;
+        type: "warning" | "danger";
+        id?: string;
+    }> = [];
     private subscription: Subscription = new Subscription();
 
     ngOnInit(): void {
@@ -79,13 +83,33 @@ export class BadgeLeaderboardComponent implements OnInit {
                 const pretty = await this.groupService.getCurrentGroup(
                     team.group_name
                 );
-                team.prettyName = pretty?.description || team.group_name; // fallback
+                team.prettyName = pretty?.description || team.group_name;
             }
 
             console.log("Fetched top_five: ", this.top_five);
-        } catch (error) {
+        } catch (error: any) {
             console.error("Error fetching top five:", error);
             this.top_five = [];
+
+            if (error.error?.error === undefined) {
+                // no nested `error.error` → probably a network/client issue
+                this.badgeService.showError(
+                    this.alerts,
+                    {
+                        data: {
+                            error: "Unexpected error. Check your internet connection.",
+                        },
+                    },
+                    "danger"
+                );
+            } else {
+                // server responded with { error: { error: "some message" } }
+                this.badgeService.showError(
+                    this.alerts,
+                    {data: {error: error.error.error}},
+                    "danger"
+                );
+            }
         }
     }
 
@@ -157,7 +181,7 @@ export class BadgeLeaderboardComponent implements OnInit {
 
 @NgModule({
     declarations: [BadgeLeaderboardComponent],
-    imports: [CommonModule, FormsModule],
+    imports: [CommonModule, FormsModule, TimUtilityModule],
     exports: [BadgeLeaderboardComponent],
 })
 export class BadgeLeaderboardModule {}
