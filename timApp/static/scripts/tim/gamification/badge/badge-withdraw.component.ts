@@ -1,4 +1,5 @@
-import {OnInit, ViewChild} from "@angular/core";
+import type {OnInit} from "@angular/core";
+import {ViewChild} from "@angular/core";
 import {Input} from "@angular/core";
 import {Component, NgModule} from "@angular/core";
 import {HostListener, ElementRef} from "@angular/core";
@@ -49,8 +50,6 @@ import {GroupService} from "tim/plugin/group-dashboard/group.service";
 
                     <div *ngIf="showComponent">
                         <div *ngIf="userAssign" class="form-group">
-                            <label>Users</label>
-
                             <div class="search-wrapper">
                                 <div class="search-groups">
                                     <label for="group-search">Search user:</label>
@@ -99,8 +98,8 @@ import {GroupService} from "tim/plugin/group-dashboard/group.service";
                                 <ng-container *ngIf="userBadges.length > 0">
                                     <div *ngIf="selectedUser?.name != undefined">
                                         <p>{{ selectedUser?.real_name }}'s badges</p>
-                                        <div class="user_badges" (wheel)="onScroll($event)">
-                                            <div class="badge-card" *ngFor="let badge of userBadges">
+                                        <div class="user_badges">
+                                            <div class="card" *ngFor="let badge of userBadges">
                                                 <tim-badge
                                                     [ngClass]="{'selected-badge': selectedBadge === badge}"
                                                     title="{{badge.title}}"
@@ -125,8 +124,6 @@ import {GroupService} from "tim/plugin/group-dashboard/group.service";
                         </div>
 
                         <div *ngIf="userAssign === false" class="form-group">
-                            <label>Groups</label>
-
                             <div class="search-wrapper">
                                 <div class="search-groups">
                                     <label for="group-search">Search group:</label>
@@ -161,8 +158,8 @@ import {GroupService} from "tim/plugin/group-dashboard/group.service";
                                 <ng-container *ngIf="groupBadges.length > 0">
                                     <div *ngIf="selectedGroup?.name != undefined">
                                         <p>{{ selectedGroup?.description }}</p>
-                                        <div class="group_badges" (wheel)="onScroll($event)">
-                                            <div class="badge-card" *ngFor="let badge of groupBadges">
+                                        <div class="group_badges">
+                                            <div class="card" *ngFor="let badge of groupBadges">
                                                 <tim-badge
                                                     [ngClass]="{'selected-badge': selectedBadge === badge}"
                                                     title="{{badge.title}}"
