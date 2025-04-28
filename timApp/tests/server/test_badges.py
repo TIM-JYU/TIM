@@ -14,23 +14,22 @@ class BadgeTestMain(TimRouteTest):
 
     def test_badge_main(self):
         # initialization
-        it_25 = self.create_group("it_25", [self.test_user_1, self.test_user_2])
-        it_26 = self.create_group("it_26", [self.test_user_1, self.test_user_3])
-        it_25_cats = self.create_group(
-            "it_25-cats", [self.test_user_1, self.test_user_2]
+        self.test_user_3.make_admin()
+        db.session.commit()
+        self.login_test3()
+        group1_name = "es_25"
+        self.get(f"/groups/create/{group1_name}")
+        # group1_doc = self.create_doc(settings={"group": group1_name})
+        self.test_user_1.grant_access(
+            UserGroup.get_by_name(group1_name).admin_doc, AccessType.teacher
         )
-        it_25_dogs = self.create_group("it_25-dogs", [self.test_user_1])
-        doc_it_25 = DocEntry.create("groups/it_25", it_25)
-        doc_it_25_cats = DocEntry.create("groups/it_25-cats", it_25_cats)
-        doc_it_26 = DocEntry.create("groups/it_26", it_26)
-        db.session.flush()
-        self.test_user_1.grant_access(doc_it_25.block, AccessType.teacher)
-        self.test_user_1.grant_access(doc_it_25_cats.block, AccessType.teacher)
-        self.test_user_1.grant_access(doc_it_26.block, AccessType.teacher)
-        self.commit_db()
-        doc_it_25.block  # TODO: Why isn't the test working without this?
-        doc_it_25_cats.block  # TODO: Why isn't the test working without this?
-        doc_it_26.block  # TODO: Why isn't the test working without this?
+        self.post(
+            f"/groups/addmember/{group1_name}",
+            data={
+                "group_name": group1_name,
+                "names": ["testuser2"],
+            },
+        )
         self.login_test1()
 
         # fetch all badges including inactive ones when no badges created
@@ -42,14 +41,14 @@ class BadgeTestMain(TimRouteTest):
         self.assertEqual([], result_ab_empty)
 
         # fetch all badges in context when no badges created
-        result_abic_empty = self.get(f"/all_badges_in_context/{it_25.name}")
+        result_abic_empty = self.get(f"/all_badges_in_context/{group1_name}")
         self.assertEqual([], result_abic_empty)
 
         # create 2 badges
         result_cb_1 = self.post(
             "/create_badge",
             data={
-                "context_group": it_25.name,
+                "context_group": group1_name,
                 "title": "Coordinator",
                 "color": "blue",
                 "shape": "hexagon",
@@ -61,7 +60,7 @@ class BadgeTestMain(TimRouteTest):
             {
                 "active": True,
                 "color": "blue",
-                "context_group": it_25.id,
+                "context_group": 9,
                 "created": result_cb_1["created"],
                 "created_by": 2,
                 "deleted": None,
@@ -81,7 +80,7 @@ class BadgeTestMain(TimRouteTest):
         result_cb_2 = self.post(
             "/create_badge",
             data={
-                "context_group": it_25.name,
+                "context_group": group1_name,
                 "title": "Communicator",
                 "color": "red",
                 "shape": "round",
@@ -89,6 +88,26 @@ class BadgeTestMain(TimRouteTest):
                 "description": "Great communication",
             },
         )
+
+        # initialization
+        it_25 = self.create_group("it_25", [self.test_user_1, self.test_user_2])
+        it_26 = self.create_group("it_26", [self.test_user_1, self.test_user_3])
+        it_25_cats = self.create_group(
+            "it_25-cats", [self.test_user_1, self.test_user_2]
+        )
+        it_25_dogs = self.create_group("it_25-dogs", [self.test_user_1])
+        doc_it_25 = DocEntry.create("groups/it_25", it_25)
+        doc_it_25_cats = DocEntry.create("groups/it_25-cats", it_25_cats)
+        doc_it_26 = DocEntry.create("groups/it_26", it_26)
+        db.session.flush()
+        self.test_user_1.grant_access(doc_it_25.block, AccessType.teacher)
+        self.test_user_1.grant_access(doc_it_25_cats.block, AccessType.teacher)
+        self.test_user_1.grant_access(doc_it_26.block, AccessType.teacher)
+        self.commit_db()
+        doc_it_25.block  # TODO: Why isn't the test working without this?
+        doc_it_25_cats.block  # TODO: Why isn't the test working without this?
+        doc_it_26.block  # TODO: Why isn't the test working without this?
+        self.login_test1()
 
         # fetch all badges after 2 badges created
         result_ab_nonempty = self.get(f"/all_badges")
@@ -1699,7 +1718,7 @@ class BadgeTestErroneousData(TimRouteTest):
 #         self.login_test1()
 #
 #         self.get(
-#             f"/current_group_name/{it_30_horses.name}",
+#             f"/current_group_name/{it_30_horses.name}", # TODO: Add /groups
 #             expect_status=200,
 #             expect_content="",
-#         )
+#         )  # TODO: Why does not this find the route when route is located in groups.py?

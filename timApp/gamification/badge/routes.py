@@ -124,14 +124,21 @@ def all_badges_in_context(context_group: str) -> Response:
     :param context_group: Context group to get badges from
     :return: Badges in json response format
     """
-    d = DocEntry.find_by_path(f"groups/{context_group}")  # TODO: Make this unambiguous.
-    if not d:
-        raise NotExist(f'User group "{context_group}" not found')
+    # d = DocEntry.find_by_path(f"groups/{context_group}")  # TODO: Make this unambiguous.
+    # if not d:
+    #     raise NotExist(f'User group "{context_group}" not found')
     context_usergroup = UserGroup.get_by_name(context_group)
+    if not context_usergroup:
+        raise NotExist(f'User group "{context_group}" not found')
+    block = context_usergroup.admin_doc
+    if not block:
+        raise NotExist(f'Admin doc for user group "{context_group}" not found')
+
     verify_teacher_access(
-        d,
+        block,
         message=f"Sorry, you don't have permission to use this resource. If you are a teacher of {context_group}, please contact TIM admin.",
     )
+
     badges = (
         run_sql(
             select(Badge)
