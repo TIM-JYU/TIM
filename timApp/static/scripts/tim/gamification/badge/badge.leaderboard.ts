@@ -1,10 +1,8 @@
-import {Component, Input, NgModule, SimpleChanges} from "@angular/core";
+import {Component, Input, NgModule} from "@angular/core";
 import {OnInit} from "@angular/core";
 import {CommonModule} from "@angular/common";
 import {FormsModule} from "@angular/forms";
-import {toPromise} from "tim/util/utils";
-import type {IBadge, IGroup} from "tim/gamification/badge/badge.interface";
-import {HttpClient, HttpClientModule} from "@angular/common/http";
+import {HttpClient} from "@angular/common/http";
 import {BadgeService} from "tim/gamification/badge/badge.service";
 import {firstValueFrom} from "rxjs";
 import {Subscription} from "rxjs";
@@ -36,7 +34,6 @@ import {TimUtilityModule} from "tim/ui/tim-utility.module";
 })
 export class BadgeLeaderboardComponent implements OnInit {
     @Input() badgegroupContext?: string;
-    @Input() badgeuserContext?: string;
     top_five: {
         group_name: string;
         badge_count?: number;
@@ -44,7 +41,6 @@ export class BadgeLeaderboardComponent implements OnInit {
     }[] = [];
     baseHeight: number = 25;
     scaleFactor: number = 10;
-    //teacherPermission: boolean = false;
     alerts: Array<{
         msg: string;
         type: "warning" | "danger";
@@ -87,7 +83,6 @@ export class BadgeLeaderboardComponent implements OnInit {
                 );
                 team.prettyName = pretty?.description || team.group_name;
             }
-            //this.teacherPermission = true;
 
             console.log("Fetched top_five: ", this.top_five);
         } catch (error: any) {
