@@ -124,9 +124,6 @@ def all_badges_in_context(context_group: str) -> Response:
     :param context_group: Context group to get badges from
     :return: Badges in json response format
     """
-    # d = DocEntry.find_by_path(f"groups/{context_group}")  # TODO: Make this unambiguous.
-    # if not d:
-    #     raise NotExist(f'User group "{context_group}" not found')
     context_usergroup = UserGroup.get_by_name(context_group)
     if not context_usergroup:
         raise NotExist(f'User group "{context_group}" not found')
@@ -136,7 +133,7 @@ def all_badges_in_context(context_group: str) -> Response:
 
     verify_teacher_access(
         block,
-        message=f"Sorry, you don't have permission to use this resource. If you are a teacher of {context_group}, please contact TIM admin.",
+        message=f'Sorry, you don\'t have permission to use this resource. If you are a teacher of "{context_group}", please contact TIM admin.',
     )
 
     badges = (
@@ -187,14 +184,18 @@ def create_badge(
     :param description: Description of the badge
     :return: ok response
     """
-    d = DocEntry.find_by_path(f"groups/{context_group}")  # TODO: Make this unambiguous.
-    if not d:
-        raise NotExist(f'User group "{context_group}" not found')
-    verify_teacher_access(
-        d,
-        message=f"Sorry, you don't have permission to use this resource. If you are a teacher of {context_group}, please contact TIM admin.",
-    )
     context_usergroup = UserGroup.get_by_name(context_group)
+    if not context_usergroup:
+        raise NotExist(f'User group "{context_group}" not found')
+    block = context_usergroup.admin_doc
+    if not block:
+        raise NotExist(f'Admin doc for user group "{context_group}" not found')
+
+    verify_teacher_access(
+        block,
+        message=f'Sorry, you don\'t have permission to use this resource. If you are a teacher of "{context_group}", please contact TIM admin.',
+    )
+
     badge = Badge(
         active=True,
         context_group=context_usergroup.id,
@@ -247,18 +248,18 @@ def modify_badge(
     :param description: Description of the badge
     :return: ok response
     """
-    context_group_object = UserGroup.get_by_id(context_group)
-    if not context_group_object:
+    context_usergroup = UserGroup.get_by_id(context_group)
+    if not context_usergroup:
         raise NotExist(f'User group with id "{context_group}" not found')
-    d = DocEntry.find_by_path(
-        f"groups/{context_group_object.name}"
-    )  # TODO: Make this unambiguous.
-    if not d:
-        raise NotExist(f'User group "{context_group_object.name}" not found')
+    block = context_usergroup.admin_doc
+    if not block:
+        raise NotExist(f'Admin doc for user group with id "{context_group}" not found')
+
     verify_teacher_access(
-        d,
-        message=f"Sorry, you don't have permission to use this resource. If you are a teacher of {context_group_object.name}, please contact TIM admin.",
+        block,
+        message=f'Sorry, you don\'t have permission to use this resource. If you are a teacher of "{context_usergroup.name}", please contact TIM admin.',
     )
+
     new_badge = {
         "context_group": context_group,
         "title": title,
@@ -300,13 +301,18 @@ def deactivate_badge(badge_id: int, context_group: str) -> Response:
     :param badge_id: ID of the badge
     :return: ok response
     """
-    d = DocEntry.find_by_path(f"groups/{context_group}")  # TODO: Make this unambiguous.
-    if not d:
-        raise NotExist(f'User group with id "{context_group}" not found')
+    context_usergroup = UserGroup.get_by_name(context_group)
+    if not context_usergroup:
+        raise NotExist(f'User group "{context_group}" not found')
+    block = context_usergroup.admin_doc
+    if not block:
+        raise NotExist(f'Admin doc for user group "{context_group}" not found')
+
     verify_teacher_access(
-        d,
-        message=f"Sorry, you don't have permission to use this resource. If you are a teacher of {context_group}, please contact TIM admin.",
+        block,
+        message=f'Sorry, you don\'t have permission to use this resource. If you are a teacher of "{context_group}", please contact TIM admin.',
     )
+
     new_badge = {
         "active": False,
         "deleted_by": get_current_user_object().id,
@@ -337,13 +343,18 @@ def reactivate_badge(badge_id: int, context_group: str) -> Response:
     :param badge_id: ID of the badge
     :return: ok response
     """
-    d = DocEntry.find_by_path(f"groups/{context_group}")  # TODO: Make this unambiguous.
-    if not d:
+    context_usergroup = UserGroup.get_by_name(context_group)
+    if not context_usergroup:
         raise NotExist(f'User group "{context_group}" not found')
+    block = context_usergroup.admin_doc
+    if not block:
+        raise NotExist(f'Admin doc for user group "{context_group}" not found')
+
     verify_teacher_access(
-        d,
-        message=f"Sorry, you don't have permission to use this resource. If you are a teacher of {context_group}, please contact TIM admin.",
+        block,
+        message=f'Sorry, you don\'t have permission to use this resource. If you are a teacher of "{context_group}", please contact TIM admin.',
     )
+
     new_badge = {
         "active": True,
         "restored_by": get_current_user_object().id,
@@ -379,18 +390,22 @@ def get_groups_badges(group_id: int, context_group: str) -> Response:
     usergroup = UserGroup.get_by_id(group_id)
     if not usergroup:
         raise NotExist(f'User group with id "{group_id}" not found')
+
     current_user = get_current_user_object()
     in_group = check_group_member(current_user, group_id)
     if not in_group:
-        d = DocEntry.find_by_path(
-            f"groups/{context_group}"
-        )  # TODO: Make this unambiguous.
-        if not d:
+        context_usergroup = UserGroup.get_by_name(context_group)
+        if not context_usergroup:
             raise NotExist(f'User group "{context_group}" not found')
+        block = context_usergroup.admin_doc
+        if not block:
+            raise NotExist(f'Admin doc for user group "{context_group}" not found')
+
         verify_teacher_access(
-            d,
-            message=f"Sorry, you don't have permission to use this resource. If you are a teacher of {context_group}, please contact TIM admin.",
+            block,
+            message=f'Sorry, you don\'t have permission to use this resource. If you are a teacher of "{context_group}", please contact TIM admin.',
         )
+
     groups_badges_given = (
         run_sql(
             select(BadgeGiven)
@@ -548,18 +563,20 @@ def get_badge_holders(badge_id: int) -> Response:
     badge = Badge.get_by_id(badge_id)
     if not badge:
         raise NotExist(f'Badge with id "{badge_id}" not found')
-    context_group = UserGroup.get_by_id(badge.context_group)
-    if not context_group:
+    context_usergroup = UserGroup.get_by_id(badge.context_group)
+    if not context_usergroup:
         raise NotExist(f'User group with id "{badge.context_group}" not found')
-    d = DocEntry.find_by_path(
-        f"groups/{context_group.name}"
-    )  # TODO: Make this unambiguous.
-    if not d:
-        raise NotExist(f'User group "{context_group.name}" not found')
+    block = context_usergroup.admin_doc
+    if not block:
+        raise NotExist(
+            f'Admin doc for user group with id "{badge.context_group}" not found'
+        )
+
     verify_teacher_access(
-        d,
-        message=f"Sorry, you don't have permission to use this resource. If you are a teacher of {context_group.name}, please contact TIM admin.",
+        block,
+        message=f'Sorry, you don\'t have permission to use this resource. If you are a teacher of "{context_usergroup.name}", please contact TIM admin.',
     )
+
     badges_given = (
         run_sql(
             select(BadgeGiven).filter(
@@ -615,13 +632,18 @@ def give_badge(
     usergroup = UserGroup.get_by_id(group_id)
     if not usergroup:
         raise NotExist(f'User group with id "{group_id}" not found')
-    d = DocEntry.find_by_path(f"groups/{context_group}")  # TODO: Make this unambiguous.
-    if not d:
+    context_usergroup = UserGroup.get_by_name(context_group)
+    if not context_usergroup:
         raise NotExist(f'User group "{context_group}" not found')
+    block = context_usergroup.admin_doc
+    if not block:
+        raise NotExist(f'Admin doc for user group "{context_group}" not found')
+
     verify_teacher_access(
-        d,
-        message=f"Sorry, you don't have permission to use this resource. If you are a teacher of {context_group}, please contact TIM admin.",
+        block,
+        message=f'Sorry, you don\'t have permission to use this resource. If you are a teacher of "{context_group}", please contact TIM admin.',
     )
+
     badge_given = BadgeGiven(
         active=True,
         group_id=group_id,
@@ -658,13 +680,18 @@ def withdraw_badge(badge_given_id: int, context_group: str) -> Response:
     badge_given = BadgeGiven.get_by_id(badge_given_id)
     if not badge_given:
         raise NotExist(f'Given badge with id "{badge_given_id}" not found')
-    d = DocEntry.find_by_path(f"groups/{context_group}")  # TODO: Make this unambiguous.
-    if not d:
+    context_usergroup = UserGroup.get_by_name(context_group)
+    if not context_usergroup:
         raise NotExist(f'User group "{context_group}" not found')
+    block = context_usergroup.admin_doc
+    if not block:
+        raise NotExist(f'Admin doc for user group "{context_group}" not found')
+
     verify_teacher_access(
-        d,
-        message=f"Sorry, you don't have permission to use this resource. If you are a teacher of {context_group}, please contact TIM admin.",
+        block,
+        message=f'Sorry, you don\'t have permission to use this resource. If you are a teacher of "{context_group}", please contact TIM admin.',
     )
+
     badge_given = {
         "active": False,
         "withdrawn_by": get_current_user_object().id,
@@ -702,13 +729,18 @@ def withdraw_all_badges(
     usergroup = UserGroup.get_by_id(usergroup_id)
     if not usergroup:
         raise NotExist(f'User group with id "{usergroup_id}" not found')
-    d = DocEntry.find_by_path(f"groups/{context_group}")  # TODO: Make this unambiguous.
-    if not d:
+    context_usergroup = UserGroup.get_by_name(context_group)
+    if not context_usergroup:
         raise NotExist(f'User group "{context_group}" not found')
+    block = context_usergroup.admin_doc
+    if not block:
+        raise NotExist(f'Admin doc for user group "{context_group}" not found')
+
     verify_teacher_access(
-        d,
-        message=f"Sorry, you don't have permission to use this resource. If you are a teacher of {context_group}, please contact TIM admin.",
+        block,
+        message=f'Sorry, you don\'t have permission to use this resource. If you are a teacher of "{context_group}", please contact TIM admin.',
     )
+
     badge_given = {
         "active": False,
         "withdrawn_by": get_current_user_object().id,
@@ -743,13 +775,18 @@ def undo_withdraw_badge(badge_given_id: int, context_group: str) -> Response:
     badge_given = BadgeGiven.get_by_id(badge_given_id)
     if not badge_given:
         raise NotExist(f'Given badge with id "{badge_given_id}" not found')
-    d = DocEntry.find_by_path(f"groups/{context_group}")  # TODO: Make this unambiguous.
-    if not d:
+    context_usergroup = UserGroup.get_by_name(context_group)
+    if not context_usergroup:
         raise NotExist(f'User group "{context_group}" not found')
+    block = context_usergroup.admin_doc
+    if not block:
+        raise NotExist(f'Admin doc for user group "{context_group}" not found')
+
     verify_teacher_access(
-        d,
-        message=f"Sorry, you don't have permission to use this resource. If you are a teacher of {context_group}, please contact TIM admin.",
+        block,
+        message=f'Sorry, you don\'t have permission to use this resource. If you are a teacher of "{context_group}", please contact TIM admin.',
     )
+
     badge_given = {
         "active": True,
         "undo_withdrawn_by": get_current_user_object().id,
@@ -772,13 +809,25 @@ def undo_withdraw_badge(badge_given_id: int, context_group: str) -> Response:
 
 @badges_blueprint.get("/podium/<group_name_prefix>")
 def podium(group_name_prefix: str) -> Response:
-    usergroup = UserGroup.get_by_name(group_name_prefix)
-    if not usergroup:
+    """
+    :param group_name_prefix: context group
+    :return: 5 subgroups with most badges in json format
+    """
+    context_usergroup = UserGroup.get_by_name(group_name_prefix)
+    if not context_usergroup:
         raise NotExist(f'User group "{group_name_prefix}" not found')
+
     current_user = get_current_user_object()
-    in_group = check_group_member(current_user, usergroup.id)
+    in_group = check_group_member(current_user, context_usergroup.id)
     if not in_group:
-        raise AccessDenied(f'You are not part of user group "{group_name_prefix}"')
+        block = context_usergroup.admin_doc
+        if not block:
+            raise NotExist(f'Admin doc for user group "{group_name_prefix}" not found')
+        verify_teacher_access(
+            block,
+            message=f'Sorry, you don\'t have permission to use this resource. If you are a teacher of "{group_name_prefix}", please contact TIM admin.',
+        )
+
     results = run_sql(
         select(UserGroup.name, func.count(BadgeGiven.id).label("badge_count"))
         .filter(
@@ -815,15 +864,18 @@ def get_subgroups(group_name_prefix: str) -> Response:
     :param group_name_prefix: Prefix of the usergroups
     :return: List of usergroups
     """
-    d = DocEntry.find_by_path(
-        f"groups/{group_name_prefix}"
-    )  # TODO: Make this unambiguous.
-    if not d:
+    context_usergroup = UserGroup.get_by_name(group_name_prefix)
+    if not context_usergroup:
         raise NotExist(f'User group "{group_name_prefix}" not found')
+    block = context_usergroup.admin_doc
+    if not block:
+        raise NotExist(f'Admin doc for user group "{group_name_prefix}" not found')
+
     verify_teacher_access(
-        d,
-        message=f"Sorry, you don't have permission to use this resource. If you are a teacher of {group_name_prefix}, please contact TIM admin.",
+        block,
+        message=f'Sorry, you don\'t have permission to use this resource. If you are a teacher of "{group_name_prefix}", please contact TIM admin.',
     )
+
     subgroups = (
         run_sql(
             select(UserGroup)
@@ -855,20 +907,21 @@ def get_users_subgroups(user_id: int, group_name_prefix: str) -> Response:
     user = User.get_by_id(user_id)
     if not user:
         raise NotExist(f'User with id "{user_id}" not found')
-    usergroup = UserGroup.get_by_name(group_name_prefix)
-    if not usergroup:
+    context_usergroup = UserGroup.get_by_name(group_name_prefix)
+    if not context_usergroup:
         raise NotExist(f'User group "{group_name_prefix}" not found')
+
     current_user = get_current_user_object()
     if current_user.id != int(user_id):
-        d = DocEntry.find_by_path(
-            f"groups/{group_name_prefix}"
-        )  # TODO: Make this unambiguous.
-        if not d:
-            raise NotExist(f'User group "{group_name_prefix}" not found')
+        block = context_usergroup.admin_doc
+        if not block:
+            raise NotExist(f'Admin doc for user group "{group_name_prefix}" not found')
+
         verify_teacher_access(
-            d,
-            message=f"Sorry, you don't have permission to use this resource. If you are a teacher of {group_name_prefix}, please contact TIM admin.",
+            block,
+            message=f'Sorry, you don\'t have permission to use this resource. If you are a teacher of "{group_name_prefix}", please contact TIM admin.',
         )
+
     usergroup_memberships = (
         run_sql(
             select(UserGroupMember).filter(
@@ -927,21 +980,21 @@ def usergroups_members(usergroup_name: str) -> Response:
     :param usergroup_name: usergroup's name
     :return: List of users
     """
-    usergroup = UserGroup.get_by_name(usergroup_name)
-    if not usergroup:
+    context_usergroup = UserGroup.get_by_name(usergroup_name)
+    if not context_usergroup:
         raise NotExist(f'User group "{usergroup_name}" not found')
-    d = DocEntry.find_by_path(
-        f"groups/{usergroup_name}"
-    )  # TODO: Make this unambiguous.
-    if not d:
-        raise NotExist(f'User group "{usergroup_name}" not found')
+    block = context_usergroup.admin_doc
+    if not block:
+        raise NotExist(f'Admin doc for user group "{usergroup_name}" not found')
 
     current_user = get_current_user_object()
-    in_group = check_group_member(current_user, usergroup.id)
+    in_group = check_group_member(current_user, context_usergroup.id)
     if not in_group:
         verify_teacher_access(
-            d,
-            message=f"Sorry, you don't have permission to use this resource. If you are a teacher of {usergroup_name}, please contact TIM admin.",
+            block,
+            message=f'Sorry, you don\'t have permission to use this resource. If you are a teacher of "{usergroup_name}", please contact TIM admin.',
         )
 
-    return json_response(sorted(list(usergroup.users), key=attrgetter("real_name")))
+    return json_response(
+        sorted(list(context_usergroup.users), key=attrgetter("real_name"))
+    )
