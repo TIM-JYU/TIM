@@ -75,12 +75,8 @@ import {GroupService} from "tim/plugin/group-dashboard/group.service";
                     <div class="list-scroll-container" (wheel)="onScrollList($event)">
                         <div *ngFor="let group of groups" class="group">
                             <span *ngIf="groupUsersMap.get(group.id)?.length">
-                                {{ groupPrettyNames.get(group.id) || group.name }}
+                                <input class="user-checkbox" type="checkbox" (change)="toggleSelectAll(group, $event)">{{ groupPrettyNames.get(group.id) || group.name }}
                             </span>
-                            <div *ngIf="groupUsersMap.get(group.id)?.length">
-                                <input class="user-checkbox" type="checkbox" (change)="toggleSelectAll(group, $event)">Select
-                                all
-                            </div>
                             <div *ngFor="let user of groupUsersMap.get(group.id)" class="option-item">
                                 <input class="user-checkbox"
                                        type="checkbox"
