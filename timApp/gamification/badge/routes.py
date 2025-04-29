@@ -10,13 +10,11 @@ from timApp.document.docentry import DocEntry
 from timApp.gamification.badge.badges import Badge, BadgeGiven
 from timApp.timdb.sqa import db, run_sql
 from timApp.timdb.types import datetime_tz
-from timApp.user.groups import raise_group_not_found_if_none
 from timApp.user.user import User
 from timApp.user.usergroup import UserGroup
 from timApp.user.usergroupmember import UserGroupMember
 from timApp.util.flask.requesthelper import NotExist
 from timApp.util.flask.responsehelper import (
-    ok_response,
     json_response,
     to_json_str,
 )
@@ -420,7 +418,8 @@ def get_groups_badges(group_id: int, context_group: str) -> Response:
             badge_given.undo_withdrawn,
         )
     context_group_object = UserGroup.get_by_name(context_group)
-    raise_group_not_found_if_none(context_group, context_group_object)
+    if not context_group_object:
+        raise NotExist(f'User group "{context_group}" not found')
     groups_badges = (
         run_sql(
             select(Badge)
@@ -543,6 +542,8 @@ def get_badge_holders(badge_id: int) -> Response:
     if not badge:
         raise NotExist(f'Badge with id "{badge_id}" not found')
     context_group = UserGroup.get_by_id(badge.context_group)
+    if not context_group:
+        raise NotExist(f'User group with id "{badge.context_group}" not found')
     d = DocEntry.find_by_path(
         f"groups/{context_group.name}"
     )  # TODO: Make this unambiguous.
@@ -920,14 +921,20 @@ def usergroups_members(usergroup_name: str) -> Response:
     :return: List of users
     """
     usergroup = UserGroup.get_by_name(usergroup_name)
-    raise_group_not_found_if_none(usergroup_name, usergroup)
+    if not usergroup:
+        raise NotExist(f'User group "{usergroup_name}" not found')
     d = DocEntry.find_by_path(
         f"groups/{usergroup_name}"
     )  # TODO: Make this unambiguous.
     if not d:
         raise NotExist(f'User group "{usergroup_name}" not found')
-    verify_teacher_access(
-        d,
-        message=f"Sorry, you don't have permission to use this resource. If you are a teacher of {usergroup_name}, please contact TIM admin.",
-    )
+
+    current_user = get_current_user_object()
+    in_group = check_group_member(current_user, usergroup.id)
+    if not in_group:
+        verify_teacher_access(
+            d,
+            message=f"Sorry, you don't have permission to use this resource. If you are a teacher of {usergroup_name}, please contact TIM admin.",
+        )
+
     return json_response(sorted(list(usergroup.users), key=attrgetter("real_name")))

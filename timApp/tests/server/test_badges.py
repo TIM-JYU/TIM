@@ -1518,7 +1518,7 @@ class BadgeTestErroneousData(TimRouteTest):
         )
         self.get(
             f"/groups_badges/{self.test_user_1.get_personal_group().id}/nonexistent_group",
-            expect_status=400,
+            expect_status=404,
             expect_content='User group "nonexistent_group" not found',
         )
 
@@ -1672,6 +1672,34 @@ class BadgeTestErroneousData(TimRouteTest):
         # fetch usergroup's members with erroneous data
         self.get(
             f"/usergroups_members/nonexistent_group",
-            expect_status=400,
+            expect_status=404,
             expect_content='User group "nonexistent_group" not found',
         )
+
+
+# class GroupNameChangerTest(TimRouteTest):
+#     def create_group(self, name: str, users: list) -> UserGroup:
+#         ug = UserGroup.create(name)
+#         for u in users:
+#             ug.users.append(u)
+#         return ug
+#
+#     def test_group_name_changer(self):
+#         # initialization
+#         it_30 = self.create_group("it_30", [self.test_user_2])
+#         it_30_horses = self.create_group("it_30-horses", [self.test_user_2])
+#         doc_it_30 = DocEntry.create("groups/it_30", it_30)
+#         doc_it_30_horses = DocEntry.create("groups/it_30-horses", it_30)
+#         db.session.flush()
+#         self.test_user_1.grant_access(doc_it_30.block, AccessType.teacher)
+#         self.test_user_1.grant_access(doc_it_30_horses.block, AccessType.teacher)
+#         self.commit_db()
+#         doc_it_30.block  # TODO: Why isn't the test working without this?
+#         doc_it_30_horses.block  # TODO: Why isn't the test working without this?
+#         self.login_test1()
+#
+#         self.get(
+#             f"/current_group_name/{it_30_horses.name}",
+#             expect_status=200,
+#             expect_content="",
+#         )

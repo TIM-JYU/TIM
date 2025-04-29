@@ -51,8 +51,6 @@ import {GroupService} from "tim/plugin/group-dashboard/group.service";
                 </div>
 
                 <div *ngIf="userAssign === true" class="form-group">
-                    <label>Users</label>
-                    
                     <div class="search-wrapper">
                       <div class="search-users">
                         <label for="user-search">Search user:</label>
@@ -73,17 +71,12 @@ import {GroupService} from "tim/plugin/group-dashboard/group.service";
                     
                     <div>
                         <input class="user-checkbox" type="checkbox" (change)="toggleSelectAllItems($event, selectedUsers, users)">Select all
-                        users
                     </div>
                     <div class="list-scroll-container" (wheel)="onScrollList($event)">
                         <div *ngFor="let group of groups" class="group">
                             <span *ngIf="groupUsersMap.get(group.id)?.length">
-                                {{ groupPrettyNames.get(group.id) || group.name }}
+                                <input class="user-checkbox" type="checkbox" (change)="toggleSelectAll(group, $event)">{{ groupPrettyNames.get(group.id) || group.name }}
                             </span>
-                            <div *ngIf="groupUsersMap.get(group.id)?.length">
-                                <input class="user-checkbox" type="checkbox" (change)="toggleSelectAll(group, $event)">Select
-                                all
-                            </div>
                             <div *ngFor="let user of groupUsersMap.get(group.id)" class="option-item">
                                 <input class="user-checkbox"
                                        type="checkbox"
@@ -102,8 +95,6 @@ import {GroupService} from "tim/plugin/group-dashboard/group.service";
                 
                
                 <div *ngIf="userAssign === false" class="form-group">
-                    <label>Groups</label>
-                    
                     <div class="search-wrapper">
                       <div class="search-groups">
                         <label for="group-search">Search group:</label>
@@ -124,8 +115,7 @@ import {GroupService} from "tim/plugin/group-dashboard/group.service";
                     </div>
                     
                     <div>
-                        <input class="group-checkbox" type="checkbox" (change)="toggleSelectAllItems($event, selectedGroups, groups)">Select all 
-                        groups
+                        <input class="group-checkbox" type="checkbox" (change)="toggleSelectAllItems($event, selectedGroups, groups)">Select all
                     </div>
                     
                     <div class="list-scroll-container" (wheel)="onScrollList($event)">
