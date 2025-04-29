@@ -14,13 +14,13 @@ import {TimUtilityModule} from "tim/ui/tim-utility.module";
 @Component({
     selector: "tim-badge-leaderboard",
     template: `
-        <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
-        <div class="viewer-container">
+        <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />        
+        <div class="viewer-container">             
             <h2>{{badgegroupContext}} top5 Leaderboard</h2>
             <tim-alert *ngFor="let alert of alerts; let i = index" [severity]="alert.type" [closeable]="true" (closing)="badgeService.closeAlert(this.alerts, i)">
                 <div [innerHTML]="alert.msg"></div>
-            </tim-alert>
-            <div class="leaderboard">                  
+            </tim-alert>               
+            <div class="leaderboard" *ngIf="alerts.length === 0">                  
                 <div *ngFor="let team of top_five; let i = index" class="position" [ngClass]="getPositionClass(i)">
                     <div class="icon">
                         <span class="material-symbols-outlined">{{ getIcon(i) }}</span>
@@ -30,12 +30,13 @@ import {TimUtilityModule} from "tim/ui/tim-utility.module";
                     <p class="badge-count">{{ team.badge_count || 0 }}</p>
                 </div>            
             </div>               
-        </div>        
+        </div>
     `,
     styleUrls: ["badge.leaderboard.scss"],
 })
 export class BadgeLeaderboardComponent implements OnInit {
     @Input() badgegroupContext?: string;
+    @Input() badgeuserContext?: string;
     top_five: {
         group_name: string;
         badge_count?: number;
@@ -43,6 +44,7 @@ export class BadgeLeaderboardComponent implements OnInit {
     }[] = [];
     baseHeight: number = 25;
     scaleFactor: number = 10;
+    //teacherPermission: boolean = false;
     alerts: Array<{
         msg: string;
         type: "warning" | "danger";
@@ -85,6 +87,7 @@ export class BadgeLeaderboardComponent implements OnInit {
                 );
                 team.prettyName = pretty?.description || team.group_name;
             }
+            //this.teacherPermission = true;
 
             console.log("Fetched top_five: ", this.top_five);
         } catch (error: any) {
