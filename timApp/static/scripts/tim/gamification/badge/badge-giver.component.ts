@@ -288,6 +288,9 @@ export class BadgeGiverComponent implements OnInit {
         return Array.from(seen.values());
     }
 
+    /**
+     * Lisää kuuntelun fetchUserBadges ja fetchGroupBadges funktioihin.
+     */
     private addListeners() {
         // Subscribe to badge update events
         this.subscription.add(
@@ -302,6 +305,14 @@ export class BadgeGiverComponent implements OnInit {
         );
     }
 
+    /**
+     * Kun käyttäjän nimeä klikataan, metodi tarkistaa onko klikattu käyttäjä jo valittuna.
+     * Jos käyttäjä on valittuna, asetetaan uusi suodatettu selectedUsers taulukko ilman käyttäjää.
+     *
+     * Jos käyttäjä ei ole jo valittu, asetetaan se valituksi ja kutsutaan toggleUserSelection metodia ja
+     * haetaan käyttäjän badget.
+     * @param user klikattu käyttäjä
+     */
     handleUserSelection(user: IUser) {
         if (this.selectedUser === user) {
             this.selectedUser = null;
@@ -315,6 +326,14 @@ export class BadgeGiverComponent implements OnInit {
         this.fetchUserBadges(user);
     }
 
+    /**
+     * Kun ryhmän nimeä klikataan, metodi tarkistaa onko klikattu ryhmä jo valittuna.
+     * Jos ryhmä on valittuna, asetetaan uusi suodatettu selectedGroups taulukko ilman ryhmää.
+     *
+     * Jos ryhmä ei ole jo valittu, asetetaan se valituksi ja kutsutaan toggleGroupSelection metodia ja
+     * haetaan ryhmän badget.
+     * @param group klikattu ryhmä
+     */
     handleGroupSelection(group: IGroup) {
         this.selectedUser = null;
         if (this.selectedGroup === group) {
@@ -329,6 +348,15 @@ export class BadgeGiverComponent implements OnInit {
         this.fetchUsers(group.name);
     }
 
+    /**
+     * Lisää valitun käyttäjän tai ryhmän taulukkoon ja palauttaa sen.
+     * Jos käyttäjän / ryhmän valinta otetaan pois, palautetaan uusi taulukko ilman käyttäjää / ryhmää.
+     *
+     * @param item tyyppiä T, josta tulee löytyä id. Tähän kelpaa IUser tai IGroup.
+     * @param selectedItems taulukko, joka on tyyppiä T, josta tulee löytyä id. Tähän kelpaa IUser[] tai IGroup[]
+     * @param event Eventin avulla saadaan selville, mistä funktiota on kutsuttu. Jos funktiota kutsutaan html:n puolelta,
+     * Event sisältää html -elementtejä. Jos sitä kutsutaan typescriptissä, Event on falsy.
+     */
     toggleItemSelection<T extends {id: number}>(
         item: T,
         selectedItems: T[],
@@ -349,6 +377,11 @@ export class BadgeGiverComponent implements OnInit {
         return selectedItems.filter((u) => u.id !== item.id);
     }
 
+    /**
+     * Kutsuu toggleItemSelection funktiota ja asettaa sen palauttaman viitteen viittaamaan this.selectedUsers taulukkoon.
+     * @param user valittu käyttäjä
+     * @param event sisältää tiedon checkbox valinnasta
+     */
     toggleUserSelection(user: IUser, event?: Event) {
         this.selectedUsers = this.toggleItemSelection(
             user,
@@ -356,6 +389,12 @@ export class BadgeGiverComponent implements OnInit {
             event
         );
     }
+
+    /**
+     * Kutsuu toggleItemSelection funktiota ja asettaa sen palauttaman viitteen viittaamaan this.selectedGroups taulukkoon.
+     * @param group valittu ryhmä
+     * @param event sisältää tiedon checkbox valinnasta
+     */
     toggleGroupSelection(group: IGroup, event?: Event) {
         this.selectedGroups = this.toggleItemSelection(
             group,
@@ -364,6 +403,11 @@ export class BadgeGiverComponent implements OnInit {
         );
     }
 
+    /**
+     * Asettaa kaikki ryhmän jäsenet valituksi tai poistaa kaikista jäsenistä valinnan.
+     * @param group ryhmä, johon jäsenet kuuluu.
+     * @param event sisältää tiedon checkboxin valinnasta
+     */
     toggleSelectAll(group: IGroup, event: Event) {
         const isChecked = (event.target as HTMLInputElement).checked;
         const groupUsers = this.groupUsersMap.get(group.id);
@@ -389,6 +433,14 @@ export class BadgeGiverComponent implements OnInit {
         }
     }
 
+    /**
+     * Asettaa kaikki käyttäjät tai ryhmät valituksi.
+     * Poistaa kaikkien käyttäjien tai ryhmien valinnat jos checkbox ei ole checked.
+     *
+     * @param event sisältää tiedon checkboxin valinnasta.
+     * @param selectedItems valitut ryhmät tai käyttäjät, joka voi olla muotoa IUser[] tai IGroup[].
+     * @param itemList lista ryhmistä tai käyttäjistä, joka voi olla muotoa IUser[] tai IGroup[].
+     */
     toggleSelectAllItems<T>(
         event: Event,
         selectedItems: T[],
@@ -405,13 +457,22 @@ export class BadgeGiverComponent implements OnInit {
         this.emptyTable(selectedItems);
     }
 
-    isSelected<Valinta extends {id: number}>(
-        item: Valinta,
-        selectedItems: Valinta[]
-    ): boolean {
+    /**
+     * Tarkistaa löytyykö parametrina annettu käyttäjä tai ryhmä selectedUsers tai selectedGroups taulukosta.
+     * @param item käyttäjä tai ryhmä, joka on tyyppiä T, josta täytyy löytyä id.
+     * @param selectedItems valitut käyttäjät/ryhmät, joka on tyyppiä T[].
+     * @return true, jos käyttäjä/ryhmä löytyy taulukosta, muuten false.
+     */
+    isSelected<T extends {id: number}>(item: T, selectedItems: T[]): boolean {
         return selectedItems.some((i) => i.id === item.id);
     }
 
+    /**
+     * Asettaa userAssignille parametrina saadun totuusarvon.
+     * Tyhjentää taulukot.
+     * Hakee lopuksi kaikki käyttäjät.
+     * @param bool totuusarvo, jonka avulla user/group view määritellään.
+     */
     handleSwap(bool: boolean) {
         this.userAssign = bool;
         this.selectedGroup = null;
@@ -421,6 +482,9 @@ export class BadgeGiverComponent implements OnInit {
         this.fetchUsers(this.badgegroupContext);
     }
 
+    /**
+     * Tyhjentää attribuutit. Kutsutaan mm. cancel painikkeessa.
+     */
     emptyForm() {
         this.selectedUser = null;
         this.selectedBadge = null;
@@ -462,6 +526,10 @@ export class BadgeGiverComponent implements OnInit {
         }
     }
 
+    /**
+     * Käy kaikki ryhmät läpi ja asettaa jokaisen ryhmän ID:n ja siihen kuuluvat käyttäjät groupUsersMappiin.
+     * Lopuksi kutsutaan filterUsers metodia.
+     */
     async fetchUsersFromGroups() {
         this.groupUsersMap.clear();
         for (const group of this.groups) {
@@ -472,12 +540,12 @@ export class BadgeGiverComponent implements OnInit {
         }
         this.filterUsers();
     }
+
     /**
-     * Tarkistaa onko annettu parametri undefined. Jos true niin lähdetään pois.
-     * Tyhjentää this.userBadges -taulukon
-     * Kutsuu badge-servicen metodia, joka hakee käyttäjälle kuuluvat badget.
-     * @param selectedUser valittu käyttäjä
-     *
+     * Badget tyhjätään ensin ja tarkistetaan että selectedUser ei ole virheellinen.
+     * Haetaan käyttäjän personalgroup, jonka avulla saadaan oikea ID badgejen hakemista varten.
+     * Asetetaan getUserBadges funktion palauttama viite viittaamaan this.userBadgesiin.
+     * @param selectedUser valittu käyttäjä, jonka badget haetaan.
      */
     async fetchUserBadges(selectedUser: IUser) {
         this.emptyTable(this.userBadges);
@@ -501,6 +569,12 @@ export class BadgeGiverComponent implements OnInit {
         );
     }
 
+    /**
+     * Tarkistetaan että groupId ja badgegroupContext ei ole virheellinen.
+     * Tyhjätään badget.
+     * Asetetaan getUserBadges funktion palauttama viite viittaamaan this.groupBadgesiin.
+     * @param groupId valitun ryhmän ID, jonka badget haetaan.
+     */
     async fetchGroupBadges(groupId?: number) {
         if (groupId == undefined) {
             console.error("groupid was undefined");
@@ -518,7 +592,8 @@ export class BadgeGiverComponent implements OnInit {
     }
 
     /**
-     * Antaa valitulle käyttäjälle valitun badgen
+     * Antaa valituille käyttäjille tai ryhmille valitun badgen.
+     * Lopuksi tyhjätään kaikki kutsumalla emptyForm metodia.
      * @param message viesti, joka antamisen yhteydessä voidaan antaa
      */
     async assignBadge(message: string) {
@@ -561,7 +636,7 @@ export class BadgeGiverComponent implements OnInit {
         }
     }
     /**
-     * Tyhjentää attribuuttina annetun taulukon
+     * Tyhjentää parametrina annetun taulukon
      */
     emptyTable<T>(table: T[]) {
         while (table.length > 0) {

@@ -354,6 +354,9 @@ export class BadgeWithdrawComponent implements OnInit {
         }
     }
 
+    /**
+     * Lisää kuuntelun fetchUserBadges ja fetchGroupBadges funktioihin.
+     */
     private addListeners() {
         // Subscribe to badge update events
         this.subscription.add(
@@ -368,6 +371,9 @@ export class BadgeWithdrawComponent implements OnInit {
         );
     }
 
+    /**
+     * Tyhjentää attribuutit. Kutsutaan mm. cancel painikkeessa.
+     */
     emptyForm() {
         this.selectedUser = null;
         this.selectedBadge = null;
@@ -382,6 +388,11 @@ export class BadgeWithdrawComponent implements OnInit {
         }, 100);
     }
 
+    /**
+     * Tyhjentää attribuutit.
+     * Asettaa userAssignille parametrina saadun totuusarvon.
+     * @param bool totuusarvo, jonka avulla user/group view määritellään.
+     */
     handleSwap(bool: boolean) {
         this.showComponent = true;
         this.selectedGroup = null;
@@ -391,6 +402,11 @@ export class BadgeWithdrawComponent implements OnInit {
         this.userAssign = bool;
     }
 
+    /**
+     * Käy kaikki ryhmät läpi ja asettaa jokaisen ryhmän ID:n ja siihen kuuluvat käyttäjät groupUsersMappiin.
+     * Lisää kaikkien käyttäjien ID:t groupedUserIds taulukkoon, jotka kuuluvat johonkin ryhmään.
+     * Suodattaa filteredUsers taulukkoon kaikki ne käyttäjät, jotka eivät kuulu mihinkään ryhmään.
+     */
     async fetchUsersFromGroups() {
         this.groupUsersMap.clear();
         for (const group of this.groups) {
@@ -409,8 +425,10 @@ export class BadgeWithdrawComponent implements OnInit {
             (user) => !groupedUserIds.has(user.id)
         );
     }
+
     /**
      * Hakee käyttäjät, jotka kuuluvat badgegroupContext ryhmään. badgegroupContext annetaan TIM:n puolelta.
+     * Jos http get pyyntö palauttaa virheen, kutsutaan badgeServicen showError metodia.
      */
     private async fetchUsers() {
         const result = await toPromise(
@@ -462,8 +480,10 @@ export class BadgeWithdrawComponent implements OnInit {
 
     /**
      * Tarkistaa onko annettu parametri undefined. Jos true niin lähdetään pois.
-     * Tyhjentää this.userBadges -taulukon
-     * Kutsuu badge-servicen metodia, joka hakee käyttäjälle kuuluvat badget.
+     * Tyhjentää valinnat sekä user- ja groupBadges taulukot.
+     * Tarkistaa selectedUser ja badgegroupContextin
+     * Hakee käyttäjän personalgroupin, jonka avulla voidaan hakea badget.
+     * Kutsuu badge-servicen getUserBadges metodia, joka hakee käyttäjälle kuuluvat badget.
      * @param userId käyttäjän id
      */
     async fetchUserBadges(userId?: number) {
@@ -499,6 +519,12 @@ export class BadgeWithdrawComponent implements OnInit {
         this.hasBadges = this.userBadges.length > 0;
     }
 
+    /**
+     * Tarkistaa groupId:n ja badgegroupContextin.
+     * Tyhjentää valinnat sekä user- ja groupBadges taulukot.
+     * Kutsuu badge-servicen getUserBadges metodia, joka hakee ryhmän badget.
+     * @param groupId ryhmän ID, jonka badget haetaan.
+     */
     async fetchGroupBadges(groupId?: number) {
         if (groupId == undefined) {
             console.error("groupid was undefined");
@@ -524,12 +550,13 @@ export class BadgeWithdrawComponent implements OnInit {
     }
 
     /**
-     * Kutsuu badge-servicen metodia, joka ottaa valitun badgen pois käyttäjältä.
+     * Kutsuu badge-servicen withdrawBadge metodia, joka ottaa valitun badgen pois käyttäjältä.
+     * Jos withdrawBadge palauttaa virheen, kutsutaan badge-servicen showError metodia.
      * @param badgegivenID ID, jonka perustella badgesgiven taulukosta voidaan ottaa pois käyttäjälle annettu badge
      */
     async removeBadge(badgegivenID?: number) {
         if (badgegivenID == undefined) {
-            console.error("badgegived id was undefined");
+            console.error("badgegivenID id was undefined");
             return;
         }
 
@@ -560,6 +587,12 @@ export class BadgeWithdrawComponent implements OnInit {
         this.selectedBadge = null;
     }
 
+    /**
+     * Tarkistaa milloin Withdraw painike tulee olla disabled.
+     * Jos badgea ei ole valittu, palautetaan true.
+     * Jos käyttäjää tai ryhmää ei ole valittu, palautetaan true.
+     * Muussa tapauksessa palautetaan false.
+     */
     isWithdrawButtonDisabled(): boolean {
         if (!this.selectedBadge) {
             return true;
@@ -585,7 +618,9 @@ export class BadgeWithdrawComponent implements OnInit {
             }
         }
     }
-
+    /**
+     * Tyhjentää parametrina annetun taulukon
+     */
     emptyTable<T>(table: T[]) {
         while (table.length > 0) {
             table.pop();

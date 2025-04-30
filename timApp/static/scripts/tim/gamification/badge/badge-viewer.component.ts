@@ -143,6 +143,48 @@ export class BadgeViewerComponent implements OnInit {
         private groupService: GroupService
     ) {}
 
+    // Finds and presents the badges of the user and their assigned group
+    ngOnInit() {
+        this.availableImages = this.badgeService.getAvailableImages();
+        if (Users.isLoggedIn()) {
+            this.InitializeData().then(() => {
+                this.getBadges();
+            });
+        }
+        this.subscription = this.badgeService.updateBadgeList$.subscribe(() => {
+            this.getBadges();
+            this.getGroupBadges();
+        });
+        this.subscription.add(
+            this.badgeService.groupNameUpdated$.subscribe((update) => {
+                this.groupPrettyNames.set(update.id, update.newName);
+            })
+        );
+    }
+
+    /**
+     * Tarkistaa badgeuser ja badgegroupContextin.
+     * Hakee käyttäjän personalGroupin userContextin avulla.
+     * Asettaa this.realNamen personalGroupin avulla.
+     * Kutsuu getUserSubGroups metodia.
+     */
+    private async InitializeData() {
+        if (!this.badgeuserContext || !this.badgegroupContext) {
+            return;
+        }
+        this.personalGroup = await this.groupService.getUserAndPersonalGroup(
+            this.badgeuserContext
+        );
+        if (!this.personalGroup) {
+            return;
+        }
+        this.realName = this.personalGroup["0"].real_name;
+        this.getUserSubGroups(
+            this.badgegroupContext,
+            this.personalGroup?.["0"].id
+        );
+    }
+
     /**
      * Kuuntelee "Esc"-näppäimen painallusat ja sulkee aviomen dialogin, mikäli näppäintä
      * painetaan. Metodi on kuuntelija, ja jos Esc-näppäintä painaa, metodi kutsuu
@@ -266,12 +308,12 @@ export class BadgeViewerComponent implements OnInit {
     }
 
     /**
-     * Tyhjentää badge -taulukon ja kutsuu badge-servicen metodia joka hakee käyttäjälle kuuluvat badget.
+     * Tyhjentää badget ja tekee http get pyynnön backendiin, josta saadaan käyttäjälle kuuluvat badget.
+     * Jos backendista saatu paluuarvo on virheellinen, kutsutaan badgeServicen showError metodia.
+     * Jos virheitä ei ilmene, asetetaan this.badges viittaamaan userBadges taulukkoon ja kutsutaan onSortChange metodia.
      */
     async getBadges() {
         this.emptyTable(this.badges);
-        this.emptyTable(this.badges);
-
         const result = await toPromise(
             this.http.get<[]>(
                 `/groups_badges/${this.personalGroup?.["1"].id}/${this.badgegroupContext}`
@@ -330,7 +372,9 @@ export class BadgeViewerComponent implements OnInit {
         }
     }
 
-    // Retrieves the badges of a group
+    /**
+     * Asettaa jokaisen käyttäjän aliryhmän ID:n ja niiden badget groupBadgesMappiin.
+     */
     async getGroupBadges() {
         this.groupBadgesMap.clear();
         if (!this.badgegroupContext) {
@@ -345,58 +389,6 @@ export class BadgeViewerComponent implements OnInit {
                     this.badgegroupContext
                 )
             );
-        }
-    }
-
-    // Finds and presents the badges of the user and their assigned group
-    ngOnInit() {
-        this.availableImages = this.badgeService.getAvailableImages();
-        if (Users.isLoggedIn()) {
-            this.InitializeData().then(() => {
-                this.getBadges();
-            });
-        }
-        this.subscription = this.badgeService.updateBadgeList$.subscribe(() => {
-            this.getBadges();
-            this.getGroupBadges();
-        });
-        this.subscription.add(
-            this.badgeService.groupNameUpdated$.subscribe((update) => {
-                this.groupPrettyNames.set(update.id, update.newName);
-            })
-        );
-    }
-
-    //
-    private async InitializeData() {
-        if (!this.badgeuserContext || !this.badgegroupContext) {
-            return;
-        }
-
-        this.personalGroup = await this.groupService.getUserAndPersonalGroup(
-            this.badgeuserContext
-        );
-        if (!this.personalGroup) {
-            return;
-        }
-        this.realName = this.personalGroup["0"].real_name;
-        this.getUserSubGroups(
-            this.badgegroupContext,
-            this.personalGroup?.["0"].id
-        );
-    }
-
-    //
-    ngOnDestroy() {
-        this.subscription.unsubscribe();
-    }
-
-    /**
-     * Tyhjentää attribuuttina annetun taulukon
-     */
-    emptyTable<T>(table: T[]) {
-        while (table.length > 0) {
-            table.pop();
         }
     }
 
@@ -465,6 +457,19 @@ export class BadgeViewerComponent implements OnInit {
         }
 
         this.groupBadgesMap.set(groupId, sorted);
+    }
+
+    ngOnDestroy() {
+        this.subscription.unsubscribe();
+    }
+
+    /**
+     * Tyhjentää parametrina annetun taulukon
+     */
+    emptyTable<T>(table: T[]) {
+        while (table.length > 0) {
+            table.pop();
+        }
     }
 }
 
