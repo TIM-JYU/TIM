@@ -290,7 +290,6 @@ export class BadgeGiverComponent implements OnInit {
 
     /**
      * Lisää kuuntelun fetchUserBadges ja fetchGroupBadges funktioihin.
-     * @private
      */
     private addListeners() {
         // Subscribe to badge update events
@@ -379,7 +378,7 @@ export class BadgeGiverComponent implements OnInit {
     }
 
     /**
-     * Kutsuu toggleItemSelection -funktiota ja asettaa sen palauttaman viitteen viittaamaan this.selectedUsers taulukkoon.
+     * Kutsuu toggleItemSelection funktiota ja asettaa sen palauttaman viitteen viittaamaan this.selectedUsers taulukkoon.
      * @param user valittu käyttäjä
      * @param event sisältää tiedon checkbox valinnasta
      */
@@ -392,7 +391,7 @@ export class BadgeGiverComponent implements OnInit {
     }
 
     /**
-     * Kutsuu toggleItemSelection -funktiota ja asettaa sen palauttaman viitteen viittaamaan this.selectedGroups taulukkoon.
+     * Kutsuu toggleItemSelection funktiota ja asettaa sen palauttaman viitteen viittaamaan this.selectedGroups taulukkoon.
      * @param group valittu ryhmä
      * @param event sisältää tiedon checkbox valinnasta
      */
@@ -483,6 +482,9 @@ export class BadgeGiverComponent implements OnInit {
         this.fetchUsers(this.badgegroupContext);
     }
 
+    /**
+     * Tyhjentää attribuutit. Kutsutaan mm. cancel painikkeessa.
+     */
     emptyForm() {
         this.selectedUser = null;
         this.selectedBadge = null;
@@ -524,6 +526,10 @@ export class BadgeGiverComponent implements OnInit {
         }
     }
 
+    /**
+     * Käy kaikki ryhmät läpi ja asettaa jokaisen ryhmän ID:n ja siihen kuuluvat käyttäjät groupUsersMappiin.
+     * Lopuksi kutsutaan filterUsers metodia.
+     */
     async fetchUsersFromGroups() {
         this.groupUsersMap.clear();
         for (const group of this.groups) {
@@ -534,12 +540,12 @@ export class BadgeGiverComponent implements OnInit {
         }
         this.filterUsers();
     }
+
     /**
-     * Tarkistaa onko annettu parametri undefined. Jos true niin lähdetään pois.
-     * Tyhjentää this.userBadges -taulukon
-     * Kutsuu badge-servicen metodia, joka hakee käyttäjälle kuuluvat badget.
-     * @param selectedUser valittu käyttäjä
-     *
+     * Badget tyhjätään ensin ja tarkistetaan että selectedUser ei ole virheellinen.
+     * Haetaan käyttäjän personalgroup, jonka avulla saadaan oikea ID badgejen hakemista varten.
+     * Asetetaan getUserBadges funktion palauttama viite viittaamaan this.userBadgesiin.
+     * @param selectedUser valittu käyttäjä, jonka badget haetaan.
      */
     async fetchUserBadges(selectedUser: IUser) {
         this.emptyTable(this.userBadges);
@@ -563,6 +569,12 @@ export class BadgeGiverComponent implements OnInit {
         );
     }
 
+    /**
+     * Tarkistetaan että groupId ja badgegroupContext ei ole virheellinen.
+     * Tyhjätään badget.
+     * Asetetaan getUserBadges funktion palauttama viite viittaamaan this.groupBadgesiin.
+     * @param groupId valitun ryhmän ID, jonka badget haetaan.
+     */
     async fetchGroupBadges(groupId?: number) {
         if (groupId == undefined) {
             console.error("groupid was undefined");
@@ -580,7 +592,8 @@ export class BadgeGiverComponent implements OnInit {
     }
 
     /**
-     * Antaa valitulle käyttäjälle valitun badgen
+     * Antaa valituille käyttäjille tai ryhmille valitun badgen.
+     * Lopuksi tyhjätään kaikki kutsumalla emptyForm metodia.
      * @param message viesti, joka antamisen yhteydessä voidaan antaa
      */
     async assignBadge(message: string) {
