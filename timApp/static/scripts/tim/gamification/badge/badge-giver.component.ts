@@ -636,7 +636,7 @@ export class BadgeGiverComponent implements OnInit {
         }
     }
     /**
-     * Tyhjentää attribuuttina annetun taulukon
+     * Tyhjentää parametrina annetun taulukon
      */
     emptyTable<T>(table: T[]) {
         while (table.length > 0) {
