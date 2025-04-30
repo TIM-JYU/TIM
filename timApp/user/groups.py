@@ -506,7 +506,6 @@ def get_usernames(usernames: list[str]):
     return usernames
 
 
-# TODO: Create tests for this route. Test with erroneous data too.
 @groups.get("/current_group_name/<name>")
 def group_name(name: str) -> Response:
     """
@@ -527,7 +526,6 @@ def group_name(name: str) -> Response:
     )
 
 
-# TODO: Create tests for this route. Test with erroneous data and with no access rights too.
 @groups.post("/editGroupName/<group_name>/<new_name>")
 def change_group_name(group_name: str, new_name: str) -> Response:
     """
@@ -547,7 +545,7 @@ def change_group_name(group_name: str, new_name: str) -> Response:
     if not in_group:
         verify_teacher_access(
             block,
-            message=f"Sorry, you don't have permission to use this resource. If you are a teacher of {group_name}, please contact TIM admin.",
+            message=f'Sorry, you don\'t have permission to use this resource. If you are a teacher of "{group_name}", please contact TIM admin.',
         )
 
     group.admin_doc.description = new_name
