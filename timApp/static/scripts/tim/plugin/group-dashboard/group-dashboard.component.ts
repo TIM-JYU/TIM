@@ -70,17 +70,6 @@ import {Subscription} from "rxjs";
             </div>
         </div>
     </div>
-
-    <div class="dashboard-section">
-        <h2 class="section-title">Settings</h2>
-        <b>Change group name:</b>
-        <tim-group-name
-            *ngIf="group"
-            [group]="group"
-            (contextGroupChange)="onContextGroupChange($event)"
-            (groupNameChange)="onGroupNameChange($event)">
-        </tim-group-name>
-    </div>
                 </div>
 </ng-container>
 `,
@@ -108,7 +97,6 @@ export class GroupDashboardComponent implements OnInit {
     totalBadges: number = 0;
 
     //TODO: scrollbar ja skaalaus, kun badgeja on paljon
-    //TODO: real name jäsenten nimien tilalla
 
     ngOnInit() {
         if (this.group) {
@@ -117,6 +105,7 @@ export class GroupDashboardComponent implements OnInit {
     }
 
     async loadData() {
+        this.contextGroup = this.groupService.getContextGroup(this.group);
         await this.getGroupName();
         await this.fetchMembers();
         await this.fetchUserBadges();
@@ -192,19 +181,6 @@ export class GroupDashboardComponent implements OnInit {
         } catch (error) {
             console.error("Error fetching group mutual badges:", error);
         }
-    }
-
-    onContextGroupChange(context: string) {
-        this.contextGroup = context;
-    }
-
-    onGroupNameChange(newName: string) {
-        this.displayName = newName;
-        this.nameJustUpdated = true;
-
-        setTimeout(() => {
-            this.nameJustUpdated = false;
-        }, 1500);
     }
 
     private refreshTotalPoints() {

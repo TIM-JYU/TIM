@@ -123,4 +123,9 @@ export class GroupService {
             return result.result;
         }
     }
+
+    getContextGroup(fullName: string) {
+        const parts = fullName.split("-");
+        return parts[0];
+    }
 }
