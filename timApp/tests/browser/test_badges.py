@@ -1,4 +1,3 @@
-import time
 from selenium.webdriver.common.by import By
 from selenium.webdriver import ActionChains
 from selenium.common.exceptions import (
@@ -20,6 +19,7 @@ class TestBadges(BrowserTest):
         d = self.create_doc(
             initial_par="""
 #- {allowangular=true}
+
 <tim-badge-creator badgegroup-context="newgroup1"></tim-badge-creator>
 
 """
@@ -45,29 +45,29 @@ class TestBadges(BrowserTest):
 
     def test_badge_creation_missing_required(self):
         """Test that required-field validation works."""
-        self.wait_until_present_and_vis("#button showBadgeForm")
-        self.find_element("#button showBadgeForm").click()
+        self.wait_until_present_and_vis("button #showBadgeForm")
+        self.find_element("button #showBadgeForm").click()
         # Only description
-        self.wait_until_present_and_vis("#textarea description")
-        self.find_element("#textarea description").send_keys("Only desc")
+        self.wait_until_present_and_vis("textarea #description")
+        self.find_element("textarea #description").send_keys("Only desc")
         # Force validation
-        t = self.find_element("#input title")
+        t = self.find_element("input #title")
         t.click()
-        t.send_keys(" ")
+        t.send_keys("Title")
         t.clear()
         self.wait_until_present_and_vis("div.error-message")
         self.assertIn("Title is required", self.find_element("div.error-message").text)
-        self.assertFalse(self.find_element("#button createButton").is_enabled())
+        self.assertFalse(self.find_element("button #createButton").is_enabled())
 
     def test_cancel_badge_creation(self):
         """Test that cancelling does not create a badge."""
-        self.wait_until_present_and_vis("#button showBadgeForm")
-        self.find_element("#button showBadgeForm").click()
-        self.wait_until_present_and_vis("#input title")
-        self.find_element("#input title").send_keys("Will Cancel")
-        self.find_element("#textarea description").send_keys("Cancel me")
-        self.find_element("#button cancelButton").click()
-        self.wait_until_hidden("#form badgeForm")
+        self.wait_until_present_and_vis("button #showBadgeForm")
+        self.find_element("button #showBadgeForm").click()
+        self.wait_until_present_and_vis("input #title")
+        self.find_element("input #title").send_keys("Will Cancel")
+        self.find_element("textarea #description").send_keys("Cancel me")
+        self.find_element("button #cancelButton").click()
+        self.wait_until_hidden("form #badgeForm")
 
         cards = self.drv.find_elements(By.CSS_SELECTOR, "div.badge-card")
         for c in cards:
@@ -86,23 +86,23 @@ class TestBadges(BrowserTest):
         elm = self.find_element("div.badge-card tim-badge")
         ActionChains(self.drv).move_to_element(elm).click().perform()
         # Edit
-        self.wait_until_present_and_vis("#button editButton")
-        self.find_element("#button editButton").click()
-        self.wait_until_present_and_vis("#input title")
-        f = self.find_element("#input title")
+        self.wait_until_present_and_vis("button #editButton")
+        self.find_element("button #editButton").click()
+        self.wait_until_present_and_vis("input #title")
+        f = self.find_element("input #title")
         f.clear()
         f.send_keys("Edited")
-        self.find_element("#button createButton").click()
+        self.find_element("button #createButton").click()
         # Verify
         upd = self.find_element("div.badge-card tim-badge").get_attribute("title")
         self.assertIn("Edited", upd)
 
     def test_alert_dismissal(self):
         """Test that validation alerts can be closed."""
-        self.wait_until_present_and_vis("#button showBadgeForm")
-        self.find_element("#button showBadgeForm").click()
+        self.wait_until_present_and_vis("button #showBadgeForm")
+        self.find_element("button #showBadgeForm").click()
         # Trigger alert
-        t = self.find_element("#input title")
+        t = self.find_element("input #title")
         t.click()
         t.send_keys(" ")
         t.clear()
@@ -151,11 +151,11 @@ class TestBadges(BrowserTest):
 
     def open_badge_form(self):
         """Opens the badge creation form by clicking the showBadgeForm button."""
-        self.wait_until_present_and_vis("#button showBadgeForm")
-        open_button = self.find_element_and_move_to("#button showBadgeForm")
+        self.wait_until_present_and_vis("button #showBadgeForm")
+        open_button = self.find_element_and_move_to("button #showBadgeForm")
         open_button.click()
         # Wait for the form to appear by checking the title input.
-        self.wait_until_present_and_vis("#input title")
+        self.wait_until_present_and_vis("input #title")
 
     def fill_badge_form(
         self,
@@ -167,23 +167,23 @@ class TestBadges(BrowserTest):
     ):
         """Fills in the badge form using provided data."""
         # Fill in the title.
-        title_input = self.find_element("#input title")
+        title_input = self.find_element("input #title")
         title_input.clear()
         title_input.send_keys(title)
 
         # Fill in the description.
-        desc_input = self.find_element("#textarea description")
+        desc_input = self.find_element("textarea #description")
         desc_input.clear()
         desc_input.send_keys(description)
 
         # Choose an image from the select.
-        image_select = self.find_element("#select image")
+        image_select = self.find_element("select #image")
         image_options = self.find_elements_by_tag_name("option", parent=image_select)
         if len(image_options) > image_index:
             image_options[image_index].click()
 
         # Choose a color from the select.
-        color_select = self.find_element("#select color")
+        color_select = self.find_element("select #color")
         color_options = self.find_elements_by_tag_name("option", parent=color_select)
         if len(color_options) > color_index:
             color_options[color_index].click()
