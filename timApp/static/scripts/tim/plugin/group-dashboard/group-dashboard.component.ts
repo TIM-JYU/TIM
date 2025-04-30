@@ -100,7 +100,7 @@ export class GroupDashboardComponent implements OnInit {
     totalBadges: number = 0;
 
     //TODO: scrollbar ja skaalaus, kun badgeja on paljon
-
+    //TODO: group badgejen noutaminen ei-jäsenille
     ngOnInit() {
         if (this.group) {
             this.loadData();
