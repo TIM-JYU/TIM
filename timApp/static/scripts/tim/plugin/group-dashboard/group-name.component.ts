@@ -26,12 +26,12 @@ import {ICurrentUser, IUser} from "tim/user/IUser";
                 <p>Pretty name: <b>{{prettyName}}</b></p>
             </div>
             <div class="changeName">
-                <button (click)="toggleInput()">Change group name</button>
-                <button (click)="toggleFullName()">
-    {{ showFullName ? "Show sub-group only" : "Show full group name" }}
-</button>
+    <button *ngIf="canEditName" (click)="toggleInput()">Change group name</button>
+    <button (click)="toggleFullName()">
+        {{ showFullName ? "Show sub-group only" : "Show full group name" }}
+    </button>
+</div>
 
-            </div>
             <div *ngIf="showInput">
                 <input [formControl]="newName" placeholder="Enter new group name"/>
                 <button (click)="saveName()" [disabled]="newName.invalid">Save</button>
@@ -54,6 +54,7 @@ export class GroupNameComponent implements OnInit {
     item: IFullDocument | IFolder | undefined;
     newName = new FormControl("", [Validators.required]);
     displayedName: string | null | undefined;
+    canEditName: boolean | undefined;
     showInput: boolean = false;
     showFullName = true;
     storedGroup: {name: string; id: number} | null = null;
@@ -91,6 +92,7 @@ export class GroupNameComponent implements OnInit {
                 ? this.groupName
                 : this.subGroup;
 
+            this.canEditName = fetchedGroup.isMember || fetchedGroup.isTeacher;
             this.parseParentGroup(this.groupName);
         }
     }

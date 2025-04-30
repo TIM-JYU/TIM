@@ -9,6 +9,7 @@ import {BadgeModule} from "tim/gamification/badge/badge.component";
 import {GroupService} from "tim/plugin/group-dashboard/group.service";
 import {PointService} from "tim/plugin/group-dashboard/point.service";
 import {Subscription} from "rxjs";
+import {UserService} from "tim/user/userService";
 
 @Component({
     selector: "tim-group-dashboard",
@@ -70,17 +71,6 @@ import {Subscription} from "rxjs";
             </div>
         </div>
     </div>
-
-    <div class="dashboard-section">
-        <h2 class="section-title">Settings</h2>
-        <b>Change group name:</b>
-        <tim-group-name
-            *ngIf="group"
-            [group]="group"
-            (contextGroupChange)="onContextGroupChange($event)"
-            (groupNameChange)="onGroupNameChange($event)">
-        </tim-group-name>
-    </div>
                 </div>
 </ng-container>
 `,
@@ -102,13 +92,14 @@ export class GroupDashboardComponent implements OnInit {
     contextGroup: string | undefined;
     members: any[] = [];
     title: string | undefined;
+    currentUserName: string | undefined;
+    canViewAllBadges: boolean = false;
     groupBadges: IBadge[] = [];
     nameJustUpdated = false;
     totalMembers: number = 0;
     totalBadges: number = 0;
 
     //TODO: scrollbar ja skaalaus, kun badgeja on paljon
-    //TODO: real name jäsenten nimien tilalla
 
     ngOnInit() {
         if (this.group) {
@@ -117,6 +108,8 @@ export class GroupDashboardComponent implements OnInit {
     }
 
     async loadData() {
+        this.contextGroup = this.groupService.getContextGroup(this.group);
+        this.currentUserName = manageglobals().current_user.name;
         await this.getGroupName();
         await this.fetchMembers();
         await this.fetchUserBadges();
@@ -137,6 +130,9 @@ export class GroupDashboardComponent implements OnInit {
             this.displayName = fetchedGroup.description || "";
             this.groupId = fetchedGroup.id;
         }
+
+        this.canViewAllBadges =
+            fetchedGroup.isTeacher || fetchedGroup.isAdmin || false;
     }
 
     async fetchMembers() {
@@ -151,6 +147,12 @@ export class GroupDashboardComponent implements OnInit {
     async fetchUserBadges() {
         let badgeCount = 0;
         const badgePromises = this.members.map(async (user) => {
+            const isCurrentUser = user.name === this.currentUserName;
+
+            if (!this.canViewAllBadges && !isCurrentUser) {
+                return;
+            }
+
             try {
                 const personalGroup =
                     await this.groupService.getUserAndPersonalGroup(user.name);
@@ -192,19 +194,6 @@ export class GroupDashboardComponent implements OnInit {
         } catch (error) {
             console.error("Error fetching group mutual badges:", error);
         }
-    }
-
-    onContextGroupChange(context: string) {
-        this.contextGroup = context;
-    }
-
-    onGroupNameChange(newName: string) {
-        this.displayName = newName;
-        this.nameJustUpdated = true;
-
-        setTimeout(() => {
-            this.nameJustUpdated = false;
-        }, 1500);
     }
 
     private refreshTotalPoints() {
