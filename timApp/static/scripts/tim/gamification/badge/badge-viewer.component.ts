@@ -319,15 +319,6 @@ export class BadgeViewerComponent implements OnInit {
                 `/groups_badges/${this.personalGroup?.["1"].id}/${this.badgegroupContext}`
             )
         );
-        const userBadges: IBadge[] = [];
-        if (result.ok) {
-            this.teacherPermission = true;
-            if (result.result != undefined) {
-                for (const alkio of result.result) {
-                    userBadges.push(alkio);
-                }
-            }
-        }
         if (!result.ok) {
             if (result.result.error.error == undefined) {
                 this.badgeService.showError(
@@ -351,6 +342,14 @@ export class BadgeViewerComponent implements OnInit {
                 "danger"
             );
             return;
+        }
+
+        const userBadges: IBadge[] = [];
+        this.teacherPermission = true;
+        if (result.result != undefined) {
+            for (const alkio of result.result) {
+                userBadges.push(alkio);
+            }
         }
         this.badges = userBadges;
         this.onSortChange(this.selectedSort);
