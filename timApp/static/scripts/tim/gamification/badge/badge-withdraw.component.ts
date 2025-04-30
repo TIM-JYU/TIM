@@ -227,7 +227,7 @@ export class BadgeWithdrawComponent implements OnInit {
     private subscription: Subscription = new Subscription();
 
     userAssign?: boolean = undefined;
-    teacherPermission = false;
+    teacherPermission = true;
     hasPermission: boolean = true;
     showComponent: boolean = true;
     hasBadges: boolean = false;
@@ -436,7 +436,6 @@ export class BadgeWithdrawComponent implements OnInit {
         );
         const users: IUser[] = [];
         if (result.ok) {
-            this.teacherPermission = true;
             if (result.result != undefined) {
                 for (const alkio of result.result) {
                     users.push(alkio);
@@ -444,6 +443,19 @@ export class BadgeWithdrawComponent implements OnInit {
             }
         }
         if (!result.ok) {
+            this.teacherPermission = false;
+            if (result.result.error.error == undefined) {
+                this.badgeService.showError(
+                    this.alerts,
+                    {
+                        data: {
+                            error: "Unexpected error. Check your internet connection.",
+                        },
+                    },
+                    "danger"
+                );
+                return;
+            }
             this.badgeService.showError(
                 this.alerts,
                 {
@@ -460,9 +472,43 @@ export class BadgeWithdrawComponent implements OnInit {
 
     private async fetchGroups() {
         if (this.badgegroupContext) {
-            this.groups = await this.groupService.getSubGroups(
-                this.badgegroupContext
+            const result = await toPromise(
+                this.http.get<[]>(`/subgroups/${this.badgegroupContext}`)
             );
+            const subGroups: IGroup[] = [];
+            if (result.ok) {
+                if (result.result != undefined) {
+                    for (const alkio of result.result) {
+                        subGroups.push(alkio);
+                    }
+                }
+            }
+            if (!result.ok) {
+                this.teacherPermission = false;
+                if (result.result.error.error == undefined) {
+                    this.badgeService.showError(
+                        this.alerts,
+                        {
+                            data: {
+                                error: "Unexpected error. Check your internet connection.",
+                            },
+                        },
+                        "danger"
+                    );
+                    return;
+                }
+                this.badgeService.showError(
+                    this.alerts,
+                    {
+                        data: {
+                            error: result.result.error.error,
+                        },
+                    },
+                    "danger"
+                );
+                return;
+            }
+            this.groups = subGroups;
         }
 
         const updatesGroups = [];
@@ -577,6 +623,18 @@ export class BadgeWithdrawComponent implements OnInit {
             .withdrawBadge(badgegivenID, this.badgegroupContext)
             .then((r) => {
                 if (!r.ok) {
+                    if (r.data?.result.error.error == undefined) {
+                        this.badgeService.showError(
+                            this.alerts,
+                            {
+                                data: {
+                                    error: "Unexpected error. Check your internet connection.",
+                                },
+                            },
+                            "danger"
+                        );
+                        return;
+                    }
                     this.badgeService.showError(
                         this.alerts,
                         {data: {error: r.data?.result.error.error || ""}},
