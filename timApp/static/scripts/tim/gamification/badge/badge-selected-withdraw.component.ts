@@ -142,13 +142,13 @@ import {GroupService} from "tim/plugin/group-dashboard/group.service";
                             <div [innerHTML]="alert.msg"></div>
                         </tim-alert>
 
-                        <div class="button-container">
-                            <button (click)="withdrawBadge()"
-                                    [disabled]="selectedUsers.length === 0 && selectedGroups.length === 0">
-                                Withdraw badge
-                            </button>
-                            <button id="cancelGiveButton" (click)="emptyForm()">Cancel</button>
-                        </div>
+<!--                        <div class="button-container">-->
+<!--                            <button (click)="withdrawBadge()"-->
+<!--                                    [disabled]="selectedUsers.length === 0 && selectedGroups.length === 0">-->
+<!--                                Withdraw badge-->
+<!--                            </button>-->
+<!--                            <button id="cancelGiveButton" (click)="emptyForm()">Cancel</button>-->
+<!--                        </div>-->
                     </div>
                 </ng-container>
             </div>
@@ -213,11 +213,11 @@ export class BadgeSelectedWithdrawComponent implements OnInit {
         }
     }
 
-    ngOnChanges(changes: SimpleChanges) {
-        if (changes.selectedBadge) {
-            this.fetchBadgeHolders(this.selectedBadge);
-        }
-    }
+    // ngOnChanges(changes: SimpleChanges) {
+    //     if (changes.selectedBadge) {
+    //         this.fetchBadgeHolders(this.selectedBadge);
+    //     }
+    // }
 
     onSearchChange(term: string) {
         this.searchTerm = term;
@@ -380,107 +380,107 @@ export class BadgeSelectedWithdrawComponent implements OnInit {
         }
     }
 
-    async fetchBadgeHolders(selectedBadge?: IBadge) {
-        if (selectedBadge == undefined) {
-            console.error("selected badge was undefined");
-            return;
-        }
-        const holders: IBadgeHolders | null =
-            await this.badgeService.getBadgeHolders(selectedBadge.id);
+    // async fetchBadgeHolders(selectedBadge?: IBadge) {
+    //     if (selectedBadge == undefined) {
+    //         console.error("selected badge was undefined");
+    //         return;
+    //     }
+    //     const holders: IBadgeHolders | null =
+    //         await this.badgeService.getBadgeHolders(selectedBadge.id);
+    //
+    //     if (!holders) {
+    //         return;
+    //     }
+    //
+    //     this.emptyTable(this.users);
+    //     this.emptyTable(this.groups);
+    //
+    //     for (const user of holders["0"]) {
+    //         this.users.push(user);
+    //     }
+    //
+    //     for (const group of holders["1"]) {
+    //         const prettyName = await this.groupService.getCurrentGroup(
+    //             group.name
+    //         );
+    //         if (prettyName) {
+    //             group.name = prettyName.description || group.name;
+    //         }
+    //         this.groups.push(group);
+    //     }
+    // }
 
-        if (!holders) {
-            return;
-        }
-
-        this.emptyTable(this.users);
-        this.emptyTable(this.groups);
-
-        for (const user of holders["0"]) {
-            this.users.push(user);
-        }
-
-        for (const group of holders["1"]) {
-            const prettyName = await this.groupService.getCurrentGroup(
-                group.name
-            );
-            if (prettyName) {
-                group.name = prettyName.description || group.name;
-            }
-            this.groups.push(group);
-        }
-    }
-
-    async withdrawBadge() {
-        // Show confirmation dialog before removing the badge
-        const confirmed = await showConfirm(
-            "Confirm badge removal event",
-            "Are you sure you want to remove this badge?"
-        );
-        if (!confirmed) {
-            return; // Exit if user cancels the confirmation dialog
-        }
-
-        if (this.badgegroupContext == undefined) {
-            console.error("group_context was undefined");
-            return;
-        }
-        if (this.selectedBadge == undefined) {
-            console.error("selected badge was undefined");
-            return;
-        }
-
-        if (this.selectedUsers.length > 0) {
-            for (const user of this.selectedUsers) {
-                const pGroup: IPersonalGroup =
-                    await this.groupService.getUserAndPersonalGroup(user.name);
-
-                await this.badgeService
-                    .withdrawSelectedBadge(
-                        pGroup["1"].id,
-                        this.selectedBadge?.id,
-                        this.badgegroupContext
-                    )
-                    .then((r) => {
-                        if (!r.ok) {
-                            this.badgeService.showError(
-                                this.alerts,
-                                {
-                                    data: {
-                                        error: r.data?.result.error.error || "",
-                                    },
-                                },
-                                "danger"
-                            );
-                        }
-                    });
-            }
-        }
-
-        if (this.selectedGroups.length > 0) {
-            for (const group of this.selectedGroups) {
-                await this.badgeService
-                    .withdrawSelectedBadge(
-                        group.id,
-                        this.selectedBadge?.id,
-                        this.badgegroupContext
-                    )
-                    .then((r) => {
-                        if (!r.ok) {
-                            this.badgeService.showError(
-                                this.alerts,
-                                {
-                                    data: {
-                                        error: r.data?.result.error.error || "",
-                                    },
-                                },
-                                "danger"
-                            );
-                        }
-                    });
-            }
-        }
-        this.emptyForm();
-    }
+    // async withdrawBadge() {
+    //     // Show confirmation dialog before removing the badge
+    //     const confirmed = await showConfirm(
+    //         "Confirm badge removal event",
+    //         "Are you sure you want to remove this badge?"
+    //     );
+    //     if (!confirmed) {
+    //         return; // Exit if user cancels the confirmation dialog
+    //     }
+    //
+    //     if (this.badgegroupContext == undefined) {
+    //         console.error("group_context was undefined");
+    //         return;
+    //     }
+    //     if (this.selectedBadge == undefined) {
+    //         console.error("selected badge was undefined");
+    //         return;
+    //     }
+    //
+    //     if (this.selectedUsers.length > 0) {
+    //         for (const user of this.selectedUsers) {
+    //             const pGroup: IPersonalGroup =
+    //                 await this.groupService.getUserAndPersonalGroup(user.name);
+    //
+    //             await this.badgeService
+    //                 .withdrawSelectedBadge(
+    //                     pGroup["1"].id,
+    //                     this.selectedBadge?.id,
+    //                     this.badgegroupContext
+    //                 )
+    //                 .then((r) => {
+    //                     if (!r.ok) {
+    //                         this.badgeService.showError(
+    //                             this.alerts,
+    //                             {
+    //                                 data: {
+    //                                     error: r.data?.result.error.error || "",
+    //                                 },
+    //                             },
+    //                             "danger"
+    //                         );
+    //                     }
+    //                 });
+    //         }
+    //     }
+    //
+    //     if (this.selectedGroups.length > 0) {
+    //         for (const group of this.selectedGroups) {
+    //             await this.badgeService
+    //                 .withdrawSelectedBadge(
+    //                     group.id,
+    //                     this.selectedBadge?.id,
+    //                     this.badgegroupContext
+    //                 )
+    //                 .then((r) => {
+    //                     if (!r.ok) {
+    //                         this.badgeService.showError(
+    //                             this.alerts,
+    //                             {
+    //                                 data: {
+    //                                     error: r.data?.result.error.error || "",
+    //                                 },
+    //                             },
+    //                             "danger"
+    //                         );
+    //                     }
+    //                 });
+    //         }
+    //     }
+    //     this.emptyForm();
+    // }
 
     /**
      * Tyhjentää attribuuttina annetun taulukon

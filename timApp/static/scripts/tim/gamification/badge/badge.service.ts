@@ -79,46 +79,50 @@ export class BadgeService {
         );
         const result = await response;
         if (result.ok) {
-            // console.log("badge poistettu käytöstä id:llä: " + badgegivenID);
-            this.triggerUpdateBadgeList();
-            return {ok: true};
-        } else {
-            return {ok: false, data: result};
-        }
-    }
-
-    async withdrawSelectedBadge(
-        userid: number,
-        badgeid: number,
-        contextGroup: string
-    ) {
-        const response = toPromise(
-            this.http.post<{ok: boolean}>("/withdraw_all_badges", {
-                badge_id: badgeid,
-                usergroup_id: userid,
-                context_group: contextGroup,
-            })
-        );
-        const result = await response;
-        if (result.ok) {
             this.triggerUpdateBadgeList();
             return {ok: true};
         }
         return {ok: false, data: result};
     }
 
-    async getBadgeHolders(badgeid: number) {
-        const response = toPromise(
-            this.http.get<IBadgeHolders>(`/badge_holders/${badgeid}`)
-        );
-        const result = await response;
-        if (result.ok) {
-            this.triggerUpdateBadgeList();
-            return result.result;
-        }
-        return null;
-    }
+    // async withdrawSelectedBadge(
+    //     userid: number,
+    //     badgeid: number,
+    //     contextGroup: string
+    // ) {
+    //     const response = toPromise(
+    //         this.http.post<{ok: boolean}>("/withdraw_all_badges", {
+    //             badge_id: badgeid,
+    //             usergroup_id: userid,
+    //             context_group: contextGroup,
+    //         })
+    //     );
+    //     const result = await response;
+    //     if (result.ok) {
+    //         this.triggerUpdateBadgeList();
+    //         return {ok: true};
+    //     }
+    //     return {ok: false, data: result};
+    // }
+    //
+    // async getBadgeHolders(badgeid: number) {
+    //     const response = toPromise(
+    //         this.http.get<IBadgeHolders>(`/badge_holders/${badgeid}`)
+    //     );
+    //     const result = await response;
+    //     if (result.ok) {
+    //         this.triggerUpdateBadgeList();
+    //         return result.result;
+    //     }
+    //     return null;
+    // }
 
+    /**
+     * Lähettää http post pyynnön, joka antaa käyttäjälle/ryhmälle badgen group- ja badge_id:n perusteella.
+     * Jos paluuarvossa on virhe, kutsutaan showError metodia.
+     * Kutsutaan notifyBadgeViewerUpdate, joka hoitaa live-päivityksen.
+     * @param data sisältää kaikki tarvittavat tiedot http post kutsuun.
+     */
     async assignBadges(data: IData) {
         const response = toPromise(
             this.http.post<{ok: boolean}>("/give_badge", {
@@ -128,12 +132,7 @@ export class BadgeService {
                 message: data.message,
             })
         );
-
         const result = await response;
-        if (result.ok) {
-            console.log(`Badge assigned to group/user ID: ${data.group_id}`);
-        }
-
         if (!result.ok) {
             this.showError(
                 this.alerts,
