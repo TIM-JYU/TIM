@@ -9,6 +9,7 @@ from timApp.notification.send_email import sent_mails_in_testing
 from timApp.tests.server.timroutetest import TimRouteTest
 from timApp.tim_app import app
 from timApp.timdb.sqa import db
+from timApp.user.groups import do_create_group_impl
 from timApp.user.user import User, UserInfo
 from timApp.user.usergroup import UserGroup
 
@@ -647,4 +648,105 @@ class GroupNotificationsTest(TimRouteTest):
         )
         self.assertEqual(
             2, len(sent_mails_in_testing), "Should send welcome mail again."
+        )
+
+
+class GroupNameChangerTest(TimRouteTest):
+    def test_group_name_changer(self):
+        # initialization
+        self.login_test1()
+        group1_name = "es_29"
+        subgroup1_name = "es_29-horses"
+        (group1, doc1) = do_create_group_impl(f"{group1_name}", group1_name)
+        (subgroup1, subdoc1) = do_create_group_impl(f"{subgroup1_name}", subgroup1_name)
+        db.session.commit()
+        self.test_user_1.grant_access(group1.admin_doc, AccessType.teacher)
+        self.test_user_1.grant_access(subgroup1.admin_doc, AccessType.teacher)
+        self.commit_db()
+        self.post(
+            f"/groups/addmember/{group1_name}",
+            data={"names": ["testuser2"]},
+        )
+        self.post(
+            f"/groups/addmember/{subgroup1_name}",
+            data={"names": ["testuser2"]},
+        )
+
+        # fetch group's original pretty name
+        self.get(
+            f"/groups/current_group_name/{subgroup1_name}",
+            expect_status=200,
+            expect_content={
+                "id": 10,
+                "name": subgroup1_name,
+                "description": subgroup1_name,
+            },
+        )
+
+        self.login_test3()
+
+        # try to edit group's pretty name when logged in user isn't included in the group and isn't teacher of the group
+        self.post(
+            f"/groups/editGroupName/{subgroup1_name}/Hevoset",
+            expect_status=403,
+            expect_content=f'Sorry, you don\'t have permission to use this resource. If you are a teacher of "{subgroup1_name}", please contact TIM admin.',
+        )
+        self.get(
+            f"/groups/current_group_name/{subgroup1_name}",
+            expect_status=200,
+            expect_content={
+                "id": 10,
+                "name": subgroup1_name,
+                "description": subgroup1_name,
+            },
+        )
+
+        self.login_test2()
+
+        # edit group's pretty name when logged in user is included in the group
+        self.post(
+            f"/groups/editGroupName/{subgroup1_name}/Hevoset",
+            expect_status=200,
+            expect_content={"id": 10, "name": subgroup1_name, "description": "Hevoset"},
+        )
+        self.get(
+            f"/groups/current_group_name/{subgroup1_name}",
+            expect_status=200,
+            expect_content={"id": 10, "name": subgroup1_name, "description": "Hevoset"},
+        )
+
+        self.login_test1()
+
+        # edit group's pretty name when logged in user is teacher of the group
+        self.post(
+            f"/groups/editGroupName/{subgroup1_name}/Hepokatit",
+            expect_status=200,
+            expect_content={
+                "id": 10,
+                "name": subgroup1_name,
+                "description": "Hepokatit",
+            },
+        )
+        self.get(
+            f"/groups/current_group_name/{subgroup1_name}",
+            expect_status=200,
+            expect_content={
+                "id": 10,
+                "name": subgroup1_name,
+                "description": "Hepokatit",
+            },
+        )
+
+        # fetch group's pretty name with erroneous data
+        self.get(
+            f"/groups/current_group_name/nonexistent_group",
+            expect_status=400,
+            expect_content='User group "nonexistent_group" not found',
+        )
+
+        # edit group's pretty name with erroneous data
+        self.post(
+            f"/groups/editGroupName/nonexistent_group/Horses",
+            expect_status=400,
+            expect_content='User group "nonexistent_group" not found',
         )
