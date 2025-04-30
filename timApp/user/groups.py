@@ -518,11 +518,23 @@ def group_name(name: str) -> Response:
     raise_group_not_found_if_none(name, group)
     block = group.admin_doc
     pretty_name = block.description
+    current_user = get_current_user_object()
+    is_member = check_group_member(current_user, group.id)
+    is_teacher = False
+    if not is_member:
+        try:
+            verify_teacher_access(block)
+            is_teacher = True
+        except AccessDenied:
+            is_teacher = False
+
     return json_response(
         {
             "id": group.id,
             "name": group.name,
             "description": pretty_name,
+            "isMember": is_member,
+            "isTeacher": is_teacher,
         }
     )
 
