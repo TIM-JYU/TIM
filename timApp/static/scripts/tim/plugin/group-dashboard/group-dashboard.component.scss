@@ -27,17 +27,11 @@
     border: 2px solid #0F4096;
     border-radius: 0.5em;
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-    transition: transform 0.2s, box-shadow 0.2s; /* Member card's hovering effect */
     position: relative;
     z-index: 1;
 
 }
 
-.member-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.2);
-     z-index: 5;
-}
 
 .member-info {
     display: flex;
