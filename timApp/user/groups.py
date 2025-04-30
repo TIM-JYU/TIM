@@ -521,6 +521,7 @@ def group_name(name: str) -> Response:
     current_user = get_current_user_object()
     is_member = check_group_member(current_user, group.id)
     is_teacher = False
+    is_admin = current_user.is_admin
     if not is_member:
         try:
             verify_teacher_access(block)
@@ -535,6 +536,7 @@ def group_name(name: str) -> Response:
             "description": pretty_name,
             "isMember": is_member,
             "isTeacher": is_teacher,
+            "isAdmin": is_admin,
         }
     )
 

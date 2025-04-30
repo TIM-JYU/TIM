@@ -9,6 +9,7 @@ import {BadgeModule} from "tim/gamification/badge/badge.component";
 import {GroupService} from "tim/plugin/group-dashboard/group.service";
 import {PointService} from "tim/plugin/group-dashboard/point.service";
 import {Subscription} from "rxjs";
+import {UserService} from "tim/user/userService";
 
 @Component({
     selector: "tim-group-dashboard",
@@ -91,6 +92,8 @@ export class GroupDashboardComponent implements OnInit {
     contextGroup: string | undefined;
     members: any[] = [];
     title: string | undefined;
+    currentUserName: string | undefined;
+    canViewAllBadges: boolean = false;
     groupBadges: IBadge[] = [];
     nameJustUpdated = false;
     totalMembers: number = 0;
@@ -106,6 +109,7 @@ export class GroupDashboardComponent implements OnInit {
 
     async loadData() {
         this.contextGroup = this.groupService.getContextGroup(this.group);
+        this.currentUserName = manageglobals().current_user.name;
         await this.getGroupName();
         await this.fetchMembers();
         await this.fetchUserBadges();
@@ -126,6 +130,9 @@ export class GroupDashboardComponent implements OnInit {
             this.displayName = fetchedGroup.description || "";
             this.groupId = fetchedGroup.id;
         }
+
+        this.canViewAllBadges =
+            fetchedGroup.isTeacher || fetchedGroup.isAdmin || false;
     }
 
     async fetchMembers() {
@@ -140,6 +147,12 @@ export class GroupDashboardComponent implements OnInit {
     async fetchUserBadges() {
         let badgeCount = 0;
         const badgePromises = this.members.map(async (user) => {
+            const isCurrentUser = user.name === this.currentUserName;
+
+            if (!this.canViewAllBadges && !isCurrentUser) {
+                return;
+            }
+
             try {
                 const personalGroup =
                     await this.groupService.getUserAndPersonalGroup(user.name);
