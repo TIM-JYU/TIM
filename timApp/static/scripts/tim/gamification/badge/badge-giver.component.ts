@@ -289,7 +289,7 @@ export class BadgeGiverComponent implements OnInit {
     }
 
     /**
-     * Lisää kuuntelun fetchUserBadges ja fetchGroupBadges funktioihin.
+     * Adds listeners to fetchUserBadges and fetchGroupBadges functions.
      */
     private addListeners() {
         // Subscribe to badge update events
@@ -306,12 +306,12 @@ export class BadgeGiverComponent implements OnInit {
     }
 
     /**
-     * Kun käyttäjän nimeä klikataan, metodi tarkistaa onko klikattu käyttäjä jo valittuna.
-     * Jos käyttäjä on valittuna, asetetaan uusi suodatettu selectedUsers taulukko ilman käyttäjää.
+     * When user's name is clicked, method checks if clicked user is already selected.
+     * If user is selected, it sets new filtered table from selectedUsers without selected user.
      *
-     * Jos käyttäjä ei ole jo valittu, asetetaan se valituksi ja kutsutaan toggleUserSelection metodia ja
-     * haetaan käyttäjän badget.
-     * @param user klikattu käyttäjä
+     * If user is not already selected, it sets it selected and calls toggleUserSelection method and fetches
+     * user's badges.
+     * @param user Clicked user
      */
     handleUserSelection(user: IUser) {
         if (this.selectedUser === user) {
@@ -327,12 +327,12 @@ export class BadgeGiverComponent implements OnInit {
     }
 
     /**
-     * Kun ryhmän nimeä klikataan, metodi tarkistaa onko klikattu ryhmä jo valittuna.
-     * Jos ryhmä on valittuna, asetetaan uusi suodatettu selectedGroups taulukko ilman ryhmää.
+     * When group's name is clicked, method checks if clicked group is already selected.
+     * If group is selected, it sets new filtered table from selectedGroups without selected group.
      *
-     * Jos ryhmä ei ole jo valittu, asetetaan se valituksi ja kutsutaan toggleGroupSelection metodia ja
-     * haetaan ryhmän badget.
-     * @param group klikattu ryhmä
+     * If group is not already selected, it sets it selected and calls toggleGroupSelection method and fetches
+     * group's users.
+     * @param group Clicked group
      */
     handleGroupSelection(group: IGroup) {
         this.selectedUser = null;
@@ -349,13 +349,13 @@ export class BadgeGiverComponent implements OnInit {
     }
 
     /**
-     * Lisää valitun käyttäjän tai ryhmän taulukkoon ja palauttaa sen.
-     * Jos käyttäjän / ryhmän valinta otetaan pois, palautetaan uusi taulukko ilman käyttäjää / ryhmää.
+     * Adds selected user or group to table and returns it.
+     * If user / group is unchecked, function returns new table without unchecked user / group.
      *
-     * @param item tyyppiä T, josta tulee löytyä id. Tähän kelpaa IUser tai IGroup.
-     * @param selectedItems taulukko, joka on tyyppiä T, josta tulee löytyä id. Tähän kelpaa IUser[] tai IGroup[]
-     * @param event Eventin avulla saadaan selville, mistä funktiota on kutsuttu. Jos funktiota kutsutaan html:n puolelta,
-     * Event sisältää html -elementtejä. Jos sitä kutsutaan typescriptissä, Event on falsy.
+     * @param item type T, that must contain "id" field. This can be IUser or IGroup.
+     * @param selectedItems type T[], that must contain "id" field. This can be IUser[] or IGroup[]
+     * @param event Allows to find out, where function is called from. If it is called from html, event is truthy.
+     * Event is falsy when called from typescript.
      */
     toggleItemSelection<T extends {id: number}>(
         item: T,
@@ -378,9 +378,9 @@ export class BadgeGiverComponent implements OnInit {
     }
 
     /**
-     * Kutsuu toggleItemSelection funktiota ja asettaa sen palauttaman viitteen viittaamaan this.selectedUsers taulukkoon.
-     * @param user valittu käyttäjä
-     * @param event sisältää tiedon checkbox valinnasta
+     * Calls toggleItemSelection function and sets returned pointer to point to this.selectedUser table.
+     * @param user Selected user.
+     * @param event Contains information from checkbox state.
      */
     toggleUserSelection(user: IUser, event?: Event) {
         this.selectedUsers = this.toggleItemSelection(
@@ -391,9 +391,9 @@ export class BadgeGiverComponent implements OnInit {
     }
 
     /**
-     * Kutsuu toggleItemSelection funktiota ja asettaa sen palauttaman viitteen viittaamaan this.selectedGroups taulukkoon.
-     * @param group valittu ryhmä
-     * @param event sisältää tiedon checkbox valinnasta
+     * Calls toggleItemSelection function and sets returned pointer to point to this.selectedGroup table.
+     * @param group Selected group.
+     * @param event Contains information from checkbox state.
      */
     toggleGroupSelection(group: IGroup, event?: Event) {
         this.selectedGroups = this.toggleItemSelection(
@@ -404,9 +404,9 @@ export class BadgeGiverComponent implements OnInit {
     }
 
     /**
-     * Asettaa kaikki ryhmän jäsenet valituksi tai poistaa kaikista jäsenistä valinnan.
-     * @param group ryhmä, johon jäsenet kuuluu.
-     * @param event sisältää tiedon checkboxin valinnasta
+     * Checks all boxes from group's users or unchecks all boxes from group's users.
+     * @param group Group that users belong to.
+     * @param event Contains information from checkbox state.
      */
     toggleSelectAll(group: IGroup, event: Event) {
         const isChecked = (event.target as HTMLInputElement).checked;
@@ -434,12 +434,12 @@ export class BadgeGiverComponent implements OnInit {
     }
 
     /**
-     * Asettaa kaikki käyttäjät tai ryhmät valituksi.
-     * Poistaa kaikkien käyttäjien tai ryhmien valinnat jos checkbox ei ole checked.
+     * Checks all boxes from users or groups.
+     * Unchecks all boxes from users or groups if "Select All" checkbox is not checked.
      *
-     * @param event sisältää tiedon checkboxin valinnasta.
-     * @param selectedItems valitut ryhmät tai käyttäjät, joka voi olla muotoa IUser[] tai IGroup[].
-     * @param itemList lista ryhmistä tai käyttäjistä, joka voi olla muotoa IUser[] tai IGroup[].
+     * @param event Contains information from checkbox state.
+     * @param selectedItems Selected groups or users, that can be type IUser[] or IGroup[].
+     * @param itemList Group or user list, that can be type IUser[] or IGroup[].
      */
     toggleSelectAllItems<T>(
         event: Event,
@@ -458,20 +458,20 @@ export class BadgeGiverComponent implements OnInit {
     }
 
     /**
-     * Tarkistaa löytyykö parametrina annettu käyttäjä tai ryhmä selectedUsers tai selectedGroups taulukosta.
-     * @param item käyttäjä tai ryhmä, joka on tyyppiä T, josta täytyy löytyä id.
-     * @param selectedItems valitut käyttäjät/ryhmät, joka on tyyppiä T[].
-     * @return true, jos käyttäjä/ryhmä löytyy taulukosta, muuten false.
+     * Checks if any user or group can be found from selectedUsers or selectedGroups table.
+     * @param item User or group, that is type T, where field "id" must be found.
+     * @param selectedItems Selected users/groups that are type T[].
+     * @return true, if user/group can found from table, else false.
      */
     isSelected<T extends {id: number}>(item: T, selectedItems: T[]): boolean {
         return selectedItems.some((i) => i.id === item.id);
     }
 
     /**
-     * Asettaa userAssignille parametrina saadun totuusarvon.
-     * Tyhjentää taulukot.
-     * Hakee lopuksi kaikki käyttäjät.
-     * @param bool totuusarvo, jonka avulla user/group view määritellään.
+     * Sets boolean value argument to userAssign.
+     * Resets tables.
+     * Fetches all users in the end.
+     * @param bool boolean value, that defines user/group view.
      */
     handleSwap(bool: boolean) {
         this.userAssign = bool;
@@ -483,7 +483,7 @@ export class BadgeGiverComponent implements OnInit {
     }
 
     /**
-     * Tyhjentää attribuutit. Kutsutaan mm. cancel painikkeessa.
+     * Empties attributes. Method is called when pressing cancel.
      */
     emptyForm() {
         this.selectedUser = null;
@@ -500,7 +500,7 @@ export class BadgeGiverComponent implements OnInit {
     }
 
     /**
-     * Hakee käyttäjät, jotka kuuluvat badgegroupContext ryhmään. badgegroupContext annetaan TIM:n puolelta.
+     * Finds users, that belongs to badgegroupContext group. badgegroupContext is given from TIM.
      */
     async fetchUsers(groupContext?: string) {
         if (groupContext) {
@@ -527,8 +527,8 @@ export class BadgeGiverComponent implements OnInit {
     }
 
     /**
-     * Käy kaikki ryhmät läpi ja asettaa jokaisen ryhmän ID:n ja siihen kuuluvat käyttäjät groupUsersMappiin.
-     * Lopuksi kutsutaan filterUsers metodia.
+     * Sets every group's ID and users to groupUsersMap.
+     * Calls filterUsers method.
      */
     async fetchUsersFromGroups() {
         this.groupUsersMap.clear();
@@ -542,10 +542,10 @@ export class BadgeGiverComponent implements OnInit {
     }
 
     /**
-     * Badget tyhjätään ensin ja tarkistetaan että selectedUser ei ole virheellinen.
-     * Haetaan käyttäjän personalgroup, jonka avulla saadaan oikea ID badgejen hakemista varten.
-     * Asetetaan getUserBadges funktion palauttama viite viittaamaan this.userBadgesiin.
-     * @param selectedUser valittu käyttäjä, jonka badget haetaan.
+     * Resets this.userBadges and checks if selectedUser is falsy.
+     * Gets user's PersonalGroup, that allows to use user's correct ID to fetch badges.
+     * Sets getUserBadges function's returned pointer to point to this.userBadges.
+     * @param selectedUser Selected user, whose badges are fetched.
      */
     async fetchUserBadges(selectedUser: IUser) {
         this.emptyTable(this.userBadges);
@@ -570,10 +570,10 @@ export class BadgeGiverComponent implements OnInit {
     }
 
     /**
-     * Tarkistetaan että groupId ja badgegroupContext ei ole virheellinen.
-     * Tyhjätään badget.
-     * Asetetaan getUserBadges funktion palauttama viite viittaamaan this.groupBadgesiin.
-     * @param groupId valitun ryhmän ID, jonka badget haetaan.
+     * Checks if groupId or badgegroupContext is falsy.
+     * Resets badges.
+     * Sets getUserBadges function returned pointer to point to this.groupBadges.
+     * @param groupId Selected group's ID, which is used to fetch group's badges.
      */
     async fetchGroupBadges(groupId?: number) {
         if (groupId == undefined) {
@@ -592,9 +592,9 @@ export class BadgeGiverComponent implements OnInit {
     }
 
     /**
-     * Antaa valituille käyttäjille tai ryhmille valitun badgen.
-     * Lopuksi tyhjätään kaikki kutsumalla emptyForm metodia.
-     * @param message viesti, joka antamisen yhteydessä voidaan antaa
+     * Assigns selected badge to selected groups or users.
+     * Calls emptyForm method for a reset.
+     * @param message optional message, that can be given when assigning badge.
      */
     async assignBadge(message: string) {
         if (this.selectedUsers.length > 0) {
@@ -636,7 +636,7 @@ export class BadgeGiverComponent implements OnInit {
         }
     }
     /**
-     * Tyhjentää parametrina annetun taulukon
+     * Resets table from argument
      */
     emptyTable<T>(table: T[]) {
         while (table.length > 0) {
