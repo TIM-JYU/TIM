@@ -3,7 +3,7 @@ import {CommonModule} from "@angular/common";
 import {BadgeService} from "tim/gamification/badge/badge.service";
 import {manageglobals} from "tim/util/globals";
 import {IFolder, IFullDocument} from "tim/item/IItem";
-import {GroupNameModule} from "tim/plugin/group-dashboard/group-name.component";
+import {NameChangerModule} from "tim/plugin/group-dashboard/name-changer.component";
 import {IBadge, IUser} from "tim/gamification/badge/badge.interface";
 import {BadgeModule} from "tim/gamification/badge/badge.component";
 import {GroupService} from "tim/plugin/group-dashboard/group.service";
@@ -153,27 +153,21 @@ export class GroupDashboardComponent implements OnInit {
                 return;
             }
 
-            try {
-                const personalGroup =
-                    await this.groupService.getUserAndPersonalGroup(user.name);
+            const personalGroup =
+                await this.groupService.getUserAndPersonalGroup(user.name);
 
-                if (personalGroup[1].id) {
-                    const badges = await this.badgeService.getUserBadges(
-                        personalGroup[1].id,
-                        this.contextGroup!
-                    );
+            if (personalGroup[1].id) {
+                const badges = await this.badgeService.getUserBadges(
+                    personalGroup[1].id,
+                    this.contextGroup!
+                );
 
-                    if (badges.length > 0) {
-                        user.badges = badges;
-                        badgeCount += badges.length;
-                    }
-                } else {
-                    console.error(
-                        `No personal group ID found for ${user.name}`
-                    );
+                if (badges.length > 0) {
+                    user.badges = badges;
+                    badgeCount += badges.length;
                 }
-            } catch (error) {
-                console.error(`Error fetching badges for ${user.name}:`, error);
+            } else {
+                return;
             }
         });
 
@@ -182,17 +176,15 @@ export class GroupDashboardComponent implements OnInit {
     }
 
     async fetchGroupBadges() {
-        try {
-            const groupBadges = await this.badgeService.getUserBadges(
-                this.groupId!,
-                this.contextGroup!
-            );
-            if (groupBadges) {
-                this.groupBadges = groupBadges;
-                this.totalBadges += groupBadges.length;
-            }
-        } catch (error) {
-            console.error("Error fetching group mutual badges:", error);
+        const groupBadges = await this.badgeService.getUserBadges(
+            this.groupId!,
+            this.contextGroup!
+        );
+        if (groupBadges) {
+            this.groupBadges = groupBadges;
+            this.totalBadges += groupBadges.length;
+        } else {
+            return;
         }
     }
 
@@ -208,6 +200,6 @@ export class GroupDashboardComponent implements OnInit {
 @NgModule({
     declarations: [GroupDashboardComponent],
     exports: [GroupDashboardComponent],
-    imports: [CommonModule, GroupNameModule, BadgeModule],
+    imports: [CommonModule, NameChangerModule, BadgeModule],
 })
 export class GroupDashboardModule {}
