@@ -190,23 +190,66 @@ export class BadgeService {
         alerts.splice(index, 1);
     }
 
-    // The available icons for badges
+    // Available icons for badges
     private availableImages = [
         {id: 1, name: "Trophy"},
         {id: 2, name: "Winner"},
         {id: 3, name: "Teamwork"},
         {id: 4, name: "Code"},
         {id: 5, name: "Debug"},
-        {id: 6, name: "On_fire"},
+        {id: 6, name: "On Fire"},
         {id: 7, name: "Rocket"},
         {id: 8, name: "Smile"},
         {id: 9, name: "Terminal"},
-        {id: 10, name: "Deployed_code"},
+        {id: 10, name: "Deployed Code"},
         {id: 11, name: "Loop"},
-        {id: 12, name: "100_points"},
+        {id: 12, name: "100 Points"},
+    ];
+
+    // Available shapes for badges
+    private availableShapes = [
+        {id: "hexagon", value: "Hexagon"},
+        {id: "flower", value: "Flower"},
+        {id: "round", value: "Round"},
+        {id: "square", value: "Square"},
+    ];
+
+    // Color list for badges
+    private availableColors = [
+        {id: "brown", forCreatorList: "Brown"},
+        {id: "coral", forCreatorList: "Coral"},
+        {id: "dark-blue", forCreatorList: "Dark Blue"},
+        {id: "dark-green", forCreatorList: "Dark Green"},
+        {id: "green", forCreatorList: "Green"},
+        {id: "mint", forCreatorList: "Mint"},
+        {id: "olive", forCreatorList: "Olive"},
+        {id: "orange", forCreatorList: "Orange"},
+        {id: "pink", forCreatorList: "Pink"},
+        {id: "purple", forCreatorList: "Purple"},
+        {id: "red", forCreatorList: "Red"},
+        {id: "skyblue", forCreatorList: "Skyblue"},
+        {id: "turquoise", forCreatorList: "Turquoise"},
+        {id: "violet", forCreatorList: "Violet"},
+        {id: "wine", forCreatorList: "Wine"},
+        {id: "yellow", forCreatorList: "Yellow"},
+        {id: "black-vibrant", forCreatorList: "Black Vibrant"},
+        {id: "green-vibrant", forCreatorList: "Green Vibrant"},
+        {id: "navy-vibrant", forCreatorList: "Navy Vibrant"},
+        {id: "orange-vibrant", forCreatorList: "Orange Vibrant"},
+        {id: "purple-vibrant", forCreatorList: "Purple Vibrant"},
+        {id: "red-vibrant", forCreatorList: "Red Vibrant"},
+        {id: "yellow-vibrant", forCreatorList: "Yellow Vibrant"},
     ];
 
     getAvailableImages() {
         return this.availableImages;
+    }
+
+    getAvailableShapes() {
+        return this.availableShapes;
+    }
+
+    getAvailableColors() {
+        return this.availableColors;
     }
 }
