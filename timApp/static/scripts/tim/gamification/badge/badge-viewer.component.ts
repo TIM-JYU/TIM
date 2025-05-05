@@ -125,7 +125,11 @@ export class BadgeViewerComponent implements OnInit {
     groupBadgesMap = new Map<number, IBadge[]>();
     groupPrettyNames: Map<number, string> = new Map();
     disableDialogWindow?: boolean;
+
     availableImages: {id: number; name: string}[] = [];
+    availableShapes: {id: string; value: string}[] = [];
+    availableColors: {id: string; forCreatorList: string}[] = [];
+
     selectedSort: string = "newest";
     sortedBadges: IBadge[] = [];
     groupSortMap: Map<number, string> = new Map();
@@ -146,6 +150,8 @@ export class BadgeViewerComponent implements OnInit {
     // Finds and presents the badges of the user and their assigned group
     ngOnInit() {
         this.availableImages = this.badgeService.getAvailableImages();
+        this.availableShapes = this.badgeService.getAvailableShapes();
+        this.availableColors = this.badgeService.getAvailableColors();
         if (Users.isLoggedIn()) {
             this.InitializeData().then(() => {
                 this.getBadges();
@@ -261,6 +267,8 @@ export class BadgeViewerComponent implements OnInit {
         // Creates a dialog-window about the data of a badge
         this.badgeService.closeActiveDialog();
         const iconName = this.getImageNameById(badge.image);
+        const colorName = this.getColorNameById(badge.color);
+        const shapeName = this.getShapeNameById(badge.shape);
 
         this.badgeService.activeDialogRef = await angularDialog.open(
             MessageDialogComponent,
@@ -271,8 +279,8 @@ export class BadgeViewerComponent implements OnInit {
                         <b>Description:</b> ${badge.description}<br>
                         <b>Message:</b> ${badge.message}<br><br>
                         <b>Icon:</b> ${iconName}<br>
-                        <b>Color:</b> ${badge.color}<br>
-                        <b>Shape:</b> ${badge.shape}<br><br>
+                        <b>Color:</b> ${colorName}<br>
+                        <b>Shape:</b> ${shapeName}<br><br>
                         <b>Given time:</b> ${formattedBadgeTime}<br>
                         <b>Created by:</b> ${badge.created_by_name}<br>
                         <b>Given by:</b> ${badge.given_by_name}<br>                     
@@ -305,6 +313,24 @@ export class BadgeViewerComponent implements OnInit {
         return selectedBadgeImageName
             ? selectedBadgeImageName.name
             : "Image not found";
+    }
+
+    getShapeNameById(id: string): string {
+        const selectedBadgeShapeName = this.availableShapes.find(
+            (shpe) => shpe.id === id
+        );
+        return selectedBadgeShapeName
+            ? selectedBadgeShapeName.value
+            : "Shape not found";
+    }
+
+    getColorNameById(id: string): string {
+        const selectedBadgeColorName = this.availableColors.find(
+            (clr) => clr.id === id
+        );
+        return selectedBadgeColorName
+            ? selectedBadgeColorName.forCreatorList
+            : "Color not found";
     }
 
     /**

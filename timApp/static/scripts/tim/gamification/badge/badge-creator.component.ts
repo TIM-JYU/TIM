@@ -164,7 +164,7 @@ import {FormsModule} from "@angular/forms";
                     <div class="form-group">
                         <label for="color">Color <span class="required">*</span></label>
                         <select id="color" formControlName="color">
-                            <option *ngFor="let color of availableColors" [value]="color">{{ color }}</option>
+                            <option *ngFor="let color of availableColors" [value]="color.id">{{ color.forCreatorList }}</option>
                         </select>
                         <div *ngIf="badgeForm.controls.color.invalid && badgeForm.controls.color.touched" class="error-message">
                             <p>Color is required.</p>
@@ -176,9 +176,9 @@ import {FormsModule} from "@angular/forms";
                         <div class="form-group">
                             <label>Shape <span class="required">*</span></label>
                             <div class="shape">
-                              <label *ngFor="let shape of shapes">
-                                <input type="radio" [id]="shape.value" formControlName="shape" [value]="shape.value">
-                                {{ shape.label }}
+                              <label *ngFor="let shape of availableShapes">
+                                <input type="radio" [id]="shape.id" formControlName="shape" [value]="shape.id">
+                                {{ shape.value }}
                               </label>
                             </div>
                           </div>
@@ -242,7 +242,10 @@ export class BadgeCreatorComponent implements OnInit {
     selectedContextGroup: string = "";
     badgeFormShowing = false;
     teacherPermission = false;
+
     availableImages: {id: number; name: string}[] = [];
+    availableShapes: {id: string; value: string}[] = [];
+    availableColors: {id: string; forCreatorList: string}[] = [];
 
     clickedBadge: any = null;
     editingBadge: any = null;
@@ -275,6 +278,8 @@ export class BadgeCreatorComponent implements OnInit {
     // It tracks changes to the context_group field and triggers a handler when the value changes.
     ngOnInit() {
         this.availableImages = this.badgeService.getAvailableImages();
+        this.availableShapes = this.badgeService.getAvailableShapes();
+        this.availableColors = this.badgeService.getAvailableColors();
         this.selectedContextGroup = this.badgegroupContext || "";
         this.getBadges();
         this.badgeForm.valueChanges.subscribe(() => {
@@ -398,41 +403,6 @@ export class BadgeCreatorComponent implements OnInit {
             this.centerToComponent();
         }, 100);
     }
-
-    // The available shapes for badges
-    shapes = [
-        {label: "Hexagon", value: "hexagon"},
-        {label: "Flower", value: "flower"},
-        {label: "Circle", value: "round"},
-        {label: "Square", value: "square"},
-    ];
-
-    // color list for forms
-    availableColors = [
-        "yellow",
-        "orange",
-        "red",
-        "wine",
-        "pink",
-        "purple",
-        "violet",
-        "dark-blue",
-        "skyblue",
-        "green",
-        "dark-green",
-        "mint",
-        "brown",
-        "coral",
-        "turquoise",
-        "olive",
-        "navy-vibrant",
-        "red-vibrant",
-        "green-vibrant",
-        "purple-vibrant",
-        "orange-vibrant",
-        "yellow-vibrant",
-        "black-vibrant",
-    ];
 
     // Ensures that preset grey cannot be chosen as a color
     disallowGrayColor(control: FormControl) {
