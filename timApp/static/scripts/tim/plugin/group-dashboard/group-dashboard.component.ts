@@ -3,7 +3,7 @@ import {CommonModule} from "@angular/common";
 import {BadgeService} from "tim/gamification/badge/badge.service";
 import {manageglobals} from "tim/util/globals";
 import {IFolder, IFullDocument} from "tim/item/IItem";
-import {GroupNameModule} from "tim/plugin/group-dashboard/group-name.component";
+import {NameChangerModule} from "tim/plugin/group-dashboard/name-changer.component";
 import {IBadge, IUser} from "tim/gamification/badge/badge.interface";
 import {BadgeModule} from "tim/gamification/badge/badge.component";
 import {GroupService} from "tim/plugin/group-dashboard/group.service";
@@ -200,6 +200,6 @@ export class GroupDashboardComponent implements OnInit {
 @NgModule({
     declarations: [GroupDashboardComponent],
     exports: [GroupDashboardComponent],
-    imports: [CommonModule, GroupNameModule, BadgeModule],
+    imports: [CommonModule, NameChangerModule, BadgeModule],
 })
 export class GroupDashboardModule {}

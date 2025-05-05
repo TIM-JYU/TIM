@@ -125,7 +125,7 @@ TIM_SAFE_TAGS = [
     "tim-badge-giver",
     "tim-badge-withdraw",
     "tim-badge-leaderboard",
-    "tim-group-name",
+    "tim-name-changer",
     "tim-group-dashboard",
     "tim-point-calculator",
 ]

@@ -14,7 +14,7 @@ import {GroupService} from "tim/plugin/group-dashboard/group.service";
 import {ICurrentUser} from "tim/user/IUser";
 
 @Component({
-    selector: "tim-group-name",
+    selector: "tim-name-changer",
     template: `
         <ng-container>
             <div class="current">
@@ -35,9 +35,9 @@ import {ICurrentUser} from "tim/user/IUser";
             </div>
         </ng-container>
     `,
-    styleUrls: ["./group-name.component.scss"],
+    styleUrls: ["./name-changer.component.scss"],
 })
-export class GroupNameComponent implements OnInit {
+export class NameChangerComponent implements OnInit {
     @Input() group!: string;
     @Input() username!: string;
     @Output() contextGroupChange = new EventEmitter<string>();
@@ -140,8 +140,8 @@ export class GroupNameComponent implements OnInit {
 }
 
 @NgModule({
-    declarations: [GroupNameComponent],
-    exports: [GroupNameComponent],
+    declarations: [NameChangerComponent],
+    exports: [NameChangerComponent],
     imports: [CommonModule, ReactiveFormsModule],
 })
-export class GroupNameModule {}
+export class NameChangerModule {}

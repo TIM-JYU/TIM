@@ -1,7 +1,7 @@
 import {Component, Input, NgModule, OnInit} from "@angular/core";
 import {CommonModule} from "@angular/common";
 import {GroupService} from "./group.service";
-import {GroupNameModule} from "./group-name.component";
+import {NameChangerModule} from "./name-changer.component";
 import {BadgeModule} from "tim/gamification/badge/badge.component";
 import {FormsModule} from "@angular/forms";
 import {PointService} from "tim/plugin/group-dashboard/point.service";
@@ -137,6 +137,6 @@ export class PointCalculatorComponent implements OnInit {
 @NgModule({
     declarations: [PointCalculatorComponent],
     exports: [PointCalculatorComponent],
-    imports: [CommonModule, GroupNameModule, BadgeModule, FormsModule],
+    imports: [CommonModule, NameChangerModule, BadgeModule, FormsModule],
 })
 export class PointCalculatorModule {}
