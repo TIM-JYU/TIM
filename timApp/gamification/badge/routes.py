@@ -143,20 +143,6 @@ def all_badges_in_context(context_group: str) -> Response:
     return json_response(badges_json)
 
 
-@badges_blueprint.get("/badge/<badge_id>")
-def get_badge(badge_id: int) -> Response:
-    """
-    Fetches a specific badge.
-    :param badge_id: ID of the badge to get
-    :return: badge in json response format or error when there is no badge with that id
-    """
-    badge = run_sql(select(Badge).filter_by(id=badge_id)).scalars().first()
-    if badge is None:
-        raise NotExist(f'Badge with id "{badge_id}" not found')
-    badge_json = badge.to_json()
-    return json_response(badge_json)
-
-
 @badges_blueprint.post("/create_badge")
 def create_badge(
     context_group: str,
