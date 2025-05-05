@@ -241,15 +241,38 @@ export class BadgeService {
         {id: "yellow-vibrant", forCreatorList: "Yellow Vibrant"},
     ];
 
+    // Get available images, sorted alphabetically by name
     getAvailableImages() {
-        return this.availableImages;
+        return this.availableImages.sort((a, b) =>
+            a.name.localeCompare(b.name)
+        );
     }
 
+    // Get available shapes, sorted alphabetically by value
     getAvailableShapes() {
-        return this.availableShapes;
+        return this.availableShapes.sort((a, b) =>
+            a.value.localeCompare(b.value)
+        );
     }
 
+    // Get available colors, sorted alphabetically by forCreatorList with all "Vibrant" colors at the end
     getAvailableColors() {
-        return this.availableColors;
+        return this.availableColors.sort((a, b) => {
+            // Check if the name contains "Vibrant"
+            const isVibrantA = a.forCreatorList
+                .toLowerCase()
+                .includes("vibrant");
+            const isVibrantB = b.forCreatorList
+                .toLowerCase()
+                .includes("vibrant");
+
+            // If both are or both are not "Vibrant", sort alphabetically
+            if (isVibrantA === isVibrantB) {
+                return a.forCreatorList.localeCompare(b.forCreatorList);
+            }
+
+            // If "a" is "Vibrant" and "b" is not, place b first
+            return isVibrantA ? 1 : -1;
+        });
     }
 }
