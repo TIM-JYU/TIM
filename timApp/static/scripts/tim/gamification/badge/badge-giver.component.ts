@@ -15,180 +15,169 @@ import type {
 } from "tim/gamification/badge/badge.interface";
 import {BadgeModule} from "tim/gamification/badge/badge.component";
 import {BadgeService} from "tim/gamification/badge/badge.service";
-import {documentglobals} from "tim/util/globals";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {GroupService} from "tim/plugin/group-dashboard/group.service";
 
 @Component({
     selector: "timBadgeGiver",
     template: `
-        <ng-container *ngIf="hasPermission; else noPermissionView">
-            <div *ngIf="showComponent" class="badge-giver">
-                <h2>Assign {{ selectedBadge?.title }} to user(s) or group(s)</h2>
+        <h2>Assign {{ selectedBadge?.title }} to user(s) or group(s)</h2>
 
-                <!-- Preview of the selected badge -->
-                <div *ngIf="selectedBadge" class="badge-preview">
-                    <label for="preview">Preview</label>
-                    <div class="preview">
-                        <tim-badge *ngIf="selectedBadge"
-                                   [title]="selectedBadge!.title"
-                                   [color]="selectedBadge!.color"
-                                   [shape]="selectedBadge!.shape"
-                                   [image]="selectedBadge!.image"
-                                   [description]="selectedBadge!.description"
-                                   [message]="message">
-                        </tim-badge>
-                    </div>
-                </div>
+        <!-- Preview of the selected badge -->
+        <div *ngIf="selectedBadge" class="badge-preview">
+            <label for="preview">Preview</label>
+            <div class="preview">
+                <tim-badge *ngIf="selectedBadge"
+                           [title]="selectedBadge!.title"
+                           [color]="selectedBadge!.color"
+                           [shape]="selectedBadge!.shape"
+                           [image]="selectedBadge!.image"
+                           [description]="selectedBadge!.description"
+                           [message]="message">
+                </tim-badge>
+            </div>
+        </div>
 
-                <div class="user-group-button-container">
-                    <button (click)="handleSwap(true); fetchUsersFromGroups()" [disabled]="userAssign === true">
-                        View users
-                    </button>
-                    <button (click)="handleSwap(false)" [disabled]="userAssign === false">
-                        View groups
-                    </button>
-                </div>
+        <div class="user-group-button-container">
+            <button (click)="handleSwap(true); fetchUsersFromGroups()" [disabled]="userAssign === true">
+                View users
+            </button>
+            <button (click)="handleSwap(false)" [disabled]="userAssign === false">
+                View groups
+            </button>
+        </div>
 
-                <div *ngIf="userAssign === true" class="form-group">
-                    <div class="search-wrapper">
-                      <div class="search-users">
-                        <label for="user-search">Search user:</label>
-                        <input type="search" id="user-search" name="q"
-                               [(ngModel)]="userSearchTerm"
-                               (ngModelChange)="filterUsers()" />
-                      </div>
-                    
-                      <div *ngIf="searchingUsers" class="search-results">
-                        <div *ngFor="let user of searchResults" class="option-item">
-                          <input type="checkbox"
-                                 [checked]="isSelected(user, selectedUsers)"
-                                 (change)="toggleUserSelection(user, $event)" />
-                          <span class="searched-name">{{ user.real_name }}</span>
-                        </div>
-                      </div>
-                    </div>
-                    
-                    <div>
-                        <input class="user-checkbox" type="checkbox" (change)="toggleSelectAllItems($event, selectedUsers, users)">Select all
-                    </div>
-                    <div class="list-scroll-container" (wheel)="onScrollList($event)">
-                        <div *ngFor="let group of groups" class="group">
-                            <span *ngIf="groupUsersMap.get(group.id)?.length">
-                                <input class="user-checkbox" type="checkbox" (change)="toggleSelectAll(group, $event)">{{ groupPrettyNames.get(group.id) || group.name }}
-                            </span>
-                            <div *ngFor="let user of groupUsersMap.get(group.id)" class="option-item">
-                                <input class="user-checkbox"
-                                       type="checkbox"
-                                       [value]="user"
-                                       (change)="toggleUserSelection(user, $event)"
-                                       [checked]="isSelected(user, selectedUsers)"
-                                />
-                                <div class="option-name" (click)="handleUserSelection(user)"
-                                     [ngClass]="{'selected-option': selectedUser?.id === user.id}">
-                                    {{ user.real_name }}
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                
-               
-                <div *ngIf="userAssign === false" class="form-group">
-                    <div class="search-wrapper">
-                      <div class="search-groups">
-                        <label for="group-search">Search group:</label>
-                        <input type="search" id="group-search" name="q"
-                               [(ngModel)]="groupSearchTerm"
-                               (ngModelChange)="filterGroups()" />
-                      </div>
-                    
-                      <div *ngIf="searchingGroups" class="search-results">
-                          <div *ngFor="let group of filteredGroups" class="option-item">
-                            <input type="checkbox"
-                                   [checked]="isSelected(group, selectedGroups)"
-                                   (change)="toggleGroupSelection(group, $event)" />
-                            <span class="searched-name">{{ groupPrettyNames.get(group.id) || group.name }}</span>
-                          </div>
-                      </div>
-                        
-                    </div>
-                    
-                    <div>
-                        <input class="group-checkbox" type="checkbox" (change)="toggleSelectAllItems($event, selectedGroups, groups)">Select all
-                    </div>
-                    
-                    <div class="list-scroll-container" (wheel)="onScrollList($event)">
-                        <div *ngFor="let group of groups" class="group-item">
-                            <input class="group-checkbox"
-                                   type="checkbox"
-                                   [value]="group"
-                                   (change)="toggleGroupSelection(group, $event)"
-                                   [checked]="isSelected(group, selectedGroups)"
-                            />
-                            <span class="option-name" (click)="handleGroupSelection(group); fetchGroupBadges(group.id);"
-                                  [ngClass]="{'selected-option': selectedGroup?.id === group.id}">
-                                {{ groupPrettyNames.get(group.id) || group.name }}
-                            </span>
-                        </div>
-                    </div>
+        <div *ngIf="userAssign === true" class="form-group">
+            <div class="search-wrapper">
+              <div class="search-users">
+                <label for="user-search">Search user:</label>
+                <input type="search" id="user-search" name="q"
+                       [(ngModel)]="userSearchTerm"
+                       (ngModelChange)="filterUsers()" />
+              </div>
             
-                     <div class="group-users">
-                        <ng-container *ngIf="selectedGroup">
-                            <p>{{selectedGroup.name}}</p>
-                            <div *ngFor="let user of users">
-                                <div class="user-name">{{ user.real_name }}</div>
-                            </div>
-                        </ng-container>
-                        <ng-container *ngIf="selectedGroup && users.length === 0">
-                            <p class="user-name">No users found</p>
-                        </ng-container>
-                        <ng-container *ngIf="!selectedGroup">
-                            <p>Select group to view users</p>
-                        </ng-container>
-                     </div>
-                    
+              <div *ngIf="searchingUsers" class="search-results">
+                <div *ngFor="let user of searchResults" class="option-item">
+                  <input type="checkbox"
+                         [checked]="isSelected(user, selectedUsers)"
+                         (change)="toggleUserSelection(user, $event)" />
+                  <span class="searched-name">{{ user.real_name }}</span>
                 </div>
-                <div *ngIf="userAssign != undefined">
-                   
-                    <!-- Message Box -->
-                    <div class="message-box">
-                        <label for="message">Message</label>
-                        <textarea id="message" 
-                                  rows="4" 
-                                  maxlength="200"
-                                  [(ngModel)]="message">
-                        </textarea>
-                        <div class="char-counter">
-                          {{ message.length }} / 200 characters
+              </div>
+            </div>
+            
+            <div>
+                <input class="user-checkbox" type="checkbox" (change)="toggleSelectAllItems($event, selectedUsers, users)">Select all
+            </div>
+            <div class="list-scroll-container" (wheel)="onScrollList($event)">
+                <div *ngFor="let group of groups" class="group">
+                    <span *ngIf="groupUsersMap.get(group.id)?.length">
+                        <input class="user-checkbox" type="checkbox" (change)="toggleSelectAll(group, $event)">{{ groupPrettyNames.get(group.id) || group.name }}
+                    </span>
+                    <div *ngFor="let user of groupUsersMap.get(group.id)" class="option-item">
+                        <input class="user-checkbox"
+                               type="checkbox"
+                               [value]="user"
+                               (change)="toggleUserSelection(user, $event)"
+                               [checked]="isSelected(user, selectedUsers)"
+                        />
+                        <div class="option-name" (click)="handleUserSelection(user)"
+                             [ngClass]="{'selected-option': selectedUser?.id === user.id}">
+                            {{ user.real_name }}
                         </div>
-                    </div>
-                    
-                    <tim-alert *ngFor="let alert of alerts; let i = index" [severity]="alert.type" [closeable]="true"
-                               (closing)="badgeService.closeAlert(this.alerts, i)">
-                        <div [innerHTML]="alert.msg"></div>
-                    </tim-alert>
-    
-                    <div class="button-container">
-                        <button (click)="assignBadge(message)"
-                                [disabled]="selectedUsers.length === 0 && selectedGroups.length === 0">
-                            Assign
-                        </button>
-                        <button id="cancelGiveButton" (click)="emptyForm()">Cancel</button>
                     </div>
                 </div>
             </div>
-        </ng-container>
+        </div>
+        
+       
+        <div *ngIf="userAssign === false" class="form-group">
+            <div class="search-wrapper">
+              <div class="search-groups">
+                <label for="group-search">Search group:</label>
+                <input type="search" id="group-search" name="q"
+                       [(ngModel)]="groupSearchTerm"
+                       (ngModelChange)="filterGroups()" />
+              </div>
+            
+              <div *ngIf="searchingGroups" class="search-results">
+                  <div *ngFor="let group of filteredGroups" class="option-item">
+                    <input type="checkbox"
+                           [checked]="isSelected(group, selectedGroups)"
+                           (change)="toggleGroupSelection(group, $event)" />
+                    <span class="searched-name">{{ groupPrettyNames.get(group.id) || group.name }}</span>
+                  </div>
+              </div>
+                
+            </div>
+            
+            <div>
+                <input class="group-checkbox" type="checkbox" (change)="toggleSelectAllItems($event, selectedGroups, groups)">Select all
+            </div>
+            
+            <div class="list-scroll-container" (wheel)="onScrollList($event)">
+                <div *ngFor="let group of groups" class="group-item">
+                    <input class="group-checkbox"
+                           type="checkbox"
+                           [value]="group"
+                           (change)="toggleGroupSelection(group, $event)"
+                           [checked]="isSelected(group, selectedGroups)"
+                    />
+                    <span class="option-name" (click)="handleGroupSelection(group); fetchGroupBadges(group.id);"
+                          [ngClass]="{'selected-option': selectedGroup?.id === group.id}">
+                        {{ groupPrettyNames.get(group.id) || group.name }}
+                    </span>
+                </div>
+            </div>
+    
+             <div class="group-users">
+                <ng-container *ngIf="selectedGroup">
+                    <p>{{selectedGroup.name}}</p>
+                    <div *ngFor="let user of users">
+                        <div class="user-name">{{ user.real_name }}</div>
+                    </div>
+                </ng-container>
+                <ng-container *ngIf="selectedGroup && users.length === 0">
+                    <p class="user-name">No users found</p>
+                </ng-container>
+                <ng-container *ngIf="!selectedGroup">
+                    <p>Select group to view users</p>
+                </ng-container>
+             </div>
+            
+        </div>
+        <div *ngIf="userAssign != undefined">
+           
+            <!-- Message Box -->
+            <div class="message-box">
+                <label for="message">Message</label>
+                <textarea id="message" 
+                          rows="4" 
+                          maxlength="200"
+                          [(ngModel)]="message">
+                </textarea>
+                <div class="char-counter">
+                  {{ message.length }} / 200 characters
+                </div>
+            </div>
+            
+            <tim-alert *ngFor="let alert of alerts; let i = index" [severity]="alert.type" [closeable]="true"
+                       (closing)="badgeService.closeAlert(this.alerts, i)">
+                <div [innerHTML]="alert.msg"></div>
+            </tim-alert>
 
-        <ng-template #noPermissionView>
-            <p>Access denied for students.</p>
-        </ng-template>
+            <div class="button-container">
+                <button (click)="assignBadge(message)"
+                        [disabled]="selectedUsers.length === 0 && selectedGroups.length === 0">
+                    Assign
+                </button>
+                <button id="cancelGiveButton" (click)="emptyForm()">Cancel</button>
+            </div>
+        </div>
     `,
     styleUrls: ["./badge-giver.component.scss"],
 })
 export class BadgeGiverComponent implements OnInit {
-    hasPermission: boolean = true;
-    showComponent: boolean = true;
     message = "";
 
     users: IUser[] = [];
@@ -231,14 +220,9 @@ export class BadgeGiverComponent implements OnInit {
 
     ngOnInit() {
         if (Users.isLoggedIn()) {
-            this.addListeners();
+            this.subscribeToBadgeUpdates();
             this.fetchUsers(this.badgegroupContext);
             this.fetchGroups();
-
-            if (Users.belongsToGroup("Administrators")) {
-                this.hasPermission = true; // Tarkistetaan onko käyttäjällä oikeus käyttää komponenttia
-                this.showComponent = true;
-            }
         }
     }
 
@@ -289,9 +273,10 @@ export class BadgeGiverComponent implements OnInit {
     }
 
     /**
-     * Lisää kuuntelun fetchUserBadges ja fetchGroupBadges funktioihin.
+     * Adds listeners to fetchUserBadges and fetchGroupBadges functions.
+     * Subscriptions allow badges to refresh live after changes.
      */
-    private addListeners() {
+    private subscribeToBadgeUpdates() {
         // Subscribe to badge update events
         this.subscription.add(
             this.badgeService.updateBadgeList$.subscribe(() => {
@@ -306,12 +291,12 @@ export class BadgeGiverComponent implements OnInit {
     }
 
     /**
-     * Kun käyttäjän nimeä klikataan, metodi tarkistaa onko klikattu käyttäjä jo valittuna.
-     * Jos käyttäjä on valittuna, asetetaan uusi suodatettu selectedUsers taulukko ilman käyttäjää.
+     * When user's name is clicked, method checks if clicked user is already selected.
+     * If user is selected, it sets new filtered table from selectedUsers without selected user.
      *
-     * Jos käyttäjä ei ole jo valittu, asetetaan se valituksi ja kutsutaan toggleUserSelection metodia ja
-     * haetaan käyttäjän badget.
-     * @param user klikattu käyttäjä
+     * If user is not already selected, it sets it selected and calls toggleUserSelection method and fetches
+     * user's badges.
+     * @param user Clicked user
      */
     handleUserSelection(user: IUser) {
         if (this.selectedUser === user) {
@@ -327,12 +312,12 @@ export class BadgeGiverComponent implements OnInit {
     }
 
     /**
-     * Kun ryhmän nimeä klikataan, metodi tarkistaa onko klikattu ryhmä jo valittuna.
-     * Jos ryhmä on valittuna, asetetaan uusi suodatettu selectedGroups taulukko ilman ryhmää.
+     * When group's name is clicked, method checks if clicked group is already selected.
+     * If group is selected, it sets new filtered table from selectedGroups without selected group.
      *
-     * Jos ryhmä ei ole jo valittu, asetetaan se valituksi ja kutsutaan toggleGroupSelection metodia ja
-     * haetaan ryhmän badget.
-     * @param group klikattu ryhmä
+     * If group is not already selected, it sets it selected and calls toggleGroupSelection method and fetches
+     * group's users.
+     * @param group Clicked group
      */
     handleGroupSelection(group: IGroup) {
         this.selectedUser = null;
@@ -349,13 +334,13 @@ export class BadgeGiverComponent implements OnInit {
     }
 
     /**
-     * Lisää valitun käyttäjän tai ryhmän taulukkoon ja palauttaa sen.
-     * Jos käyttäjän / ryhmän valinta otetaan pois, palautetaan uusi taulukko ilman käyttäjää / ryhmää.
+     * Adds selected user or group to table and returns it.
+     * If user / group is unchecked, function returns new table without unchecked user / group.
      *
-     * @param item tyyppiä T, josta tulee löytyä id. Tähän kelpaa IUser tai IGroup.
-     * @param selectedItems taulukko, joka on tyyppiä T, josta tulee löytyä id. Tähän kelpaa IUser[] tai IGroup[]
-     * @param event Eventin avulla saadaan selville, mistä funktiota on kutsuttu. Jos funktiota kutsutaan html:n puolelta,
-     * Event sisältää html -elementtejä. Jos sitä kutsutaan typescriptissä, Event on falsy.
+     * @param item type T, that must contain "id" field. This can be IUser or IGroup.
+     * @param selectedItems type T[], that must contain "id" field. This can be IUser[] or IGroup[]
+     * @param event Allows to find out, where function is called from. If it is called from html, event is truthy.
+     * Event is falsy when called from typescript.
      */
     toggleItemSelection<T extends {id: number}>(
         item: T,
@@ -378,9 +363,9 @@ export class BadgeGiverComponent implements OnInit {
     }
 
     /**
-     * Kutsuu toggleItemSelection funktiota ja asettaa sen palauttaman viitteen viittaamaan this.selectedUsers taulukkoon.
-     * @param user valittu käyttäjä
-     * @param event sisältää tiedon checkbox valinnasta
+     * Calls toggleItemSelection function and sets returned pointer to point to this.selectedUser table.
+     * @param user Selected user.
+     * @param event Contains information from checkbox state.
      */
     toggleUserSelection(user: IUser, event?: Event) {
         this.selectedUsers = this.toggleItemSelection(
@@ -391,9 +376,9 @@ export class BadgeGiverComponent implements OnInit {
     }
 
     /**
-     * Kutsuu toggleItemSelection funktiota ja asettaa sen palauttaman viitteen viittaamaan this.selectedGroups taulukkoon.
-     * @param group valittu ryhmä
-     * @param event sisältää tiedon checkbox valinnasta
+     * Calls toggleItemSelection function and sets returned pointer to point to this.selectedGroup table.
+     * @param group Selected group.
+     * @param event Contains information from checkbox state.
      */
     toggleGroupSelection(group: IGroup, event?: Event) {
         this.selectedGroups = this.toggleItemSelection(
@@ -404,9 +389,9 @@ export class BadgeGiverComponent implements OnInit {
     }
 
     /**
-     * Asettaa kaikki ryhmän jäsenet valituksi tai poistaa kaikista jäsenistä valinnan.
-     * @param group ryhmä, johon jäsenet kuuluu.
-     * @param event sisältää tiedon checkboxin valinnasta
+     * Checks all boxes from group's users or unchecks all boxes from group's users.
+     * @param group Group that users belong to.
+     * @param event Contains information from checkbox state.
      */
     toggleSelectAll(group: IGroup, event: Event) {
         const isChecked = (event.target as HTMLInputElement).checked;
@@ -434,12 +419,12 @@ export class BadgeGiverComponent implements OnInit {
     }
 
     /**
-     * Asettaa kaikki käyttäjät tai ryhmät valituksi.
-     * Poistaa kaikkien käyttäjien tai ryhmien valinnat jos checkbox ei ole checked.
+     * Checks all boxes from users or groups.
+     * Unchecks all boxes from users or groups if "Select All" checkbox is not checked.
      *
-     * @param event sisältää tiedon checkboxin valinnasta.
-     * @param selectedItems valitut ryhmät tai käyttäjät, joka voi olla muotoa IUser[] tai IGroup[].
-     * @param itemList lista ryhmistä tai käyttäjistä, joka voi olla muotoa IUser[] tai IGroup[].
+     * @param event Contains information from checkbox state.
+     * @param selectedItems Selected groups or users, that can be type IUser[] or IGroup[].
+     * @param itemList Group or user list, that can be type IUser[] or IGroup[].
      */
     toggleSelectAllItems<T>(
         event: Event,
@@ -458,20 +443,20 @@ export class BadgeGiverComponent implements OnInit {
     }
 
     /**
-     * Tarkistaa löytyykö parametrina annettu käyttäjä tai ryhmä selectedUsers tai selectedGroups taulukosta.
-     * @param item käyttäjä tai ryhmä, joka on tyyppiä T, josta täytyy löytyä id.
-     * @param selectedItems valitut käyttäjät/ryhmät, joka on tyyppiä T[].
-     * @return true, jos käyttäjä/ryhmä löytyy taulukosta, muuten false.
+     * Checks if any user or group can be found from selectedUsers or selectedGroups table.
+     * @param item User or group, that is type T, where field "id" must be found.
+     * @param selectedItems Selected users/groups that are type T[].
+     * @return true, if user/group can found from table, else false.
      */
     isSelected<T extends {id: number}>(item: T, selectedItems: T[]): boolean {
         return selectedItems.some((i) => i.id === item.id);
     }
 
     /**
-     * Asettaa userAssignille parametrina saadun totuusarvon.
-     * Tyhjentää taulukot.
-     * Hakee lopuksi kaikki käyttäjät.
-     * @param bool totuusarvo, jonka avulla user/group view määritellään.
+     * Sets boolean value argument to userAssign.
+     * Resets tables.
+     * Fetches all users in the end.
+     * @param bool boolean value, that defines user/group view.
      */
     handleSwap(bool: boolean) {
         this.userAssign = bool;
@@ -483,14 +468,13 @@ export class BadgeGiverComponent implements OnInit {
     }
 
     /**
-     * Tyhjentää attribuutit. Kutsutaan mm. cancel painikkeessa.
+     * Resets attributes. Method is called when pressing cancel.
      */
     emptyForm() {
         this.selectedUser = null;
         this.selectedBadge = null;
         this.selectedGroup = null;
         this.message = "";
-        this.showComponent = false;
         this.emptyTable(this.userBadges);
         this.emptyTable(this.groupBadges);
         this.emptyTable(this.selectedUsers);
@@ -500,7 +484,7 @@ export class BadgeGiverComponent implements OnInit {
     }
 
     /**
-     * Hakee käyttäjät, jotka kuuluvat badgegroupContext ryhmään. badgegroupContext annetaan TIM:n puolelta.
+     * Finds users, that belongs to badgegroupContext group. badgegroupContext is received from TIM.
      */
     async fetchUsers(groupContext?: string) {
         if (groupContext) {
@@ -527,8 +511,8 @@ export class BadgeGiverComponent implements OnInit {
     }
 
     /**
-     * Käy kaikki ryhmät läpi ja asettaa jokaisen ryhmän ID:n ja siihen kuuluvat käyttäjät groupUsersMappiin.
-     * Lopuksi kutsutaan filterUsers metodia.
+     * Sets every group's ID and users to groupUsersMap.
+     * Calls filterUsers method.
      */
     async fetchUsersFromGroups() {
         this.groupUsersMap.clear();
@@ -542,10 +526,10 @@ export class BadgeGiverComponent implements OnInit {
     }
 
     /**
-     * Badget tyhjätään ensin ja tarkistetaan että selectedUser ei ole virheellinen.
-     * Haetaan käyttäjän personalgroup, jonka avulla saadaan oikea ID badgejen hakemista varten.
-     * Asetetaan getUserBadges funktion palauttama viite viittaamaan this.userBadgesiin.
-     * @param selectedUser valittu käyttäjä, jonka badget haetaan.
+     * Resets this.userBadges and checks if selectedUser is falsy.
+     * Gets user's PersonalGroup, that allows to use user's correct ID to fetch badges.
+     * Sets getUserBadges function's returned pointer to point to this.userBadges.
+     * @param selectedUser Selected user, whose badges are fetched.
      */
     async fetchUserBadges(selectedUser: IUser) {
         this.emptyTable(this.userBadges);
@@ -570,10 +554,10 @@ export class BadgeGiverComponent implements OnInit {
     }
 
     /**
-     * Tarkistetaan että groupId ja badgegroupContext ei ole virheellinen.
-     * Tyhjätään badget.
-     * Asetetaan getUserBadges funktion palauttama viite viittaamaan this.groupBadgesiin.
-     * @param groupId valitun ryhmän ID, jonka badget haetaan.
+     * Checks if groupId or badgegroupContext is falsy.
+     * Resets badges.
+     * Sets getUserBadges function returned pointer to point to this.groupBadges.
+     * @param groupId Selected group's ID, which is used to fetch group's badges.
      */
     async fetchGroupBadges(groupId?: number) {
         if (groupId == undefined) {
@@ -592,9 +576,9 @@ export class BadgeGiverComponent implements OnInit {
     }
 
     /**
-     * Antaa valituille käyttäjille tai ryhmille valitun badgen.
-     * Lopuksi tyhjätään kaikki kutsumalla emptyForm metodia.
-     * @param message viesti, joka antamisen yhteydessä voidaan antaa
+     * Assigns selected badge to selected groups or users.
+     * Calls emptyForm method for a reset.
+     * @param message optional message, that can be given when assigning badge.
      */
     async assignBadge(message: string) {
         if (this.selectedUsers.length > 0) {
@@ -622,9 +606,12 @@ export class BadgeGiverComponent implements OnInit {
         this.emptyForm();
     }
 
-    // Bring pretty group names (descriptions)
-    prettyGroupNames() {}
-
+    /**
+     * Function is triggered when a wheel scroll event occurs.
+     * Checks if the element can actually scroll vertically.
+     * Apply custom scroll logic if the element can scroll.
+     * @param event Browser's scroll-wheel event
+     */
     onScrollList(event: WheelEvent) {
         const element = event.currentTarget as HTMLElement;
         const scrollable = element.scrollHeight > element.clientHeight;
@@ -636,7 +623,7 @@ export class BadgeGiverComponent implements OnInit {
         }
     }
     /**
-     * Tyhjentää parametrina annetun taulukon
+     * Resets table from argument.
      */
     emptyTable<T>(table: T[]) {
         while (table.length > 0) {
