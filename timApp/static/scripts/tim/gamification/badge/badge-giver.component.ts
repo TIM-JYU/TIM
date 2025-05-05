@@ -607,20 +607,11 @@ export class BadgeGiverComponent implements OnInit {
     }
 
     /**
-     * Function is triggered when a wheel scroll event occurs.
-     * Checks if the element can actually scroll vertically.
-     * Apply custom scroll logic if the element can scroll.
-     * @param event Browser's scroll-wheel event
+     * Calls onScrollList method via badgeService.
+     * @param event Browser's scroll-wheel event.
      */
     onScrollList(event: WheelEvent) {
-        const element = event.currentTarget as HTMLElement;
-        const scrollable = element.scrollHeight > element.clientHeight;
-        if (scrollable) {
-            const targetElement = event.currentTarget as HTMLElement;
-            const scrollAmount = event.deltaY * 0.5;
-            targetElement.scrollTop += scrollAmount;
-            event.preventDefault();
-        }
+        this.badgeService.onScrollList(event);
     }
     /**
      * Resets table from argument.
