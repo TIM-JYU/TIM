@@ -20,6 +20,7 @@ import {Subscription} from "rxjs";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {toPromise} from "tim/util/utils";
 import {GroupService} from "tim/plugin/group-dashboard/group.service";
+import {scrollToElement} from "tim/util/utils";
 
 @Component({
     selector: "tim-badge-withdraw",
@@ -384,7 +385,7 @@ export class BadgeWithdrawComponent implements OnInit {
         this.emptyTable(this.userBadges);
         this.groupUsersMap.clear();
         setTimeout(() => {
-            this.centerToComponent();
+            scrollToElement(this.startSection?.nativeElement);
         }, 100);
     }
 
@@ -682,31 +683,6 @@ export class BadgeWithdrawComponent implements OnInit {
     emptyTable<T>(table: T[]) {
         while (table.length > 0) {
             table.pop();
-        }
-    }
-
-    centerToComponent() {
-        if (this.startSection) {
-            const element = this.startSection.nativeElement;
-            const rect = element.getBoundingClientRect();
-
-            const isVisible =
-                rect.top >= 0 &&
-                rect.left >= 0 &&
-                rect.bottom <=
-                    (window.innerHeight ||
-                        document.documentElement.clientHeight) &&
-                rect.right <=
-                    (window.innerWidth || document.documentElement.clientWidth);
-
-            if (!isVisible) {
-                const offset = -100;
-                const position = rect.top + window.scrollY + offset;
-                window.scrollTo({
-                    top: position,
-                    behavior: "smooth",
-                });
-            }
         }
     }
 
