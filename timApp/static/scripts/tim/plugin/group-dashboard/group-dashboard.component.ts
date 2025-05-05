@@ -153,27 +153,21 @@ export class GroupDashboardComponent implements OnInit {
                 return;
             }
 
-            try {
-                const personalGroup =
-                    await this.groupService.getUserAndPersonalGroup(user.name);
+            const personalGroup =
+                await this.groupService.getUserAndPersonalGroup(user.name);
 
-                if (personalGroup[1].id) {
-                    const badges = await this.badgeService.getUserBadges(
-                        personalGroup[1].id,
-                        this.contextGroup!
-                    );
+            if (personalGroup[1].id) {
+                const badges = await this.badgeService.getUserBadges(
+                    personalGroup[1].id,
+                    this.contextGroup!
+                );
 
-                    if (badges.length > 0) {
-                        user.badges = badges;
-                        badgeCount += badges.length;
-                    }
-                } else {
-                    console.error(
-                        `No personal group ID found for ${user.name}`
-                    );
+                if (badges.length > 0) {
+                    user.badges = badges;
+                    badgeCount += badges.length;
                 }
-            } catch (error) {
-                console.error(`Error fetching badges for ${user.name}:`, error);
+            } else {
+                return;
             }
         });
 
@@ -182,17 +176,15 @@ export class GroupDashboardComponent implements OnInit {
     }
 
     async fetchGroupBadges() {
-        try {
-            const groupBadges = await this.badgeService.getUserBadges(
-                this.groupId!,
-                this.contextGroup!
-            );
-            if (groupBadges) {
-                this.groupBadges = groupBadges;
-                this.totalBadges += groupBadges.length;
-            }
-        } catch (error) {
-            console.error("Error fetching group mutual badges:", error);
+        const groupBadges = await this.badgeService.getUserBadges(
+            this.groupId!,
+            this.contextGroup!
+        );
+        if (groupBadges) {
+            this.groupBadges = groupBadges;
+            this.totalBadges += groupBadges.length;
+        } else {
+            return;
         }
     }
 
