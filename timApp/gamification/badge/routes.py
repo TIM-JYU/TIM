@@ -8,6 +8,7 @@ from timApp.auth.accesshelper import (
     verify_teacher_access,
     AccessDenied,
     verify_view_access,
+    has_view_access,
 )
 from timApp.auth.sessioninfo import get_current_user_object
 from timApp.document.docentry import DocEntry
@@ -394,7 +395,6 @@ def get_groups_badges(group_id: int, context_group: str) -> Response:
     usergroup = UserGroup.get_by_id(group_id)
     if not usergroup:
         raise NotExist(f'User group with id "{group_id}" not found')
-
     current_user = get_current_user_object()
     in_group = check_group_member(current_user, group_id)
     if not in_group:
