@@ -1,21 +1,17 @@
 import {
     Component,
-    Inject,
     Input,
     NgModule,
     OnInit,
-    SimpleChanges,
     EventEmitter,
     Output,
 } from "@angular/core";
 import {CommonModule} from "@angular/common";
 import {FormControl, ReactiveFormsModule, Validators} from "@angular/forms";
-import {HttpClient} from "@angular/common/http";
-import {BadgeService} from "tim/gamification/badge/badge.service";
 import {manageglobals} from "tim/util/globals";
 import {IFolder, IFullDocument} from "tim/item/IItem";
 import {GroupService} from "tim/plugin/group-dashboard/group.service";
-import {ICurrentUser, IUser} from "tim/user/IUser";
+import {ICurrentUser} from "tim/user/IUser";
 
 @Component({
     selector: "tim-group-name",
@@ -61,10 +57,7 @@ export class GroupNameComponent implements OnInit {
     user: ICurrentUser | null = null;
     doc: IFullDocument | IFolder | undefined;
 
-    constructor(
-        private badgeService: BadgeService,
-        private groupService: GroupService
-    ) {}
+    constructor(private groupService: GroupService) {}
 
     ngOnInit(): void {
         this.item = manageglobals().curr_item;
@@ -93,7 +86,7 @@ export class GroupNameComponent implements OnInit {
                 : this.subGroup;
 
             this.canEditName = fetchedGroup.isMember || fetchedGroup.isTeacher;
-            this.parseParentGroup(this.groupName);
+            this.parseParentGroup();
         }
     }
 
@@ -123,8 +116,7 @@ export class GroupNameComponent implements OnInit {
         this.groupNameChange.emit(this.prettyName!);
     }
 
-    // Koko nimi on edelleen tallessa storedGroup.name:ssa tai prentGroupissa, jos käyttöä
-    parseParentGroup(groupName: string | null) {
+    parseParentGroup() {
         if (!this.groupName) return;
         const nameParts = this.groupName.split("-");
         this.parentGroup = nameParts[0];
