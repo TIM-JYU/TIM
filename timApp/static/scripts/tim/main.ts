@@ -27,7 +27,6 @@ import {AnnotationComponent} from "tim/velp/annotation.component";
 import * as velpSelection from "tim/velp/velpSelection";
 import {staticDynamicImport} from "tim/staticDynamicImport";
 import {AppModule} from "tim/app.module";
-import {TodoListComponent} from "tim/todo/todo-component";
 import {BadgeComponent} from "tim/gamification/badge/badge.component";
 import {BadgeViewerComponent} from "tim/gamification/badge/badge-viewer.component";
 import {BadgeCreatorComponent} from "tim/gamification/badge/badge-creator.component";
@@ -165,7 +164,6 @@ function createDowngradedAppModule() {
     doDowngrade(dg, "timUserProfile", UserProfileComponent);
     doDowngrade(dg, "timParticipantList", ParticipantListComponent);
     doDowngrade(dg, "timCourseManager", CourseManagerComponent);
-    doDowngrade(dg, "timTodo", TodoListComponent);
     doDowngrade(dg, "timBadge", BadgeComponent);
     doDowngrade(dg, "timBadgeViewer", BadgeViewerComponent);
     doDowngrade(dg, "timBadgeCreator", BadgeCreatorComponent);

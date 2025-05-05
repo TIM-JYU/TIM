@@ -20,6 +20,7 @@ import {BadgeSelectedWithdrawModule} from "tim/gamification/badge/badge-selected
 import {documentglobals} from "tim/util/globals";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {FormsModule} from "@angular/forms";
+import {scrollToElement} from "tim/util/utils";
 
 @Component({
     selector: "tim-badge-creator",
@@ -288,7 +289,7 @@ export class BadgeCreatorComponent implements OnInit {
         this.hideOtherViewsExcept(true);
 
         setTimeout(() => {
-            this.centerToComponent();
+            scrollToElement(this.allBadgesSection?.nativeElement);
         }, 100);
     }
 
@@ -327,7 +328,7 @@ export class BadgeCreatorComponent implements OnInit {
             this.showEditingForm(badge);
         }
         setTimeout(() => {
-            this.centerToComponent();
+            scrollToElement(this.allBadgesSection?.nativeElement);
         }, 100);
     }
 
@@ -338,7 +339,7 @@ export class BadgeCreatorComponent implements OnInit {
 
         this.clickedBadge = badge;
         setTimeout(() => {
-            this.centerToComponent();
+            scrollToElement(this.allBadgesSection?.nativeElement);
         }, 100);
     }
 
@@ -348,7 +349,7 @@ export class BadgeCreatorComponent implements OnInit {
         );
         this.showSelectedWithdraw = !this.showSelectedWithdraw;
         setTimeout(() => {
-            this.centerToComponent();
+            scrollToElement(this.allBadgesSection?.nativeElement);
         }, 100);
     }
 
@@ -381,7 +382,7 @@ export class BadgeCreatorComponent implements OnInit {
         this.badgeFormShowing = false;
         this.isFormChanged = false;
         setTimeout(() => {
-            this.centerToComponent();
+            scrollToElement(this.allBadgesSection?.nativeElement);
         }, 100);
     }
 
@@ -395,7 +396,7 @@ export class BadgeCreatorComponent implements OnInit {
         });
         this.isFormChanged = false;
         setTimeout(() => {
-            this.centerToComponent();
+            scrollToElement(this.allBadgesSection?.nativeElement);
         }, 100);
     }
 
@@ -484,7 +485,7 @@ export class BadgeCreatorComponent implements OnInit {
 
                 this.badgeService.triggerUpdateBadgeList();
                 this.badgeFormShowing = false;
-                this.centerToComponent();
+                scrollToElement(this.allBadgesSection?.nativeElement);
             }
             if (!result.ok) {
                 if (result.result.error.error == undefined) {
@@ -516,7 +517,7 @@ export class BadgeCreatorComponent implements OnInit {
         this.badgeFormShowing = false;
         this.resetForm();
         setTimeout(() => {
-            this.centerToComponent();
+            scrollToElement(this.allBadgesSection?.nativeElement);
         }, 100);
     }
 
@@ -616,7 +617,7 @@ export class BadgeCreatorComponent implements OnInit {
             this.badgeService.triggerUpdateBadgeList();
             this.badgeFormShowing = false;
             this.clickedBadge = null;
-            this.centerToComponent();
+            scrollToElement(this.allBadgesSection?.nativeElement);
         }
     }
 
@@ -690,32 +691,6 @@ export class BadgeCreatorComponent implements OnInit {
                 } catch (error) {
                     console.error("Error deleting badge", error);
                 }
-            }
-        }
-    }
-
-    // Moves the screen back to the top, when other components are closed.
-    centerToComponent() {
-        if (this.allBadgesSection) {
-            const element = this.allBadgesSection.nativeElement;
-            const rect = element.getBoundingClientRect();
-
-            const isVisible =
-                rect.top >= 0 &&
-                rect.left >= 0 &&
-                rect.bottom <=
-                    (window.innerHeight ||
-                        document.documentElement.clientHeight) &&
-                rect.right <=
-                    (window.innerWidth || document.documentElement.clientWidth);
-
-            if (!isVisible) {
-                const offset = -100;
-                const position = rect.top + window.scrollY + offset;
-                window.scrollTo({
-                    top: position,
-                    behavior: "smooth",
-                });
             }
         }
     }
