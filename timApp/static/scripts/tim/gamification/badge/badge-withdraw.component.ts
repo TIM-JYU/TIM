@@ -25,18 +25,18 @@ import {scrollToElement} from "tim/util/utils";
 @Component({
     selector: "tim-badge-withdraw",
     template: `
-        <ng-container *ngIf="hasPermission; else noPermissionView">
+        
             <div class="badge-withdraw" #startSection>
                 <h2>View users or groups ({{ badgegroupContext }})</h2>
 
-                <ng-container *ngIf="!teacherPermission">
+                <ng-container *ngIf="!hasPermissionToComponent">
                     <tim-alert *ngFor="let alert of alerts; let i = index" [severity]="alert.type" [closeable]="true"
                                (closing)="badgeService.closeAlert(this.alerts, i)">
                         <div [innerHTML]="alert.msg"></div>
                     </tim-alert>
                 </ng-container>
 
-                <ng-container *ngIf="teacherPermission">
+                <ng-container *ngIf="hasPermissionToComponent">
                     <div class="user-group-button-container">
                         <button (click)="handleSwap(true); fetchUsersFromGroups()"
                                 [disabled]="userAssign || users.length === 0"
@@ -49,7 +49,7 @@ import {scrollToElement} from "tim/util/utils";
                         </button>
                     </div>
 
-                    <div *ngIf="showComponent">
+                    <div *ngIf="showSelection">
                         <div *ngIf="userAssign" class="form-group">
                             <div class="search-wrapper">
                                 <div class="search-groups">
@@ -217,10 +217,6 @@ import {scrollToElement} from "tim/util/utils";
                     </div>
                 </ng-container>
             </div>
-        </ng-container>
-        <ng-template #noPermissionView>
-            <p>Access denied for students.</p>
-        </ng-template>
     `,
     styleUrls: ["badge-withdraw.component.scss"],
 })
@@ -228,9 +224,8 @@ export class BadgeWithdrawComponent implements OnInit {
     private subscription: Subscription = new Subscription();
 
     userAssign?: boolean = undefined;
-    teacherPermission = true;
-    hasPermission: boolean = true;
-    showComponent: boolean = true;
+    hasPermissionToComponent = true;
+    showSelection: boolean = true;
     hasBadges: boolean = false;
 
     users: IUser[] = [];
@@ -266,6 +261,14 @@ export class BadgeWithdrawComponent implements OnInit {
         private groupService: GroupService,
         private elRef: ElementRef
     ) {}
+
+    ngOnInit() {
+        if (Users.isLoggedIn()) {
+            this.subscribeToBadgeUpdates();
+            this.fetchUsers();
+            this.fetchGroups();
+        }
+    }
 
     onUserSearchChange() {
         const term = this.searchTerm.toLowerCase().trim();
@@ -321,6 +324,12 @@ export class BadgeWithdrawComponent implements OnInit {
         }
     }
 
+    /**
+     * Function is triggered when a wheel scroll event occurs.
+     * Checks if the element can actually scroll horizontally.
+     * Apply custom scroll logic if the element can scroll.
+     * @param event Browser's scroll-wheel event
+     */
     onScroll(event: WheelEvent) {
         const element = event.currentTarget as HTMLElement;
         const scrollable = element.scrollWidth > element.clientWidth;
@@ -332,33 +341,19 @@ export class BadgeWithdrawComponent implements OnInit {
         }
     }
 
+    /**
+     * Calls onScrollList method via badgeService.
+     * @param event Browser's scroll-wheel event.
+     */
     onScrollList(event: WheelEvent) {
-        const element = event.currentTarget as HTMLElement;
-        const scrollable = element.scrollHeight > element.clientHeight;
-        if (scrollable) {
-            const targetElement = event.currentTarget as HTMLElement;
-            const scrollAmount = event.deltaY * 0.5;
-            targetElement.scrollTop += scrollAmount;
-            event.preventDefault();
-        }
-    }
-
-    ngOnInit() {
-        if (Users.isLoggedIn()) {
-            this.addListeners();
-            this.fetchUsers();
-            this.fetchGroups();
-            if (Users.belongsToGroup("Administrators")) {
-                this.hasPermission = true; // Tarkistetaan onko käyttäjällä oikeus käyttää komponenttia
-                this.showComponent = true;
-            }
-        }
+        this.badgeService.onScrollList(event);
     }
 
     /**
-     * Lisää kuuntelun fetchUserBadges ja fetchGroupBadges funktioihin.
+     * Adds listeners to fetchUserBadges and fetchGroupBadges functions.
+     * Subscriptions allow badges to refresh live after changes.
      */
-    private addListeners() {
+    private subscribeToBadgeUpdates() {
         // Subscribe to badge update events
         this.subscription.add(
             this.badgeService.updateBadgeList$.subscribe(() => {
@@ -373,13 +368,13 @@ export class BadgeWithdrawComponent implements OnInit {
     }
 
     /**
-     * Tyhjentää attribuutit. Kutsutaan mm. cancel painikkeessa.
+     * Resets attributes. Method is called when pressing cancel.
      */
     emptyForm() {
         this.selectedUser = null;
         this.selectedBadge = null;
         this.selectedGroup = null;
-        this.showComponent = false;
+        this.showSelection = false;
         this.userAssign = undefined;
         this.emptyTable(this.userBadges);
         this.emptyTable(this.userBadges);
@@ -390,12 +385,12 @@ export class BadgeWithdrawComponent implements OnInit {
     }
 
     /**
-     * Tyhjentää attribuutit.
-     * Asettaa userAssignille parametrina saadun totuusarvon.
-     * @param bool totuusarvo, jonka avulla user/group view määritellään.
+     * Resets attributes.
+     * Sets boolean value from argument to userAssign.
+     * @param bool boolean value, that defines user/group view.
      */
     handleSwap(bool: boolean) {
-        this.showComponent = true;
+        this.showSelection = true;
         this.selectedGroup = null;
         this.selectedUser = null;
         this.selectedBadge = null;
@@ -404,9 +399,9 @@ export class BadgeWithdrawComponent implements OnInit {
     }
 
     /**
-     * Käy kaikki ryhmät läpi ja asettaa jokaisen ryhmän ID:n ja siihen kuuluvat käyttäjät groupUsersMappiin.
-     * Lisää kaikkien käyttäjien ID:t groupedUserIds taulukkoon, jotka kuuluvat johonkin ryhmään.
-     * Suodattaa filteredUsers taulukkoon kaikki ne käyttäjät, jotka eivät kuulu mihinkään ryhmään.
+     * Sets every group's ID and users to groupUsersMap.
+     * Adds every user's ID's, that belong to any group to groupedUserIds table.
+     * Filters every user, that does not belong to any group to filteredUsers table.
      */
     async fetchUsersFromGroups() {
         this.groupUsersMap.clear();
@@ -428,8 +423,8 @@ export class BadgeWithdrawComponent implements OnInit {
     }
 
     /**
-     * Hakee käyttäjät, jotka kuuluvat badgegroupContext ryhmään. badgegroupContext annetaan TIM:n puolelta.
-     * Jos http get pyyntö palauttaa virheen, kutsutaan badgeServicen showError metodia.
+     * Fetches users, that belong to badgegroupContext group. badgegroupContext is received from TIM.
+     * If http get request returns error, showError method is called via badgeService.
      */
     private async fetchUsers() {
         const result = await toPromise(
@@ -444,7 +439,7 @@ export class BadgeWithdrawComponent implements OnInit {
             }
         }
         if (!result.ok) {
-            this.teacherPermission = false;
+            this.hasPermissionToComponent = false;
             if (result.result.error.error == undefined) {
                 this.badgeService.showError(
                     this.alerts,
@@ -471,6 +466,12 @@ export class BadgeWithdrawComponent implements OnInit {
         this.users = users;
     }
 
+    /**
+     * Fetches groups, that belong to badgegroupContext group. badgegroupContext is received from TIM.
+     * If http get request returns error, hasPermissionToComponent is set to false and showError method is called via badgeService.
+     *
+     * **Comment updateGroups section**
+     */
     private async fetchGroups() {
         if (this.badgegroupContext) {
             const result = await toPromise(
@@ -485,7 +486,7 @@ export class BadgeWithdrawComponent implements OnInit {
                 }
             }
             if (!result.ok) {
-                this.teacherPermission = false;
+                this.hasPermissionToComponent = false;
                 if (result.result.error.error == undefined) {
                     this.badgeService.showError(
                         this.alerts,
@@ -526,12 +527,12 @@ export class BadgeWithdrawComponent implements OnInit {
     }
 
     /**
-     * Tarkistaa onko annettu parametri undefined. Jos true niin lähdetään pois.
-     * Tyhjentää valinnat sekä user- ja groupBadges taulukot.
-     * Tarkistaa selectedUser ja badgegroupContextin
-     * Hakee käyttäjän personalgroupin, jonka avulla voidaan hakea badget.
-     * Kutsuu badge-servicen getUserBadges metodia, joka hakee käyttäjälle kuuluvat badget.
-     * @param userId käyttäjän id
+     * Checks if userId is undefined.
+     * Resets selections and groupBadges & userBadges.
+     * Checks if selectedUser or badgegroupContext are falsy.
+     * Fetches user's personal group, which is used to fetch user's badges
+     * Calls getUserBadges method via badge-service.
+     * @param userId User's ID
      */
     async fetchUserBadges(userId?: number) {
         if (userId == undefined) {
@@ -567,10 +568,10 @@ export class BadgeWithdrawComponent implements OnInit {
     }
 
     /**
-     * Tarkistaa groupId:n ja badgegroupContextin.
-     * Tyhjentää valinnat sekä user- ja groupBadges taulukot.
-     * Kutsuu badge-servicen getUserBadges metodia, joka hakee ryhmän badget.
-     * @param groupId ryhmän ID, jonka badget haetaan.
+     * Checks if groupId or badgegroupContext is falsy.
+     * Resets badges.
+     * Sets getUserBadges method's returned pointer to point to this.groupBadges.
+     * @param groupId Selected group's ID, which is used to fetch group's badges.
      */
     async fetchGroupBadges(groupId?: number) {
         if (groupId == undefined) {
@@ -597,9 +598,9 @@ export class BadgeWithdrawComponent implements OnInit {
     }
 
     /**
-     * Kutsuu badge-servicen withdrawBadge metodia, joka ottaa valitun badgen pois käyttäjältä.
-     * Jos withdrawBadge palauttaa virheen, kutsutaan badge-servicen showError metodia.
-     * @param badgegivenID ID, jonka perustella badgesgiven taulukosta voidaan ottaa pois käyttäjälle annettu badge
+     * Calls withdrawBadge method via badge-service, that removes selected badge from user.
+     * If withdrawBadge method returns error, showError method is called via badge-service.
+     * @param badgegivenID ID, that is used to withdraw badge from user.
      */
     async removeBadge(badgegivenID?: number) {
         if (badgegivenID == undefined) {
@@ -647,10 +648,10 @@ export class BadgeWithdrawComponent implements OnInit {
     }
 
     /**
-     * Tarkistaa milloin Withdraw painike tulee olla disabled.
-     * Jos badgea ei ole valittu, palautetaan true.
-     * Jos käyttäjää tai ryhmää ei ole valittu, palautetaan true.
-     * Muussa tapauksessa palautetaan false.
+     * Checks when Withdraw button is supposed to be disabled.
+     * If badge is not selected, returns true.
+     * If user or group is not selected, returns true.
+     * Otherwise, returns false.
      */
     isWithdrawButtonDisabled(): boolean {
         if (!this.selectedBadge) {
@@ -678,7 +679,7 @@ export class BadgeWithdrawComponent implements OnInit {
         }
     }
     /**
-     * Tyhjentää parametrina annetun taulukon
+     * Resets table from argument.
      */
     emptyTable<T>(table: T[]) {
         while (table.length > 0) {
