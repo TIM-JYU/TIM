@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from typing import Optional
 
 from sqlalchemy import ForeignKey
@@ -91,9 +93,7 @@ class Badge(db.Model):
         }
 
     @staticmethod
-    def get_by_id(
-        badge_id: int,
-    ):  # TODO: Add " -> Badge | None", but why isn't Badge defined?
+    def get_by_id(badge_id: int) -> Badge | None:
         return db.session.get(Badge, badge_id)
 
 
@@ -159,7 +159,5 @@ class BadgeGiven(db.Model):
         }
 
     @staticmethod
-    def get_by_id(
-        badge_given_id: int,
-    ):  # TODO: Add " -> BadgeGiven | None", but why isn't BadgeGiven defined?
+    def get_by_id(badge_given_id: int) -> BadgeGiven | None:
         return db.session.get(BadgeGiven, badge_given_id)

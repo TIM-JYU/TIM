@@ -92,19 +92,6 @@ def check_group_member(current_user: User, usergroup: int) -> bool:
         return False
 
 
-@badges_blueprint.get("/all_badges_including_inactive")
-def all_badges_including_inactive() -> Response:
-    """
-    Fetches all badges including the inactive badges. Sorted by created-timestamp.
-    :return: Badges in json response format
-    """
-    badges = run_sql(select(Badge).order_by(Badge.created)).scalars().all()
-    badges_json = []
-    for badge in badges:
-        badges_json.append(badge.to_json())
-    return json_response(badges_json)
-
-
 @badges_blueprint.get("/all_badges")
 def get_badges() -> Response:
     """
@@ -154,20 +141,6 @@ def all_badges_in_context(context_group: str) -> Response:
     for badge in badges:
         badges_json.append(badge.to_json())
     return json_response(badges_json)
-
-
-@badges_blueprint.get("/badge/<badge_id>")
-def get_badge(badge_id: int) -> Response:
-    """
-    Fetches a specific badge.
-    :param badge_id: ID of the badge to get
-    :return: badge in json response format or error when there is no badge with that id
-    """
-    badge = run_sql(select(Badge).filter_by(id=badge_id)).scalars().first()
-    if badge is None:
-        raise NotExist(f'Badge with id "{badge_id}" not found')
-    badge_json = badge.to_json()
-    return json_response(badge_json)
 
 
 @badges_blueprint.post("/create_badge")
@@ -681,8 +654,8 @@ def withdraw_badge(badge_given_id: int, context_group: str) -> Response:
     :param badge_given_id: ID of the badgegiven
     :return: ok response
     """
-    badge_given = BadgeGiven.get_by_id(badge_given_id)
-    if not badge_given:
+    badge_given_old = BadgeGiven.get_by_id(badge_given_id)
+    if not badge_given_old:
         raise NotExist(f'Given badge with id "{badge_given_id}" not found')
     context_usergroup = UserGroup.get_by_name(context_group)
     if not context_usergroup:
@@ -696,24 +669,24 @@ def withdraw_badge(badge_given_id: int, context_group: str) -> Response:
         message=f'Sorry, you don\'t have permission to use this resource. If you are a teacher of "{context_group}", please contact TIM admin.',
     )
 
-    badge_given = {
+    badge_given_new = {
         "active": False,
         "withdrawn_by": get_current_user_object().id,
         "withdrawn": datetime_tz.now(),
     }
-    BadgeGiven.query.filter_by(id=badge_given_id).update(badge_given)
+    BadgeGiven.query.filter_by(id=badge_given_id).update(badge_given_new)
     db.session.commit()
     if current_app.config["BADGE_LOG_FILE"]:
         log_badge_event(
             {
                 "event": "withdraw_badge",
-                "timestamp": badge_given["withdrawn"],
+                "timestamp": badge_given_new["withdrawn"],
                 "id": badge_given_id,
-                "executor": badge_given["withdrawn_by"],
-                "active": badge_given["active"],
+                "executor": badge_given_new["withdrawn_by"],
+                "active": badge_given_new["active"],
             }
         )
-    return json_response(badge_given, 200)
+    return json_response(badge_given_new, 200)
 
 
 @badges_blueprint.post("/withdraw_all_badges")
@@ -776,8 +749,8 @@ def undo_withdraw_badge(badge_given_id: int, context_group: str) -> Response:
     :param badge_given_id: ID of the badgegiven
     :return: ok response
     """
-    badge_given = BadgeGiven.get_by_id(badge_given_id)
-    if not badge_given:
+    badge_given_old = BadgeGiven.get_by_id(badge_given_id)
+    if not badge_given_old:
         raise NotExist(f'Given badge with id "{badge_given_id}" not found')
     context_usergroup = UserGroup.get_by_name(context_group)
     if not context_usergroup:
@@ -791,24 +764,24 @@ def undo_withdraw_badge(badge_given_id: int, context_group: str) -> Response:
         message=f'Sorry, you don\'t have permission to use this resource. If you are a teacher of "{context_group}", please contact TIM admin.',
     )
 
-    badge_given = {
+    badge_given_new = {
         "active": True,
         "undo_withdrawn_by": get_current_user_object().id,
         "undo_withdrawn": datetime_tz.now(),
     }
-    BadgeGiven.query.filter_by(id=badge_given_id).update(badge_given)
+    BadgeGiven.query.filter_by(id=badge_given_id).update(badge_given_new)
     db.session.commit()
     if current_app.config["BADGE_LOG_FILE"]:
         log_badge_event(
             {
                 "event": "undo_withdraw_badge",
-                "timestamp": badge_given["undo_withdrawn"],
+                "timestamp": badge_given_new["undo_withdrawn"],
                 "id": badge_given_id,
-                "executor": badge_given["undo_withdrawn_by"],
-                "active": badge_given["active"],
+                "executor": badge_given_new["undo_withdrawn_by"],
+                "active": badge_given_new["active"],
             }
         )
-    return json_response(badge_given, 200)
+    return json_response(badge_given_new, 200)
 
 
 @badges_blueprint.get("/podium/<group_name_prefix>")
