@@ -4,7 +4,12 @@ from operator import attrgetter
 from pathlib import Path
 from flask import Response, current_app
 from sqlalchemy import select, or_, func, desc
-from timApp.auth.accesshelper import verify_teacher_access, AccessDenied
+from timApp.auth.accesshelper import (
+    verify_teacher_access,
+    AccessDenied,
+    verify_view_access,
+    has_view_access,
+)
 from timApp.auth.sessioninfo import get_current_user_object
 from timApp.document.docentry import DocEntry
 from timApp.gamification.badge.badges import Badge, BadgeGiven
@@ -390,7 +395,6 @@ def get_groups_badges(group_id: int, context_group: str) -> Response:
     usergroup = UserGroup.get_by_id(group_id)
     if not usergroup:
         raise NotExist(f'User group with id "{group_id}" not found')
-
     current_user = get_current_user_object()
     in_group = check_group_member(current_user, group_id)
     if not in_group:
@@ -990,7 +994,7 @@ def usergroups_members(usergroup_name: str) -> Response:
     current_user = get_current_user_object()
     in_group = check_group_member(current_user, context_usergroup.id)
     if not in_group:
-        verify_teacher_access(
+        verify_view_access(
             block,
             message=f'Sorry, you don\'t have permission to use this resource. If you are a teacher of "{usergroup_name}", please contact TIM admin.',
         )

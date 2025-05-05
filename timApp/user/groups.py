@@ -13,6 +13,7 @@ from timApp.auth.accesshelper import (
     AccessDenied,
     verify_logged_in,
     verify_teacher_access,
+    verify_view_access,
 )
 from timApp.auth.accesstype import AccessType
 from timApp.auth.auth_models import BlockAccess
@@ -521,12 +522,16 @@ def group_name(name: str) -> Response:
     is_member = check_group_member(current_user, group.id)
     is_teacher = False
     is_admin = current_user.is_admin
+    has_view_rights = False
     if not is_member:
         try:
             verify_teacher_access(block)
             is_teacher = True
+            verify_view_access(block)
+            has_view_rights = True
         except AccessDenied:
             is_teacher = False
+            has_view_rights = False
 
     return json_response(
         {
@@ -536,6 +541,7 @@ def group_name(name: str) -> Response:
             "isMember": is_member,
             "isTeacher": is_teacher,
             "isAdmin": is_admin,
+            "viewRights": has_view_rights,
         }
     )
 
