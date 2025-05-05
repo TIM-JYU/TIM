@@ -92,19 +92,6 @@ def check_group_member(current_user: User, usergroup: int) -> bool:
         return False
 
 
-@badges_blueprint.get("/all_badges_including_inactive")
-def all_badges_including_inactive() -> Response:
-    """
-    Fetches all badges including the inactive badges. Sorted by created-timestamp.
-    :return: Badges in json response format
-    """
-    badges = run_sql(select(Badge).order_by(Badge.created)).scalars().all()
-    badges_json = []
-    for badge in badges:
-        badges_json.append(badge.to_json())
-    return json_response(badges_json)
-
-
 @badges_blueprint.get("/all_badges")
 def get_badges() -> Response:
     """
