@@ -60,6 +60,12 @@ export class BadgeComponent implements OnInit, OnChanges {
         }
     }
 
+    /**
+     * Sets the icon based on the image property. If no icon matches,
+     * the deafault "question_mark" is set.
+     *
+     * @returns void
+     */
     setIcon(): void {
         this.icon = this.image
             ? this.iconMap[this.image] || "question_mark"
