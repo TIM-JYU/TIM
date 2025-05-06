@@ -34,7 +34,6 @@ import {BadgeGiverComponent} from "tim/gamification/badge/badge-giver.component"
 import {BadgeWithdrawComponent} from "tim/gamification/badge/badge-withdraw.component";
 import {BadgeLeaderboardComponent} from "tim/gamification/badge/badge.leaderboard";
 import {NameChangerComponent} from "tim/plugin/group-dashboard/name-changer.component";
-import {BadgeSelectedWithdrawComponent} from "tim/gamification/badge/badge-selected-withdraw.component";
 import {GroupDashboardComponent} from "tim/plugin/group-dashboard/group-dashboard.component";
 import {HeaderComponent} from "tim/header/header.component";
 import {CreateItemComponent} from "tim/item/create-item.component";
@@ -89,8 +88,8 @@ import {
 import {genericglobals, isErrorGlobals} from "tim/util/globals";
 import {ParCompiler} from "tim/editor/parCompiler";
 import {PrintButtonComponent} from "tim/ui/print-button.component";
-import {FormulaEditorLoaderComponent} from "../../../modules/cs/js/editor/math-editor/formula-editor-loader.component";
 import {PointCalculatorComponent} from "tim/plugin/group-dashboard/point-calculator.component";
+import {FormulaEditorLoaderComponent} from "../../../modules/cs/js/editor/math-editor/formula-editor-loader.component";
 
 BackspaceDisabler.disable();
 
@@ -171,7 +170,6 @@ function createDowngradedAppModule() {
     doDowngrade(dg, "timBadgeWithdraw", BadgeWithdrawComponent);
     doDowngrade(dg, "timNameChanger", NameChangerComponent);
     doDowngrade(dg, "timBadgeLeaderboard", BadgeLeaderboardComponent);
-    doDowngrade(dg, "timBadgeSelectedWithdraw", BadgeSelectedWithdrawComponent);
     doDowngrade(dg, "timGroupDashboard", GroupDashboardComponent);
     doDowngrade(dg, "timPointCalculator", PointCalculatorComponent);
     return dg;
