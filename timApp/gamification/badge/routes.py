@@ -745,38 +745,14 @@ def get_users_subgroups(user_id: int, group_name_prefix: str) -> Response:
             message=f'Sorry, you don\'t have permission to use this resource. If you are a teacher of "{group_name_prefix}", please contact TIM admin.',
         )
 
-    usergroup_memberships = (
-        run_sql(
-            select(UserGroupMember).filter(
-                UserGroupMember.user_id == user_id,
-                or_(
-                    UserGroupMember.membership_end > datetime_tz.now(),
-                    UserGroupMember.membership_end == None,
-                ),
-            )
-        )
-        .scalars()
-        .all()
-    )
-    users_usergroup_ids = []
-    for usergroup_membership in usergroup_memberships:
-        users_usergroup_ids.append(usergroup_membership.usergroup_id)
-    users_subgroups = (
-        run_sql(
-            select(UserGroup)
-            .filter(
-                UserGroup.id.in_(users_usergroup_ids),
-                UserGroup.name.like(group_name_prefix + "%"),
-                UserGroup.name != group_name_prefix,
-            )
-            .order_by(UserGroup.name)
-        )
-        .scalars()
-        .all()
-    )
+    users_groups = user.groups
     users_subgroups_json = []
-    for users_subgroup in users_subgroups:
-        users_subgroups_json.append(users_subgroup.to_json())
+    for users_group in users_groups:
+        if (
+            users_group.name[: len(group_name_prefix)] == group_name_prefix
+            and users_group.name != group_name_prefix
+        ):
+            users_subgroups_json.append(users_group.to_json())
     return json_response(users_subgroups_json)
 
 
