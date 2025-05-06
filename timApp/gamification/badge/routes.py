@@ -788,9 +788,9 @@ def users_personal_group(name: str) -> Response:
     :param name: User's username
     :return: useraccount and usergroup in json format
     """
-    personal_group = UserGroup.get_by_name(name)
     user_account = User.get_by_name(name)
-    if personal_group and user_account:
+    personal_group = user_account.get_personal_group()
+    if user_account and personal_group:
         return json_response((user_account, personal_group))
     raise NotExist(f'User "{name}" not found')
 
