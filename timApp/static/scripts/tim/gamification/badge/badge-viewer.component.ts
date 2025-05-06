@@ -42,8 +42,6 @@ import {GroupService} from "tim/plugin/group-dashboard/group.service";
             <ng-container *ngIf="badges.length > 0">
                 
                 <div class="sort-select">
-<!--                    <label for="user-sort-select">Sort badges by: </label>-->
-                    
                     <select id="user-sort-select" [(ngModel)]="selectedSort" (ngModelChange)="onSortChange($event)">
                       <option value="newest">Newest</option>
                       <option value="oldest">Oldest</option>
@@ -418,69 +416,13 @@ export class BadgeViewerComponent implements OnInit {
     }
 
     onSortChange(sortType: string) {
-        this.sortedBadges = [...this.badges];
-
-        switch (sortType) {
-            case "az":
-                this.sortedBadges.sort((a, b) =>
-                    a.title.localeCompare(b.title)
-                );
-                break;
-            case "za":
-                this.sortedBadges.sort((a, b) =>
-                    b.title.localeCompare(a.title)
-                );
-                break;
-            case "newest":
-                this.sortedBadges.sort(
-                    (a, b) =>
-                        new Date(b.given).getTime() -
-                        new Date(a.given).getTime()
-                );
-                break;
-            case "oldest":
-                this.sortedBadges.sort(
-                    (a, b) =>
-                        new Date(a.given).getTime() -
-                        new Date(b.given).getTime()
-                );
-                break;
-            default:
-                this.sortedBadges = [...this.badges];
-        }
+        this.sortedBadges = this.badgeService.sortBadges(this.badges, sortType);
     }
 
     onGroupSortChange(groupId: number, sortType: string) {
         this.groupSortMap.set(groupId, sortType);
-
         const originalBadges = this.groupBadgesMap.get(groupId) || [];
-        const sorted = [...originalBadges];
-
-        switch (sortType) {
-            case "az":
-                sorted.sort((a, b) => a.title.localeCompare(b.title));
-                break;
-            case "za":
-                sorted.sort((a, b) => b.title.localeCompare(a.title));
-                break;
-            case "newest":
-                sorted.sort(
-                    (a, b) =>
-                        new Date(b.given).getTime() -
-                        new Date(a.given).getTime()
-                );
-                break;
-            case "oldest":
-                sorted.sort(
-                    (a, b) =>
-                        new Date(a.given).getTime() -
-                        new Date(b.given).getTime()
-                );
-                break;
-            default:
-                return;
-        }
-
+        const sorted = this.badgeService.sortBadges(originalBadges, sortType);
         this.groupBadgesMap.set(groupId, sorted);
     }
 

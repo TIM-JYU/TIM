@@ -51,14 +51,14 @@ import {scrollToElement} from "tim/util/utils";
                     </div>                 
                     
                     <div class="sort-select">
-<!--                      <label for="sort-sel">Sort badges by: </label>-->
-                            
-                      <select id="sort-sel" [(ngModel)]="selectedSort" (ngModelChange)="onSortChange($event)">
-                        <option value="newest">Newest</option>
-                        <option value="oldest">Oldest</option>
-                        <option value="az">A-Z</option>
-                        <option value="za">Z-A</option>
-                      </select>
+                        <select id="sort-sel" 
+                                [(ngModel)]="selectedSort" 
+                                (change)="onSortChange(selectedSort)">
+                          <option value="newest">Newest</option>
+                          <option value="oldest">Oldest</option>
+                          <option value="az">A-Z</option>
+                          <option value="za">Z-A</option>
+                        </select>
                     </div>
                     
                     <div class="badge-view">
@@ -665,40 +665,17 @@ export class BadgeCreatorComponent implements OnInit {
         }
     }
 
-    // Update the sortedBadges array based on the chosen sort type.
-    // "az" and "za" sort the badges alphabetically by title.
-    // "newest" and "oldest" sort the badges by the created date.
-    onSortChange(sortType: any) {
-        this.sortedBadges = [...this.all_badges];
-
-        switch (sortType) {
-            case "az":
-                this.sortedBadges.sort((a, b) =>
-                    a.title.localeCompare(b.title)
-                );
-                break;
-            case "za":
-                this.sortedBadges.sort((a, b) =>
-                    b.title.localeCompare(a.title)
-                );
-                break;
-            case "newest":
-                this.sortedBadges.sort(
-                    (a, b) =>
-                        new Date(b.created).getTime() -
-                        new Date(a.created).getTime()
-                );
-                break;
-            case "oldest":
-                this.sortedBadges.sort(
-                    (a, b) =>
-                        new Date(a.created).getTime() -
-                        new Date(b.created).getTime()
-                );
-                break;
-            default:
-                this.sortedBadges = [...this.all_badges];
-        }
+    /**
+     * Handles the badge sorting logic triggered by user interaction.
+     * Delegates sorting to the BadgeService based on the selected sort type.
+     *
+     * @param sortType The selected sort option ("az", "za", "newest", "oldest")
+     */
+    onSortChange(sortType: string) {
+        this.sortedBadges = this.badgeService.sortBadges(
+            this.all_badges,
+            sortType
+        );
     }
 }
 

@@ -11,6 +11,7 @@ import type {
     IBadgeHolders,
 } from "tim/gamification/badge/badge.interface";
 import {documentglobals} from "tim/util/globals";
+import {sortLang} from "tim/user/IUser";
 
 interface IData {
     context_group?: string;
@@ -290,6 +291,52 @@ export class BadgeService {
             const scrollAmount = event.deltaY * 0.5;
             targetElement.scrollTop += scrollAmount;
             event.preventDefault();
+        }
+    }
+
+    /**
+     * Sorts a list of badges based on the selected sort type.
+     * Alphabetical sorting is locale-aware and uses the configured `sortLang` locale.
+     *
+     * @param badges The array of badge objects to be sorted
+     * @param sortType The selected sorting option:
+     *  - "az": Sort badges A–Z by title (locale-aware using `sortLang`)
+     *  - "za": Sort badges Z–A by title (locale-aware using `sortLang`)
+     *  - "newest": Sort badges by creation date, newest first
+     *  - "oldest": Sort badges by creation date, oldest first
+     *  - any other value: Returns the badges unsorted (copied)
+     * @returns A new sorted array of badges
+     */
+    sortBadges(badges: IBadge[], sortType: string): IBadge[] {
+        const sorted = [...badges];
+
+        switch (sortType) {
+            case "az":
+                return sorted.sort((a, b) =>
+                    a.title.localeCompare(b.title, sortLang, {
+                        sensitivity: "base",
+                    })
+                );
+            case "za":
+                return sorted.sort((a, b) =>
+                    b.title.localeCompare(a.title, sortLang, {
+                        sensitivity: "base",
+                    })
+                );
+            case "newest":
+                return sorted.sort(
+                    (a, b) =>
+                        new Date(b.created).getTime() -
+                        new Date(a.created).getTime()
+                );
+            case "oldest":
+                return sorted.sort(
+                    (a, b) =>
+                        new Date(a.created).getTime() -
+                        new Date(b.created).getTime()
+                );
+            default:
+                return sorted;
         }
     }
 }
