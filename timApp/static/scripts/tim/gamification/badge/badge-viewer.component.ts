@@ -24,7 +24,7 @@ import {GroupService} from "tim/plugin/group-dashboard/group.service";
 @Component({
     selector: "tim-badge-viewer",
     template: `
-        <ng-container *ngIf="!teacherPermission">
+        <ng-container *ngIf="!hasPermissionToComponent">
             <div class="viewer-container">
                 <h2 class="badge-heading">User Badges </h2>
                 <tim-alert *ngFor="let alert of alerts; let i = index" [severity]="alert.type" [closeable]="true" (closing)="badgeService.closeAlert(this.alerts, i)">
@@ -33,7 +33,7 @@ import {GroupService} from "tim/plugin/group-dashboard/group.service";
             </div>
         </ng-container>
         
-        <ng-container *ngIf="teacherPermission">
+        <ng-container *ngIf="hasPermissionToComponent">
         <div class="viewer-container">
             <h2 class="badge-heading">User Badges ({{realName}})</h2>
             <ng-container *ngIf="badges.length === 0">
@@ -76,7 +76,6 @@ import {GroupService} from "tim/plugin/group-dashboard/group.service";
 
                     <ng-container *ngIf="groupBadgesMap.get(group.id)?.length || 0 > 0">
                         <div class="sort-select">
-<!--                            <label for="group-sort-{{group.id}}">Sort badges by: </label>-->
                             <select
                                 [id]="'group-sort-' + group.id"
                                 [ngModel]="groupSortMap.get(group.id) || 'newest'"
@@ -132,7 +131,7 @@ export class BadgeViewerComponent implements OnInit {
     sortedBadges: IBadge[] = [];
     groupSortMap: Map<number, string> = new Map();
 
-    teacherPermission: boolean = false;
+    hasPermissionToComponent: boolean = false;
     alerts: Array<{
         msg: string;
         type: "warning" | "danger";
@@ -151,7 +150,7 @@ export class BadgeViewerComponent implements OnInit {
         this.availableShapes = this.badgeService.getAvailableShapes();
         this.availableColors = this.badgeService.getAvailableColors();
         if (Users.isLoggedIn()) {
-            this.InitializeData().then(() => {
+            this.initializeData().then(() => {
                 this.getBadges();
             });
         }
@@ -167,12 +166,12 @@ export class BadgeViewerComponent implements OnInit {
     }
 
     /**
-     * Tarkistaa badgeuser ja badgegroupContextin.
-     * Hakee käyttäjän personalGroupin userContextin avulla.
-     * Asettaa this.realNamen personalGroupin avulla.
-     * Kutsuu getUserSubGroups metodia.
+     * Checks if badgeuser or badgegroupContext are falsy.
+     * Fetches user's personal group with userContext.
+     * Sets this.realName with personalGroup.
+     * Calls getUserSubGroups method.
      */
-    private async InitializeData() {
+    private async initializeData() {
         if (!this.badgeuserContext || !this.badgegroupContext) {
             return;
         }
@@ -334,9 +333,11 @@ export class BadgeViewerComponent implements OnInit {
     }
 
     /**
-     * Tyhjentää badget ja tekee http get pyynnön backendiin, josta saadaan käyttäjälle kuuluvat badget.
-     * Jos backendista saatu paluuarvo on virheellinen, kutsutaan badgeServicen showError metodia.
-     * Jos virheitä ei ilmene, asetetaan this.badges viittaamaan userBadges taulukkoon ja kutsutaan onSortChange metodia.
+     * Resets badges and makes http get request to receive user/group's badges.
+     * If request returns error, showError method is called via badge-service.
+     * If there are no errors, hasPermissionToComponent is set to true.
+     * this.badges pointer is set to point to userBadges.
+     * Finally, onSortChange method is called.
      */
     async getBadges() {
         this.emptyTable(this.badges);
@@ -369,9 +370,9 @@ export class BadgeViewerComponent implements OnInit {
             );
             return;
         }
+        this.hasPermissionToComponent = true;
 
         const userBadges: IBadge[] = [];
-        this.teacherPermission = true;
         if (result.result != undefined) {
             for (const alkio of result.result) {
                 userBadges.push(alkio);
@@ -381,11 +382,18 @@ export class BadgeViewerComponent implements OnInit {
         this.onSortChange(this.selectedSort);
     }
 
-    // Gets the usergroups under the specified maingroup
-    async getUserSubGroups(groupContext: string, userid: number) {
+    /**
+     * Gets the user's subgroups under the specified main group.
+     *
+     * **Comment prettyname section**
+     *
+     * @param groupContext Main group
+     * @param userID User's id
+     */
+    async getUserSubGroups(groupContext: string, userID: number) {
         this.userSubGroups = await this.groupService.getUserSubGroups(
             groupContext,
-            userid
+            userID
         );
         this.getGroupBadges();
 
@@ -398,7 +406,7 @@ export class BadgeViewerComponent implements OnInit {
     }
 
     /**
-     * Asettaa jokaisen käyttäjän aliryhmän ID:n ja niiden badget groupBadgesMappiin.
+     * Sets every user's subgroup's ID and badges to groupBadgesMap.
      */
     async getGroupBadges() {
         this.groupBadgesMap.clear();
@@ -433,7 +441,7 @@ export class BadgeViewerComponent implements OnInit {
     }
 
     /**
-     * Tyhjentää parametrina annetun taulukon
+     * Resets table from argument.
      */
     emptyTable<T>(table: T[]) {
         while (table.length > 0) {
