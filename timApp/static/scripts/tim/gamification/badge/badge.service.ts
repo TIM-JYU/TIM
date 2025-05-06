@@ -1,16 +1,8 @@
 import {Injectable} from "@angular/core";
 import {HttpClient} from "@angular/common/http";
-import {lastValueFrom, Observable} from "rxjs";
 import {Subject} from "rxjs";
 import {toPromise} from "tim/util/utils";
-import type {
-    IBadge,
-    IUser,
-    IGroup,
-    IPersonalGroup,
-    IBadgeHolders,
-} from "tim/gamification/badge/badge.interface";
-import {documentglobals} from "tim/util/globals";
+import type {IBadge} from "tim/gamification/badge/badge.interface";
 
 interface IData {
     context_group?: string;
@@ -45,13 +37,13 @@ export class BadgeService {
     constructor(private http: HttpClient) {}
 
     /**
-     * Hakee käyttäjän ryhmälle kuuluvat badget ID:n perusteella.
-     * Ryhmä voi olla joko henkilökohtainen ryhmä, tai ryhmä, jossa jäseniä on enemmän, kuin yksi.
-     * @param id ryhmän ID
-     * @param contextGroup käyttäjän kontekstiryhmä
-     * @return palauttaa IBadge taulukon
+     * Fetches badges for user or group.
+     * ID can be user's personal group ID with one member or group ID with multiple.
+     * @param id defines user/group.
+     * @param contextGroup Course context for badges.
+     * @return returns IBadge[]
      */
-    async getUserBadges(id: number, contextGroup: string) {
+    async getBadges(id: number, contextGroup: string) {
         const result = await toPromise(
             this.http.get<[]>(`/groups_badges/${id}/${contextGroup}`)
         );
@@ -67,64 +59,33 @@ export class BadgeService {
     }
 
     /**
-     * Ottaa valitun badgen pois käytöstä käyttäjältä.
-     * @param badgegivenID badgegiven -tietokantataulukon id, jonka avulla valittu badge poistetaan käytöstä
+     * Withdraws selected badge from user.
+     * @param badgeGivenID Used to define user who has selected badge.
+     * @param context_group Course context for badges.
      */
-    async withdrawBadge(badgegivenID: number, context_group: string) {
-        const response = toPromise(
+    async withdrawBadge(badgeGivenID: number, context_group: string) {
+        const result = await toPromise(
             this.http.post<{ok: boolean}>("/withdraw_badge", {
-                badge_given_id: badgegivenID,
+                badge_given_id: badgeGivenID,
                 context_group: context_group,
             })
         );
-        const result = await response;
-        if (result.ok) {
-            this.triggerUpdateBadgeList();
-            return {ok: true};
+        if (!result.ok) {
+            return {ok: false, data: result};
         }
-        return {ok: false, data: result};
+        this.triggerUpdateBadgeList();
+        return {ok: true};
     }
 
-    // async withdrawSelectedBadge(
-    //     userid: number,
-    //     badgeid: number,
-    //     contextGroup: string
-    // ) {
-    //     const response = toPromise(
-    //         this.http.post<{ok: boolean}>("/withdraw_all_badges", {
-    //             badge_id: badgeid,
-    //             usergroup_id: userid,
-    //             context_group: contextGroup,
-    //         })
-    //     );
-    //     const result = await response;
-    //     if (result.ok) {
-    //         this.triggerUpdateBadgeList();
-    //         return {ok: true};
-    //     }
-    //     return {ok: false, data: result};
-    // }
-    //
-    // async getBadgeHolders(badgeid: number) {
-    //     const response = toPromise(
-    //         this.http.get<IBadgeHolders>(`/badge_holders/${badgeid}`)
-    //     );
-    //     const result = await response;
-    //     if (result.ok) {
-    //         this.triggerUpdateBadgeList();
-    //         return result.result;
-    //     }
-    //     return null;
-    // }
-
     /**
-     * Lähettää http post pyynnön, joka antaa käyttäjälle/ryhmälle badgen group- ja badge_id:n perusteella.
-     * Jos paluuarvossa on virhe, kutsutaan showError metodia.
-     * Kutsutaan notifyBadgeViewerUpdate, joka hoitaa live-päivityksen.
-     * @param data sisältää kaikki tarvittavat tiedot http post kutsuun.
+     * Sends http post request, that gives badge to a user or group.
+     * User/group is defined by group_id & badge_id.
+     * If request returns an error, showError method is called.
+     * notifyBadgeViewerUpdate is called to handle live updates.
+     * @param data Contains all information for http post request.
      */
     async assignBadges(data: IData) {
-        const response = toPromise(
+        const result = await toPromise(
             this.http.post<{ok: boolean}>("/give_badge", {
                 context_group: data.context_group,
                 group_id: data.group_id,
@@ -132,7 +93,6 @@ export class BadgeService {
                 message: data.message,
             })
         );
-        const result = await response;
         if (!result.ok) {
             this.showError(
                 this.alerts,

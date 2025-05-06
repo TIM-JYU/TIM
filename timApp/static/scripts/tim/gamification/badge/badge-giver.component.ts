@@ -528,7 +528,7 @@ export class BadgeGiverComponent implements OnInit {
     /**
      * Resets this.userBadges and checks if selectedUser is falsy.
      * Gets user's PersonalGroup, that allows to use user's correct ID to fetch badges.
-     * Sets getUserBadges function's returned pointer to point to this.userBadges.
+     * Sets getBadges function's returned pointer to point to this.userBadges.
      * @param selectedUser Selected user, whose badges are fetched.
      */
     async fetchUserBadges(selectedUser: IUser) {
@@ -547,7 +547,7 @@ export class BadgeGiverComponent implements OnInit {
             console.error("Failed to retrieve the context group.");
             return;
         }
-        this.userBadges = await this.badgeService.getUserBadges(
+        this.userBadges = await this.badgeService.getBadges(
             pGroup["1"].id,
             this.badgegroupContext
         );
@@ -556,7 +556,7 @@ export class BadgeGiverComponent implements OnInit {
     /**
      * Checks if groupId or badgegroupContext is falsy.
      * Resets badges.
-     * Sets getUserBadges function returned pointer to point to this.groupBadges.
+     * Sets getBadges function returned pointer to point to this.groupBadges.
      * @param groupId Selected group's ID, which is used to fetch group's badges.
      */
     async fetchGroupBadges(groupId?: number) {
@@ -569,7 +569,7 @@ export class BadgeGiverComponent implements OnInit {
             return;
         }
         this.emptyTable(this.groupBadges);
-        this.groupBadges = await this.badgeService.getUserBadges(
+        this.groupBadges = await this.badgeService.getBadges(
             groupId,
             this.badgegroupContext
         );
