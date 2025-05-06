@@ -118,7 +118,6 @@ TIM_SAFE_TAGS = [
     "tim-steps",
     "tim-participant-list",
     "tim-course-manager",
-    "tim-todo",
     "tim-badge",
     "tim-badge-creator",
     "tim-badge-viewer",

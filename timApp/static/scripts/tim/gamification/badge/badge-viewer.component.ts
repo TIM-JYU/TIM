@@ -411,7 +411,7 @@ export class BadgeViewerComponent implements OnInit {
         for (const group of this.userSubGroups) {
             this.groupBadgesMap.set(
                 group.id,
-                await this.badgeService.getUserBadges(
+                await this.badgeService.getBadges(
                     group.id,
                     this.badgegroupContext
                 )

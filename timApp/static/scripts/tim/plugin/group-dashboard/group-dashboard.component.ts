@@ -1,14 +1,16 @@
-import {Component, Input, NgModule, OnInit} from "@angular/core";
+import type {OnInit} from "@angular/core";
+import {Component, Input, NgModule} from "@angular/core";
 import {CommonModule} from "@angular/common";
 import {BadgeService} from "tim/gamification/badge/badge.service";
 import {manageglobals} from "tim/util/globals";
-import {IFolder, IFullDocument} from "tim/item/IItem";
+import type {IFolder, IFullDocument} from "tim/item/IItem";
 import {NameChangerModule} from "tim/plugin/group-dashboard/name-changer.component";
-import {IBadge, IUser} from "tim/gamification/badge/badge.interface";
+import type {IBadge} from "tim/gamification/badge/badge.interface";
+import {IUser} from "tim/gamification/badge/badge.interface";
 import {BadgeModule} from "tim/gamification/badge/badge.component";
 import {GroupService} from "tim/plugin/group-dashboard/group.service";
 import {PointService} from "tim/plugin/group-dashboard/point.service";
-import {Subscription} from "rxjs";
+import type {Subscription} from "rxjs";
 import {UserService} from "tim/user/userService";
 
 @Component({
@@ -99,8 +101,8 @@ export class GroupDashboardComponent implements OnInit {
     totalMembers: number = 0;
     totalBadges: number = 0;
 
-    //TODO: scrollbar ja skaalaus, kun badgeja on paljon
-    //TODO: group badgejen noutaminen ei-jäsenille
+    // TODO: scrollbar ja skaalaus, kun badgeja on paljon
+    // TODO: group badgejen noutaminen ei-jäsenille
     ngOnInit() {
         if (this.group) {
             this.loadData();
@@ -157,7 +159,7 @@ export class GroupDashboardComponent implements OnInit {
                 await this.groupService.getUserAndPersonalGroup(user.name);
 
             if (personalGroup[1].id) {
-                const badges = await this.badgeService.getUserBadges(
+                const badges = await this.badgeService.getBadges(
                     personalGroup[1].id,
                     this.contextGroup!
                 );
@@ -176,7 +178,7 @@ export class GroupDashboardComponent implements OnInit {
     }
 
     async fetchGroupBadges() {
-        const groupBadges = await this.badgeService.getUserBadges(
+        const groupBadges = await this.badgeService.getBadges(
             this.groupId!,
             this.contextGroup!
         );
