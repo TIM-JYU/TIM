@@ -93,7 +93,7 @@ def check_group_member(current_user: User, usergroup: int) -> bool:
 
 
 @badges_blueprint.get("/all_badges/<context_group>")
-def all_badges_in_context(context_group: str) -> Response:
+def all_badges(context_group: str) -> Response:
     """
     Fetches all badges in specific context_group. Sorted by created-timestamp.
     :param context_group: Context group to get badges from
@@ -291,48 +291,6 @@ def deactivate_badge(badge_id: int, context_group: str) -> Response:
                 "timestamp": new_badge["deleted"],
                 "id": badge_id,
                 "executor": new_badge["deleted_by"],
-            }
-        )
-    return json_response(new_badge, 200)
-
-
-@badges_blueprint.post("/reactivate_badge")
-def reactivate_badge(badge_id: int, context_group: str) -> Response:
-    """
-    Reactivates a badge.
-    :param context_group: Context group where the badge is included
-    :param badge_id: ID of the badge
-    :return: ok response
-    """
-    context_usergroup = UserGroup.get_by_name(context_group)
-    if not context_usergroup:
-        raise NotExist(f'User group "{context_group}" not found')
-    block = context_usergroup.admin_doc
-    if not block:
-        raise NotExist(f'Admin doc for user group "{context_group}" not found')
-
-    verify_teacher_access(
-        block,
-        message=f'Sorry, you don\'t have permission to use this resource. If you are a teacher of "{context_group}", please contact TIM admin.',
-    )
-
-    new_badge = {
-        "active": True,
-        "restored_by": get_current_user_object().id,
-        "restored": datetime_tz.now(),
-    }
-    old_badge = run_sql(select(Badge).filter_by(id=badge_id)).scalars().first()
-    if old_badge is None:
-        raise NotExist(f'Badge with id "{badge_id}" not found')
-    Badge.query.filter_by(id=badge_id).update(new_badge)
-    db.session.commit()
-    if current_app.config["BADGE_LOG_FILE"]:
-        log_badge_event(
-            {
-                "event": "restore_badge",
-                "timestamp": new_badge["restored"],
-                "id": badge_id,
-                "executor": new_badge["restored_by"],
             }
         )
     return json_response(new_badge, 200)
@@ -672,101 +630,6 @@ def withdraw_badge(badge_given_id: int, context_group: str) -> Response:
     return json_response(badge_given_new, 200)
 
 
-@badges_blueprint.post("/withdraw_all_badges")
-def withdraw_all_badges(
-    badge_id: int, usergroup_id: int, context_group: str
-) -> Response:
-    """
-    Withdraws all badges of given ID from a usergroup.
-    :param usergroup_id: ID of the usergroup
-    :param context_group: Context group where the badge is included
-    :param badge_id: ID of the badge
-    :return: ok response
-    """
-    badge = Badge.get_by_id(badge_id)
-    if not badge:
-        raise NotExist(f'Badge with id "{badge_id}" not found')
-    usergroup = UserGroup.get_by_id(usergroup_id)
-    if not usergroup:
-        raise NotExist(f'User group with id "{usergroup_id}" not found')
-    context_usergroup = UserGroup.get_by_name(context_group)
-    if not context_usergroup:
-        raise NotExist(f'User group "{context_group}" not found')
-    block = context_usergroup.admin_doc
-    if not block:
-        raise NotExist(f'Admin doc for user group "{context_group}" not found')
-
-    verify_teacher_access(
-        block,
-        message=f'Sorry, you don\'t have permission to use this resource. If you are a teacher of "{context_group}", please contact TIM admin.',
-    )
-
-    badge_given = {
-        "active": False,
-        "withdrawn_by": get_current_user_object().id,
-        "withdrawn": datetime_tz.now(),
-    }
-    BadgeGiven.query.filter(
-        BadgeGiven.badge_id == badge_id, BadgeGiven.group_id == usergroup_id
-    ).update(badge_given)
-    db.session.commit()
-    if current_app.config["BADGE_LOG_FILE"]:
-        log_badge_event(
-            {
-                "event": "withdraw_all_badges",
-                "timestamp": badge_given["withdrawn"],
-                "badge_id": badge_id,
-                "usergroup_id": usergroup_id,
-                "executor": badge_given["withdrawn_by"],
-                "active": badge_given["active"],
-            }
-        )
-    return json_response(badge_given, 200)
-
-
-@badges_blueprint.post("/undo_withdraw_badge")
-def undo_withdraw_badge(badge_given_id: int, context_group: str) -> Response:
-    """
-    Undoes a badge withdrawal from a usergroup.
-    :param context_group: Context group where the badge is included
-    :param badge_given_id: ID of the badgegiven
-    :return: ok response
-    """
-    badge_given_old = BadgeGiven.get_by_id(badge_given_id)
-    if not badge_given_old:
-        raise NotExist(f'Given badge with id "{badge_given_id}" not found')
-    context_usergroup = UserGroup.get_by_name(context_group)
-    if not context_usergroup:
-        raise NotExist(f'User group "{context_group}" not found')
-    block = context_usergroup.admin_doc
-    if not block:
-        raise NotExist(f'Admin doc for user group "{context_group}" not found')
-
-    verify_teacher_access(
-        block,
-        message=f'Sorry, you don\'t have permission to use this resource. If you are a teacher of "{context_group}", please contact TIM admin.',
-    )
-
-    badge_given_new = {
-        "active": True,
-        "undo_withdrawn_by": get_current_user_object().id,
-        "undo_withdrawn": datetime_tz.now(),
-    }
-    BadgeGiven.query.filter_by(id=badge_given_id).update(badge_given_new)
-    db.session.commit()
-    if current_app.config["BADGE_LOG_FILE"]:
-        log_badge_event(
-            {
-                "event": "undo_withdraw_badge",
-                "timestamp": badge_given_new["undo_withdrawn"],
-                "id": badge_given_id,
-                "executor": badge_given_new["undo_withdrawn_by"],
-                "active": badge_given_new["active"],
-            }
-        )
-    return json_response(badge_given_new, 200)
-
-
 @badges_blueprint.get("/podium/<group_name_prefix>")
 def podium(group_name_prefix: str) -> Response:
     """
@@ -882,38 +745,14 @@ def get_users_subgroups(user_id: int, group_name_prefix: str) -> Response:
             message=f'Sorry, you don\'t have permission to use this resource. If you are a teacher of "{group_name_prefix}", please contact TIM admin.',
         )
 
-    usergroup_memberships = (
-        run_sql(
-            select(UserGroupMember).filter(
-                UserGroupMember.user_id == user_id,
-                or_(
-                    UserGroupMember.membership_end > datetime_tz.now(),
-                    UserGroupMember.membership_end == None,
-                ),
-            )
-        )
-        .scalars()
-        .all()
-    )
-    users_usergroup_ids = []
-    for usergroup_membership in usergroup_memberships:
-        users_usergroup_ids.append(usergroup_membership.usergroup_id)
-    users_subgroups = (
-        run_sql(
-            select(UserGroup)
-            .filter(
-                UserGroup.id.in_(users_usergroup_ids),
-                UserGroup.name.like(group_name_prefix + "%"),
-                UserGroup.name != group_name_prefix,
-            )
-            .order_by(UserGroup.name)
-        )
-        .scalars()
-        .all()
-    )
+    users_groups = user.groups
     users_subgroups_json = []
-    for users_subgroup in users_subgroups:
-        users_subgroups_json.append(users_subgroup.to_json())
+    for users_group in users_groups:
+        if (
+            users_group.name[: len(group_name_prefix)] == group_name_prefix
+            and users_group.name != group_name_prefix
+        ):
+            users_subgroups_json.append(users_group.to_json())
     return json_response(users_subgroups_json)
 
 
@@ -925,9 +764,9 @@ def users_personal_group(name: str) -> Response:
     :param name: User's username
     :return: useraccount and usergroup in json format
     """
-    personal_group = UserGroup.get_by_name(name)
     user_account = User.get_by_name(name)
-    if personal_group and user_account:
+    personal_group = user_account.get_personal_group()
+    if user_account and personal_group:
         return json_response((user_account, personal_group))
     raise NotExist(f'User "{name}" not found')
 
