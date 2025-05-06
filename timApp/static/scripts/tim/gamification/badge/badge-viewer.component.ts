@@ -192,13 +192,14 @@ export class BadgeViewerComponent implements OnInit {
     }
 
     /**
-     * Kuuntelee "Esc"-näppäimen painallusat ja sulkee aviomen dialogin, mikäli näppäintä
-     * painetaan. Metodi on kuuntelija, ja jos Esc-näppäintä painaa, metodi kutsuu
-     * closeDialog - metodia, joka sulkee auki olevan dilaogin.
+     * Listens for the pressing of the "Esc" key and closes the open dialog if the key is pressed.
+     * This method acts as a listener, and when the Esc key is pressed, it calls the
+     * `closeDialog` method, which closes the open dialog.
      *
-     * @param event - tapahtuma, joka sisätlää tietoja näppäimen painalluksesta.
+     * @param event - the event that contains information about the key press.
      * @returns void
      */
+
     @HostListener("document:keydown", ["$event"])
     onEscapeClick(event: KeyboardEvent): void {
         if (event.key === "Escape") {
@@ -207,13 +208,13 @@ export class BadgeViewerComponent implements OnInit {
     }
 
     /**
-     * Kuuntelee vasemman hiirennapin painallusta ja sulkee avoimena olevan dialogin, jos
-     * jos sellainen on auki. CloseDialog - metodia kutsutaan vain, jos käyttäjä painaa
-     * mistä tahansa muualta kuin badgesta.
+     * Listens for a left mouse button click and closes the open dialog if one is open.
+     * The `closeDialog` method is called only if the user clicks somewhere other than the badge.
      *
-     * @param event - tapahtuma, joka sisältää tietoja näppäimen painalluksesta.
+     * @param event - the event that contains information about the mouse click.
      * @returns void
      */
+
     @HostListener("document:click", ["$event"])
     onLeftClick(event: MouseEvent): void {
         if (event.button === 0) {
@@ -238,15 +239,15 @@ export class BadgeViewerComponent implements OnInit {
     }
 
     /**
-     * Avaa dialogin, joka näyttää tietoja badge-objektista.
+     * Opens a dialog displaying information about a badge object.
      *
-     * Tämä metodi sulkee ensin avoimet dialogit jos niitä on ja avaa sitten uuden,
-     * jossa näytetään badgen tiedot badge-objektista.
+     * This method first closes any open dialogs, then opens a new one to display
+     * details from the provided badge object.
      *
-     * @param badge - IBadge-tyyppinen objekti, sisältää tiedot näytettävästä badge-objektista.
-     * @returns Promise<void> - Metodi ei palauta mitään, mutta on asynkroninen
-     * ja odottaa dialogin sukeutumista.
+     * @param badge - An object of type `IBadge` containing the details of the badge to display.
+     * @returns Promise<void> - An asynchronous method that resolves once the dialog is closed.
      */
+
     async openDialog(badge: IBadge): Promise<void> {
         if (this.disableDialogWindow) {
             this.badgeService.closeActiveDialog();
@@ -301,11 +302,12 @@ export class BadgeViewerComponent implements OnInit {
     }
 
     /**
-     * Hakee klikatun badgen imagen nimen bagen id:n perusteella
-     * @param id - klikatun badgen image.id
-     * @returns - id:n perusteella haettu badgen imagen nimi tai "Image not found"
-     * jos sitä ei löydy
+     * Retrieves the image name of the clicked badge based on its ID.
+     *
+     * @param id - The `image.id` of the clicked badge.
+     * @returns string - The image name corresponding to the given ID, or "Image not found" if unavailable.
      */
+
     getImageNameById(id: number): string {
         const selectedBadgeImageName = this.availableImages.find(
             (img) => img.id === id
