@@ -228,7 +228,7 @@ export class BadgeCreatorComponent implements OnInit {
 
     isFormChanged = false; // Flag to track form changes
     all_badges: IBadge[] = [];
-    selectedContextGroup: string = "";
+    selectedContextGroup: string | undefined = undefined;
     badgeFormShowing = false;
     teacherPermission = false;
 
@@ -268,7 +268,7 @@ export class BadgeCreatorComponent implements OnInit {
         this.availableImages = this.badgeService.getAvailableImages();
         this.availableShapes = this.badgeService.getAvailableShapes();
         this.availableColors = this.badgeService.getAvailableColors();
-        this.selectedContextGroup = this.badgegroupContext || "";
+        this.selectedContextGroup = this.badgegroupContext;
         this.getBadges();
         this.badgeForm.valueChanges.subscribe(() => {
             this.isFormChanged = true;
@@ -467,18 +467,12 @@ export class BadgeCreatorComponent implements OnInit {
         }, 100);
     }
 
-    // Get all badges depending on if context group is selected. Fails if not teacher.
+    // Get all badges in chosen context group. Fails if not teacher.
     private async getBadges() {
         let response;
-        if (this.selectedContextGroup) {
-            response = toPromise(
-                this.http.get<[]>(
-                    `/all_badges_in_context/${this.selectedContextGroup}`
-                )
-            );
-        } else {
-            response = toPromise(this.http.get<[]>("/all_badges"));
-        }
+        response = toPromise(
+            this.http.get<[]>(`/all_badges/${this.selectedContextGroup}`)
+        );
 
         const result = await response;
 
