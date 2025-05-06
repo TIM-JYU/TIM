@@ -167,7 +167,6 @@ img {
   margin: 0 0.1em 0 0.1em;
 }
 
-
 .output button {
   background-color: white;
 }
@@ -176,8 +175,18 @@ img {
   pointer-events: none;
 }
 
-
 .gate-drop:hover {
   stroke: grey;
   fill-opacity: 100;
+}
+
+.gate-drop.touch-hover {
+  stroke: grey !important;
+  stroke-width: 5px !important;
+  filter: grayscale(50%) !important;
+}
+
+// Ensure that the text inside the gate does not have extra stroke while hovering
+.gate-text {
+  stroke-width: 1 !important; /* Ensures no stroke width is applied */
 }

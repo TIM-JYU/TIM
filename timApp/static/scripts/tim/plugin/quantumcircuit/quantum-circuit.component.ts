@@ -1,4 +1,5 @@
 import * as t from "io-ts";
+import type {TypeOf} from "io-ts";
 import type {AfterViewInit, DoBootstrap, OnInit} from "@angular/core";
 import {Component, NgModule, ViewChild, ElementRef} from "@angular/core";
 import {HttpClient, HttpClientModule} from "@angular/common/http";
@@ -179,8 +180,12 @@ const QuantumCircuitMarkup = t.intersection([
         rightAxisLabel: withDefault(t.string, "Output"),
         feedbackShowTable: withDefault(t.boolean, true),
         answerExactMatch: withDefault(t.boolean, false),
+        removeControls: withDefault(t.boolean, true),
+        touchOffset: withDefault(t.number, 0),
     }),
 ]);
+
+export type QuantumCircuitMarkupType = TypeOf<typeof QuantumCircuitMarkup>;
 
 // All data that plugin receives from the server (Markup + any extra state data)
 const QuantumCircuitFields = t.intersection([
@@ -1239,7 +1244,8 @@ export class QuantumCircuitComponent
 
         this.board = new QuantumBoard(
             this.markup.nQubits,
-            this.markup.nMoments
+            this.markup.nMoments,
+            this.markup
         );
 
         try {
@@ -1462,6 +1468,8 @@ export class QuantumCircuitComponent
 
     ngOnInit(): void {
         super.ngOnInit();
+
+        this.gateService.setMarkup(this.markup);
 
         this.initializeBoard(false);
 

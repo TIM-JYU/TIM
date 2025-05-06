@@ -13,7 +13,10 @@ import {
     Matrix,
 } from "mathjs";
 import {of} from "rxjs";
-import type {ICustomGateInfo} from "tim/plugin/quantumcircuit/quantum-circuit.component";
+import type {
+    ICustomGateInfo,
+    QuantumCircuitMarkupType,
+} from "tim/plugin/quantumcircuit/quantum-circuit.component";
 
 export interface ServiceGate {
     name: string;
@@ -41,6 +44,8 @@ export class GateService {
         [0, 1, 0, 0],
         [0, 0, 0, 1],
     ]);
+
+    markup!: QuantumCircuitMarkupType;
 
     constructor() {
         const H = multiply(
@@ -163,6 +168,14 @@ export class GateService {
         for (const gate of this.gates) {
             this.gateNameToMatrix.set(gate.name, gate.matrix);
         }
+    }
+
+    setMarkup(markup: QuantumCircuitMarkupType) {
+        this.markup = markup;
+    }
+
+    getMarkup(): QuantumCircuitMarkupType {
+        return this.markup;
     }
 
     /**
