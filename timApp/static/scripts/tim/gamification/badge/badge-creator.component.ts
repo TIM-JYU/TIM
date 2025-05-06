@@ -16,7 +16,6 @@ import {showConfirm} from "tim/ui/showConfirmDialog";
 import {toPromise} from "tim/util/utils";
 import {BadgeModule} from "tim/gamification/badge/badge.component";
 import {BadgeWithdrawModule} from "tim/gamification/badge/badge-withdraw.component";
-import {BadgeSelectedWithdrawModule} from "tim/gamification/badge/badge-selected-withdraw.component";
 import {documentglobals} from "tim/util/globals";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {FormsModule} from "@angular/forms";
@@ -81,11 +80,6 @@ import {scrollToElement} from "tim/util/utils";
                                         [disabled]="!clickedBadge" 
                                         [ngClass]="{'disabled-btn': !clickedBadge}">
                                         <span class="material-icons">add</span></button>
-<!--                                <button title="Withdraw Badge" id="giveBadgeButton" type="button"-->
-<!--                                        [disabled]="!clickedBadge" -->
-<!--                                        (click)="showBadgeSelectedWithdraw(clickedBadge)"-->
-<!--                                        class="right-button">-->
-<!--                                        <span class="material-icons">person_remove</span></button>-->
                                 <button title="Edit Badge" id="editButton" type="button" 
                                         (click)="editBadge(clickedBadge)" 
                                         [disabled]="!clickedBadge" 
@@ -109,10 +103,6 @@ import {scrollToElement} from "tim/util/utils";
               
               <ng-container *ngIf="showGiver">
                   <timBadgeGiver (cancelEvent)="handleCancel()" [badgegroupContext]="badgegroupContext" [selectedBadge]="clickedBadge"></timBadgeGiver>                        
-              </ng-container>
-              
-              <ng-container *ngIf="showSelectedWithdraw">
-                  <tim-badge-selected-withdraw (cancelEvent)="handleCancel()" [badgegroupContext]="badgegroupContext" [selectedBadge]="clickedBadge"></tim-badge-selected-withdraw>             
               </ng-container>
               
             <div class="upper-form-group" *ngIf="this.badgeFormShowing">
@@ -240,7 +230,7 @@ export class BadgeCreatorComponent implements OnInit {
 
     isFormChanged = false; // Flag to track form changes
     all_badges: IBadge[] = [];
-    selectedContextGroup: string = "";
+    selectedContextGroup: string | undefined = undefined;
     badgeFormShowing = false;
     teacherPermission = false;
 
@@ -252,7 +242,6 @@ export class BadgeCreatorComponent implements OnInit {
     editingBadge: any = null;
 
     showGiver = false;
-    showSelectedWithdraw = false;
     @Input() badgegroupContext?: string;
     alerts: Array<{
         msg: string;
@@ -281,7 +270,7 @@ export class BadgeCreatorComponent implements OnInit {
         this.availableImages = this.badgeService.getAvailableImages();
         this.availableShapes = this.badgeService.getAvailableShapes();
         this.availableColors = this.badgeService.getAvailableColors();
-        this.selectedContextGroup = this.badgegroupContext || "";
+        this.selectedContextGroup = this.badgegroupContext;
         this.getBadges();
         this.badgeForm.valueChanges.subscribe(() => {
             this.isFormChanged = true;
@@ -301,7 +290,6 @@ export class BadgeCreatorComponent implements OnInit {
     // Hides the other components when cancel is pressed
     hideOtherViewsExcept(thisView: boolean) {
         this.showGiver = false;
-        this.showSelectedWithdraw = false;
         this.badgeFormShowing = false;
         return thisView;
     }
@@ -343,16 +331,6 @@ export class BadgeCreatorComponent implements OnInit {
         this.showGiver = !this.showGiver;
 
         this.clickedBadge = badge;
-        setTimeout(() => {
-            scrollToElement(this.allBadgesSection?.nativeElement);
-        }, 100);
-    }
-
-    showBadgeSelectedWithdraw(clickedBadge: IBadge) {
-        this.showSelectedWithdraw = this.hideOtherViewsExcept(
-            this.showSelectedWithdraw
-        );
-        this.showSelectedWithdraw = !this.showSelectedWithdraw;
         setTimeout(() => {
             scrollToElement(this.allBadgesSection?.nativeElement);
         }, 100);
@@ -491,18 +469,12 @@ export class BadgeCreatorComponent implements OnInit {
         }, 100);
     }
 
-    // Get all badges depending on if context group is selected. Fails if not teacher.
+    // Get all badges in chosen context group. Fails if not teacher.
     private async getBadges() {
         let response;
-        if (this.selectedContextGroup) {
-            response = toPromise(
-                this.http.get<[]>(
-                    `/all_badges_in_context/${this.selectedContextGroup}`
-                )
-            );
-        } else {
-            response = toPromise(this.http.get<[]>("/all_badges"));
-        }
+        response = toPromise(
+            this.http.get<[]>(`/all_badges/${this.selectedContextGroup}`)
+        );
 
         const result = await response;
 
@@ -691,7 +663,6 @@ export class BadgeCreatorComponent implements OnInit {
         BadgeGiverModule,
         BadgeWithdrawModule,
         TimUtilityModule,
-        BadgeSelectedWithdrawModule,
         FormsModule,
     ],
 })

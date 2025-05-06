@@ -92,24 +92,7 @@ def check_group_member(current_user: User, usergroup: int) -> bool:
         return False
 
 
-@badges_blueprint.get("/all_badges")
-def get_badges() -> Response:
-    """
-    Fetches all badges except the inactive badges. Sorted by created-timestamp.
-    :return: Badges in json response format
-    """
-    badges = (
-        run_sql(select(Badge).filter_by(active=True).order_by(Badge.created))
-        .scalars()
-        .all()
-    )
-    badges_json = []
-    for badge in badges:
-        badges_json.append(badge.to_json())
-    return json_response(badges_json)
-
-
-@badges_blueprint.get("/all_badges_in_context/<context_group>")
+@badges_blueprint.get("/all_badges/<context_group>")
 def all_badges_in_context(context_group: str) -> Response:
     """
     Fetches all badges in specific context_group. Sorted by created-timestamp.

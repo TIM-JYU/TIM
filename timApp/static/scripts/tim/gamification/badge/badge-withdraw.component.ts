@@ -563,7 +563,7 @@ export class BadgeWithdrawComponent implements OnInit {
      * Resets selections and groupBadges & userBadges.
      * Checks if selectedUser or badgegroupContext are falsy.
      * Fetches user's personal group, which is used to fetch user's badges
-     * Calls getUserBadges method via badge-service.
+     * Calls getBadges method via badge-service.
      * @param userId User's ID
      */
     async fetchUserBadges(userId?: number) {
@@ -592,7 +592,7 @@ export class BadgeWithdrawComponent implements OnInit {
             await this.groupService.getUserAndPersonalGroup(
                 this.selectedUser.name
             );
-        this.userBadges = await this.badgeService.getUserBadges(
+        this.userBadges = await this.badgeService.getBadges(
             pGroup["1"].id,
             this.badgegroupContext
         );
@@ -602,7 +602,7 @@ export class BadgeWithdrawComponent implements OnInit {
     /**
      * Checks if groupId or badgegroupContext is falsy.
      * Resets badges.
-     * Sets getUserBadges method's returned pointer to point to this.groupBadges.
+     * Sets getBadges method's returned pointer to point to this.groupBadges.
      * @param groupId Selected group's ID, which is used to fetch group's badges.
      */
     async fetchGroupBadges(groupId?: number) {
@@ -622,7 +622,7 @@ export class BadgeWithdrawComponent implements OnInit {
         this.emptyTable(this.userBadges);
         this.emptyTable(this.groupBadges);
 
-        this.groupBadges = await this.badgeService.getUserBadges(
+        this.groupBadges = await this.badgeService.getBadges(
             groupId,
             this.badgegroupContext
         );
