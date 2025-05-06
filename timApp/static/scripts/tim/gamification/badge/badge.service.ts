@@ -4,7 +4,7 @@ import {Subject} from "rxjs";
 import {toPromise} from "tim/util/utils";
 import type {IBadge} from "tim/gamification/badge/badge.interface";
 
-interface IData {
+interface IBadgeData {
     context_group?: string;
     group_id: number;
     badge_id?: number;
@@ -41,7 +41,7 @@ export class BadgeService {
      * ID can be user's personal group ID with one member or group ID with multiple.
      * @param id defines user/group.
      * @param contextGroup Course context for badges.
-     * @return returns IBadge[]
+     * @return IBadge[]
      */
     async getBadges(id: number, contextGroup: string) {
         const result = await toPromise(
@@ -61,13 +61,13 @@ export class BadgeService {
     /**
      * Withdraws selected badge from user.
      * @param badgeGivenID Used to define user who has selected badge.
-     * @param context_group Course context for badges.
+     * @param contextGroup Course context for badges.
      */
-    async withdrawBadge(badgeGivenID: number, context_group: string) {
+    async withdrawBadge(badgeGivenID: number, contextGroup: string) {
         const result = await toPromise(
             this.http.post<{ok: boolean}>("/withdraw_badge", {
                 badge_given_id: badgeGivenID,
-                context_group: context_group,
+                context_group: contextGroup,
             })
         );
         if (!result.ok) {
@@ -84,7 +84,7 @@ export class BadgeService {
      * notifyBadgeViewerUpdate is called to handle live updates.
      * @param data Contains all information for http post request.
      */
-    async assignBadges(data: IData) {
+    async assignBadges(data: IBadgeData) {
         const result = await toPromise(
             this.http.post<{ok: boolean}>("/give_badge", {
                 context_group: data.context_group,
