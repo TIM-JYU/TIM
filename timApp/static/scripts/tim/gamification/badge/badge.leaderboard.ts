@@ -61,7 +61,15 @@ export class BadgeLeaderboardComponent implements OnInit {
         private groupService: GroupService
     ) {}
 
-    // Gets the top five groups with most badges
+    /**
+     * Fetches and processes the top five groups for the current badge group context.
+     *
+     * - Retrieves the top five groups via an HTTP GET request.
+     * - Updates `this.top_five` with the results and sets a `prettyName` for each group.
+     * - Handles errors by logging them and displaying appropriate messages to the user.
+     *
+     * @returns Promise<void> - Resolves when the process is complete.
+     */
     async getTopFive() {
         try {
             const result = await firstValueFrom(
@@ -90,7 +98,6 @@ export class BadgeLeaderboardComponent implements OnInit {
             this.top_five = [];
 
             if (error.error?.error === undefined) {
-                // no nested `error.error` → probably a network/client issue
                 this.badgeService.showError(
                     this.alerts,
                     {
@@ -101,7 +108,6 @@ export class BadgeLeaderboardComponent implements OnInit {
                     "danger"
                 );
             } else {
-                // server responded with { error: { error: "some message" } }
                 this.badgeService.showError(
                     this.alerts,
                     {data: {error: error.error.error}},
@@ -111,7 +117,12 @@ export class BadgeLeaderboardComponent implements OnInit {
         }
     }
 
-    // Places the position of the group based on the number of badges
+    /**
+     * Returns a CSS class name based on the given position index.
+     *
+     * @param index - The position index (0-based).
+     * @returns string - The corresponding class name or an empty string for invalid indexes.
+     */
     getPositionClass(index: number): string {
         switch (index) {
             case 0:
@@ -129,7 +140,12 @@ export class BadgeLeaderboardComponent implements OnInit {
         }
     }
 
-    // The icon of the position
+    /**
+     * Returns an icon name based on the given position index.
+     *
+     * @param index - The position index (0-based).
+     * @returns string - The corresponding icon name or an empty string for invalid indexes.
+     */
     getIcon(index: number): string {
         switch (index) {
             case 0:
@@ -147,7 +163,12 @@ export class BadgeLeaderboardComponent implements OnInit {
         }
     }
 
-    // The number of the position
+    /**
+     * Returns the position as a string based on the given index.
+     *
+     * @param index - The position index (0-based).
+     * @returns string - The corresponding position string or an empty string for invalid indexes.
+     */
     getPosition(index: number): string {
         switch (index) {
             case 0:
@@ -165,7 +186,13 @@ export class BadgeLeaderboardComponent implements OnInit {
         }
     }
 
-    // Calculate the height of the columns
+    /**
+     * Calculates the height based on the badge count.
+     * Uses a base height and scales it by the badge count multiplied by a scale factor.
+     *
+     * @param badgeCount - The number of badges (optional, defaults to 0 if not provided).
+     * @returns string - The calculated height in pixels.
+     */
     calculateHeight(badgeCount?: number): string {
         const count = badgeCount || 0;
         const height = this.baseHeight + count * this.scaleFactor;

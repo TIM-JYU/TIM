@@ -201,21 +201,39 @@ export class BadgeService {
         {id: "yellow-vibrant", forCreatorList: "Yellow Vibrant"},
     ];
 
-    // Get available images, sorted alphabetically by name
+    /**
+     * Returns a sorted list of available icons
+     * Sorts the icons alphabetically based on their name property
+     *
+     * @returns Array - A sorted array of available icons
+     */
     getAvailableImages() {
         return this.availableImages.sort((a, b) =>
             a.name.localeCompare(b.name)
         );
     }
 
-    // Get available shapes, sorted alphabetically by value
+    /**
+     * Returns a sorted list of available shapes.
+     * Sorts the shapes alphabetically based on their `value` property.
+     *
+     * @returns Array - A sorted array of available shapes.
+     */
     getAvailableShapes() {
         return this.availableShapes.sort((a, b) =>
             a.value.localeCompare(b.value)
         );
     }
 
-    // Get available colors, sorted alphabetically by forCreatorList with all "Vibrant" colors at the end
+    /**
+     * Returns a sorted list of available colors.
+     *
+     * - Sorts colors based on whether their name contains the word "Vibrant".
+     * - If both colors are either "Vibrant" or not, they are sorted alphabetically.
+     * - If one color is "Vibrant" and the other is not, the non-"Vibrant" color is placed first.
+     *
+     * @returns Array - A sorted array of available colors.
+     */
     getAvailableColors() {
         return this.availableColors.sort((a, b) => {
             // Check if the name contains "Vibrant"
@@ -226,12 +244,10 @@ export class BadgeService {
                 .toLowerCase()
                 .includes("vibrant");
 
-            // If both are or both are not "Vibrant", sort alphabetically
             if (isVibrantA === isVibrantB) {
                 return a.forCreatorList.localeCompare(b.forCreatorList);
             }
 
-            // If "a" is "Vibrant" and "b" is not, place b first
             return isVibrantA ? 1 : -1;
         });
     }
