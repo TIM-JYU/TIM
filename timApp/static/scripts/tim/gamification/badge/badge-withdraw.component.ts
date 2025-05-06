@@ -270,6 +270,10 @@ export class BadgeWithdrawComponent implements OnInit {
         }
     }
 
+    /**
+     * Performs a search on the list of users using the current search term.
+     * Updates `userSearchResults` with users whose `real_name` matches the search pattern.
+     */
     onUserSearchChange() {
         const term = this.searchTerm.toLowerCase().trim();
         if (!term) {
@@ -277,11 +281,20 @@ export class BadgeWithdrawComponent implements OnInit {
             return;
         }
 
-        this.userSearchResults = this.users.filter((user) =>
-            user.real_name!.toLowerCase().includes(term)
-        );
+        try {
+            const regex = new RegExp(term, "i");
+            this.userSearchResults = this.users.filter((user) =>
+                regex.test(user.real_name ?? "")
+            );
+        } catch (e) {
+            this.userSearchResults = [];
+        }
     }
 
+    /**
+     * Performs a search on the groups array using the `groupSearchTerm` field.
+     * Updates `groupSearchResults` with groups whose `description` matches the search term.
+     */
     onGroupSearchChange() {
         const term = this.groupSearchTerm.toLowerCase().trim();
         if (!term) {
@@ -289,11 +302,21 @@ export class BadgeWithdrawComponent implements OnInit {
             return;
         }
 
-        this.groupSearchResults = this.groups.filter((group) =>
-            group.description.toLowerCase().includes(term)
-        );
+        try {
+            const regex = new RegExp(term, "i");
+            this.groupSearchResults = this.groups.filter((group) =>
+                regex.test(group.description ?? "")
+            );
+        } catch (e) {
+            this.groupSearchResults = [];
+        }
     }
 
+    /**
+     * Selects a user from the search results, clears the search input,
+     * and fetches badges associated with the selected user.
+     * @param user The selected user
+     */
     selectUserFromSearch(user: IUser) {
         this.selectedUser = user;
         this.searchTerm = "";
@@ -301,6 +324,11 @@ export class BadgeWithdrawComponent implements OnInit {
         this.fetchUserBadges(user.id);
     }
 
+    /**
+     * Selects a group from the search results, clears the search input,
+     * and fetches badges associated with the selected group.
+     * @param group The selected group
+     */
     selectGroupFromSearch(group: IGroup) {
         this.selectedGroup = group;
         this.groupSearchTerm = "";
@@ -308,6 +336,10 @@ export class BadgeWithdrawComponent implements OnInit {
         this.fetchGroupBadges(group.id);
     }
 
+    /**
+     * Closes the user search results dropdown when clicking outside the search area.
+     * @param event The mouse click event
+     */
     @HostListener("document:click", ["$event"])
     onDocumentClick(event: MouseEvent): void {
         const searchResults =

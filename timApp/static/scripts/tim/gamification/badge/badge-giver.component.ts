@@ -132,7 +132,7 @@ import {GroupService} from "tim/plugin/group-dashboard/group.service";
     
              <div class="group-users">
                 <ng-container *ngIf="selectedGroup">
-                    <p>{{selectedGroup.name}}</p>
+                    <p>{{selectedGroup!.name}}</p>
                     <div *ngFor="let user of users">
                         <div class="user-name">{{ user.real_name }}</div>
                     </div>
@@ -226,15 +226,24 @@ export class BadgeGiverComponent implements OnInit {
         }
     }
 
+    /**
+     * Filters users in each group based on the user search term using regex.
+     * Updates the `filteredUsersByGroup` map with matching users.
+     */
     filterUsers() {
         this.filteredUsersByGroup.clear();
 
         const searchTerm = this.userSearchTerm.trim().toLowerCase();
         this.searchingUsers = searchTerm.length > 0;
 
+        const regex = new RegExp(
+            searchTerm.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"),
+            "i"
+        );
+
         for (const [groupId, users] of this.groupUsersMap.entries()) {
             const filtered = users.filter((user) =>
-                user.real_name!.toLowerCase().includes(searchTerm)
+                regex.test(user.real_name!)
             );
             if (filtered.length > 0 || searchTerm === "") {
                 this.filteredUsersByGroup.set(groupId, filtered);
@@ -242,6 +251,10 @@ export class BadgeGiverComponent implements OnInit {
         }
     }
 
+    /**
+     * Filters groups based on the group search term using regex.
+     * Matches against both the group name and its optional "pretty name".
+     */
     filterGroups() {
         const searchTerm = this.groupSearchTerm.trim().toLowerCase();
         this.searchingGroups = searchTerm.length > 0;
@@ -249,17 +262,21 @@ export class BadgeGiverComponent implements OnInit {
         if (searchTerm === "") {
             this.filteredGroups = [...this.groups];
         } else {
+            const regex = new RegExp(
+                searchTerm.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"),
+                "i"
+            );
             this.filteredGroups = this.groups.filter(
                 (group) =>
-                    group.name.toLowerCase().includes(searchTerm) ||
-                    this.groupPrettyNames
-                        .get(group.id)
-                        ?.toLowerCase()
-                        .includes(searchTerm)
+                    regex.test(group.name) ||
+                    regex.test(this.groupPrettyNames.get(group.id) || "")
             );
         }
     }
 
+    /**
+     * Returns list of all users matching the current user search filter.
+     */
     get searchResults(): IUser[] {
         const seen = new Map<number, IUser>();
         for (const users of this.filteredUsersByGroup.values()) {
