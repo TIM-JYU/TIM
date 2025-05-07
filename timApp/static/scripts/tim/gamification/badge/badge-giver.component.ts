@@ -9,14 +9,14 @@ import {Subscription} from "rxjs";
 import {Users} from "tim/user/userService";
 import type {
     IBadge,
-    IGroup,
+    IBadgeGroup,
     IPersonalGroup,
-    IUser,
 } from "tim/gamification/badge/badge.interface";
 import {BadgeModule} from "tim/gamification/badge/badge.component";
 import {BadgeService} from "tim/gamification/badge/badge.service";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {GroupService} from "tim/plugin/group-dashboard/group.service";
+import type {IUser} from "tim/user/IUser";
 
 @Component({
     selector: "timBadgeGiver",
@@ -185,9 +185,9 @@ export class BadgeGiverComponent implements OnInit {
     selectedUsers: IUser[] = [];
     userBadges: IBadge[] = [];
 
-    groups: IGroup[] = [];
-    selectedGroup?: IGroup | null = null;
-    selectedGroups: IGroup[] = [];
+    groups: IBadgeGroup[] = [];
+    selectedGroup?: IBadgeGroup | null = null;
+    selectedGroups: IBadgeGroup[] = [];
     groupBadges: IBadge[] = [];
     groupUsersMap = new Map<number, IUser[]>();
     groupPrettyNames: Map<number, string> = new Map();
@@ -210,7 +210,7 @@ export class BadgeGiverComponent implements OnInit {
     searchingUsers = false;
     groupSearchTerm: string = "";
     searchingGroups = false;
-    filteredGroups: IGroup[] = [];
+    filteredGroups: IBadgeGroup[] = [];
 
     constructor(
         private http: HttpClient,
@@ -336,7 +336,7 @@ export class BadgeGiverComponent implements OnInit {
      * group's users.
      * @param group Clicked group
      */
-    handleGroupSelection(group: IGroup) {
+    handleGroupSelection(group: IBadgeGroup) {
         this.selectedUser = null;
         if (this.selectedGroup === group) {
             this.selectedGroup = null;
@@ -397,7 +397,7 @@ export class BadgeGiverComponent implements OnInit {
      * @param group Selected group.
      * @param event Contains information from checkbox state.
      */
-    toggleGroupSelection(group: IGroup, event?: Event) {
+    toggleGroupSelection(group: IBadgeGroup, event?: Event) {
         this.selectedGroups = this.toggleItemSelection(
             group,
             this.selectedGroups,
@@ -410,7 +410,7 @@ export class BadgeGiverComponent implements OnInit {
      * @param group Group that users belong to.
      * @param event Contains information from checkbox state.
      */
-    toggleSelectAll(group: IGroup, event: Event) {
+    toggleSelectAll(group: IBadgeGroup, event: Event) {
         const isChecked = (event.target as HTMLInputElement).checked;
         const groupUsers = this.groupUsersMap.get(group.id);
         if (groupUsers === undefined) {
