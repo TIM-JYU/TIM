@@ -608,7 +608,7 @@ export class BadgeCreatorComponent implements OnInit {
                         this.resetForm();
                         this.clickedBadge = false;
                         this.isFormChanged = false;
-                        // Send a signel to badgeservice about succesful delete-action
+                        // Send a signal to badgeservice about succesful delete-action
                         this.badgeService.triggerUpdateBadgeList();
                     } else {
                         if (response.result.error.error == undefined) {
