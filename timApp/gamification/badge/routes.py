@@ -92,6 +92,44 @@ def check_group_member(current_user: User, usergroup: int) -> bool:
         return False
 
 
+def verify_access(
+    access_type: str,
+    user_group: UserGroup | None,
+    user_group_name: str | None = None,
+    user_group_id: int | None = None,
+) -> None:
+    """
+    Checks whether logged in user has particular access to a given user group.
+    :param access_type: Access type. Either 'teacher' or 'view'.
+    :param user_group: User group to check.
+    :param user_group_name: Name of user group.
+    :param user_group_id: ID of user group.
+    :return:
+    """
+    if not user_group:
+        if user_group_name:
+            raise NotExist(f'User group "{user_group_name}" not found')
+        elif user_group_id:
+            raise NotExist(f'User group with id "{user_group_id}" not found')
+        else:
+            raise NotExist(f"User group not found")
+
+    block = user_group.admin_doc
+    if not block:
+        raise NotExist(f'Admin doc for user group "{user_group.name}" not found')
+
+    if access_type == "teacher":
+        verify_teacher_access(
+            block,
+            message=f'Sorry, you don\'t have permission to use this resource. If you are a teacher of "{user_group.name}", please contact TIM admin.',
+        )
+    elif access_type == "view":
+        verify_view_access(
+            block,
+            message=f"Sorry, you don't have permission to use this resource.",
+        )
+
+
 @badges_blueprint.get("/all_badges/<context_group>")
 def all_badges(context_group: str) -> Response:
     """
@@ -100,16 +138,17 @@ def all_badges(context_group: str) -> Response:
     :return: Badges in json response format
     """
     context_usergroup = UserGroup.get_by_name(context_group)
-    if not context_usergroup:
-        raise NotExist(f'User group "{context_group}" not found')
-    block = context_usergroup.admin_doc
-    if not block:
-        raise NotExist(f'Admin doc for user group "{context_group}" not found')
-
-    verify_teacher_access(
-        block,
-        message=f'Sorry, you don\'t have permission to use this resource. If you are a teacher of "{context_group}", please contact TIM admin.',
-    )
+    verify_access("teacher", context_usergroup, user_group_name=context_group)
+    # if not context_usergroup:
+    #     raise NotExist(f'User group "{context_group}" not found')
+    # block = context_usergroup.admin_doc
+    # if not block:
+    #     raise NotExist(f'Admin doc for user group "{context_group}" not found')
+    #
+    # verify_teacher_access(
+    #     block,
+    #     message=f'Sorry, you don\'t have permission to use this resource. If you are a teacher of "{context_group}", please contact TIM admin.',
+    # )
 
     badges = (
         run_sql(
@@ -146,16 +185,17 @@ def create_badge(
     :return: ok response
     """
     context_usergroup = UserGroup.get_by_name(context_group)
-    if not context_usergroup:
-        raise NotExist(f'User group "{context_group}" not found')
-    block = context_usergroup.admin_doc
-    if not block:
-        raise NotExist(f'Admin doc for user group "{context_group}" not found')
-
-    verify_teacher_access(
-        block,
-        message=f'Sorry, you don\'t have permission to use this resource. If you are a teacher of "{context_group}", please contact TIM admin.',
-    )
+    verify_access("teacher", context_usergroup, user_group_name=context_group)
+    # if not context_usergroup:
+    #     raise NotExist(f'User group "{context_group}" not found')
+    # block = context_usergroup.admin_doc
+    # if not block:
+    #     raise NotExist(f'Admin doc for user group "{context_group}" not found')
+    #
+    # verify_teacher_access(
+    #     block,
+    #     message=f'Sorry, you don\'t have permission to use this resource. If you are a teacher of "{context_group}", please contact TIM admin.',
+    # )
 
     badge = Badge(
         active=True,
@@ -210,16 +250,17 @@ def modify_badge(
     :return: ok response
     """
     context_usergroup = UserGroup.get_by_id(context_group)
-    if not context_usergroup:
-        raise NotExist(f'User group with id "{context_group}" not found')
-    block = context_usergroup.admin_doc
-    if not block:
-        raise NotExist(f'Admin doc for user group with id "{context_group}" not found')
-
-    verify_teacher_access(
-        block,
-        message=f'Sorry, you don\'t have permission to use this resource. If you are a teacher of "{context_usergroup.name}", please contact TIM admin.',
-    )
+    verify_access("teacher", context_usergroup, user_group_id=context_group)
+    # if not context_usergroup:
+    #     raise NotExist(f'User group with id "{context_group}" not found')
+    # block = context_usergroup.admin_doc
+    # if not block:
+    #     raise NotExist(f'Admin doc for user group with id "{context_group}" not found')
+    #
+    # verify_teacher_access(
+    #     block,
+    #     message=f'Sorry, you don\'t have permission to use this resource. If you are a teacher of "{context_usergroup.name}", please contact TIM admin.',
+    # )
 
     new_badge = {
         "context_group": context_group,
@@ -263,16 +304,17 @@ def deactivate_badge(badge_id: int, context_group: str) -> Response:
     :return: ok response
     """
     context_usergroup = UserGroup.get_by_name(context_group)
-    if not context_usergroup:
-        raise NotExist(f'User group "{context_group}" not found')
-    block = context_usergroup.admin_doc
-    if not block:
-        raise NotExist(f'Admin doc for user group "{context_group}" not found')
-
-    verify_teacher_access(
-        block,
-        message=f'Sorry, you don\'t have permission to use this resource. If you are a teacher of "{context_group}", please contact TIM admin.',
-    )
+    verify_access("teacher", context_usergroup, user_group_name=context_group)
+    # if not context_usergroup:
+    #     raise NotExist(f'User group "{context_group}" not found')
+    # block = context_usergroup.admin_doc
+    # if not block:
+    #     raise NotExist(f'Admin doc for user group "{context_group}" not found')
+    #
+    # verify_teacher_access(
+    #     block,
+    #     message=f'Sorry, you don\'t have permission to use this resource. If you are a teacher of "{context_group}", please contact TIM admin.',
+    # )
 
     new_badge = {
         "active": False,
@@ -313,16 +355,17 @@ def get_groups_badges(group_id: int, context_group: str) -> Response:
     in_group = check_group_member(current_user, group_id)
     if not in_group:
         context_usergroup = UserGroup.get_by_name(context_group)
-        if not context_usergroup:
-            raise NotExist(f'User group "{context_group}" not found')
-        block = context_usergroup.admin_doc
-        if not block:
-            raise NotExist(f'Admin doc for user group "{context_group}" not found')
-
-        verify_teacher_access(
-            block,
-            message=f'Sorry, you don\'t have permission to use this resource. If you are a teacher of "{context_group}", please contact TIM admin.',
-        )
+        verify_access("teacher", context_usergroup, user_group_name=context_group)
+        # if not context_usergroup:
+        #     raise NotExist(f'User group "{context_group}" not found')
+        # block = context_usergroup.admin_doc
+        # if not block:
+        #     raise NotExist(f'Admin doc for user group "{context_group}" not found')
+        #
+        # verify_teacher_access(
+        #     block,
+        #     message=f'Sorry, you don\'t have permission to use this resource. If you are a teacher of "{context_group}", please contact TIM admin.',
+        # )
 
     groups_badges_given = (
         run_sql(
@@ -482,18 +525,19 @@ def get_badge_holders(badge_id: int) -> Response:
     if not badge:
         raise NotExist(f'Badge with id "{badge_id}" not found')
     context_usergroup = UserGroup.get_by_id(badge.context_group)
-    if not context_usergroup:
-        raise NotExist(f'User group with id "{badge.context_group}" not found')
-    block = context_usergroup.admin_doc
-    if not block:
-        raise NotExist(
-            f'Admin doc for user group with id "{badge.context_group}" not found'
-        )
-
-    verify_teacher_access(
-        block,
-        message=f'Sorry, you don\'t have permission to use this resource. If you are a teacher of "{context_usergroup.name}", please contact TIM admin.',
-    )
+    verify_access("teacher", context_usergroup, user_group_id=badge.context_group)
+    # if not context_usergroup:
+    #     raise NotExist(f'User group with id "{badge.context_group}" not found')
+    # block = context_usergroup.admin_doc
+    # if not block:
+    #     raise NotExist(
+    #         f'Admin doc for user group with id "{badge.context_group}" not found'
+    #     )
+    #
+    # verify_teacher_access(
+    #     block,
+    #     message=f'Sorry, you don\'t have permission to use this resource. If you are a teacher of "{context_usergroup.name}", please contact TIM admin.',
+    # )
 
     badges_given = (
         run_sql(
@@ -551,16 +595,17 @@ def give_badge(
     if not usergroup:
         raise NotExist(f'User group with id "{group_id}" not found')
     context_usergroup = UserGroup.get_by_name(context_group)
-    if not context_usergroup:
-        raise NotExist(f'User group "{context_group}" not found')
-    block = context_usergroup.admin_doc
-    if not block:
-        raise NotExist(f'Admin doc for user group "{context_group}" not found')
-
-    verify_teacher_access(
-        block,
-        message=f'Sorry, you don\'t have permission to use this resource. If you are a teacher of "{context_group}", please contact TIM admin.',
-    )
+    verify_access("teacher", context_usergroup, user_group_name=context_group)
+    # if not context_usergroup:
+    #     raise NotExist(f'User group "{context_group}" not found')
+    # block = context_usergroup.admin_doc
+    # if not block:
+    #     raise NotExist(f'Admin doc for user group "{context_group}" not found')
+    #
+    # verify_teacher_access(
+    #     block,
+    #     message=f'Sorry, you don\'t have permission to use this resource. If you are a teacher of "{context_group}", please contact TIM admin.',
+    # )
 
     badge_given = BadgeGiven(
         active=True,
@@ -599,16 +644,17 @@ def withdraw_badge(badge_given_id: int, context_group: str) -> Response:
     if not badge_given_old:
         raise NotExist(f'Given badge with id "{badge_given_id}" not found')
     context_usergroup = UserGroup.get_by_name(context_group)
-    if not context_usergroup:
-        raise NotExist(f'User group "{context_group}" not found')
-    block = context_usergroup.admin_doc
-    if not block:
-        raise NotExist(f'Admin doc for user group "{context_group}" not found')
-
-    verify_teacher_access(
-        block,
-        message=f'Sorry, you don\'t have permission to use this resource. If you are a teacher of "{context_group}", please contact TIM admin.',
-    )
+    verify_access("teacher", context_usergroup, user_group_name=context_group)
+    # if not context_usergroup:
+    #     raise NotExist(f'User group "{context_group}" not found')
+    # block = context_usergroup.admin_doc
+    # if not block:
+    #     raise NotExist(f'Admin doc for user group "{context_group}" not found')
+    #
+    # verify_teacher_access(
+    #     block,
+    #     message=f'Sorry, you don\'t have permission to use this resource. If you are a teacher of "{context_group}", please contact TIM admin.',
+    # )
 
     badge_given_new = {
         "active": False,
@@ -643,13 +689,14 @@ def podium(group_name_prefix: str) -> Response:
     current_user = get_current_user_object()
     in_group = check_group_member(current_user, context_usergroup.id)
     if not in_group:
-        block = context_usergroup.admin_doc
-        if not block:
-            raise NotExist(f'Admin doc for user group "{group_name_prefix}" not found')
-        verify_teacher_access(
-            block,
-            message=f'Sorry, you don\'t have permission to use this resource. If you are a teacher of "{group_name_prefix}", please contact TIM admin.',
-        )
+        verify_access("teacher", context_usergroup, user_group_name=group_name_prefix)
+        # block = context_usergroup.admin_doc
+        # if not block:
+        #     raise NotExist(f'Admin doc for user group "{group_name_prefix}" not found')
+        # verify_teacher_access(
+        #     block,
+        #     message=f'Sorry, you don\'t have permission to use this resource. If you are a teacher of "{group_name_prefix}", please contact TIM admin.',
+        # )
 
     results = run_sql(
         select(UserGroup.name, func.count(BadgeGiven.id).label("badge_count"))
@@ -688,16 +735,17 @@ def get_subgroups(group_name_prefix: str) -> Response:
     :return: List of usergroups
     """
     context_usergroup = UserGroup.get_by_name(group_name_prefix)
-    if not context_usergroup:
-        raise NotExist(f'User group "{group_name_prefix}" not found')
-    block = context_usergroup.admin_doc
-    if not block:
-        raise NotExist(f'Admin doc for user group "{group_name_prefix}" not found')
-
-    verify_teacher_access(
-        block,
-        message=f'Sorry, you don\'t have permission to use this resource. If you are a teacher of "{group_name_prefix}", please contact TIM admin.',
-    )
+    verify_access("teacher", context_usergroup, user_group_name=group_name_prefix)
+    # if not context_usergroup:
+    #     raise NotExist(f'User group "{group_name_prefix}" not found')
+    # block = context_usergroup.admin_doc
+    # if not block:
+    #     raise NotExist(f'Admin doc for user group "{group_name_prefix}" not found')
+    #
+    # verify_teacher_access(
+    #     block,
+    #     message=f'Sorry, you don\'t have permission to use this resource. If you are a teacher of "{group_name_prefix}", please contact TIM admin.',
+    # )
 
     subgroups = (
         run_sql(
@@ -730,20 +778,21 @@ def get_users_subgroups(user_id: int, group_name_prefix: str) -> Response:
     user = User.get_by_id(user_id)
     if not user:
         raise NotExist(f'User with id "{user_id}" not found')
-    context_usergroup = UserGroup.get_by_name(group_name_prefix)
-    if not context_usergroup:
-        raise NotExist(f'User group "{group_name_prefix}" not found')
 
     current_user = get_current_user_object()
-    if current_user.id != int(user_id):
-        block = context_usergroup.admin_doc
-        if not block:
-            raise NotExist(f'Admin doc for user group "{group_name_prefix}" not found')
-
-        verify_teacher_access(
-            block,
-            message=f'Sorry, you don\'t have permission to use this resource. If you are a teacher of "{group_name_prefix}", please contact TIM admin.',
-        )
+    if current_user.id != user.id:
+        context_usergroup = UserGroup.get_by_name(group_name_prefix)
+        verify_access("teacher", context_usergroup, user_group_name=group_name_prefix)
+        # if not context_usergroup:
+        #     raise NotExist(f'User group "{group_name_prefix}" not found')
+        # block = context_usergroup.admin_doc
+        # if not block:
+        #     raise NotExist(f'Admin doc for user group "{group_name_prefix}" not found')
+        #
+        # verify_teacher_access(
+        #     block,
+        #     message=f'Sorry, you don\'t have permission to use this resource. If you are a teacher of "{group_name_prefix}", please contact TIM admin.',
+        # )
 
     users_groups = user.groups
     users_subgroups_json = []
@@ -784,17 +833,18 @@ def usergroups_members(usergroup_name: str) -> Response:
     context_usergroup = UserGroup.get_by_name(usergroup_name)
     if not context_usergroup:
         raise NotExist(f'User group "{usergroup_name}" not found')
-    block = context_usergroup.admin_doc
-    if not block:
-        raise NotExist(f'Admin doc for user group "{usergroup_name}" not found')
 
     current_user = get_current_user_object()
     in_group = check_group_member(current_user, context_usergroup.id)
     if not in_group:
-        verify_view_access(
-            block,
-            message=f'Sorry, you don\'t have permission to use this resource. If you are a teacher of "{usergroup_name}", please contact TIM admin.',
-        )
+        verify_access("view", context_usergroup, user_group_name=usergroup_name)
+        # block = context_usergroup.admin_doc
+        # if not block:
+        #     raise NotExist(f'Admin doc for user group "{usergroup_name}" not found')
+        # verify_view_access(
+        #     block,
+        #     message=f'Sorry, you don\'t have permission to use this resource. If you are a teacher of "{usergroup_name}", please contact TIM admin.',
+        # )
 
     return json_response(
         sorted(list(context_usergroup.users), key=attrgetter("real_name"))
