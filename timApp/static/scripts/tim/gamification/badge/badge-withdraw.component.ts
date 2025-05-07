@@ -195,7 +195,7 @@ import {scrollToElement} from "tim/util/utils";
                         
                         <ng-container *ngIf="selectedBadge">
                             <h5>Details of the selected badge</h5>
-                            <p>
+                            <p class="word-wrap">
                                 Title: {{ selectedBadge!.title || "No title" }} <br>
                                 Description: {{ selectedBadge!.description || "No description" }} <br>
                                 Message: {{ selectedBadge!.message || "No message" }} <br> 

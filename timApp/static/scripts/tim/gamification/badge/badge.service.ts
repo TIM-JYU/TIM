@@ -133,7 +133,13 @@ export class BadgeService {
         }
     }
 
-    // Show errors
+    /**
+     * Displays an error message in the alerts list, avoiding duplicates.
+     *
+     * @param alerts - The current list of alert messages.
+     * @param response - The response object containing the error message.
+     * @param type - The type of the alert to display (e.g., warning or danger).
+     */
     showError(
         alerts: any,
         response: {data: {error: string}},
@@ -146,7 +152,12 @@ export class BadgeService {
         alerts.push({msg, type});
     }
 
-    // Removes an error-message from alerts-list
+    /**
+     * Removes an alert message from the alerts list at the specified index.
+     *
+     * @param alerts - The list of alert messages.
+     * @param index - The index of the alert to remove.
+     */
     closeAlert(alerts: any, index: number) {
         alerts.splice(index, 1);
     }
