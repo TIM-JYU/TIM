@@ -6,7 +6,6 @@ import {manageglobals} from "tim/util/globals";
 import type {IFolder, IFullDocument} from "tim/item/IItem";
 import {NameChangerModule} from "tim/plugin/group-dashboard/name-changer.component";
 import type {IBadge} from "tim/gamification/badge/badge.interface";
-import {IUser} from "tim/gamification/badge/badge.interface";
 import {BadgeModule} from "tim/gamification/badge/badge.component";
 import {GroupService} from "tim/plugin/group-dashboard/group.service";
 import {PointService} from "tim/plugin/group-dashboard/point.service";

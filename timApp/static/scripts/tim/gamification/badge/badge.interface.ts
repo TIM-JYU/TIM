@@ -1,6 +1,8 @@
-// Interface representing a badge and its associated details
-import type {IUser} from "tim/user/IUser";
+import type {IGroup, IUser} from "tim/user/IUser";
 
+/**
+ * Interface representing a badge and its associated details
+ */
 export interface IBadge {
     id: number;
     title: string;
@@ -17,23 +19,17 @@ export interface IBadge {
     created: Date;
 }
 
-// Interface representing a group with a name and description
-export interface IGroup {
-    id: number;
-    name: string;
+/**
+ * Interface that extends IGroup contents and adds description field for a pretty group name.
+ */
+export interface IBadgeGroup extends IGroup {
     description: string;
 }
 
-// Interface representing a user
-// export interface IUser {
-//     id: number;
-//     name: string;
-//     real_name: string | null;
-//     email: string;
-// }
-
-// Interface representing a tuple containing a user and a group
+/**
+ *  Interface representing a tuple containing a user and a group
+ */
 export interface IPersonalGroup {
     0: IUser;
-    1: IGroup;
+    1: IBadgeGroup;
 }

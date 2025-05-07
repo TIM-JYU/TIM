@@ -9,7 +9,7 @@ import {HttpClient, HttpClientModule} from "@angular/common/http";
 import {BadgeModule} from "tim/gamification/badge/badge.component";
 import type {
     IBadge,
-    IGroup,
+    IBadgeGroup,
     IPersonalGroup,
 } from "tim/gamification/badge/badge.interface";
 import {BadgeService} from "tim/gamification/badge/badge.service";
@@ -239,15 +239,15 @@ export class BadgeWithdrawComponent implements OnInit {
     @Input() badgegroupContext?: string;
     @ViewChild("startSection") startSection!: ElementRef;
 
-    groups: IGroup[] = [];
-    selectedGroup?: IGroup | null = null;
+    groups: IBadgeGroup[] = [];
+    selectedGroup?: IBadgeGroup | null = null;
     groupBadges: IBadge[] = [];
     groupUsersMap = new Map<number, IUser[]>();
 
     searchTerm = "";
     userSearchResults: IUser[] = [];
     groupSearchTerm = "";
-    groupSearchResults: IGroup[] = [];
+    groupSearchResults: IBadgeGroup[] = [];
 
     alerts: Array<{
         msg: string;
@@ -329,7 +329,7 @@ export class BadgeWithdrawComponent implements OnInit {
      * and fetches badges associated with the selected group.
      * @param group The selected group
      */
-    selectGroupFromSearch(group: IGroup) {
+    selectGroupFromSearch(group: IBadgeGroup) {
         this.selectedGroup = group;
         this.groupSearchTerm = "";
         this.groupSearchResults = [];
@@ -509,7 +509,7 @@ export class BadgeWithdrawComponent implements OnInit {
             const result = await toPromise(
                 this.http.get<[]>(`/subgroups/${this.badgegroupContext}`)
             );
-            const subGroups: IGroup[] = [];
+            const subGroups: IBadgeGroup[] = [];
             if (result.ok) {
                 if (result.result != undefined) {
                     for (const alkio of result.result) {
