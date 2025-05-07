@@ -765,10 +765,12 @@ def users_personal_group(name: str) -> Response:
     :return: useraccount and usergroup in json format
     """
     user_account = User.get_by_name(name)
+    if not user_account:
+        raise NotExist(f'User "{name}" not found')
     personal_group = user_account.get_personal_group()
-    if user_account and personal_group:
-        return json_response((user_account, personal_group))
-    raise NotExist(f'User "{name}" not found')
+    if not personal_group:
+        raise NotExist(f'Personal group for user "{name}" not found')
+    return json_response((user_account, personal_group))
 
 
 # TODO: Move this route to better place maybe.
