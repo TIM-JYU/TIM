@@ -27,6 +27,7 @@ interface MenuGate {
                      [style.width.px]="gate.name === 'control' || gate.name == 'antiControl' || gate.name === 'swap' ? circuitOptions.gateSize : gate.width"
                      [style.height.px]="circuitOptions.gateSize"
                      (click)="handleClick($event, gate.name)"
+                     (touchstart)="handleTouchStart($event, gate.name)"
                      (dragstart)="handleDragStart($event, gate.name)">
                     <div [ngSwitch]="gate.name">
                         <svg *ngSwitchCase="'control'"
@@ -145,6 +146,11 @@ export class QuantumGateMenuComponent implements OnInit, OnDestroy {
      * @param gate gate being dragged
      */
     handleDragStart(event: DragEvent, gate: string) {
+        // if touch has initiaded "drag", do nothing
+        if (this.activeGate) {
+            event.preventDefault();
+            return;
+        }
         event.dataTransfer?.setData("text/plain", gate);
     }
 
@@ -155,5 +161,151 @@ export class QuantumGateMenuComponent implements OnInit, OnDestroy {
     handleClick(event: MouseEvent | TouchEvent, name: string) {
         event.preventDefault();
         this.select.emit(name);
+    }
+
+    // Simulate drag for touch devices
+
+    private activeGate: string | null = null;
+    private dragElement: HTMLElement | null = null;
+    private dragOverElement: Element | null = null;
+    // Offset to move the element slightly above the finger
+    private yOffset = 40; // Adjust this value as needed
+
+    handleTouchStart(event: TouchEvent | MouseEvent, gate: string) {
+        this.yOffset = this.gateService.getMarkup().touchOffset;
+        if (this.yOffset <= 0) {
+            return;
+        }
+        event.preventDefault();
+        this.activeGate = gate;
+
+        // Clone the target element for visual feedback
+        const target = event.target as HTMLElement;
+
+        const isSVG = target instanceof SVGElement;
+
+        if (isSVG) {
+            // Clone the SVG element directly
+            const svgElement = target.closest("svg");
+            const svgClone = svgElement?.cloneNode(true) as SVGElement;
+
+            // Wrap the SVG wrapper in a div for styling
+            const divWrapper = document.createElement("div");
+            divWrapper.appendChild(svgClone);
+
+            // Set styles for the div wrapper
+            const boundingBox = target.getBoundingClientRect();
+            divWrapper.style.width = `${boundingBox.width}px`;
+            divWrapper.style.height = `${boundingBox.height}px`;
+            divWrapper.style.position = "absolute";
+            divWrapper.style.pointerEvents = "none";
+            divWrapper.style.opacity = "0.7";
+            divWrapper.style.zIndex = "10000";
+            divWrapper.style.left = "0px";
+            divWrapper.style.top = "0px";
+
+            this.dragElement = divWrapper;
+        } else {
+            this.dragElement = target.cloneNode(true) as HTMLElement;
+        }
+
+        document.body.appendChild(this.dragElement);
+
+        const [cursorX, cursorY] = this.getCursorPosition(event);
+        this.updateDragElementPosition(cursorX, cursorY);
+
+        // Add move and end listeners
+        const moveHandler = (moveEvent: TouchEvent | MouseEvent) => {
+            moveEvent.preventDefault(); // Estää oletuskäyttäytymisen, kuten vierityksen
+            const [moveX, moveY] = this.getCursorPosition(moveEvent);
+            this.updateDragElementPosition(moveX, moveY);
+            const dropTarget = document.elementFromPoint(
+                moveX,
+                moveY - this.yOffset
+            );
+            const gateHover = dropTarget?.closest(".gate-drop");
+            if (this.dragOverElement !== gateHover) {
+                this.dragOverElement?.classList.remove("touch-hover");
+            }
+            if (!gateHover) {
+                return;
+            }
+            this.dragOverElement = gateHover;
+            this.dragOverElement?.classList.add("touch-hover");
+        };
+
+        const endHandler = (endEvent: TouchEvent | MouseEvent) => {
+            endEvent.preventDefault();
+            this.handleDrop(endEvent);
+            this.cleanupDrag();
+            document.removeEventListener("mousemove", moveHandler);
+            document.removeEventListener("mouseup", endHandler);
+            document.removeEventListener("touchmove", moveHandler);
+            document.removeEventListener("touchend", endHandler);
+        };
+
+        document.addEventListener("mousemove", moveHandler);
+        document.addEventListener("mouseup", endHandler);
+        document.addEventListener("touchmove", moveHandler);
+        document.addEventListener("touchend", endHandler);
+    }
+    updateDragElementPosition(x: number, y: number) {
+        if (this.dragElement) {
+            // Account for page scroll offset
+            const scrollX = window.scrollX;
+            const scrollY = window.scrollY;
+
+            // Update position
+            this.dragElement.style.left = `${x + scrollX}px`;
+            this.dragElement.style.top = `${y + scrollY - this.yOffset}px`;
+            this.dragElement.style.transform = "translate(-50%, -50%)"; // Center the element on the cursor
+        }
+    }
+
+    handleDrop(event: TouchEvent | MouseEvent) {
+        const [dropX, dropY] = this.getCursorPosition(event);
+        const dropTarget = document.elementFromPoint(
+            dropX,
+            dropY - this.yOffset
+        );
+        const gateDrop = dropTarget?.closest(".gate-drop");
+        if (gateDrop) {
+            const dropEvent = new DragEvent("drop", {
+                bubbles: true,
+                cancelable: true,
+                dataTransfer: new DataTransfer(),
+            });
+
+            // Esimerkki datan lisäämisestä dataTransferiin
+            dropEvent.dataTransfer?.setData(
+                "text/plain",
+                this.activeGate ?? ""
+            );
+
+            // Lähetä tapahtuma
+            gateDrop.dispatchEvent(dropEvent);
+        } else {
+            console.log("Dropped outside valid target " + dropX + " " + dropY);
+        }
+    }
+
+    cleanupDrag() {
+        if (this.dragElement) {
+            document.body.removeChild(this.dragElement);
+            this.dragElement = null;
+        }
+        this.activeGate = null;
+        if (this.dragOverElement) {
+            // this.dragOverElement.classList.remove("touch-hover");
+            this.dragOverElement = null;
+        }
+    }
+
+    getCursorPosition(event: TouchEvent | MouseEvent): [number, number] {
+        if (event instanceof MouseEvent) {
+            return [event.clientX, event.clientY];
+        }
+        const touch = event.touches[0] || event.changedTouches[0];
+        return [touch.clientX, touch.clientY];
     }
 }

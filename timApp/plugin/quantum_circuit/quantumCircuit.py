@@ -225,6 +225,9 @@ class QuantumCircuitMarkup(GenericMarkupModel):
 
     lazyBody: str | None = None
 
+    removeControls: bool | None = None
+    touchOffset: int | None = None
+
 
 @dataclass
 class QuantumCircuitStateModel:

@@ -1,4 +1,5 @@
 import type {GatePos} from "tim/plugin/quantumcircuit/quantum-circuit-board.component";
+import type {QuantumCircuitMarkupType} from "tim/plugin/quantumcircuit/quantum-circuit.component";
 
 export class Gate {
     name: string;
@@ -83,8 +84,13 @@ export class QuantumBoard {
     board: Cell[][];
     nQubits: number;
     nMoments: number;
+    markup: QuantumCircuitMarkupType;
 
-    constructor(nQubits: number, nMoments: number) {
+    constructor(
+        nQubits: number,
+        nMoments: number,
+        markup: QuantumCircuitMarkupType
+    ) {
         this.board = [];
         this.nQubits = nQubits;
         this.nMoments = nMoments;
@@ -96,6 +102,7 @@ export class QuantumBoard {
             }
             this.board.push(row);
         }
+        this.markup = markup;
     }
 
     private isInvalidPosition(target: number, time: number) {
@@ -108,7 +115,7 @@ export class QuantumBoard {
     }
 
     clone() {
-        const copy = new QuantumBoard(this.nQubits, this.nMoments);
+        const copy = new QuantumBoard(this.nQubits, this.nMoments, this.markup);
         const board: Cell[][] = [];
         for (const row of this.board) {
             const bRow: Cell[] = [];
@@ -130,7 +137,7 @@ export class QuantumBoard {
         if (this.get(pos.target, pos.time)?.editable === false) {
             return;
         }
-        this.set(pos.target, pos.time, gate);
+        this.set(pos.target, pos.time, gate, this.markup.removeControls);
     }
 
     /**
@@ -238,7 +245,7 @@ export class QuantumBoard {
         const controls = this.getControls(oldPos, false);
         const antiControls = this.getControls(oldPos, true);
         this.remove(oldPos.target, oldPos.time);
-        this.set(newPos.target, newPos.time, gate);
+        this.set(newPos.target, newPos.time, gate, this.markup.removeControls);
         if (oldPos.time !== newPos.time) {
             return;
         }
@@ -581,13 +588,19 @@ export class QuantumBoard {
      * @param target qubit associated with cell
      * @param time time of cell
      * @param value new value for cell
+     * @param deleteControl should control gates be removed too
      */
-    set(target: number, time: number, value: Cell) {
+    set(
+        target: number,
+        time: number,
+        value: Cell,
+        deleteControl: boolean = true
+    ) {
         if (this.isInvalidPosition(target, time)) {
             console.log("invalid indices", target, time);
             return;
         }
-        this.remove(target, time);
+        this.remove(target, time, deleteControl);
 
         this.board[target][time] = value;
     }
@@ -613,8 +626,9 @@ export class QuantumBoard {
      * Removes gate from board and cells connected to it.
      * @param target target of gate to remove
      * @param time time of gate to remove
+     * @param controlDelete should control gates be removed too
      */
-    remove(target: number, time: number) {
+    remove(target: number, time: number, controlDelete: boolean = true) {
         let multiQubitTarget;
         let swapTarget;
 
@@ -639,7 +653,9 @@ export class QuantumBoard {
                     cell.target === multiQubitTarget ||
                     cell.target === swapTarget)
             ) {
-                this.board[i][time] = undefined;
+                if (controlDelete) {
+                    this.board[i][time] = undefined;
+                }
             }
             if (cell instanceof Swap && cell.target === target) {
                 this.board[i][time] = undefined;
