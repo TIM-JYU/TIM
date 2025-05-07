@@ -13,7 +13,7 @@
   border: 2px solid #0F4096;
   border-radius: 0.5em;
   background-color: #f0f4ff;
-  padding-left: 2px;
+  padding-left: 0.5em;
 }
 
 .user-name {
@@ -23,7 +23,7 @@
 
 .option-item {
     display: flex;
-    align-items: flex-start;
+    align-items: center;
     padding-left: 1.5em;
 }
 .group-item {
@@ -36,7 +36,9 @@
 }
 
 .user-checkbox {
-  width: 5%;
+  margin-top: 0;
+  width: 2%;
+  margin-right: 5px;
 }
 
 .group-checkbox{
@@ -44,7 +46,6 @@
 }
 
 .option-name {
-    margin-top: 1px;
     display: block;
     cursor: pointer;
 }
