@@ -90,7 +90,6 @@ body {
   max-height: 90px;
 }
 
-
 .trophy {
   display: flex;
   justify-content: center;
@@ -127,8 +126,8 @@ body {
   font-size: 12px;
   height: 30px;
   font-weight: bold;
-  max-width: 100px;         // Adjust to a suitable max width for your layout
-  white-space: normal;      // Allow the text to break
+  max-width: 100px;
+  white-space: normal;
   overflow-wrap: break-word;
 }
 

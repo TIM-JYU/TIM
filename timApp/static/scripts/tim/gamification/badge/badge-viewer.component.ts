@@ -425,10 +425,21 @@ export class BadgeViewerComponent implements OnInit {
         }
     }
 
+    /**
+     * Sorts all badges using the specified sort type and updates the sorted list.
+     *
+     * @param sortType - The type of sorting to apply (e.g., alphabetical, by date).
+     */
     onSortChange(sortType: string) {
         this.sortedBadges = this.badgeService.sortBadges(this.badges, sortType);
     }
 
+    /**
+     * Sorts badges within a specific group using the given sort type and updates the group's sorted badge list.
+     *
+     * @param groupId - The identifier of the group whose badges should be sorted.
+     * @param sortType - The type of sorting to apply within the group.
+     */
     onGroupSortChange(groupId: number, sortType: string) {
         this.groupSortMap.set(groupId, sortType);
         const originalBadges = this.groupBadgesMap.get(groupId) || [];

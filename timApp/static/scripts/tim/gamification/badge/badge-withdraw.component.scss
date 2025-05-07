@@ -50,11 +50,11 @@
 }
 
 .user-name:hover {
-    text-decoration: underline; /* Korostaa nimeä hoverilla */
+    text-decoration: underline;
 }
 
 .group-name:hover {
-    text-decoration: underline; /* Korostaa nimeä hoverilla */
+    text-decoration: underline;
 }
 
 .selected-option {
@@ -69,6 +69,12 @@
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+.word-wrap {
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  white-space: normal;
 }
 
 .selected-badge {

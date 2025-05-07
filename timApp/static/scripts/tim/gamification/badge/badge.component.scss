@@ -57,7 +57,6 @@
     transform: rotate(-60deg);
 }
 
-/* Pulse animation */
 @keyframes pulse {
     0% {
         filter: drop-shadow(0 0 5px var(--glow-light, rgba(0, 123, 255, 0.2)));
@@ -77,7 +76,6 @@
     display: inline-block;
     position: relative;
     transition: all 0.2s ease;
-    // animation
     filter: drop-shadow(0 0 5px var(--glow-light, rgba(255, 0, 0, 0.2)));
     animation: pulse 6s infinite;
 }
@@ -98,7 +96,6 @@
   border-radius: 229px;
   display: inline-block;
   transition: all 0.2s ease;
-
   filter: drop-shadow(0 0 5px var(--glow-light, rgba(255, 0, 0, 0.2)));
   animation: pulse 6s infinite;
 }
@@ -336,7 +333,6 @@
     --glow-light: rgba(0, 255, 0, 0.4);
     --glow-strong: rgba(0, 255, 0, 1);
 }
-
 
 .purple-vibrant {
     background: linear-gradient(to bottom right,
