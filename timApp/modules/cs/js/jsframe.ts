@@ -90,10 +90,21 @@ const JsframeAll = t.intersection([
     }),
 ]);
 
-interface JSFrameData {
-    c: unknown;
+interface JSFrameBase {
     message?: string;
+    fielddata?: unknown;
 }
+
+interface CFrame extends JSFrameBase {
+    c: unknown;
+}
+
+interface UserCodeFrame extends JSFrameBase {
+    usercode: unknown;
+    [key: string]: unknown;
+}
+
+type JSFrameData = CFrame | UserCodeFrame;
 
 interface JSFrameWindow extends Window {
     getData?(): JSFrameData;
@@ -161,7 +172,15 @@ type MessageFromFrame =
  *
  * @param data The data to transform.
  */
-function unwrapAllC(data: unknown): {c: unknown} {
+function unwrapAllC(data: unknown): JSFrameData {
+    if (
+        typeof data === "object" &&
+        data !== null &&
+        !Array.isArray(data) &&
+        "usercode" in data
+    ) {
+        return data as JSFrameData;
+    }
     while (CProp.is(data) && CProp.is(data.c)) {
         data = data.c;
     }
@@ -448,7 +467,7 @@ export class JsframeComponent
             )
         );
         this.initData = "";
-        let data: {c: unknown; fielddata?: unknown} = this.getDataFromMarkup();
+        let data: JSFrameData = this.getDataFromMarkup();
         if (res.result.data) {
             // there is no more fielddata-attribute
             if (!data) {

@@ -177,7 +177,9 @@ def scim_error_json(code: int, msg: str) -> dict:
 @scim.before_request
 def check_auth() -> None:
     ip = request.remote_addr
-    if ip != current_app.config.get("SCIM_ALLOWED_IP"):
+    allowed_ip = current_app.config.get("SCIM_ALLOWED_IP")
+    allowed_ips = allowed_ip if isinstance(allowed_ip, set) else {allowed_ip}
+    if ip not in allowed_ips:
         raise SCIMException(403, f"IP not allowed: {ip}")
     expected_username = current_app.config.get("SCIM_USERNAME")
     expected_password = current_app.config.get("SCIM_PASSWORD")
