@@ -9,14 +9,14 @@ import {Subscription} from "rxjs";
 import {Users} from "tim/user/userService";
 import type {
     IBadge,
-    IGroup,
+    IBadgeGroup,
     IPersonalGroup,
-    IUser,
 } from "tim/gamification/badge/badge.interface";
 import {BadgeModule} from "tim/gamification/badge/badge.component";
 import {BadgeService} from "tim/gamification/badge/badge.service";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {GroupService} from "tim/plugin/group-dashboard/group.service";
+import type {IUser} from "tim/user/IUser";
 
 @Component({
     selector: "timBadgeGiver",
@@ -49,30 +49,32 @@ import {GroupService} from "tim/plugin/group-dashboard/group.service";
 
         <div *ngIf="userAssign === true" class="form-group">
             <div class="search-wrapper">
-              <div class="search-users">
-                <label for="user-search">Search user:</label>
-                <input type="search" id="user-search" name="q"
-                       [(ngModel)]="userSearchTerm"
-                       (ngModelChange)="filterUsers()" />
-              </div>
-            
-              <div *ngIf="searchingUsers" class="search-results">
-                <div *ngFor="let user of searchResults" class="option-item">
-                  <input type="checkbox"
-                         [checked]="isSelected(user, selectedUsers)"
-                         (change)="toggleUserSelection(user, $event)" />
-                  <span class="searched-name">{{ user.real_name }}</span>
+                <div class="search-users">
+                    <label for="user-search">Search user:</label>
+                    <input type="search" id="user-search" name="q"
+                           [(ngModel)]="userSearchTerm"
+                           (ngModelChange)="filterUsers()"/>
                 </div>
-              </div>
+
+                <div *ngIf="searchingUsers" class="search-results">
+                    <div *ngFor="let user of searchResults" class="option-item">
+                        <input type="checkbox"
+                               [checked]="isSelected(user, selectedUsers)"
+                               (change)="toggleUserSelection(user, $event)"/>
+                        <span class="searched-name">{{ user.real_name }}</span>
+                    </div>
+                </div>
             </div>
-            
+
             <div>
-                <input class="user-checkbox" type="checkbox" (change)="toggleSelectAllItems($event, selectedUsers, users)">Select all
+                <input class="user-checkbox" type="checkbox"
+                       (change)="toggleSelectAllItems($event, selectedUsers, users)">Select all
             </div>
             <div class="list-scroll-container" (wheel)="onScrollList($event)">
                 <div *ngFor="let group of groups" class="group">
                     <span *ngIf="groupUsersMap.get(group.id)?.length">
-                        <input class="user-checkbox" type="checkbox" (change)="toggleSelectAll(group, $event)">{{ groupPrettyNames.get(group.id) || group.name }}
+                        <input class="user-checkbox" type="checkbox"
+                               (change)="toggleSelectAll(group, $event)">{{ groupPrettyNames.get(group.id) || group.name }}
                     </span>
                     <div *ngFor="let user of groupUsersMap.get(group.id)" class="option-item">
                         <input class="user-checkbox"
@@ -87,34 +89,50 @@ import {GroupService} from "tim/plugin/group-dashboard/group.service";
                         </div>
                     </div>
                 </div>
+                <div class="group">
+                    <span >Users without group</span>
+                    <div *ngFor="let user of usersWithoutGroup" class="option-item">
+                        <input class="user-checkbox"
+                               type="checkbox"
+                               [value]="user"
+                               (change)="toggleUserSelection(user, $event)"
+                               [checked]="isSelected(user, selectedUsers)"
+                        />
+                        <span class="option-name" (click)="handleUserSelection(user)"
+                              [ngClass]="{'selected-option': selectedUser?.id === user.id}">
+                                 {{ user.real_name }}
+                        </span>
+                    </div>
+                </div>
             </div>
         </div>
-        
-       
+
+
         <div *ngIf="userAssign === false" class="form-group">
             <div class="search-wrapper">
-              <div class="search-groups">
-                <label for="group-search">Search group:</label>
-                <input type="search" id="group-search" name="q"
-                       [(ngModel)]="groupSearchTerm"
-                       (ngModelChange)="filterGroups()" />
-              </div>
-            
-              <div *ngIf="searchingGroups" class="search-results">
-                  <div *ngFor="let group of filteredGroups" class="option-item">
-                    <input type="checkbox"
-                           [checked]="isSelected(group, selectedGroups)"
-                           (change)="toggleGroupSelection(group, $event)" />
-                    <span class="searched-name">{{ groupPrettyNames.get(group.id) || group.name }}</span>
-                  </div>
-              </div>
-                
+                <div class="search-groups">
+                    <label for="group-search">Search group:</label>
+                    <input type="search" id="group-search" name="q"
+                           [(ngModel)]="groupSearchTerm"
+                           (ngModelChange)="filterGroups()"/>
+                </div>
+
+                <div *ngIf="searchingGroups" class="search-results">
+                    <div *ngFor="let group of filteredGroups" class="option-item">
+                        <input type="checkbox"
+                               [checked]="isSelected(group, selectedGroups)"
+                               (change)="toggleGroupSelection(group, $event)"/>
+                        <span class="searched-name">{{ groupPrettyNames.get(group.id) || group.name }}</span>
+                    </div>
+                </div>
+
             </div>
-            
+
             <div>
-                <input class="group-checkbox" type="checkbox" (change)="toggleSelectAllItems($event, selectedGroups, groups)">Select all
+                <input class="group-checkbox" type="checkbox"
+                       (change)="toggleSelectAllItems($event, selectedGroups, groups)">Select all
             </div>
-            
+
             <div class="list-scroll-container" (wheel)="onScrollList($event)">
                 <div *ngFor="let group of groups" class="group-item">
                     <input class="group-checkbox"
@@ -129,10 +147,10 @@ import {GroupService} from "tim/plugin/group-dashboard/group.service";
                     </span>
                 </div>
             </div>
-    
-             <div class="group-users">
+
+            <div class="group-users">
                 <ng-container *ngIf="selectedGroup">
-                    <p>{{selectedGroup!.name}}</p>
+                    <p>{{ selectedGroup!.name }}</p>
                     <div *ngFor="let user of users">
                         <div class="user-name">{{ user.real_name }}</div>
                     </div>
@@ -143,24 +161,24 @@ import {GroupService} from "tim/plugin/group-dashboard/group.service";
                 <ng-container *ngIf="!selectedGroup">
                     <p>Select group to view users</p>
                 </ng-container>
-             </div>
-            
+            </div>
+
         </div>
         <div *ngIf="userAssign != undefined">
-           
+
             <!-- Message Box -->
             <div class="message-box">
                 <label for="message">Message</label>
-                <textarea id="message" 
-                          rows="4" 
+                <textarea id="message"
+                          rows="4"
                           maxlength="200"
                           [(ngModel)]="message">
                 </textarea>
                 <div class="char-counter">
-                  {{ message.length }} / 200 characters
+                    {{ message.length }} / 200 characters
                 </div>
             </div>
-            
+
             <tim-alert *ngFor="let alert of alerts; let i = index" [severity]="alert.type" [closeable]="true"
                        (closing)="badgeService.closeAlert(this.alerts, i)">
                 <div [innerHTML]="alert.msg"></div>
@@ -183,11 +201,12 @@ export class BadgeGiverComponent implements OnInit {
     users: IUser[] = [];
     selectedUser?: IUser | null = null;
     selectedUsers: IUser[] = [];
+    usersWithoutGroup: IUser[] = [];
     userBadges: IBadge[] = [];
 
-    groups: IGroup[] = [];
-    selectedGroup?: IGroup | null = null;
-    selectedGroups: IGroup[] = [];
+    groups: IBadgeGroup[] = [];
+    selectedGroup?: IBadgeGroup | null = null;
+    selectedGroups: IBadgeGroup[] = [];
     groupBadges: IBadge[] = [];
     groupUsersMap = new Map<number, IUser[]>();
     groupPrettyNames: Map<number, string> = new Map();
@@ -210,7 +229,7 @@ export class BadgeGiverComponent implements OnInit {
     searchingUsers = false;
     groupSearchTerm: string = "";
     searchingGroups = false;
-    filteredGroups: IGroup[] = [];
+    filteredGroups: IBadgeGroup[] = [];
 
     constructor(
         private http: HttpClient,
@@ -336,7 +355,7 @@ export class BadgeGiverComponent implements OnInit {
      * group's users.
      * @param group Clicked group
      */
-    handleGroupSelection(group: IGroup) {
+    handleGroupSelection(group: IBadgeGroup) {
         this.selectedUser = null;
         if (this.selectedGroup === group) {
             this.selectedGroup = null;
@@ -397,7 +416,7 @@ export class BadgeGiverComponent implements OnInit {
      * @param group Selected group.
      * @param event Contains information from checkbox state.
      */
-    toggleGroupSelection(group: IGroup, event?: Event) {
+    toggleGroupSelection(group: IBadgeGroup, event?: Event) {
         this.selectedGroups = this.toggleItemSelection(
             group,
             this.selectedGroups,
@@ -410,7 +429,7 @@ export class BadgeGiverComponent implements OnInit {
      * @param group Group that users belong to.
      * @param event Contains information from checkbox state.
      */
-    toggleSelectAll(group: IGroup, event: Event) {
+    toggleSelectAll(group: IBadgeGroup, event: Event) {
         const isChecked = (event.target as HTMLInputElement).checked;
         const groupUsers = this.groupUsersMap.get(group.id);
         if (groupUsers === undefined) {
@@ -531,6 +550,7 @@ export class BadgeGiverComponent implements OnInit {
      * Sets every group's ID and users to groupUsersMap.
      * Calls filterUsers method.
      */
+
     async fetchUsersFromGroups() {
         this.groupUsersMap.clear();
         for (const group of this.groups) {
@@ -539,6 +559,14 @@ export class BadgeGiverComponent implements OnInit {
                 await this.groupService.getUsersFromGroup(group.name)
             );
         }
+        const groupedUserIds = new Set<number>(
+            Array.from(this.groupUsersMap.values())
+                .flat()
+                .map((user) => user.id)
+        );
+        this.usersWithoutGroup = this.users.filter(
+            (user) => !groupedUserIds.has(user.id)
+        );
         this.filterUsers();
     }
 

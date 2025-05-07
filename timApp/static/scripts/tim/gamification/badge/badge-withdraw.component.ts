@@ -9,9 +9,8 @@ import {HttpClient, HttpClientModule} from "@angular/common/http";
 import {BadgeModule} from "tim/gamification/badge/badge.component";
 import type {
     IBadge,
-    IGroup,
+    IBadgeGroup,
     IPersonalGroup,
-    IUser,
 } from "tim/gamification/badge/badge.interface";
 import {BadgeService} from "tim/gamification/badge/badge.service";
 import {Users} from "tim/user/userService";
@@ -21,202 +20,203 @@ import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {toPromise} from "tim/util/utils";
 import {GroupService} from "tim/plugin/group-dashboard/group.service";
 import {scrollToElement} from "tim/util/utils";
+import type {IUser} from "tim/user/IUser";
 
 @Component({
     selector: "tim-badge-withdraw",
     template: `
-        
-            <div class="badge-withdraw" #startSection>
-                <h2>View users or groups ({{ badgegroupContext }})</h2>
 
-                <ng-container *ngIf="!hasPermissionToComponent">
-                    <tim-alert *ngFor="let alert of alerts; let i = index" [severity]="alert.type" [closeable]="true"
-                               (closing)="badgeService.closeAlert(this.alerts, i)">
-                        <div [innerHTML]="alert.msg"></div>
-                    </tim-alert>
-                </ng-container>
+        <div class="badge-withdraw" #startSection>
+            <h2>View users or groups ({{ badgegroupContext }})</h2>
 
-                <ng-container *ngIf="hasPermissionToComponent">
-                    <div class="user-group-button-container">
-                        <button (click)="handleSwap(true); fetchUsersFromGroups()"
-                                [disabled]="userAssign || users.length === 0"
-                                [title]="users.length === 0 && userAssign == undefined ? 'No users available' : ''">
-                            Users
-                        </button>
-                        <button (click)="handleSwap(false)" [disabled]="userAssign === false || groups.length === 0"
-                                [title]="groups.length === 0 && userAssign == undefined ? 'No groups available' : ''">
-                            Groups
-                        </button>
-                    </div>
+            <ng-container *ngIf="!hasPermissionToComponent">
+                <tim-alert *ngFor="let alert of alerts; let i = index" [severity]="alert.type" [closeable]="true"
+                           (closing)="badgeService.closeAlert(this.alerts, i)">
+                    <div [innerHTML]="alert.msg"></div>
+                </tim-alert>
+            </ng-container>
 
-                    <div *ngIf="showSelection">
-                        <div *ngIf="userAssign" class="form-group">
-                            <div class="search-wrapper">
-                                <div class="search-groups">
-                                    <label for="group-search">Search user:</label>
-                                    <input type="search" id="group-search" name="q"
-                                           [(ngModel)]="searchTerm"
-                                           (ngModelChange)="onUserSearchChange()" />
-                                </div>
+            <ng-container *ngIf="hasPermissionToComponent">
+                <div class="user-group-button-container">
+                    <button (click)="handleSwap(true); fetchUsersFromGroups()"
+                            [disabled]="userAssign || users.length === 0"
+                            [title]="users.length === 0 && userAssign == undefined ? 'No users available' : ''">
+                        Users
+                    </button>
+                    <button (click)="handleSwap(false)" [disabled]="userAssign === false || groups.length === 0"
+                            [title]="groups.length === 0 && userAssign == undefined ? 'No groups available' : ''">
+                        Groups
+                    </button>
+                </div>
 
-                                <div *ngIf="userSearchResults.length > 0" class="search-results">
-                                    <div *ngFor="let user of userSearchResults"
-                                         class="option-item"
-                                         [ngClass]="{'selected-option': selectedUser?.id === user.id}"
-                                         (click)="selectUserFromSearch(user)">
-                                        <span class="searched-name">{{ user.real_name }}</span>
-                                    </div>
-                                </div>
+                <div *ngIf="showSelection">
+                    <div *ngIf="userAssign" class="form-group">
+                        <div class="search-wrapper">
+                            <div class="search-groups">
+                                <label for="group-search">Search user:</label>
+                                <input type="search" id="group-search" name="q"
+                                       [(ngModel)]="searchTerm"
+                                       (ngModelChange)="onUserSearchChange()"/>
                             </div>
 
-                            <div class="users-list">
-                                <div class="list-scroll-container" (wheel)="onScrollList($event)">
+                            <div *ngIf="userSearchResults.length > 0" class="search-results">
+                                <div *ngFor="let user of userSearchResults"
+                                     class="option-item"
+                                     [ngClass]="{'selected-option': selectedUser?.id === user.id}"
+                                     (click)="selectUserFromSearch(user)">
+                                    <span class="searched-name">{{ user.real_name }}</span>
+                                </div>
+                            </div>
+                        </div>
 
-                                    <div *ngFor="let group of groups" class="group">
+                        <div class="users-list">
+                            <div class="list-scroll-container" (wheel)="onScrollList($event)">
+
+                                <div *ngFor="let group of groups" class="group">
                                         <span *ngIf="groupUsersMap.get(group.id)?.length">
                                             {{ group.description }}
                                         </span>
-                                        <div *ngFor="let user of groupUsersMap.get(group.id)" class="option-item">
+                                    <div *ngFor="let user of groupUsersMap.get(group.id)" class="option-item">
                                             <span class="user-name"
                                                   (click)="selectedUser = user; fetchUserBadges(user.id)"
                                                   [ngClass]="{'selected-option': selectedUser?.id === user.id}">
                                                 {{ user.real_name }}
                                             </span>
-                                        </div>
                                     </div>
+                                </div>
 
-                                    <span>Users with no group</span>
-                                    <div *ngFor="let user of filteredUsers" class="option-item">
+                                <span>Users without group</span>
+                                <div *ngFor="let user of usersWithoutGroup" class="option-item">
                                         <span class="user-name" (click)="selectedUser = user; fetchUserBadges(user.id)"
                                               [ngClass]="{'selected-option': selectedUser?.id === user.id}">
                                             {{ user.real_name }}
                                         </span>
-                                    </div>
-
                                 </div>
+
                             </div>
-                            <div class="badges-preview">
-                                <ng-container *ngIf="userBadges.length > 0">
-                                    <div *ngIf="selectedUser?.name != undefined">
-                                        <p>{{ selectedUser?.real_name }}'s badges</p>
-                                        <div class="user_badges">
-                                            <div class="card" *ngFor="let badge of userBadges">
-                                                <tim-badge
+                        </div>
+                        <div class="badges-preview">
+                            <ng-container *ngIf="userBadges.length > 0">
+                                <div *ngIf="selectedUser?.name != undefined">
+                                    <p>{{ selectedUser?.real_name }}'s badges</p>
+                                    <div class="user_badges">
+                                        <div class="card" *ngFor="let badge of userBadges">
+                                            <tim-badge
                                                     [ngClass]="{'selected-badge': selectedBadge === badge}"
                                                     title="{{badge.title}}"
                                                     color="{{badge.color}}"
                                                     shape="{{badge.shape}}"
                                                     [image]="badge.image"
                                                     (click)="selectBadge(badge, false, false)">
-                                                </tim-badge>
-                                            </div>
+                                            </tim-badge>
                                         </div>
                                     </div>
-                                </ng-container>
-                                <ng-container *ngIf="!hasBadges && selectedUser">
-                                    <p>{{ selectedUser!.real_name }}</p>
-                                    <p>No badges assigned</p>
-                                </ng-container>
+                                </div>
+                            </ng-container>
+                            <ng-container *ngIf="!hasBadges && selectedUser">
+                                <p>{{ selectedUser!.real_name }}</p>
+                                <p>No badges assigned</p>
+                            </ng-container>
 
-                                <ng-container *ngIf="!selectedUser">
-                                    <p>Select user to view badges</p>
-                                </ng-container>
+                            <ng-container *ngIf="!selectedUser">
+                                <p>Select user to view badges</p>
+                            </ng-container>
+                        </div>
+                    </div>
+
+                    <div *ngIf="userAssign === false" class="form-group">
+                        <div class="search-wrapper">
+                            <div class="search-groups">
+                                <label for="group-search">Search group:</label>
+                                <input type="search" id="group-search" name="q"
+                                       [(ngModel)]="groupSearchTerm"
+                                       (ngModelChange)="onGroupSearchChange()"/>
+                            </div>
+
+                            <div *ngIf="groupSearchResults.length > 0" class="search-results">
+                                <div *ngFor="let group of groupSearchResults"
+                                     class="option-item"
+                                     [ngClass]="{'selected-option': selectedGroup?.id === group.id}"
+                                     (click)="selectGroupFromSearch(group)">
+                                    <span class="searched-name">{{ group.description }}</span>
+                                </div>
                             </div>
                         </div>
 
-                        <div *ngIf="userAssign === false" class="form-group">
-                            <div class="search-wrapper">
-                                <div class="search-groups">
-                                    <label for="group-search">Search group:</label>
-                                    <input type="search" id="group-search" name="q"
-                                           [(ngModel)]="groupSearchTerm"
-                                           (ngModelChange)="onGroupSearchChange()" />
-                                </div>
-
-                                <div *ngIf="groupSearchResults.length > 0" class="search-results">
-                                    <div *ngFor="let group of groupSearchResults"
-                                         class="option-item"
-                                         [ngClass]="{'selected-option': selectedGroup?.id === group.id}"
-                                         (click)="selectGroupFromSearch(group)">
-                                        <span class="searched-name">{{ group.description }}</span>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="users-list">
-                                <div class="list-scroll-container" (wheel)="onScrollList($event)">
-                                    <div *ngFor="let group of groups" class="option-item">
+                        <div class="users-list">
+                            <div class="list-scroll-container" (wheel)="onScrollList($event)">
+                                <div *ngFor="let group of groups" class="option-item">
                                         <span class="group-name"
                                               (click)="selectedGroup = group; fetchGroupBadges(group.id)"
                                               [ngClass]="{'selected-option': selectedGroup?.id === group.id}">
                                             {{ group.description }}
                                         </span>
-                                    </div>
                                 </div>
                             </div>
-                            <div class="badges-preview">
+                        </div>
+                        <div class="badges-preview">
 
-                                <ng-container *ngIf="groupBadges.length > 0">
-                                    <div *ngIf="selectedGroup?.name != undefined">
-                                        <p>{{ selectedGroup?.description }}</p>
-                                        <div class="group_badges">
-                                            <div class="card" *ngFor="let badge of groupBadges">
-                                                <tim-badge
+                            <ng-container *ngIf="groupBadges.length > 0">
+                                <div *ngIf="selectedGroup?.name != undefined">
+                                    <p>{{ selectedGroup?.description }}</p>
+                                    <div class="group_badges">
+                                        <div class="card" *ngFor="let badge of groupBadges">
+                                            <tim-badge
                                                     [ngClass]="{'selected-badge': selectedBadge === badge}"
                                                     title="{{badge.title}}"
                                                     color="{{badge.color}}"
                                                     shape="{{badge.shape}}"
                                                     [image]="badge.image"
                                                     (click)="selectBadge(badge, true, false)">
-                                                </tim-badge>
-                                            </div>
+                                            </tim-badge>
                                         </div>
                                     </div>
-                                </ng-container>
+                                </div>
+                            </ng-container>
 
-                                <ng-container *ngIf="!hasBadges && selectedGroup">
-                                    <p>{{ selectedGroup!.name }}</p>
-                                    <p>No badges assigned</p>
-                                </ng-container>
+                            <ng-container *ngIf="!hasBadges && selectedGroup">
+                                <p>{{ selectedGroup!.name }}</p>
+                                <p>No badges assigned</p>
+                            </ng-container>
 
-                                <ng-container *ngIf="!selectedGroup">
-                                    <p>Select group to view badges</p>
-                                </ng-container>
-
-                            </div>
+                            <ng-container *ngIf="!selectedGroup">
+                                <p>Select group to view badges</p>
+                            </ng-container>
 
                         </div>
 
-                        <tim-alert *ngFor="let alert of alerts; let i = index" [severity]="alert.type"
-                                   [closeable]="true" (closing)="badgeService.closeAlert(this.alerts, i)">
-                            <div [innerHTML]="alert.msg"></div>
-                        </tim-alert>
-                        
-                        
-                        <ng-container *ngIf="selectedBadge">
-                            <h5>Details of the selected badge</h5>
-                            <p class="word-wrap">
-                                Title: {{ selectedBadge!.title || "No title" }} <br>
-                                Description: {{ selectedBadge!.description || "No description" }} <br>
-                                Message: {{ selectedBadge!.message || "No message" }} <br> 
-                                Given By: {{ selectedBadge!.given_by_name || "No name" }} <br> 
-                                Given Time: {{ selectedBadge!.given || "No date" }} <br> 
-                            </p>
-                        </ng-container>
-
-                        <ng-container *ngIf="userAssign != undefined">
-                            <div class="button-container">
-                                <button id="assignButton" (click)="removeBadge(selectedBadge?.badgegiven_id)"
-                                        [disabled]="isWithdrawButtonDisabled()"
-                                        [title]="isWithdrawButtonDisabled() ? 'Select badge to withdraw' : ''">
-                                    Withdraw
-                                </button>
-                                <button id="cancelButton" (click)="emptyForm()">Cancel</button>
-                            </div>
-                        </ng-container>
                     </div>
-                </ng-container>
-            </div>
+
+                    <tim-alert *ngFor="let alert of alerts; let i = index" [severity]="alert.type"
+                               [closeable]="true" (closing)="badgeService.closeAlert(this.alerts, i)">
+                        <div [innerHTML]="alert.msg"></div>
+                    </tim-alert>
+
+
+                    <ng-container *ngIf="selectedBadge">
+                        <h5>Details of the selected badge</h5>
+                        <p class="word-wrap">
+                            Title: {{ selectedBadge!.title || "No title" }} <br>
+                            Description: {{ selectedBadge!.description || "No description" }} <br>
+                            Message: {{ selectedBadge!.message || "No message" }} <br>
+                            Given By: {{ selectedBadge!.given_by_name || "No name" }} <br>
+                            Given Time: {{ selectedBadge!.given || "No date" }} <br>
+                        </p>
+                    </ng-container>
+
+                    <ng-container *ngIf="userAssign != undefined">
+                        <div class="button-container">
+                            <button id="assignButton" (click)="removeBadge(selectedBadge?.badgegiven_id)"
+                                    [disabled]="isWithdrawButtonDisabled()"
+                                    [title]="isWithdrawButtonDisabled() ? 'Select badge to withdraw' : ''">
+                                Withdraw
+                            </button>
+                            <button id="cancelButton" (click)="emptyForm()">Cancel</button>
+                        </div>
+                    </ng-container>
+                </div>
+            </ng-container>
+        </div>
     `,
     styleUrls: ["badge-withdraw.component.scss"],
 })
@@ -230,7 +230,7 @@ export class BadgeWithdrawComponent implements OnInit {
 
     users: IUser[] = [];
     selectedUser?: IUser | null = null;
-    filteredUsers: IUser[] = [];
+    usersWithoutGroup: IUser[] = [];
     userBadges: IBadge[] = [];
 
     badges: any = [];
@@ -239,15 +239,15 @@ export class BadgeWithdrawComponent implements OnInit {
     @Input() badgegroupContext?: string;
     @ViewChild("startSection") startSection!: ElementRef;
 
-    groups: IGroup[] = [];
-    selectedGroup?: IGroup | null = null;
+    groups: IBadgeGroup[] = [];
+    selectedGroup?: IBadgeGroup | null = null;
     groupBadges: IBadge[] = [];
     groupUsersMap = new Map<number, IUser[]>();
 
     searchTerm = "";
     userSearchResults: IUser[] = [];
     groupSearchTerm = "";
-    groupSearchResults: IGroup[] = [];
+    groupSearchResults: IBadgeGroup[] = [];
 
     alerts: Array<{
         msg: string;
@@ -329,7 +329,7 @@ export class BadgeWithdrawComponent implements OnInit {
      * and fetches badges associated with the selected group.
      * @param group The selected group
      */
-    selectGroupFromSearch(group: IGroup) {
+    selectGroupFromSearch(group: IBadgeGroup) {
         this.selectedGroup = group;
         this.groupSearchTerm = "";
         this.groupSearchResults = [];
@@ -433,7 +433,7 @@ export class BadgeWithdrawComponent implements OnInit {
     /**
      * Sets every group's ID and users to groupUsersMap.
      * Adds every user's ID's, that belong to any group to groupedUserIds table.
-     * Filters every user, that does not belong to any group to filteredUsers table.
+     * Filters every user, that does not belong to any group to usersWithoutGroup table.
      */
     async fetchUsersFromGroups() {
         this.groupUsersMap.clear();
@@ -449,7 +449,8 @@ export class BadgeWithdrawComponent implements OnInit {
                 .flat()
                 .map((user) => user.id)
         );
-        this.filteredUsers = this.users.filter(
+
+        this.usersWithoutGroup = this.users.filter(
             (user) => !groupedUserIds.has(user.id)
         );
     }
@@ -509,7 +510,7 @@ export class BadgeWithdrawComponent implements OnInit {
             const result = await toPromise(
                 this.http.get<[]>(`/subgroups/${this.badgegroupContext}`)
             );
-            const subGroups: IGroup[] = [];
+            const subGroups: IBadgeGroup[] = [];
             if (result.ok) {
                 if (result.result != undefined) {
                     for (const alkio of result.result) {

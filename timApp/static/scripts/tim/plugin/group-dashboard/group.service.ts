@@ -1,6 +1,7 @@
 import {HttpClient} from "@angular/common/http";
 import {Subject} from "rxjs";
-import {IGroup, IUser} from "tim/gamification/badge/badge.interface";
+import type {IBadgeGroup} from "tim/gamification/badge/badge.interface";
+import type {IUser} from "tim/user/IUser";
 import {toPromise} from "tim/util/utils";
 import {Injectable} from "@angular/core";
 
@@ -44,7 +45,7 @@ export class GroupService {
         const result = await toPromise(
             this.http.get<[]>(`/subgroups/${group}`)
         );
-        const subGroups: IGroup[] = [];
+        const subGroups: IBadgeGroup[] = [];
         if (result.ok) {
             if (result.result != undefined) {
                 for (const alkio of result.result) {
@@ -64,7 +65,7 @@ export class GroupService {
         const result = await toPromise(
             this.http.get<[]>(`/users_subgroups/${userid}/${group}`)
         );
-        const userSubGroups: IGroup[] = [];
+        const userSubGroups: IBadgeGroup[] = [];
         if (result.ok) {
             if (result.result != undefined) {
                 for (const alkio of result.result) {

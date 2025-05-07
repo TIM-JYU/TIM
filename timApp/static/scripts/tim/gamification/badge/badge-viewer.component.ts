@@ -8,7 +8,7 @@ import {BadgeModule} from "tim/gamification/badge/badge.component";
 import {BadgeService} from "tim/gamification/badge/badge.service";
 import type {
     IBadge,
-    IGroup,
+    IBadgeGroup,
     IPersonalGroup,
 } from "tim/gamification/badge/badge.interface";
 import {Subscription} from "rxjs";
@@ -115,7 +115,7 @@ export class BadgeViewerComponent implements OnInit {
     realName: string | null = null;
     selectedUser?: IUser | null = null;
     badges: IBadge[] = [];
-    userSubGroups: IGroup[] = [];
+    userSubGroups: IBadgeGroup[] = [];
     @Input() badgegroupContext?: string;
     @Input() badgeuserContext?: string;
     private subscription: Subscription = new Subscription();
