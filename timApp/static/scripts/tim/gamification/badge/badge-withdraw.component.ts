@@ -11,7 +11,6 @@ import type {
     IBadge,
     IGroup,
     IPersonalGroup,
-    IUser,
 } from "tim/gamification/badge/badge.interface";
 import {BadgeService} from "tim/gamification/badge/badge.service";
 import {Users} from "tim/user/userService";
@@ -21,6 +20,7 @@ import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {toPromise} from "tim/util/utils";
 import {GroupService} from "tim/plugin/group-dashboard/group.service";
 import {scrollToElement} from "tim/util/utils";
+import type {IUser} from "tim/user/IUser";
 
 @Component({
     selector: "tim-badge-withdraw",

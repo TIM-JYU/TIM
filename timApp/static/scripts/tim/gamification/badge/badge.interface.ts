@@ -1,4 +1,6 @@
 // Interface representing a badge and its associated details
+import type {IUser} from "tim/user/IUser";
+
 export interface IBadge {
     id: number;
     title: string;
@@ -23,21 +25,15 @@ export interface IGroup {
 }
 
 // Interface representing a user
-export interface IUser {
-    id: number;
-    name: string;
-    real_name: string | null;
-    email: string;
-}
+// export interface IUser {
+//     id: number;
+//     name: string;
+//     real_name: string | null;
+//     email: string;
+// }
 
 // Interface representing a tuple containing a user and a group
 export interface IPersonalGroup {
     0: IUser;
     1: IGroup;
-}
-
-// Interface representing badge holders, with lists of users and groups
-export interface IBadgeHolders {
-    0: IUser[];
-    1: IGroup[];
 }

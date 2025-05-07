@@ -11,12 +11,12 @@ import type {
     IBadge,
     IGroup,
     IPersonalGroup,
-    IUser,
 } from "tim/gamification/badge/badge.interface";
 import {BadgeModule} from "tim/gamification/badge/badge.component";
 import {BadgeService} from "tim/gamification/badge/badge.service";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {GroupService} from "tim/plugin/group-dashboard/group.service";
+import type {IUser} from "tim/user/IUser";
 
 @Component({
     selector: "timBadgeGiver",
