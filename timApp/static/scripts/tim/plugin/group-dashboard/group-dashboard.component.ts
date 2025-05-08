@@ -25,7 +25,7 @@ import {UserService} from "tim/user/userService";
     <div class="dashboard-section">
         <h2 class="section-title">Group details</h2>
         <h3>{{displayName}}'s badges</h3>
-        <div class="group-badges">
+        <div class="group-badge-area">
             <div *ngIf="groupBadges.length === 0">No group badges yet.</div>
     <span *ngFor="let badge of groupBadges" class="badge">
         <tim-badge class
@@ -40,9 +40,9 @@ import {UserService} from "tim/user/userService";
 </div>
         <h3>Statistics</h3>
 <div class="stat-summary">
-    <p><strong>Total members:</strong> {{ totalMembers }}</p>
-    <p><strong>Total badges (group + user):</strong> {{ totalBadges }}</p>
-    <p><strong>Total points: {{totalPoints}}</strong></p>
+    <p>Total members: <strong>{{ totalMembers }}</strong></p>
+    <p>Total badges (group + user): <strong>{{ totalBadges }}</strong></p>
+    <p>Total points: <strong>{{totalPoints}}</strong></p>
 </div>
 
 <div class="stat-visuals">
@@ -56,7 +56,7 @@ import {UserService} from "tim/user/userService";
             <div class="member-card" *ngFor="let member of members">
                 <div class="member-info">
                     <span class="member-name">{{ member.real_name }}</span>
-                    <div class="badges">
+                    <div class="member-badge-area">
                         <span *ngFor="let badge of member.badges" class="badge">
                             <tim-badge
                                 title="{{badge.title}}"
