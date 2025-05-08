@@ -180,8 +180,8 @@ const QuantumCircuitMarkup = t.intersection([
         rightAxisLabel: withDefault(t.string, "Output"),
         feedbackShowTable: withDefault(t.boolean, true),
         answerExactMatch: withDefault(t.boolean, false),
-        removeControls: withDefault(t.boolean, true),
-        touchOffset: withDefault(t.number, 0),
+        removeControls: withDefault(t.boolean, false),
+        touchOffset: withDefault(t.number, 40),
     }),
 ]);
 
