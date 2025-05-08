@@ -227,7 +227,7 @@ export class BadgeViewerComponent implements OnInit {
     }
 
     /**
-     * Sulkee avoimena olevan dialogin kutsuttaessa
+     * closes the dialog which is open
      */
     closeDialog(): void {
         if (this.badgeService.activeDialogRef) {
@@ -304,7 +304,6 @@ export class BadgeViewerComponent implements OnInit {
      * @param id - The `image.id` of the clicked badge.
      * @returns string - The image name corresponding to the given ID, or "Image not found" if unavailable.
      */
-
     getImageNameById(id: number): string {
         const selectedBadgeImageName = this.availableImages.find(
             (img) => img.id === id
@@ -314,6 +313,12 @@ export class BadgeViewerComponent implements OnInit {
             : "Image not found";
     }
 
+    /**
+     * Retrieves the shape of the clicked badge based on its ID.
+     *
+     * @param id - The `shape.id` of the clicked badge.
+     * @returns string - The shape name corresponding to the given ID, or "Shape not found" if unavailable.
+     */
     getShapeNameById(id: string): string {
         const selectedBadgeShapeName = this.availableShapes.find(
             (shpe) => shpe.id === id
@@ -323,6 +328,12 @@ export class BadgeViewerComponent implements OnInit {
             : "Shape not found";
     }
 
+    /**
+     * Retrieves the color name of the clicked badge based on its ID.
+     *
+     * @param id - The `color.id` of the clicked badge.
+     * @returns string - The color name corresponding to the given ID, or "Color not found" if unavailable.
+     */
     getColorNameById(id: string): string {
         const selectedBadgeColorName = this.availableColors.find(
             (clr) => clr.id === id
