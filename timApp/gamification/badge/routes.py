@@ -144,7 +144,7 @@ def verify_access(
 @badges_blueprint.get("/all_badges/<context_group>")
 def all_badges(context_group: str) -> Response:
     """
-    Fetches all badges in specific context_group. Sorted by created-timestamp.
+    Fetches all badges in specific context_group. Sorted by created-timestamp.!res
     :param context_group: Context group to get badges from
     :return: Badges in json response format
     """
