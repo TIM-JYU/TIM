@@ -1,4 +1,5 @@
 """badge-related routes."""
+
 from dataclasses import dataclass
 from operator import attrgetter
 from pathlib import Path
@@ -90,6 +91,11 @@ def check_group_member(current_user: User, usergroup: int) -> bool:
         return True
     else:
         return False
+
+
+@badges_blueprint.get("/check_connection")
+def check_connection() -> Response:
+    return json_response(True)
 
 
 @badges_blueprint.get("/all_badges/<context_group>")

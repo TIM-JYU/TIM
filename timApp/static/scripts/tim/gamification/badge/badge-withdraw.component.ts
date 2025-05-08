@@ -471,20 +471,11 @@ export class BadgeWithdrawComponent implements OnInit {
                 }
             }
         }
+        if (await this.checkConnectionError()) {
+            return;
+        }
         if (!result.ok) {
             this.hasPermissionToComponent = false;
-            if (result.result.error.error == undefined) {
-                this.badgeService.showError(
-                    this.alerts,
-                    {
-                        data: {
-                            error: "Unexpected error. Check your internet connection.",
-                        },
-                    },
-                    "danger"
-                );
-                return;
-            }
             this.badgeService.showError(
                 this.alerts,
                 {
@@ -518,20 +509,11 @@ export class BadgeWithdrawComponent implements OnInit {
                     }
                 }
             }
+            if (await this.checkConnectionError()) {
+                return;
+            }
             if (!result.ok) {
                 this.hasPermissionToComponent = false;
-                if (result.result.error.error == undefined) {
-                    this.badgeService.showError(
-                        this.alerts,
-                        {
-                            data: {
-                                error: "Unexpected error. Check your internet connection.",
-                            },
-                        },
-                        "danger"
-                    );
-                    return;
-                }
                 this.badgeService.showError(
                     this.alerts,
                     {
@@ -568,6 +550,9 @@ export class BadgeWithdrawComponent implements OnInit {
      * @param userId User's ID
      */
     async fetchUserBadges(userId?: number) {
+        if (await this.checkConnectionError()) {
+            return;
+        }
         if (userId == undefined) {
             console.error("userid was undefined");
             this.hasBadges = false;
@@ -607,6 +592,9 @@ export class BadgeWithdrawComponent implements OnInit {
      * @param groupId Selected group's ID, which is used to fetch group's badges.
      */
     async fetchGroupBadges(groupId?: number) {
+        if (await this.checkConnectionError()) {
+            return;
+        }
         if (groupId == undefined) {
             console.error("groupid was undefined");
             this.hasBadges = false;
@@ -662,11 +650,13 @@ export class BadgeWithdrawComponent implements OnInit {
                 if (await this.checkConnectionError()) {
                     return;
                 }
-                this.badgeService.showError(
-                    this.alerts,
-                    {data: {error: r.data?.result.error.error || ""}},
-                    "danger"
-                );
+                if (!r.ok) {
+                    this.badgeService.showError(
+                        this.alerts,
+                        {data: {error: r.data?.result.error.error || ""}},
+                        "danger"
+                    );
+                }
             });
         this.selectedBadge = null;
     }
@@ -704,9 +694,7 @@ export class BadgeWithdrawComponent implements OnInit {
     }
 
     async checkConnectionError() {
-        const result = await toPromise(
-            this.http.get(`/all_badges/${this.badgegroupContext}`)
-        );
+        const result = await toPromise(this.http.get(`/check_connection/`));
         if (!result.ok) {
             this.badgeService.showError(
                 this.alerts,
@@ -717,10 +705,8 @@ export class BadgeWithdrawComponent implements OnInit {
                 },
                 "danger"
             );
-            console.log("vitusti true");
             return true;
         }
-        console.log("vitutuasa false");
         return false;
     }
 
