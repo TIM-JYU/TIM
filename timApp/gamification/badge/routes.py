@@ -98,11 +98,6 @@ def check_connection() -> Response:
     return json_response(True)
 
 
-@badges_blueprint.get("/check_connection")
-def check_connection() -> Response:
-    return json_response(True)
-
-
 def verify_access(
     access_type: str,
     user_group: UserGroup | None,
