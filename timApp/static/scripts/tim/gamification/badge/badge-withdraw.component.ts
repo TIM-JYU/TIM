@@ -647,6 +647,7 @@ export class BadgeWithdrawComponent implements OnInit {
             "Are you sure you want to remove this badge?"
         );
         if (!confirmed) {
+            this.checkConnectionError();
             return; // Exit if user cancels the confirmation dialog
         }
 
@@ -654,28 +655,18 @@ export class BadgeWithdrawComponent implements OnInit {
             console.error("group_context was undefined");
             return;
         }
+
         this.badgeService
             .withdrawBadge(badgegivenID, this.badgegroupContext)
-            .then((r) => {
-                if (!r.ok) {
-                    if (r.data?.result.error.error == undefined) {
-                        this.badgeService.showError(
-                            this.alerts,
-                            {
-                                data: {
-                                    error: "Unexpected error. Check your internet connection.",
-                                },
-                            },
-                            "danger"
-                        );
-                        return;
-                    }
-                    this.badgeService.showError(
-                        this.alerts,
-                        {data: {error: r.data?.result.error.error || ""}},
-                        "danger"
-                    );
+            .then(async (r) => {
+                if (await this.checkConnectionError()) {
+                    return;
                 }
+                this.badgeService.showError(
+                    this.alerts,
+                    {data: {error: r.data?.result.error.error || ""}},
+                    "danger"
+                );
             });
         this.selectedBadge = null;
     }
@@ -711,6 +702,28 @@ export class BadgeWithdrawComponent implements OnInit {
             }
         }
     }
+
+    async checkConnectionError() {
+        const result = await toPromise(
+            this.http.get(`/all_badges/${this.badgegroupContext}`)
+        );
+        if (!result.ok) {
+            this.badgeService.showError(
+                this.alerts,
+                {
+                    data: {
+                        error: "Unexpected error. Check your internet connection.",
+                    },
+                },
+                "danger"
+            );
+            console.log("vitusti true");
+            return true;
+        }
+        console.log("vitutuasa false");
+        return false;
+    }
+
     /**
      * Resets table from argument.
      */
