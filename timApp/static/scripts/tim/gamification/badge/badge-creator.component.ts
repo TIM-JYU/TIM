@@ -596,6 +596,9 @@ export class BadgeCreatorComponent implements OnInit {
      * arise.
      */
     async deleteBadge() {
+        if (await this.checkConnectionError()) {
+            return;
+        }
         let confirmMessage = `Are you sure you want to delete "${this.editingBadge.title}" badge?`;
 
         if (await this.isBadgeAssigned()) {
@@ -630,16 +633,7 @@ export class BadgeCreatorComponent implements OnInit {
                         // Send a signal to badgeservice about succesful delete-action
                         this.badgeService.triggerUpdateBadgeList();
                     } else {
-                        if (response.result.error.error == undefined) {
-                            this.badgeService.showError(
-                                this.alerts,
-                                {
-                                    data: {
-                                        error: "Unexpected error. Check your internet connection.",
-                                    },
-                                },
-                                "danger"
-                            );
+                        if (await this.checkConnectionError()) {
                             return;
                         }
                         this.badgeService.showError(
