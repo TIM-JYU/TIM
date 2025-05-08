@@ -6,7 +6,10 @@ from selenium.common.exceptions import (
     ElementNotInteractableException,
 )
 from selenium.webdriver.remote.webelement import WebElement
+from timApp.timdb.sqa import db
+from timApp.auth.accesstype import AccessType
 from timApp.tests.browser.browsertest import BrowserTest
+from timApp.user.usergroup import UserGroup
 
 
 class TestBadges(BrowserTest):
@@ -15,21 +18,29 @@ class TestBadges(BrowserTest):
         # Log in as teacher
         self.login_browser_quick_test1()
         self.login_test1()
+        testiryhma = UserGroup.create("testikonteksti")
+        db.session.commit()
+
         # Embed the badge components in a new document
         d = self.create_doc(
             initial_par="""
 #- {allowangular=true}
 
-<tim-badge-creator badgegroup-context="newgroup1"></tim-badge-creator>
+<tim-badge-creator badgegroup-context="testiryhma"></tim-badge-creator>
 
 """
         )
+
+        self.test_user_1.grant_access(d, AccessType.teacher)
+        db.session.commit()
         self.goto_document(d)
 
     def tearDown(self):
         super().tearDown()
 
     def _create_default_badge(self, title: str):
+        # Embed the badge components in a new document
+
         self.open_badge_form()
         self.fill_badge_form(title=title, description=title)
         # Submit the form
@@ -38,12 +49,16 @@ class TestBadges(BrowserTest):
         self.wait_until_present_and_vis("div.badge-card tim-badge")
 
     def test_badge_creation_valid(self):
+        # Embed the badge components in a new document
+
         """Test that a valid badge is created successfully."""
         self._create_default_badge("Test Badge")
         badge = self.find_element("div.badge-card tim-badge")
         self.assertIn("Test Badge", badge.get_attribute("title"))
 
     def test_badge_creation_missing_required(self):
+        # Embed the badge components in a new document
+
         """Test that required-field validation works."""
         self.wait_until_present_and_vis("button #showBadgeForm")
         self.find_element("button #showBadgeForm").click()
@@ -60,6 +75,8 @@ class TestBadges(BrowserTest):
         self.assertFalse(self.find_element("button #createButton").is_enabled())
 
     def test_cancel_badge_creation(self):
+        # Embed the badge components in a new document
+
         """Test that cancelling does not create a badge."""
         self.wait_until_present_and_vis("button #showBadgeForm")
         self.find_element("button #showBadgeForm").click()
@@ -80,6 +97,8 @@ class TestBadges(BrowserTest):
                 continue
 
     def test_badge_editing(self):
+        # Embed the badge components in a new document
+
         """Test editing an existing badge."""
         self._create_default_badge("Editable")
         # Select
@@ -98,6 +117,8 @@ class TestBadges(BrowserTest):
         self.assertIn("Edited", upd)
 
     def test_alert_dismissal(self):
+        # Embed the badge components in a new document
+
         """Test that validation alerts can be closed."""
         self.wait_until_present_and_vis("button #showBadgeForm")
         self.find_element("button #showBadgeForm").click()
@@ -117,6 +138,8 @@ class TestBadges(BrowserTest):
         self.should_not_exist("tim-alert")
 
     def test_give_badge(self):
+        # Embed the badge components in a new document
+
         """Test the badge assignment interface."""
         self._create_default_badge("Assignable")
         # Select
@@ -131,6 +154,8 @@ class TestBadges(BrowserTest):
         self.wait_until_hidden("timBadgeGiver")
 
     def test_withdraw_badge(self):
+        # Embed the badge components in a new document
+
         """Test the badge withdrawal interface."""
         self._create_default_badge("Withdrawable")
         # Select
