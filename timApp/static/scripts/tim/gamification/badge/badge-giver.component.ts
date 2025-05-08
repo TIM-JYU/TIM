@@ -17,6 +17,7 @@ import {BadgeService} from "tim/gamification/badge/badge.service";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {GroupService} from "tim/plugin/group-dashboard/group.service";
 import type {IUser} from "tim/user/IUser";
+import {toPromise} from "tim/util/utils";
 
 @Component({
     selector: "timBadgeGiver",
@@ -141,7 +142,7 @@ import type {IUser} from "tim/user/IUser";
                            (change)="toggleGroupSelection(group, $event)"
                            [checked]="isSelected(group, selectedGroups)"
                     />
-                    <span class="option-name" (click)="handleGroupSelection(group); fetchGroupBadges(group.id);"
+                    <span class="option-name" (click)="handleGroupSelection(group)"
                           [ngClass]="{'selected-option': selectedGroup?.id === group.id}">
                         {{ groupPrettyNames.get(group.id) || group.name }}
                     </span>
@@ -202,12 +203,10 @@ export class BadgeGiverComponent implements OnInit {
     selectedUser?: IUser | null = null;
     selectedUsers: IUser[] = [];
     usersWithoutGroup: IUser[] = [];
-    userBadges: IBadge[] = [];
 
     groups: IBadgeGroup[] = [];
     selectedGroup?: IBadgeGroup | null = null;
     selectedGroups: IBadgeGroup[] = [];
-    groupBadges: IBadge[] = [];
     groupUsersMap = new Map<number, IUser[]>();
     groupPrettyNames: Map<number, string> = new Map();
 
@@ -239,7 +238,6 @@ export class BadgeGiverComponent implements OnInit {
 
     ngOnInit() {
         if (Users.isLoggedIn()) {
-            this.subscribeToBadgeUpdates();
             this.fetchUsers(this.badgegroupContext);
             this.fetchGroups();
         }
@@ -309,24 +307,6 @@ export class BadgeGiverComponent implements OnInit {
     }
 
     /**
-     * Adds listeners to fetchUserBadges and fetchGroupBadges functions.
-     * Subscriptions allow badges to refresh live after changes.
-     */
-    private subscribeToBadgeUpdates() {
-        // Subscribe to badge update events
-        this.subscription.add(
-            this.badgeService.updateBadgeList$.subscribe(() => {
-                if (this.selectedUser?.id != undefined) {
-                    this.fetchUserBadges(this.selectedUser); // Refresh badges
-                }
-                if (this.selectedGroup?.id != undefined) {
-                    this.fetchGroupBadges(this.selectedGroup.id); // Refresh group badges
-                }
-            })
-        );
-    }
-
-    /**
      * When user's name is clicked, method checks if clicked user is already selected.
      * If user is selected, it sets new filtered table from selectedUsers without selected user.
      *
@@ -344,7 +324,6 @@ export class BadgeGiverComponent implements OnInit {
         }
         this.selectedUser = user;
         this.toggleUserSelection(user);
-        this.fetchUserBadges(user);
     }
 
     /**
@@ -511,8 +490,6 @@ export class BadgeGiverComponent implements OnInit {
         this.selectedBadge = null;
         this.selectedGroup = null;
         this.message = "";
-        this.emptyTable(this.userBadges);
-        this.emptyTable(this.groupBadges);
         this.emptyTable(this.selectedUsers);
         this.emptyTable(this.selectedGroups);
         this.groupUsersMap.clear();
@@ -523,6 +500,9 @@ export class BadgeGiverComponent implements OnInit {
      * Finds users, that belongs to badgegroupContext group. badgegroupContext is received from TIM.
      */
     async fetchUsers(groupContext?: string) {
+        if (await this.checkConnectionError()) {
+            return;
+        }
         if (groupContext) {
             this.users = await this.groupService.getUsersFromGroup(
                 groupContext
@@ -550,8 +530,10 @@ export class BadgeGiverComponent implements OnInit {
      * Sets every group's ID and users to groupUsersMap.
      * Calls filterUsers method.
      */
-
     async fetchUsersFromGroups() {
+        if (await this.checkConnectionError()) {
+            return;
+        }
         this.groupUsersMap.clear();
         for (const group of this.groups) {
             this.groupUsersMap.set(
@@ -571,61 +553,14 @@ export class BadgeGiverComponent implements OnInit {
     }
 
     /**
-     * Resets this.userBadges and checks if selectedUser is falsy.
-     * Gets user's PersonalGroup, that allows to use user's correct ID to fetch badges.
-     * Sets getBadges function's returned pointer to point to this.userBadges.
-     * @param selectedUser Selected user, whose badges are fetched.
-     */
-    async fetchUserBadges(selectedUser: IUser) {
-        this.emptyTable(this.userBadges);
-        if (!selectedUser) {
-            console.error("Selected user was undefined");
-            return;
-        }
-        const pGroup: IPersonalGroup =
-            await this.groupService.getUserAndPersonalGroup(selectedUser.name);
-        if (!pGroup) {
-            console.error("Failed to retrieve the user's personal group ID.");
-            return;
-        }
-        if (!this.badgegroupContext) {
-            console.error("Failed to retrieve the context group.");
-            return;
-        }
-        this.userBadges = await this.badgeService.getBadges(
-            pGroup["1"].id,
-            this.badgegroupContext
-        );
-    }
-
-    /**
-     * Checks if groupId or badgegroupContext is falsy.
-     * Resets badges.
-     * Sets getBadges function returned pointer to point to this.groupBadges.
-     * @param groupId Selected group's ID, which is used to fetch group's badges.
-     */
-    async fetchGroupBadges(groupId?: number) {
-        if (groupId == undefined) {
-            console.error("groupid was undefined");
-            return;
-        }
-        if (!this.badgegroupContext) {
-            console.error("Failed to retrieve the context group.");
-            return;
-        }
-        this.emptyTable(this.groupBadges);
-        this.groupBadges = await this.badgeService.getBadges(
-            groupId,
-            this.badgegroupContext
-        );
-    }
-
-    /**
      * Assigns selected badge to selected groups or users.
      * Calls emptyForm method for a reset.
      * @param message optional message, that can be given when assigning badge.
      */
     async assignBadge(message: string) {
+        if (await this.checkConnectionError()) {
+            return;
+        }
         if (this.selectedUsers.length > 0) {
             for (const user of this.selectedUsers) {
                 const pGroup: IPersonalGroup =
@@ -658,6 +593,29 @@ export class BadgeGiverComponent implements OnInit {
     onScrollList(event: WheelEvent) {
         this.badgeService.onScrollList(event);
     }
+
+    /**
+     * Tests connection with check_connection route.
+     * If there is error with result, calls showError method via badge-service and returns true.
+     * If no errors, returns false.
+     */
+    async checkConnectionError() {
+        const result = await toPromise(this.http.get(`/check_connection/`));
+        if (!result.ok) {
+            this.badgeService.showError(
+                this.alerts,
+                {
+                    data: {
+                        error: "Unexpected error. Check your internet connection.",
+                    },
+                },
+                "danger"
+            );
+            return true;
+        }
+        return false;
+    }
+
     /**
      * Resets table from argument.
      */
