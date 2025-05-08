@@ -310,7 +310,12 @@ export class BadgeCreatorComponent implements OnInit {
         this.emptyForm();
     }
 
-    // Edit an existing badge, show attributes in input fields
+    /**
+     * Toggles the visibility of the badge editing form and prepares it for the selected badge.
+     *
+     * @param {IBadge} badge - The badge object that needs to be edited, containing all relevant details.
+     *
+     */
     editBadge(badge: IBadge) {
         this.badgeFormShowing = !this.badgeFormShowing;
         this.badgeFormShowing = this.hideOtherViewsExcept(
@@ -342,7 +347,15 @@ export class BadgeCreatorComponent implements OnInit {
         this.isFormChanged = true;
     }
 
-    // When existing badge is pressed, shows form with filled information of the badge
+    /**
+     * Prepares and displays the badge editing form with the given badge data.
+     *
+     * This function sets the provided `badge` object for editing, marks the form as changed,
+     * and populates the form fields with the current values of the selected badge.
+     *
+     * @param {IBadge} badge - The badge object to be edited, containing all the necessary properties.
+     *
+     */
     showEditingForm(badge: IBadge) {
         this.editingBadge = badge;
         this.clickedBadge = badge;
@@ -358,7 +371,13 @@ export class BadgeCreatorComponent implements OnInit {
         });
     }
 
-    // toggles between showing and not showing form, happens when create or cancel button is pressed.
+    /**
+     * Resets the form and related states to their initial values.
+     *
+     * This function clears any selected or editing badge, hides the badge form, and resets
+     * the form change status. It also scrolls to the badge list section after a short delay.
+     *
+     */
     resetForm() {
         this.clickedBadge = null;
         this.editingBadge = null;
@@ -369,7 +388,10 @@ export class BadgeCreatorComponent implements OnInit {
         }, 100);
     }
 
-    // Clears form information, except given values
+    /**
+     * Resets the badge form to its default state and clears the editing badge.
+     *
+     */
     emptyForm() {
         this.editingBadge = null;
         this.badgeForm.reset({
@@ -458,7 +480,12 @@ export class BadgeCreatorComponent implements OnInit {
         }
     }
 
-    // When cancelled, form information is cleared
+    /**
+     * Handles the cancellation of the current badge editing process.
+     * It resets the form and fetches the latest badge information.
+     *
+     * @returns {Promise<void>} Resolves when the cancellation process is complete and the UI is updated.
+     */
     async onCancel() {
         this.emptyForm();
         await this.getBadges();
@@ -513,7 +540,14 @@ export class BadgeCreatorComponent implements OnInit {
         }
     }
 
-    // Save changes on the badge that is being edited
+    /**
+     * Saves the changes made to the badge and updates the server with the modified details.
+     *
+     * @async
+     * @function saveBadgeChanges
+     * @returns {Promise<void>} Resolves when the badge changes are successfully saved, or an error is handled.
+     *
+     */
     async saveBadgeChanges() {
         if (this.editingBadge) {
             Object.assign(this.editingBadge, this.badgeForm.value);
@@ -563,7 +597,14 @@ export class BadgeCreatorComponent implements OnInit {
         }
     }
 
-    // Check if badge has been assigned to user_group
+    /**
+     * Checks if the currently selected badge is assigned to any users.
+     *
+     * This function sends a GET request to the `/badge_holders/{badge_id}` endpoint and checks if the badge
+     * is assigned to any users or groups based on the response.
+     *
+     * @returns {Promise<boolean>} A promise that resolves to `true` if the badge is assigned to users or groups, or `false` otherwise.
+     */
     async isBadgeAssigned() {
         const response = await toPromise(
             this.http.get<any>(`/badge_holders/${this.clickedBadge.id}`)
@@ -575,7 +616,12 @@ export class BadgeCreatorComponent implements OnInit {
         }
     }
 
-    // Delete a badge from use
+    /**
+     * Handles the deletion of a badge, including user confirmation, server communication,
+     * and client-side state updates. This method ensures flow for safely
+     * deactivating a badge while managing various edge cases. Throws error if connection issues
+     * arise.
+     */
     async deleteBadge() {
         let confirmMessage = `Are you sure you want to delete "${this.editingBadge.title}" badge?`;
 
