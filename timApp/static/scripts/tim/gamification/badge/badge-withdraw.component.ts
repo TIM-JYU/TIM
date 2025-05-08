@@ -551,6 +551,7 @@ export class BadgeWithdrawComponent implements OnInit {
      */
     async fetchUserBadges(userId?: number) {
         if (await this.checkConnectionError()) {
+            this.hasBadges = false;
             return;
         }
         if (userId == undefined) {
@@ -693,6 +694,11 @@ export class BadgeWithdrawComponent implements OnInit {
         }
     }
 
+    /**
+     * Tests connection with check_connection route.
+     * If there is error with result, calls showError method via badge-service and returns true.
+     * If no errors, returns false.
+     */
     async checkConnectionError() {
         const result = await toPromise(this.http.get(`/check_connection/`));
         if (!result.ok) {

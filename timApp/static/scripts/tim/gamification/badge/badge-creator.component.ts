@@ -457,19 +457,10 @@ export class BadgeCreatorComponent implements OnInit {
                 this.badgeFormShowing = false;
                 scrollToElement(this.allBadgesSection?.nativeElement);
             }
+            if (await this.checkConnectionError()) {
+                return;
+            }
             if (!result.ok) {
-                if (result.result.error.error == undefined) {
-                    this.badgeService.showError(
-                        this.alerts,
-                        {
-                            data: {
-                                error: "Unexpected error. Check your internet connection.",
-                            },
-                        },
-                        "danger"
-                    );
-                    return;
-                }
                 this.badgeService.showError(
                     this.alerts,
                     {data: {error: result.result.error.error}},
@@ -514,19 +505,10 @@ export class BadgeCreatorComponent implements OnInit {
                 this.onSortChange(this.selectedSort);
             }
         }
+        if (await this.checkConnectionError()) {
+            return;
+        }
         if (!result.ok) {
-            if (result.result.error.error == undefined) {
-                this.badgeService.showError(
-                    this.alerts,
-                    {
-                        data: {
-                            error: "Unexpected error. Check your internet connection.",
-                        },
-                    },
-                    "danger"
-                );
-                return;
-            }
             this.badgeService.showError(
                 this.alerts,
                 {
@@ -570,19 +552,10 @@ export class BadgeCreatorComponent implements OnInit {
                 this.emptyForm();
                 await this.getBadges();
             }
+            if (await this.checkConnectionError()) {
+                return;
+            }
             if (!result.ok) {
-                if (result.result.error.error == undefined) {
-                    this.badgeService.showError(
-                        this.alerts,
-                        {
-                            data: {
-                                error: "Unexpected error. Check your internet connection.",
-                            },
-                        },
-                        "danger"
-                    );
-                    return;
-                }
                 this.badgeService.showError(
                     this.alerts,
                     {data: {error: result.result.error.error}},
@@ -694,6 +667,28 @@ export class BadgeCreatorComponent implements OnInit {
             this.all_badges,
             sortType
         );
+    }
+
+    /**
+     * Tests connection with check_connection route.
+     * If there is error with result, calls showError method via badge-service and returns true.
+     * If no errors, returns false.
+     */
+    async checkConnectionError() {
+        const result = await toPromise(this.http.get(`/check_connection/`));
+        if (!result.ok) {
+            this.badgeService.showError(
+                this.alerts,
+                {
+                    data: {
+                        error: "Unexpected error. Check your internet connection.",
+                    },
+                },
+                "danger"
+            );
+            return true;
+        }
+        return false;
     }
 }
 
