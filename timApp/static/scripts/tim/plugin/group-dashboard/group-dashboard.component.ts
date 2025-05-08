@@ -40,9 +40,9 @@ import {UserService} from "tim/user/userService";
 </div>
         <h3>Statistics</h3>
 <div class="stat-summary">
-    <p><strong>Total members:</strong> {{ totalMembers }}</p>
-    <p><strong>Total badges (group + user):</strong> {{ totalBadges }}</p>
-    <p><strong>Total points: {{totalPoints}}</strong></p>
+    <p>Total members: <strong>{{ totalMembers }}</strong></p>
+    <p>Total badges (group + user): <strong>{{ totalBadges }}</strong></p>
+    <p>Total points: <strong>{{totalPoints}}</strong></p>
 </div>
 
 <div class="stat-visuals">
