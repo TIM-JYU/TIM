@@ -471,20 +471,11 @@ export class BadgeWithdrawComponent implements OnInit {
                 }
             }
         }
+        if (await this.checkConnectionError()) {
+            return;
+        }
         if (!result.ok) {
             this.hasPermissionToComponent = false;
-            if (result.result.error.error == undefined) {
-                this.badgeService.showError(
-                    this.alerts,
-                    {
-                        data: {
-                            error: "Unexpected error. Check your internet connection.",
-                        },
-                    },
-                    "danger"
-                );
-                return;
-            }
             this.badgeService.showError(
                 this.alerts,
                 {
@@ -518,20 +509,11 @@ export class BadgeWithdrawComponent implements OnInit {
                     }
                 }
             }
+            if (await this.checkConnectionError()) {
+                return;
+            }
             if (!result.ok) {
                 this.hasPermissionToComponent = false;
-                if (result.result.error.error == undefined) {
-                    this.badgeService.showError(
-                        this.alerts,
-                        {
-                            data: {
-                                error: "Unexpected error. Check your internet connection.",
-                            },
-                        },
-                        "danger"
-                    );
-                    return;
-                }
                 this.badgeService.showError(
                     this.alerts,
                     {
@@ -568,6 +550,9 @@ export class BadgeWithdrawComponent implements OnInit {
      * @param userId User's ID
      */
     async fetchUserBadges(userId?: number) {
+        if (await this.checkConnectionError()) {
+            return;
+        }
         if (userId == undefined) {
             console.error("userid was undefined");
             this.hasBadges = false;
@@ -607,6 +592,9 @@ export class BadgeWithdrawComponent implements OnInit {
      * @param groupId Selected group's ID, which is used to fetch group's badges.
      */
     async fetchGroupBadges(groupId?: number) {
+        if (await this.checkConnectionError()) {
+            return;
+        }
         if (groupId == undefined) {
             console.error("groupid was undefined");
             this.hasBadges = false;
@@ -647,6 +635,7 @@ export class BadgeWithdrawComponent implements OnInit {
             "Are you sure you want to remove this badge?"
         );
         if (!confirmed) {
+            this.checkConnectionError();
             return; // Exit if user cancels the confirmation dialog
         }
 
@@ -654,22 +643,14 @@ export class BadgeWithdrawComponent implements OnInit {
             console.error("group_context was undefined");
             return;
         }
+
         this.badgeService
             .withdrawBadge(badgegivenID, this.badgegroupContext)
-            .then((r) => {
+            .then(async (r) => {
+                if (await this.checkConnectionError()) {
+                    return;
+                }
                 if (!r.ok) {
-                    if (r.data?.result.error.error == undefined) {
-                        this.badgeService.showError(
-                            this.alerts,
-                            {
-                                data: {
-                                    error: "Unexpected error. Check your internet connection.",
-                                },
-                            },
-                            "danger"
-                        );
-                        return;
-                    }
                     this.badgeService.showError(
                         this.alerts,
                         {data: {error: r.data?.result.error.error || ""}},
@@ -711,6 +692,24 @@ export class BadgeWithdrawComponent implements OnInit {
             }
         }
     }
+
+    async checkConnectionError() {
+        const result = await toPromise(this.http.get(`/check_connection/`));
+        if (!result.ok) {
+            this.badgeService.showError(
+                this.alerts,
+                {
+                    data: {
+                        error: "Unexpected error. Check your internet connection.",
+                    },
+                },
+                "danger"
+            );
+            return true;
+        }
+        return false;
+    }
+
     /**
      * Resets table from argument.
      */
