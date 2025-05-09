@@ -17,22 +17,22 @@ import {ICurrentUser} from "tim/user/IUser";
     selector: "tim-name-changer",
     template: `
         <ng-container>
-            <div class="current">
+            <div class="name-changer">
                 <p>Current group name: <b>{{ displayedName }}</b></p>
                 <p>Pretty name: <b>{{prettyName}}</b></p>
-            </div>
-            <div class="changeName">
+            
+            <div class="buttons-section">
     <button *ngIf="canEditName" (click)="toggleInput()">Change group name</button>
     <button (click)="toggleFullName()">
         {{ showFullName ? "Show sub-group only" : "Show full group name" }}
     </button>
 </div>
-
-            <div *ngIf="showInput">
-                <input [formControl]="newName" placeholder="Enter new group name"/>
-                <button (click)="saveName()" [disabled]="newName.invalid">Save</button>
-                <button (click)="toggleInput()">Cancel</button>
-            </div>
+                <div *ngIf="showInput" class="input-buttons">
+                    <input [formControl]="newName" placeholder="Enter new group name"/>
+                    <button (click)="saveName()" [disabled]="newName.invalid">Save</button>
+                    <button (click)="toggleInput()" class="cancelButton">Cancel</button>
+                </div>
+                </div>
         </ng-container>
     `,
     styleUrls: ["./name-changer.component.scss"],
