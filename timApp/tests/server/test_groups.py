@@ -680,6 +680,10 @@ class GroupNameChangerTest(TimRouteTest):
                 "id": 10,
                 "name": subgroup1_name,
                 "description": subgroup1_name,
+                "isAdmin": False,
+                "isMember": False,
+                "isTeacher": True,
+                "viewRights": True,
             },
         )
 
@@ -698,6 +702,10 @@ class GroupNameChangerTest(TimRouteTest):
                 "id": 10,
                 "name": subgroup1_name,
                 "description": subgroup1_name,
+                "isAdmin": False,
+                "isMember": False,
+                "isTeacher": False,
+                "viewRights": False,
             },
         )
 
@@ -712,7 +720,15 @@ class GroupNameChangerTest(TimRouteTest):
         self.get(
             f"/groups/current_group_name/{subgroup1_name}",
             expect_status=200,
-            expect_content={"id": 10, "name": subgroup1_name, "description": "Hevoset"},
+            expect_content={
+                "id": 10,
+                "name": subgroup1_name,
+                "description": "Hevoset",
+                "isAdmin": False,
+                "isMember": True,
+                "isTeacher": False,
+                "viewRights": False,
+            },
         )
 
         self.login_test1()
@@ -734,6 +750,10 @@ class GroupNameChangerTest(TimRouteTest):
                 "id": 10,
                 "name": subgroup1_name,
                 "description": "Hepokatit",
+                "isAdmin": False,
+                "isMember": False,
+                "isTeacher": True,
+                "viewRights": True,
             },
         )
 
