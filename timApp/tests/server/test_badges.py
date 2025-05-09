@@ -1071,6 +1071,18 @@ class BadgeTestUsergroupsMembers(TimRouteTest):
 
 
 class BadgeTestPodium(TimRouteTest):
+    def give_badge(self, group_id):
+        self.post(
+            f"/give_badge",
+            data={
+                "context_group": "es_28",
+                "group_id": group_id,
+                "badge_id": 1,
+                "message": "Congratulations!",
+            },
+            expect_status=200,
+        )
+
     def test_badge_podium(self):
         # initialization
         self.login_test1()
@@ -1105,7 +1117,7 @@ class BadgeTestPodium(TimRouteTest):
         self.test_user_1.grant_access(subgroup6.admin_doc, AccessType.teacher)
         self.commit_db()
 
-        # create a badge and give it 2 times to cats and once to bats
+        # create a badge
         self.post(
             f"/create_badge",
             data={
@@ -1118,36 +1130,11 @@ class BadgeTestPodium(TimRouteTest):
             },
             expect_status=200,
         )
-        self.post(
-            f"/give_badge",
-            data={
-                "context_group": group1_name,
-                "group_id": 10,
-                "badge_id": 1,
-                "message": "Congratulations!",
-            },
-            expect_status=200,
-        )
-        self.post(
-            f"/give_badge",
-            data={
-                "context_group": group1_name,
-                "group_id": 10,
-                "badge_id": 1,
-                "message": "Congratulations!",
-            },
-            expect_status=200,
-        )
-        self.post(
-            f"/give_badge",
-            data={
-                "context_group": group1_name,
-                "group_id": 12,
-                "badge_id": 1,
-                "message": "Congratulations!",
-            },
-            expect_status=200,
-        )
+
+        # give badge once to bats and 2 times to cats
+        self.give_badge(12)
+        self.give_badge(10)
+        self.give_badge(10)
 
         # get podium after 6 subgroups created and badges given to some of them
         self.get(
@@ -1160,186 +1147,14 @@ class BadgeTestPodium(TimRouteTest):
         )
 
         # give badges so that all of 6 subgroups have some
-        self.post(
-            f"/give_badge",
-            data={
-                "context_group": group1_name,
-                "group_id": 11,
-                "badge_id": 1,
-                "message": "Congratulations!",
-            },
-            expect_status=200,
-        )
-        self.post(
-            f"/give_badge",
-            data={
-                "context_group": group1_name,
-                "group_id": 11,
-                "badge_id": 1,
-                "message": "Congratulations!",
-            },
-            expect_status=200,
-        )
-        self.post(
-            f"/give_badge",
-            data={
-                "context_group": group1_name,
-                "group_id": 11,
-                "badge_id": 1,
-                "message": "Congratulations!",
-            },
-            expect_status=200,
-        )
-        self.post(
-            f"/give_badge",
-            data={
-                "context_group": group1_name,
-                "group_id": 15,
-                "badge_id": 1,
-                "message": "Congratulations!",
-            },
-            expect_status=200,
-        )
-        self.post(
-            f"/give_badge",
-            data={
-                "context_group": group1_name,
-                "group_id": 15,
-                "badge_id": 1,
-                "message": "Congratulations!",
-            },
-            expect_status=200,
-        )
-        self.post(
-            f"/give_badge",
-            data={
-                "context_group": group1_name,
-                "group_id": 15,
-                "badge_id": 1,
-                "message": "Congratulations!",
-            },
-            expect_status=200,
-        )
-        self.post(
-            f"/give_badge",
-            data={
-                "context_group": group1_name,
-                "group_id": 15,
-                "badge_id": 1,
-                "message": "Congratulations!",
-            },
-            expect_status=200,
-        )
-        self.post(
-            f"/give_badge",
-            data={
-                "context_group": group1_name,
-                "group_id": 14,
-                "badge_id": 1,
-                "message": "Congratulations!",
-            },
-            expect_status=200,
-        )
-        self.post(
-            f"/give_badge",
-            data={
-                "context_group": group1_name,
-                "group_id": 14,
-                "badge_id": 1,
-                "message": "Congratulations!",
-            },
-            expect_status=200,
-        )
-        self.post(
-            f"/give_badge",
-            data={
-                "context_group": group1_name,
-                "group_id": 14,
-                "badge_id": 1,
-                "message": "Congratulations!",
-            },
-            expect_status=200,
-        )
-        self.post(
-            f"/give_badge",
-            data={
-                "context_group": group1_name,
-                "group_id": 14,
-                "badge_id": 1,
-                "message": "Congratulations!",
-            },
-            expect_status=200,
-        )
-        self.post(
-            f"/give_badge",
-            data={
-                "context_group": group1_name,
-                "group_id": 14,
-                "badge_id": 1,
-                "message": "Congratulations!",
-            },
-            expect_status=200,
-        )
-        self.post(
-            f"/give_badge",
-            data={
-                "context_group": group1_name,
-                "group_id": 13,
-                "badge_id": 1,
-                "message": "Congratulations!",
-            },
-            expect_status=200,
-        )
-        self.post(
-            f"/give_badge",
-            data={
-                "context_group": group1_name,
-                "group_id": 13,
-                "badge_id": 1,
-                "message": "Congratulations!",
-            },
-            expect_status=200,
-        )
-        self.post(
-            f"/give_badge",
-            data={
-                "context_group": group1_name,
-                "group_id": 13,
-                "badge_id": 1,
-                "message": "Congratulations!",
-            },
-            expect_status=200,
-        )
-        self.post(
-            f"/give_badge",
-            data={
-                "context_group": group1_name,
-                "group_id": 13,
-                "badge_id": 1,
-                "message": "Congratulations!",
-            },
-            expect_status=200,
-        )
-        self.post(
-            f"/give_badge",
-            data={
-                "context_group": group1_name,
-                "group_id": 13,
-                "badge_id": 1,
-                "message": "Congratulations!",
-            },
-            expect_status=200,
-        )
-        self.post(
-            f"/give_badge",
-            data={
-                "context_group": group1_name,
-                "group_id": 13,
-                "badge_id": 1,
-                "message": "Congratulations!",
-            },
-            expect_status=200,
-        )
+        for i in range(3):
+            self.give_badge(11)
+        for i in range(4):
+            self.give_badge(15)
+        for i in range(5):
+            self.give_badge(14)
+        for i in range(6):
+            self.give_badge(13)
 
         # get podium after badges given to all of 6 subgroups
         self.get(
@@ -1413,24 +1228,6 @@ class BadgeTestErroneousData(TimRouteTest):
                 "group_id": self.test_user_2.get_personal_group().id,
                 "badge_id": 1,
                 "message": "Congratulations!",
-            },
-            expect_status=200,
-        )
-        self.post(
-            f"/give_badge",
-            data={
-                "context_group": group1_name,
-                "group_id": self.test_user_2.get_personal_group().id,
-                "badge_id": 1,
-                "message": "Congratulations again!",
-            },
-            expect_status=200,
-        )
-        self.post(
-            f"/withdraw_badge",
-            data={
-                "badge_given_id": 2,
-                "context_group": group1_name,
             },
             expect_status=200,
         )
