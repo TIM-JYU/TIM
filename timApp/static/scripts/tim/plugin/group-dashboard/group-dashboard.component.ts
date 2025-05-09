@@ -8,9 +8,7 @@ import {NameChangerModule} from "tim/plugin/group-dashboard/name-changer.compone
 import type {IBadge} from "tim/gamification/badge/badge.interface";
 import {BadgeModule} from "tim/gamification/badge/badge.component";
 import {GroupService} from "tim/plugin/group-dashboard/group.service";
-import {PointService} from "tim/plugin/group-dashboard/point.service";
 import type {Subscription} from "rxjs";
-import {UserService} from "tim/user/userService";
 
 @Component({
     selector: "tim-group-dashboard",
@@ -42,7 +40,6 @@ import {UserService} from "tim/user/userService";
 <div class="stat-summary">
     <p>Total members: <strong>{{ totalMembers }}</strong></p>
     <p>Total badges (group + user): <strong>{{ totalBadges }}</strong></p>
-    <p>Total points: <strong>{{totalPoints}}</strong></p>
 </div>
 
 <div class="stat-visuals">
@@ -80,14 +77,10 @@ import {UserService} from "tim/user/userService";
 export class GroupDashboardComponent implements OnInit {
     constructor(
         private groupService: GroupService,
-        private badgeService: BadgeService,
-        private pointService: PointService
+        private badgeService: BadgeService
     ) {}
 
     @Input() group!: string;
-    private item: IFullDocument | IFolder | undefined;
-    private pointSub?: Subscription;
-    totalPoints: number = 0;
     displayName: string | undefined;
     groupId: number | undefined;
     contextGroup: string | undefined;
@@ -115,12 +108,6 @@ export class GroupDashboardComponent implements OnInit {
         await this.fetchMembers();
         await this.fetchUserBadges();
         await this.fetchGroupBadges();
-        this.refreshTotalPoints();
-
-        this.item = manageglobals().curr_item;
-        this.pointSub = this.pointService.pointsUpdated$.subscribe(() => {
-            this.refreshTotalPoints();
-        });
     }
 
     async getGroupName() {
@@ -189,13 +176,7 @@ export class GroupDashboardComponent implements OnInit {
         }
     }
 
-    private refreshTotalPoints() {
-        this.totalPoints = this.pointService.getTotalPoints(this.group);
-    }
-
-    ngOnDestroy(): void {
-        this.pointSub?.unsubscribe();
-    }
+    ngOnDestroy(): void {}
 }
 
 @NgModule({
