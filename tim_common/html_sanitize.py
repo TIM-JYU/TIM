@@ -126,7 +126,6 @@ TIM_SAFE_TAGS = [
     "tim-badge-leaderboard",
     "tim-name-changer",
     "tim-group-dashboard",
-    "tim-point-calculator",
 ]
 
 TIM_SAFE_ATTRS_MAP = {
