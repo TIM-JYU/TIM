@@ -1,12 +1,12 @@
-:host {
-    display: block;
-    margin: 1rem 0;
-    padding: 1rem;
-    border-radius: 1rem;
-    background-color: #f5f8ff; // soft light blue
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-    font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-    transition: all 0.3s ease;
+.name-changer {
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 30px 200px #0000cc38, 0 0 20px #0F0C0020;
+    padding: 1em;
+    border-radius: 1em;
+    margin: 2em 0 2em 0;
+    width: 100%;
+    background-color: #fff;
 }
 
 .current p {
@@ -19,33 +19,54 @@
     }
 }
 
-.changeName {
-    margin-bottom: 1rem;
+.buttons-section {
+    display: flex;
+    flex-direction: row;
+}
 
-    button {
-        margin-right: 0.5rem;
-        padding: 0.4rem 0.8rem;
-        background-color: #2a4d9b;
-        color: #fff;
-        border: none;
-        border-radius: 6px;
-        cursor: pointer;
-        font-size: 0.9rem;
-        transition: background-color 0.2s;
+button {
+    width: 100%;
+    margin: 0.8em;
+    padding: 0.8em;
+    border: none;
+    border-radius: 0.5em;
+    background-color: #0F4096;
+    color: #fff;
+    font-size: 1.1em;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
 
-        &:hover {
-            background-color: #1e3a7a;
-        }
-    }
+.input-buttons {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 1em;
+}
+
+
+
+.input-buttons button {
+    width: auto;
+    margin: 0.8em;
+    padding: 0.8em;
+    border: none;
+    border-radius: 0.5em;
+    font-size: 1.1em;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+
 }
 
 input {
-    padding: 0.4rem;
+    padding: 0.6em 1em;
     margin-right: 0.5rem;
     border: 1px solid #ccc;
     border-radius: 6px;
-    font-size: 0.95rem;
-    width: 250px;
+    font-size: 1.1em;
+    width: 50%;
+    height: auto;
 
     &:focus {
         outline: none;
@@ -57,4 +78,10 @@ input {
 button:disabled {
     background-color: #999;
     cursor: not-allowed;
+}
+
+.cancelButton {
+    background-color: #6c757d;
+  color: #fff;
+  font-weight: bold;
 }
