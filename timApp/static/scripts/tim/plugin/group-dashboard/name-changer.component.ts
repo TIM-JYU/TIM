@@ -98,7 +98,6 @@ export class NameChangerComponent implements OnInit {
 
         if (this.storedGroup) {
             await this.groupService.updateGroupName(
-                this.storedGroup.id,
                 this.storedGroup.name,
                 newPrettyName
             );
