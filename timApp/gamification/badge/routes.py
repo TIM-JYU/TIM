@@ -736,6 +736,10 @@ def usergroups_members(usergroup_name: str) -> Response:
     if not in_group:
         verify_access("view", context_usergroup, user_group_name=usergroup_name)
 
+    for user in context_usergroup.users:
+        if not user.real_name:
+            user.real_name = user.name
+
     return json_response(
         sorted(list(context_usergroup.users), key=attrgetter("real_name"))
     )

@@ -62,7 +62,7 @@ import {scrollToElement} from "tim/util/utils";
                     
                     <div class="badge-view">
                       <ng-container *ngIf="all_badges.length == 0">
-                          <p class="no-badges-txt">This user/group does not have any badges yet.</p>
+                          <p class="no-badges-txt">This course does not have any badges yet.</p>
                       </ng-container>
                       <ng-container *ngIf="all_badges.length > 0">
                           <div class="badge-card" *ngFor="let badge of sortedBadges">
