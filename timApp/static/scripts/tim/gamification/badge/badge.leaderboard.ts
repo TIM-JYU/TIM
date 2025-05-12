@@ -96,24 +96,6 @@ export class BadgeLeaderboardComponent implements OnInit {
         } catch (error: any) {
             console.error("Error fetching top five:", error);
             this.top_five = [];
-
-            if (error.error?.error === undefined) {
-                this.badgeService.showError(
-                    this.alerts,
-                    {
-                        data: {
-                            error: "Unexpected error. Check your internet connection.",
-                        },
-                    },
-                    "danger"
-                );
-            } else {
-                this.badgeService.showError(
-                    this.alerts,
-                    {data: {error: error.error.error}},
-                    "danger"
-                );
-            }
         }
     }
 
