@@ -41,7 +41,6 @@ export class NameChangerComponent implements OnInit {
     @Output() groupNameChange = new EventEmitter<string>();
     groupName: string | null = null;
     prettyName: string | null = null;
-    parentGroup: string | undefined;
     subGroup: string | undefined;
     group_id: number | undefined;
     item: IFullDocument | IFolder | undefined;
@@ -58,10 +57,14 @@ export class NameChangerComponent implements OnInit {
 
     ngOnInit(): void {
         this.item = manageglobals().curr_item;
-        this.getGroupName();
+        this.getGroup();
     }
 
-    async getGroupName() {
+    /**
+     * Fetch group from group service with the name that user has provided for component.
+     * Access group's full name with .name, pretty_name with .description and id with .id
+     */
+    async getGroup() {
         if (!this.group) {
             return;
         }

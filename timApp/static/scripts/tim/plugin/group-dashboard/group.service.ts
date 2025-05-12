@@ -12,7 +12,6 @@ export class GroupService {
     constructor(private http: HttpClient) {}
 
     private groupNameUpdated = new Subject<{id: number; newName: string}>();
-    groupNameUpdated$ = this.groupNameUpdated.asObservable();
 
     notifyGroupNameChange(id: number, newName: string) {
         this.groupNameUpdated.next({id, newName});
@@ -95,7 +94,7 @@ export class GroupService {
     // Gets the current selected group
     async getCurrentGroup(groupName: string | null) {
         const response = toPromise(
-            this.http.get<any>(`/groups/current_group_name/${groupName}`)
+            this.http.get<any>(`/groups/pretty_name/${groupName}`)
         );
         const result = await response;
 
