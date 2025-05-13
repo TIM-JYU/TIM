@@ -292,10 +292,16 @@ export class BadgeService {
      *  - "newest": Sort badges by creation date, newest first
      *  - "oldest": Sort badges by creation date, oldest first
      *  - any other value: Returns the badges unsorted (copied)
+     * @param sortGivenTime If true, date-based sorting uses `given` date; otherwise uses `created`. Defaults to false.
      * @returns A new sorted array of badges
      */
-    sortBadges(badges: IBadge[], sortType: string): IBadge[] {
+    sortBadges(
+        badges: IBadge[],
+        sortType: string,
+        sortGivenTime: boolean = false
+    ): IBadge[] {
         const sorted = [...badges];
+        const key = sortGivenTime ? "given" : "created";
 
         switch (sortType) {
             case "az":
@@ -313,14 +319,12 @@ export class BadgeService {
             case "newest":
                 return sorted.sort(
                     (a, b) =>
-                        new Date(b.created).getTime() -
-                        new Date(a.created).getTime()
+                        new Date(b[key]).getTime() - new Date(a[key]).getTime()
                 );
             case "oldest":
                 return sorted.sort(
                     (a, b) =>
-                        new Date(a.created).getTime() -
-                        new Date(b.created).getTime()
+                        new Date(a[key]).getTime() - new Date(b[key]).getTime()
                 );
             default:
                 return sorted;
