@@ -461,7 +461,9 @@ export class BadgeWithdrawComponent implements OnInit {
      */
     private async fetchUsers() {
         const result = await toPromise(
-            this.http.get<[]>(`/usergroups_members/${this.badgegroupContext}`)
+            this.http.get<[]>(
+                `/groups/usergroups_members/${this.badgegroupContext}`
+            )
         );
         const users: IUser[] = [];
         if (result.ok) {
@@ -499,7 +501,7 @@ export class BadgeWithdrawComponent implements OnInit {
     private async fetchGroups() {
         if (this.badgegroupContext) {
             const result = await toPromise(
-                this.http.get<[]>(`/subgroups/${this.badgegroupContext}`)
+                this.http.get<[]>(`/groups/subgroups/${this.badgegroupContext}`)
             );
             const subGroups: IBadgeGroup[] = [];
             if (result.ok) {
