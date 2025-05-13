@@ -443,9 +443,7 @@ export class BadgeCreatorComponent implements OnInit {
                     description: this.newBadge.description,
                 })
             );
-            // console.log("contextgroup: ", this.selectedContextGroup);
             const result = await response;
-            // console.log("contextgroup: ", this.selectedContextGroup);
             if (result.ok) {
                 while (this.all_badges.length > 0) {
                     this.all_badges.pop();
