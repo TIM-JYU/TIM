@@ -11,12 +11,6 @@ import {Injectable} from "@angular/core";
 export class GroupService {
     constructor(private http: HttpClient) {}
 
-    private groupNameUpdated = new Subject<{id: number; newName: string}>();
-
-    notifyGroupNameChange(id: number, newName: string) {
-        this.groupNameUpdated.next({id, newName});
-    }
-
     /**
      * Hakee kaikki käyttäjät, jotka kuuluvat parametrina annettuun ryhmään.
      * @param group ryhmä, jonka käyttäjiä haetaan.
@@ -75,6 +69,11 @@ export class GroupService {
         return userSubGroups;
     }
 
+    /**
+     * Fetches user's data along with their personal group's information.
+     * @param userName user's name
+     * @returns an object that contains user data and personal group data
+     */
     async getUserAndPersonalGroup(userName: string | undefined) {
         const response = toPromise(
             this.http.get<any>(`/groups/user_and_personal_group/${userName}`)

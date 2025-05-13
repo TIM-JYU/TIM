@@ -36,9 +36,6 @@ import {ICurrentUser} from "tim/user/IUser";
 })
 export class NameChangerComponent implements OnInit {
     @Input() group!: string;
-    @Input() username!: string;
-    @Output() contextGroupChange = new EventEmitter<string>();
-    @Output() groupNameChange = new EventEmitter<string>();
     groupName: string | null = null;
     prettyName: string | null = null;
     subGroup: string | undefined;
@@ -49,7 +46,6 @@ export class NameChangerComponent implements OnInit {
     canEditName: boolean | undefined;
     showInput: boolean = false;
     showFullName = true;
-    storedGroup: {name: string; id: number} | null = null;
     user: ICurrentUser | null = null;
     doc: IFullDocument | IFolder | undefined;
 
@@ -73,12 +69,8 @@ export class NameChangerComponent implements OnInit {
             this.group
         );
         if (fetchedGroup) {
-            this.groupName = fetchedGroup.name; // store raw name for parsing
+            this.groupName = fetchedGroup.name;
             this.group_id = fetchedGroup.id;
-            this.storedGroup = {
-                name: fetchedGroup.name,
-                id: fetchedGroup.id,
-            };
 
             this.prettyName = fetchedGroup.description || "";
             this.displayedName = this.showFullName
@@ -89,29 +81,27 @@ export class NameChangerComponent implements OnInit {
         }
     }
 
+    /**
+     * Saves a new pretty name (description) for the current group,
+     * updates local prettyName variable for display in user interface.
+     */
     async saveName() {
-        if (!this.newName.valid || !this.storedGroup || !this.newName.value) {
+        if (
+            !this.newName.valid ||
+            !this.groupName ||
+            !this.group_id ||
+            !this.newName.value
+        ) {
             return;
         }
 
         const newPrettyName = this.newName.value;
 
-        if (this.storedGroup) {
-            await this.groupService.updateGroupName(
-                this.storedGroup.name,
-                newPrettyName
-            );
+        await this.groupService.updateGroupName(this.groupName, newPrettyName);
 
-            this.prettyName = newPrettyName;
-            this.groupName = this.storedGroup.name;
-            this.newName.setValue("");
-            this.showInput = !this.showInput;
-        }
-        this.groupService.notifyGroupNameChange(
-            this.storedGroup.id,
-            newPrettyName
-        );
-        this.groupNameChange.emit(this.prettyName!);
+        this.prettyName = newPrettyName;
+        this.newName.setValue("");
+        this.showInput = !this.showInput;
     }
 
     toggleInput() {
