@@ -252,7 +252,7 @@ export class BadgeViewerComponent implements OnInit {
         }
 
         const formattedBadgeTime: string = new Date(badge.given).toLocaleString(
-            "fi-FI",
+            navigator.language,
             {
                 hour: "2-digit",
                 minute: "2-digit",
@@ -292,7 +292,6 @@ export class BadgeViewerComponent implements OnInit {
         try {
             await this.badgeService.activeDialogRef.result;
         } catch (error) {
-            // console.log here if needed
         } finally {
             this.badgeService.activeDialogRef = null;
         }
@@ -442,7 +441,11 @@ export class BadgeViewerComponent implements OnInit {
      * @param sortType - The type of sorting to apply (e.g., alphabetical, by date).
      */
     onSortChange(sortType: string) {
-        this.sortedBadges = this.badgeService.sortBadges(this.badges, sortType);
+        this.sortedBadges = this.badgeService.sortBadges(
+            this.badges,
+            sortType,
+            true
+        );
     }
 
     /**
