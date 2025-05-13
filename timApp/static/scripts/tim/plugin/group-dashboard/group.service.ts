@@ -24,7 +24,7 @@ export class GroupService {
      */
     async getUsersFromGroup(group: string) {
         const result = await toPromise(
-            this.http.get<[]>(`/usergroups_members/${group}`)
+            this.http.get<[]>(`/groups/usergroups_members/${group}`)
         );
         const users: IUser[] = [];
         if (result.ok) {
@@ -43,7 +43,7 @@ export class GroupService {
      */
     async getSubGroups(group: string) {
         const result = await toPromise(
-            this.http.get<[]>(`/subgroups/${group}`)
+            this.http.get<[]>(`/groups/subgroups/${group}`)
         );
         const subGroups: IBadgeGroup[] = [];
         if (result.ok) {
@@ -63,7 +63,7 @@ export class GroupService {
      */
     async getUserSubGroups(group: string, userid: number) {
         const result = await toPromise(
-            this.http.get<[]>(`/users_subgroups/${userid}/${group}`)
+            this.http.get<[]>(`/groups/users_subgroups/${userid}/${group}`)
         );
         const userSubGroups: IBadgeGroup[] = [];
         if (result.ok) {
@@ -78,7 +78,7 @@ export class GroupService {
 
     async getUserAndPersonalGroup(userName: string | undefined) {
         const response = toPromise(
-            this.http.get<any>(`/user_and_personal_group/${userName}`)
+            this.http.get<any>(`/groups/user_and_personal_group/${userName}`)
         );
         const result = await response;
 

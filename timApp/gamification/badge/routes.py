@@ -93,11 +93,6 @@ def check_group_member(current_user: User, usergroup: int) -> bool:
         return False
 
 
-@badges_blueprint.get("/check_connection")
-def check_connection() -> Response:
-    return json_response(True)
-
-
 def verify_access(
     access_type: str,
     user_group: UserGroup | None,
@@ -134,6 +129,11 @@ def verify_access(
             block,
             message=f"Sorry, you don't have permission to use this resource.",
         )
+
+
+@badges_blueprint.get("/check_connection")
+def check_connection() -> Response:
+    return json_response(True)
 
 
 @badges_blueprint.get("/all_badges/<context_group>")
@@ -565,106 +565,3 @@ def podium(group_name_prefix: str) -> Response:
         )
 
     return json_response(podium_json)
-
-
-# TODO: Move this route to better place maybe.
-@badges_blueprint.get("/subgroups/<group_name_prefix>")
-def get_subgroups(group_name_prefix: str) -> Response:
-    """
-    Fetces usergroups that have a name that starts with the given prefix but is not the exact prefix.
-    Sorted by name.
-    :param group_name_prefix: Prefix of the usergroups
-    :return: List of usergroups
-    """
-    context_usergroup = UserGroup.get_by_name(group_name_prefix)
-    verify_access("teacher", context_usergroup, user_group_name=group_name_prefix)
-
-    subgroups = (
-        run_sql(
-            select(UserGroup)
-            .filter(
-                UserGroup.name.like(group_name_prefix + "%"),
-                UserGroup.name != group_name_prefix,
-            )
-            .order_by(UserGroup.name)
-        )
-        .scalars()
-        .all()
-    )
-    subgroups_json = []
-    for subgroup in subgroups:
-        subgroups_json.append(subgroup.to_json())
-    return json_response(subgroups_json)
-
-
-# TODO: Move this route to better place maybe.
-@badges_blueprint.get("/users_subgroups/<user_id>/<group_name_prefix>")
-def get_users_subgroups(user_id: int, group_name_prefix: str) -> Response:
-    """
-    Fetches usergroups that user with given user_id belongs. Fetched usergroups also
-    have a name that starts with the given prefix but is not the exact prefix. Sorted by name.
-    :param user_id: ID of the user
-    :param group_name_prefix: Prefix of the usergroups
-    :return: List of usergroups
-    """
-    user = User.get_by_id(user_id)
-    if not user:
-        raise NotExist(f'User with id "{user_id}" not found')
-
-    current_user = get_current_user_object()
-    if current_user.id != user.id:
-        context_usergroup = UserGroup.get_by_name(group_name_prefix)
-        verify_access("teacher", context_usergroup, user_group_name=group_name_prefix)
-
-    users_groups = user.groups
-    users_subgroups_json = []
-    for users_group in users_groups:
-        if (
-            users_group.name[: len(group_name_prefix)] == group_name_prefix
-            and users_group.name != group_name_prefix
-        ):
-            users_subgroups_json.append(users_group.to_json())
-    return json_response(users_subgroups_json)
-
-
-# TODO: Move this route to better place maybe.
-@badges_blueprint.get("/user_and_personal_group/<name>")
-def users_personal_group(name: str) -> Response:
-    """
-    Fetches user and his/her personal usergroup.
-    :param name: User's username
-    :return: useraccount and usergroup in json format
-    """
-    user_account = User.get_by_name(name)
-    if not user_account:
-        raise NotExist(f'User "{name}" not found')
-    personal_group = user_account.get_personal_group()
-    if not personal_group:
-        raise NotExist(f'Personal group for user "{name}" not found')
-    return json_response((user_account, personal_group))
-
-
-# TODO: Move this route to better place maybe.
-@badges_blueprint.get("/usergroups_members/<usergroup_name>")
-def usergroups_members(usergroup_name: str) -> Response:
-    """
-    Fetches usergroup's members.
-    :param usergroup_name: usergroup's name
-    :return: List of users
-    """
-    context_usergroup = UserGroup.get_by_name(usergroup_name)
-    if not context_usergroup:
-        raise NotExist(f'User group "{usergroup_name}" not found')
-
-    current_user = get_current_user_object()
-    in_group = check_group_member(current_user, context_usergroup.id)
-    if not in_group:
-        verify_access("view", context_usergroup, user_group_name=usergroup_name)
-
-    for user in context_usergroup.users:
-        if not user.real_name:
-            user.real_name = user.name
-
-    return json_response(
-        sorted(list(context_usergroup.users), key=attrgetter("real_name"))
-    )
