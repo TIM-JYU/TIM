@@ -3,12 +3,10 @@ import {Component, Input, NgModule} from "@angular/core";
 import {CommonModule} from "@angular/common";
 import {BadgeService} from "tim/gamification/badge/badge.service";
 import {manageglobals} from "tim/util/globals";
-import type {IFolder, IFullDocument} from "tim/item/IItem";
 import {NameChangerModule} from "tim/plugin/group-dashboard/name-changer.component";
 import type {IBadge} from "tim/gamification/badge/badge.interface";
 import {BadgeModule} from "tim/gamification/badge/badge.component";
 import {GroupService} from "tim/plugin/group-dashboard/group.service";
-import type {Subscription} from "rxjs";
 
 @Component({
     selector: "tim-group-dashboard",
@@ -93,14 +91,22 @@ export class GroupDashboardComponent implements OnInit {
     totalMembers: number = 0;
     totalBadges: number = 0;
 
-    // TODO: scrollbar ja skaalaus, kun badgeja on paljon
-    // TODO: group badgejen noutaminen ei-jäsenille
+    /**
+     * Triggers loading of group related data if group is provided in the user interface
+     */
     ngOnInit() {
         if (this.group) {
             this.loadData();
         }
     }
 
+    /**
+     * Loads necessary data for group dashboard, including:
+     * - context group
+     * - group's display name and id
+     * - members of the group
+     * - badges for individual members of the group and group's common badges
+     */
     async loadData() {
         this.contextGroup = this.groupService.getContextGroup(this.group);
         this.currentUserName = manageglobals().current_user.name;
@@ -110,6 +116,14 @@ export class GroupDashboardComponent implements OnInit {
         await this.fetchGroupBadges();
     }
 
+    /**
+     * Fetches data for current group, including:
+     * - pretty name (description)
+     * - group id
+     * - permissions for badge viewing
+     * TODO: do badge viewing rights entirely in backend
+     * @returns group data
+     */
     async getGroupName() {
         const fetchedGroup = await this.groupService.getCurrentGroup(
             this.group
@@ -123,6 +137,10 @@ export class GroupDashboardComponent implements OnInit {
             fetchedGroup.isTeacher || fetchedGroup.isAdmin || false;
     }
 
+    /**
+     * Fetches a list of users belonging to current group,
+     * updates member view and member count in user interface
+     */
     async fetchMembers() {
         const members = await this.groupService.getUsersFromGroup(this.group);
 
@@ -132,6 +150,13 @@ export class GroupDashboardComponent implements OnInit {
         }
     }
 
+    /**
+     * Fetches personal badges for each group member.
+     * Currently, a regular member of the group can only see his own badges.
+     * An admin or teacher can see every member's personal badges.
+     * Uses member's personal group IDs to query badges.
+     * Counts total badges.
+     */
     async fetchUserBadges() {
         let badgeCount = 0;
         const badgePromises = this.members.map(async (user) => {
@@ -163,6 +188,10 @@ export class GroupDashboardComponent implements OnInit {
         this.totalBadges += badgeCount;
     }
 
+    /**
+     * Fetches badges that are assigned directly to the group itself.
+     * Updates the group's badge list and adds to the total badge count.
+     */
     async fetchGroupBadges() {
         const groupBadges = await this.badgeService.getBadges(
             this.groupId!,
@@ -175,8 +204,6 @@ export class GroupDashboardComponent implements OnInit {
             return;
         }
     }
-
-    ngOnDestroy(): void {}
 }
 
 @NgModule({
