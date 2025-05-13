@@ -1,5 +1,5 @@
 """badge-related routes."""
-
+from collections import defaultdict
 from dataclasses import dataclass
 from operator import attrgetter
 from pathlib import Path
@@ -313,160 +313,85 @@ def get_groups_badges(group_id: int, context_group: str) -> Response:
     :return: Badges in json response format
     """
     if group_id == "undefined":
-        raise NotExist(f"User group not found")
+        raise NotExist("User group not found")
     usergroup = UserGroup.get_by_id(group_id)
     if not usergroup:
         raise NotExist(f'User group with id "{group_id}" not found')
+    context_usergroup = UserGroup.get_by_name(context_group)
+    if not context_usergroup:
+        raise NotExist(f'User group "{context_group}" not found')
+
     current_user = get_current_user_object()
     in_group = check_group_member(current_user, group_id)
     if not in_group:
-        context_usergroup = UserGroup.get_by_name(context_group)
         verify_access("teacher", context_usergroup, user_group_name=context_group)
 
     groups_badges_given = (
         run_sql(
             select(BadgeGiven)
-            .filter(BadgeGiven.active)
-            .filter(BadgeGiven.group_id == group_id)
+            .filter(BadgeGiven.active, BadgeGiven.group_id == group_id)
             .order_by(BadgeGiven.given)
         )
         .scalars()
         .all()
     )
-    badge_ids = []
-    badge_ids_unique = []
-    badge_ids_badgegiven_ids_and_msgs: dict[str, tuple] = {}
-    for badge_given in groups_badges_given:
-        key_extension = 0
-        while (
-            str(badge_given.badge_id) + "_" + str(key_extension)
-        ) in badge_ids_badgegiven_ids_and_msgs.keys():
-            key_extension += 1
-        badge_ids.append(badge_given.badge_id)
-        badge_ids_unique.append((badge_given.badge_id, key_extension))
-        badge_ids_badgegiven_ids_and_msgs[
-            str(badge_given.badge_id) + "_" + str(key_extension)
-        ] = (
-            badge_given.id,
-            badge_given.message,
-            badge_given.given_by,
-            badge_given.given,
-            badge_given.withdrawn_by,
-            badge_given.withdrawn,
-            badge_given.undo_withdrawn_by,
-            badge_given.undo_withdrawn,
-        )
-    context_group_object = UserGroup.get_by_name(context_group)
-    if not context_group_object:
-        raise NotExist(f'User group "{context_group}" not found')
-    groups_badges = (
+
+    badge_map = defaultdict(list)
+    for bg in groups_badges_given:
+        badge_map[bg.badge_id].append(bg)
+    badge_ids = list(badge_map.keys())
+
+    badges = (
         run_sql(
             select(Badge)
             .filter_by(active=True)
             .filter(
-                Badge.context_group == context_group_object.id, Badge.id.in_(badge_ids)
+                Badge.context_group == context_usergroup.id, Badge.id.in_(badge_ids)
             )
         )
         .scalars()
         .all()
     )
-    delete_keys = []
-    for key in badge_ids_badgegiven_ids_and_msgs:
-        key_first = int(key.split("_")[0])
-        delete = True
-        for groups_badge in groups_badges:
-            if key_first == groups_badge.id:
-                delete = False
-        if delete:
-            delete_keys.append(key)
-    for key in delete_keys:
-        del badge_ids_badgegiven_ids_and_msgs[key]
-    for i in range(len(badge_ids_unique) - 1, -1, -1):
-        delete = True
-        for groups_badge in groups_badges:
-            if badge_ids_unique[i][0] == groups_badge.id:
-                delete = False
-        if delete:
-            del badge_ids_unique[i]
-    groups_badges_ordered = []
-    for badge_id in badge_ids:
-        for groups_badge in groups_badges:
-            if groups_badge.id == badge_id:
-                groups_badges_ordered.append(groups_badge)
+
+    valid_badge_ids = {b.id for b in badges}
+    badge_id_to_badge = {b.id: b for b in badges}
+
     badges_json = []
-    i = 0
-    for groups_badge in groups_badges_ordered:
-        groups_badge_json = groups_badge.to_json()
-        key = f"{badge_ids_unique[i][0]}_{badge_ids_unique[i][1]}"
-        groups_badge_json["badgegiven_id"] = badge_ids_badgegiven_ids_and_msgs[key][0]
-        groups_badge_json["message"] = badge_ids_badgegiven_ids_and_msgs[key][1]
-        groups_badge_json["given_by"] = badge_ids_badgegiven_ids_and_msgs[key][2]
-        groups_badge_json["given"] = badge_ids_badgegiven_ids_and_msgs[key][3]
-        groups_badge_json["withdrawn_by"] = badge_ids_badgegiven_ids_and_msgs[key][4]
-        groups_badge_json["withdrawn"] = badge_ids_badgegiven_ids_and_msgs[key][5]
-        groups_badge_json["undo_withdrawn_by"] = badge_ids_badgegiven_ids_and_msgs[key][
-            6
-        ]
-        groups_badge_json["undo_withdrawn"] = badge_ids_badgegiven_ids_and_msgs[key][7]
-        badges_json.append(groups_badge_json)
-        i += 1
-    for badge_json in badges_json:
-        if badge_json["created_by"]:
-            created_by = User.get_by_id(badge_json["created_by"])
-        else:
-            created_by = None
-        if badge_json["modified_by"]:
-            modified_by = User.get_by_id(badge_json["modified_by"])
-        else:
-            modified_by = None
-        if badge_json["deleted_by"]:
-            deleted_by = User.get_by_id(badge_json["deleted_by"])
-        else:
-            deleted_by = None
-        if badge_json["restored_by"]:
-            restored_by = User.get_by_id(badge_json["restored_by"])
-        else:
-            restored_by = None
-        if badge_json["given_by"]:
-            given_by = User.get_by_id(badge_json["given_by"])
-        else:
-            given_by = None
-        if badge_json["withdrawn_by"]:
-            withdrawn_by = User.get_by_id(badge_json["withdrawn_by"])
-        else:
-            withdrawn_by = None
-        if badge_json["undo_withdrawn_by"]:
-            undo_withdrawn_by = User.get_by_id(badge_json["undo_withdrawn_by"])
-        else:
-            undo_withdrawn_by = None
-        if created_by:
-            badge_json["created_by_name"] = created_by.real_name
-        else:
-            badge_json["created_by_name"] = None
-        if modified_by:
-            badge_json["modified_by_name"] = modified_by.real_name
-        else:
-            badge_json["modified_by_name"] = None
-        if deleted_by:
-            badge_json["deleted_by_name"] = deleted_by.real_name
-        else:
-            badge_json["deleted_by_name"] = None
-        if restored_by:
-            badge_json["restored_by_name"] = restored_by.real_name
-        else:
-            badge_json["restored_by_name"] = None
-        if given_by:
-            badge_json["given_by_name"] = given_by.real_name
-        else:
-            badge_json["given_by_name"] = None
-        if withdrawn_by:
-            badge_json["withdrawn_by_name"] = withdrawn_by.real_name
-        else:
-            badge_json["withdrawn_by_name"] = None
-        if undo_withdrawn_by:
-            badge_json["undo_withdrawn_by_name"] = undo_withdrawn_by.real_name
-        else:
-            badge_json["undo_withdrawn_by_name"] = None
+    for badge_id in badge_ids:
+        if badge_id not in valid_badge_ids:
+            continue
+        badge = badge_id_to_badge[badge_id]
+        for i, badge_given in enumerate(badge_map[badge_id]):
+            badge_json = badge.to_json()
+            badge_json.update(
+                {
+                    "badgegiven_id": badge_given.id,
+                    "message": badge_given.message,
+                    "given_by": badge_given.given_by,
+                    "given": badge_given.given,
+                    "withdrawn_by": badge_given.withdrawn_by,
+                    "withdrawn": badge_given.withdrawn,
+                    "undo_withdrawn_by": badge_given.undo_withdrawn_by,
+                    "undo_withdrawn": badge_given.undo_withdrawn,
+                }
+            )
+
+            user_fields = [
+                "created_by",
+                "modified_by",
+                "deleted_by",
+                "restored_by",
+                "given_by",
+                "withdrawn_by",
+                "undo_withdrawn_by",
+            ]
+            for field in user_fields:
+                uid = badge_json.get(field)
+                user = User.get_by_id(uid) if uid else None
+                badge_json[f"{field}_name"] = user.real_name if user else None
+
+            badges_json.append(badge_json)
+
     return json_response(badges_json)
 
 
