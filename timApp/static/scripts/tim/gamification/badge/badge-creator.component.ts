@@ -371,35 +371,30 @@ export class BadgeCreatorComponent implements OnInit {
         });
     }
 
-    /**
-     * Resets the form and related states to their initial values.
-     *
-     * This function clears any selected or editing badge, hides the badge form, and resets
-     * the form change status. It also scrolls to the badge list section after a short delay.
-     *
-     */
     resetForm() {
-        this.clickedBadge = null;
-        this.editingBadge = null;
-        this.badgeFormShowing = false;
-        this.isFormChanged = false;
-        setTimeout(() => {
-            scrollToElement(this.allBadgesSection?.nativeElement);
-        }, 100);
+        this.resetBadgeForm("full");
+    }
+    emptyForm() {
+        this.resetBadgeForm("empty");
     }
 
     /**
-     * Resets the badge form to its default state and clears the editing badge.
-     *
+     * sets the form according to what function was called.
+     * @param mode has two different modes full and empty
      */
-    emptyForm() {
+    resetBadgeForm(mode: "full" | "empty") {
         this.editingBadge = null;
-        this.badgeForm.reset({
-            color: "gray",
-            shape: "hexagon",
-            context_group: this.selectedContextGroup,
-        });
         this.isFormChanged = false;
+        if (mode === "full") {
+            this.clickedBadge = null;
+            this.badgeFormShowing = false;
+        } else {
+            this.badgeForm.reset({
+                color: "gray",
+                shape: "hexagon",
+                context_group: this.selectedContextGroup,
+            });
+        }
         setTimeout(() => {
             scrollToElement(this.allBadgesSection?.nativeElement);
         }, 100);
