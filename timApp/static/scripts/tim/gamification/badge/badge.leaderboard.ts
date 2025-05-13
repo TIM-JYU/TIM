@@ -83,7 +83,6 @@ export class BadgeLeaderboardComponent implements OnInit {
             );
 
             this.top_five = result || [];
-            console.log("top5: ", this.top_five);
 
             for (const team of this.top_five) {
                 const pretty = await this.groupService.getCurrentGroup(
@@ -91,8 +90,6 @@ export class BadgeLeaderboardComponent implements OnInit {
                 );
                 team.prettyName = pretty?.description || team.group_name;
             }
-
-            console.log("Fetched top_five: ", this.top_five);
         } catch (error: any) {
             console.error("Error fetching top five:", error);
             this.top_five = [];
