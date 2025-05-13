@@ -119,7 +119,7 @@ export class GroupService {
     async updateGroupName(group_name: string, new_name: string | null) {
         const response = toPromise(
             this.http.post<{ok: boolean}>(
-                `/groups/editGroupName/${group_name}/${new_name}`,
+                `/groups/change_pretty_name/${group_name}/${new_name}`,
                 {}
             )
         );
