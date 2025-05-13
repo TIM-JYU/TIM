@@ -144,18 +144,21 @@
     border-radius: 4px;
     padding: 2px 5px 4px;
     transform: translateX(-50%);
+    white-space: normal;
+    word-break: break-word;
     min-width: 100px;
     z-index: 1;
     color: #fff;
     bottom: 4px;
     left: 50%;
-    height: 20px;
-    font-size: 13px;
+    height: auto;
+    font-size: 10px;
     box-shadow: 0 1px 2px rgba(0, 0, 0, 0.27);
     text-shadow: 0 2px 2px rgba(0, 0, 0, 0.1);
     text-transform: uppercase;
     background: linear-gradient(to bottom right, #555 0%, #333 100%);
     cursor: pointer;
+    margin-bottom: 0;
 }
 
 .yellow {

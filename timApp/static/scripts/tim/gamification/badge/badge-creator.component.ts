@@ -115,15 +115,15 @@ import {scrollToElement} from "tim/util/utils";
                 <form [formGroup]="badgeForm" (ngSubmit)="editingBadge ? saveBadgeChanges() : onSubmit()" id="badgeForm" class="form-group">
                   <div class="form-group">
                       <label for="title">Badge Title <span class="required">*</span></label>
-                      <input type="text" maxlength="15" id="title" name="title" formControlName="title" [class.invalid]="badgeForm.controls.title.invalid && badgeForm.controls.title.touched">
+                      <input type="text" maxlength="30" id="title" name="title" formControlName="title" [class.invalid]="badgeForm.controls.title.invalid && badgeForm.controls.title.touched">
                       
                       <div class="char-counter">
-                        {{ badgeForm.get('title')?.value?.length || 0 }} / 15 characters
+                        {{ badgeForm.get('title')?.value?.length || 0 }} / 30 characters
                       </div>
                       
                       <div *ngIf="badgeForm.controls.title.invalid && badgeForm.controls.title.touched" class="error-message">
                           <p *ngIf="badgeForm.controls.title.hasError('required')">Title is required.</p>
-                          <p *ngIf="badgeForm.controls.title.hasError('maxlength')">Title is too long (max 20 characters).</p>
+                          <p *ngIf="badgeForm.controls.title.hasError('maxlength')">Title is too long (max 30 characters).</p>
                       </div>
                   </div>
     

@@ -1,5 +1,5 @@
-import type {OnInit, OnChanges} from "@angular/core";
-import {Component, Input, NgModule, SimpleChanges} from "@angular/core";
+import type {OnInit, OnChanges, SimpleChanges} from "@angular/core";
+import {Component, Input, NgModule} from "@angular/core";
 import {CommonModule} from "@angular/common";
 import {FormsModule} from "@angular/forms";
 
