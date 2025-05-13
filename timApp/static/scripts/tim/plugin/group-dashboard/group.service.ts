@@ -11,13 +11,6 @@ import {Injectable} from "@angular/core";
 export class GroupService {
     constructor(private http: HttpClient) {}
 
-    private groupNameUpdated = new Subject<{id: number; newName: string}>();
-    groupNameUpdated$ = this.groupNameUpdated.asObservable();
-
-    notifyGroupNameChange(id: number, newName: string) {
-        this.groupNameUpdated.next({id, newName});
-    }
-
     /**
      * Hakee kaikki käyttäjät, jotka kuuluvat parametrina annettuun ryhmään.
      * @param group ryhmä, jonka käyttäjiä haetaan.
@@ -76,6 +69,11 @@ export class GroupService {
         return userSubGroups;
     }
 
+    /**
+     * Fetches user's data along with their personal group's information.
+     * @param userName user's name
+     * @returns an object that contains user data and personal group data
+     */
     async getUserAndPersonalGroup(userName: string | undefined) {
         const response = toPromise(
             this.http.get<any>(`/groups/user_and_personal_group/${userName}`)
@@ -92,10 +90,14 @@ export class GroupService {
         }
     }
 
-    // Gets the current selected group
+    /**
+     * Retrieves group data including id, internal name, and description (pretty name).
+     * @param groupName The full internal name of the group (e.g., "parent-subgroup").
+     * @returns An object containing the group's id, name, and description, or null if the fetch fails.
+     */
     async getCurrentGroup(groupName: string | null) {
         const response = toPromise(
-            this.http.get<any>(`/groups/current_group_name/${groupName}`)
+            this.http.get<any>(`/groups/pretty_name/${groupName}`)
         );
         const result = await response;
 
@@ -107,12 +109,14 @@ export class GroupService {
         return null;
     }
 
-    // Changes the groups name into the
-    async updateGroupName(
-        group_id: number,
-        group_name: string,
-        new_name: string | null
-    ) {
+    /**
+     * Updates the group's description field (also called "pretty name").
+     * Does not change the actual group name.
+     * @param group_name actual group's name (identifier) provided for the component
+     * @param new_name group's new name (pretty name)
+     * @returns whether the update was successful
+     */
+    async updateGroupName(group_name: string, new_name: string | null) {
         const response = toPromise(
             this.http.post<{ok: boolean}>(
                 `/groups/editGroupName/${group_name}/${new_name}`,
@@ -125,6 +129,11 @@ export class GroupService {
         }
     }
 
+    /**
+     * Extracts the context group (i.e., the parent group) from a full group name.
+     * @param fullName The full internal group name, typically in the format "parent-subgroup".
+     * @returns The first part of the group name before the dash, representing the context group.
+     */
     getContextGroup(fullName: string) {
         const parts = fullName.split("-");
         return parts[0];

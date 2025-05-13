@@ -606,8 +606,9 @@ def usergroups_members(usergroup_name: str) -> Response:
     )
 
 
-@groups.get("/current_group_name/<name>")
-def group_name(name: str) -> Response:
+# TODO: implement proper rights checking instead of isMember, isTeacher and such
+@groups.get("/pretty_name/<name>")
+def pretty_name(name: str) -> Response:
     """
     Fetches group name from the database.
     :param name: Name of the group given in group changer
