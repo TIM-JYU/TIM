@@ -646,8 +646,8 @@ def pretty_name(name: str) -> Response:
     )
 
 
-@groups.post("/editGroupName/<group_name>/<new_name>")
-def change_group_name(group_name: str, new_name: str) -> Response:
+@groups.post("/change_pretty_name/<group_name>/<new_name>")
+def change_pretty_name(group_name: str, new_name: str) -> Response:
     """
     Changes groups description block (pretty name)
     :param group_name: full group name
