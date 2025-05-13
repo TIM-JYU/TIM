@@ -19,13 +19,10 @@ import {ICurrentUser} from "tim/user/IUser";
         <ng-container>
             <div class="name-changer">
                 <p>Current group name: <b>{{ displayedName }}</b></p>
-                <p>Pretty name: <b>{{prettyName}}</b></p>
+                <p>New name: <b>{{prettyName}}</b></p>
             
             <div class="buttons-section">
     <button *ngIf="canEditName" (click)="toggleInput()">Change group name</button>
-    <button (click)="toggleFullName()">
-        {{ showFullName ? "Show sub-group only" : "Show full group name" }}
-    </button>
 </div>
                 <div *ngIf="showInput" class="input-buttons">
                     <input [formControl]="newName" placeholder="Enter new group name"/>
@@ -86,7 +83,6 @@ export class NameChangerComponent implements OnInit {
                 : this.subGroup;
 
             this.canEditName = fetchedGroup.isMember || fetchedGroup.isTeacher;
-            this.parseParentGroup();
         }
     }
 
@@ -114,24 +110,6 @@ export class NameChangerComponent implements OnInit {
             newPrettyName
         );
         this.groupNameChange.emit(this.prettyName!);
-    }
-
-    parseParentGroup() {
-        if (!this.groupName) return;
-        const nameParts = this.groupName.split("-");
-        this.parentGroup = nameParts[0];
-        this.subGroup = nameParts.slice(1).join(".");
-        this.displayedName = this.groupName;
-        this.contextGroupChange.emit(this.parentGroup);
-    }
-
-    toggleFullName() {
-        this.showFullName = !this.showFullName;
-        if (this.showFullName) {
-            this.displayedName = this.groupName;
-        } else {
-            this.displayedName = this.subGroup;
-        }
     }
 
     toggleInput() {
