@@ -75,12 +75,12 @@ import {PurifyModule} from "tim/util/purify.module";
                             </tim-badge>
                               <div *ngIf="clickedBadge === badge" class="badge-buttons">
                                 <button title="Assign Badge" id="giveBadgeButton" type="button" 
-                                        (click)="showBadgeGiver(clickedBadge)" 
+                                        (click)="showBadgeGiver(clickedBadge!)" 
                                         [disabled]="!clickedBadge" 
                                         [ngClass]="{'disabled-btn': !clickedBadge}">
                                         <span class="material-icons">add</span></button>
                                 <button title="Edit Badge" id="editButton" type="button" 
-                                        (click)="editBadge(clickedBadge)" 
+                                        (click)="editBadge(clickedBadge!)" 
                                         [disabled]="!clickedBadge" 
                                         [ngClass]="{'disabled-btn': !clickedBadge}">
                                         <span class="material-icons">edit</span></button>
@@ -237,8 +237,8 @@ export class BadgeCreatorComponent implements OnInit {
     availableShapes: {id: string; value: string}[] = [];
     availableColors: {id: string; forCreatorList: string}[] = [];
 
-    clickedBadge: any = null;
-    editingBadge: any = null;
+    clickedBadge: IBadge | null = null;
+    editingBadge: IBadge | null = null;
 
     showGiver = false;
     @Input() badgegroupContext?: string;
@@ -577,7 +577,7 @@ export class BadgeCreatorComponent implements OnInit {
      */
     async isBadgeAssigned() {
         const response = await toPromise(
-            this.http.get<any>(`/badge_holders/${this.clickedBadge.id}`)
+            this.http.get<any>(`/badge_holders/${this.clickedBadge!.id}`)
         );
         if (response.result[0].length > 0 || response.result[1].length > 0) {
             return true;
@@ -596,14 +596,18 @@ export class BadgeCreatorComponent implements OnInit {
         if (await this.checkConnectionError()) {
             return;
         }
-        let confirmMessage = `Are you sure you want to delete "${this.editingBadge.title}" badge?`;
+        let confirmMessage = `Are you sure you want to delete "${
+            this.editingBadge!.title
+        }" badge?`;
 
         if (await this.isBadgeAssigned()) {
-            confirmMessage = `WARNING<br><br>This badge has been assigned to users, are you sure you want to delete "${this.editingBadge.title}" badge?`;
+            confirmMessage = `WARNING<br><br>This badge has been assigned to users, are you sure you want to delete "${
+                this.editingBadge!.title
+            }" badge?`;
         }
         if (
             await showConfirm(
-                `Delete ${this.editingBadge.title}`,
+                `Delete ${this.editingBadge!.title}`,
                 confirmMessage
             )
         ) {
@@ -625,7 +629,7 @@ export class BadgeCreatorComponent implements OnInit {
                         this.getBadges();
                         this.emptyForm();
                         this.resetForm();
-                        this.clickedBadge = false;
+                        this.clickedBadge = null;
                         this.isFormChanged = false;
                         // Send a signal to badgeservice about succesful delete-action
                         this.badgeService.triggerUpdateBadgeList();

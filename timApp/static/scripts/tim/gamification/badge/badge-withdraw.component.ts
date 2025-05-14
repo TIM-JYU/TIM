@@ -234,7 +234,7 @@ export class BadgeWithdrawComponent implements OnInit {
     usersWithoutGroup: IUser[] = [];
     userBadges: IBadge[] = [];
 
-    badges: any = [];
+    badges: IBadge[] = [];
     selectedBadge?: IBadge | null = null;
 
     @Input() badgegroupContext?: string;
