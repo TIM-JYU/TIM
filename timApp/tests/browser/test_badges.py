@@ -130,11 +130,6 @@ class TestBadges(BrowserTest):
         self.wait_until_present_and_vis("tim-alert")
         alert = self.find_element("tim-alert")
         self.assertTrue(alert.text)
-        # Dismiss
-        try:
-            alert.find_element(By.CSS_SELECTOR, ".close").click()
-        except (ElementClickInterceptedException, ElementNotInteractableException):
-            pass
         self.should_not_exist("tim-alert")
 
     def test_give_badge(self):
