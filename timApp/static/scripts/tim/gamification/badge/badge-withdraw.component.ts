@@ -28,7 +28,7 @@ import {PurifyModule} from "tim/util/purify.module";
     template: `
 
         <div class="badge-withdraw" #startSection>
-            <h2>View users or groups ({{ badgegroupContext }})</h2>
+            <h2><ng-container i18n>View users or groups </ng-container>({{ badgegroupContext }})</h2>
 
             <ng-container *ngIf="!hasPermissionToComponent">
                 <tim-alert *ngFor="let alert of alerts; let i = index" [severity]="alert.type" [closeable]="true"
@@ -42,11 +42,11 @@ import {PurifyModule} from "tim/util/purify.module";
                     <button (click)="handleSwap(true); fetchUsersFromGroups()"
                             [disabled]="userAssign || users.length === 0"
                             [title]="users.length === 0 && userAssign == undefined ? 'No users available' : ''">
-                        Users
+                        <ng-container i18n>Users</ng-container>
                     </button>
                     <button (click)="handleSwap(false)" [disabled]="userAssign === false || groups.length === 0"
                             [title]="groups.length === 0 && userAssign == undefined ? 'No groups available' : ''">
-                        Groups
+                        <ng-container i18n>Groups</ng-container>
                     </button>
                 </div>
 
@@ -54,7 +54,7 @@ import {PurifyModule} from "tim/util/purify.module";
                     <div *ngIf="userAssign" class="form-group">
                         <div class="search-wrapper">
                             <div class="search-groups">
-                                <label for="group-search">Search user:</label>
+                                <label for="group-search" i18n>Search user:</label>
                                 <input type="search" id="group-search" name="q"
                                        [(ngModel)]="searchTerm"
                                        (ngModelChange)="onUserSearchChange()"/>
@@ -86,7 +86,7 @@ import {PurifyModule} from "tim/util/purify.module";
                                     </div>
                                 </div>
 
-                                <span>Users without group</span>
+                                <span i18n>Users without group</span>
                                 <div *ngFor="let user of usersWithoutGroup" class="option-item">
                                         <span class="user-name" (click)="selectedUser = user; fetchUserBadges(user.id)"
                                               [ngClass]="{'selected-option': selectedUser?.id === user.id}">
@@ -99,7 +99,7 @@ import {PurifyModule} from "tim/util/purify.module";
                         <div class="badges-preview">
                             <ng-container *ngIf="userBadges.length > 0">
                                 <div *ngIf="selectedUser?.name != undefined">
-                                    <p>{{ selectedUser?.real_name }}'s badges</p>
+                                    <p>{{ selectedUser?.real_name }}</p>
                                     <div class="user_badges">
                                         <div class="card" *ngFor="let badge of userBadges">
                                             <tim-badge
@@ -116,11 +116,11 @@ import {PurifyModule} from "tim/util/purify.module";
                             </ng-container>
                             <ng-container *ngIf="!hasBadges && selectedUser">
                                 <p>{{ selectedUser!.real_name }}</p>
-                                <p>No badges assigned</p>
+                                <p i18n>No badges assigned</p>
                             </ng-container>
 
                             <ng-container *ngIf="!selectedUser">
-                                <p>Select user to view badges</p>
+                                <p i18n>Select user to view badges</p>
                             </ng-container>
                         </div>
                     </div>
@@ -128,7 +128,7 @@ import {PurifyModule} from "tim/util/purify.module";
                     <div *ngIf="userAssign === false" class="form-group">
                         <div class="search-wrapper">
                             <div class="search-groups">
-                                <label for="group-search">Search group:</label>
+                                <label for="group-search" i18n>Search group:</label>
                                 <input type="search" id="group-search" name="q"
                                        [(ngModel)]="groupSearchTerm"
                                        (ngModelChange)="onGroupSearchChange()"/>
@@ -177,11 +177,11 @@ import {PurifyModule} from "tim/util/purify.module";
 
                             <ng-container *ngIf="!hasBadges && selectedGroup">
                                 <p>{{ selectedGroup!.name }}</p>
-                                <p>No badges assigned</p>
+                                <p i18n>No badges assigned</p>
                             </ng-container>
 
                             <ng-container *ngIf="!selectedGroup">
-                                <p>Select group to view badges</p>
+                                <p i18n>Select group to view badges</p>
                             </ng-container>
 
                         </div>
@@ -195,13 +195,13 @@ import {PurifyModule} from "tim/util/purify.module";
 
 
                     <ng-container *ngIf="selectedBadge">
-                        <h5>Details of the selected badge</h5>
+                        <h5 i18n>Details</h5>
                         <p class="word-wrap">
-                            Title: {{ selectedBadge!.title || "No title" }} <br>
-                            Description: {{ selectedBadge!.description || "No description" }} <br>
-                            Message: {{ selectedBadge!.message || "No message" }} <br>
-                            Given By: {{ selectedBadge!.given_by_name || "No name" }} <br>
-                            Given Time: {{ selectedBadge!.given || "No date" }} <br>
+                            <ng-container i18n>Title:</ng-container> {{ selectedBadge!.title || "No title" }} <br>
+                            <ng-container i18n>Description:</ng-container> {{ selectedBadge!.description || "No description" }} <br>
+                            <ng-container i18n>Message:</ng-container> {{ selectedBadge!.message || "No message" }} <br>
+                            <ng-container i18n>Given by:</ng-container> {{ selectedBadge!.given_by_name || "No name" }} <br>
+                            <ng-container i18n>Time given:</ng-container> {{ selectedBadge!.given || "No date" }} <br>
                         </p>
                     </ng-container>
 
@@ -210,9 +210,9 @@ import {PurifyModule} from "tim/util/purify.module";
                             <button id="assignButton" (click)="removeBadge(selectedBadge?.badgegiven_id)"
                                     [disabled]="isWithdrawButtonDisabled()"
                                     [title]="isWithdrawButtonDisabled() ? 'Select badge to withdraw' : ''">
-                                Withdraw
+                                <ng-container i18n>Withdraw</ng-container>
                             </button>
-                            <button id="cancelButton" (click)="emptyForm()">Cancel</button>
+                            <button id="cancelButton" (click)="emptyForm()"><ng-container i18n>Cancel</ng-container></button>
                         </div>
                     </ng-container>
                 </div>
