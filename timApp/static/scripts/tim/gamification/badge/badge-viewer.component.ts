@@ -389,6 +389,7 @@ export class BadgeViewerComponent implements OnInit {
             }
         }
         this.badges = userBadges;
+        this.badges = this.badgeService.sortBadges(this.badges, "newest", true);
         this.onSortChange(this.selectedSort);
     }
 
@@ -427,9 +428,13 @@ export class BadgeViewerComponent implements OnInit {
         for (const group of this.userSubGroups) {
             this.groupBadgesMap.set(
                 group.id,
-                await this.badgeService.getBadges(
-                    group.id,
-                    this.badgegroupContext
+                this.badgeService.sortBadges(
+                    await this.badgeService.getBadges(
+                        group.id,
+                        this.badgegroupContext
+                    ),
+                    "newest",
+                    true
                 )
             );
         }
@@ -457,7 +462,11 @@ export class BadgeViewerComponent implements OnInit {
     onGroupSortChange(groupId: number, sortType: string) {
         this.groupSortMap.set(groupId, sortType);
         const originalBadges = this.groupBadgesMap.get(groupId) || [];
-        const sorted = this.badgeService.sortBadges(originalBadges, sortType);
+        const sorted = this.badgeService.sortBadges(
+            originalBadges,
+            sortType,
+            true
+        );
         this.groupBadgesMap.set(groupId, sorted);
     }
 
