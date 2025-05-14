@@ -19,6 +19,7 @@ import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {GroupService} from "tim/plugin/group-dashboard/group.service";
 import type {IUser} from "tim/user/IUser";
 import {toPromise} from "tim/util/utils";
+import {PurifyModule} from "tim/util/purify.module";
 
 @Component({
     selector: "timBadgeGiver",
@@ -189,7 +190,7 @@ import {toPromise} from "tim/util/utils";
 
             <tim-alert *ngFor="let alert of alerts; let i = index" [severity]="alert.type" [closeable]="true"
                        (closing)="badgeService.closeAlert(this.alerts, i)">
-                <div [innerHTML]="alert.msg"></div>
+                <div [innerHTML]="alert.msg | purify"></div>
             </tim-alert>
 
             <div class="button-container">
@@ -662,6 +663,12 @@ export class BadgeGiverComponent implements OnInit {
 @NgModule({
     declarations: [BadgeGiverComponent],
     exports: [BadgeGiverComponent],
-    imports: [CommonModule, FormsModule, BadgeModule, TimUtilityModule],
+    imports: [
+        CommonModule,
+        FormsModule,
+        BadgeModule,
+        TimUtilityModule,
+        PurifyModule,
+    ],
 })
 export class BadgeGiverModule {}

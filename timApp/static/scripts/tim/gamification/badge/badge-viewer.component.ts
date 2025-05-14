@@ -20,6 +20,7 @@ import {HostListener} from "@angular/core";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {toPromise} from "tim/util/utils";
 import {GroupService} from "tim/plugin/group-dashboard/group.service";
+import {PurifyModule} from "tim/util/purify.module";
 
 @Component({
     selector: "tim-badge-viewer",
@@ -28,7 +29,7 @@ import {GroupService} from "tim/plugin/group-dashboard/group.service";
             <div class="viewer-container">
                 <h2 class="badge-heading">User Badges </h2>
                 <tim-alert *ngFor="let alert of alerts; let i = index" [severity]="alert.type" [closeable]="true" (closing)="badgeService.closeAlert(this.alerts, i)">
-                    <div [innerHTML]="alert.msg"></div>
+                    <div [innerHTML]="alert.msg | purify"></div>
                 </tim-alert>
             </div>
         </ng-container>
@@ -492,6 +493,7 @@ export class BadgeViewerComponent implements OnInit {
         HttpClientModule,
         BadgeModule,
         TimUtilityModule,
+        PurifyModule,
     ],
     exports: [BadgeViewerComponent],
 })

@@ -18,6 +18,7 @@ import {BadgeWithdrawModule} from "tim/gamification/badge/badge-withdraw.compone
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {FormsModule} from "@angular/forms";
 import {scrollToElement} from "tim/util/utils";
+import {PurifyModule} from "tim/util/purify.module";
 
 @Component({
     selector: "tim-badge-creator",
@@ -29,7 +30,7 @@ import {scrollToElement} from "tim/util/utils";
                 <div class="all-badges">
                     <h2>{{ selectedContextGroup ? "All Badges (" + selectedContextGroup + ")" : "All Badges" }}</h2>
                     <tim-alert *ngFor="let alert of alerts; let i = index" [severity]="alert.type" [closeable]="true" (closing)="badgeService.closeAlert(this.alerts, i)">
-                        <div [innerHTML]="alert.msg"></div>
+                        <div [innerHTML]="alert.msg | purify"></div>
                     </tim-alert>                    
                 </div>
             </div>
@@ -95,7 +96,7 @@ import {scrollToElement} from "tim/util/utils";
                     
                 </fieldset>
                 <tim-alert *ngFor="let alert of alerts; let i = index" [severity]="alert.type" [closeable]="true" (closing)="badgeService.closeAlert(this.alerts, i)">
-                    <div [innerHTML]="alert.msg"></div>
+                    <div [innerHTML]="alert.msg | purify"></div>
                 </tim-alert>
             </div>
               
@@ -176,11 +177,11 @@ import {scrollToElement} from "tim/util/utils";
                             <div class="preview">
                                 <fieldset>
                                   <tim-badge
-                                    [title]="badgeForm.value.title || ''"
-                                    [color]="badgeForm.value.color || 'gray'"
-                                    [image]="badgeForm.value.image || 0 "
-                                    [description]="badgeForm.value.description || ''"
-                                    [shape]="badgeForm.value.shape || 'hexagon'">
+                                    [title]="badgeForm.value.title || defaultBadgeValues.title"
+                                    [color]="badgeForm.value.color || defaultBadgeValues.color"
+                                    [image]="badgeForm.value.image || defaultBadgeValues.image "
+                                    [description]="badgeForm.value.description || defaultBadgeValues.description"
+                                    [shape]="badgeForm.value.shape || defaultBadgeValues.shape">
                                   </tim-badge>
                                 </fieldset>
                             </div>
@@ -188,7 +189,7 @@ import {scrollToElement} from "tim/util/utils";
                     </div>
                     
                     <tim-alert *ngFor="let alert of alerts; let i = index" [severity]="alert.type" [closeable]="true" (closing)="badgeService.closeAlert(this.alerts, i)">
-                        <div [innerHTML]="alert.msg"></div>
+                        <div [innerHTML]="alert.msg | purify"></div>
                     </tim-alert>
                     
                     <div class="button-container">
@@ -273,6 +274,11 @@ export class BadgeCreatorComponent implements OnInit {
         this.badgeForm.valueChanges.subscribe(() => {
             this.isFormChanged = true;
         });
+    }
+
+    // Access default badge values directly from the service
+    get defaultBadgeValues() {
+        return this.badgeService.getDefaultBadgeValues();
     }
 
     // The handle for canceling an event conserning badge-creator.
@@ -690,6 +696,7 @@ export class BadgeCreatorComponent implements OnInit {
         BadgeWithdrawModule,
         TimUtilityModule,
         FormsModule,
+        PurifyModule,
     ],
 })
 export class BadgeCreatorModule {}

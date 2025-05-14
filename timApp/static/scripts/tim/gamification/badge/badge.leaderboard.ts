@@ -8,6 +8,7 @@ import {firstValueFrom} from "rxjs";
 import {Subscription} from "rxjs";
 import {GroupService} from "tim/plugin/group-dashboard/group.service";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
+import {PurifyModule} from "tim/util/purify.module";
 
 @Component({
     selector: "tim-badge-leaderboard",
@@ -16,7 +17,7 @@ import {TimUtilityModule} from "tim/ui/tim-utility.module";
         <div class="viewer-container">             
             <h2>{{badgegroupContext}} top5 Leaderboard</h2>
             <tim-alert *ngFor="let alert of alerts; let i = index" [severity]="alert.type" [closeable]="true" (closing)="badgeService.closeAlert(this.alerts, i)">
-                <div [innerHTML]="alert.msg"></div>
+                <div [innerHTML]="alert.msg | purify"></div>
             </tim-alert>               
             <div class="leaderboard" *ngIf="alerts.length === 0">                  
                 <div *ngFor="let team of top_five; let i = index" class="position" [ngClass]="getPositionClass(i)">
@@ -185,7 +186,7 @@ export class BadgeLeaderboardComponent implements OnInit {
 
 @NgModule({
     declarations: [BadgeLeaderboardComponent],
-    imports: [CommonModule, FormsModule, TimUtilityModule],
+    imports: [CommonModule, FormsModule, TimUtilityModule, PurifyModule],
     exports: [BadgeLeaderboardComponent],
 })
 export class BadgeLeaderboardModule {}

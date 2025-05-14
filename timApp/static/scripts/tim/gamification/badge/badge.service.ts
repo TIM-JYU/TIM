@@ -162,6 +162,18 @@ export class BadgeService {
         alerts.splice(index, 1);
     }
 
+    private defaultBadgeValues = {
+        title: "",
+        color: "gray",
+        image: 0,
+        description: "",
+        shape: "hexagon",
+    };
+
+    getDefaultBadgeValues() {
+        return this.defaultBadgeValues;
+    }
+
     // Available icons for badges
     private availableImages = [
         {id: 1, name: "Trophy"},
