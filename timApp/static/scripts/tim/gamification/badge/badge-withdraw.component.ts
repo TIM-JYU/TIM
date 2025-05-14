@@ -30,14 +30,14 @@ import {PurifyModule} from "tim/util/purify.module";
         <div class="badge-withdraw" #startSection>
             <h2><ng-container i18n>View users or groups </ng-container>({{ badgegroupContext }})</h2>
 
-            <ng-container *ngIf="!hasPermissionToComponent">
+            <ng-container *ngIf="!hasPermissionToHandleBadges">
                 <tim-alert *ngFor="let alert of alerts; let i = index" [severity]="alert.type" [closeable]="true"
                            (closing)="badgeService.closeAlert(this.alerts, i)">
                     <div [innerHTML]="alert.msg | purify"></div>
                 </tim-alert>
             </ng-container>
 
-            <ng-container *ngIf="hasPermissionToComponent">
+            <ng-container *ngIf="hasPermissionToHandleBadges">
                 <div class="user-group-button-container">
                     <button (click)="handleSwap(true); fetchUsersFromGroups()"
                             [disabled]="userAssign || users.length === 0"
@@ -225,7 +225,7 @@ export class BadgeWithdrawComponent implements OnInit {
     private subscription: Subscription = new Subscription();
 
     userAssign?: boolean = undefined;
-    hasPermissionToComponent = true;
+    hasPermissionToHandleBadges = true;
     showSelection: boolean = true;
     hasBadges: boolean = false;
 
@@ -478,7 +478,7 @@ export class BadgeWithdrawComponent implements OnInit {
             return;
         }
         if (!result.ok) {
-            this.hasPermissionToComponent = false;
+            this.hasPermissionToHandleBadges = false;
             this.badgeService.showError(
                 this.alerts,
                 {
@@ -495,7 +495,7 @@ export class BadgeWithdrawComponent implements OnInit {
 
     /**
      * Fetches groups, that belong to badgegroupContext group. badgegroupContext is received from TIM.
-     * If http get request returns error, hasPermissionToComponent is set to false and showError method is called via badgeService.
+     * If http get request returns error, hasPermissionToHandleBadges is set to false and showError method is called via badgeService.
      *
      * **Comment updateGroups section**
      */
@@ -516,7 +516,7 @@ export class BadgeWithdrawComponent implements OnInit {
                 return;
             }
             if (!result.ok) {
-                this.hasPermissionToComponent = false;
+                this.hasPermissionToHandleBadges = false;
                 this.badgeService.showError(
                     this.alerts,
                     {

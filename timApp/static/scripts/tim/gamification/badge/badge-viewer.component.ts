@@ -25,7 +25,7 @@ import {PurifyModule} from "tim/util/purify.module";
 @Component({
     selector: "tim-badge-viewer",
     template: `
-        <ng-container *ngIf="!hasPermissionToComponent">
+        <ng-container *ngIf="!hasPermissionToHandleBadges">
             <div class="viewer-container">
                 <h2 class="badge-heading">User Badges </h2>
                 <tim-alert *ngFor="let alert of alerts; let i = index" [severity]="alert.type" [closeable]="true" (closing)="badgeService.closeAlert(this.alerts, i)">
@@ -34,7 +34,7 @@ import {PurifyModule} from "tim/util/purify.module";
             </div>
         </ng-container>
         
-        <ng-container *ngIf="hasPermissionToComponent">
+        <ng-container *ngIf="hasPermissionToHandleBadges">
         <div class="viewer-container">
             <h2 class="badge-heading">User Badges ({{realName}})</h2>
             <ng-container *ngIf="badges.length === 0">
@@ -132,7 +132,7 @@ export class BadgeViewerComponent implements OnInit {
     sortedBadges: IBadge[] = [];
     groupSortMap: Map<number, string> = new Map();
 
-    hasPermissionToComponent: boolean = false;
+    hasPermissionToHandleBadges: boolean = false;
     alerts: Array<{
         msg: string;
         type: "warning" | "danger";
@@ -346,7 +346,7 @@ export class BadgeViewerComponent implements OnInit {
     /**
      * Resets badges and makes http get request to receive user/group's badges.
      * If request returns error, showError method is called via badge-service.
-     * If there are no errors, hasPermissionToComponent is set to true.
+     * If there are no errors, hasPermissionToHandleBadges is set to true.
      * this.badges pointer is set to point to userBadges.
      * Finally, onSortChange method is called.
      */
@@ -381,7 +381,7 @@ export class BadgeViewerComponent implements OnInit {
             );
             return;
         }
-        this.hasPermissionToComponent = true;
+        this.hasPermissionToHandleBadges = true;
 
         const userBadges: IBadge[] = [];
         if (result.result != undefined) {
