@@ -25,7 +25,7 @@ import {PurifyModule} from "tim/util/purify.module";
     template: `
         <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
 
-        <ng-container *ngIf="!teacherPermission">
+        <ng-container *ngIf="!hasPermissionToHandleBadges">
             <div class="badge-creator">
                 <div class="all-badges">
                     <h2>{{ selectedContextGroup ? "All Badges (" + selectedContextGroup + ")" : "All Badges" }}</h2>
@@ -35,7 +35,7 @@ import {PurifyModule} from "tim/util/purify.module";
                 </div>
             </div>
         </ng-container>
-        <ng-container *ngIf="teacherPermission">
+        <ng-container *ngIf="hasPermissionToHandleBadges">
         <div class="badge-creator" #allBadgesSection>
           <fieldset class="form-fieldset">
             <div class="all-badges">
@@ -231,7 +231,7 @@ export class BadgeCreatorComponent implements OnInit {
     all_badges: IBadge[] = [];
     selectedContextGroup: string | undefined = undefined;
     badgeFormShowing = false;
-    teacherPermission = false;
+    hasPermissionToHandleBadges = false;
 
     availableImages: {id: number; name: string}[] = [];
     availableShapes: {id: string; value: string}[] = [];
@@ -494,7 +494,7 @@ export class BadgeCreatorComponent implements OnInit {
         const result = await response;
 
         if (result.ok) {
-            this.teacherPermission = true;
+            this.hasPermissionToHandleBadges = true;
             if (result.result !== undefined) {
                 const badges: IBadge[] = result.result;
                 this.all_badges = badges;
