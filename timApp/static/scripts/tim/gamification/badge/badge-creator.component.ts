@@ -428,10 +428,10 @@ export class BadgeCreatorComponent implements OnInit {
     });
 
     // Saves newly created badge
-    newBadge: any = null;
+    newBadge: IBadge | undefined;
     async onSubmit() {
         if (this.badgeForm.valid) {
-            this.newBadge = this.badgeForm.value;
+            this.newBadge = this.badgeForm.value as IBadge;
             const response = toPromise(
                 this.http.post<{ok: boolean}>("/create_badge", {
                     context_group: this.selectedContextGroup,
@@ -577,9 +577,13 @@ export class BadgeCreatorComponent implements OnInit {
      */
     async isBadgeAssigned() {
         const response = await toPromise(
-            this.http.get<any>(`/badge_holders/${this.clickedBadge!.id}`)
+            this.http.get<{id: number; name: string; personal_user: string}>(
+                `/badge_holders/${this.clickedBadge!.id}`
+            )
         );
-        if (response.result[0].length > 0 || response.result[1].length > 0) {
+        console.log("mikä tähän tulee: ", response);
+        if (response.result) {
+            // antaa true koska kutsu onnistui
             return true;
         } else {
             return false;
