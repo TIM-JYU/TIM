@@ -62,7 +62,10 @@ import {toPromise} from "tim/util/utils";
                         <input type="checkbox"
                                [checked]="isSelected(user, selectedUsers)"
                                (change)="toggleUserSelection(user, $event)"/>
-                        <span class="searched-name">{{ user.real_name }}</span>
+                        <div class="searched-name" (click)="handleUserSelection(user)"
+                             [ngClass]="{'selected-option': selectedUser?.id === user.id}">
+                            {{ user.real_name }}
+                        </div>
                     </div>
                 </div>
             </div>
@@ -123,7 +126,10 @@ import {toPromise} from "tim/util/utils";
                         <input type="checkbox"
                                [checked]="isSelected(group, selectedGroups)"
                                (change)="toggleGroupSelection(group, $event)"/>
-                        <span class="searched-name">{{ groupPrettyNames.get(group.id) || group.name }}</span>
+                        <span class="searched-name" (click)="handleGroupSelection(group)"
+                          [ngClass]="{'selected-option': selectedGroup?.id === group.id}">
+                        {{ groupPrettyNames.get(group.id) || group.name }}
+                    </span>
                     </div>
                 </div>
 
