@@ -606,42 +606,38 @@ def usergroups_members(usergroup_name: str) -> Response:
     )
 
 
-# TODO: implement proper rights checking instead of isMember, isTeacher and such
 @groups.get("/pretty_name/<name>")
 def pretty_name(name: str) -> Response:
     """
-    Fetches group name from the database.
-    :param name: Name of the group given in group changer
-    :return: group name
+    Fetches group data including group's admin_doc's description (pretty_name).
+    :param name: Name of the group
+    :return: group data in json format
     """
     group = UserGroup.get_by_name(name)
     raise_group_not_found_if_none(name, group)
     block = group.admin_doc
-    pretty_name = block.description
+    group_pretty_name = block.description
     current_user = get_current_user_object()
+
     is_member = check_group_member(current_user, group.id)
-    is_teacher = False
     is_admin = current_user.is_admin
-    has_view_rights = False
-    if not is_member:
-        try:
-            verify_teacher_access(block)
-            is_teacher = True
-            verify_view_access(block)
-            has_view_rights = True
-        except AccessDenied:
-            is_teacher = False
-            has_view_rights = False
+    is_teacher = False
+    try:
+        verify_teacher_access(block)
+        is_teacher = True
+    except AccessDenied:
+        pass
+
+    edit_access = False
+    if is_admin or is_teacher or is_member:
+        edit_access = True
 
     return json_response(
         {
             "id": group.id,
             "name": group.name,
-            "description": pretty_name,
-            "isMember": is_member,
-            "isTeacher": is_teacher,
-            "isAdmin": is_admin,
-            "viewRights": has_view_rights,
+            "description": group_pretty_name,
+            "edit_access": edit_access,
         }
     )
 
