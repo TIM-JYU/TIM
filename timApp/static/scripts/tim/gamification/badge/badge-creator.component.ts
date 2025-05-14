@@ -43,7 +43,7 @@ import {PurifyModule} from "tim/util/purify.module";
                     <div class="creator-header">
                         <h2>{{ selectedContextGroup ? "All Badges (" + selectedContextGroup + ")" : "All Badges" }}</h2>
                         <div class="right-buttons">                       
-                          <button title="Create Badge" id="showBadgeForm" type="button" (click)="toggleBadgeCreateFromVisibility()">
+                          <button title="Create new badge" id="showBadgeForm" type="button" (click)="toggleBadgeCreateFromVisibility()">
                               <span class="material-icons" style="font-size: 30px">add</span></button>
                         </div> 
                     </div>                 
@@ -52,8 +52,8 @@ import {PurifyModule} from "tim/util/purify.module";
                         <select id="sort-sel" 
                                 [(ngModel)]="selectedSort" 
                                 (change)="onSortChange(selectedSort)">
-                          <option value="newest">Newest</option>
-                          <option value="oldest">Oldest</option>
+                          <option value="newest" i18n>Newest</option>
+                          <option value="oldest" i18n>Oldest</option>
                           <option value="az">A-Z</option>
                           <option value="za">Z-A</option>
                         </select>
@@ -61,7 +61,7 @@ import {PurifyModule} from "tim/util/purify.module";
                     
                     <div class="badge-view">
                       <ng-container *ngIf="all_badges.length == 0">
-                          <p class="no-badges-txt">This course does not have any badges yet.</p>
+                          <p class="no-badges-txt" i18n>This course does not have any badges yet.</p>
                       </ng-container>
                       <ng-container *ngIf="all_badges.length > 0">
                           <div class="badge-card" *ngFor="let badge of sortedBadges">
@@ -74,20 +74,20 @@ import {PurifyModule} from "tim/util/purify.module";
                                        (click)="selectBadge(badge);">
                             </tim-badge>
                               <div *ngIf="clickedBadge === badge" class="badge-buttons">
-                                <button title="Assign Badge" id="giveBadgeButton" type="button" 
+                                <button title="Assign" id="giveBadgeButton" type="button" 
                                         (click)="showBadgeGiver(clickedBadge)" 
                                         [disabled]="!clickedBadge" 
-                                        [ngClass]="{'disabled-btn': !clickedBadge}">
+                                        [ngClass]="{'disabled-btn': !clickedBadge}" i18n-title>
                                         <span class="material-icons">add</span></button>
-                                <button title="Edit Badge" id="editButton" type="button" 
+                                <button title="Edit" id="editButton" type="button" 
                                         (click)="editBadge(clickedBadge)" 
                                         [disabled]="!clickedBadge" 
-                                        [ngClass]="{'disabled-btn': !clickedBadge}">
+                                        [ngClass]="{'disabled-btn': !clickedBadge}" i18n-title>
                                         <span class="material-icons">edit</span></button>
-                                <button title="Delete Badge" id="deleteButton" type="button"
+                                <button title="Delete" id="deleteButton" type="button"
                                         [disabled]="!editingBadge" 
                                         (click)="deleteBadge()"
-                                        class="right-button">
+                                        class="right-button" i18n-title>
                                         <span class="material-icons">delete</span></button>
                               </div>
                           </div>
@@ -105,10 +105,10 @@ import {PurifyModule} from "tim/util/purify.module";
               </ng-container>
               
             <div class="upper-form-group" *ngIf="this.badgeFormShowing">
-                <h2>{{ editingBadge ? 'Edit "' + editingBadge.title + '" Badge' : 'Create a Badge' }}</h2>
+                <h2>{{ editingBadge ? 'Edit "' + editingBadge.title + '"' : 'Create new badge' }}</h2>
                 
                 <p class="form-note">
-                  Fields marked with <span class="required-asterisk">*</span> are required.
+                  <ng-container>Fields marked with</ng-container><span class="required-asterisk"> * </span><ng-container>are required</ng-container>.
                 </p>
                 
                 <form [formGroup]="badgeForm" (ngSubmit)="editingBadge ? saveBadgeChanges() : onSubmit()" id="badgeForm" class="form-group">
@@ -117,12 +117,12 @@ import {PurifyModule} from "tim/util/purify.module";
                       <input type="text" maxlength="30" id="title" name="title" formControlName="title" [class.invalid]="badgeForm.controls.title.invalid && badgeForm.controls.title.touched">
                       
                       <div class="char-counter">
-                        {{ badgeForm.get('title')?.value?.length || 0 }} / 30 characters
+                        {{ badgeForm.get('title')?.value?.length || 0 }} /<ng-container i18n> 30 characters</ng-container>
                       </div>
                       
                       <div *ngIf="badgeForm.controls.title.invalid && badgeForm.controls.title.touched" class="error-message">
-                          <p *ngIf="badgeForm.controls.title.hasError('required')">Title is required.</p>
-                          <p *ngIf="badgeForm.controls.title.hasError('maxlength')">Title is too long (max 30 characters).</p>
+                          <p *ngIf="badgeForm.controls.title.hasError('required')" i18n>Title is required.</p>
+                          <p *ngIf="badgeForm.controls.title.hasError('maxlength')" i18n>Title is too long (max 30 characters).</p>
                       </div>
                   </div>
     
@@ -131,12 +131,12 @@ import {PurifyModule} from "tim/util/purify.module";
                       <textarea rows="3" cols="" maxlength="200" id="description" formControlName="description"></textarea>
                       
                       <div class="char-counter">
-                        {{ badgeForm.get('description')?.value?.length || 0 }} / 200 characters
+                        {{ badgeForm.get('description')?.value?.length || 0 }} /<ng-container i18n> 200 characters</ng-container>
                       </div>
                       
                       <div *ngIf="badgeForm.controls.description.invalid && badgeForm.controls.description.touched" class="error-message">
-                          <p *ngIf="badgeForm.controls.description.hasError('required')">Description is required.</p>
-                          <p *ngIf="badgeForm.controls.description.hasError('maxlength')">Description is too long (max 200 characters).</p>
+                          <p *ngIf="badgeForm.controls.description.hasError('required')" i18n>Description is required.</p>
+                          <p *ngIf="badgeForm.controls.description.hasError('maxlength')" i18n>Description is too long (max 200 characters).</p>
                       </div>
                   </div>
     
@@ -147,7 +147,7 @@ import {PurifyModule} from "tim/util/purify.module";
                             <option *ngFor="let image of availableImages" [value]="image.id">{{ image.name }}</option>
                         </select>
                         <div *ngIf="badgeForm.controls.image.invalid && badgeForm.controls.image.touched" class="error-message">
-                            <p *ngIf="badgeForm.controls.image.hasError('required')">Icon is required.</p>
+                            <p *ngIf="badgeForm.controls.image.hasError('required')" i18n>Icon is required.</p>
                         </div>
                     </div>
     
@@ -157,7 +157,7 @@ import {PurifyModule} from "tim/util/purify.module";
                             <option *ngFor="let color of availableColors" [value]="color.id">{{ color.forCreatorList }}</option>
                         </select>
                         <div *ngIf="badgeForm.controls.color.invalid && badgeForm.controls.color.touched" class="error-message">
-                            <p>Color is required.</p>
+                            <p i18n>Color is required.</p>
                         </div>
                     </div>
     
@@ -173,7 +173,7 @@ import {PurifyModule} from "tim/util/purify.module";
                             </div>
                           </div>
                         <div class="form-group">
-                            <label>Preview of the badge</label>
+                            <label i18n>Preview</label>
                             <div class="preview">
                                 <fieldset>
                                   <tim-badge
@@ -202,7 +202,7 @@ import {PurifyModule} from "tim/util/purify.module";
                       <div class="button-group">
                           <button id="cancelButton" 
                                   title="Cancel and return without saving" 
-                                  type="button" (click)="onCancel()">
+                                  type="button" (click)="onCancel()" i18n-title i18n>
                               Cancel
                           </button>
                       </div>
@@ -214,7 +214,7 @@ import {PurifyModule} from "tim/util/purify.module";
     </ng-container>
 
     <ng-template #noPermissionView>
-      <p>Access denied for students.</p>
+      <p i18n>Access denied for students.</p>
     </ng-template>
     `,
     styleUrls: ["./badge-creator.component.scss"],
