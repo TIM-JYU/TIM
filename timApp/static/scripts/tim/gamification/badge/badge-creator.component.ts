@@ -11,12 +11,10 @@ import {BadgeViewerModule} from "tim/gamification/badge/badge-viewer.component";
 import {BadgeGiverModule} from "tim/gamification/badge/badge-giver.component";
 import {BadgeService} from "tim/gamification/badge/badge.service";
 import type {IBadge} from "tim/gamification/badge/badge.interface";
-import {Users} from "tim/user/userService";
 import {showConfirm} from "tim/ui/showConfirmDialog";
 import {toPromise} from "tim/util/utils";
 import {BadgeModule} from "tim/gamification/badge/badge.component";
 import {BadgeWithdrawModule} from "tim/gamification/badge/badge-withdraw.component";
-import {documentglobals} from "tim/util/globals";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {FormsModule} from "@angular/forms";
 import {scrollToElement} from "tim/util/utils";
@@ -45,7 +43,7 @@ import {PurifyModule} from "tim/util/purify.module";
                     <div class="creator-header">
                         <h2>{{ selectedContextGroup ? "All Badges (" + selectedContextGroup + ")" : "All Badges" }}</h2>
                         <div class="right-buttons">                       
-                          <button title="Create Badge" id="showBadgeForm" type="button" (click)="clickCreate()">
+                          <button title="Create Badge" id="showBadgeForm" type="button" (click)="toggleBadgeCreateFromVisibility()">
                               <span class="material-icons" style="font-size: 30px">add</span></button>
                         </div> 
                     </div>                 
@@ -301,7 +299,7 @@ export class BadgeCreatorComponent implements OnInit {
     }
 
     // If user has pressed the create badge button, toggles the visibility of the badge creating form
-    clickCreate() {
+    toggleBadgeCreateFromVisibility() {
         this.clickedBadge = null;
         this.badgeFormShowing = this.hideOtherViewsExcept(
             this.badgeFormShowing
