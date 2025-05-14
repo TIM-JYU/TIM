@@ -2,8 +2,6 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver import ActionChains
 from selenium.common.exceptions import (
     NoSuchElementException,
-    ElementClickInterceptedException,
-    ElementNotInteractableException,
 )
 from selenium.webdriver.remote.webelement import WebElement
 from timApp.timdb.sqa import db
