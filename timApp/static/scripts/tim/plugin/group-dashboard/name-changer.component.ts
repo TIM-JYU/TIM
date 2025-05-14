@@ -77,7 +77,7 @@ export class NameChangerComponent implements OnInit {
                 ? this.groupName
                 : this.subGroup;
 
-            this.canEditName = fetchedGroup.isMember || fetchedGroup.isTeacher;
+            this.canEditName = fetchedGroup.edit_access;
         }
     }
 
