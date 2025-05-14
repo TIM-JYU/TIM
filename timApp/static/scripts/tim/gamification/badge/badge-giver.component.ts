@@ -6,6 +6,7 @@ import {HttpClient} from "@angular/common/http";
 import {CommonModule} from "@angular/common";
 import {FormsModule} from "@angular/forms";
 import {Subscription} from "rxjs";
+import {ElementRef, HostListener} from "@angular/core";
 import {Users} from "tim/user/userService";
 import type {
     IBadge,
@@ -62,7 +63,10 @@ import {toPromise} from "tim/util/utils";
                         <input type="checkbox"
                                [checked]="isSelected(user, selectedUsers)"
                                (change)="toggleUserSelection(user, $event)"/>
-                        <span class="searched-name">{{ user.real_name }}</span>
+                        <div class="searched-name" (click)="handleUserSelection(user)"
+                             [ngClass]="{'selected-option': selectedUser?.id === user.id}">
+                            {{ user.real_name }}
+                        </div>
                     </div>
                 </div>
             </div>
@@ -123,7 +127,10 @@ import {toPromise} from "tim/util/utils";
                         <input type="checkbox"
                                [checked]="isSelected(group, selectedGroups)"
                                (change)="toggleGroupSelection(group, $event)"/>
-                        <span class="searched-name">{{ groupPrettyNames.get(group.id) || group.name }}</span>
+                        <span class="searched-name" (click)="handleGroupSelection(group)"
+                          [ngClass]="{'selected-option': selectedGroup?.id === group.id}">
+                        {{ groupPrettyNames.get(group.id) || group.name }}
+                    </span>
                     </div>
                 </div>
 
@@ -233,7 +240,8 @@ export class BadgeGiverComponent implements OnInit {
     constructor(
         private http: HttpClient,
         protected badgeService: BadgeService,
-        private groupService: GroupService
+        private groupService: GroupService,
+        private elementRef: ElementRef
     ) {}
 
     ngOnInit() {
@@ -346,6 +354,24 @@ export class BadgeGiverComponent implements OnInit {
         this.selectedGroup = group;
         this.toggleGroupSelection(group);
         this.fetchUsers(group.name);
+    }
+
+    /**
+     * Listens for click events on the document and closes search result dropdowns
+     * if the click occurs outside of this component.
+     *
+     * @param event MouseEvent The click event used to determine whether the click
+     * occurred inside or outside the component.
+     */
+    @HostListener("document:click", ["$event"])
+    onClickOutside(event: MouseEvent) {
+        const clickedInside = this.elementRef.nativeElement.contains(
+            event.target
+        );
+        if (!clickedInside) {
+            this.searchingUsers = false;
+            this.searchingGroups = false;
+        }
     }
 
     /**
