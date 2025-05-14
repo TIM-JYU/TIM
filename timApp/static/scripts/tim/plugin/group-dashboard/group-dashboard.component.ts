@@ -133,8 +133,7 @@ export class GroupDashboardComponent implements OnInit {
             this.groupId = fetchedGroup.id;
         }
 
-        this.canViewAllBadges =
-            fetchedGroup.isTeacher || fetchedGroup.isAdmin || false;
+        this.canViewAllBadges = fetchedGroup.edit_access || false;
     }
 
     /**
