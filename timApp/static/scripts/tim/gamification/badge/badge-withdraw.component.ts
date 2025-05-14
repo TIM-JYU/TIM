@@ -21,6 +21,7 @@ import {toPromise} from "tim/util/utils";
 import {GroupService} from "tim/plugin/group-dashboard/group.service";
 import {scrollToElement} from "tim/util/utils";
 import type {IUser} from "tim/user/IUser";
+import {PurifyModule} from "tim/util/purify.module";
 
 @Component({
     selector: "tim-badge-withdraw",
@@ -32,7 +33,7 @@ import type {IUser} from "tim/user/IUser";
             <ng-container *ngIf="!hasPermissionToComponent">
                 <tim-alert *ngFor="let alert of alerts; let i = index" [severity]="alert.type" [closeable]="true"
                            (closing)="badgeService.closeAlert(this.alerts, i)">
-                    <div [innerHTML]="alert.msg"></div>
+                    <div [innerHTML]="alert.msg | purify"></div>
                 </tim-alert>
             </ng-container>
 
@@ -189,7 +190,7 @@ import type {IUser} from "tim/user/IUser";
 
                     <tim-alert *ngFor="let alert of alerts; let i = index" [severity]="alert.type"
                                [closeable]="true" (closing)="badgeService.closeAlert(this.alerts, i)">
-                        <div [innerHTML]="alert.msg"></div>
+                        <div [innerHTML]="alert.msg | purify"></div>
                     </tim-alert>
 
 
@@ -743,6 +744,7 @@ export class BadgeWithdrawComponent implements OnInit {
         HttpClientModule,
         BadgeModule,
         TimUtilityModule,
+        PurifyModule,
     ],
     exports: [BadgeWithdrawComponent],
 })
