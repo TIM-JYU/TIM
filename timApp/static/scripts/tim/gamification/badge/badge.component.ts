@@ -6,11 +6,11 @@ import {FormsModule} from "@angular/forms";
 @Component({
     selector: "tim-badge",
     template: `
-    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
     <div class="badge-container" [ngClass]="['badge', color, shape]">
         <div class="icon">
-            <span class="material-symbols-outlined">{{ icon }}</span>
+          <img [src]="'/static/scripts/vendor/material-design-icons/' + icon + '.svg'" alt="{{ icon }}" />
         </div>
+
         <div class="ribbon">{{ title }}</div>
         
         <span *ngIf="description" class="tooltip">
@@ -37,17 +37,17 @@ export class BadgeComponent implements OnInit, OnChanges {
 
     private readonly iconMap: Record<number, string> = {
         1: "trophy",
-        2: "editor_choice",
-        3: "diversity_3",
+        2: "winner",
+        3: "teamwork",
         4: "code",
-        5: "bug_report",
-        6: "local_fire_department",
-        7: "rocket_launch",
-        8: "sentiment_satisfied",
+        5: "bug",
+        6: "on_fire",
+        7: "rocket",
+        8: "smile",
         9: "terminal",
         10: "deployed_code",
         11: "loop",
-        12: "money",
+        12: "100_points",
     };
 
     ngOnInit(): void {
