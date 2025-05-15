@@ -428,10 +428,10 @@ export class BadgeCreatorComponent implements OnInit {
     });
 
     // Saves newly created badge
-    newBadge: any = null;
+    newBadge: IBadge | undefined;
     async onSubmit() {
         if (this.badgeForm.valid) {
-            this.newBadge = this.badgeForm.value;
+            this.newBadge = this.badgeForm.value as IBadge;
             const response = toPromise(
                 this.http.post<{ok: boolean}>("/create_badge", {
                     context_group: this.selectedContextGroup,
@@ -575,11 +575,26 @@ export class BadgeCreatorComponent implements OnInit {
      *
      * @returns {Promise<boolean>} A promise that resolves to `true` if the badge is assigned to users or groups, or `false` otherwise.
      */
-    async isBadgeAssigned() {
+    async isBadgeAssigned(): Promise<boolean> {
         const response = await toPromise(
-            this.http.get<any>(`/badge_holders/${this.clickedBadge!.id}`)
+            this.http.get<{
+                ok: boolean;
+                result: Array<
+                    Array<{
+                        id: number;
+                        name: string;
+                        personal_user: string | null;
+                    }>
+                >;
+            }>(`/badge_holders/${this.clickedBadge!.id}`)
         );
-        if (response.result[0].length > 0 || response.result[1].length > 0) {
+
+        if (
+            response &&
+            Array.isArray(response.result) &&
+            Array.isArray(response.result[1]) &&
+            response.result[1].length > 0
+        ) {
             return true;
         } else {
             return false;
