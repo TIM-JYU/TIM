@@ -888,8 +888,8 @@ class GroupNameChangerTest(TimRouteTest):
     def test_group_name_changer(self):
         # initialization
         self.login_test1()
-        group1_name = "es_29"
-        subgroup1_name = "es_29-horses"
+        group1_name = "es_25"
+        subgroup1_name = "es_25-horses"
         (group1, doc1) = do_create_group_impl(f"{group1_name}", group1_name)
         (subgroup1, subdoc1) = do_create_group_impl(f"{subgroup1_name}", subgroup1_name)
         db.session.commit()
@@ -907,16 +907,13 @@ class GroupNameChangerTest(TimRouteTest):
 
         # fetch group's original pretty name
         self.get(
-            f"/groups/current_group_name/{subgroup1_name}",
+            f"/groups/pretty_name/{subgroup1_name}",
             expect_status=200,
             expect_content={
                 "id": 10,
                 "name": subgroup1_name,
                 "description": subgroup1_name,
-                "isAdmin": False,
-                "isMember": False,
-                "isTeacher": True,
-                "viewRights": True,
+                "edit_access": True,
             },
         )
 
@@ -924,43 +921,38 @@ class GroupNameChangerTest(TimRouteTest):
 
         # try to edit group's pretty name when logged in user isn't included in the group and isn't teacher of the group
         self.post(
-            f"/groups/editGroupName/{subgroup1_name}/Hevoset",
+            f"/groups/change_pretty_name/{subgroup1_name}/Hevoset",
             expect_status=403,
             expect_content=f'Sorry, you don\'t have permission to use this resource. If you are a teacher of "{subgroup1_name}", please contact TIM admin.',
         )
         self.get(
-            f"/groups/current_group_name/{subgroup1_name}",
+            f"/groups/pretty_name/{subgroup1_name}",
             expect_status=200,
             expect_content={
                 "id": 10,
                 "name": subgroup1_name,
                 "description": subgroup1_name,
-                "isAdmin": False,
-                "isMember": False,
-                "isTeacher": False,
-                "viewRights": False,
+                "edit_access": False,
             },
         )
 
         self.login_test2()
 
         # edit group's pretty name when logged in user is included in the group
+        # but editing is prohibited in document settings
         self.post(
-            f"/groups/editGroupName/{subgroup1_name}/Hevoset",
-            expect_status=200,
-            expect_content={"id": 10, "name": subgroup1_name, "description": "Hevoset"},
+            f"/groups/change_pretty_name/{subgroup1_name}/Hevoset",
+            expect_status=403,
+            expect_content=f'Sorry, you don\'t have permission to use this resource. If you are a teacher of "{subgroup1_name}", please contact TIM admin.',
         )
         self.get(
-            f"/groups/current_group_name/{subgroup1_name}",
+            f"/groups/pretty_name/{subgroup1_name}",
             expect_status=200,
             expect_content={
                 "id": 10,
                 "name": subgroup1_name,
-                "description": "Hevoset",
-                "isAdmin": False,
-                "isMember": True,
-                "isTeacher": False,
-                "viewRights": False,
+                "description": subgroup1_name,
+                "edit_access": False,
             },
         )
 
@@ -968,38 +960,35 @@ class GroupNameChangerTest(TimRouteTest):
 
         # edit group's pretty name when logged in user is teacher of the group
         self.post(
-            f"/groups/editGroupName/{subgroup1_name}/Hepokatit",
+            f"/groups/change_pretty_name/{subgroup1_name}/Hevoset",
             expect_status=200,
             expect_content={
                 "id": 10,
                 "name": subgroup1_name,
-                "description": "Hepokatit",
+                "description": "Hevoset",
             },
         )
         self.get(
-            f"/groups/current_group_name/{subgroup1_name}",
+            f"/groups/pretty_name/{subgroup1_name}",
             expect_status=200,
             expect_content={
                 "id": 10,
                 "name": subgroup1_name,
-                "description": "Hepokatit",
-                "isAdmin": False,
-                "isMember": False,
-                "isTeacher": True,
-                "viewRights": True,
+                "description": "Hevoset",
+                "edit_access": True,
             },
         )
 
         # fetch group's pretty name with erroneous data
         self.get(
-            f"/groups/current_group_name/nonexistent_group",
+            f"/groups/pretty_name/nonexistent_group",
             expect_status=400,
             expect_content='User group "nonexistent_group" not found',
         )
 
         # edit group's pretty name with erroneous data
         self.post(
-            f"/groups/editGroupName/nonexistent_group/Horses",
+            f"/groups/change_pretty_name/nonexistent_group/Horses",
             expect_status=400,
             expect_content='User group "nonexistent_group" not found',
         )
