@@ -28,7 +28,7 @@ import {PurifyModule} from "tim/util/purify.module";
         <ng-container *ngIf="!hasPermissionToHandleBadges">
             <div class="badge-creator">
                 <div class="all-badges">
-                    <h2>{{ selectedContextGroup ? "All Badges (" + selectedContextGroup + ")" : "All Badges" }}</h2>
+                    <h2>{{ selectedContextGroup ? textAllBadges +" ("+ selectedContextGroup +")" : textAllBadges }}</h2>
                     <tim-alert *ngFor="let alert of alerts; let i = index" [severity]="alert.type" [closeable]="true" (closing)="badgeService.closeAlert(this.alerts, i)">
                         <div [innerHTML]="alert.msg | purify"></div>
                     </tim-alert>                    
@@ -41,9 +41,9 @@ import {PurifyModule} from "tim/util/purify.module";
             <div class="all-badges">
                 <fieldset>
                     <div class="creator-header">
-                        <h2>{{ selectedContextGroup ? "All Badges (" + selectedContextGroup + ")" : "All Badges" }}</h2>
+                        <h2>{{ selectedContextGroup ? textAllBadges +" ("+ selectedContextGroup +")" : textAllBadges }}</h2>
                         <div class="right-buttons">                       
-                          <button title="Create Badge" id="showBadgeForm" type="button" (click)="toggleBadgeCreateFromVisibility()">
+                          <button title="Create a new badge" id="showBadgeForm" type="button" (click)="toggleBadgeCreateFromVisibility()" i18n-title>
                               <span class="material-icons" style="font-size: 30px">add</span></button>
                         </div> 
                     </div>                 
@@ -52,8 +52,8 @@ import {PurifyModule} from "tim/util/purify.module";
                         <select id="sort-sel" 
                                 [(ngModel)]="selectedSort" 
                                 (change)="onSortChange(selectedSort)">
-                          <option value="newest">Newest</option>
-                          <option value="oldest">Oldest</option>
+                          <option value="newest" i18n>Newest</option>
+                          <option value="oldest" i18n>Oldest</option>
                           <option value="az">A-Z</option>
                           <option value="za">Z-A</option>
                         </select>
@@ -61,7 +61,7 @@ import {PurifyModule} from "tim/util/purify.module";
                     
                     <div class="badge-view">
                       <ng-container *ngIf="all_badges.length == 0">
-                          <p class="no-badges-txt">This course does not have any badges yet.</p>
+                          <p class="no-badges-txt" i18n>This course does not have any badges yet.</p>
                       </ng-container>
                       <ng-container *ngIf="all_badges.length > 0">
                           <div class="badge-card" *ngFor="let badge of sortedBadges">
@@ -77,17 +77,17 @@ import {PurifyModule} from "tim/util/purify.module";
                                 <button title="Assign Badge" id="giveBadgeButton" type="button" 
                                         (click)="showBadgeGiver(clickedBadge!)" 
                                         [disabled]="!clickedBadge" 
-                                        [ngClass]="{'disabled-btn': !clickedBadge}">
+                                        [ngClass]="{'disabled-btn': !clickedBadge}" i18n-title>
                                         <span class="material-icons">add</span></button>
                                 <button title="Edit Badge" id="editButton" type="button" 
                                         (click)="editBadge(clickedBadge!)" 
                                         [disabled]="!clickedBadge" 
-                                        [ngClass]="{'disabled-btn': !clickedBadge}">
+                                        [ngClass]="{'disabled-btn': !clickedBadge}" i18n-title>
                                         <span class="material-icons">edit</span></button>
-                                <button title="Delete Badge" id="deleteButton" type="button"
+                                <button title="Delete" id="deleteButton" type="button"
                                         [disabled]="!editingBadge" 
                                         (click)="deleteBadge()"
-                                        class="right-button">
+                                        class="right-button" i18n-title>
                                         <span class="material-icons">delete</span></button>
                               </div>
                           </div>
@@ -105,66 +105,66 @@ import {PurifyModule} from "tim/util/purify.module";
               </ng-container>
               
             <div class="upper-form-group" *ngIf="this.badgeFormShowing">
-                <h2>{{ editingBadge ? 'Edit "' + editingBadge.title + '" Badge' : 'Create a Badge' }}</h2>
+                <h2>{{ editingBadge ? textEdit +" "+ editingBadge.title : textCreateNewBadge }}</h2>
                 
                 <p class="form-note">
-                  Fields marked with <span class="required-asterisk">*</span> are required.
+                  <ng-container i18n>Fields marked with</ng-container><span class="required-asterisk"> * </span><ng-container i18n>are required</ng-container>.
                 </p>
                 
                 <form [formGroup]="badgeForm" (ngSubmit)="editingBadge ? saveBadgeChanges() : onSubmit()" id="badgeForm" class="form-group">
                   <div class="form-group">
-                      <label for="title">Badge Title <span class="required">*</span></label>
+                      <label for="title"><ng-container i18n>Badge title </ng-container><span class="required">*</span></label>
                       <input type="text" maxlength="30" id="title" name="title" formControlName="title" [class.invalid]="badgeForm.controls.title.invalid && badgeForm.controls.title.touched">
                       
                       <div class="char-counter">
-                        {{ badgeForm.get('title')?.value?.length || 0 }} / 30 characters
+                        {{ badgeForm.get('title')?.value?.length || 0 }} /<ng-container i18n> 30 characters</ng-container>
                       </div>
                       
                       <div *ngIf="badgeForm.controls.title.invalid && badgeForm.controls.title.touched" class="error-message">
-                          <p *ngIf="badgeForm.controls.title.hasError('required')">Title is required.</p>
-                          <p *ngIf="badgeForm.controls.title.hasError('maxlength')">Title is too long (max 30 characters).</p>
+                          <p *ngIf="badgeForm.controls.title.hasError('required')" i18n>Title is required.</p>
+                          <p *ngIf="badgeForm.controls.title.hasError('maxlength')" i18n>Title is too long (max 30 characters).</p>
                       </div>
                   </div>
     
                   <div class="form-group">
-                      <label for="description">Description <span class="required">*</span></label>
+                      <label for="description"><ng-container i18n>Description </ng-container><span class="required">*</span></label>
                       <textarea rows="3" cols="" maxlength="200" id="description" formControlName="description"></textarea>
                       
                       <div class="char-counter">
-                        {{ badgeForm.get('description')?.value?.length || 0 }} / 200 characters
+                        {{ badgeForm.get('description')?.value?.length || 0 }} /<ng-container i18n> 200 characters</ng-container>
                       </div>
                       
                       <div *ngIf="badgeForm.controls.description.invalid && badgeForm.controls.description.touched" class="error-message">
-                          <p *ngIf="badgeForm.controls.description.hasError('required')">Description is required.</p>
-                          <p *ngIf="badgeForm.controls.description.hasError('maxlength')">Description is too long (max 200 characters).</p>
+                          <p *ngIf="badgeForm.controls.description.hasError('required')" i18n>Description is required.</p>
+                          <p *ngIf="badgeForm.controls.description.hasError('maxlength')" i18n>Description is too long (max 200 characters).</p>
                       </div>
                   </div>
     
                   <div class="icon-color-group">
                     <div class="form-group">
-                        <label for="image">Icon <span class="required">*</span></label>
+                        <label for="image"><ng-container i18n>Icon </ng-container><span class="required">*</span></label>
                         <select id="image" formControlName="image">
                             <option *ngFor="let image of availableImages" [value]="image.id">{{ image.name }}</option>
                         </select>
                         <div *ngIf="badgeForm.controls.image.invalid && badgeForm.controls.image.touched" class="error-message">
-                            <p *ngIf="badgeForm.controls.image.hasError('required')">Icon is required.</p>
+                            <p *ngIf="badgeForm.controls.image.hasError('required')" i18n>Icon is required.</p>
                         </div>
                     </div>
     
                     <div class="form-group">
-                        <label for="color">Color <span class="required">*</span></label>
+                        <label for="color"><ng-container i18n>Color </ng-container><span class="required">*</span></label>
                         <select id="color" formControlName="color">
                             <option *ngFor="let color of availableColors" [value]="color.id">{{ color.forCreatorList }}</option>
                         </select>
                         <div *ngIf="badgeForm.controls.color.invalid && badgeForm.controls.color.touched" class="error-message">
-                            <p>Color is required.</p>
+                            <p i18n>Color is required.</p>
                         </div>
                     </div>
     
                   </div>
                     <div class="shape-preview-group">
                         <div class="form-group">
-                            <label>Shape <span class="required">*</span></label>
+                            <label><ng-container i18n>Shape </ng-container><span class="required">*</span></label>
                             <div class="shape">
                               <label *ngFor="let shape of availableShapes">
                                 <input type="radio" [id]="shape.id" formControlName="shape" [value]="shape.id">
@@ -173,7 +173,7 @@ import {PurifyModule} from "tim/util/purify.module";
                             </div>
                           </div>
                         <div class="form-group">
-                            <label>Preview of the badge</label>
+                            <label i18n>Preview</label>
                             <div class="preview">
                                 <fieldset>
                                   <tim-badge
@@ -195,14 +195,14 @@ import {PurifyModule} from "tim/util/purify.module";
                     <div class="button-container">
                       <button id="createButton"
                               type="submit"
-                              [attr.title]="!badgeForm.valid ? 'Fill all the required fields' : null"
+                              [attr.title]="!badgeForm.valid ? textFillRequired : null"
                               [disabled]="!badgeForm.valid">
-                          {{ editingBadge ? 'Save Changes' : 'Create' }}
+                          {{ editingBadge ? textSave : textCreate }}
                       </button>
                       <div class="button-group">
                           <button id="cancelButton" 
                                   title="Cancel and return without saving" 
-                                  type="button" (click)="onCancel()">
+                                  type="button" (click)="onCancel()" i18n-title i18n>
                               Cancel
                           </button>
                       </div>
@@ -214,7 +214,7 @@ import {PurifyModule} from "tim/util/purify.module";
     </ng-container>
 
     <ng-template #noPermissionView>
-      <p>Access denied for students.</p>
+      <p i18n>Access denied for students.</p>
     </ng-template>
     `,
     styleUrls: ["./badge-creator.component.scss"],
@@ -249,6 +249,13 @@ export class BadgeCreatorComponent implements OnInit {
     }> = [];
     selectedSort: string = "newest";
     sortedBadges: IBadge[] = [];
+
+    textCreate = $localize`:@@form.create:Create`;
+    textSave = $localize`:@@form.save:Save Changes`;
+    textFillRequired = $localize`:@@form.fillRequired:Fill all the required fields`;
+    textAllBadges = $localize`:@@form.allBadges:All Badges`;
+    textCreateNewBadge = $localize`:@@form.createNewBadge:Create a new badge`;
+    textEdit = $localize`:@@form.edit:Edit`;
 
     // Method called when a badge is clicked
     selectBadge(badge: IBadge) {
@@ -291,7 +298,10 @@ export class BadgeCreatorComponent implements OnInit {
         }, 100);
     }
 
-    // Hides the other components when cancel is pressed
+    /**
+     * Toggles other views (e.g. editing, assigning) false, except one given from argument.
+     * @param thisView View you want to keep open.
+     */
     hideOtherViewsExcept(thisView: boolean) {
         this.showGiver = false;
         this.badgeFormShowing = false;
@@ -334,7 +344,10 @@ export class BadgeCreatorComponent implements OnInit {
         }, 100);
     }
 
-    // Opens badge-giver from creator
+    /**
+     * Opens badge assigning view and hides other views.
+     * @param badge Selected badge
+     */
     showBadgeGiver(badge: IBadge) {
         this.showGiver = this.hideOtherViewsExcept(this.showGiver);
         this.showGiver = !this.showGiver;
@@ -428,10 +441,10 @@ export class BadgeCreatorComponent implements OnInit {
     });
 
     // Saves newly created badge
-    newBadge: any = null;
+    newBadge: IBadge | undefined;
     async onSubmit() {
         if (this.badgeForm.valid) {
-            this.newBadge = this.badgeForm.value;
+            this.newBadge = this.badgeForm.value as IBadge;
             const response = toPromise(
                 this.http.post<{ok: boolean}>("/create_badge", {
                     context_group: this.selectedContextGroup,
@@ -575,11 +588,26 @@ export class BadgeCreatorComponent implements OnInit {
      *
      * @returns {Promise<boolean>} A promise that resolves to `true` if the badge is assigned to users or groups, or `false` otherwise.
      */
-    async isBadgeAssigned() {
+    async isBadgeAssigned(): Promise<boolean> {
         const response = await toPromise(
-            this.http.get<any>(`/badge_holders/${this.clickedBadge!.id}`)
+            this.http.get<{
+                ok: boolean;
+                result: Array<
+                    Array<{
+                        id: number;
+                        name: string;
+                        personal_user: string | null;
+                    }>
+                >;
+            }>(`/badge_holders/${this.clickedBadge!.id}`)
         );
-        if (response.result[0].length > 0 || response.result[1].length > 0) {
+
+        if (
+            response &&
+            Array.isArray(response.result) &&
+            Array.isArray(response.result[1]) &&
+            response.result[1].length > 0
+        ) {
             return true;
         } else {
             return false;

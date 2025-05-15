@@ -27,7 +27,7 @@ import {PurifyModule} from "tim/util/purify.module";
     template: `
         <ng-container *ngIf="!hasPermissionToHandleBadges">
             <div class="viewer-container">
-                <h2 class="badge-heading">User Badges </h2>
+                <h2 class="badge-heading" i18n>User Badges </h2>
                 <tim-alert *ngFor="let alert of alerts; let i = index" [severity]="alert.type" [closeable]="true" (closing)="badgeService.closeAlert(this.alerts, i)">
                     <div [innerHTML]="alert.msg | purify"></div>
                 </tim-alert>
@@ -36,16 +36,16 @@ import {PurifyModule} from "tim/util/purify.module";
         
         <ng-container *ngIf="hasPermissionToHandleBadges">
         <div class="viewer-container">
-            <h2 class="badge-heading">User Badges ({{realName}})</h2>
+            <h2 class="badge-heading"><ng-container i18n>Badges</ng-container> ({{realName}})</h2>
             <ng-container *ngIf="badges.length === 0">
-                <p class="no-badges-txt">No user badges</p>
+                <p class="no-badges-txt" i18n>No user badges</p>
             </ng-container>
             <ng-container *ngIf="badges.length > 0">
                 
                 <div class="sort-select">
                     <select id="user-sort-select" [(ngModel)]="selectedSort" (ngModelChange)="onSortChange($event)">
-                      <option value="newest">Newest</option>
-                      <option value="oldest">Oldest</option>
+                      <option value="newest" i18n>Newest</option>
+                      <option value="oldest" i18n>Oldest</option>
                       <option value="az">A-Z</option>
                       <option value="za">Z-A</option>
                     </select>
@@ -69,10 +69,10 @@ import {PurifyModule} from "tim/util/purify.module";
 
             <ng-container *ngIf="userSubGroups.length > 0">
                 <div class="subgroups" *ngFor="let group of userSubGroups">
-                    <h2 class="badge-heading">Group Badges ({{ groupPrettyNames.get(group.id) || group.name }})</h2>
+                    <h2 class="badge-heading"><ng-container i18n>Badges</ng-container> ({{ groupPrettyNames.get(group.id) || group.name }})</h2>
 
                     <ng-container *ngIf="groupBadgesMap.get(group.id)?.length == 0">
-                        <p class="no-badges-txt">No group badges</p>
+                        <p class="no-badges-txt" i18n>No group badges</p>
                     </ng-container>
 
                     <ng-container *ngIf="groupBadgesMap.get(group.id)?.length || 0 > 0">
@@ -82,8 +82,8 @@ import {PurifyModule} from "tim/util/purify.module";
                                 [ngModel]="groupSortMap.get(group.id) || 'newest'"
                                 (ngModelChange)="onGroupSortChange(group.id, $event)"
                             >
-                                <option value="newest">Newest</option>
-                                <option value="oldest">Oldest</option>
+                                <option value="newest" i18n>Newest</option>
+                                <option value="oldest" i18n>Oldest</option>
                                 <option value="az">A-Z</option>
                                 <option value="za">Z-A</option>
                             </select>
@@ -138,6 +138,15 @@ export class BadgeViewerComponent implements OnInit {
         type: "warning" | "danger";
         id?: string;
     }> = [];
+
+    textMessage = $localize`:@@form.message:Message`;
+    textDescription = $localize`:@@form.description:Description`;
+    textIcon = $localize`:@@form.textIcon:Icon`;
+    textColor = $localize`:@@form.textColor:Color`;
+    textShape = $localize`:@@form.textShape:Shape`;
+    textTime = $localize`:@@form.textTime:Time`;
+    textCreatedBy = $localize`:@@form.textCreatedBy:Created By`;
+    textGivenBy = $localize`:@@form.textGivenBy:Given By`;
 
     constructor(
         private http: HttpClient,
@@ -275,14 +284,14 @@ export class BadgeViewerComponent implements OnInit {
                 message: `
                     <div class="badge-dialog-window">
                         <b>${badge.title}</b><br><br>
-                        <b>Description:</b> ${badge.description}<br>
-                        <b>Message:</b> ${badge.message}<br><br>
-                        <b>Icon:</b> ${iconName}<br>
-                        <b>Color:</b> ${colorName}<br>
-                        <b>Shape:</b> ${shapeName}<br><br>
-                        <b>Given time:</b> ${formattedBadgeTime}<br>
-                        <b>Created by:</b> ${badge.created_by_name}<br>
-                        <b>Given by:</b> ${badge.given_by_name}<br>                     
+                        <b>${this.textDescription}:</b> ${badge.description}<br>
+                        <b>${this.textMessage}:</b> ${badge.message}<br><br>
+                        <b>${this.textIcon}:</b> ${iconName}<br>
+                        <b>${this.textColor}:</b> ${colorName}<br>
+                        <b>${this.textShape}:</b> ${shapeName}<br><br>
+                        <b>${this.textTime}:</b> ${formattedBadgeTime}<br>
+                        <b>${this.textCreatedBy}:</b> ${badge.created_by_name}<br>
+                        <b>${this.textGivenBy}:</b> ${badge.given_by_name}<br>                     
                     </div>                                                
             `,
                 modal: false,
