@@ -74,17 +74,17 @@ import {PurifyModule} from "tim/util/purify.module";
                                        (click)="selectBadge(badge);">
                             </tim-badge>
                               <div *ngIf="clickedBadge === badge" class="badge-buttons">
-                                <button title="Assign Badge" id="giveBadgeButton" type="button" 
+                                <button title="Assign badge" id="giveBadgeButton" type="button" 
                                         (click)="showBadgeGiver(clickedBadge!)" 
                                         [disabled]="!clickedBadge" 
                                         [ngClass]="{'disabled-btn': !clickedBadge}" i18n-title>
                                         <span class="material-icons">add</span></button>
-                                <button title="Edit Badge" id="editButton" type="button" 
+                                <button title="Edit badge" id="editButton" type="button" 
                                         (click)="editBadge(clickedBadge!)" 
                                         [disabled]="!clickedBadge" 
                                         [ngClass]="{'disabled-btn': !clickedBadge}" i18n-title>
                                         <span class="material-icons">edit</span></button>
-                                <button title="Delete" id="deleteButton" type="button"
+                                <button title="Delete badge" id="deleteButton" type="button"
                                         [disabled]="!editingBadge" 
                                         (click)="deleteBadge()"
                                         class="right-button" i18n-title>
@@ -113,11 +113,11 @@ import {PurifyModule} from "tim/util/purify.module";
                 
                 <form [formGroup]="badgeForm" (ngSubmit)="editingBadge ? saveBadgeChanges() : onSubmit()" id="badgeForm" class="form-group">
                   <div class="form-group">
-                      <label for="title"><ng-container i18n>Badge title </ng-container><span class="required">*</span></label>
+                      <label for="title"><ng-container i18n>Badge title</ng-container><span class="required"> *</span></label>
                       <input type="text" maxlength="30" id="title" name="title" formControlName="title" [class.invalid]="badgeForm.controls.title.invalid && badgeForm.controls.title.touched">
                       
                       <div class="char-counter">
-                        {{ badgeForm.get('title')?.value?.length || 0 }} /<ng-container i18n> 30 characters</ng-container>
+                        {{ badgeForm.get('title')?.value?.length || 0 }} / 30 <ng-container i18n>characters</ng-container>
                       </div>
                       
                       <div *ngIf="badgeForm.controls.title.invalid && badgeForm.controls.title.touched" class="error-message">
@@ -127,11 +127,11 @@ import {PurifyModule} from "tim/util/purify.module";
                   </div>
     
                   <div class="form-group">
-                      <label for="description"><ng-container i18n>Description </ng-container><span class="required">*</span></label>
+                      <label for="description"><ng-container i18n>Description</ng-container><span class="required"> *</span></label>
                       <textarea rows="3" cols="" maxlength="200" id="description" formControlName="description"></textarea>
                       
                       <div class="char-counter">
-                        {{ badgeForm.get('description')?.value?.length || 0 }} /<ng-container i18n> 200 characters</ng-container>
+                        {{ badgeForm.get('description')?.value?.length || 0 }} / 200 <ng-container i18n>characters</ng-container>
                       </div>
                       
                       <div *ngIf="badgeForm.controls.description.invalid && badgeForm.controls.description.touched" class="error-message">
@@ -142,7 +142,7 @@ import {PurifyModule} from "tim/util/purify.module";
     
                   <div class="icon-color-group">
                     <div class="form-group">
-                        <label for="image"><ng-container i18n>Icon </ng-container><span class="required">*</span></label>
+                        <label for="image"><ng-container i18n>Icon</ng-container><span class="required"> *</span></label>
                         <select id="image" formControlName="image">
                             <option *ngFor="let image of availableImages" [value]="image.id">{{ image.name }}</option>
                         </select>
@@ -152,7 +152,7 @@ import {PurifyModule} from "tim/util/purify.module";
                     </div>
     
                     <div class="form-group">
-                        <label for="color"><ng-container i18n>Color </ng-container><span class="required">*</span></label>
+                        <label for="color"><ng-container i18n>Color</ng-container><span class="required"> *</span></label>
                         <select id="color" formControlName="color">
                             <option *ngFor="let color of availableColors" [value]="color.id">{{ color.forCreatorList }}</option>
                         </select>
@@ -164,7 +164,7 @@ import {PurifyModule} from "tim/util/purify.module";
                   </div>
                     <div class="shape-preview-group">
                         <div class="form-group">
-                            <label><ng-container i18n>Shape </ng-container><span class="required">*</span></label>
+                            <label><ng-container i18n>Shape</ng-container><span class="required"> *</span></label>
                             <div class="shape">
                               <label *ngFor="let shape of availableShapes">
                                 <input type="radio" [id]="shape.id" formControlName="shape" [value]="shape.id">

@@ -28,7 +28,7 @@ import {PurifyModule} from "tim/util/purify.module";
     template: `
 
         <div class="badge-withdraw" #startSection>
-            <h2><ng-container i18n>View users or groups </ng-container>({{ badgegroupContext }})</h2>
+            <h2><ng-container i18n>View users or groups</ng-container> ({{ badgegroupContext }})</h2>
 
             <ng-container *ngIf="!hasPermissionToHandleBadges">
                 <tim-alert *ngFor="let alert of alerts; let i = index" [severity]="alert.type" [closeable]="true"
