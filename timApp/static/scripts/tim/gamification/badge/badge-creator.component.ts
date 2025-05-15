@@ -575,15 +575,26 @@ export class BadgeCreatorComponent implements OnInit {
      *
      * @returns {Promise<boolean>} A promise that resolves to `true` if the badge is assigned to users or groups, or `false` otherwise.
      */
-    async isBadgeAssigned() {
+    async isBadgeAssigned(): Promise<boolean> {
         const response = await toPromise(
-            this.http.get<{id: number; name: string; personal_user: string}>(
-                `/badge_holders/${this.clickedBadge!.id}`
-            )
+            this.http.get<{
+                ok: boolean;
+                result: Array<
+                    Array<{
+                        id: number;
+                        name: string;
+                        personal_user: string | null;
+                    }>
+                >;
+            }>(`/badge_holders/${this.clickedBadge!.id}`)
         );
-        console.log("mikä tähän tulee: ", response);
-        if (response.result) {
-            // antaa true koska kutsu onnistui
+
+        if (
+            response &&
+            Array.isArray(response.result) &&
+            Array.isArray(response.result[1]) &&
+            response.result[1].length > 0
+        ) {
             return true;
         } else {
             return false;
