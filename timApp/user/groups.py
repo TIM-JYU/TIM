@@ -24,6 +24,7 @@ from timApp.auth.sessioninfo import (
 from timApp.document.create_item import apply_template, create_document
 from timApp.document.docentry import DocEntry
 from timApp.document.docinfo import DocInfo
+from timApp.document.document import Document
 from timApp.gamification.badge.routes import check_group_member, verify_access
 from timApp.item.validation import ItemValidationRule
 from timApp.notification.send_email import multi_send_email
@@ -616,10 +617,16 @@ def pretty_name(name: str) -> Response:
     group = UserGroup.get_by_name(name)
     raise_group_not_found_if_none(name, group)
     block = group.admin_doc
+    doc_entries = block.docentries
+    settings = doc_entries[0].document.get_settings()
+
     group_pretty_name = block.description
     current_user = get_current_user_object()
 
-    is_member = check_group_member(current_user, group.id)
+    is_member_and_allowed_to_edit = (
+        check_group_member(current_user, group.id)
+        and settings.pretty_name_edit_for_member()
+    )
     is_admin = current_user.is_admin
     is_teacher = False
     try:
@@ -629,7 +636,7 @@ def pretty_name(name: str) -> Response:
         pass
 
     edit_access = False
-    if is_admin or is_teacher or is_member:
+    if is_admin or is_teacher or is_member_and_allowed_to_edit:
         edit_access = True
 
     return json_response(
@@ -653,12 +660,18 @@ def change_pretty_name(group_name: str, new_name: str) -> Response:
     group = UserGroup.get_by_name(group_name)
     raise_group_not_found_if_none(group_name, group)
     block = group.admin_doc
-    if not block:
-        raise NotExist(f'Admin doc for user group "{group_name}" not found')
+    doc_entries = block.docentries
+    settings = doc_entries[0].document.get_settings()
 
     current_user = get_current_user_object()
     in_group = check_group_member(current_user, group.id)
-    if not in_group:
+    if in_group:
+        if not settings.pretty_name_edit_for_member():
+            verify_teacher_access(
+                block,
+                message=f'Sorry, you don\'t have permission to use this resource. If you are a teacher of "{group_name}", please contact TIM admin.',
+            )
+    else:
         verify_teacher_access(
             block,
             message=f'Sorry, you don\'t have permission to use this resource. If you are a teacher of "{group_name}", please contact TIM admin.',

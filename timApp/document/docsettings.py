@@ -120,6 +120,7 @@ class DocSettingTypes:
     loginCodes: bool
     loginMessage: str
     customIndex: list[tuple[Any, Any]]
+    prettyNameEditForMember: bool
 
 
 doc_setting_field_map: dict[str, Field] = {
@@ -733,6 +734,9 @@ class DocSettings:
 
     def custom_index(self) -> list[tuple[Any, Any]]:
         return self.get_setting_or_default("customIndex", [])
+
+    def pretty_name_edit_for_member(self) -> bool:
+        return self.get_setting_or_default("prettyNameEditForMember", False)
 
 
 def resolve_settings_for_pars(pars: Iterable[DocParagraph]) -> YamlBlock:
