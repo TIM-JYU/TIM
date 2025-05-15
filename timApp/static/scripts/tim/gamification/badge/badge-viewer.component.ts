@@ -139,14 +139,14 @@ export class BadgeViewerComponent implements OnInit {
         id?: string;
     }> = [];
 
-    textMessage = $localize`:@@form.message:Message`;
-    textDescription = $localize`:@@form.description:Description`;
-    textIcon = $localize`:@@form.textIcon:Icon`;
-    textColor = $localize`:@@form.textColor:Color`;
-    textShape = $localize`:@@form.textShape:Shape`;
-    textTime = $localize`:@@form.textTime:Time`;
-    textCreatedBy = $localize`:@@form.textCreatedBy:Created By`;
-    textGivenBy = $localize`:@@form.textGivenBy:Given By`;
+    textMessage = $localize`:@@form.message:Message:`;
+    textDescription = $localize`:@@form.description:Description:`;
+    textIcon = $localize`:@@form.textIcon:Icon:`;
+    textColor = $localize`:@@form.textColor:Color:`;
+    textShape = $localize`:@@form.textShape:Shape:`;
+    textTime = $localize`:@@form.textTime:Time given:`;
+    textCreatedBy = $localize`:@@form.textCreatedBy:Created by:`;
+    textGivenBy = $localize`:@@form.textGivenBy:Given by:`;
 
     constructor(
         private http: HttpClient,
@@ -284,14 +284,14 @@ export class BadgeViewerComponent implements OnInit {
                 message: `
                     <div class="badge-dialog-window">
                         <b>${badge.title}</b><br><br>
-                        <b>${this.textDescription}:</b> ${badge.description}<br>
-                        <b>${this.textMessage}:</b> ${badge.message}<br><br>
-                        <b>${this.textIcon}:</b> ${iconName}<br>
-                        <b>${this.textColor}:</b> ${colorName}<br>
-                        <b>${this.textShape}:</b> ${shapeName}<br><br>
-                        <b>${this.textTime}:</b> ${formattedBadgeTime}<br>
-                        <b>${this.textCreatedBy}:</b> ${badge.created_by_name}<br>
-                        <b>${this.textGivenBy}:</b> ${badge.given_by_name}<br>                     
+                        <b>${this.textDescription}</b> ${badge.description}<br>
+                        <b>${this.textMessage}</b> ${badge.message}<br><br>
+                        <b>${this.textIcon}</b> ${iconName}<br>
+                        <b>${this.textColor}</b> ${colorName}<br>
+                        <b>${this.textShape}</b> ${shapeName}<br><br>
+                        <b>${this.textTime}</b> ${formattedBadgeTime}<br>
+                        <b>${this.textCreatedBy}</b> ${badge.created_by_name}<br>
+                        <b>${this.textGivenBy}</b> ${badge.given_by_name}<br>                     
                     </div>                                                
             `,
                 modal: false,

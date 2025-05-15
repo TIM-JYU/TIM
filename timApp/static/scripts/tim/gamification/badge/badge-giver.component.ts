@@ -24,7 +24,7 @@ import {PurifyModule} from "tim/util/purify.module";
 @Component({
     selector: "timBadgeGiver",
     template: `
-        <h2>Assign {{ selectedBadge?.title }} to user(s) or group(s)</h2>
+        <h2><ng-container i18n>Assign</ng-container> {{ selectedBadge?.title }} <ng-container i18n>to user(s) or group(s)</ng-container></h2>
 
         <!-- Preview of the selected badge -->
         <div *ngIf="selectedBadge" class="badge-preview">
@@ -42,10 +42,10 @@ import {PurifyModule} from "tim/util/purify.module";
         </div>
 
         <div class="user-group-button-container">
-            <button (click)="handleSwap(true); fetchUsersFromGroups()" [disabled]="userAssign === true">
+            <button (click)="handleSwap(true); fetchUsersFromGroups()" [disabled]="userAssign === true" i18n>
                 View users
             </button>
-            <button (click)="handleSwap(false)" [disabled]="userAssign === false">
+            <button (click)="handleSwap(false)" [disabled]="userAssign === false" i18n>
                 View groups
             </button>
         </div>
@@ -53,7 +53,7 @@ import {PurifyModule} from "tim/util/purify.module";
         <div *ngIf="userAssign === true" class="form-group">
             <div class="search-wrapper">
                 <div class="search-users">
-                    <label for="user-search">Search user:</label>
+                    <label for="user-search" i18n>Search user:</label>
                     <input type="search" id="user-search" name="q"
                            [(ngModel)]="userSearchTerm"
                            (ngModelChange)="filterUsers()"/>
@@ -74,7 +74,7 @@ import {PurifyModule} from "tim/util/purify.module";
 
             <div>
                 <input class="user-checkbox" type="checkbox"
-                       (change)="toggleSelectAllItems($event, selectedUsers, users)">Select all
+                       (change)="toggleSelectAllItems($event, selectedUsers, users)"><ng-container i18n>Select all</ng-container>
             </div>
             <div class="list-scroll-container" (wheel)="onScrollList($event)">
                 <div *ngFor="let group of groups" class="group">
@@ -96,7 +96,7 @@ import {PurifyModule} from "tim/util/purify.module";
                     </div>
                 </div>
                 <div class="group">
-                    <span >Users without group</span>
+                    <span i18n>Users without group</span>
                     <div *ngFor="let user of usersWithoutGroup" class="option-item">
                         <input class="user-checkbox"
                                type="checkbox"
@@ -117,7 +117,7 @@ import {PurifyModule} from "tim/util/purify.module";
         <div *ngIf="userAssign === false" class="form-group">
             <div class="search-wrapper">
                 <div class="search-groups">
-                    <label for="group-search">Search group:</label>
+                    <label for="group-search" i18n>Search group:</label>
                     <input type="search" id="group-search" name="q"
                            [(ngModel)]="groupSearchTerm"
                            (ngModelChange)="filterGroups()"/>
@@ -139,7 +139,7 @@ import {PurifyModule} from "tim/util/purify.module";
 
             <div>
                 <input class="group-checkbox" type="checkbox"
-                       (change)="toggleSelectAllItems($event, selectedGroups, groups)">Select all
+                       (change)="toggleSelectAllItems($event, selectedGroups, groups)"><ng-container i18n>Select all</ng-container>
             </div>
 
             <div class="list-scroll-container" (wheel)="onScrollList($event)">
@@ -165,10 +165,10 @@ import {PurifyModule} from "tim/util/purify.module";
                     </div>
                 </ng-container>
                 <ng-container *ngIf="selectedGroup && users.length === 0">
-                    <p class="user-name">No users found</p>
+                    <p class="user-name" i18n>No users found</p>
                 </ng-container>
                 <ng-container *ngIf="!selectedGroup">
-                    <p>Select group to view users</p>
+                    <p i18n>Select group to view users</p>
                 </ng-container>
             </div>
 
@@ -177,14 +177,14 @@ import {PurifyModule} from "tim/util/purify.module";
 
             <!-- Message Box -->
             <div class="message-box">
-                <label for="message">Message</label>
+                <label for="message" i18n>Message</label>
                 <textarea id="message"
                           rows="4"
                           maxlength="200"
                           [(ngModel)]="message">
                 </textarea>
                 <div class="char-counter">
-                    {{ message.length }} / 200 characters
+                    {{ message.length }} / 200 <ng-container i18n>characters</ng-container>
                 </div>
             </div>
 
@@ -195,10 +195,10 @@ import {PurifyModule} from "tim/util/purify.module";
 
             <div class="button-container">
                 <button (click)="assignBadge(message)"
-                        [disabled]="selectedUsers.length === 0 && selectedGroups.length === 0">
+                        [disabled]="selectedUsers.length === 0 && selectedGroups.length === 0" i18n>
                     Assign
                 </button>
-                <button id="cancelGiveButton" (click)="emptyForm()">Cancel</button>
+                <button id="cancelGiveButton" (click)="emptyForm()" i18n>Cancel</button>
             </div>
         </div>
     `,
