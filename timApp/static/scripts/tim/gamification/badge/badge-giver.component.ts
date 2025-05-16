@@ -24,6 +24,7 @@ import {PurifyModule} from "tim/util/purify.module";
 @Component({
     selector: "timBadgeGiver",
     template: `
+        <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
         <h2><ng-container i18n>Assign</ng-container> {{ selectedBadge?.title }} <ng-container i18n>to user(s) or group(s)</ng-container></h2>
 
         <!-- Preview of the selected badge -->
@@ -53,18 +54,18 @@ import {PurifyModule} from "tim/util/purify.module";
         <div *ngIf="userAssign === true" class="form-group">
             <div class="search-wrapper">
                 <div class="search-users">
-                    <label for="user-search" i18n>Search user:</label>
                     <input type="search" id="user-search" name="q"
                            [(ngModel)]="userSearchTerm"
                            (ngModelChange)="filterUsers()"/>
+                    <span class="material-icons">search</span>
                 </div>
 
                 <div *ngIf="searchingUsers" class="search-results">
-                    <div *ngFor="let user of searchResults" class="option-item">
+                    <div *ngFor="let user of searchResults" class="option-item" (click)="handleUserSelection(user)">
                         <input type="checkbox"
                                [checked]="isSelected(user, selectedUsers)"
                                (change)="toggleUserSelection(user, $event)"/>
-                        <div class="searched-name" (click)="handleUserSelection(user)"
+                        <div class="searched-name" 
                              [ngClass]="{'selected-option': selectedUser?.id === user.id}">
                             {{ user.real_name }}
                         </div>
@@ -82,7 +83,7 @@ import {PurifyModule} from "tim/util/purify.module";
                         <input class="user-checkbox" type="checkbox"
                                (change)="toggleSelectAll(group, $event)">{{ groupPrettyNames.get(group.id) || group.name }}
                     </span>
-                    <div *ngFor="let user of groupUsersMap.get(group.id)" class="option-item">
+                    <div *ngFor="let user of groupUsersMap.get(group.id)" class="users-item">
                         <input class="user-checkbox"
                                type="checkbox"
                                [value]="user"
@@ -97,7 +98,7 @@ import {PurifyModule} from "tim/util/purify.module";
                 </div>
                 <div class="group">
                     <span i18n>Users without group</span>
-                    <div *ngFor="let user of usersWithoutGroup" class="option-item">
+                    <div *ngFor="let user of usersWithoutGroup" class="users-item">
                         <input class="user-checkbox"
                                type="checkbox"
                                [value]="user"
@@ -117,18 +118,18 @@ import {PurifyModule} from "tim/util/purify.module";
         <div *ngIf="userAssign === false" class="form-group">
             <div class="search-wrapper">
                 <div class="search-groups">
-                    <label for="group-search" i18n>Search group:</label>
                     <input type="search" id="group-search" name="q"
                            [(ngModel)]="groupSearchTerm"
                            (ngModelChange)="filterGroups()"/>
+                    <span class="material-icons">search</span>
                 </div>
 
                 <div *ngIf="searchingGroups" class="search-results">
-                    <div *ngFor="let group of filteredGroups" class="option-item">
+                    <div *ngFor="let group of filteredGroups" class="option-item" (click)="handleGroupSelection(group)">
                         <input type="checkbox"
                                [checked]="isSelected(group, selectedGroups)"
                                (change)="toggleGroupSelection(group, $event)"/>
-                        <span class="searched-name" (click)="handleGroupSelection(group)"
+                        <span class="searched-name"
                           [ngClass]="{'selected-option': selectedGroup?.id === group.id}">
                         {{ groupPrettyNames.get(group.id) || group.name }}
                     </span>
@@ -150,7 +151,7 @@ import {PurifyModule} from "tim/util/purify.module";
                            (change)="toggleGroupSelection(group, $event)"
                            [checked]="isSelected(group, selectedGroups)"
                     />
-                    <span class="option-name" (click)="handleGroupSelection(group)"
+                    <span class="groups-item" (click)="handleGroupSelection(group)"
                           [ngClass]="{'selected-option': selectedGroup?.id === group.id}">
                         {{ groupPrettyNames.get(group.id) || group.name }}
                     </span>
