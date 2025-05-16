@@ -18,7 +18,10 @@ import {PurifyModule} from "tim/util/purify.module";
             <h2>{{badgegroupContext}} <ng-container i18n>top5 Leaderboard</ng-container></h2>
             <tim-alert *ngFor="let alert of alerts; let i = index" [severity]="alert.type" [closeable]="true" (closing)="badgeService.closeAlert(this.alerts, i)">
                 <div [innerHTML]="alert.msg | purify"></div>
-            </tim-alert>               
+            </tim-alert>      
+            <div *ngIf="alerts.length === 0 && top_five.length === 0">
+                <p class="no-badges-txt" i18n>No groups with badges.</p>
+            </div>
             <div class="leaderboard" *ngIf="alerts.length === 0">                  
                 <div *ngFor="let team of top_five; let i = index" class="position" [ngClass]="getPositionClass(i)">
                     <div class="icon">
