@@ -13,7 +13,6 @@ import {PurifyModule} from "tim/util/purify.module";
 @Component({
     selector: "tim-badge-leaderboard",
     template: `
-        <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />        
         <div class="viewer-container">             
             <h2>{{badgegroupContext}} <ng-container i18n>top5 Leaderboard</ng-container></h2>
             <tim-alert *ngFor="let alert of alerts; let i = index" [severity]="alert.type" [closeable]="true" (closing)="badgeService.closeAlert(this.alerts, i)">
@@ -25,7 +24,7 @@ import {PurifyModule} from "tim/util/purify.module";
             <div class="leaderboard" *ngIf="alerts.length === 0">                  
                 <div *ngFor="let team of top_five; let i = index" class="position" [ngClass]="getPositionClass(i)">
                     <div class="icon">
-                        <span class="material-symbols-outlined">{{ getIcon(i) }}</span>
+                      <img [src]="'/static/scripts/vendor/material-design-icons/' + getIcon(i) + '.svg'" alt="{{ getIcon(i) }}" />
                     </div>
                     <div class="trophy" [ngStyle]="{'height': calculateHeight(team.badge_count) }">{{ getPosition(i) }}</div>
                     <p class="team">{{ team.prettyName }}</p>
@@ -132,7 +131,7 @@ export class BadgeLeaderboardComponent implements OnInit {
     getIcon(index: number): string {
         switch (index) {
             case 0:
-                return "trophy"; // 1st place
+                return "trophy_yellow"; // 1st place
             case 1:
                 return "counter_2"; // 2nd place
             case 2:

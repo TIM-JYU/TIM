@@ -131,7 +131,7 @@ input:focus, select:focus {
 
 button {
   width: 100%;
-  padding: 0.8em;
+  //padding: 0.8em;
   border: none;
   border-radius: 0.5em;
   background-color: #0F4096;
@@ -212,6 +212,7 @@ button[type="button"]:hover {
 }
 
 #cancelButton {
+  padding: 0.8em;
   background-color: #6c757d;
   color: #fff;
   font-weight: bold;
