@@ -50,7 +50,7 @@ def log_badge_event(log_info: dict) -> None:
     """
     Logs all events that modifies badge or badgegiven tables. Log file can be
     found at ../timapp/tim_logs/badge.log.
-    :param log_info: info that is about to be logged in badge.log file
+    :param log_info: Info that is about to be logged in badge.log file
     :return:
     """
     path = Path(current_app.config["BADGE_LOG_PATH"])
@@ -60,10 +60,10 @@ def log_badge_event(log_info: dict) -> None:
 
 def check_group_member(current_user: User, usergroup: int) -> bool:
     """
-    Checks whether logged in user is a member of usergroup.
-    :param current_user: logged in user
-    :param usergroup: usergroup to check
-    :return: true if user is member of usergroup, false otherwise
+    Checks whether logged in user is a member of user group.
+    :param current_user: Logged in user
+    :param usergroup: User group to check
+    :return: True if user is member of user group, false otherwise
     """
     context_usergroup = (
         run_sql(select(UserGroup).filter(UserGroup.id == usergroup)).scalars().first()
@@ -130,6 +130,10 @@ def verify_access(
 
 @badges_blueprint.get("/check_connection")
 def check_connection() -> Response:
+    """
+    Checks connection to backend.
+    :return: True in json response if connection is working
+    """
     return json_response(True)
 
 
@@ -175,7 +179,7 @@ def create_badge(
     :param shape: Shape of the badge
     :param image: Image of the badge
     :param description: Description of the badge
-    :return: ok response
+    :return: Created badge in json format
     """
     context_usergroup = UserGroup.get_by_name(context_group)
     verify_access("teacher", context_usergroup, user_group_name=context_group)
@@ -230,7 +234,7 @@ def modify_badge(
     :param shape: Shape of the badge
     :param image: Image of the badge
     :param description: Description of the badge
-    :return: ok response
+    :return: Modified badge in json format
     """
     context_usergroup = UserGroup.get_by_id(context_group)
     verify_access("teacher", context_usergroup, user_group_id=context_group)
@@ -274,7 +278,7 @@ def deactivate_badge(badge_id: int, context_group: str) -> Response:
     Deactivates a badge.
     :param context_group: Context group where the badge is included
     :param badge_id: ID of the badge
-    :return: ok response
+    :return: Info of deleted badge in json format
     """
     context_usergroup = UserGroup.get_by_name(context_group)
     verify_access("teacher", context_usergroup, user_group_name=context_group)
@@ -304,8 +308,8 @@ def deactivate_badge(badge_id: int, context_group: str) -> Response:
 @badges_blueprint.get("/groups_badges/<group_id>/<context_group>")
 def get_groups_badges(group_id: int, context_group: str) -> Response:
     """
-    Fetches badges that are given to a usergroup. Sorted by given-timestamp.
-    :param group_id: ID of the usergroup
+    Fetches badges that are given to a user group. Sorted by given-timestamp.
+    :param group_id: ID of the user group
     :param context_group: Name of the context group
     :return: Badges in json response format
     """
@@ -395,9 +399,9 @@ def get_groups_badges(group_id: int, context_group: str) -> Response:
 @badges_blueprint.get("/badge_holders/<badge_id>")
 def get_badge_holders(badge_id: int) -> Response:
     """
-    Fetches all usergroups that holds certain badge.
+    Fetches all users and user groups that holds certain badge.
     :param badge_id: Badge ID
-    :return: list of users and list of usergroups in json format
+    :return: List of users and list of user groups in json format
     """
     badge = Badge.get_by_id(badge_id)
     if not badge:
@@ -447,12 +451,12 @@ def give_badge(
     message: str,
 ) -> Response:
     """
-    Gives a badge to a usergroup.
+    Gives a badge to a user group.
     :param context_group: Context group where the badge is included
-    :param group_id: ID of the usergroup that the badge is given
-    :param badge_id: ID of the badge that is given to the usergroup
-    :param message: Message to give to the usergroup when the badge is given
-    :return: ok response
+    :param group_id: ID of the user group that the badge is given
+    :param badge_id: ID of the badge that is given to the user group
+    :param message: Message to give to the userg roup when the badge is given
+    :return: Given badge in json format
     """
     badge = Badge.get_by_id(badge_id)
     if not badge:
@@ -491,10 +495,10 @@ def give_badge(
 @badges_blueprint.post("/withdraw_badge")
 def withdraw_badge(badge_given_id: int, context_group: str) -> Response:
     """
-    Withdraws a badge from a usergroup.
+    Withdraws a badge from a user group.
     :param context_group: Context group where the badge is included
     :param badge_given_id: ID of the badgegiven
-    :return: ok response
+    :return: info of withdrawn badge in json format
     """
     badge_given_old = BadgeGiven.get_by_id(badge_given_id)
     if not badge_given_old:
@@ -525,7 +529,8 @@ def withdraw_badge(badge_given_id: int, context_group: str) -> Response:
 @badges_blueprint.get("/podium/<group_name_prefix>")
 def podium(group_name_prefix: str) -> Response:
     """
-    :param group_name_prefix: context group
+    Fetches 5 user groups with given group name prefix that has had the most badges.
+    :param group_name_prefix: Context group
     :return: 5 subgroups with most badges in json format
     """
     context_usergroup = UserGroup.get_by_name(group_name_prefix)
