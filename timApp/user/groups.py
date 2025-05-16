@@ -13,7 +13,6 @@ from timApp.auth.accesshelper import (
     AccessDenied,
     verify_logged_in,
     verify_teacher_access,
-    verify_view_access,
 )
 from timApp.auth.accesstype import AccessType
 from timApp.auth.auth_models import BlockAccess
@@ -22,9 +21,7 @@ from timApp.auth.sessioninfo import (
     get_current_user_group_object,
 )
 from timApp.document.create_item import apply_template, create_document
-from timApp.document.docentry import DocEntry
 from timApp.document.docinfo import DocInfo
-from timApp.document.document import Document
 from timApp.gamification.badge.routes import check_group_member, verify_access
 from timApp.item.validation import ItemValidationRule
 from timApp.notification.send_email import multi_send_email
@@ -511,10 +508,9 @@ def get_usernames(usernames: list[str]):
 @groups.get("/subgroups/<group_name_prefix>")
 def get_subgroups(group_name_prefix: str) -> Response:
     """
-    Fetces usergroups that have a name that starts with the given prefix but is not the exact prefix.
-    Sorted by name.
-    :param group_name_prefix: Prefix of the usergroups
-    :return: List of usergroups
+    Fetches user groups that have a name that starts with the given prefix but is not the exact prefix.
+    :param group_name_prefix: Prefix of the user groups
+    :return: List of user groups sorted by name
     """
     context_usergroup = UserGroup.get_by_name(group_name_prefix)
     verify_access("teacher", context_usergroup, user_group_name=group_name_prefix)
@@ -540,11 +536,11 @@ def get_subgroups(group_name_prefix: str) -> Response:
 @groups.get("/users_subgroups/<user_id>/<group_name_prefix>")
 def get_users_subgroups(user_id: int, group_name_prefix: str) -> Response:
     """
-    Fetches usergroups that user with given user_id belongs. Fetched usergroups also
-    have a name that starts with the given prefix but is not the exact prefix. Sorted by name.
+    Fetches user groups that user with given user_id belongs. Fetched user groups also
+    have a name that starts with the given prefix but is not the exact prefix.
     :param user_id: ID of the user
-    :param group_name_prefix: Prefix of the usergroups
-    :return: List of usergroups
+    :param group_name_prefix: Prefix of the user groups
+    :return: List of user groups sorted by name
     """
     user = User.get_by_id(user_id)
     if not user:
@@ -569,9 +565,9 @@ def get_users_subgroups(user_id: int, group_name_prefix: str) -> Response:
 @groups.get("/user_and_personal_group/<name>")
 def users_personal_group(name: str) -> Response:
     """
-    Fetches user and his/her personal usergroup.
+    Fetches user and his/her personal user group.
     :param name: User's username
-    :return: useraccount and usergroup in json format
+    :return: User account and personal user group in json format
     """
     user_account = User.get_by_name(name)
     if not user_account:
@@ -585,8 +581,8 @@ def users_personal_group(name: str) -> Response:
 @groups.get("/usergroups_members/<usergroup_name>")
 def usergroups_members(usergroup_name: str) -> Response:
     """
-    Fetches usergroup's members.
-    :param usergroup_name: usergroup's name
+    Fetches user group's members.
+    :param usergroup_name: User group's name
     :return: List of users
     """
     context_usergroup = UserGroup.get_by_name(usergroup_name)
@@ -612,7 +608,7 @@ def pretty_name(name: str) -> Response:
     """
     Fetches group data including group's admin_doc's description (pretty_name).
     :param name: Name of the group
-    :return: group data in json format
+    :return: Group data in json format
     """
     group = UserGroup.get_by_name(name)
     raise_group_not_found_if_none(name, group)
@@ -652,10 +648,10 @@ def pretty_name(name: str) -> Response:
 @groups.post("/change_pretty_name/<group_name>/<new_name>")
 def change_pretty_name(group_name: str, new_name: str) -> Response:
     """
-    Changes groups description block (pretty name)
-    :param group_name: full group name
-    :param new_name: new group name (pretty name)
-    :return: new description
+    Changes group's admin_doc's description (pretty name)
+    :param group_name: Full group name
+    :param new_name: New group's admin_doc's description (pretty name)
+    :return: Group data in json format
     """
     group = UserGroup.get_by_name(group_name)
     raise_group_not_found_if_none(group_name, group)
