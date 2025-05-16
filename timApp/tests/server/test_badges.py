@@ -561,7 +561,7 @@ class BadgeTestGroupsBadges(TimRouteTest):
         )
 
         # fetch groups badges when user has teacher access to the context group
-        # and is not included in the context group
+        # and is not included in the subgroup
         self.get(
             f"/groups_badges/10/{group1_name}",
             expect_content=[],
@@ -584,8 +584,31 @@ class BadgeTestGroupsBadges(TimRouteTest):
         # and is not included in the context group
         self.get(
             f"/groups_badges/10/{group1_name}",
-            expect_content=f'Sorry, you don\'t have permission to use this resource. If you are a teacher of "{group1_name}", please contact TIM admin.',
+            expect_content=f"Sorry, you don't have permission to use this resource.",
             expect_status=403,
+        )
+
+
+class BadgeTestGroupsBadgesView(TimRouteTest):
+    def test_badge_groups_badges_view(self):
+        # initialization
+        self.login_test1()
+        group1_name = "es_25"
+        subgroup1_name = "es_25-cats"
+        (group1, doc1) = do_create_group_impl(f"{group1_name}", group1_name)
+        (subgroup1, subdoc1) = do_create_group_impl(f"{subgroup1_name}", subgroup1_name)
+        db.session.commit()
+        self.test_user_3.grant_access(subgroup1.admin_doc, AccessType.view)
+        self.commit_db()
+
+        self.login_test3()
+
+        # fetch groups badges when user has view access to the subgroup
+        # and is not included in the subgroup
+        self.get(
+            f"/groups_badges/10/{group1_name}",
+            expect_content=[],
+            expect_status=200,
         )
 
 

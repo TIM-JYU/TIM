@@ -8,6 +8,7 @@ from sqlalchemy import select, or_, func, desc
 from timApp.auth.accesshelper import (
     verify_teacher_access,
     verify_view_access,
+    AccessDenied,
 )
 from timApp.auth.sessioninfo import get_current_user_object
 from timApp.gamification.badge.badges import Badge, BadgeGiven
@@ -325,7 +326,10 @@ def get_groups_badges(group_id: int, context_group: str) -> Response:
     current_user = get_current_user_object()
     in_group = check_group_member(current_user, group_id)
     if not in_group:
-        verify_access("teacher", context_usergroup, user_group_name=context_group)
+        try:
+            verify_access("view", usergroup, user_group_id=group_id)
+        except NotExist:
+            verify_access("teacher", context_usergroup, user_group_name=context_group)
 
     groups_badges_given = (
         run_sql(
