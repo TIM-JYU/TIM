@@ -12,6 +12,11 @@ import {manageglobals} from "tim/util/globals";
 import {IFolder, IFullDocument} from "tim/item/IItem";
 import {GroupService} from "tim/plugin/group-dashboard/group.service";
 import {ICurrentUser} from "tim/user/IUser";
+import {toPromise} from "tim/util/utils";
+import {BadgeService} from "tim/gamification/badge/badge.service";
+import {HttpClient} from "@angular/common/http";
+import {PurifyModule} from "tim/util/purify.module";
+import {TimUtilityModule} from "tim/ui/tim-utility.module";
 
 @Component({
     selector: "tim-name-changer",
@@ -29,6 +34,10 @@ import {ICurrentUser} from "tim/user/IUser";
                     <button (click)="saveName()" [disabled]="newName.invalid"><ng-container i18n>Save</ng-container></button>
                     <button (click)="toggleInput()" class="cancelButton"><ng-container i18n>Cancel</ng-container></button>
                 </div>
+                <tim-alert *ngFor="let alert of alerts; let i = index" [severity]="alert.type"
+                               [closeable]="true" (closing)="badgeService.closeAlert(this.alerts, i)">
+                        <div [innerHTML]="alert.msg | purify"></div>
+                    </tim-alert>
                 </div>
         </ng-container>
     `,
@@ -48,8 +57,17 @@ export class NameChangerComponent implements OnInit {
     showFullName = true;
     user: ICurrentUser | null = null;
     doc: IFullDocument | IFolder | undefined;
+    alerts: Array<{
+        msg: string;
+        type: "warning" | "danger";
+        id?: string;
+    }> = [];
 
-    constructor(private groupService: GroupService) {}
+    constructor(
+        private groupService: GroupService,
+        protected badgeService: BadgeService,
+        private http: HttpClient
+    ) {}
 
     ngOnInit(): void {
         this.item = manageglobals().curr_item;
@@ -86,6 +104,10 @@ export class NameChangerComponent implements OnInit {
      * updates local prettyName variable for display in user interface.
      */
     async saveName() {
+        const noConnectionAvailable = await this.checkConnectionError();
+        if (noConnectionAvailable) {
+            return;
+        }
         if (
             !this.newName.valid ||
             !this.groupName ||
@@ -104,14 +126,43 @@ export class NameChangerComponent implements OnInit {
         this.showInput = !this.showInput;
     }
 
+    /**
+     * Tests connection with check_connection route.
+     * If there is error with result, calls showError method via badge-service and returns true.
+     * If no errors, returns false.
+     */
+    async checkConnectionError() {
+        const result = await toPromise(this.http.get(`/check_connection/`));
+        if (!result.ok) {
+            this.badgeService.showError(
+                this.alerts,
+                {
+                    data: {
+                        error: "Unexpected error. Check your internet connection.",
+                    },
+                },
+                "danger"
+            );
+            return true;
+        }
+        return false;
+    }
+
     toggleInput() {
         this.showInput = !this.showInput;
     }
+
+    protected readonly alert = alert;
 }
 
 @NgModule({
     declarations: [NameChangerComponent],
     exports: [NameChangerComponent],
-    imports: [CommonModule, ReactiveFormsModule],
+    imports: [
+        CommonModule,
+        ReactiveFormsModule,
+        PurifyModule,
+        TimUtilityModule,
+    ],
 })
 export class NameChangerModule {}
