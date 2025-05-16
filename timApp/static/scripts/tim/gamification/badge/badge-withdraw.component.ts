@@ -26,7 +26,7 @@ import {PurifyModule} from "tim/util/purify.module";
 @Component({
     selector: "tim-badge-withdraw",
     template: `
-
+        <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
         <div class="badge-withdraw" #startSection>
             <h2><ng-container i18n>View users or groups</ng-container> ({{ badgegroupContext }})</h2>
 
@@ -54,10 +54,10 @@ import {PurifyModule} from "tim/util/purify.module";
                     <div *ngIf="userAssign" class="form-group">
                         <div class="search-wrapper">
                             <div class="search-groups">
-                                <label for="group-search" i18n>Search user:</label>
                                 <input type="search" id="group-search" name="q"
                                        [(ngModel)]="searchTerm"
                                        (ngModelChange)="onUserSearchChange()"/>
+                                <span class="material-icons">search</span>
                             </div>
 
                             <div *ngIf="userSearchResults.length > 0" class="search-results">
@@ -128,10 +128,10 @@ import {PurifyModule} from "tim/util/purify.module";
                     <div *ngIf="userAssign === false" class="form-group">
                         <div class="search-wrapper">
                             <div class="search-groups">
-                                <label for="group-search" i18n>Search group:</label>
                                 <input type="search" id="group-search" name="q"
                                        [(ngModel)]="groupSearchTerm"
                                        (ngModelChange)="onGroupSearchChange()"/>
+                                <span class="material-icons">search</span>
                             </div>
 
                             <div *ngIf="groupSearchResults.length > 0" class="search-results">

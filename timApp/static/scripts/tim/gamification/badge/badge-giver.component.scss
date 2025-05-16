@@ -21,7 +21,7 @@
   padding-left: 1em;
 }
 
-.option-item {
+.users-item {
     display: flex;
     align-items: center;
     padding-left: 1.5em;
@@ -51,8 +51,18 @@
     cursor: pointer;
 }
 
-.option-name:hover {
+.option-item:hover {
+    background-color: lightskyblue;
+    cursor: pointer;
+}
+
+.users-item:hover {
     text-decoration: underline;
+}
+
+.groups-item:hover {
+    text-decoration: underline;
+    cursor: pointer;
 }
 
 .selected-option {
@@ -278,7 +288,7 @@ button:disabled {
   align-items: center;
   gap: 0.5rem;
   position: relative;
-  width: 100%;
+  width: 30%;
   margin-bottom: 0.5rem;
 
   label {
