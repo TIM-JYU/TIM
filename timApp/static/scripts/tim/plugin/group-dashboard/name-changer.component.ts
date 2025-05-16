@@ -18,16 +18,16 @@ import {ICurrentUser} from "tim/user/IUser";
     template: `
         <ng-container>
             <div class="name-changer">
-                <p>Current group name: <b>{{ displayedName }}</b></p>
-                <p>New name: <b>{{prettyName}}</b></p>
+                <p><ng-container i18n>Current group name: </ng-container> <b>{{ displayedName }}</b></p>
+                <p><ng-container i18n>New name: </ng-container><b>{{prettyName}}</b></p>
             
             <div class="buttons-section">
-    <button *ngIf="canEditName" (click)="toggleInput()">Change group name</button>
+                <button *ngIf="canEditName" (click)="toggleInput()"><ng-container i18n>Change group name</ng-container></button>
 </div>
                 <div *ngIf="showInput" class="input-buttons">
                     <input [formControl]="newName" placeholder="Enter new group name"/>
-                    <button (click)="saveName()" [disabled]="newName.invalid">Save</button>
-                    <button (click)="toggleInput()" class="cancelButton">Cancel</button>
+                    <button (click)="saveName()" [disabled]="newName.invalid"><ng-container i18n>Save</ng-container></button>
+                    <button (click)="toggleInput()" class="cancelButton"><ng-container i18n>Cancel</ng-container></button>
                 </div>
                 </div>
         </ng-container>
