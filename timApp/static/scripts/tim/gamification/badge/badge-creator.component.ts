@@ -23,8 +23,6 @@ import {PurifyModule} from "tim/util/purify.module";
 @Component({
     selector: "tim-badge-creator",
     template: `
-        <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
-
         <ng-container *ngIf="!hasPermissionToHandleBadges">
             <div class="badge-creator">
                 <div class="all-badges">
@@ -44,7 +42,8 @@ import {PurifyModule} from "tim/util/purify.module";
                         <h2>{{ selectedContextGroup ? textAllBadges +" ("+ selectedContextGroup +")" : textAllBadges }}</h2>
                         <div class="right-buttons">                       
                           <button title="Create a new badge" id="showBadgeForm" type="button" (click)="toggleBadgeCreateFromVisibility()" i18n-title>
-                              <span class="material-icons" style="font-size: 30px">add</span></button>
+                              <img src="/static/scripts/vendor/material-design-icons/add.svg" alt="add" />
+                          </button>
                         </div> 
                     </div>                 
                     
@@ -78,17 +77,20 @@ import {PurifyModule} from "tim/util/purify.module";
                                         (click)="showBadgeGiver(clickedBadge!)" 
                                         [disabled]="!clickedBadge" 
                                         [ngClass]="{'disabled-btn': !clickedBadge}" i18n-title>
-                                        <span class="material-icons">add</span></button>
+                                        <img src="/static/scripts/vendor/material-design-icons/add.svg" alt="add" />
+                                </button>
                                 <button title="Edit badge" id="editButton" type="button" 
                                         (click)="editBadge(clickedBadge!)" 
                                         [disabled]="!clickedBadge" 
                                         [ngClass]="{'disabled-btn': !clickedBadge}" i18n-title>
-                                        <span class="material-icons">edit</span></button>
+                                        <img src="/static/scripts/vendor/material-design-icons/edit.svg" alt="edit" />
+                                </button>
                                 <button title="Delete badge" id="deleteButton" type="button"
                                         [disabled]="!editingBadge" 
                                         (click)="deleteBadge()"
                                         class="right-button" i18n-title>
-                                        <span class="material-icons">delete</span></button>
+                                        <img src="/static/scripts/vendor/material-design-icons/delete.svg" alt="delete" />
+                                </button>
                               </div>
                           </div>
                       </ng-container>
