@@ -15,7 +15,7 @@ import {PurifyModule} from "tim/util/purify.module";
     template: `
         <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />        
         <div class="viewer-container">             
-            <h2>{{badgegroupContext}} top5 Leaderboard</h2>
+            <h2>{{badgegroupContext}} <ng-container i18n>top5 Leaderboard</ng-container></h2>
             <tim-alert *ngFor="let alert of alerts; let i = index" [severity]="alert.type" [closeable]="true" (closing)="badgeService.closeAlert(this.alerts, i)">
                 <div [innerHTML]="alert.msg | purify"></div>
             </tim-alert>               
