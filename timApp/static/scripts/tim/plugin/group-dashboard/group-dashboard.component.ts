@@ -14,15 +14,15 @@ import {GroupService} from "tim/plugin/group-dashboard/group.service";
         <ng-container>
             <div class="tim-dashboard">
     <h1 class="name-header">
-    {{ displayName }}'s dashboard
+    {{ displayName }}'s <ng-container i18n>dashboard</ng-container>
     <span *ngIf="nameJustUpdated" class="name-updated-icon">✔️</span>
 </h1>
 
     <div class="dashboard-section">
-        <h2 class="section-title">Group details</h2>
-        <h3>{{displayName}}'s badges</h3>
+        <h2 i18n class="section-title">Group details</h2>
+        <h3>{{displayName}}'s <ng-container i18n>badges</ng-container></h3>
         <div class="group-badge-area">
-            <div *ngIf="groupBadges.length === 0">No group badges yet.</div>
+            <div i18n *ngIf="groupBadges.length === 0">No group badges yet.</div>
     <span *ngFor="let badge of groupBadges" class="badge">
         <tim-badge class
             [title]="badge.title"
@@ -34,10 +34,10 @@ import {GroupService} from "tim/plugin/group-dashboard/group.service";
         </tim-badge>
     </span>
 </div>
-        <h3>Statistics</h3>
+        <h3 i18n>Statistics</h3>
 <div class="stat-summary">
-    <p>Total members: <strong>{{ totalMembers }}</strong></p>
-    <p>Total badges (group + user): <strong>{{ totalBadges }}</strong></p>
+    <p><ng-container i18n>Total members: </ng-container><strong>{{ totalMembers }}</strong></p>
+    <p><ng-container i18n>Total badges (group + user): </ng-container><strong>{{ totalBadges }}</strong></p>
 </div>
 
 <div class="stat-visuals">
@@ -46,7 +46,7 @@ import {GroupService} from "tim/plugin/group-dashboard/group.service";
     </div>
 
     <div class="dashboard-section">
-        <h2 class="section-title">Members</h2>
+        <h2 i18n class="section-title">Members</h2>
         <div class="member-list">
             <div class="member-card" *ngFor="let member of members">
                 <div class="member-info">
