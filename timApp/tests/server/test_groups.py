@@ -913,7 +913,6 @@ class GroupNameChangerTest(TimRouteTest):
                 "id": 10,
                 "name": subgroup1_name,
                 "description": subgroup1_name,
-                "edit_access": True,
             },
         )
 
@@ -927,13 +926,8 @@ class GroupNameChangerTest(TimRouteTest):
         )
         self.get(
             f"/groups/pretty_name/{subgroup1_name}",
-            expect_status=200,
-            expect_content={
-                "id": 10,
-                "name": subgroup1_name,
-                "description": subgroup1_name,
-                "edit_access": False,
-            },
+            expect_status=403,
+            expect_content=f'Sorry, you don\'t have permission to use this resource. If you are a teacher of "{subgroup1_name}", please contact TIM admin.',
         )
 
         self.login_test2()
@@ -947,13 +941,8 @@ class GroupNameChangerTest(TimRouteTest):
         )
         self.get(
             f"/groups/pretty_name/{subgroup1_name}",
-            expect_status=200,
-            expect_content={
-                "id": 10,
-                "name": subgroup1_name,
-                "description": subgroup1_name,
-                "edit_access": False,
-            },
+            expect_status=403,
+            expect_content=f'Sorry, you don\'t have permission to use this resource. If you are a teacher of "{subgroup1_name}", please contact TIM admin.',
         )
 
         self.login_test1()
@@ -975,7 +964,6 @@ class GroupNameChangerTest(TimRouteTest):
                 "id": 10,
                 "name": subgroup1_name,
                 "description": "Hevoset",
-                "edit_access": True,
             },
         )
 
