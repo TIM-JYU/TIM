@@ -604,6 +604,11 @@ def usergroups_members(usergroup_name: str) -> Response:
 
 
 def pretty_name_access_checks(group_name):
+    """
+    Does the access checks of pretty name related routes.
+    :param group_name: Name of the group
+    :return:
+    """
     group = UserGroup.get_by_name(group_name)
     raise_group_not_found_if_none(group_name, group)
     block = group.admin_doc
@@ -653,6 +658,7 @@ def change_pretty_name(group_name: str, new_name: str) -> Response:
 
     group.admin_doc.description = new_name
     db.session.commit()
+
     return json_response(
         {"id": group.id, "name": group.name, "description": block.description}
     )
