@@ -9,6 +9,7 @@ import {BadgeService} from "tim/gamification/badge/badge.service";
 import type {
     IBadge,
     IBadgeGroup,
+    IErrorAlert,
     IPersonalGroup,
 } from "tim/gamification/badge/badge.interface";
 import {Subscription} from "rxjs";
@@ -133,11 +134,7 @@ export class BadgeViewerComponent implements OnInit {
     groupSortMap: Map<number, string> = new Map();
 
     hasPermissionToHandleBadges: boolean = false;
-    alerts: Array<{
-        msg: string;
-        type: "warning" | "danger";
-        id?: string;
-    }> = [];
+    alerts: Array<IErrorAlert> = [];
 
     textMessage = $localize`:@@form.message:Message:`;
     textDescription = $localize`:@@form.description:Description:`;
@@ -366,7 +363,8 @@ export class BadgeViewerComponent implements OnInit {
                 `/groups_badges/${this.personalGroup?.["1"].id}/${this.badgegroupContext}`
             )
         );
-        if (await this.checkConnectionError()) {
+        const error = await this.badgeService.checkConnectionError(this.alerts);
+        if (error) {
             return;
         }
         if (!result.ok) {
@@ -469,28 +467,6 @@ export class BadgeViewerComponent implements OnInit {
             true
         );
         this.groupBadgesMap.set(groupId, sorted);
-    }
-
-    /**
-     * Tests connection with check_connection route.
-     * If there is error with result, calls showError method via badge-service and returns true.
-     * If no errors, returns false.
-     */
-    async checkConnectionError() {
-        const result = await toPromise(this.http.get(`/check_connection/`));
-        if (!result.ok) {
-            this.badgeService.showError(
-                this.alerts,
-                {
-                    data: {
-                        error: "Unexpected error. Check your internet connection.",
-                    },
-                },
-                "danger"
-            );
-            return true;
-        }
-        return false;
     }
 
     ngOnDestroy() {

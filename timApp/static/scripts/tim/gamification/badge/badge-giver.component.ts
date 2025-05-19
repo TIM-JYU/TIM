@@ -11,6 +11,7 @@ import {Users} from "tim/user/userService";
 import type {
     IBadge,
     IBadgeGroup,
+    IErrorAlert,
     IPersonalGroup,
 } from "tim/gamification/badge/badge.interface";
 import {BadgeModule} from "tim/gamification/badge/badge.component";
@@ -224,11 +225,7 @@ export class BadgeGiverComponent implements OnInit {
 
     userAssign?: boolean = undefined;
 
-    alerts: Array<{
-        msg: string;
-        type: "warning" | "danger";
-        id?: string;
-    }> = [];
+    alerts: Array<IErrorAlert> = [];
     private subscription: Subscription = new Subscription();
     @Output() cancelEvent = new EventEmitter<void>();
 
@@ -528,7 +525,8 @@ export class BadgeGiverComponent implements OnInit {
      * Finds users, that belongs to badgegroupContext group. badgegroupContext is received from TIM.
      */
     async fetchUsers(groupContext?: string) {
-        if (await this.checkConnectionError()) {
+        const error = await this.badgeService.checkConnectionError(this.alerts);
+        if (error) {
             return;
         }
         if (groupContext) {
@@ -559,7 +557,8 @@ export class BadgeGiverComponent implements OnInit {
      * Calls filterUsers method.
      */
     async fetchUsersFromGroups() {
-        if (await this.checkConnectionError()) {
+        const error = await this.badgeService.checkConnectionError(this.alerts);
+        if (error) {
             return;
         }
         this.groupUsersMap.clear();
@@ -586,7 +585,8 @@ export class BadgeGiverComponent implements OnInit {
      * @param message optional message, that can be given when assigning badge.
      */
     async assignBadge(message: string) {
-        if (await this.checkConnectionError()) {
+        const error = await this.badgeService.checkConnectionError(this.alerts);
+        if (error) {
             return;
         }
         if (this.selectedUsers.length > 0) {
@@ -620,28 +620,6 @@ export class BadgeGiverComponent implements OnInit {
      */
     onScrollList(event: WheelEvent) {
         this.badgeService.onScrollList(event);
-    }
-
-    /**
-     * Tests connection with check_connection route.
-     * If there is error with result, calls showError method via badge-service and returns true.
-     * If no errors, returns false.
-     */
-    async checkConnectionError() {
-        const result = await toPromise(this.http.get(`/check_connection/`));
-        if (!result.ok) {
-            this.badgeService.showError(
-                this.alerts,
-                {
-                    data: {
-                        error: "Unexpected error. Check your internet connection.",
-                    },
-                },
-                "danger"
-            );
-            return true;
-        }
-        return false;
     }
 
     /**

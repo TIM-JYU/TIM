@@ -1,4 +1,5 @@
 import type {IGroup, IUser} from "tim/user/IUser";
+import {IError} from "../../../../../modules/jsrunner/shared/jsrunnertypes";
 
 /**
  * Interface representing a badge and its associated details
@@ -17,6 +18,12 @@ export interface IBadge {
     given: Date;
     created_by_name: string;
     created: Date;
+}
+
+export interface IErrorAlert {
+    msg: string;
+    type: "warning" | "danger";
+    id?: string;
 }
 
 /**
