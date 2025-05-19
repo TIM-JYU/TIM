@@ -5,7 +5,7 @@
     padding: 1em;
     border-radius: 1em;
     margin: 2em 0 2em 0;
-    width: 100%;
+    width: 50%;
     background-color: #fff;
 }
 
@@ -25,14 +25,14 @@
 }
 
 button {
-    width: 100%;
-    margin: 0.8em;
-    padding: 0.8em;
+    width: 44%;
+    padding: 1em;
     border: none;
     border-radius: 0.5em;
     background-color: #0F4096;
     color: #fff;
-    font-size: 1.1em;
+    font-size: 12px;
+    font-weight: bold;
     cursor: pointer;
     transition: background-color 0.3s ease;
 }
@@ -42,13 +42,12 @@ button {
     flex-direction: row;
     align-items: center;
     gap: 0.4rem;
-    padding: 1em;
 }
 
 
 
 .input-buttons button {
-    width: auto;
+    width: 20%;
     margin: 0.8em;
     padding: 0.8em;
     border: none;
@@ -65,7 +64,7 @@ input {
     border: 1px solid #ccc;
     border-radius: 6px;
     font-size: 1.1em;
-    width: 50%;
+    width: 100%;
     height: auto;
 
     &:focus {
