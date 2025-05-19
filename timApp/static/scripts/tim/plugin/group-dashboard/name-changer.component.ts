@@ -15,14 +15,13 @@ import {TimUtilityModule} from "tim/ui/tim-utility.module";
 @Component({
     selector: "tim-name-changer",
     template: `
-        <ng-container>
             <div class="name-changer">
                 <p><ng-container i18n>Current group name: </ng-container> <b>{{ displayedName }}</b></p>
                 <p><ng-container i18n>New name: </ng-container><b>{{prettyName}}</b></p>
             
-            <div class="buttons-section">
-                <button *ngIf="canEditName" (click)="toggleInput()"><ng-container i18n>Change group name</ng-container></button>
-</div>
+                <div class="buttons-section">
+                    <button *ngIf="canEditName" (click)="toggleInput()"><ng-container i18n>Change group name</ng-container></button>
+                </div>
                 <div *ngIf="showInput" class="input-buttons">
                     <input [formControl]="newName" placeholder="Enter new group name"/>
                     <button (click)="saveName()" [disabled]="newName.invalid"><ng-container i18n>Save</ng-container></button>
@@ -30,9 +29,9 @@ import {TimUtilityModule} from "tim/ui/tim-utility.module";
                 <tim-alert *ngFor="let alert of alerts; let i = index" [severity]="alert.type"
                                [closeable]="true" (closing)="badgeService.closeAlert(this.alerts, i)">
                         <div [innerHTML]="alert.msg | purify"></div>
-                    </tim-alert>
-                </div>
-        </ng-container>
+                </tim-alert>
+            </div>
+       
     `,
     styleUrls: ["./name-changer.component.scss"],
 })
@@ -72,6 +71,9 @@ export class NameChangerComponent implements OnInit {
      * Access group's full name with .name, pretty_name with .description and id with .id
      */
     async getGroup() {
+        if (await this.checkConnectionError()) {
+            return;
+        }
         if (!this.group) {
             return;
         }
@@ -79,17 +81,25 @@ export class NameChangerComponent implements OnInit {
         const fetchedGroup = await this.groupService.getCurrentGroup(
             this.group
         );
-        if (fetchedGroup) {
-            this.groupName = fetchedGroup.name;
-            this.group_id = fetchedGroup.id;
-
-            this.prettyName = fetchedGroup.description || "";
-            this.displayedName = this.showFullName
-                ? this.groupName
-                : this.subGroup;
-
-            this.canEditName = fetchedGroup.edit_access;
+        if (!fetchedGroup) {
+            this.badgeService.showError(
+                this.alerts,
+                {
+                    data: {
+                        error: `Unexpected error. ${this.group} not found.`,
+                    },
+                },
+                "danger"
+            );
+            return;
         }
+        this.groupName = fetchedGroup.name;
+        this.group_id = fetchedGroup.id;
+
+        this.prettyName = fetchedGroup.description || "";
+        this.displayedName = this.showFullName ? this.groupName : this.subGroup;
+
+        this.canEditName = fetchedGroup.edit_access;
     }
 
     /**
