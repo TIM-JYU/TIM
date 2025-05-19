@@ -103,9 +103,8 @@ export class GroupService {
 
         if (result.ok) {
             return result.result;
-        } else {
-            console.error("Failed to fetch groups name.");
         }
+        console.error("Failed to fetch groups name.");
         return null;
     }
 
@@ -123,10 +122,7 @@ export class GroupService {
                 {}
             )
         );
-        const result = await response;
-        if (result.ok) {
-            return result.result;
-        }
+        return await response;
     }
 
     /**
