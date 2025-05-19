@@ -366,19 +366,10 @@ export class BadgeViewerComponent implements OnInit {
                 `/groups_badges/${this.personalGroup?.["1"].id}/${this.badgegroupContext}`
             )
         );
+        if (await this.checkConnectionError()) {
+            return;
+        }
         if (!result.ok) {
-            if (result.result.error.error == undefined) {
-                this.badgeService.showError(
-                    this.alerts,
-                    {
-                        data: {
-                            error: "Unexpected error. Check your internet connection.",
-                        },
-                    },
-                    "danger"
-                );
-                return;
-            }
             this.badgeService.showError(
                 this.alerts,
                 {
@@ -478,6 +469,28 @@ export class BadgeViewerComponent implements OnInit {
             true
         );
         this.groupBadgesMap.set(groupId, sorted);
+    }
+
+    /**
+     * Tests connection with check_connection route.
+     * If there is error with result, calls showError method via badge-service and returns true.
+     * If no errors, returns false.
+     */
+    async checkConnectionError() {
+        const result = await toPromise(this.http.get(`/check_connection/`));
+        if (!result.ok) {
+            this.badgeService.showError(
+                this.alerts,
+                {
+                    data: {
+                        error: "Unexpected error. Check your internet connection.",
+                    },
+                },
+                "danger"
+            );
+            return true;
+        }
+        return false;
     }
 
     ngOnDestroy() {
