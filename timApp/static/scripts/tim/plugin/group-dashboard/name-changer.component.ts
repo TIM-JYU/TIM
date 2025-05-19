@@ -78,21 +78,23 @@ export class NameChangerComponent implements OnInit {
             return;
         }
 
-        const fetchedGroup = await this.groupService.getCurrentGroup(
-            this.group
+        const result = await toPromise(
+            this.http.get<any>(`/groups/pretty_name/${this.group}`)
         );
-        if (!fetchedGroup) {
+        if (!result.ok) {
             this.badgeService.showError(
                 this.alerts,
                 {
                     data: {
-                        error: `Unexpected error. ${this.group} not found.`,
+                        error: result.result.error.error,
                     },
                 },
                 "danger"
             );
             return;
         }
+        const fetchedGroup = result.result;
+
         this.groupName = fetchedGroup.name;
         this.group_id = fetchedGroup.id;
 
