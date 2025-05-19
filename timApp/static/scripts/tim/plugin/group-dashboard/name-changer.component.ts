@@ -101,7 +101,7 @@ export class NameChangerComponent implements OnInit {
         this.prettyName = fetchedGroup.description || "";
         this.displayedName = this.showFullName ? this.groupName : this.subGroup;
 
-        this.canEditName = fetchedGroup.edit_access;
+        this.canEditName = fetchedGroup.edit_access || true;
     }
 
     /**
