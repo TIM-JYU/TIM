@@ -11,6 +11,7 @@ import {BadgeService} from "tim/gamification/badge/badge.service";
 import {HttpClient} from "@angular/common/http";
 import {PurifyModule} from "tim/util/purify.module";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
+import type {IErrorAlert} from "tim/gamification/badge/badge.interface";
 
 @Component({
     selector: "tim-name-changer",
@@ -49,11 +50,7 @@ export class NameChangerComponent implements OnInit {
     showFullName = true;
     user: ICurrentUser | null = null;
     doc: IFullDocument | IFolder | undefined;
-    alerts: Array<{
-        msg: string;
-        type: "warning" | "danger";
-        id?: string;
-    }> = [];
+    alerts: Array<IErrorAlert> = [];
 
     constructor(
         private groupService: GroupService,
@@ -71,7 +68,8 @@ export class NameChangerComponent implements OnInit {
      * Access group's full name with .name, pretty_name with .description and id with .id
      */
     async getGroup() {
-        if (await this.checkConnectionError()) {
+        const error = await this.badgeService.checkConnectionError(this.alerts);
+        if (error) {
             return;
         }
         if (!this.group) {
@@ -109,7 +107,8 @@ export class NameChangerComponent implements OnInit {
      * updates local prettyName variable for display in user interface.
      */
     async saveName() {
-        const noConnectionAvailable = await this.checkConnectionError();
+        const noConnectionAvailable =
+            await this.badgeService.checkConnectionError(this.alerts);
         if (noConnectionAvailable) {
             return;
         }
@@ -129,28 +128,6 @@ export class NameChangerComponent implements OnInit {
         this.prettyName = newPrettyName;
         this.newName.setValue("");
         this.showInput = !this.showInput;
-    }
-
-    /**
-     * Tests connection with check_connection route.
-     * If there is error with result, calls showError method via badge-service and returns true.
-     * If no errors, returns false.
-     */
-    async checkConnectionError() {
-        const result = await toPromise(this.http.get(`/check_connection/`));
-        if (!result.ok) {
-            this.badgeService.showError(
-                this.alerts,
-                {
-                    data: {
-                        error: "Unexpected error. Check your internet connection.",
-                    },
-                },
-                "danger"
-            );
-            return true;
-        }
-        return false;
     }
 
     toggleInput() {

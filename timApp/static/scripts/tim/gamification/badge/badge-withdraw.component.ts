@@ -10,6 +10,7 @@ import {BadgeModule} from "tim/gamification/badge/badge.component";
 import type {
     IBadge,
     IBadgeGroup,
+    IErrorAlert,
     IPersonalGroup,
 } from "tim/gamification/badge/badge.interface";
 import {BadgeService} from "tim/gamification/badge/badge.service";
@@ -250,11 +251,7 @@ export class BadgeWithdrawComponent implements OnInit {
     groupSearchTerm = "";
     groupSearchResults: IBadgeGroup[] = [];
 
-    alerts: Array<{
-        msg: string;
-        type: "warning" | "danger";
-        id?: string;
-    }> = [];
+    alerts: Array<IErrorAlert> = [];
 
     constructor(
         private http: HttpClient,
@@ -474,7 +471,8 @@ export class BadgeWithdrawComponent implements OnInit {
                 }
             }
         }
-        if (await this.checkConnectionError()) {
+        const error = await this.badgeService.checkConnectionError(this.alerts);
+        if (error) {
             return;
         }
         if (!result.ok) {
@@ -512,7 +510,10 @@ export class BadgeWithdrawComponent implements OnInit {
                     }
                 }
             }
-            if (await this.checkConnectionError()) {
+            const error = await this.badgeService.checkConnectionError(
+                this.alerts
+            );
+            if (error) {
                 return;
             }
             if (!result.ok) {
@@ -553,7 +554,8 @@ export class BadgeWithdrawComponent implements OnInit {
      * @param userId User's ID
      */
     async fetchUserBadges(userId?: number) {
-        if (await this.checkConnectionError()) {
+        const error = await this.badgeService.checkConnectionError(this.alerts);
+        if (error) {
             this.hasBadges = false;
             return;
         }
@@ -596,7 +598,8 @@ export class BadgeWithdrawComponent implements OnInit {
      * @param groupId Selected group's ID, which is used to fetch group's badges.
      */
     async fetchGroupBadges(groupId?: number) {
-        if (await this.checkConnectionError()) {
+        const error = await this.badgeService.checkConnectionError(this.alerts);
+        if (error) {
             return;
         }
         if (groupId == undefined) {
@@ -639,7 +642,7 @@ export class BadgeWithdrawComponent implements OnInit {
             "Are you sure you want to remove this badge?"
         );
         if (!confirmed) {
-            this.checkConnectionError();
+            this.badgeService.checkConnectionError(this.alerts);
             return; // Exit if user cancels the confirmation dialog
         }
 
@@ -651,7 +654,10 @@ export class BadgeWithdrawComponent implements OnInit {
         this.badgeService
             .withdrawBadge(badgegivenID, this.badgegroupContext)
             .then(async (r) => {
-                if (await this.checkConnectionError()) {
+                const error = await this.badgeService.checkConnectionError(
+                    this.alerts
+                );
+                if (error) {
                     return;
                 }
                 if (!r.ok) {
@@ -695,28 +701,6 @@ export class BadgeWithdrawComponent implements OnInit {
                 this.selectedGroup = null;
             }
         }
-    }
-
-    /**
-     * Tests connection with check_connection route.
-     * If there is error with result, calls showError method via badge-service and returns true.
-     * If no errors, returns false.
-     */
-    async checkConnectionError() {
-        const result = await toPromise(this.http.get(`/check_connection/`));
-        if (!result.ok) {
-            this.badgeService.showError(
-                this.alerts,
-                {
-                    data: {
-                        error: "Unexpected error. Check your internet connection.",
-                    },
-                },
-                "danger"
-            );
-            return true;
-        }
-        return false;
     }
 
     /**

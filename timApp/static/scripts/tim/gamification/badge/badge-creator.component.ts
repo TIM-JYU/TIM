@@ -10,7 +10,7 @@ import {HttpClientModule} from "@angular/common/http";
 import {BadgeViewerModule} from "tim/gamification/badge/badge-viewer.component";
 import {BadgeGiverModule} from "tim/gamification/badge/badge-giver.component";
 import {BadgeService} from "tim/gamification/badge/badge.service";
-import type {IBadge} from "tim/gamification/badge/badge.interface";
+import type {IBadge, IErrorAlert} from "tim/gamification/badge/badge.interface";
 import {showConfirm} from "tim/ui/showConfirmDialog";
 import {toPromise} from "tim/util/utils";
 import {BadgeModule} from "tim/gamification/badge/badge.component";
@@ -244,11 +244,7 @@ export class BadgeCreatorComponent implements OnInit {
 
     showGiver = false;
     @Input() badgegroupContext?: string;
-    alerts: Array<{
-        msg: string;
-        type: "warning" | "danger";
-        id?: string;
-    }> = [];
+    alerts: Array<IErrorAlert> = [];
     selectedSort: string = "newest";
     sortedBadges: IBadge[] = [];
 
@@ -489,7 +485,10 @@ export class BadgeCreatorComponent implements OnInit {
                 this.badgeFormShowing = false;
                 scrollToElement(this.allBadgesSection?.nativeElement);
             }
-            if (await this.checkConnectionError()) {
+            const error = await this.badgeService.checkConnectionError(
+                this.alerts
+            );
+            if (error) {
                 return;
             }
             if (!result.ok) {
@@ -539,7 +538,8 @@ export class BadgeCreatorComponent implements OnInit {
                 this.onSortChange(this.selectedSort);
             }
         }
-        if (await this.checkConnectionError()) {
+        const error = await this.badgeService.checkConnectionError(this.alerts);
+        if (error) {
             return;
         }
         if (!result.ok) {
@@ -586,7 +586,10 @@ export class BadgeCreatorComponent implements OnInit {
                 this.emptyForm();
                 await this.getBadges();
             }
-            if (await this.checkConnectionError()) {
+            const error = await this.badgeService.checkConnectionError(
+                this.alerts
+            );
+            if (error) {
                 return;
             }
             if (!result.ok) {
@@ -645,7 +648,8 @@ export class BadgeCreatorComponent implements OnInit {
      * arise.
      */
     async deleteBadge() {
-        if (await this.checkConnectionError()) {
+        const error = await this.badgeService.checkConnectionError(this.alerts);
+        if (error) {
             return;
         }
         let confirmMessage = `Are you sure you want to delete "${
@@ -686,7 +690,11 @@ export class BadgeCreatorComponent implements OnInit {
                         // Send a signal to badgeservice about succesful delete-action
                         this.badgeService.triggerUpdateBadgeList();
                     } else {
-                        if (await this.checkConnectionError()) {
+                        const error =
+                            await this.badgeService.checkConnectionError(
+                                this.alerts
+                            );
+                        if (error) {
                             return;
                         }
                         this.badgeService.showError(
@@ -714,28 +722,6 @@ export class BadgeCreatorComponent implements OnInit {
             this.all_badges,
             sortType
         );
-    }
-
-    /**
-     * Tests connection with check_connection route.
-     * If there is error with result, calls showError method via badge-service and returns true.
-     * If no errors, returns false.
-     */
-    async checkConnectionError() {
-        const result = await toPromise(this.http.get(`/check_connection/`));
-        if (!result.ok) {
-            this.badgeService.showError(
-                this.alerts,
-                {
-                    data: {
-                        error: "Unexpected error. Check your internet connection.",
-                    },
-                },
-                "danger"
-            );
-            return true;
-        }
-        return false;
     }
 }
 

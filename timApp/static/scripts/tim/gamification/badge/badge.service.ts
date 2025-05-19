@@ -2,7 +2,7 @@ import {Injectable} from "@angular/core";
 import {HttpClient} from "@angular/common/http";
 import {Subject} from "rxjs";
 import {toPromise} from "tim/util/utils";
-import type {IBadge} from "tim/gamification/badge/badge.interface";
+import type {IBadge, IErrorAlert} from "tim/gamification/badge/badge.interface";
 import {sortLang} from "tim/user/IUser";
 
 interface IBadgeData {
@@ -18,11 +18,7 @@ interface IBadgeData {
 export class BadgeService {
     private updateBadgeSubject = new Subject<void>();
 
-    alerts: Array<{
-        msg: string;
-        type: "warning" | "danger";
-        id?: string;
-    }> = [];
+    alerts: Array<IErrorAlert> = [];
 
     updateBadgeList$ = this.updateBadgeSubject.asObservable();
 
@@ -330,5 +326,27 @@ export class BadgeService {
             default:
                 return sorted;
         }
+    }
+
+    /**
+     * Tests connection with check_connection route.
+     * If there is error with result, calls showError method via badge-service and returns true.
+     * If no errors, returns false.
+     */
+    async checkConnectionError(alert: any) {
+        const result = await toPromise(this.http.get(`/check_connection/`));
+        if (!result.ok) {
+            this.showError(
+                alert,
+                {
+                    data: {
+                        error: "Unexpected error. Check your internet connection.",
+                    },
+                },
+                "danger"
+            );
+            return true;
+        }
+        return false;
     }
 }
