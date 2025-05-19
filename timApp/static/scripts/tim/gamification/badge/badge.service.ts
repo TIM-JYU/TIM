@@ -16,7 +16,6 @@ interface IBadgeData {
     providedIn: "root",
 })
 export class BadgeService {
-    // Subject, joka laukaisee updatesignaalin
     private updateBadgeSubject = new Subject<void>();
 
     alerts: Array<{
@@ -25,7 +24,6 @@ export class BadgeService {
         id?: string;
     }> = [];
 
-    // Observable updatetapahtuman kuunteluun
     updateBadgeList$ = this.updateBadgeSubject.asObservable();
 
     private groupNameUpdated = new Subject<{id: number; newName: string}>();
@@ -107,29 +105,22 @@ export class BadgeService {
         }
     }
 
-    private dialogOpen = false;
-
-    // Checks, if dialog-window is open
-    isDialogOpen(): boolean {
-        return this.dialogOpen;
-    }
-    // Sets the dialog-window as "open"
-    setDialogOpen(isOpen: boolean): void {
-        this.dialogOpen = isOpen;
-    }
-
-    // Send a request to update viewer, when a new badge is created
+    /**
+     *     Send a request to update viewer, when a new badge is created
+     */
     triggerUpdateBadgeList() {
         this.updateBadgeSubject.next();
     }
 
-    public activeDialogRef: any = null; // Store the active dialog reference
+    public activeDialogRef: any = null;
 
-    // Close the active dialog if it exists
+    /**
+     * if a dialog window is already open, it will be closed.
+     */
     closeActiveDialog(): void {
         if (this.activeDialogRef) {
-            this.activeDialogRef.close({}); // Close the current dialog
-            this.activeDialogRef = null; // Reset the reference
+            this.activeDialogRef.close({});
+            this.activeDialogRef = null;
         }
     }
 
@@ -260,7 +251,6 @@ export class BadgeService {
      */
     getAvailableColors() {
         return this.availableColors.sort((a, b) => {
-            // Check if the name contains "Vibrant"
             const isVibrantA = a.forCreatorList
                 .toLowerCase()
                 .includes("vibrant");
@@ -271,7 +261,6 @@ export class BadgeService {
             if (isVibrantA === isVibrantB) {
                 return a.forCreatorList.localeCompare(b.forCreatorList);
             }
-
             return isVibrantA ? 1 : -1;
         });
     }

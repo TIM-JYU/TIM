@@ -131,15 +131,15 @@ export class BadgeLeaderboardComponent implements OnInit {
     getIcon(index: number): string {
         switch (index) {
             case 0:
-                return "trophy_yellow"; // 1st place
+                return "trophy_yellow";
             case 1:
-                return "counter_2"; // 2nd place
+                return "counter_2";
             case 2:
-                return "counter_3"; // 3rd place
+                return "counter_3";
             case 3:
-                return "sentiment_stressed"; // 4th place
+                return "sentiment_stressed";
             case 4:
-                return "sentiment_very_dissatisfied"; // 5th place
+                return "sentiment_very_dissatisfied";
             default:
                 return "";
         }
