@@ -229,7 +229,7 @@ export class BadgeCreatorComponent implements OnInit {
         protected badgeService: BadgeService
     ) {}
 
-    isFormChanged = false; // Flag to track form changes
+    isFormChanged = false;
     all_badges: IBadge[] = [];
     selectedContextGroup: string | undefined = undefined;
     badgeFormShowing = false;
@@ -259,7 +259,10 @@ export class BadgeCreatorComponent implements OnInit {
     textCreateNewBadge = $localize`:@@form.createNewBadge:Create a new badge`;
     textEdit = $localize`:@@form.edit:Edit`;
 
-    // Method called when a badge is clicked
+    /**
+     * Method called when a badge is clicked
+     * @param badge clicked badge by user
+     */
     selectBadge(badge: IBadge) {
         if (this.clickedBadge === badge) {
             this.clickedBadge = null;
@@ -272,8 +275,10 @@ export class BadgeCreatorComponent implements OnInit {
         this.showEditingForm(badge);
     }
 
-    // Initializes the component by loading badges and subscribing to form value changes.
-    // It tracks changes to the context_group field and triggers a handler when the value changes.
+    /**
+     * Initializes the component by loading badges and subscribing to form value changes.
+     * It tracks changes to the context_group field and triggers a handler when the value changes.
+     **/
     ngOnInit() {
         this.availableImages = this.badgeService.getAvailableImages();
         this.availableShapes = this.badgeService.getAvailableShapes();
@@ -285,12 +290,16 @@ export class BadgeCreatorComponent implements OnInit {
         });
     }
 
-    // Access default badge values directly from the service
+    /**
+     * Access default badge values directly from the service
+     */
     get defaultBadgeValues() {
         return this.badgeService.getDefaultBadgeValues();
     }
 
-    // The handle for canceling an event conserning badge-creator.
+    /**
+     * The handle for canceling an event concerning badge-creator.
+     */
     handleCancel() {
         this.resetForm();
         this.hideOtherViewsExcept(true);
@@ -310,7 +319,9 @@ export class BadgeCreatorComponent implements OnInit {
         return thisView;
     }
 
-    // If user has pressed the create badge button, toggles the visibility of the badge creating form
+    /**
+     * If user has pressed the create badge button, toggles the visibility of the badge creating form
+     */
     toggleBadgeCreateFromVisibility() {
         this.clickedBadge = null;
         this.badgeFormShowing = this.hideOtherViewsExcept(
@@ -360,7 +371,9 @@ export class BadgeCreatorComponent implements OnInit {
         }, 100);
     }
 
-    // when create button is pressed, shows empty form
+    /**
+     * When the create button is pressed, shows empty form
+     */
     showForm() {
         this.badgeFormShowing = true;
         this.isFormChanged = true;
@@ -419,12 +432,16 @@ export class BadgeCreatorComponent implements OnInit {
         }, 100);
     }
 
-    // Ensures that preset grey cannot be chosen as a color
+    /**
+     * Ensures that preset grey cannot be chosen as a color
+     */
     disallowGrayColor(control: FormControl) {
         return control.value === "gray" ? {grayNotAllowed: true} : null;
     }
 
-    // The values of a badge
+    /**
+     * The values of a badge
+     */
     badgeForm = new FormGroup({
         id: new FormControl(0),
         image: new FormControl(0, [Validators.required]),
@@ -442,7 +459,10 @@ export class BadgeCreatorComponent implements OnInit {
         context_group: new FormControl("", [Validators.required]),
     });
 
-    // Saves newly created badge
+    /**
+     * Saves newly created badge with the information the user has set,
+     * when the create badge button is pressed.
+     */
     newBadge: IBadge | undefined;
     async onSubmit() {
         if (this.badgeForm.valid) {
@@ -499,7 +519,9 @@ export class BadgeCreatorComponent implements OnInit {
         }, 100);
     }
 
-    // Get all badges in chosen context group. Fails if not teacher.
+    /**
+     * Get all badges in chosen context group. Fails if not teacher.
+     */
     private async getBadges() {
         let response;
         response = toPromise(
