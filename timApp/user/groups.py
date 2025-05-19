@@ -603,56 +603,7 @@ def usergroups_members(usergroup_name: str) -> Response:
     )
 
 
-@groups.get("/pretty_name/<name>")
-def pretty_name(name: str) -> Response:
-    """
-    Fetches group data including group's admin_doc's description (pretty_name).
-    :param name: Name of the group
-    :return: Group data in json format
-    """
-    group = UserGroup.get_by_name(name)
-    raise_group_not_found_if_none(name, group)
-    block = group.admin_doc
-    doc_entries = block.docentries
-    settings = doc_entries[0].document.get_settings()
-
-    group_pretty_name = block.description
-    current_user = get_current_user_object()
-
-    is_member_and_allowed_to_edit = (
-        check_group_member(current_user, group.id)
-        and settings.pretty_name_edit_for_member()
-    )
-    is_admin = current_user.is_admin
-    is_teacher = False
-    try:
-        verify_teacher_access(block)
-        is_teacher = True
-    except AccessDenied:
-        pass
-
-    edit_access = False
-    if is_admin or is_teacher or is_member_and_allowed_to_edit:
-        edit_access = True
-
-    return json_response(
-        {
-            "id": group.id,
-            "name": group.name,
-            "description": group_pretty_name,
-            "edit_access": edit_access,
-        }
-    )
-
-
-@groups.post("/change_pretty_name/<group_name>/<new_name>")
-def change_pretty_name(group_name: str, new_name: str) -> Response:
-    """
-    Changes group's admin_doc's description (pretty name)
-    :param group_name: Full group name
-    :param new_name: New group's admin_doc's description (pretty name)
-    :return: Group data in json format
-    """
+def pretty_name_access_checks(group_name):
     group = UserGroup.get_by_name(group_name)
     raise_group_not_found_if_none(group_name, group)
     block = group.admin_doc
@@ -672,6 +623,33 @@ def change_pretty_name(group_name: str, new_name: str) -> Response:
             block,
             message=f'Sorry, you don\'t have permission to use this resource. If you are a teacher of "{group_name}", please contact TIM admin.',
         )
+
+    return group, block
+
+
+@groups.get("/pretty_name/<group_name>")
+def pretty_name(group_name: str) -> Response:
+    """
+    Fetches group data including group's admin_doc's description (pretty_name).
+    :param group_name: Name of the group
+    :return: Group data in json format
+    """
+    (group, block) = pretty_name_access_checks(group_name)
+
+    return json_response(
+        {"id": group.id, "name": group.name, "description": block.description}
+    )
+
+
+@groups.post("/change_pretty_name/<group_name>/<new_name>")
+def change_pretty_name(group_name: str, new_name: str) -> Response:
+    """
+    Changes group's admin_doc's description (pretty name)
+    :param group_name: Full group name
+    :param new_name: New group's admin_doc's description (pretty name)
+    :return: Group data in json format
+    """
+    (group, block) = pretty_name_access_checks(group_name)
 
     group.admin_doc.description = new_name
     db.session.commit()
