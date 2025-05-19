@@ -225,7 +225,7 @@ export class BadgeWithdrawComponent implements OnInit {
     private subscription: Subscription = new Subscription();
 
     userAssign?: boolean = undefined;
-    hasPermissionToHandleBadges = true;
+    hasPermissionToHandleBadges = false;
     showSelection: boolean = true;
     hasBadges: boolean = false;
 
@@ -473,12 +473,12 @@ export class BadgeWithdrawComponent implements OnInit {
                     users.push(alkio);
                 }
             }
+            this.hasPermissionToHandleBadges = true;
         }
         if (await this.checkConnectionError()) {
             return;
         }
         if (!result.ok) {
-            this.hasPermissionToHandleBadges = false;
             this.badgeService.showError(
                 this.alerts,
                 {
@@ -511,12 +511,12 @@ export class BadgeWithdrawComponent implements OnInit {
                         subGroups.push(alkio);
                     }
                 }
+                this.hasPermissionToHandleBadges = true;
             }
             if (await this.checkConnectionError()) {
                 return;
             }
             if (!result.ok) {
-                this.hasPermissionToHandleBadges = false;
                 this.badgeService.showError(
                     this.alerts,
                     {
