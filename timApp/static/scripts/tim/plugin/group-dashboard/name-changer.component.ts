@@ -1,17 +1,11 @@
-import {
-    Component,
-    Input,
-    NgModule,
-    OnInit,
-    EventEmitter,
-    Output,
-} from "@angular/core";
+import type {OnInit} from "@angular/core";
+import {Component, Input, NgModule, EventEmitter, Output} from "@angular/core";
 import {CommonModule} from "@angular/common";
 import {FormControl, ReactiveFormsModule, Validators} from "@angular/forms";
 import {manageglobals} from "tim/util/globals";
-import {IFolder, IFullDocument} from "tim/item/IItem";
+import type {IFolder, IFullDocument} from "tim/item/IItem";
 import {GroupService} from "tim/plugin/group-dashboard/group.service";
-import {ICurrentUser} from "tim/user/IUser";
+import type {ICurrentUser} from "tim/user/IUser";
 import {toPromise} from "tim/util/utils";
 import {BadgeService} from "tim/gamification/badge/badge.service";
 import {HttpClient} from "@angular/common/http";
@@ -32,7 +26,6 @@ import {TimUtilityModule} from "tim/ui/tim-utility.module";
                 <div *ngIf="showInput" class="input-buttons">
                     <input [formControl]="newName" placeholder="Enter new group name"/>
                     <button (click)="saveName()" [disabled]="newName.invalid"><ng-container i18n>Save</ng-container></button>
-                    <button (click)="toggleInput()" class="cancelButton"><ng-container i18n>Cancel</ng-container></button>
                 </div>
                 <tim-alert *ngFor="let alert of alerts; let i = index" [severity]="alert.type"
                                [closeable]="true" (closing)="badgeService.closeAlert(this.alerts, i)">
