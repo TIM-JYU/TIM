@@ -137,9 +137,9 @@ export class BadgeLeaderboardComponent implements OnInit {
             case 2:
                 return "counter_3";
             case 3:
-                return "sentiment_stressed";
+                return "counter_4";
             case 4:
-                return "sentiment_very_dissatisfied";
+                return "counter_5";
             default:
                 return "";
         }
