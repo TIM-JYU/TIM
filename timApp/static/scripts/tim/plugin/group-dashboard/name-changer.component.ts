@@ -79,17 +79,25 @@ export class NameChangerComponent implements OnInit {
         const fetchedGroup = await this.groupService.getCurrentGroup(
             this.group
         );
-        if (fetchedGroup) {
-            this.groupName = fetchedGroup.name;
-            this.group_id = fetchedGroup.id;
-
-            this.prettyName = fetchedGroup.description || "";
-            this.displayedName = this.showFullName
-                ? this.groupName
-                : this.subGroup;
-
-            this.canEditName = fetchedGroup.edit_access;
+        if (!fetchedGroup) {
+            this.badgeService.showError(
+                this.alerts,
+                {
+                    data: {
+                        error: `Unexpected error. ${this.group} not found.`,
+                    },
+                },
+                "danger"
+            );
+            return;
         }
+        this.groupName = fetchedGroup.name;
+        this.group_id = fetchedGroup.id;
+
+        this.prettyName = fetchedGroup.description || "";
+        this.displayedName = this.showFullName ? this.groupName : this.subGroup;
+
+        this.canEditName = fetchedGroup.edit_access;
     }
 
     /**
