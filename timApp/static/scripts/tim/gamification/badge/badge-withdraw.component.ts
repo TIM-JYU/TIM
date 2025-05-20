@@ -27,7 +27,6 @@ import {PurifyModule} from "tim/util/purify.module";
 @Component({
     selector: "tim-badge-withdraw",
     template: `
-        <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
         <div class="badge-withdraw" #startSection>
             <h2><ng-container i18n>View users or groups</ng-container> ({{ badgegroupContext }})</h2>
 
@@ -58,7 +57,7 @@ import {PurifyModule} from "tim/util/purify.module";
                                 <input type="search" id="group-search" name="q"
                                        [(ngModel)]="searchTerm"
                                        (ngModelChange)="onUserSearchChange()"/>
-                                <span class="material-icons">search</span>
+                                <img src="/static/scripts/vendor/material-design-icons/search.svg" alt="search" />
                             </div>
 
                             <div *ngIf="userSearchResults.length > 0" class="search-results">
@@ -86,14 +85,15 @@ import {PurifyModule} from "tim/util/purify.module";
                                             </span>
                                     </div>
                                 </div>
-
-                                <span i18n>Users without group</span>
-                                <div *ngFor="let user of usersWithoutGroup" class="option-item">
-                                        <span class="user-name" (click)="selectedUser = user; fetchUserBadges(user.id)"
-                                              [ngClass]="{'selected-option': selectedUser?.id === user.id}">
-                                            {{ user.real_name }}
-                                        </span>
-                                </div>
+                                <ng-container *ngIf="usersWithoutGroup.length > 0">
+                                    <span i18n>Users without group</span>
+                                    <div *ngFor="let user of usersWithoutGroup" class="option-item">
+                                            <span class="user-name" (click)="selectedUser = user; fetchUserBadges(user.id)"
+                                                  [ngClass]="{'selected-option': selectedUser?.id === user.id}">
+                                                {{ user.real_name }}
+                                            </span>
+                                    </div>
+                                </ng-container>
 
                             </div>
                         </div>
@@ -132,7 +132,7 @@ import {PurifyModule} from "tim/util/purify.module";
                                 <input type="search" id="group-search" name="q"
                                        [(ngModel)]="groupSearchTerm"
                                        (ngModelChange)="onGroupSearchChange()"/>
-                                <span class="material-icons">search</span>
+                                <img src="/static/scripts/vendor/material-design-icons/search.svg" alt="search" />
                             </div>
 
                             <div *ngIf="groupSearchResults.length > 0" class="search-results">

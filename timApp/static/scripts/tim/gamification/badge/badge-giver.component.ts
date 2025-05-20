@@ -25,7 +25,6 @@ import {PurifyModule} from "tim/util/purify.module";
 @Component({
     selector: "timBadgeGiver",
     template: `
-        <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
         <h2><ng-container i18n>Assign</ng-container> {{ selectedBadge?.title }} <ng-container i18n>to user(s) or group(s)</ng-container></h2>
 
         <!-- Preview of the selected badge -->
@@ -58,7 +57,7 @@ import {PurifyModule} from "tim/util/purify.module";
                     <input type="search" id="user-search" name="q"
                            [(ngModel)]="userSearchTerm"
                            (ngModelChange)="filterUsers()"/>
-                    <span class="material-icons">search</span>
+                    <img src="/static/scripts/vendor/material-design-icons/search.svg" alt="search" />
                 </div>
 
                 <div *ngIf="searchingUsers" class="search-results">
@@ -97,21 +96,23 @@ import {PurifyModule} from "tim/util/purify.module";
                         </div>
                     </div>
                 </div>
-                <div class="group">
-                    <span i18n>Users without group</span>
-                    <div *ngFor="let user of usersWithoutGroup" class="users-item">
-                        <input class="user-checkbox"
-                               type="checkbox"
-                               [value]="user"
-                               (change)="toggleUserSelection(user, $event)"
-                               [checked]="isSelected(user, selectedUsers)"
-                        />
-                        <span class="option-name" (click)="handleUserSelection(user)"
-                              [ngClass]="{'selected-option': selectedUser?.id === user.id}">
-                                 {{ user.real_name }}
-                        </span>
+                <ng-container *ngIf="usersWithoutGroup.length > 0">
+                    <div class="group">
+                        <span i18n>Users without group</span>
+                        <div *ngFor="let user of usersWithoutGroup" class="users-item">
+                            <input class="user-checkbox"
+                                   type="checkbox"
+                                   [value]="user"
+                                   (change)="toggleUserSelection(user, $event)"
+                                   [checked]="isSelected(user, selectedUsers)"
+                            />
+                            <span class="option-name" (click)="handleUserSelection(user)"
+                                  [ngClass]="{'selected-option': selectedUser?.id === user.id}">
+                                     {{ user.real_name }}
+                            </span>
+                        </div>
                     </div>
-                </div>
+                </ng-container>
             </div>
         </div>
 
@@ -122,7 +123,7 @@ import {PurifyModule} from "tim/util/purify.module";
                     <input type="search" id="group-search" name="q"
                            [(ngModel)]="groupSearchTerm"
                            (ngModelChange)="filterGroups()"/>
-                    <span class="material-icons">search</span>
+                    <img src="/static/scripts/vendor/material-design-icons/search.svg" alt="search" />
                 </div>
 
                 <div *ngIf="searchingGroups" class="search-results">

@@ -1,5 +1,5 @@
 import {Component, Input, NgModule} from "@angular/core";
-import {OnInit} from "@angular/core";
+import type {OnInit} from "@angular/core";
 import {CommonModule} from "@angular/common";
 import {FormsModule} from "@angular/forms";
 import {HttpClient} from "@angular/common/http";
@@ -14,7 +14,7 @@ import {PurifyModule} from "tim/util/purify.module";
     selector: "tim-badge-leaderboard",
     template: `
         <div class="viewer-container">             
-            <h2>{{badgegroupContext}} <ng-container i18n>top5 Leaderboard</ng-container></h2>
+            <h2><ng-container i18n>Leaderboard</ng-container> ({{badgegroupContext}})</h2>
             <tim-alert *ngFor="let alert of alerts; let i = index" [severity]="alert.type" [closeable]="true" (closing)="badgeService.closeAlert(this.alerts, i)">
                 <div [innerHTML]="alert.msg | purify"></div>
             </tim-alert>      
