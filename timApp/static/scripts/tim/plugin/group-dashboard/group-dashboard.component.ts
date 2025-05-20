@@ -4,20 +4,33 @@ import {CommonModule} from "@angular/common";
 import {BadgeService} from "tim/gamification/badge/badge.service";
 import {manageglobals} from "tim/util/globals";
 import {NameChangerModule} from "tim/plugin/group-dashboard/name-changer.component";
-import type {IBadge} from "tim/gamification/badge/badge.interface";
+import type {IBadge, IErrorAlert} from "tim/gamification/badge/badge.interface";
 import {BadgeModule} from "tim/gamification/badge/badge.component";
 import {GroupService} from "tim/plugin/group-dashboard/group.service";
+import {toPromise} from "tim/util/utils";
+import {HttpClient} from "@angular/common/http";
+import {PurifyModule} from "tim/util/purify.module";
+import {TimUtilityModule} from "tim/ui/tim-utility.module";
 
 @Component({
     selector: "tim-group-dashboard",
     template: `
         <ng-container>
             <div class="tim-dashboard">
+                
     <h1 class="name-header">
-    {{ displayName }}'s <ng-container i18n>dashboard</ng-container>
+        <span *ngIf="displayName">{{ displayName }}'s </span><ng-container i18n>dashboard</ng-container>
     <span *ngIf="nameJustUpdated" class="name-updated-icon">✔️</span>
 </h1>
-
+                
+                <!-- Show alert if group is not found -->
+        <div *ngIf="alerts.length > 0">
+            <tim-alert *ngFor="let alert of alerts; let i = index" [severity]="alert.type"
+                [closeable]="true" (closing)="badgeService.closeAlert(this.alerts, i)">
+                <div [innerHTML]="alert.msg | purify"></div>
+            </tim-alert>
+        </div>
+    <div *ngIf="displayName && alerts.length === 0">
     <div class="dashboard-section">
         <h2 i18n class="section-title">Group details</h2>
         <h3>{{displayName}}'s <ng-container i18n>badges</ng-container></h3>
@@ -68,6 +81,7 @@ import {GroupService} from "tim/plugin/group-dashboard/group.service";
         </div>
     </div>
                 </div>
+            </div>    
 </ng-container>
 `,
     styleUrls: ["./group-dashboard.component.scss"],
@@ -75,7 +89,8 @@ import {GroupService} from "tim/plugin/group-dashboard/group.service";
 export class GroupDashboardComponent implements OnInit {
     constructor(
         private groupService: GroupService,
-        private badgeService: BadgeService
+        protected badgeService: BadgeService,
+        private http: HttpClient
     ) {}
 
     @Input() group!: string;
@@ -90,6 +105,7 @@ export class GroupDashboardComponent implements OnInit {
     nameJustUpdated = false;
     totalMembers: number = 0;
     totalBadges: number = 0;
+    alerts: Array<IErrorAlert> = [];
 
     /**
      * Triggers loading of group related data if group is provided in the user interface
@@ -125,9 +141,23 @@ export class GroupDashboardComponent implements OnInit {
      * @returns group data
      */
     async getGroupName() {
-        const fetchedGroup = await this.groupService.getCurrentGroup(
-            this.group
+        const result = await toPromise(
+            this.http.get<any>(`/groups/pretty_name/${this.group}`)
         );
+        if (!result.ok) {
+            this.badgeService.showError(
+                this.alerts,
+                {
+                    data: {
+                        error: result.result.error.error,
+                    },
+                },
+                "danger"
+            );
+            return;
+        }
+        const fetchedGroup = result.result;
+
         if (fetchedGroup) {
             this.displayName = fetchedGroup.description || "";
             this.groupId = fetchedGroup.id;
@@ -203,11 +233,19 @@ export class GroupDashboardComponent implements OnInit {
             return;
         }
     }
+
+    protected readonly alert = alert;
 }
 
 @NgModule({
     declarations: [GroupDashboardComponent],
     exports: [GroupDashboardComponent],
-    imports: [CommonModule, NameChangerModule, BadgeModule],
+    imports: [
+        CommonModule,
+        NameChangerModule,
+        BadgeModule,
+        PurifyModule,
+        TimUtilityModule,
+    ],
 })
 export class GroupDashboardModule {}
