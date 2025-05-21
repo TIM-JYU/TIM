@@ -560,7 +560,7 @@ export class BadgeWithdrawComponent implements OnInit {
             return;
         }
         if (userId == undefined) {
-            console.error("userid was undefined");
+            console.error("Failed to retrieve user's ID.");
             this.hasBadges = false;
             return;
         }
@@ -603,7 +603,7 @@ export class BadgeWithdrawComponent implements OnInit {
             return;
         }
         if (groupId == undefined) {
-            console.error("groupid was undefined");
+            console.error("Failed to retrieve group ID.");
             this.hasBadges = false;
             return;
         }
@@ -632,7 +632,7 @@ export class BadgeWithdrawComponent implements OnInit {
      */
     async removeBadge(badgegivenID?: number) {
         if (badgegivenID == undefined) {
-            console.error("badgegivenID id was undefined");
+            console.error("Failed to remove badge. ID was undefined.");
             return;
         }
 
@@ -647,7 +647,7 @@ export class BadgeWithdrawComponent implements OnInit {
         }
 
         if (this.badgegroupContext == undefined) {
-            console.error("group_context was undefined");
+            console.error("Group_context was undefined");
             return;
         }
 

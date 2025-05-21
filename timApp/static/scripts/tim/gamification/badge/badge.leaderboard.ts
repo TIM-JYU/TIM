@@ -9,6 +9,8 @@ import {Subscription} from "rxjs";
 import {GroupService} from "tim/plugin/group-dashboard/group.service";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {PurifyModule} from "tim/util/purify.module";
+import type {IErrorAlert} from "tim/gamification/badge/badge.interface";
+import {toPromise} from "tim/util/utils";
 
 @Component({
     selector: "tim-badge-leaderboard",
@@ -44,11 +46,7 @@ export class BadgeLeaderboardComponent implements OnInit {
     }[] = [];
     baseHeight: number = 25;
     scaleFactor: number = 10;
-    alerts: Array<{
-        msg: string;
-        type: "warning" | "danger";
-        id?: string;
-    }> = [];
+    alerts: Array<IErrorAlert> = [];
     private subscription: Subscription = new Subscription();
 
     ngOnInit(): void {
