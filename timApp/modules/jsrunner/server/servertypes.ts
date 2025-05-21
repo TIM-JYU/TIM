@@ -12,6 +12,8 @@ export const UserFieldData = t.type({
     groupinfo: t.type({
         membership_end: nullable(t.number),
         membership_add: nullable(t.number),
+        active_memberships: t.array(t.string),
+        expired_memberships: t.array(t.string),
     }),
 });
 

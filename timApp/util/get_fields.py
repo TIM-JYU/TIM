@@ -33,9 +33,17 @@ from timApp.timdb.sqa import run_sql
 from timApp.user.groups import verify_group_view_access
 from timApp.user.user import User, get_membership_end, get_membership_added
 from timApp.user.usergroup import UserGroup
+from timApp.user.usergroupmember import UserGroupMember
 from timApp.util.flask.requesthelper import RouteException
 from timApp.util.plugininfofield import PluginInfoField, get_plugininfo_field_values
-from timApp.util.utils import widen_fields, get_alias, seq_to_str, fin_timezone
+from timApp.util.utils import (
+    widen_fields,
+    get_alias,
+    seq_to_str,
+    fin_timezone,
+    get_current_time,
+    partition,
+)
 
 ALL_ANSWERED_WILDCARD = "*"
 
@@ -466,6 +474,7 @@ def get_fields_and_users(
     user_fieldstyles = None
     user_index = -1
     res: list[UserFieldObj] = []
+    now = get_current_time()
     for uid, a in answers_with_users:
         if last_user != uid:
             user_index += 1
@@ -497,9 +506,18 @@ def get_fields_and_users(
                 if member_filter_type != MembershipFilter.Current
                 else None
             )
+            relevant_memberships: list[UserGroupMember] = [
+                m for m in user.memberships if m.usergroup_id in group_id_set
+            ]
+            active_memberships, expired_memberships = partition(
+                lambda m: m.membership_end is None or now < m.membership_end,
+                relevant_memberships,
+            )
             obj["groupinfo"] = {
                 "membership_add": time.mktime(m_add.timetuple()) if m_add else None,
                 "membership_end": time.mktime(m_end.timetuple()) if m_end else None,
+                "active_memberships": [m.group.name for m in active_memberships],
+                "expired_memberships": [m.group.name for m in expired_memberships],
             }
             last_user = uid
             if not a:

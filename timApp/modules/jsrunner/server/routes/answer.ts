@@ -113,6 +113,8 @@ function runner(d: IRunnerData): RunnerResult {
             groupinfo: {
                 membership_add: null,
                 membership_end: null,
+                active_memberships: [],
+                expired_memberships: [],
             },
             fields: {},
             styles: {},
