@@ -21,12 +21,20 @@ import type {IErrorAlert} from "tim/gamification/badge/badge.interface";
                 <p><ng-container i18n>New name: </ng-container><b>{{prettyName}}</b></p>
             
                 <div class="buttons-section">
-                    <button *ngIf="canEditName" (click)="toggleInput()"><ng-container i18n>Change group name</ng-container></button>
+                    <button *ngIf="canEditName" (click)="toggleInput()"><ng-container i18n>Change name</ng-container></button>
                 </div>
-                <div *ngIf="showInput" class="input-buttons">
-                    <input [formControl]="newName" placeholder="Enter new group name"/>
-                    <button (click)="saveName()" [disabled]="newName.invalid"><ng-container i18n>Save</ng-container></button>
-                </div>
+                <ng-container *ngIf="showInput">
+                    <div class="input-buttons">
+                        <input [formControl]="newName" placeholder="Enter new group name" maxlength="30"/>
+                        <button (click)="saveName()" [disabled]="newName.invalid"><ng-container i18n>Save</ng-container></button>
+                        <div *ngIf="newName.invalid && newName.touched" class="error-message">
+                            <p *ngIf="newName.hasError('maxlength')" i18n>Title is too long (max 30 characters).</p>
+                        </div>
+                    </div>
+                    <div class="char-counter">
+                        {{ newName.value?.length || 0 }} / 30 <ng-container i18n>characters</ng-container>
+                    </div>
+                </ng-container>
                 <tim-alert *ngFor="let alert of alerts; let i = index" [severity]="alert.type"
                                [closeable]="true" (closing)="badgeService.closeAlert(this.alerts, i)">
                         <div [innerHTML]="alert.msg | purify"></div>
