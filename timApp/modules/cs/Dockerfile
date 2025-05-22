@@ -278,7 +278,7 @@ RUN $PIP_INSTALL pyqula && bash -c "${APT_CLEANUP}"
 RUN wget -q https://github.com/industrial-optimization-group/DESDEO/releases/download/supplementary/solver_binaries.tgz && \
     mkdir -p /etc/desdeo/solver_binaries && \
     tar -xzf solver_binaries.tgz -C /etc/desdeo/solver_binaries && \
-    rm solver_binaries.tgz \
+    rm solver_binaries.tgz
 ENV PATH=$PATH:/etc/desdeo/solver_binaries/ampl.linux-intel64
 RUN $PIP_INSTALL desdeo && bash -c "${APT_CLEANUP}"
 
