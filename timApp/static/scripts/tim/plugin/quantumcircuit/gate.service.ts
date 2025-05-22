@@ -11,6 +11,8 @@ import {
     pi,
     pow,
     Matrix,
+    sqrt,
+    fraction,
 } from "mathjs";
 import {of} from "rxjs";
 import type {
@@ -92,6 +94,21 @@ export class GateService {
             ],
         ]);
 
+        const sin45 = fraction(1, sqrt(2) as number);
+        const neg_sin45 = fraction(-1, sqrt(2) as number);
+        const B = matrix([
+            [sin45, 0, sin45, 0],
+            [0, sin45, 0, sin45],
+            [0, sin45, 0, neg_sin45],
+            [sin45, 0, neg_sin45, 0],
+        ]);
+        const D = matrix([
+            [sin45, 0, 0, sin45],
+            [0, sin45, sin45, 0],
+            [sin45, 0, 0, neg_sin45],
+            [0, sin45, neg_sin45, 0],
+        ]);
+
         this.gates = [
             {
                 name: "H",
@@ -141,6 +158,20 @@ export class GateService {
                 hidden: false,
                 group: "basic",
                 info: "square root of X",
+            },
+            {
+                name: "B",
+                matrix: B,
+                hidden: false,
+                group: "basic",
+                info: "Bell",
+            },
+            {
+                name: "D",
+                matrix: D,
+                hidden: false,
+                group: "basic",
+                info: "Deutsch",
             },
             {
                 name: "swap",
