@@ -35,8 +35,10 @@ ENV PYTHON=python$PY_VERSION
 
 # Install Python and pip
 # Use this if the python version is available via official Ubuntu repository
+ARG PIP_INSTALL="${PYTHON} -m pip install --break-system-packages --ignore-installed"
 RUN bash -c "${APT_INSTALL} ${PYTHON} wget dirmngr gpg-agent curl ${PYTHON}-dev python3-pip && ${APT_CLEANUP}"
 # Use this if the python version is not available via official Ubuntu repository
+# ARG PIP_INSTALL="${PYTHON} -m pip install --ignore-installed"
 #RUN bash -c "add-apt-repository ppa:deadsnakes/ppa && apt-get update && \
 #    ${APT_INSTALL} ${PYTHON} wget dirmngr gpg-agent curl ${PYTHON}-dev && \
 #    cd /usr/lib/python3/dist-packages/ && cp apt_pkg*.so apt_pkg.so && \
@@ -77,7 +79,7 @@ libxml2-dev \
 libxslt1-dev \
 && ${APT_CLEANUP}"
 
-RUN ${PYTHON} -m pip install --break-system-packages --ignore-installed setuptools Flask bleach lxml==4.9.4 && bash -c "${APT_CLEANUP}"
+RUN ${PIP_INSTALL} setuptools Flask bleach lxml==4.9.4 && bash -c "${APT_CLEANUP}"
 
 # 2025-01-03: X11 shipped with Ubuntu 24.04 seems to be not synced with
 # xkb-data package. This causes the following messages being logged:
@@ -113,7 +115,7 @@ RUN wget -q https://download.docker.com/linux/static/stable/x86_64/docker-${DOCK
     tar -xzvf docker-${DOCKER_VERSION}.tgz --strip=1 -C /usr/bin docker/docker && \
     rm docker-${DOCKER_VERSION}.tgz && docker --version
 
-RUN $PYTHON -m pip install \
+RUN $PIP_INSTALL \
 beautifulsoup4 \
 filelock \
 gunicorn \
@@ -128,7 +130,7 @@ python-dateutil \
 typing-inspect \
 webargs \
 && \
-$PYTHON -m pip install requests urllib3 --upgrade && \
+$PIP_INSTALL requests urllib3 --upgrade && \
 bash -c "${APT_CLEANUP}"
 
 # git
@@ -252,23 +254,23 @@ USER root
 # Python packages
 
 # OpenCV
-RUN $PYTHON -m pip install sympy opencv-contrib-python-headless && bash -c "${APT_CLEANUP}"
+RUN $PIP_INSTALL sympy opencv-contrib-python-headless && bash -c "${APT_CLEANUP}"
 
 # Gurobi
-RUN $PYTHON -m pip install gurobipy && bash -c "${APT_CLEANUP}"
+RUN $PIP_INSTALL gurobipy && bash -c "${APT_CLEANUP}"
 
 # http://www.scipy.org/install.html
 RUN bash -c "${APT_INSTALL} epstool transfig && ${APT_CLEANUP}"
-RUN $PYTHON -m pip install numpy scipy matplotlib pandas statsmodels control scikit-learn scikit-image pooch networkx && bash -c "${APT_CLEANUP}"
+RUN $PIP_INSTALL numpy scipy matplotlib pandas statsmodels control scikit-learn scikit-image pooch networkx && bash -c "${APT_CLEANUP}"
 # As an additional step, we need to initialize the default datasets of scikit-image
 ENV SKIMAGE_DATADIR=/etc/skimage
 RUN $PYTHON -c "import skimage; print(skimage.__version__)"
 
 # pyod
-RUN $PYTHON -m pip install pyod && bash -c "${APT_CLEANUP}"
+RUN $PIP_INSTALL pyod && bash -c "${APT_CLEANUP}"
 
 # pyqula
-RUN $PYTHON -m pip install pyqula && bash -c "${APT_CLEANUP}"
+RUN $PIP_INSTALL pyqula && bash -c "${APT_CLEANUP}"
 
 # DESDEO
 # First, download and untargz the binaries from https://github.com/industrial-optimization-group/DESDEO/releases/download/supplementary/solver_binaries.tgz
@@ -278,10 +280,10 @@ RUN wget -q https://github.com/industrial-optimization-group/DESDEO/releases/dow
     tar -xzf solver_binaries.tgz -C /etc/desdeo/solver_binaries && \
     rm solver_binaries.tgz \
 ENV PATH=$PATH:/etc/desdeo/solver_binaries/ampl.linux-intel64
-RUN $PYTHON -m pip install desdeo && bash -c "${APT_CLEANUP}"
+RUN $PIP_INSTALL desdeo && bash -c "${APT_CLEANUP}"
 
 # sktime
-RUN bash -c "$PYTHON -m pip install sktime[all_extras] && ${APT_CLEANUP}"
+RUN bash -c "$PIP_INSTALL sktime[all_extras] && ${APT_CLEANUP}"
 
 # R packages
 RUN bash -c "${APT_INSTALL} gcc g++ liblapack-dev liblapack3 libopenblas-dev gfortran && ${APT_CLEANUP}"
@@ -400,14 +402,14 @@ RUN bash -c "wget -qO- \"https://www.mongodb.org/static/pgp/server-${MONGODB_VER
 RUN mongosh --version
 
 # Install cqlsh from pip
-RUN $PYTHON -m pip install cqlsh six --upgrade && bash -c "${APT_CLEANUP}"
+RUN $PIP_INSTALL cqlsh six --upgrade && bash -c "${APT_CLEANUP}"
 RUN cqlsh --version
 
 # Install Elixir
 RUN bash -c "${APT_INSTALL} erlang elixir && apt-get purge --auto-remove -y gnupg && ${APT_CLEANUP}" && \
     elixir --version
 
-RUN $PYTHON -m pip install coverage && bash -c "${APT_CLEANUP}"
+RUN $PIP_INSTALL coverage && bash -c "${APT_CLEANUP}"
 
 # Install OpenSCAD
 
@@ -423,9 +425,9 @@ RUN raco pkg install -i --deps search-auto sicp quickcheck
 RUN bash -c "${APT_INSTALL} guile-3.0 && ${APT_CLEANUP}"
 
 # Install SpeechRecognition for basic speech recognition
-RUN $PYTHON -m pip install SpeechRecognition soundfile && bash -c "${APT_CLEANUP}"
+RUN $PIP_INSTALL SpeechRecognition soundfile && bash -c "${APT_CLEANUP}"
 # Install Google Translate API library
-RUN $PYTHON -m pip install --pre googletrans && bash -c "${APT_CLEANUP}"
+RUN $PIP_INSTALL --pre googletrans && bash -c "${APT_CLEANUP}"
 
 # Install OCaml
 RUN bash -c "${APT_INSTALL} ocaml opam && ${APT_CLEANUP}"
