@@ -30,7 +30,7 @@ RUN echo "Europe/Helsinki" > /etc/timezone; dpkg-reconfigure -f noninteractive t
 # Install gpg and gpg-agent for verifying signatures before installing python
 RUN bash -c "${APT_INSTALL} gpg-agent && ${APT_CLEANUP}"
 
-ENV PY_VERSION=3.12
+ENV PY_VERSION=3.13
 ENV PYTHON=python$PY_VERSION
 
 # Install Python and pip
