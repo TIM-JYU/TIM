@@ -77,7 +77,7 @@ libxml2-dev \
 libxslt1-dev \
 && ${APT_CLEANUP}"
 
-RUN ${PYTHON} -m pip install --ignore-installed setuptools Flask bleach lxml==4.9.4 && bash -c "${APT_CLEANUP}"
+RUN ${PYTHON} -m pip --break-system-packages install --ignore-installed setuptools Flask bleach lxml==4.9.4 && bash -c "${APT_CLEANUP}"
 
 # 2025-01-03: X11 shipped with Ubuntu 24.04 seems to be not synced with
 # xkb-data package. This causes the following messages being logged:
