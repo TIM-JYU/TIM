@@ -227,7 +227,7 @@ class LanguageTypes {
         alloy: {ace: "alloy", comment: ""},
         text: {ace: "text", comment: ""},
         cs: {ace: "csharp", comment: "//"},
-        run: {ace: "run", comment: "//"},
+        run: {ace: "sh", comment: "#"},
         md: {ace: "text", comment: "<!-- -->"},
         js: {ace: "javascript", comment: "//"},
         glowscript: {ace: "javascript", comment: "//"},
@@ -930,6 +930,14 @@ interface IFrameLoad {
     channel: MessageChannel;
 }
 
+type IFrameType = {
+    filename?: string;
+    content: string;
+    width?: number;
+    height?: number;
+    id?: string;
+};
+
 interface IRunResponseWeb {
     error?: string;
     pwd?: string;
@@ -949,6 +957,7 @@ interface IRunResponseWeb {
     "-replyMD"?: string;
     parsons_correct?: number[];
     parsons_styles?: string[];
+    iframes?: IFrameType[];
 }
 
 export interface IRunResponse {
@@ -3032,6 +3041,10 @@ ${fhtml}
                 this.videoURL = videoURL;
             }
 
+            if (data.web.iframes) {
+                this.showIframes(data.web.iframes);
+            }
+
             if (imgURL) {
                 this.imgURL = imgURL + this.imgURL; // TODO: What's the point to catanate ULR's?
                 this.result = err.trim();
@@ -4113,6 +4126,41 @@ ${fhtml}
         return this.runChanged;
     }
 
+    // @ViewChild("iframesContainer", {static: true})
+    @ViewChild("csrunPreview", {static: true})
+    iframesContainer?: ElementRef<HTMLDivElement>;
+
+    showIframes(iframes: IFrameType[]) {
+        if (!this.iframesContainer) {
+            return;
+        }
+        this.iframesContainer.nativeElement.innerHTML = "";
+
+        for (let i = 0; i < iframes.length; i++) {
+            const iframe = iframes[i];
+            const w =
+                iframe.width ??
+                this.iframesContainer?.nativeElement.offsetWidth;
+            const h = iframe.height ?? 400;
+            const tid = this.getTaskId()?.name?.toString() ?? "iframe";
+            const id = "" + tid + "-" + i;
+            const iframeElem = document.createElement("iframe");
+            iframeElem.setAttribute("srcdoc", iframe.content); // htmlContent voi sisältää lainausmerkkejä
+            iframe.content = ""; // to save memory, not needed anymore
+            iframeElem.setAttribute(
+                "sandbox",
+                "allow-scripts allow-forms allow-modals"
+            );
+            iframeElem.width = w?.toString();
+            iframeElem.height = h?.toString();
+            iframeElem.setAttribute("class", "csRunIframe");
+            iframeElem.setAttribute("id", id);
+            iframeElem.setAttribute("title", iframe.filename ?? "iframe");
+            // iframeElem.setAttribute("style", "border:0");
+            this.iframesContainer.nativeElement.appendChild(iframeElem);
+        }
+    }
+
     @HostListener("focusout")
     autosave() {
         if (this.markup.autosave && this.edited) {
@@ -4381,7 +4429,7 @@ ${fhtml}
             </div>
             <div class="htmlresult" *ngIf="htmlresult"><span [innerHTML]="htmlresult | purify"
                                                              aria-live="polite"></span></div>
-            <div class="csrunPreview" [class.csrun-clicking]="formulaEditor" (keydown)="elementSelectAll($event)"
+            <div #csrunPreview class="csrunPreview" [class.csrun-clicking]="formulaEditor" (keydown)="elementSelectAll($event)"
                  tabindex="0" aria-live="polite"
                  (dblclick)="handleSelectFormulaFromPreview($event, preview)" #preview>
                 <div *ngIf="iframesettings && !isTauno"
@@ -4389,20 +4437,20 @@ ${fhtml}
                      caption="Preview"
                      detachable="true"
                      class="no-popup-menu">
-            <span class="csRunMenu" *ngIf="!markup['noclose']">
-                <tim-close-button
-                        (click)="closeFrame()"
-                        style="float: right">
-                </tim-close-button>
-            </span>
+                    <span class="csRunMenu" *ngIf="!markup['noclose']">
+                        <tim-close-button
+                                (click)="closeFrame()"
+                                style="float: right">
+                        </tim-close-button>
+                    </span>
                     <iframe [id]="iframesettings.id"
-                            class="jsCanvas"
-                            [src]="iframesettings.src"
-                            (load)="onIframeLoad($event)"
-                            [width]="iframesettings.width"
-                            [height]="iframesettings.height"
-                            sandbox="allow-scripts allow-forms"
-                            style="border:0">
+                        class="jsCanvas"
+                        [src]="iframesettings.src"
+                        (load)="onIframeLoad($event)"
+                        [width]="iframesettings.width"
+                        [height]="iframesettings.height"
+                        sandbox="allow-scripts allow-forms"
+                        style="border:0">
                     </iframe>
                 </div>
                 <div class="csMDHTML" #mdHtmlDiv *ngIf="mdHtml" [innerHTML]="mdHtml | purify" aria-live="polite">

@@ -436,7 +436,7 @@ def get_html(self: "TIMServer", ttype: TType, query: QueryClass):
             return ""
 
         if error:
-            htmldata += "<pre>" + cs_min_sanitize(error) + "</pre>"
+            htmldata += "<pre>" + cs_min_sanitize(str(error)) + "</pre>"
 
         is_html = get_param(query, "isHtml", False)
         default_class = "console"
@@ -458,7 +458,7 @@ def get_html(self: "TIMServer", ttype: TType, query: QueryClass):
         console = ret["web"].get("console", None)
         if console:
             if not is_html:
-                console = cs_min_sanitize(console)
+                console = cs_min_sanitize(str(console))
             # else:
             #     console = svg_sanitize(console)
             htmldata += (
@@ -467,7 +467,7 @@ def get_html(self: "TIMServer", ttype: TType, query: QueryClass):
                 + " "
                 + cache_class
                 + ">"
-                + console
+                + str(console)
                 + "</"
                 + cache_elem
                 + ">"
@@ -1033,9 +1033,10 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
         global_anonymous = False
         for query in queries:
             is_graphviz = get_graphviz_data(query) is not None
+            # noinspection PyBroadException
             try:
                 update_markup_from_file(query)
-            except:
+            except Exception:  # pylint: disable=broad-except
                 pass  # TODO: show error to user
 
             ga = get_param(query, "GlobalAnonymous", None)
@@ -1186,17 +1187,19 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
     def do_all(self, query):
         timeout = get_param(query, "timeout", 20)
         if not isinstance(timeout, int):
+            # noinspection PyBroadException
             try:
                 timeout = int(timeout)
-            except:
+            except:  # pylint: disable=broad-except
                 timeout = 20
         timeout = (
             timeout + 3
         )  # +3 because we want languages to realize the timeout first
+        # noinspection PyBroadException
         try:
             signal.signal(signal.SIGALRM, signal_handler)
             signal.alarm(timeout)  # Ten seconds
-        except Exception:
+        except Exception:  # pylint: disable=broad-except
             # print("No signal", e)  #  TODO; why is this signal at all when it always comes here?
             pass
         try:
@@ -1892,6 +1895,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
 
                 t_run_time = time.time() - t1startrun
                 # print(out[590:650])
+                # noinspection PyBroadException
                 try:
                     times_string += (
                         codecs.open(
@@ -1899,7 +1903,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                         ).read()
                         or ""
                     )
-                except:
+                except:  # pylint: disable=broad-except
                     pass
 
                 if err.find("Compile error") >= 0:
@@ -2022,6 +2026,37 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             out = svg_sanitize(out)
         # else:
         #    out = tim_sanitize(out)
+
+        iframes = get_param(query, "iframes", None)
+        if iframes:
+            web_iframes = []
+            web["iframes"] = web_iframes
+            for iframe in iframes:
+                fn = iframe.get("filename", None)
+                content = None
+                filename = ""
+                # noinspection PyBroadException
+                try:
+                    if fn:
+                        if fn == "stdout":
+                            content = out
+                            out = ""
+                        else:
+                            filename = language.prgpath + "/" + fn
+                            with open(filename, encoding="utf-8") as f:
+                                content = f.read()
+                except Exception:  # pylint: disable=broad-except
+                    if not iframe.get("ignoreError", False):
+                        err += "Error reading iframe file: " + fn
+                if content:
+                    if iframe.get("remove", True):
+                        try:
+                            os.remove(filename)
+                        except FileNotFoundError:
+                            pass
+                    iframe["content"] = content
+                    web_iframes.append(iframe)
+
         web["console"] = out
         web["error"] = err + warnmessage
         web["pwd"] = cs_min_sanitize(pwddir.strip())
