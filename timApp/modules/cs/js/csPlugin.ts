@@ -4138,8 +4138,6 @@ ${fhtml}
 
         for (let i = 0; i < iframes.length; i++) {
             const iframe = iframes[i];
-            const src = iframe.content; // this.getDataUrl(iframe.content);
-            iframe.content = ""; // to save memory, not needed anymore
             const w =
                 iframe.width ??
                 this.iframesContainer?.nativeElement.offsetWidth;
@@ -4147,7 +4145,8 @@ ${fhtml}
             const tid = this.getTaskId()?.name?.toString() ?? "iframe";
             const id = "" + tid + "-" + i;
             const iframeElem = document.createElement("iframe");
-            iframeElem.setAttribute("srcdoc", src); // htmlContent voi sisältää lainausmerkkejä
+            iframeElem.setAttribute("srcdoc", iframe.content); // htmlContent voi sisältää lainausmerkkejä
+            iframe.content = ""; // to save memory, not needed anymore
             iframeElem.setAttribute(
                 "sandbox",
                 "allow-scripts allow-forms allow-modals"
