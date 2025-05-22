@@ -35,7 +35,7 @@ ENV PYTHON=python$PY_VERSION
 
 # Install Python and pip
 # Use this if the python version is available via official Ubuntu repository
-RUN bash -c "${APT_INSTALL} ${PYTHON} wget dirmngr gpg-agent curl ${PYTHON}-dev && ${APT_CLEANUP}"
+RUN bash -c "${APT_INSTALL} ${PYTHON} wget dirmngr gpg-agent curl ${PYTHON}-dev python3-pip && ${APT_CLEANUP}"
 # Use this if the python version is not available via official Ubuntu repository
 #RUN bash -c "add-apt-repository ppa:deadsnakes/ppa && apt-get update && \
 #    ${APT_INSTALL} ${PYTHON} wget dirmngr gpg-agent curl ${PYTHON}-dev && \
