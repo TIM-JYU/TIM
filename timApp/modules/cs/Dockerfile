@@ -41,6 +41,7 @@ RUN bash -c "add-apt-repository ppa:deadsnakes/ppa && apt-get update && \
     cd /usr/lib/python3/dist-packages/ && cp apt_pkg*.so apt_pkg.so && \
     wget -q https://bootstrap.pypa.io/get-pip.py -O get-pip.py && ${PYTHON} get-pip.py && rm get-pip.py && \
     ${APT_CLEANUP}"
+RUN ${PYTHON} -m pip install --ignore-installed setuptools Flask bleach lxml && bash -c "${APT_CLEANUP}"
 
 RUN bash -c "gpg --homedir /tmp --no-default-keyring --keyring /usr/share/keyrings/mono-official-archive-keyring.gpg --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 3FA7E0328081BFF6A14DA29AA6A19B38D3D831EF \
     && echo 'deb [signed-by=/usr/share/keyrings/mono-official-archive-keyring.gpg] https://download.mono-project.com/repo/ubuntu stable-focal main' | tee /etc/apt/sources.list.d/mono-official-stable.list \
@@ -76,7 +77,6 @@ libxml2-dev \
 libxslt1-dev \
 && ${APT_CLEANUP}"
 
-RUN ${PYTHON} -m pip install --ignore-installed setuptools Flask bleach lxml==4.9.4 && bash -c "${APT_CLEANUP}"
 
 # 2025-01-03: X11 shipped with Ubuntu 24.04 seems to be not synced with
 # xkb-data package. This causes the following messages being logged:
