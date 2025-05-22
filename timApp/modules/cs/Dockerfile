@@ -30,7 +30,7 @@ RUN echo "Europe/Helsinki" > /etc/timezone; dpkg-reconfigure -f noninteractive t
 # Install gpg and gpg-agent for verifying signatures before installing python
 RUN bash -c "${APT_INSTALL} gpg-agent && ${APT_CLEANUP}"
 
-ENV PY_VERSION=3.11
+ENV PY_VERSION=3.12
 ENV PYTHON=python$PY_VERSION
 
 # Install Python and pip
@@ -265,6 +265,16 @@ RUN $PYTHON -m pip install pyod && bash -c "${APT_CLEANUP}"
 
 # pyqula
 RUN $PYTHON -m pip install pyqula && bash -c "${APT_CLEANUP}"
+
+# DESDEO
+# First, download and untargz the binaries from https://github.com/industrial-optimization-group/DESDEO/releases/download/supplementary/solver_binaries.tgz
+# into /etc/desdeo/solver_binaries
+RUN wget -q https://github.com/industrial-optimization-group/DESDEO/releases/download/supplementary/solver_binaries.tgz && \
+    mkdir -p /etc/desdeo/solver_binaries && \
+    tar -xzf solver_binaries.tgz -C /etc/desdeo/solver_binaries && \
+    rm solver_binaries.tgz \
+ENV PATH=$PATH:/etc/desdeo/solver_binaries/ampl.linux-intel64
+RUN $PYTHON -m pip install desdeo && bash -c "${APT_CLEANUP}"
 
 # sktime
 RUN bash -c "$PYTHON -m pip install sktime[all_extras] && ${APT_CLEANUP}"
