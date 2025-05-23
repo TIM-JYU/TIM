@@ -12,7 +12,6 @@ import {
     pow,
     Matrix,
     sqrt,
-    fraction,
 } from "mathjs";
 import {of} from "rxjs";
 import type {
