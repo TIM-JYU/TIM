@@ -35,10 +35,10 @@ ENV PYTHON=python$PY_VERSION
 
 # Install Python and pip
 # Use this if the python version is available via official Ubuntu repository
-ARG PIP_INSTALL="${PYTHON} -m pip install --break-system-packages --ignore-installed"
+ARG PIP_INSTALL="${PYTHON} -m pip install --break-system-packages"
 RUN bash -c "${APT_INSTALL} ${PYTHON} wget dirmngr gpg-agent curl ${PYTHON}-dev python3-pip && ${APT_CLEANUP}"
 # Use this if the python version is not available via official Ubuntu repository
-# ARG PIP_INSTALL="${PYTHON} -m pip install --ignore-installed"
+# ARG PIP_INSTALL="${PYTHON} -m pip install"
 #RUN bash -c "add-apt-repository ppa:deadsnakes/ppa && apt-get update && \
 #    ${APT_INSTALL} ${PYTHON} wget dirmngr gpg-agent curl ${PYTHON}-dev && \
 #    cd /usr/lib/python3/dist-packages/ && cp apt_pkg*.so apt_pkg.so && \
@@ -79,7 +79,7 @@ libxml2-dev \
 libxslt1-dev \
 && ${APT_CLEANUP}"
 
-RUN ${PIP_INSTALL} setuptools Flask bleach lxml==4.9.4 && bash -c "${APT_CLEANUP}"
+RUN ${PIP_INSTALL} --ignore-installed setuptools Flask bleach lxml==4.9.4 && bash -c "${APT_CLEANUP}"
 
 # 2025-01-03: X11 shipped with Ubuntu 24.04 seems to be not synced with
 # xkb-data package. This causes the following messages being logged:
@@ -122,9 +122,9 @@ gunicorn \
 html5lib \
 humanize \
 isodate \
-marshmallow \
-marshmallow-enum \
-marshmallow_union \
+marshmallow==3.22.0 \
+marshmallow-enum==1.5.1 \
+marshmallow_union==0.1.15.post1 \
 pyaml \
 python-dateutil \
 typing-inspect \
