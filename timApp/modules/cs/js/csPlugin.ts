@@ -454,7 +454,7 @@ function commentTrim(s: string) {
     if (n !== 0) {
         return s;
     }
-    return s.substr(3);
+    return s.slice(3);
 }
 
 function doVariables(v: string | undefined, name: string) {
@@ -674,7 +674,7 @@ const GitMarkup = t.partial({
         }),
     ]),
     library: t.string,
-    fields: t.dictionary(
+    fields: t.record(
         t.string,
         t.intersection([
             t.type({
@@ -786,26 +786,26 @@ const CsMarkupDefaults = t.type({
     canvasWidth: withDefault(t.number, 700),
     codeover: withDefault(t.boolean, false),
     codeunder: withDefault(t.boolean, false),
-    cols: withDefault(t.Integer, 10),
+    cols: withDefault(t.number, 10),
     copyLink: withDefault(t.string, "Copy"),
     copyConsoleLink: withDefault(t.string, "⧉"),
     copyErrorLink: withDefault(t.string, "⧉"),
     dragAndDrop: withDefault(t.boolean, true),
-    editorMode: withDefault(t.Integer, -1),
-    editorModes: withDefault(t.union([t.string, t.Integer]), "01"),
+    editorMode: withDefault(t.number, -1),
+    editorModes: withDefault(t.union([t.string, t.number]), "01"),
     formulaEditor: withDefault(t.boolean, false),
     iframe: withDefault(t.boolean, false), // TODO this maybe gets deleted on server
-    indent: withDefault(t.Integer, -1),
+    indent: withDefault(t.number, -1),
     initSimcir: withDefault(t.string, ""),
     "style-args": withDefault(t.string, ""), // TODO get rid of "-"
-    inputrows: withDefault(t.Integer, 1),
+    inputrows: withDefault(t.number, 1),
     inputstem: withDefault(t.string, ""),
     isHtml: withDefault(t.boolean, false),
     jsparsons: withDefault(t.string, "JS-Parsons"),
     justSave: withDefault(t.boolean, false),
     justCompile: withDefault(t.boolean, false),
     lang: withDefault(t.string, "fi"),
-    maxrows: withDefault(t.Integer, 100),
+    maxrows: withDefault(t.number, 100),
     maxSize: withDefault(t.number, 50),
     uploadAcceptMaxSize: withDefault(t.number, -1), // Differs from maxSize because this is a global maxSize instead of default
     noConsoleClear: withDefault(t.boolean, false),
@@ -813,7 +813,7 @@ const CsMarkupDefaults = t.type({
     norun: withDefault(t.boolean, false),
     nosave: withDefault(t.boolean, false),
     open: withDefault(t.boolean, false),
-    rows: withDefault(t.Integer, 1),
+    rows: withDefault(t.number, 1),
     showRuntime: withDefault(t.boolean, false),
     toggleEditor: withDefault(t.union([t.boolean, t.string]), false),
     type: withDefault(t.string, "cs"),
@@ -936,6 +936,8 @@ type IFrameType = {
     width?: number;
     height?: number;
     id?: string;
+    style?: string;
+    sandbox?: string;
 };
 
 interface IRunResponseWeb {
@@ -1073,7 +1075,7 @@ export function createTemplateButtons(
             const parsed = JSON.parse(line);
             let defaultData = parsed[0].replace("\\square", "⁞");
             defaultData = defaultData.replace(
-                /\\\[|\\\]|\\square|\s|\\\(|\\\)/g,
+                /\\\[|\\]|\\square|\s|\\\(|\\\)/g,
                 ""
             );
             const item: ITemplateButton = {
@@ -1968,7 +1970,7 @@ export class CsController extends CsBase implements ITimComponent {
      * Moves cursor inside clicked formula in preview in editor
      * and opens formula editor. Closes editor if it was open.
      * @param event mouse click event
-     * @param preview root element
+     * @param div root element
      */
     async handleSelectFormulaFromPreview(
         event: MouseEvent,
@@ -2107,7 +2109,7 @@ ${fhtml}
     }
 
     get isExternalFetch(): boolean {
-        return !!this.isRun && !!this.hasExternalSources;
+        return !(!this.isRun || !this.hasExternalSources);
     }
 
     externalFetchText() {
@@ -2662,7 +2664,7 @@ ${fhtml}
                         this.editor?.insert(markdownImageTag);
                         this.editor?.focus();
                     })
-                    .catch((e) => {}); // nothing to catch
+                    .catch((_) => {}); // nothing to catch
             }
         }
     }
@@ -3292,8 +3294,7 @@ ${fhtml}
         const div = document.createElement("div");
         div.id = v.vid;
         this.simcirElem.appendChild(div);
-        const scr = $(this.simcirElem).children().first();
-        this.simcir = scr;
+        this.simcir = $(this.simcirElem).children().first();
         await this.setCircuitData();
         await this.initSimcirCircuitListener();
         return true;
@@ -4126,38 +4127,96 @@ ${fhtml}
         return this.runChanged;
     }
 
+    createCloseButton(div: HTMLDivElement) {
+        const closeBtn = document.createElement("button");
+        closeBtn.innerHTML = "&times;";
+        closeBtn.style.position = "absolute";
+        closeBtn.style.top = "1px";
+        closeBtn.style.right = "1px";
+        closeBtn.style.background = "transparent";
+        closeBtn.style.border = "none";
+        closeBtn.style.fontSize = "18px";
+        closeBtn.style.cursor = "pointer";
+        closeBtn.setAttribute("aria-label", "Close");
+        closeBtn.setAttribute("title", "Close");
+        closeBtn.onclick = () => {
+            div.remove();
+        };
+        div.appendChild(closeBtn);
+        return closeBtn;
+    }
+
     // @ViewChild("iframesContainer", {static: true})
     @ViewChild("csrunPreview", {static: true})
-    iframesContainer?: ElementRef<HTMLDivElement>;
+    csrunPreviewDiv?: ElementRef<HTMLDivElement>;
 
     showIframes(iframes: IFrameType[]) {
-        if (!this.iframesContainer) {
+        if (!this.csrunPreviewDiv) {
             return;
         }
-        this.iframesContainer.nativeElement.innerHTML = "";
+        // this.csrunPreviewDiv.nativeElement.innerHTML = "";
+        let iframesContainer: HTMLDivElement | null =
+            this.csrunPreviewDiv.nativeElement.querySelector(
+                ".iframes-container"
+            );
+
+        const tid = this.getTaskId()?.name?.toString() ?? "iframe";
+
+        if (!iframesContainer) {
+            iframesContainer = document.createElement("div");
+            iframesContainer.className = "iframes-container";
+            iframesContainer.id = tid + "-iframes-container";
+            this.csrunPreviewDiv.nativeElement.appendChild(iframesContainer);
+        }
+        iframesContainer.innerHTML = "";
+        iframesContainer.style.position = "relative";
+        this.createCloseButton(iframesContainer);
+
+        /*
+        const closeBtnRef =
+            iframesContainer.createComponent(CloseButtonComponent);
+        closeBtnRef.location.nativeElement.addEventListener("click", () =>
+            iframesContainer?.remove()
+        );
+         */
 
         for (let i = 0; i < iframes.length; i++) {
             const iframe = iframes[i];
-            const w =
-                iframe.width ??
-                this.iframesContainer?.nativeElement.offsetWidth;
+            const w = iframe.width ?? iframesContainer.offsetWidth;
             const h = iframe.height ?? 400;
-            const tid = this.getTaskId()?.name?.toString() ?? "iframe";
-            const id = "" + tid + "-" + i;
+            const id = "" + tid + "-iframe-" + i;
             const iframeElem = document.createElement("iframe");
             iframeElem.setAttribute("srcdoc", iframe.content); // htmlContent voi sisältää lainausmerkkejä
             iframe.content = ""; // to save memory, not needed anymore
-            iframeElem.setAttribute(
-                "sandbox",
-                "allow-scripts allow-forms allow-modals"
-            );
+
+            let sandbox = "allow-scripts";
+            if (iframe.sandbox !== undefined) {
+                sandbox = "";
+                for (const sbItem of iframe.sandbox.split(" ")) {
+                    if (
+                        [
+                            "allow-scripts",
+                            "allow-modals",
+                            "allow-forms",
+                        ].includes(sbItem)
+                    ) {
+                        sandbox += sbItem + " ";
+                    }
+                }
+                sandbox = sandbox.trim();
+            }
+            iframeElem.setAttribute("sandbox", sandbox);
+
             iframeElem.width = w?.toString();
             iframeElem.height = h?.toString();
+            if (iframe.style) {
+                iframeElem.setAttribute("style", iframe.style ?? "");
+            }
             iframeElem.setAttribute("class", "csRunIframe");
             iframeElem.setAttribute("id", id);
             iframeElem.setAttribute("title", iframe.filename ?? "iframe");
             // iframeElem.setAttribute("style", "border:0");
-            this.iframesContainer.nativeElement.appendChild(iframeElem);
+            iframesContainer.appendChild(iframeElem);
         }
     }
 
