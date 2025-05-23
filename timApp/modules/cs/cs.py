@@ -972,6 +972,18 @@ type_splitter = re.compile("[^+a-z0-9]")
 def handle_iframes(
     iframes, web_iframes, out, err, prgpath, sandbox=None, recurse=False
 ):
+    """
+    Handle list of iframes.  If íframe has readIframes attribute,
+    read the iframes dict from file and continue by that list
+    :param iframes: list of iframes to use
+    :param web_iframes: result variable for iframes
+    :param out: output string until now
+    :param err: error string until now
+    :param prgpath: program path directory
+    :param sandbox: if recursice call, use this sandbox
+    :param recurse: if recursive call, do not read iframes dict from file
+    :return: possibly modified out and err
+    """
     for iframe in iframes:
         content = None
         filename = ""
@@ -1031,8 +1043,9 @@ def check_iframes(query, web, out, err, prgpath):
     :param out: output string until now
     :param err: error string until now
     :param prgpath: path to the program directory
-    :return: posibly modified out and err, for example out may change to empty string
-             if the iframe is stdout and err may get new error messages
+    :return possibly modified out and err, for example
+            out may change to empty string
+            if the iframe is stdout and err may get new error messages
     """
     iframes = get_param(query, "iframes", None)
     if not iframes:
