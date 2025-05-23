@@ -94,8 +94,10 @@ export class GateService {
             ],
         ]);
 
-        const sin45 = fraction(1, sqrt(2) as number);
-        const neg_sin45 = fraction(-1, sqrt(2) as number);
+        // Fraction only accepts whole numbers as parameters,
+        // so just use `divide` here
+        const sin45 = divide(1, sqrt(2) as number);
+        const neg_sin45 = divide(-1, sqrt(2) as number);
         const B = matrix([
             [sin45, 0, sin45, 0],
             [0, sin45, 0, sin45],
