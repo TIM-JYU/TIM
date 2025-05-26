@@ -1611,7 +1611,9 @@ class TS(Language):
         self.fileext = "ts"
 
     def run(self, result, sourcelines, points_rule):
-        code, out, err, pwddir = self.runself(["ts-node", self.pure_exename])
+        code, out, err, pwddir = self.runself(
+            ["ts-node", "-O", '{"module": "commonjs"}', self.pure_exename]
+        )
         err = re.sub(".*/usr/.*nable to compile TypeScript:\n", "", err, flags=re.S)
         err = re.sub("at createTSError.*", "", err, flags=re.S)
         if err:
