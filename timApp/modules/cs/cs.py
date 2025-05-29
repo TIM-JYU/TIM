@@ -6,7 +6,6 @@ import hashlib
 import http.server
 import io
 import json
-import yaml
 import logging
 import os
 import random
@@ -31,6 +30,7 @@ from file_handler import FileHandler
 from file_util import write_safe, rm, rm_safe
 from languages import dummy_language, sanitize_cmdline
 from manager import all_js_files, all_css_files
+from timApp.modules.cs.iframes import check_iframes
 from tim_common.cs_points_rule import (
     return_points,
     get_points_rule,
@@ -80,6 +80,7 @@ from tim_common.fileParams import (
     replace_program_tokens,
 )
 from ttype import TType
+
 
 #  uid = pwd.getpwnam('agent')[2]
 #  os.setuid(uid)
@@ -967,93 +968,6 @@ def signal_handler(signum, frame):
 
 
 type_splitter = re.compile("[^+a-z0-9]")
-
-
-def handle_iframes(
-    iframes, web_iframes, out, err, prgpath, sandbox=None, recurse=False
-):
-    """
-    Handle list of iframes.  If íframe has readIframes attribute,
-    read the iframes dict from file and continue by that list
-    :param iframes: list of iframes to use
-    :param web_iframes: result variable for iframes
-    :param out: output string until now
-    :param err: error string until now
-    :param prgpath: program path directory
-    :param sandbox: if recursice call, use this sandbox
-    :param recurse: if recursive call, do not read iframes dict from file
-    :return: possibly modified out and err
-    """
-    for iframe in iframes:
-        content = None
-        filename = ""
-        fn = ""
-        # noinspection PyBroadException
-        try:
-            fn = iframe.get("readIframes", None)
-            if fn:
-                if recurse:
-                    continue  # do not read iframes recursively
-                # read iframes from file but only when sandbox is not set
-                filename = prgpath + "/" + fn
-                with open(filename, encoding="utf-8") as f:
-                    content = f.read()
-                # content_iframes = json.loads(content)
-                content_iframes = yaml.safe_load(content)
-                sbox = iframe.get("sandbox", None)
-                out, err = handle_iframes(
-                    content_iframes, web_iframes, out, err, prgpath, sbox, True
-                )
-                continue
-
-            fn = iframe.get("filename", None)
-            if fn:
-                if fn == "stdout":
-                    content = out
-                    out = ""
-                else:
-                    filename = prgpath + "/" + fn
-                    with open(filename, encoding="utf-8") as f:
-                        content = f.read()
-        except Exception:  # pylint: disable=broad-except
-            if not iframe.get("ignoreError", False):
-                err += " Error reading iframe file: " + fn
-        if content:
-            if iframe.get("remove", True):
-                try:
-                    os.remove(filename)
-                except FileNotFoundError:
-                    pass
-            iframe["content"] = content
-            if recurse:
-                # if sandbox when read iframes from file, use top level sandbox
-                iframe.pop("sandbox", None)
-                if sandbox is not None:
-                    iframe["sandbox"] = sandbox
-            web_iframes.append(iframe)
-    return out, err
-
-
-def check_iframes(query, web, out, err, prgpath):
-    """
-    Handle iframes in the query.
-    This function will read the iframe files and put them to web
-    :param query: all the parameters
-    :param web: result
-    :param out: output string until now
-    :param err: error string until now
-    :param prgpath: path to the program directory
-    :return possibly modified out and err, for example
-            out may change to empty string
-            if the iframe is stdout and err may get new error messages
-    """
-    iframes = get_param(query, "iframes", None)
-    if not iframes:
-        return out, err
-    web_iframes = []
-    web["iframes"] = web_iframes
-    out, err = handle_iframes(iframes, web_iframes, out, err, prgpath)
-    return out, err
 
 
 class TIMServer(http.server.BaseHTTPRequestHandler):
@@ -2126,7 +2040,9 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
         ts += times_string
         # print(ts)
         web["runtime"] = cs_min_sanitize(ts)
-        if result.get("nosave", False):  # Language has decided not to save
+        if result.get("nosave", False) or not result.get(
+            "save", None
+        ):  # Language has decided not to save
             del result["save"]
 
         result["web"] = web

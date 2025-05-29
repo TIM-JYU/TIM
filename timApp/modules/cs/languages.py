@@ -583,6 +583,9 @@ class CS(Language):
         self.sourcefilename = f"/tmp/{self.basename}/{self.filename}.cs"
         self.exename = f"/tmp/{self.basename}/{self.filename}.exe"
 
+    def extensions(self):
+        return [".cs"], ".cs", ".exe"
+
     @staticmethod
     @functools.cache
     def runtime_config():
@@ -1856,7 +1859,19 @@ class MD(Language):
 
 class HTML(Language):
     ttype = "html"
-    pass
+
+    def __init__(self, query, sourcecode):
+        super().__init__(query, sourcecode)
+        self.fileext = "html"
+        self.filedext = ".html"
+        self.sourcefilename = f"/tmp/{self.basename}/{self.filename}.html"
+
+    def extensions(self):
+        return [".html"], ".html", ""
+
+
+class IHTML(HTML):  # when HTML is used just plain iframes file
+    ttype = "ihtml"
 
 
 class SimCir(Language):

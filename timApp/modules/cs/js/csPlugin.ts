@@ -241,6 +241,7 @@ class LanguageTypes {
         swift: {ace: "swift", comment: "//"},
         mathcheck: {ace: "text", comment: ""},
         html: {ace: "html", comment: "<!-- -->"},
+        ihtml: {ace: "html", comment: "<!-- -->"},
         processing: {ace: "javascript", comment: "//"},
         rust: {ace: "rust", comment: "//"},
         wescheme: {ace: "scheme", comment: "--"},
@@ -940,6 +941,17 @@ type IFrameType = {
     sandbox?: string;
 };
 
+type IFramesType = {
+    files: IFrameType[];
+    style?: string;
+    defaults?: {
+        width?: number;
+        height?: number;
+        style?: string;
+        sandbox?: string;
+    };
+};
+
 interface IRunResponseWeb {
     error?: string;
     pwd?: string;
@@ -959,7 +971,7 @@ interface IRunResponseWeb {
     "-replyMD"?: string;
     parsons_correct?: number[];
     parsons_styles?: string[];
-    iframes?: IFrameType[];
+    iframes?: IFramesType;
 }
 
 export interface IRunResponse {
@@ -3054,7 +3066,10 @@ ${fhtml}
                 if (this.runSuccess) {
                     if (this.markup.isHtml) {
                         this.htmlresult = removeXML(err) + this.htmlresult;
-                    } else if (!languageTypes.isInArray(runType, csJSTypes)) {
+                    } else if (
+                        !languageTypes.isInArray(runType, csJSTypes) ||
+                        (err && !data.web.error)
+                    ) {
                         this.result = err;
                     } else {
                         this.error = data.web.error;
@@ -4127,6 +4142,12 @@ ${fhtml}
         return this.runChanged;
     }
 
+    /**
+     * Creates a close button for the given div.
+     * close button removes the parent div when clicked.
+     * @param div - The HTMLDivElement to which the close button will be added.
+     * @returns The created close button element.
+     */
     createCloseButton(div: HTMLDivElement) {
         const closeBtn = document.createElement("button");
         closeBtn.innerHTML = "&times;";
@@ -4148,13 +4169,16 @@ ${fhtml}
 
     // @ViewChild("iframesContainer", {static: true})
     @ViewChild("csrunPreview", {static: true})
-    csrunPreviewDiv?: ElementRef<HTMLDivElement>;
+    private csrunPreviewDiv?: ElementRef<HTMLDivElement>;
 
-    showIframes(iframes: IFrameType[]) {
+    /**
+     * Show iframes in the csrunPreviewDiv.
+     * @param iframes - The IFramesType object containing iframe data.
+     */
+    showIframes(iframes: IFramesType) {
         if (!this.csrunPreviewDiv) {
             return;
         }
-        // this.csrunPreviewDiv.nativeElement.innerHTML = "";
         let iframesContainer: HTMLDivElement | null =
             this.csrunPreviewDiv.nativeElement.querySelector(
                 ".iframes-container"
@@ -4163,36 +4187,44 @@ ${fhtml}
         const tid = this.getTaskId()?.name?.toString() ?? "iframe";
 
         if (!iframesContainer) {
+            // if no container found, create a new one
             iframesContainer = document.createElement("div");
             iframesContainer.className = "iframes-container";
             iframesContainer.id = tid + "-iframes-container";
             this.csrunPreviewDiv.nativeElement.appendChild(iframesContainer);
         }
+        if (iframes.style) {
+            iframesContainer.setAttribute("style", iframes.style);
+        }
         iframesContainer.innerHTML = "";
         iframesContainer.style.position = "relative";
+        iframesContainer.style.overflow = "hidden";
         this.createCloseButton(iframesContainer);
 
-        /*
+        /* // Create an Angular close button for the iframes container
         const closeBtnRef =
             iframesContainer.createComponent(CloseButtonComponent);
         closeBtnRef.location.nativeElement.addEventListener("click", () =>
             iframesContainer?.remove()
         );
-         */
+        */
 
-        for (let i = 0; i < iframes.length; i++) {
-            const iframe = iframes[i];
-            const w = iframe.width ?? iframesContainer.offsetWidth;
-            const h = iframe.height ?? 400;
-            const id = "" + tid + "-iframe-" + i;
+        for (let i = 0; i < iframes.files?.length ?? 0; i++) {
+            const iframe = iframes.files[i];
+            const wset = iframe.width ?? iframes.defaults?.width;
+            const w = wset ?? iframesContainer.offsetWidth;
+            const hset = iframe.height ?? iframes.defaults?.height;
+            const h = hset ?? 400;
+            const id = iframe.id ?? "" + tid + "-iframe-" + i;
             const iframeElem = document.createElement("iframe");
             iframeElem.setAttribute("srcdoc", iframe.content); // htmlContent voi sisältää lainausmerkkejä
             iframe.content = ""; // to save memory, not needed anymore
 
             let sandbox = "allow-scripts";
-            if (iframe.sandbox !== undefined) {
+            const sb = iframe.sandbox ?? iframes.defaults?.sandbox;
+            if (sb !== undefined) {
                 sandbox = "";
-                for (const sbItem of iframe.sandbox.split(" ")) {
+                for (const sbItem of sb.split(" ")) {
                     if (
                         [
                             "allow-scripts",
@@ -4206,17 +4238,27 @@ ${fhtml}
                 sandbox = sandbox.trim();
             }
             iframeElem.setAttribute("sandbox", sandbox);
+            iframesContainer.appendChild(iframeElem);
 
-            iframeElem.width = w?.toString();
-            iframeElem.height = h?.toString();
-            if (iframe.style) {
-                iframeElem.setAttribute("style", iframe.style ?? "");
+            const style = iframe.style ?? iframes.defaults?.style ?? "";
+            if (style) {
+                iframeElem.setAttribute("style", style);
             }
             iframeElem.setAttribute("class", "csRunIframe");
             iframeElem.setAttribute("id", id);
             iframeElem.setAttribute("title", iframe.filename ?? "iframe");
-            // iframeElem.setAttribute("style", "border:0");
-            iframesContainer.appendChild(iframeElem);
+
+            const computedStyle = window.getComputedStyle(iframeElem);
+
+            // Set width and height if they are not set or if they are asked to set
+            if (computedStyle.width === "300px" || wset) {
+                iframeElem.width = w.toString();
+            }
+            if (computedStyle.height === "150px" || hset) {
+                iframeElem.height = h.toString();
+            }
+            // Ensure the iframe position is relative event user tries to style it
+            iframeElem.style.position = "relative";
         }
     }
 
