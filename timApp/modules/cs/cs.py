@@ -21,6 +21,7 @@ from os.path import splitext
 from pathlib import Path
 from subprocess import Popen, PIPE, check_output
 from traceback import print_exc
+from typing import Any
 from urllib.request import urlopen
 
 from cs_logging import get_logger
@@ -29,6 +30,7 @@ from file_handler import FileHandler
 from file_util import write_safe, rm, rm_safe
 from languages import dummy_language, sanitize_cmdline
 from manager import all_js_files, all_css_files
+from iframes import check_iframes
 from tim_common.cs_points_rule import (
     return_points,
     get_points_rule,
@@ -78,6 +80,7 @@ from tim_common.fileParams import (
     replace_program_tokens,
 )
 from ttype import TType
+
 
 #  uid = pwd.getpwnam('agent')[2]
 #  os.setuid(uid)
@@ -495,7 +498,7 @@ def get_html(self: "TIMServer", ttype: TType, query: QueryClass):
             rm_safe(img)
 
         video = ret["web"].get("video", None)
-        if video:
+        if isinstance(video, str) and video:
             htmldata += (
                 video_start
                 + video
@@ -1221,9 +1224,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
         pwddir = ""
         # print(threading.currentThread().getName())
         result = {}  # query.jso
-        if not result:
-            result = {}
-        save = {}
+        save: dict[str, Any] = {}
         web = {}
         tim_info = {}
         result["web"] = web
@@ -2027,35 +2028,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
         # else:
         #    out = tim_sanitize(out)
 
-        iframes = get_param(query, "iframes", None)
-        if iframes:
-            web_iframes = []
-            web["iframes"] = web_iframes
-            for iframe in iframes:
-                fn = iframe.get("filename", None)
-                content = None
-                filename = ""
-                # noinspection PyBroadException
-                try:
-                    if fn:
-                        if fn == "stdout":
-                            content = out
-                            out = ""
-                        else:
-                            filename = language.prgpath + "/" + fn
-                            with open(filename, encoding="utf-8") as f:
-                                content = f.read()
-                except Exception:  # pylint: disable=broad-except
-                    if not iframe.get("ignoreError", False):
-                        err += "Error reading iframe file: " + fn
-                if content:
-                    if iframe.get("remove", True):
-                        try:
-                            os.remove(filename)
-                        except FileNotFoundError:
-                            pass
-                    iframe["content"] = content
-                    web_iframes.append(iframe)
+        out, err = check_iframes(query, web, out, err, language.prgpath)
 
         web["console"] = out
         web["error"] = err + warnmessage
@@ -2067,7 +2040,9 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
         ts += times_string
         # print(ts)
         web["runtime"] = cs_min_sanitize(ts)
-        if result.get("nosave", False):  # Language has decided not to save
+        if result.get("nosave", False) or not result.get(
+            "save", None
+        ):  # Language has decided not to save
             del result["save"]
 
         result["web"] = web
