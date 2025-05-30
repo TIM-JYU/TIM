@@ -30,7 +30,7 @@ from file_handler import FileHandler
 from file_util import write_safe, rm, rm_safe
 from languages import dummy_language, sanitize_cmdline
 from manager import all_js_files, all_css_files
-from timApp.modules.cs.iframes import check_iframes
+from iframes import check_iframes
 from tim_common.cs_points_rule import (
     return_points,
     get_points_rule,
