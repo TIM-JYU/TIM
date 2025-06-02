@@ -148,7 +148,7 @@ def handle_iframes(
             if fn:
                 if recurse:
                     continue  # do not read iframes recursively
-                # read iframes from file but only when sandbox is not set
+                # read iframes from file
                 filename = prgpath + "/" + fn
                 with open(filename, encoding="utf-8") as f:
                     content = f.read()
@@ -189,9 +189,9 @@ def handle_iframes(
                     filename = prgpath + "/" + fn
                     with open(filename, encoding="utf-8") as f:
                         content = f.read()
-        except Exception:  # pylint: disable=broad-except
+        except Exception as ex:  # pylint: disable=broad-except
             if not iframe.ignoreError:
-                err += " Error reading iframe file: " + fn
+                err += "\nError reading iframe file: " + fn + " : " + str(ex) + "\n"
         if content:  # if content was read, then put it to iframe
             if iframe.remove:
                 try:
