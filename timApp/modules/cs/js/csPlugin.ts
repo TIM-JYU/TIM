@@ -3846,7 +3846,7 @@ ${fhtml}
         this.exportingMD = false;
     }
 
-    private scope = $rootScope.$new();
+    private scope = $rootScope.$new(); // TODO: remove this when ParCompiler is updated to Angular 2+
 
     async showMD() {
         this.runError = false;
