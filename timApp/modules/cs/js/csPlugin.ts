@@ -21,6 +21,9 @@ import {
     HostListener,
     ViewChild,
 } from "@angular/core";
+
+import {$rootScope} from "tim/util/ngimport";
+
 import {HttpClient, HttpHeaders} from "@angular/common/http";
 import type {SafeResourceUrl} from "@angular/platform-browser";
 import {DomSanitizer} from "@angular/platform-browser";
@@ -3843,6 +3846,8 @@ ${fhtml}
         this.exportingMD = false;
     }
 
+    private scope = $rootScope.$new();
+
     async showMD() {
         this.runError = false;
         this.result = "";
@@ -3878,14 +3883,19 @@ ${fhtml}
         );
         if (r.ok) {
             const data = r.result;
-            const element: JQuery = $($.parseHTML(data.texts) as HTMLElement[]);
+            // const element: JQuery = $($.parseHTML(data.texts) as HTMLElement[]);
             // Remove par class as it's used to identify real paragraphs
-            element.removeClass("par");
+            // element.removeClass("par");
             // Remove editline as well as it's not valid for preview
-            element.children(".editline").remove();
-            this.mdHtml = element.wrapAll("<div>").parent().html();
+            // element.children(".editline").remove();
+            // this.mdHtml = element.wrapAll("<div>").parent().html();
             // Process math in the preview, since the math may require MathJax
-            await ParCompiler.processAllMathDelayed(this.preview, 0);
+            // await ParCompiler.processAllMathDelayed(this.preview, 0);
+            await ParCompiler.compileAndAppendTo(
+                this.preview,
+                data,
+                this.scope
+            );
         } else {
             const data = r.result;
             this.runError = true;
