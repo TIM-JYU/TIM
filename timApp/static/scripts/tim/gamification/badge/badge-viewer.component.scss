@@ -1,0 +1,132 @@
+.viewer-container {
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 30px 200px #0000cc38, 0 0 20px #0F0C0020;
+  padding: 1em;
+  border-radius: 1em;
+  margin: 2em 0;
+  width: 100%;
+  background-color: #fff;
+}
+
+.user-badges, .users-group-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 25px;
+  justify-content: flex-start;
+  margin-bottom: 20px;
+  padding: 15px 0;
+}
+
+.badge-card {
+  width: 125px;
+  height: 125px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.badge-card tim-badge {
+  transform: scale(clamp(0.4, 1, 1));
+  transition: transform 0.2s ease-in-out;
+}
+
+.badge-card tim-badge:hover {
+  transform: scale(1);
+  z-index: 2;
+}
+
+.badge-dialog-window {
+  padding-left: 20px;
+  padding-top: 15px;
+  padding-bottom: 15px;
+  word-wrap: break-word;
+}
+
+.user-badges::after {
+  content: "";
+  flex-grow: 9999;
+  min-width: 70px;
+}
+
+.no-badges-txt {
+  color: darkgrey;
+  font-style: italic;
+}
+
+.sort-select {
+  margin: 1rem 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 1.2rem;
+
+  label {
+    font-weight: 600;
+    color: #333;
+    line-height: 1.2;
+    margin-bottom: 0;
+  }
+
+  select {
+    padding: 0.55rem 1.2rem;
+    font-size: 0.95rem;
+    line-height: 1.2;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    background-color: #fff;
+    color: #333;
+    transition: border-color 0.2s ease-in-out, box-shadow 0.2s;
+
+    &:hover {
+      border-color: #888;
+    }
+
+    &:focus {
+      outline: none;
+      border-color: #4285f4;
+      box-shadow: 0 0 0 2px rgba(66, 133, 244, 0.2);
+    }
+  }
+}
+
+
+@media (max-width: 785px) {
+
+  .user-badges, .users-group-badges {
+    padding: 0;
+  }
+
+  .badge-card {
+    margin: 0 10px 0 10px;
+  }
+
+  .user-badges, .users-group-badges {
+    gap: 2px;
+  }
+
+  .badge-card tim-badge {
+    transform: scale(clamp(0.5, 0.7, 0.7));
+  }
+
+}
+
+@media (max-width: 550px) {
+
+  .user-badges, .users-group-badges {
+    gap: 0;
+  }
+
+  .badge-card {
+    margin: -10px 5px -10px 5px;
+  }
+
+  .badge-card tim-badge {
+    transform: scale(clamp(0.4, 0.6, 0.6));
+  }
+
+  .badge-card tim-badge:hover {
+    transform: scale(0.9);
+  }
+
+}
