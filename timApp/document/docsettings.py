@@ -148,6 +148,7 @@ class DocSettingTypes:
     edit_buttons: list[dict[str, str]]
     __static_macros: dict[str, Any]
     __static_macros_hash: str
+    prettyNameEditForMember: bool
 
 
 doc_setting_type_hints = get_type_hints(DocSettingTypes)
@@ -944,6 +945,9 @@ class DocSettings:
 
     def get_edit_buttons(self, default=None) -> list[dict[str, str]] | None:
         return self.get_setting_or_default("edit_buttons", [])
+
+    def pretty_name_edit_for_member(self) -> bool:
+        return self.get_setting_or_default("prettyNameEditForMember", False)
 
 
 def resolve_settings_for_pars(pars: Iterable[DocParagraph]) -> YamlBlock:

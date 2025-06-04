@@ -1,0 +1,464 @@
+.badge-creator {
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 30px 200px #0000cc38, 0 0 20px #0F0C0020;
+  padding: 1em;
+  border-radius: 1em;
+  margin: 2em 0 2em 0;
+  width: 100%;
+  background-color: #fff;
+}
+
+.creator-header {
+  display: flex;
+}
+
+.badge-view {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  justify-content: flex-start;
+}
+
+.badge-card {
+    position: relative;
+    width: 150px;
+    height: 140px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    gap: 10px;
+    margin-bottom: 40px;
+}
+
+.badge-card tim-badge {
+  transform: scale(clamp(0.4, 1, 1));
+  transition: transform 0.2s ease-in-out;
+}
+
+.badge-card tim-badge:hover {
+  transform: scale(1);
+  z-index: 2;
+}
+
+.badge-view::after {
+  content: "";
+  flex-grow: 9999;
+  min-width: 70px;
+}
+
+.selected-badge {
+  background: linear-gradient(135deg,
+                              #A8D0E6,
+                              #86C8D8,
+                              #70A9B7,
+                              #4F97A3,
+                              #7CC4D1,
+                              #B0D6E6,
+                              #66A8C4);
+  border-radius: 12px;
+  font-size: 1.2em;
+  font-family: 'Arial', sans-serif;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.selected-badge:hover {
+  background-color: #cfe2ff;
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+}
+
+.selected-badge:active {
+  background-color: #aad4ff;
+  border-color: #0056b3;
+}
+
+h2 {
+  color: black;
+  margin: 20px 0 20px 0;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5em;
+}
+
+.icon-color-group, .shape-preview-group, .delete-edit {
+  display: flex;
+  justify-content: space-between;
+  gap: 1.5em;
+}
+
+.icon-color-group .form-group, .shape-preview-group .form-group {
+  flex: 1;
+  max-width: 50%;
+}
+
+label {
+  font-weight: 600;
+  color: #333;
+}
+
+input, select {
+  padding: 0.8em;
+  border: 1px solid #0F4096;
+  border-radius: 0.5em;
+  background-color: #f0f4ff;
+  font-size: 1em;
+  transition: border-color 0.3s ease;
+}
+
+textarea {
+  padding: 0.8em;
+  border: 1px solid #0F4096;
+  border-radius: 0.5em;
+  background-color: #f0f4ff;
+  font-size: 1em;
+  transition: border-color 0.3s ease;
+}
+
+input:focus, select:focus {
+  border-color: #0D357A;
+  outline: none;
+}
+
+button {
+  width: 100%;
+  //padding: 0.8em;
+  border: none;
+  border-radius: 0.5em;
+  background-color: #0F4096;
+  color: #fff;
+  font-size: 1.1em;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+button:hover {
+  background-color: #0D357A;
+}
+
+.preview {
+  width: 100%;
+  height: 163px;
+  border: 2px solid #0F4096;
+  border-radius: 0.5em;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: #f0f4ff;
+  margin-bottom: 2em;
+}
+
+.shape {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5em;
+  padding: 0.8em;
+  border: 1px solid #0F4096;
+  border-radius: 0.5em;
+  background-color: #f0f4ff;
+  font-size: 1em;
+  transition: border-color 0.3s ease;
+}
+
+.shape label {
+  margin-right: 10px;
+}
+
+.badge-view {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+    align-items: center;
+    gap: 2px;
+}
+
+.all-badges tim-badge {
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+
+.all-badges tim-badge:hover {
+  transform: scale(1.05);
+}
+
+button[type="button"]:hover {
+  background-color: #9b1212;
+}
+
+#deleteButton[disabled] {
+  background-color: #E18A8A;
+  color: white;
+  cursor: not-allowed;
+}
+
+#cancelButton[disabled]{
+  background-color: #ccc;
+  color: #777;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+#createButton[disabled], #createButton[disabled]:hover {
+  background-color: #7A9BCD;
+}
+
+#cancelButton {
+  padding: 0.8em;
+  background-color: #6c757d;
+  color: #fff;
+  font-weight: bold;
+}
+
+#cancelButton[disabled]:hover {
+  background-color: #ccc;
+}
+
+#createButton:hover, #giveBadgeButton:hover, #editButton:hover{
+  background-color: #0D357A;
+}
+
+#cancelButton:hover {
+  background-color: #5a6268;
+}
+
+.delete-edit .button-group {
+  flex: 1;
+  max-width: 50%;
+}
+
+#createButton {
+  width: 100%;
+  padding: 0.8em;
+  border: none;
+  border-radius: 0.5em;
+  background-color: #0F4096;
+  color: #fff;
+  font-size: 1.1em;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.button-group {
+    display: flex;
+    align-items: center;
+    width: 100%;
+}
+
+.left-buttons {
+    display: flex;
+    gap: 10px;
+}
+
+.right-buttons {
+    display: flex;
+    gap: 10px;
+    margin-left: auto;
+}
+
+#showBadgeForm, #editButton, #giveBadgeButton {
+    width: 4em;
+    height: 4em;
+    background-color: #0F4096;
+    color: white;
+    font-size: 1em;
+    font-weight: bold;
+    border: none;
+    border-radius: 0.8em;
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: background-color 0.2s ease;
+}
+
+.right-button {
+    font-size: medium;
+    font-weight: bold;
+    width: 5em;
+    height: 5em;
+    background-color: #c31515;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    text-align: center;
+    justify-content: center;
+    border-radius: 0.8em;
+}
+
+#showBadgeForm:hover {
+    background-color: #0D357A;
+}
+
+.disabled-btn {
+    background-color: #ccc;
+    color: #777;
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+#editButton:disabled, #giveBadgeButton:disabled {
+  cursor: not-allowed;
+}
+
+.button-container {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.badge-buttons {
+    position: absolute;
+    bottom: -35px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 3px;
+}
+
+.badge-buttons button {
+  max-width: 30px;
+  max-height: 30px;
+}
+
+.no-badges-txt {
+  color: darkgrey;
+  font-style: italic;
+}
+
+.char-counter {
+  font-size: 0.8em;
+  color: #555;
+  text-align: right;
+  margin-top: 0.25em;
+}
+
+.required {
+  color: red;
+}
+
+.error-message {
+  color: red;
+  font-size: 0.8em;
+}
+
+.form-note {
+  font-size: 0.6em;
+  color: #555;
+  margin-bottom: 3.5em;
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+}
+
+.required-asterisk {
+  color: red;
+  font-weight: bold;
+  margin: 0 0.4rem;
+}
+
+
+.sort-select {
+  margin: 0 0 1rem 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 1.2rem;
+
+  label {
+    font-weight: 600;
+    color: #333;
+    line-height: 1.2;
+    margin-bottom: 0;
+  }
+
+  select {
+    padding: 0.55rem 1.2rem;
+    font-size: 0.95rem;
+    line-height: 1.2;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    background-color: #fff;
+    color: #333;
+    transition: border-color 0.2s ease-in-out, box-shadow 0.2s;
+
+    &:hover {
+      border-color: #888;
+    }
+
+    &:focus {
+      outline: none;
+      border-color: #4285f4;
+      box-shadow: 0 0 0 2px rgba(66, 133, 244, 0.2);
+    }
+  }
+}
+
+@media (max-width: 785px) {
+
+  .badge-card {
+    margin: -15px -15px 10px -15px;
+  }
+
+  .badge-view {
+    gap: 2px;
+  }
+
+  .badge-card tim-badge {
+    transform: scale(clamp(0.5, 0.7, 0.7));
+  }
+
+  .badge-card tim-badge:hover {
+    transform: scale(0.8);
+  }
+
+  .badge-buttons {
+    bottom: -20px;
+  }
+
+  .badge-buttons button {
+    max-width: 30px;
+    max-height: 30px;
+  }
+
+}
+
+@media (max-width: 550px) {
+
+  .badge-card {
+    width: 130px;
+    height: 130px;
+    margin: -15px -15px 10px -15px;
+  }
+
+  .badge-view {
+    gap: 0;
+  }
+
+  .badge-card tim-badge {
+    transform: scale(clamp(0.4, 0.6, 0.6));
+  }
+
+  .badge-card tim-badge:hover {
+    transform: scale(0.7);
+  }
+
+  .badge-buttons {
+    bottom: -10px;
+  }
+
+  .badge-buttons button {
+    max-width: 25px;
+    max-height: 25px;
+  }
+
+}
