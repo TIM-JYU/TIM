@@ -22,8 +22,6 @@ import {
     ViewChild,
 } from "@angular/core";
 
-import {$rootScope} from "tim/util/ngimport";
-
 import {HttpClient, HttpHeaders} from "@angular/common/http";
 import type {SafeResourceUrl} from "@angular/platform-browser";
 import {DomSanitizer} from "@angular/platform-browser";
@@ -66,6 +64,7 @@ import {
 import {InputDialogKind} from "tim/ui/input-dialog.kind";
 import {showInputDialog} from "tim/ui/showInputDialog";
 import html2canvas from "html2canvas";
+import {vctrlInstance} from "tim/document/viewctrlinstance";
 import type {
     SimcirConnectorDef,
     SimcirDeviceInstance,
@@ -3846,8 +3845,6 @@ ${fhtml}
         this.exportingMD = false;
     }
 
-    private scope = $rootScope.$new(); // TODO: remove this when ParCompiler is updated to Angular 2+
-
     async showMD() {
         this.runError = false;
         this.result = "";
@@ -3892,10 +3889,15 @@ ${fhtml}
             element.addClass("mdPreviewDiv");
 
             data.texts = element.wrapAll("<div>").parent().html();
+            const viewCtrl = vctrlInstance;
+            if (!viewCtrl) {
+                // TODO: remove this when ParCompiler is updated to Angular 2+
+                throw new Error("ViewCtrl was undefined");
+            }
             await ParCompiler.compileAndAppendTo(
                 this.preview,
                 data,
-                this.scope
+                viewCtrl.scope
             );
         } else {
             const data = r.result;
