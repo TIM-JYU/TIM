@@ -2726,14 +2726,14 @@ ${fhtml}
         this.hasBeenRun = true;
         const ty = languageTypes.getRunType(this.selectedLanguage, "cs");
         if (ty === "md") {
-            this.showMD();
+            await this.showMD();
             if (nosave || this.nosave) {
                 return;
             }
         }
         if (languageTypes.isInArray(ty, csJSTypes)) {
             // this.jstype = ty;
-            this.showJS();
+            await this.showJS();
             if (nosave || this.nosave) {
                 return;
             }
