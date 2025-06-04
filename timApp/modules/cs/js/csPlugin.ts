@@ -3883,14 +3883,15 @@ ${fhtml}
         );
         if (r.ok) {
             const data = r.result;
-            // const element: JQuery = $($.parseHTML(data.texts) as HTMLElement[]);
+            const element: JQuery = $($.parseHTML(data.texts) as HTMLElement[]);
             // Remove par class as it's used to identify real paragraphs
-            // element.removeClass("par");
+            element.removeClass("par");
             // Remove editline as well as it's not valid for preview
-            // element.children(".editline").remove();
-            // this.mdHtml = element.wrapAll("<div>").parent().html();
-            // Process math in the preview, since the math may require MathJax
-            // await ParCompiler.processAllMathDelayed(this.preview, 0);
+            element.children(".editline").remove();
+            // give class for possibility of styling
+            element.addClass("mdPreviewDiv");
+
+            data.texts = element.wrapAll("<div>").parent().html();
             await ParCompiler.compileAndAppendTo(
                 this.preview,
                 data,
