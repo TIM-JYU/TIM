@@ -57,7 +57,8 @@
             var lectureInfo = {{lecture_info|tojson}};
             var footerDocs = {
                 privacyNotice: {{ config.PRIVACY_NOTICE_DOC|tojson }},
-                accessibilityStatement: {{ config.ACCESSIBILITY_STATEMENT_DOC|tojson }}
+                accessibilityStatement: {{ config.ACCESSIBILITY_STATEMENT_DOC|tojson }},
+                termsOfService: {{ config.TERMS_OF_SERVICE_DOC|tojson }}
             };
 
             var layout = {};

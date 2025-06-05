@@ -69,8 +69,9 @@ interface IConfig {
 export type Locale = "fi" | "sv" | "en-US";
 
 export interface IFooterDocs {
-    privacyNotice?: string;
     accessibilityStatement?: string;
+    privacyNotice?: string;
+    termsOfService?: string;
 }
 
 export interface IGenericGlobals {

@@ -45,6 +45,10 @@ import {documentglobals, genericglobals} from "tim/util/globals";
                                         Privacy notice
                                     </a>
                                     <br>
+                                    <a *ngIf="footerDocs.termsOfService" href="/view/{{footerDocs.termsOfService}}{{getLangCode()}}" i18n>
+                                        Terms of Service
+                                    </a>
+                                    <br>
                                     <a *ngIf="footerDocs.accessibilityStatement"
                                        href="/view/{{footerDocs.accessibilityStatement}}" i18n>
                                         Accessibility statement
@@ -65,4 +69,20 @@ export class FooterComponent {
     config = genericglobals().config;
     layout = genericglobals().layout;
     footerDocs = genericglobals().footerDocs;
+
+    getLangCode(): string {
+        const lang = genericglobals().userPrefs.language ?? "";
+        // At this moment this won't work for the frontpage
+        // TODO: Find a way to make this work on the frontpage
+        if (lang && documentglobals().translations) {
+            const tr = documentglobals().translations.filter(
+                (t) => t.lang_id == lang
+            );
+            if (tr.length == 0) {
+                return "";
+            }
+            return "/" + lang;
+        }
+        return "";
+    }
 }
