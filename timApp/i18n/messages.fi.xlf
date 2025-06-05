@@ -10659,6 +10659,14 @@ Syötä useiden käyttäjien osoitteet allekkain tai pilkulla erotettuina.</targ
           <context context-type="linenumber">702</context>
         </context-group>
       </trans-unit>
+      <trans-unit id="7571375880734710634" datatype="html">
+        <source> Terms of Service </source>
+        <target state="translated"> Käyttöehdot </target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/footer.component.ts</context>
+          <context context-type="linenumber">48,50</context>
+        </context-group>
+      </trans-unit>
       <trans-unit id="7416659172020658801" datatype="html">
         <source>Create a new badge</source>
         <target state="new">Create a new badge</target>
