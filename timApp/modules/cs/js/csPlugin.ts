@@ -21,6 +21,7 @@ import {
     HostListener,
     ViewChild,
 } from "@angular/core";
+
 import {HttpClient, HttpHeaders} from "@angular/common/http";
 import type {SafeResourceUrl} from "@angular/platform-browser";
 import {DomSanitizer} from "@angular/platform-browser";
@@ -63,6 +64,7 @@ import {
 import {InputDialogKind} from "tim/ui/input-dialog.kind";
 import {showInputDialog} from "tim/ui/showInputDialog";
 import html2canvas from "html2canvas";
+import {vctrlInstance} from "tim/document/viewctrlinstance";
 import type {
     SimcirConnectorDef,
     SimcirDeviceInstance,
@@ -2724,14 +2726,14 @@ ${fhtml}
         this.hasBeenRun = true;
         const ty = languageTypes.getRunType(this.selectedLanguage, "cs");
         if (ty === "md") {
-            this.showMD();
+            await this.showMD();
             if (nosave || this.nosave) {
                 return;
             }
         }
         if (languageTypes.isInArray(ty, csJSTypes)) {
             // this.jstype = ty;
-            this.showJS();
+            await this.showJS();
             if (nosave || this.nosave) {
                 return;
             }
@@ -3883,9 +3885,20 @@ ${fhtml}
             element.removeClass("par");
             // Remove editline as well as it's not valid for preview
             element.children(".editline").remove();
-            this.mdHtml = element.wrapAll("<div>").parent().html();
-            // Process math in the preview, since the math may require MathJax
-            await ParCompiler.processAllMathDelayed(this.preview, 0);
+            // give class for possibility of styling
+            element.addClass("mdPreviewDiv");
+
+            data.texts = element.wrapAll("<div>").parent().html();
+            const viewCtrl = vctrlInstance;
+            if (!viewCtrl) {
+                // TODO: remove this when ParCompiler is updated to Angular 2+
+                throw new Error("ViewCtrl was undefined");
+            }
+            await ParCompiler.compileAndAppendTo(
+                this.preview,
+                data,
+                viewCtrl.scope
+            );
         } else {
             const data = r.result;
             this.runError = true;
