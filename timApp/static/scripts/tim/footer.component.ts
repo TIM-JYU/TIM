@@ -1,6 +1,7 @@
 import {Component} from "@angular/core";
 import {getVisibilityVars} from "tim/timRoot";
 import {documentglobals, genericglobals} from "tim/util/globals";
+import {Users} from "tim/user/userService";
 
 @Component({
     selector: "tim-footer",
@@ -44,10 +45,12 @@ import {documentglobals, genericglobals} from "tim/util/globals";
                                     <a *ngIf="footerDocs.privacyNotice" href="/view/{{footerDocs.privacyNotice}}" i18n>
                                         Privacy notice
                                     </a>
-                                    <br>
-                                    <a *ngIf="footerDocs.termsOfService" href="/view/{{footerDocs.termsOfService}}{{getLangCode()}}" i18n>
-                                        Terms of Service
-                                    </a>
+                                    <ng-container *ngIf="footerDocs.termsOfService">
+                                        <br>
+                                        <a href="{{getLangLink('/view/' + footerDocs.termsOfService)}}" i18n>
+                                            Terms of Service
+                                        </a>
+                                    </ng-container>
                                     <br>
                                     <a *ngIf="footerDocs.accessibilityStatement"
                                        href="/view/{{footerDocs.accessibilityStatement}}" i18n>
@@ -70,19 +73,12 @@ export class FooterComponent {
     layout = genericglobals().layout;
     footerDocs = genericglobals().footerDocs;
 
-    getLangCode(): string {
-        const lang = genericglobals().userPrefs.language ?? "";
-        // At this moment this won't work for the frontpage
-        // TODO: Find a way to make this work on the frontpage
-        if (lang && documentglobals().translations) {
-            const tr = documentglobals().translations.filter(
-                (t) => t.lang_id == lang
-            );
-            if (tr.length == 0) {
-                return "";
-            }
-            return "/" + lang;
+    getLangLink(link: string): string {
+        const currentLang = Users.getCurrentLanguage();
+        // For the basecase, with language fi, return unmodified link
+        if (currentLang == "fi") {
+            return link;
         }
-        return "";
+        return link + "/" + currentLang;
     }
 }
