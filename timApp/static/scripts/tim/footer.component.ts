@@ -79,6 +79,7 @@ export class FooterComponent {
         if (currentLang == "fi") {
             return link;
         }
-        return link + "/" + currentLang;
+        // For languages not handled, default to english
+        return link + "/en-US";
     }
 }
