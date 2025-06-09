@@ -1,0 +1,440 @@
+.badge {
+    font-family: system-ui;
+    font-weight: bolder;
+    text-align: center;
+    position: relative;
+    display: inline-block;
+    top: 0;
+    transition: all 0.2s ease;
+    cursor: pointer;
+    background: inherit;
+    user-select: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+}
+
+.badge .icon {
+  width: 4.5em;
+  height: 4.5em;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  padding: 0;
+  margin: 0;
+}
+
+.badge .icon svg,
+.badge .icon img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.badge.hexagon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 5em;
+    height: 7.6em;
+    position: relative;
+    border-radius: 10px;
+    transition: all 0.2s ease;
+    filter: drop-shadow(0 0 5px var(--glow-light, rgba(255, 0, 0, 0.2)));
+    animation: pulse 6s infinite;
+}
+
+.badge.hexagon:before, .badge.hexagon:after, .badge.flower:before, .badge.flower:after {
+    position: absolute;
+    width: inherit;
+    height: inherit;
+    border-radius: inherit;
+    background: inherit;
+    content: "";
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    margin: auto;
+}
+
+.badge.hexagon:before {
+    transform: rotate(60deg);
+}
+
+.badge.hexagon:after {
+    transform: rotate(-60deg);
+}
+
+@keyframes pulse {
+    0% {
+        filter: drop-shadow(0 0 5px var(--glow-light, rgba(0, 123, 255, 0.2)));
+    }
+    50% {
+        filter: drop-shadow(0 0 20px var(--glow-strong, rgba(0, 123, 255, 0.8)));
+    }
+    100% {
+        filter: drop-shadow(0 0 5px var(--glow-light, rgba(0, 123, 255, 0.2)));
+    }
+}
+
+.badge.square {
+    width: 7.6em;
+    height: 7.6em;
+    border-radius: 12px;
+    display: inline-block;
+    position: relative;
+    transition: all 0.2s ease;
+    filter: drop-shadow(0 0 5px var(--glow-light, rgba(255, 0, 0, 0.2)));
+    animation: pulse 6s infinite;
+}
+
+//.badge.square > .ribbon{
+//    bottom: 4px;
+//}
+
+.badge.square .material-symbols-outlined {
+  margin-top: 9px;
+  margin-left: 0;
+}
+
+.badge.flower {
+  width: 4em;
+  height: 9.2em;
+  position: relative;
+  border-radius: 229px;
+  display: inline-block;
+  transition: all 0.2s ease;
+  filter: drop-shadow(0 0 5px var(--glow-light, rgba(255, 0, 0, 0.2)));
+  animation: pulse 6s infinite;
+}
+
+.badge.flower:before {
+    transform: rotate(60deg);
+}
+
+.badge.flower:after {
+    transform: rotate(-60deg);
+}
+
+.badge.flower .material-symbols-outlined {
+  margin-top: 17px;
+  margin-left: -11px;
+}
+
+.badge.round {
+    border-radius: 50%;
+    width: 90px;
+    height: 90px;
+    filter: drop-shadow(0 0 5px var(--glow-light, rgba(255, 0, 0, 0.2)));
+    animation: pulse 6s infinite;
+}
+
+.badge.round .material-symbols-outlined {
+  margin-top: 9px;
+  margin-left: 0;
+}
+
+.badge:hover {
+    top: -4px;
+}
+
+.badge .font {
+    display: inline-block;
+    margin-top: 1em;
+}
+
+.badge .ribbon {
+    position: absolute;
+    border-radius: 4px;
+    padding: 2px 5px 4px;
+    transform: translateX(-50%) translateY(-30%);
+    white-space: normal;
+    word-break: break-word;
+    min-width: 100px;
+    z-index: 1;
+    color: #fff;
+    left: 50%;
+    height: auto;
+    font-size: 12px;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.27);
+    text-shadow: 0 2px 2px rgba(0, 0, 0, 0.1);
+    text-transform: uppercase;
+    background: linear-gradient(to bottom right, #555 0%, #333 100%);
+    cursor: pointer;
+    margin-bottom: 0;
+    bottom: 0;
+}
+
+.badge.flower > .ribbon{
+    bottom: 10px;
+}
+
+.yellow {
+    background: linear-gradient(to bottom right, #ffeb3b 0%, #fbc02d 100%);
+    color: #ffb300;
+    --glow-light: transparent;
+    --glow-strong: transparent;
+}
+
+.orange {
+    background: linear-gradient(to bottom right, #ffc400 0%, #ff6f00 100%);
+    color: #ff8f00;
+    --glow-light: transparent;
+    --glow-strong: transparent;
+}
+
+.pink {
+    background: linear-gradient(to bottom right, #F48FB1 0%, #d81b60 100%);
+    color: #dc306f;
+    --glow-light: transparent;
+    --glow-strong: transparent;
+}
+
+.red {
+    background: linear-gradient(to bottom right, #f4511e 0%, #b71c1c 100%);
+    color: #c62828;
+    --glow-light: transparent;
+    --glow-strong: transparent;
+}
+
+.purple {
+    background: linear-gradient(to bottom right, #ab47bc 0%, #4527a0 100%);
+    color: #7127a8;
+    --glow-light: transparent;
+    --glow-strong: transparent;
+}
+
+.teal {
+    background: linear-gradient(to bottom right, #4DB6AC 0%, #00796B 100%);
+    color: #34a297;
+    --glow-light: transparent;
+    --glow-strong: transparent;
+}
+
+.dark-blue {
+    background: linear-gradient(to bottom right, #1976D2 0%, #283593 100%);
+    color: #1c68c5;
+    --glow-light: transparent;
+    --glow-strong: transparent;
+}
+
+.green {
+    background: linear-gradient(to bottom right, #cddc39 0%, #8bc34a 100%);
+    color: #7cb342;
+    --glow-light: transparent;
+    --glow-strong: transparent;
+}
+
+.dark-green {
+    background: linear-gradient(to bottom right, #4CAF50 0%, #1B5E20 100%);
+    color: #00944a;
+    --glow-light: transparent;
+    --glow-strong: transparent;
+}
+
+.gray {
+    background: linear-gradient(to bottom right, #d3d3d3 0%, #a9a9a9 100%);
+    color: #808080;
+    --glow-light: transparent;
+    --glow-strong: transparent;
+}
+
+.indigo {
+    background: linear-gradient(to bottom right, #3f51b5 0%, #1a237e 100%);
+    color: #303f9f;
+    --glow-light: transparent;
+    --glow-strong: transparent;
+}
+
+.brown {
+    background: linear-gradient(to bottom right, #8d6e63 0%, #3e2723 100%);
+    color: #5d4037;
+    --glow-light: transparent;
+    --glow-strong: transparent;
+}
+
+.violet {
+    background: linear-gradient(to bottom right, #9c27b0 0%, #6a1b9a 40%, #4a148c 100%);
+    color: #8e24aa;
+    --glow-light: transparent;
+    --glow-strong: transparent;
+}
+
+.skyblue {
+    background: linear-gradient(to bottom right, #81d4fa 0%, #0288d1 100%);
+    color: #0277bd;
+    --glow-light: transparent;
+    --glow-strong: transparent;
+}
+
+.mint {
+    background: linear-gradient(to bottom right, #a5d6a7 0%, #388e3c 100%);
+    color: #2c6e28;
+    --glow-light: transparent;
+    --glow-strong: transparent;
+}
+
+.peach {
+    background: linear-gradient(to bottom right, #ffb74d 0%, #f57c00 100%);
+    color: #ff6f00;
+    --glow-light: transparent;
+    --glow-strong: transparent;
+}
+
+.wine {
+    background: linear-gradient(to bottom right, #d32f2f 0%, #7a0c1e 100%);
+    color: #9a1e26;
+    --glow-light: transparent;
+    --glow-strong: transparent;
+}
+
+.coral {
+    background: linear-gradient(to bottom right, rgb(255, 127, 80) 0%, rgb(255, 99, 71) 100%);
+    color: rgb(255, 69, 0);
+    --glow-light: transparent;
+    --glow-strong: transparent;
+}
+
+.turquoise {
+    background: linear-gradient(to bottom right, rgb(64, 224, 208) 0%, rgb(0, 206, 209) 100%);
+    color: rgb(32, 178, 170);
+    --glow-light: transparent;
+    --glow-strong: transparent;
+}
+
+.olive {
+    background: linear-gradient(to bottom right, rgb(128, 128, 0) 0%, rgb(85, 107, 47) 100%);
+    color: rgb(107, 142, 35);
+    --glow-light: transparent;
+    --glow-strong: transparent;
+}
+
+.navy-vibrant {
+    background: linear-gradient(to bottom right,
+        rgb(0, 0, 128) 0%,
+        rgb(25, 25, 112) 30%,
+        rgb(0, 255, 255) 60%,
+        rgb(255, 0, 255) 100%
+    );
+    color: rgb(255, 255, 0);
+    --glow-light: rgba(0, 0, 255, 0.4);
+    --glow-strong: rgba(0, 0, 255, 1);
+}
+
+.red-vibrant {
+    background: linear-gradient(to bottom right,
+        rgb(64, 0, 0) 0%,
+        rgb(139, 0, 0) 30%,
+        rgb(255, 0, 0) 60%,
+        rgb(255, 255, 0) 100%
+    );
+    color: rgb(0, 255, 255);
+    --glow-light: rgba(255, 0, 0, 0.4);
+    --glow-strong: rgba(255, 0, 0, 1);
+}
+
+.green-vibrant {
+    background: linear-gradient(to bottom right,
+        rgb(0, 32, 0) 0%,
+        rgb(0, 128, 0) 25%,
+        rgb(0, 255, 0) 50%,
+        rgb(0, 64, 0) 100%
+    );
+    color: rgb(255, 0, 0);
+    --glow-light: rgba(0, 255, 0, 0.4);
+    --glow-strong: rgba(0, 255, 0, 1);
+}
+
+.purple-vibrant {
+    background: linear-gradient(to bottom right,
+        rgb(32, 0, 64) 0%,
+        rgb(75, 0, 130) 30%,
+        rgb(255, 0, 255) 60%,
+        rgb(0, 255, 255) 100%
+    );
+    color: rgb(255, 255, 0);
+    --glow-light: rgba(255, 0, 255, 0.4);
+    --glow-strong: rgba(255, 0, 255, 1);
+}
+
+.orange-vibrant {
+    background: linear-gradient(to bottom right,
+        rgb(64, 32, 0) 0%,
+        rgb(255, 69, 0) 30%,
+        rgb(255, 165, 0) 60%,
+        rgb(255, 0, 0) 100%
+    );
+    color: rgb(0, 0, 255);
+    --glow-light: rgba(255, 69, 0, 0.4);
+    --glow-strong: rgba(255, 69, 0, 1);
+}
+
+.yellow-vibrant {
+    background: linear-gradient(to bottom right,
+        rgb(255, 255, 0) 0%,
+        rgb(255, 165, 0) 30%,
+        rgb(0, 255, 255) 60%,
+        rgb(255, 0, 255) 100%
+    );
+    color: rgb(0, 255, 0);
+    --glow-light: rgba(255, 255, 0, 0.4);
+    --glow-strong: rgba(255, 255, 0, 1);
+}
+
+.black-vibrant {
+    background: linear-gradient(to bottom right,
+        rgb(0, 0, 0) 0%,
+        rgb(15, 15, 15) 20%,
+        rgb(40, 40, 40) 50%,
+        rgb(80, 80, 80) 80%,
+        rgb(20, 20, 20) 100%
+    );
+    --glow-light: rgba(50, 50, 50, 0.4);
+    --glow-strong: rgba(15, 15, 15, 1);
+}
+
+.badge-container {
+  padding: 10px;
+  cursor: pointer;
+}
+
+.tooltip {
+  width: 250px;
+  visibility: hidden;
+  position: absolute;
+  top: 110%;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: rgba(0, 0, 0, 0.85);
+  color: white;
+  padding: 5px 10px;
+  border-radius: 4px;
+  text-align: center;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  white-space: normal;
+  z-index: 99999;
+  word-wrap: break-word;
+}
+
+.tooltip::after {
+    content: " ";
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    margin-left: -5px;
+    border-width: 5px;
+    border-style: solid;
+    border-color: transparent transparent rgba(0, 0, 0, 0.85) transparent;
+}
+
+.badge-container:hover .tooltip {
+  visibility: visible;
+  opacity: 1;
+}
