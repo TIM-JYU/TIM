@@ -48,6 +48,8 @@ LOG_FILE = "timLog.log"
 LOG_LEVEL = logging.INFO
 LOG_LEVEL_STDOUT = logging.INFO
 LOG_PATH = os.path.join(LOG_DIR, LOG_FILE)
+BADGE_LOG_FILE = "badge.log"
+BADGE_LOG_PATH = os.path.join(LOG_DIR, BADGE_LOG_FILE)
 # If True, requests are also logged before they are processed.
 # This is useful sometimes to profile calls that never complete.
 LOG_BEFORE_REQUESTS = False

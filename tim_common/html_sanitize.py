@@ -118,6 +118,14 @@ TIM_SAFE_TAGS = [
     "tim-steps",
     "tim-participant-list",
     "tim-course-manager",
+    "tim-badge",
+    "tim-badge-creator",
+    "tim-badge-viewer",
+    "tim-badge-giver",
+    "tim-badge-withdraw",
+    "tim-badge-leaderboard",
+    "tim-name-changer",
+    "tim-group-dashboard",
 ]
 
 TIM_SAFE_ATTRS_MAP = {
@@ -275,6 +283,8 @@ TIM_SAFE_ATTRS = frozenset(
         "document-id",
         "profile-id",
         "view-mode",
+        "badgegroup-context",
+        "badgeuser-context",
     ]
 )
 

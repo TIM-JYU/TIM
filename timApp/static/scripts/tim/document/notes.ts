@@ -324,7 +324,7 @@ export class NotesHandler {
     /**
      * Moves the note badge to the correct element.
      * @param par - Element where the badge needs to be attached
-     * @param badgeY - Badge's position relative to the element where it's attached
+     * @param badgeY - badge's position relative to the element where it's attached
      */
     updateNoteBadge(par: ParContext, badgeY: number) {
         // At the moment note badge is not usable for people who can't comment

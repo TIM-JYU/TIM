@@ -1,0 +1,147 @@
+.material-symbols-outlined {
+    font-size: 52px;
+    position: relative;
+    margin-top: 10px;
+    text-align: center;
+    color: gray;
+    margin-left: -6px;
+    z-index: 1;
+}
+
+.first .material-symbols-outlined {
+  color: orange;
+}
+
+.second .material-symbols-outlined {
+  color: silver;
+}
+
+.third .material-symbols-outlined {
+  color: burlywood;
+}
+
+.fourth .material-symbols-outlined {
+  color: #808080;
+}
+
+.fifth .material-symbols-outlined {
+  color: #d3d3d3;
+}
+
+.no-badges-txt {
+  color: darkgrey;
+  font-style: italic;
+}
+
+.nimi {
+  color: red;
+  font-weight: bold;
+}
+
+.viewer-container {
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 30px 200px #0000cc38, 0 0 20px #0F0C0020;
+  padding: 1em;
+  border-radius: 1em;
+  margin: 2em 0;
+  width: 100%;
+  background-color: #fff;
+  z-index: 10;
+}
+
+body {
+  font-family: Arial, sans-serif;
+  background-color: #f4f4f4;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  margin: 0;
+}
+
+.leaderboard {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  font-weight: bold;
+  padding-top: 32px;
+}
+
+.position {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  flex: 0 1 100px;
+}
+
+.position.first .trophy {
+  max-height: 370px;
+}
+
+.position.second .trophy {
+  max-height: 300px;
+}
+
+.position.third .trophy {
+  max-height: 230px;
+}
+
+.position.fourth .trophy {
+  max-height: 160px;
+}
+
+.position.fifth .trophy {
+  max-height: 90px;
+}
+
+.trophy {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  box-sizing: border-box;
+  border-radius: 10px;
+  margin-bottom: 10px;
+  padding-top: 10px;
+  transition: height 0.3s ease;
+}
+
+.first .trophy {
+  background: gold;
+}
+
+.second .trophy {
+  background: silver;
+}
+
+.third .trophy {
+  background: #cd7f32;
+}
+
+.fourth .trophy {
+  background: #808080;
+}
+
+.fifth .trophy {
+  background: #d3d3d3;
+}
+
+.team {
+  font-size: 12px;
+  height: 30px;
+  font-weight: bold;
+  max-width: 100px;
+  white-space: normal;
+  overflow-wrap: break-word;
+}
+
+.badge-count {
+  font-size: 16px;
+  color: #555;
+}
+
+.leaderboard .icon img {
+  width: 52px;
+  height: 52px;
+}

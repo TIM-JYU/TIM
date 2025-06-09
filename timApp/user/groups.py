@@ -12,6 +12,7 @@ from timApp.auth.accesshelper import (
     check_admin_access,
     AccessDenied,
     verify_logged_in,
+    verify_teacher_access,
 )
 from timApp.auth.accesstype import AccessType
 from timApp.auth.auth_models import BlockAccess
@@ -21,6 +22,7 @@ from timApp.auth.sessioninfo import (
 )
 from timApp.document.create_item import apply_template, create_document
 from timApp.document.docinfo import DocInfo
+from timApp.gamification.badge.routes import check_group_member, verify_access
 from timApp.item.validation import ItemValidationRule
 from timApp.notification.send_email import multi_send_email
 from timApp.timdb.sqa import db, run_sql
@@ -501,3 +503,162 @@ def get_usernames(usernames: list[str]):
     usernames = list({n for name in usernames if (n := name.strip())})
     usernames.sort()
     return usernames
+
+
+@groups.get("/subgroups/<group_name_prefix>")
+def get_subgroups(group_name_prefix: str) -> Response:
+    """
+    Fetches user groups that have a name that starts with the given prefix but is not the exact prefix.
+    :param group_name_prefix: Prefix of the user groups
+    :return: List of user groups sorted by name
+    """
+    context_usergroup = UserGroup.get_by_name(group_name_prefix)
+    verify_access("teacher", context_usergroup, user_group_name=group_name_prefix)
+
+    subgroups = (
+        run_sql(
+            select(UserGroup)
+            .filter(
+                UserGroup.name.like(group_name_prefix + "%"),
+                UserGroup.name != group_name_prefix,
+            )
+            .order_by(UserGroup.name)
+        )
+        .scalars()
+        .all()
+    )
+    subgroups_json = []
+    for subgroup in subgroups:
+        subgroups_json.append(subgroup.to_json())
+    return json_response(subgroups_json)
+
+
+@groups.get("/users_subgroups/<user_id>/<group_name_prefix>")
+def get_users_subgroups(user_id: int, group_name_prefix: str) -> Response:
+    """
+    Fetches user groups that user with given user_id belongs. Fetched user groups also
+    have a name that starts with the given prefix but is not the exact prefix.
+    :param user_id: ID of the user
+    :param group_name_prefix: Prefix of the user groups
+    :return: List of user groups sorted by name
+    """
+    user = User.get_by_id(user_id)
+    if not user:
+        raise NotExist(f'User with id "{user_id}" not found')
+
+    current_user = get_current_user_object()
+    if current_user.id != user.id:
+        context_usergroup = UserGroup.get_by_name(group_name_prefix)
+        verify_access("teacher", context_usergroup, user_group_name=group_name_prefix)
+
+    users_groups = user.groups
+    users_subgroups_json = []
+    for users_group in users_groups:
+        if (
+            users_group.name[: len(group_name_prefix)] == group_name_prefix
+            and users_group.name != group_name_prefix
+        ):
+            users_subgroups_json.append(users_group.to_json())
+    return json_response(users_subgroups_json)
+
+
+@groups.get("/user_and_personal_group/<name>")
+def users_personal_group(name: str) -> Response:
+    """
+    Fetches user and his/her personal user group.
+    :param name: User's username
+    :return: User account and personal user group in json format
+    """
+    user_account = User.get_by_name(name)
+    if not user_account:
+        raise NotExist(f'User "{name}" not found')
+    personal_group = user_account.get_personal_group()
+    if not personal_group:
+        raise NotExist(f'Personal group for user "{name}" not found')
+    return json_response((user_account, personal_group))
+
+
+@groups.get("/usergroups_members/<usergroup_name>")
+def usergroups_members(usergroup_name: str) -> Response:
+    """
+    Fetches user group's members.
+    :param usergroup_name: User group's name
+    :return: List of users
+    """
+    context_usergroup = UserGroup.get_by_name(usergroup_name)
+    if not context_usergroup:
+        raise NotExist(f'User group "{usergroup_name}" not found')
+
+    current_user = get_current_user_object()
+    in_group = check_group_member(current_user, context_usergroup.id)
+    if not in_group:
+        verify_access("view", context_usergroup, user_group_name=usergroup_name)
+
+    for user in context_usergroup.users:
+        if not user.real_name:
+            user.real_name = user.name
+
+    return json_response(
+        sorted(list(context_usergroup.users), key=attrgetter("real_name"))
+    )
+
+
+def pretty_name_access_checks(group_name):
+    """
+    Does the access checks of pretty name related routes.
+    :param group_name: Name of the group
+    :return:
+    """
+    group = UserGroup.get_by_name(group_name)
+    raise_group_not_found_if_none(group_name, group)
+    block = group.admin_doc
+    doc_entries = block.docentries
+    settings = doc_entries[0].document.get_settings()
+
+    current_user = get_current_user_object()
+    in_group = check_group_member(current_user, group.id)
+    if in_group:
+        if not settings.pretty_name_edit_for_member():
+            verify_teacher_access(
+                block,
+                message=f'Sorry, you don\'t have permission to use this resource. If you are a teacher of "{group_name}", please contact TIM admin.',
+            )
+    else:
+        verify_teacher_access(
+            block,
+            message=f'Sorry, you don\'t have permission to use this resource. If you are a teacher of "{group_name}", please contact TIM admin.',
+        )
+
+    return group, block
+
+
+@groups.get("/pretty_name/<group_name>")
+def pretty_name(group_name: str) -> Response:
+    """
+    Fetches group data including group's admin_doc's description (pretty_name).
+    :param group_name: Name of the group
+    :return: Group data in json format
+    """
+    (group, block) = pretty_name_access_checks(group_name)
+
+    return json_response(
+        {"id": group.id, "name": group.name, "description": block.description}
+    )
+
+
+@groups.post("/change_pretty_name/<group_name>/<new_name>")
+def change_pretty_name(group_name: str, new_name: str) -> Response:
+    """
+    Changes group's admin_doc's description (pretty name)
+    :param group_name: Full group name
+    :param new_name: New group's admin_doc's description (pretty name)
+    :return: Group data in json format
+    """
+    (group, block) = pretty_name_access_checks(group_name)
+
+    group.admin_doc.description = new_name
+    db.session.commit()
+
+    return json_response(
+        {"id": group.id, "name": group.name, "description": block.description}
+    )
