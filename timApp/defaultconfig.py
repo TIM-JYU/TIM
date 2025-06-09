@@ -31,6 +31,10 @@ PRIVACY_NOTICE_DOC = "tim/tietosuojailmoitus"
 # If None, link to the document is not shown
 ACCESSIBILITY_STATEMENT_DOC = "tim/saavutettavuusseloste"
 
+# Path to TIM document containing the Terms of service The link to the document is shown in page footer.
+# If None, link to the document is not shown
+TERMS_OF_SERVICE_DOC = None
+
 ALLOWED_DOCUMENT_UPLOAD_MIMETYPES = ["text/plain"]
 COMPRESS_DEBUG = True
 COMPRESS_MIMETYPES = [

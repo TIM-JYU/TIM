@@ -1,6 +1,7 @@
 import {Component} from "@angular/core";
 import {getVisibilityVars} from "tim/timRoot";
 import {documentglobals, genericglobals} from "tim/util/globals";
+import {Users} from "tim/user/userService";
 
 @Component({
     selector: "tim-footer",
@@ -44,6 +45,12 @@ import {documentglobals, genericglobals} from "tim/util/globals";
                                     <a *ngIf="footerDocs.privacyNotice" href="/view/{{footerDocs.privacyNotice}}" i18n>
                                         Privacy notice
                                     </a>
+                                    <ng-container *ngIf="footerDocs.termsOfService">
+                                        <br>
+                                        <a href="{{getLangLink('/view/' + footerDocs.termsOfService)}}" i18n>
+                                            Terms of Service
+                                        </a>
+                                    </ng-container>
                                     <br>
                                     <a *ngIf="footerDocs.accessibilityStatement"
                                        href="/view/{{footerDocs.accessibilityStatement}}" i18n>
@@ -65,4 +72,14 @@ export class FooterComponent {
     config = genericglobals().config;
     layout = genericglobals().layout;
     footerDocs = genericglobals().footerDocs;
+
+    getLangLink(link: string): string {
+        const currentLang = Users.getCurrentLanguage();
+        // For the basecase, with language fi, return unmodified link
+        if (currentLang == "fi") {
+            return link;
+        }
+        // For languages not handled, default to english
+        return link + "/en-US";
+    }
 }
