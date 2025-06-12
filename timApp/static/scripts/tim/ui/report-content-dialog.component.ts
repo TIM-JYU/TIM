@@ -1,11 +1,13 @@
-import {Component, DoBootstrap, NgModule} from "@angular/core";
+import {Component, NgModule} from "@angular/core";
 import {AngularDialogComponent} from "./angulardialog/angular-dialog-component.directive";
 import {CommonModule} from "@angular/common";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {DialogModule} from "tim/ui/angulardialog/dialog.module";
 import {FormsModule} from "@angular/forms";
 
-export interface IReportContentParams {}
+export interface IReportContentParams {
+    currentUrl: string;
+}
 
 @Component({
     selector: "report-content-dialog",
@@ -15,16 +17,62 @@ export interface IReportContentParams {}
                 Report content
             </ng-container>
             <ng-container body>
-                <h1>Report Content</h1>
-                <form #form="ngForm">
-                    <fieldset>
-                        <div class="form-group">
+                <div class="page-header">
+                    <h1>Report Content</h1>
+                </div>
+                <div class="help-block">
+                    <p>You can use this form to report any harmful or inappropriate content you have encountered while using TIM.</p>
+                    <p>If you would like the TIM administrators to follow up with you, you may optionally include you email address.</p>
+                </div>
+                <form #reportForm="ngForm">
+                    <div class="form-group">
+                        <label i18n for="idUrl">
+                            Page URL
+                            <span class="label label-info">(optional)</span>
+                        </label>
+                        <input 
+                                class="form-control"
+                                id="idUrl" 
+                                type="url" 
+                                name="url" 
+                                [(ngModel)]="url">
+                        <small class="help-block">This is the page where you encountered the issue. You can change it if you're reporting a different page.</small>
+                    </div>
+                    <div class="form-group">
+                        <label i18n for="idEmail">
+                            Your Email
+                            <span class="label label-info">(optional)</span>
+                        </label> 
+                        <input 
+                                class="form-control"
+                                id="idEmail" 
+                                type="email" 
+                                #emailField="ngModel"
+                                name="emailInput" 
+                                [(ngModel)]="email" 
+                                placeholder="Email">
+                        <small class="help-block">Enter your email if you'd like us to contact you about your report.</small>
+                    </div>
+                    <div class="form-group" [ngClass]="{'has-error': reasonfield.invalid && reasonfield.touched}">
+                        <label for="idReportText" i18n>Describe the issue</label>
+                        <textarea 
+                                class="form-control" 
+                                id="idReportText" 
+                                name="reportText" 
+                                rows="5"
+                                [(ngModel)]="reason" 
+                                #reasonfield="ngModel" 
+                                required></textarea>
+                        <div *ngIf="reasonfield.invalid && reasonfield.touched" class="alert alert-danger">
+                            <small *ngIf="reasonfield.errors?.required" i18n>This field is required.</small>    
                         </div>
-                    </fieldset>
+                        <small class="help-block">Please explain what you found harmful or inappropriate. Be as specific as possible.</small>
+                    </div>
                 </form>           
             </ng-container>
             <ng-container footer>
-                <p>Footer</p>
+                <button class="timButton" (click)="sendMail()" [disabled]="reportForm.invalid">Report Page</button>
+                <button class="btn btn-default" (click)="dismiss()">Cancel</button>
             </ng-container>
         </tim-dialog-frame>
     `,
@@ -34,10 +82,30 @@ export class ReportContentDialogComponent extends AngularDialogComponent<
     any
 > {
     protected dialogName = "ReportContent";
+    name = "";
+    email = "";
+    url = "";
+    reason = "";
 
     constructor() {
         super();
     }
+
+    ngOnInit() {
+        this.url = this.data.currentUrl;
+    }
+
+    //TODO: Sanitize user input
+    sendMail() {
+        this.close({
+            name: this.name,
+            email: this.email,
+            url: this.url,
+            reason: this.reason,
+        });
+    }
+
+    protected readonly JSON = JSON;
 }
 
 @NgModule({

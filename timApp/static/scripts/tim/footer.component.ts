@@ -3,6 +3,7 @@ import {getVisibilityVars} from "tim/timRoot";
 import {documentglobals, genericglobals} from "tim/util/globals";
 import {Users} from "tim/user/userService";
 import {showReportContentDialog} from "tim/ui/showReportContentDialog";
+import {to2} from "tim/util/utils";
 
 @Component({
     selector: "tim-footer",
@@ -58,7 +59,7 @@ import {showReportContentDialog} from "tim/ui/showReportContentDialog";
                                         Accessibility statement
                                     </a>
                                     <br>
-                                    <button class="timbutton" (click)="reportContent()">Report content</button>
+                                    <a (click)="reportContent()">Report content</a>
                                 </ng-container>
                             </div>
                         </div>
@@ -87,6 +88,13 @@ export class FooterComponent {
     }
 
     async reportContent() {
-        await showReportContentDialog({});
+        const windowUrl = window.location.href;
+        // TODO: Sanitation. Remove any tokens etc. to protect user
+        const response = await to2(
+            showReportContentDialog({currentUrl: windowUrl})
+        );
+        if (response.ok) {
+            // console.log("Results are in " + JSON.stringify(response.result));
+        }
     }
 }

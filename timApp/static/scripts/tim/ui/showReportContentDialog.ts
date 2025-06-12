@@ -5,5 +5,7 @@ export async function showReportContentDialog(params?: IReportContentParams) {
     const {ReportContentDialogComponent} = await import(
         "./report-content-dialog.component"
     );
-    return await angularDialog.open(ReportContentDialogComponent, params);
+    return await (
+        await angularDialog.open(ReportContentDialogComponent, params)
+    ).result;
 }
