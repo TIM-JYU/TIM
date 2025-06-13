@@ -12,18 +12,17 @@ import type {
     IBadge,
     IBadgeGroup,
     IErrorAlert,
-    IPersonalGroup,
 } from "tim/gamification/badge/badge.interface";
 import {BadgeModule} from "tim/gamification/badge/badge.component";
 import {BadgeService} from "tim/gamification/badge/badge.service";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {GroupService} from "tim/plugin/group-dashboard/group.service";
-import type {IUser} from "tim/user/IUser";
-import {toPromise} from "tim/util/utils";
+import type {IGroup, IUser} from "tim/user/IUser";
 import {PurifyModule} from "tim/util/purify.module";
+import type {AngularError, Result} from "tim/util/utils";
 
 @Component({
-    selector: "timBadgeGiver",
+    selector: "tim-badge-giver",
     template: `
         <h2><ng-container i18n>Assign</ng-container> {{ selectedBadge?.title }} <ng-container i18n>to user(s) or group(s)</ng-container></h2>
 
@@ -241,7 +240,7 @@ export class BadgeGiverComponent implements OnInit {
         private http: HttpClient,
         protected badgeService: BadgeService,
         private groupService: GroupService,
-        private elementRef: ElementRef
+        private elementRef: ElementRef<HTMLElement>
     ) {}
 
     ngOnInit() {
@@ -294,7 +293,7 @@ export class BadgeGiverComponent implements OnInit {
             this.filteredGroups = this.groups.filter(
                 (group) =>
                     regex.test(group.name) ||
-                    regex.test(this.groupPrettyNames.get(group.id) || "")
+                    regex.test(this.groupPrettyNames.get(group.id) ?? "")
             );
         }
     }
@@ -366,8 +365,9 @@ export class BadgeGiverComponent implements OnInit {
     @HostListener("document:click", ["$event"])
     onClickOutside(event: MouseEvent) {
         const clickedInside = this.elementRef.nativeElement.contains(
-            event.target
+            event.target as HTMLElement
         );
+
         if (!clickedInside) {
             this.searchingUsers = false;
             this.searchingGroups = false;
@@ -539,9 +539,13 @@ export class BadgeGiverComponent implements OnInit {
 
     async fetchGroups() {
         if (this.badgegroupContext) {
-            this.groups = await this.groupService.getSubGroups(
-                this.badgegroupContext
-            );
+            this.groupService
+                .getSubGroups(this.badgegroupContext)
+                .then((response) => {
+                    if (response.ok) {
+                        this.groups = response.result;
+                    }
+                });
             for (const group of this.groups) {
                 const prettyName = await this.groupService.getCurrentGroup(
                     group.name
@@ -586,20 +590,22 @@ export class BadgeGiverComponent implements OnInit {
      * @param message optional message, that can be given when assigning badge.
      */
     async assignBadge(message: string) {
-        const error = await this.badgeService.checkConnectionError(this.alerts);
-        if (error) {
-            return;
-        }
+        // TODO: display errors in UI
         if (this.selectedUsers.length > 0) {
             for (const user of this.selectedUsers) {
-                const pGroup: IPersonalGroup =
-                    await this.groupService.getUserAndPersonalGroup(user.name);
-                await this.badgeService.assignBadges({
-                    context_group: this.badgegroupContext,
-                    group_id: pGroup["1"].id,
-                    badge_id: this.selectedBadge?.id,
-                    message: message,
-                });
+                const resp: Result<IGroup, AngularError> =
+                    await this.groupService.getPersonalGroup(user.name);
+                if (resp.ok) {
+                    const group = resp.result;
+                    await this.badgeService.assignBadges({
+                        context_group: this.badgegroupContext,
+                        group_id: group.id,
+                        badge_id: this.selectedBadge?.id,
+                        message: message,
+                    });
+                } else {
+                    // display error message
+                }
             }
         }
         if (this.selectedGroups.length > 0) {
@@ -612,6 +618,7 @@ export class BadgeGiverComponent implements OnInit {
                 });
             }
         }
+        // FIXME: why do we need to clear the form?
         this.emptyForm();
     }
 

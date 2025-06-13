@@ -1,9 +1,14 @@
 import {HttpClient} from "@angular/common/http";
-import {Subject} from "rxjs";
 import type {IBadgeGroup} from "tim/gamification/badge/badge.interface";
-import type {IUser} from "tim/user/IUser";
+import type {IGroup, IUser} from "tim/user/IUser";
 import {toPromise} from "tim/util/utils";
 import {Injectable} from "@angular/core";
+
+export type BadgeGroupInfo = {
+    id: number;
+    name: string;
+    description: string;
+};
 
 @Injectable({
     providedIn: "root",
@@ -12,22 +17,18 @@ export class GroupService {
     constructor(private http: HttpClient) {}
 
     /**
-     * Hakee kaikki käyttäjät, jotka kuuluvat parametrina annettuun ryhmään.
-     * @param group ryhmä, jonka käyttäjiä haetaan.
+     * Retrives a list of users belonging to a specific group
+     * @param group
+     * @return list of users in the group
      */
-    async getUsersFromGroup(group: string) {
-        const result = await toPromise(
-            this.http.get<[]>(`/groups/usergroups_members/${group}`)
+    async getUsersFromGroup(group: string): Promise<IUser[]> {
+        const response = await toPromise(
+            this.http.get<[IUser]>(`/groups/usergroups_members/${group}`)
         );
-        const users: IUser[] = [];
-        if (result.ok) {
-            if (result.result != undefined) {
-                for (const alkio of result.result) {
-                    users.push(alkio);
-                }
-            }
+        if (response.ok) {
+            return response.result;
         }
-        return users;
+        return [];
     }
 
     /**
@@ -35,18 +36,9 @@ export class GroupService {
      * @param group ryhmä, jonka avulla aliryhmät haetaan
      */
     async getSubGroups(group: string) {
-        const result = await toPromise(
-            this.http.get<[]>(`/groups/subgroups/${group}`)
+        return await toPromise(
+            this.http.get<IBadgeGroup[]>(`/groups/subgroups/${group}`)
         );
-        const subGroups: IBadgeGroup[] = [];
-        if (result.ok) {
-            if (result.result != undefined) {
-                for (const alkio of result.result) {
-                    subGroups.push(alkio);
-                }
-            }
-        }
-        return subGroups;
     }
 
     /**
@@ -70,24 +62,22 @@ export class GroupService {
     }
 
     /**
-     * Fetches user's data along with their personal group's information.
+     * Fetches user's personal group.
      * @param userName user's name
-     * @returns an object that contains user data and personal group data
+     * @returns user's personal group
      */
-    async getUserAndPersonalGroup(userName: string | undefined) {
-        const response = toPromise(
-            this.http.get<any>(`/groups/user_and_personal_group/${userName}`)
+    async getPersonalGroup(userName: string) {
+        return await toPromise(
+            this.http.get<IGroup>(`/groups/personal_group/${userName}`)
         );
-        const result = await response;
-
-        if (result.ok) {
-            return result.result;
-        } else {
-            console.error(
-                `Failed to fetch personal group for user: ${userName}`
-            );
-            return null;
-        }
+        // const response = await toPromise(
+        //     this.http.get<IGroup>(`/groups/personal_group/${userName}`)
+        // );
+        // if (response.ok) {
+        //     return response.result;
+        // } else {
+        //     return response.result.error;
+        // }
     }
 
     /**
@@ -95,17 +85,15 @@ export class GroupService {
      * @param groupName The full internal name of the group (e.g., "parent-subgroup").
      * @returns An object containing the group's id, name, and description, or null if the fetch fails.
      */
-    async getCurrentGroup(groupName: string | null) {
+    async getCurrentGroup(groupName: string) {
         const response = toPromise(
-            this.http.get<any>(`/groups/pretty_name/${groupName}`)
+            this.http.get<BadgeGroupInfo>(`/groups/pretty_name/${groupName}`)
         );
         const result = await response;
 
         if (result.ok) {
             return result.result;
         }
-        console.error("Failed to fetch groups name.");
-        return null;
     }
 
     /**
@@ -115,10 +103,10 @@ export class GroupService {
      * @param new_name group's new name (pretty name)
      * @returns whether the update was successful
      */
-    async updateGroupName(group_name: string, new_name: string | null) {
+    async updateGroupName(group_name: string, new_name: string) {
         const response = toPromise(
             this.http.post<{ok: boolean}>(
-                `/groups/change_pretty_name/${group_name}/${new_name}`,
+                `/groups/pretty_name/${group_name}/${new_name}`,
                 {}
             )
         );

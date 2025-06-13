@@ -17,13 +17,11 @@ interface IBadgeData {
 })
 export class BadgeService {
     private updateBadgeSubject = new Subject<void>();
-
-    alerts: Array<IErrorAlert> = [];
-
-    updateBadgeList$ = this.updateBadgeSubject.asObservable();
-
     private groupNameUpdated = new Subject<{id: number; newName: string}>();
+    updateBadgeList$ = this.updateBadgeSubject.asObservable();
     groupNameUpdated$ = this.groupNameUpdated.asObservable();
+    public activeDialogRef: any = null;
+    alerts: Array<IErrorAlert> = [];
 
     notifyBadgeViewerUpdate() {
         this.updateBadgeSubject.next();
@@ -108,8 +106,6 @@ export class BadgeService {
         this.updateBadgeSubject.next();
     }
 
-    public activeDialogRef: any = null;
-
     /**
      * if a dialog window is already open, it will be closed.
      */
@@ -128,12 +124,12 @@ export class BadgeService {
      * @param type - The type of the alert to display (e.g., warning or danger).
      */
     showError(
-        alerts: any,
+        alerts: IErrorAlert[],
         response: {data: {error: string}},
         type: "warning" | "danger"
     ) {
         const msg = `Error: ${response.data.error ?? response.data}`;
-        if (alerts.some((a: any) => a.msg === msg && a.type === type)) {
+        if (alerts.some((a: IErrorAlert) => a.msg === msg && a.type === type)) {
             return;
         }
         alerts.push({msg, type});
@@ -145,7 +141,7 @@ export class BadgeService {
      * @param alerts - The list of alert messages.
      * @param index - The index of the alert to remove.
      */
-    closeAlert(alerts: any, index: number) {
+    closeAlert(alerts: IErrorAlert[], index: number) {
         alerts.splice(index, 1);
     }
 
@@ -333,11 +329,11 @@ export class BadgeService {
      * If there is error with result, calls showError method via badge-service and returns true.
      * If no errors, returns false.
      */
-    async checkConnectionError(alert: any) {
+    async checkConnectionError(alerts: IErrorAlert[]) {
         const result = await toPromise(this.http.get(`/check_connection/`));
         if (!result.ok) {
             this.showError(
-                alert,
+                alerts,
                 {
                     data: {
                         error: "Unexpected error. Check your internet connection.",

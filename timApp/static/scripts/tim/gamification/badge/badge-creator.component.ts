@@ -103,7 +103,7 @@ import {PurifyModule} from "tim/util/purify.module";
             </div>
               
               <ng-container *ngIf="showGiver">
-                  <timBadgeGiver (cancelEvent)="handleCancel()" [badgegroupContext]="badgegroupContext" [selectedBadge]="clickedBadge"></timBadgeGiver>                        
+                  <tim-badge-giver (cancelEvent)="handleCancel()" [badgegroupContext]="badgegroupContext" [selectedBadge]="clickedBadge"></tim-badge-giver>                        
               </ng-container>
               
             <div class="upper-form-group" *ngIf="this.badgeFormShowing">
@@ -231,7 +231,7 @@ export class BadgeCreatorComponent implements OnInit {
 
     isFormChanged = false;
     all_badges: IBadge[] = [];
-    selectedContextGroup: string | undefined = undefined;
+    selectedContextGroup?: string;
     badgeFormShowing = false;
     hasPermissionToHandleBadges = false;
 
@@ -522,37 +522,41 @@ export class BadgeCreatorComponent implements OnInit {
      * Get all badges in chosen context group. Fails if not teacher.
      */
     private async getBadges() {
-        let response;
-        response = toPromise(
-            this.http.get<[]>(`/all_badges/${this.selectedContextGroup}`)
-        );
-
-        const result = await response;
-
-        if (result.ok) {
-            this.hasPermissionToHandleBadges = true;
-            if (result.result !== undefined) {
-                const badges: IBadge[] = result.result;
-                this.all_badges = badges;
-                this.all_badges.reverse();
-                this.onSortChange(this.selectedSort);
-            }
-        }
-        const error = await this.badgeService.checkConnectionError(this.alerts);
-        if (error) {
-            return;
-        }
-        if (!result.ok) {
-            this.badgeService.showError(
-                this.alerts,
-                {
-                    data: {
-                        error: result.result.error.error,
-                    },
-                },
-                "danger"
+        // FIXME: show error if there is no context group
+        if (this.selectedContextGroup !== undefined) {
+            const response = toPromise(
+                this.http.get<[]>(`/all_badges/${this.selectedContextGroup}`)
             );
-            return;
+
+            const result = await response;
+
+            if (result.ok) {
+                this.hasPermissionToHandleBadges = true;
+                if (result.result !== undefined) {
+                    this.all_badges = result.result;
+                    this.all_badges.reverse();
+                    this.onSortChange(this.selectedSort);
+                }
+            }
+            const error = await this.badgeService.checkConnectionError(
+                this.alerts
+            );
+            // FIXME: show connection error instead of silently returning
+            if (error) {
+                return;
+            }
+            if (!result.ok) {
+                this.badgeService.showError(
+                    this.alerts,
+                    {
+                        data: {
+                            error: result.result.error.error,
+                        },
+                    },
+                    "danger"
+                );
+                return;
+            }
         }
     }
 
@@ -629,16 +633,12 @@ export class BadgeCreatorComponent implements OnInit {
             }>(`/badge_holders/${this.clickedBadge!.id}`)
         );
 
-        if (
+        return (
             response &&
             Array.isArray(response.result) &&
             Array.isArray(response.result[1]) &&
             response.result[1].length > 0
-        ) {
-            return true;
-        } else {
-            return false;
-        }
+        );
     }
 
     /**
@@ -648,6 +648,7 @@ export class BadgeCreatorComponent implements OnInit {
      * arise.
      */
     async deleteBadge() {
+        // FIXME: show connection error instead of silently returning
         const error = await this.badgeService.checkConnectionError(this.alerts);
         if (error) {
             return;
@@ -668,44 +669,32 @@ export class BadgeCreatorComponent implements OnInit {
             )
         ) {
             if (this.editingBadge) {
-                try {
-                    const response = await toPromise(
-                        this.http.post<{ok: boolean}>("/deactivate_badge", {
-                            badge_id: this.editingBadge.id,
-                            context_group: this.selectedContextGroup,
-                        })
-                    );
+                const response = await toPromise(
+                    this.http.post<{ok: boolean}>("/deactivate_badge", {
+                        badge_id: this.editingBadge.id,
+                        context_group: this.selectedContextGroup,
+                    })
+                );
 
-                    if (response.ok) {
-                        while (this.all_badges.length > 0) {
-                            this.all_badges.pop();
-                            this.all_badges.pop();
-                        }
-
-                        this.getBadges();
-                        this.emptyForm();
-                        this.resetForm();
-                        this.clickedBadge = null;
-                        this.isFormChanged = false;
-                        // Send a signal to badgeservice about succesful delete-action
-                        this.badgeService.triggerUpdateBadgeList();
-                    } else {
-                        const error =
-                            await this.badgeService.checkConnectionError(
-                                this.alerts
-                            );
-                        if (error) {
-                            return;
-                        }
-                        this.badgeService.showError(
-                            this.alerts,
-                            {data: {error: response.result.error.error}},
-                            "danger"
-                        );
-                        return;
+                if (response.ok) {
+                    while (this.all_badges.length > 0) {
+                        this.all_badges.pop();
+                        this.all_badges.pop();
                     }
-                } catch (error) {
-                    console.error("Error deleting badge", error);
+                    this.getBadges();
+                    this.emptyForm();
+                    this.resetForm();
+                    this.clickedBadge = null;
+                    this.isFormChanged = false;
+                    // Send a signal to badgeservice about succesful delete-action
+                    this.badgeService.triggerUpdateBadgeList();
+                } else {
+                    this.badgeService.showError(
+                        this.alerts,
+                        {data: {error: response.result.error.error}},
+                        "danger"
+                    );
+                    return;
                 }
             }
         }

@@ -8,7 +8,6 @@ from sqlalchemy import select, or_, func, desc
 from timApp.auth.accesshelper import (
     verify_teacher_access,
     verify_view_access,
-    AccessDenied,
 )
 from timApp.auth.sessioninfo import get_current_user_object
 from timApp.gamification.badge.badges import Badge, BadgeGiven
