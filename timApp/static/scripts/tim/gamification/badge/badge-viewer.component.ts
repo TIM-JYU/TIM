@@ -10,11 +10,10 @@ import type {
     IBadge,
     IBadgeGroup,
     IErrorAlert,
-    IPersonalGroup,
 } from "tim/gamification/badge/badge.interface";
 import {Subscription} from "rxjs";
 import {Users} from "tim/user/userService";
-import type {IUser} from "tim/user/IUser";
+import type {IGroup, IUser} from "tim/user/IUser";
 import {angularDialog} from "tim/ui/angulardialog/dialog.service";
 import {MessageDialogComponent} from "tim/ui/message-dialog.component";
 import {HostListener} from "@angular/core";
@@ -113,7 +112,7 @@ import {PurifyModule} from "tim/util/purify.module";
     encapsulation: ViewEncapsulation.None,
 })
 export class BadgeViewerComponent implements OnInit {
-    personalGroup?: IPersonalGroup;
+    personalGroup?: IGroup;
     realName: string | null = null;
     selectedUser?: IUser | null = null;
     badges: IBadge[] = [];
@@ -172,6 +171,7 @@ export class BadgeViewerComponent implements OnInit {
         );
     }
 
+    // FIXME: this method lack a clear purpose, get rid of this
     /**
      * Checks if badgeuser or badgegroupContext are falsy.
      * Fetches user's personal group with userContext.
@@ -182,17 +182,20 @@ export class BadgeViewerComponent implements OnInit {
         if (!this.badgeuserContext || !this.badgegroupContext) {
             return;
         }
-        this.personalGroup = await this.groupService.getUserAndPersonalGroup(
+        const response = await this.groupService.getPersonalGroup(
             this.badgeuserContext
         );
-        if (!this.personalGroup) {
+        if (response.ok) {
+            this.personalGroup = response.result;
+            this.realName = this.personalGroup.personal_user!.real_name;
+            this.getUserSubGroups(
+                this.badgegroupContext,
+                this.personalGroup.id
+            );
+        } else {
+            // TODO: display error
             return;
         }
-        this.realName = this.personalGroup["0"].real_name;
-        this.getUserSubGroups(
-            this.badgegroupContext,
-            this.personalGroup?.["0"].id
-        );
     }
 
     /**
@@ -212,23 +215,19 @@ export class BadgeViewerComponent implements OnInit {
     }
 
     /**
-     * Listens for a left mouse button click and closes the open dialog if one is open.
+     * Listens for a mouse button click and closes the open dialog if one is open.
      * The `closeDialog` method is called only if the user clicks somewhere other than the badge.
      *
      * @param event - the event that contains information about the mouse click.
      * @returns void
      */
-
     @HostListener("document:click", ["$event"])
-    onLeftClick(event: MouseEvent): void {
-        if (event.button === 0) {
-            const targetElement = event.target as HTMLElement;
-            if (targetElement.closest(".badge-card")) {
-                return;
-            }
-            if (targetElement.closest(".badge-dialog-window")) {
-                return;
-            }
+    onMouseClick(event: MouseEvent): void {
+        const targetElement = event.target as HTMLElement;
+        if (
+            !targetElement.closest(".badge-card") &&
+            !targetElement.closest(".badge-dialog-window")
+        ) {
             this.closeDialog();
         }
     }
@@ -259,6 +258,7 @@ export class BadgeViewerComponent implements OnInit {
         }
 
         const formattedBadgeTime: string = new Date(badge.given).toLocaleString(
+            // TODO: get language from user's TIM settings
             navigator.language,
             {
                 hour: "2-digit",
@@ -275,6 +275,7 @@ export class BadgeViewerComponent implements OnInit {
         const colorName = this.getColorNameById(badge.color);
         const shapeName = this.getShapeNameById(badge.shape);
 
+        // TODO: create custom dialog for this
         this.badgeService.activeDialogRef = await angularDialog.open(
             MessageDialogComponent,
             {
@@ -289,9 +290,9 @@ export class BadgeViewerComponent implements OnInit {
                         <b>${this.textTime}</b> ${formattedBadgeTime}<br>
                         <b>${this.textCreatedBy}</b> ${badge.created_by_name}<br>
                         <b>${this.textGivenBy}</b> ${badge.given_by_name}<br>                     
-                    </div>                                                
+                    </div>
             `,
-                modal: false,
+                modal: true,
             }
         );
 
@@ -359,8 +360,9 @@ export class BadgeViewerComponent implements OnInit {
     async getBadges() {
         this.emptyTable(this.badges);
         const result = await toPromise(
-            this.http.get<[]>(
-                `/groups_badges/${this.personalGroup?.["1"].id}/${this.badgegroupContext}`
+            this.http.get<IBadge[]>(
+                `/groups_badges/${this.personalGroup!.id}/${this
+                    .badgegroupContext!}`
             )
         );
         const error = await this.badgeService.checkConnectionError(this.alerts);
@@ -460,7 +462,7 @@ export class BadgeViewerComponent implements OnInit {
      */
     onGroupSortChange(groupId: number, sortType: string) {
         this.groupSortMap.set(groupId, sortType);
-        const originalBadges = this.groupBadgesMap.get(groupId) || [];
+        const originalBadges = this.groupBadgesMap.get(groupId) ?? [];
         const sorted = this.badgeService.sortBadges(
             originalBadges,
             sortType,

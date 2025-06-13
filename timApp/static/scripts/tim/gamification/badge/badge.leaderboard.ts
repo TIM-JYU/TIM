@@ -10,7 +10,6 @@ import {GroupService} from "tim/plugin/group-dashboard/group.service";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {PurifyModule} from "tim/util/purify.module";
 import type {IErrorAlert} from "tim/gamification/badge/badge.interface";
-import {toPromise} from "tim/util/utils";
 
 @Component({
     selector: "tim-badge-leaderboard",
@@ -72,7 +71,7 @@ export class BadgeLeaderboardComponent implements OnInit {
      * @returns Promise<void> - Resolves when the process is complete.
      */
     async getTopFive() {
-        try {
+        if (this.badgegroupContext) {
             const result = await firstValueFrom(
                 this.http.get<
                     {
@@ -83,16 +82,15 @@ export class BadgeLeaderboardComponent implements OnInit {
                 >(`/podium/${this.badgegroupContext}`)
             );
 
-            this.top_five = result || [];
+            this.top_five = result ?? [];
 
             for (const team of this.top_five) {
                 const pretty = await this.groupService.getCurrentGroup(
                     team.group_name
                 );
-                team.prettyName = pretty?.description || team.group_name;
+                team.prettyName = pretty?.description ?? team.group_name;
             }
-        } catch (error: any) {
-            console.error("Error fetching top five:", error);
+        } else {
             this.top_five = [];
         }
     }
@@ -174,7 +172,7 @@ export class BadgeLeaderboardComponent implements OnInit {
      * @returns string - The calculated height in pixels.
      */
     calculateHeight(badgeCount?: number): string {
-        const count = badgeCount || 0;
+        const count = badgeCount ?? 0;
         const height = this.baseHeight + count * this.scaleFactor;
         return `${height}px`;
     }

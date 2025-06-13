@@ -11,6 +11,17 @@ import {toPromise} from "tim/util/utils";
 import {HttpClient} from "@angular/common/http";
 import {PurifyModule} from "tim/util/purify.module";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
+import type {IGroup, IUser} from "tim/user/IUser";
+
+// FIXME: temp interfaces, get rid of these
+export interface IPrettyName {
+    id: number;
+    name: string;
+    description: string;
+}
+export interface IBadgeUser extends IUser {
+    badges: IBadge[];
+}
 
 @Component({
     selector: "tim-group-dashboard",
@@ -49,7 +60,7 @@ import {TimUtilityModule} from "tim/ui/tim-utility.module";
 </div>
         <h3 i18n>Statistics</h3>
 <div class="stat-summary">
-    <p><ng-container i18n>Total members: </ng-container><strong>{{ totalMembers }}</strong></p>
+    <p><ng-container i18n>Total members: </ng-container><strong>{{ this.members.length }}</strong></p>
     <p><ng-container i18n>Total badges (group + user): </ng-container><strong>{{ totalBadges }}</strong></p>
 </div>
 
@@ -97,13 +108,12 @@ export class GroupDashboardComponent implements OnInit {
     displayName: string | undefined;
     groupId: number | undefined;
     contextGroup: string | undefined;
-    members: any[] = [];
+    members: IBadgeUser[] = [];
     title: string | undefined;
     currentUserName: string | undefined;
     canViewAllBadges: boolean = false;
     groupBadges: IBadge[] = [];
     nameJustUpdated = false;
-    totalMembers: number = 0;
     totalBadges: number = 0;
     alerts: Array<IErrorAlert> = [];
 
@@ -112,24 +122,13 @@ export class GroupDashboardComponent implements OnInit {
      */
     ngOnInit() {
         if (this.group) {
-            this.loadData();
+            this.contextGroup = this.groupService.getContextGroup(this.group);
+            this.currentUserName = manageglobals().current_user.name;
+            this.getGroupName().then();
+            this.members = this.getMembers();
+            this.getUserBadges().then();
+            this.fetchGroupBadges().then();
         }
-    }
-
-    /**
-     * Loads necessary data for group dashboard, including:
-     * - context group
-     * - group's display name and id
-     * - members of the group
-     * - badges for individual members of the group and group's common badges
-     */
-    async loadData() {
-        this.contextGroup = this.groupService.getContextGroup(this.group);
-        this.currentUserName = manageglobals().current_user.name;
-        await this.getGroupName();
-        await this.fetchMembers();
-        await this.fetchUserBadges();
-        await this.fetchGroupBadges();
     }
 
     /**
@@ -142,7 +141,7 @@ export class GroupDashboardComponent implements OnInit {
      */
     async getGroupName() {
         const result = await toPromise(
-            this.http.get<any>(`/groups/pretty_name/${this.group}`)
+            this.http.get<IPrettyName>(`/groups/pretty_name/${this.group}`)
         );
         if (!result.ok) {
             this.badgeService.showError(
@@ -156,27 +155,24 @@ export class GroupDashboardComponent implements OnInit {
             );
             return;
         }
-        const fetchedGroup = result.result;
+        const group = result.result;
 
-        if (fetchedGroup) {
-            this.displayName = fetchedGroup.description || "";
-            this.groupId = fetchedGroup.id;
+        if (group) {
+            this.displayName = group.description || "";
+            this.groupId = group.id;
         }
-
-        this.canViewAllBadges = fetchedGroup.edit_access || false;
     }
 
     /**
      * Fetches a list of users belonging to current group,
      * updates member view and member count in user interface
      */
-    async fetchMembers() {
-        const members = await this.groupService.getUsersFromGroup(this.group);
-
-        if (members) {
-            this.members = members;
-            this.totalMembers = members.length;
-        }
+    getMembers() {
+        let members: IUser[] = [];
+        this.groupService
+            .getUsersFromGroup(this.group)
+            .then((result) => (members = result));
+        return members as IBadgeUser[];
     }
 
     /**
@@ -186,7 +182,7 @@ export class GroupDashboardComponent implements OnInit {
      * Uses member's personal group IDs to query badges.
      * Counts total badges.
      */
-    async fetchUserBadges() {
+    async getUserBadges() {
         let badgeCount = 0;
         const badgePromises = this.members.map(async (user) => {
             const isCurrentUser = user.name === this.currentUserName;
@@ -195,21 +191,29 @@ export class GroupDashboardComponent implements OnInit {
                 return;
             }
 
-            const personalGroup =
-                await this.groupService.getUserAndPersonalGroup(user.name);
-
-            if (personalGroup[1].id) {
-                const badges = await this.badgeService.getBadges(
-                    personalGroup[1].id,
-                    this.contextGroup!
-                );
-
-                if (badges.length > 0) {
-                    user.badges = badges;
-                    badgeCount += badges.length;
+            let personalGroup: IGroup | undefined;
+            this.groupService.getPersonalGroup(user.name).then((result) => {
+                if (result.ok) {
+                    personalGroup = result.result;
+                } else {
+                    // personalGroup = null;
                 }
-            } else {
-                return;
+            });
+
+            if (personalGroup) {
+                if (personalGroup.id) {
+                    const badges = await this.badgeService.getBadges(
+                        personalGroup.id,
+                        this.contextGroup!
+                    );
+
+                    if (badges.length > 0) {
+                        user.badges = badges;
+                        badgeCount += badges.length;
+                    }
+                } else {
+                    return;
+                }
             }
         });
 

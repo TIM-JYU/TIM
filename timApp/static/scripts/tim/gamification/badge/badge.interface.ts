@@ -1,5 +1,4 @@
-import type {IGroup, IUser} from "tim/user/IUser";
-import {IError} from "../../../../../modules/jsrunner/shared/jsrunnertypes";
+import type {IGroup} from "tim/user/IUser";
 
 /**
  * Interface representing a badge and its associated details
@@ -31,12 +30,4 @@ export interface IErrorAlert {
  */
 export interface IBadgeGroup extends IGroup {
     description: string;
-}
-
-/**
- *  Interface representing a tuple containing a user and a group
- */
-export interface IPersonalGroup {
-    0: IUser;
-    1: IBadgeGroup;
 }

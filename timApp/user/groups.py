@@ -562,20 +562,18 @@ def get_users_subgroups(user_id: int, group_name_prefix: str) -> Response:
     return json_response(users_subgroups_json)
 
 
-@groups.get("/user_and_personal_group/<name>")
-def users_personal_group(name: str) -> Response:
+@groups.get("/personal_group/<name>")
+def get_personal_group(name: str) -> Response:
     """
-    Fetches user and his/her personal user group.
+    Fetches user's personal user group.
     :param name: User's username
     :return: User account and personal user group in json format
     """
-    user_account = User.get_by_name(name)
-    if not user_account:
+    user = User.get_by_name(name)
+    if not user:
         raise NotExist(f'User "{name}" not found')
-    personal_group = user_account.get_personal_group()
-    if not personal_group:
-        raise NotExist(f'Personal group for user "{name}" not found')
-    return json_response((user_account, personal_group))
+    else:
+        return json_response(user.get_personal_group())
 
 
 @groups.get("/usergroups_members/<usergroup_name>")
@@ -593,10 +591,6 @@ def usergroups_members(usergroup_name: str) -> Response:
     in_group = check_group_member(current_user, context_usergroup.id)
     if not in_group:
         verify_access("view", context_usergroup, user_group_name=usergroup_name)
-
-    for user in context_usergroup.users:
-        if not user.real_name:
-            user.real_name = user.name
 
     return json_response(
         sorted(list(context_usergroup.users), key=attrgetter("real_name"))
@@ -640,13 +634,13 @@ def pretty_name(group_name: str) -> Response:
     :return: Group data in json format
     """
     (group, block) = pretty_name_access_checks(group_name)
+    return json_response(group.human_name)
+    # return json_response(
+    #     {"id": group.id, "name": group.name, "description": block.description}
+    # )
 
-    return json_response(
-        {"id": group.id, "name": group.name, "description": block.description}
-    )
 
-
-@groups.post("/change_pretty_name/<group_name>/<new_name>")
+@groups.post("/pretty_name/<group_name>/<new_name>")
 def change_pretty_name(group_name: str, new_name: str) -> Response:
     """
     Changes group's admin_doc's description (pretty name)
