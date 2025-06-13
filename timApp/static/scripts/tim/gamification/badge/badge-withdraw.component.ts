@@ -11,7 +11,6 @@ import type {
     IBadge,
     IBadgeGroup,
     IErrorAlert,
-    IPersonalGroup,
 } from "tim/gamification/badge/badge.interface";
 import {BadgeService} from "tim/gamification/badge/badge.service";
 import {Users} from "tim/user/userService";
@@ -21,7 +20,7 @@ import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {toPromise} from "tim/util/utils";
 import {GroupService} from "tim/plugin/group-dashboard/group.service";
 import {scrollToElement} from "tim/util/utils";
-import type {IUser} from "tim/user/IUser";
+import type {IGroup, IUser} from "tim/user/IUser";
 import {PurifyModule} from "tim/util/purify.module";
 
 @Component({
@@ -239,7 +238,7 @@ export class BadgeWithdrawComponent implements OnInit {
     selectedBadge?: IBadge | null = null;
 
     @Input() badgegroupContext?: string;
-    @ViewChild("startSection") startSection!: ElementRef;
+    @ViewChild("startSection") startSection!: HTMLDivElement;
 
     groups: IBadgeGroup[] = [];
     selectedGroup?: IBadgeGroup | null = null;
@@ -257,7 +256,7 @@ export class BadgeWithdrawComponent implements OnInit {
         private http: HttpClient,
         protected badgeService: BadgeService,
         private groupService: GroupService,
-        private elRef: ElementRef
+        private elRef: ElementRef<HTMLDivElement>
     ) {}
 
     ngOnInit() {
@@ -348,7 +347,7 @@ export class BadgeWithdrawComponent implements OnInit {
         if (
             searchResults &&
             searchWrapper &&
-            !searchWrapper.contains(event.target)
+            !searchWrapper.contains(event.target as Element)
         ) {
             this.userSearchResults = [];
         }
@@ -410,7 +409,7 @@ export class BadgeWithdrawComponent implements OnInit {
         this.emptyTable(this.userBadges);
         this.groupUsersMap.clear();
         setTimeout(() => {
-            scrollToElement(this.startSection?.nativeElement);
+            scrollToElement(this.startSection as Element);
         }, 100);
     }
 
@@ -459,8 +458,8 @@ export class BadgeWithdrawComponent implements OnInit {
      */
     private async fetchUsers() {
         const result = await toPromise(
-            this.http.get<[]>(
-                `/groups/usergroups_members/${this.badgegroupContext}`
+            this.http.get<[IUser]>(
+                `/groups/usergroups_members/${this.badgegroupContext!}`
             )
         );
         const users: IUser[] = [];
@@ -471,6 +470,7 @@ export class BadgeWithdrawComponent implements OnInit {
                 }
             }
         }
+        // FIXME: this connection check is pointless
         const error = await this.badgeService.checkConnectionError(this.alerts);
         if (error) {
             return;
@@ -554,6 +554,7 @@ export class BadgeWithdrawComponent implements OnInit {
      * @param userId User's ID
      */
     async fetchUserBadges(userId?: number) {
+        // FIXME: this connection check is pointless
         const error = await this.badgeService.checkConnectionError(this.alerts);
         if (error) {
             this.hasBadges = false;
@@ -580,15 +581,21 @@ export class BadgeWithdrawComponent implements OnInit {
             this.hasBadges = false;
             return;
         }
-        const pGroup: IPersonalGroup =
-            await this.groupService.getUserAndPersonalGroup(
-                this.selectedUser.name
+        let pGroup: IGroup | undefined;
+        this.groupService
+            .getPersonalGroup(this.selectedUser.name)
+            .then((response) => {
+                if (response.ok) {
+                    pGroup = response.result;
+                }
+            });
+        if (pGroup) {
+            this.userBadges = await this.badgeService.getBadges(
+                pGroup.id,
+                this.badgegroupContext
             );
-        this.userBadges = await this.badgeService.getBadges(
-            pGroup["1"].id,
-            this.badgegroupContext
-        );
-        this.hasBadges = this.userBadges.length > 0;
+            this.hasBadges = this.userBadges.length > 0;
+        }
     }
 
     /**
@@ -663,7 +670,7 @@ export class BadgeWithdrawComponent implements OnInit {
                 if (!r.ok) {
                     this.badgeService.showError(
                         this.alerts,
-                        {data: {error: r.data?.result.error.error || ""}},
+                        {data: {error: r.data?.result.error.error ?? ""}},
                         "danger"
                     );
                 }
