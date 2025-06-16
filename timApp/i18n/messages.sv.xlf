@@ -10628,6 +10628,102 @@ Separate multiple addresses with commas or write each address on a new line.</ta
           <context context-type="linenumber">507,508</context>
         </context-group>
       </trans-unit>
+      <trans-unit id="1935891093549754733" datatype="html">
+        <source> Report content </source>
+        <target state="new"> Report content </target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/ui/report-content-dialog.component.ts</context>
+          <context context-type="linenumber">16,18</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="5382311376767899711" datatype="html">
+        <source> Page URL <x id="START_TAG_SPAN" ctype="x-span" equiv-text="&lt;span class=&quot;label label-info&quot;&gt;"/>(optional)<x id="CLOSE_TAG_SPAN" ctype="x-span" equiv-text="&lt;/span&gt;"/></source>
+        <target state="new"> Page URL <x id="START_TAG_SPAN" ctype="x-span" equiv-text="&lt;span class=&quot;label label-info&quot;&gt;"/>(optional)<x id="CLOSE_TAG_SPAN" ctype="x-span" equiv-text="&lt;/span&gt;"/></target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/ui/report-content-dialog.component.ts</context>
+          <context context-type="linenumber">29,31</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="5369335165199679048" datatype="html">
+        <source> Your Email <x id="START_TAG_SPAN" ctype="x-span" equiv-text="&lt;span class=&quot;label label-info&quot;&gt;"/>(optional)<x id="CLOSE_TAG_SPAN" ctype="x-span" equiv-text="&lt;/span&gt;"/></source>
+        <target state="new"> Your Email <x id="START_TAG_SPAN" ctype="x-span" equiv-text="&lt;span class=&quot;label label-info&quot;&gt;"/>(optional)<x id="CLOSE_TAG_SPAN" ctype="x-span" equiv-text="&lt;/span&gt;"/></target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/ui/report-content-dialog.component.ts</context>
+          <context context-type="linenumber">42,44</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="452949630448939191" datatype="html">
+        <source>Describe the issue</source>
+        <target state="new">Describe the issue</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/ui/report-content-dialog.component.ts</context>
+          <context context-type="linenumber">57</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="1417693714872528491" datatype="html">
+        <source>This field is required.</source>
+        <target state="new">This field is required.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/ui/report-content-dialog.component.ts</context>
+          <context context-type="linenumber">67</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="568459468942408959" datatype="html">
+        <source>Report Content</source>
+        <target state="new">Report Content</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/ui/report-content-dialog.component.ts</context>
+          <context context-type="linenumber">21</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="4544877121833907946" datatype="html">
+        <source><x id="START_PARAGRAPH" ctype="x-p" equiv-text="&lt;p&gt;"/>You can use this form to report any harmful or inappropriate content you have encountered while using TIM.<x id="CLOSE_PARAGRAPH" ctype="x-p" equiv-text="&lt;/p&gt;"/><x id="START_PARAGRAPH" ctype="x-p" equiv-text="&lt;p&gt;"/>If you would like the TIM administrators to follow up with you, you may optionally include you email address.<x id="CLOSE_PARAGRAPH" ctype="x-p" equiv-text="&lt;/p&gt;"/></source>
+        <target state="new"><x id="START_PARAGRAPH" ctype="x-p" equiv-text="&lt;p&gt;"/>You can use this form to report any harmful or inappropriate content you have encountered while using TIM.<x id="CLOSE_PARAGRAPH" ctype="x-p" equiv-text="&lt;/p&gt;"/><x id="START_PARAGRAPH" ctype="x-p" equiv-text="&lt;p&gt;"/>If you would like the TIM administrators to follow up with you, you may optionally include you email address.<x id="CLOSE_PARAGRAPH" ctype="x-p" equiv-text="&lt;/p&gt;"/></target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/ui/report-content-dialog.component.ts</context>
+          <context context-type="linenumber">24,25</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="8414879883786537714" datatype="html">
+        <source>Please explain what you found harmful or inappropriate. Be as specific as possible.</source>
+        <target state="new">Please explain what you found harmful or inappropriate. Be as specific as possible.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/ui/report-content-dialog.component.ts</context>
+          <context context-type="linenumber">71</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="6151928365554450816" datatype="html">
+        <source>Report Page</source>
+        <target state="new">Report Page</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/ui/report-content-dialog.component.ts</context>
+          <context context-type="linenumber">76</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="4096818040903036257" datatype="html">
+        <source>This is the page where you encountered the issue. You can change it if you&apos;re reporting a different page.</source>
+        <target state="new">This is the page where you encountered the issue. You can change it if you&apos;re reporting a different page.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/ui/report-content-dialog.component.ts</context>
+          <context context-type="linenumber">40</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="6860144309922719886" datatype="html">
+        <source>Enter your email if you&apos;d like us to contact you about your report.</source>
+        <target state="new">Enter your email if you&apos;d like us to contact you about your report.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/ui/report-content-dialog.component.ts</context>
+          <context context-type="linenumber">56</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="6456781411935518667" datatype="html">
+        <source>Report content</source>
+        <target state="new">Report content</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/footer.component.ts</context>
+          <context context-type="linenumber">62,63</context>
+        </context-group>
+      </trans-unit>
     </body>
   </file>
 </xliff>
