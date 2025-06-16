@@ -1,5 +1,5 @@
-import {IReportContentParams} from "./report-content-dialog.component";
-import {angularDialog} from "./angulardialog/dialog.service";
+import type {IReportContentParams} from "tim/ui/report-content-dialog.component";
+import {angularDialog} from "tim/ui/angulardialog/dialog.service";
 
 export async function showReportContentDialog(params?: IReportContentParams) {
     const {ReportContentDialogComponent} = await import(
