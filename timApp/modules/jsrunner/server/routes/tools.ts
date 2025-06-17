@@ -249,6 +249,7 @@ const TSendGradesToSisuData = t.partial({
 export interface SendGradesToSisuData
     extends t.TypeOf<typeof TSendGradesToSisuData> {
     destCourse: string;
+    destCourseGroup: string | null;
 }
 
 const DefaultSendGradesToSisuData: SendGradesToSisuData = {
@@ -256,6 +257,7 @@ const DefaultSendGradesToSisuData: SendGradesToSisuData = {
     sendMailTo: [],
     users: [],
     destCourse: "",
+    destCourseGroup: null,
 };
 
 // const dummyGTools: GTools = new GTools(
@@ -1315,6 +1317,7 @@ export class GTools extends ToolsBase {
                 ...DefaultSendGradesToSisuData,
                 ...opts,
                 destCourse: this.markup.destCourse,
+                destCourseGroup: this.markup.destCourseGroup ?? null,
             };
         } else {
             this.sendToSisu = {...this.sendToSisu, ...opts};
