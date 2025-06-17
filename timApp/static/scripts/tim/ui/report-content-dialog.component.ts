@@ -4,6 +4,8 @@ import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {DialogModule} from "tim/ui/angulardialog/dialog.module";
 import {FormsModule} from "@angular/forms";
 import {AngularDialogComponent} from "tim/ui/angulardialog/angular-dialog-component.directive";
+import {HttpClient, HttpClientModule} from "@angular/common/http";
+import {toPromise} from "tim/util/utils";
 
 export interface IReportContentParams {
     currentUrl: string;
@@ -35,7 +37,7 @@ export interface IReportContentParams {
                                 id="idUrl" 
                                 type="url" 
                                 name="url" 
-                                [(ngModel)]="url"
+                                [(ngModel)]="reportedUrl"
                                 i18n>
                         <small class="help-block" i18n>This is the page where you encountered the issue. You can change it if you're reporting a different page.</small>
                     </div>
@@ -84,27 +86,39 @@ export class ReportContentDialogComponent extends AngularDialogComponent<
     any
 > {
     protected dialogName = "ReportContent";
+    reason = "";
     name = "";
     email = "";
-    url = "";
-    reason = "";
+    reportedUrl = "";
 
-    constructor() {
+    constructor(private http: HttpClient) {
         super();
     }
 
     ngOnInit() {
-        this.url = this.data.currentUrl;
+        this.reportedUrl = this.data.currentUrl;
     }
 
     // TODO: Sanitize user input
-    sendMail() {
+    async sendMail() {
         this.close({
+            reason: this.reason,
             name: this.name,
             email: this.email,
-            url: this.url,
-            reason: this.reason,
+            reportedUrl: this.reportedUrl,
         });
+
+        const json_payload = {
+            reason: this.reason,
+            name: this.name,
+            email: this.email,
+            reportedUrl: this.reportedUrl,
+        };
+
+        const r = await toPromise(this.http.post("/report", json_payload));
+        if (r.ok) {
+            console.log(r.result);
+        }
     }
 
     protected readonly JSON = JSON;
@@ -113,6 +127,12 @@ export class ReportContentDialogComponent extends AngularDialogComponent<
 @NgModule({
     declarations: [ReportContentDialogComponent],
     exports: [ReportContentDialogComponent],
-    imports: [CommonModule, TimUtilityModule, DialogModule, FormsModule],
+    imports: [
+        CommonModule,
+        TimUtilityModule,
+        DialogModule,
+        FormsModule,
+        HttpClientModule,
+    ],
 })
 export class ReportContentDialogModule {}

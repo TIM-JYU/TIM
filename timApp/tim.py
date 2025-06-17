@@ -35,6 +35,7 @@ from timApp.auth.sessioninfo import (
 from timApp.backup.backup_routes import backup
 from timApp.bookmark.course import update_user_course_bookmarks
 from timApp.bookmark.routes import bookmarks
+from timApp.content_report.content_report import content_report
 from timApp.defaultconfig import SECRET_KEY
 from timApp.document.course.routes import course_blueprint
 from timApp.document.editing.routes import edit_page
@@ -112,6 +113,7 @@ cache.init_app(app)
 blueprints = [
     access,
     admin_bp,
+    content_report,
     annotations,
     answers,
     backup,
