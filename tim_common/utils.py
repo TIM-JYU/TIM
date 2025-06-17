@@ -3,6 +3,7 @@ import re
 from dataclasses import field
 from typing import Any, Mapping, overload
 
+import jinja2
 import marshmallow
 from isodate import Duration, duration_isoformat, parse_duration
 from marshmallow import ValidationError
@@ -146,3 +147,14 @@ def replace_in_file(file_path: str, pattern: str, replacement: str) -> int:
             file.write(new_content)
 
     return num_replacements
+
+
+def render_raw_template_string(template: str, **context: Any) -> str:
+    """
+    Renders a Jinja2 template outside Flask's context. Skips any injected variables.
+
+    :param template: Template to render.
+    :param context: Specific values to inject.
+    :return: Rendered template.
+    """
+    return jinja2.Template(template).render(**context)

@@ -45,8 +45,8 @@ from timApp.util.utils import (
     get_current_time,
     is_valid_email,
     partition,
-    render_raw_template_string,
 )
+from tim_common.utils import render_raw_template_string
 from tim_common.marshmallow_dataclass import class_schema
 
 groups = TypedBlueprint("groups", __name__, url_prefix="/groups")
