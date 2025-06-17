@@ -1,3 +1,5 @@
+import hashlib
+import pathlib
 from copy import copy
 from dataclasses import dataclass, field, fields, is_dataclass
 from datetime import datetime, timezone
@@ -5,9 +7,10 @@ from typing import Any, Mapping, NewType, Literal
 
 import dateutil.parser
 import marshmallow
+import requests
 from marshmallow import missing, pre_load, EXCLUDE
 
-from tim_common.utils import Missing
+from tim_common.utils import Missing, render_raw_template_string
 
 
 @dataclass
@@ -87,8 +90,14 @@ class AccessField:
 
 
 @dataclass
+class ExternalTemplateInfo:
+    url: str
+
+
+@dataclass
 class ModelAnswerInfo:
     answer: str | None | Missing = missing
+    externalTemplates: dict[str, ExternalTemplateInfo] | None | Missing = missing
     count: int | None | Missing = 1
     disabled: bool | Literal["unless_review"] | None | Missing = missing
     endDate: PluginDateTime | datetime | None | Missing = missing
@@ -104,6 +113,52 @@ class ModelAnswerInfo:
     minPoints: float | None | Missing = missing
     hidePoints: bool | None | Missing = missing
     revealDate: PluginDateTime | datetime | None | Missing = missing
+
+    def get_expanded_answer(self, cache_dir: pathlib.Path | None = None) -> str | None:
+        """
+        Expands the model answer by inserting possible external template variables defined
+        in the `externalTemplates` field.
+
+        :param cache_dir:  Directory to cache the external templates. If not specified, no caching is done.
+        :return: The `answer` attribute with possible external template variables expanded.
+        """
+        if self.answer is None or not isinstance(self.answer, str):
+            return None
+        if not isinstance(self.externalTemplates, dict) or not self.externalTemplates:
+            return self.answer
+
+        if cache_dir and not cache_dir.exists():
+            cache_dir.mkdir(parents=True, exist_ok=True)
+
+        template_variables = {}
+
+        for tmpl_var, tmpl_info in self.externalTemplates.items():
+            tmpl_name_hash = hashlib.blake2b(
+                tmpl_info.url.encode("utf-8"),
+                digest_size=16,
+            ).hexdigest()
+            if cache_dir:
+                cached_file_path = cache_dir / tmpl_name_hash
+                if cached_file_path.exists():
+                    # noinspection PyBroadException
+                    try:
+                        template_variables[tmpl_var] = cached_file_path.read_text()
+                        continue
+                    except:  # If we cannot read the cached file for whatever reason, we will fetch it again.
+                        pass
+
+            r = requests.get(tmpl_info.url)
+            if r.status_code == 200:
+                template_variables[tmpl_var] = r.text
+                if cache_dir:
+                    cached_file_path = cache_dir / tmpl_name_hash
+                    # noinspection PyBroadException
+                    try:
+                        cached_file_path.write_text(template_variables[tmpl_var])
+                    except:  # If we cannot write the cached file for whatever reason, we will not cache it.
+                        pass
+
+        return render_raw_template_string(self.answer, **template_variables)
 
 
 @dataclass
