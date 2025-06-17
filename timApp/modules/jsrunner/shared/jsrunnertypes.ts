@@ -43,6 +43,7 @@ export const JsrunnerMarkup = t.intersection([
         nextRunner: t.string,
         timeZoneDiff: t.number,
         destCourse: t.string,
+        destCourseGroup: t.string,
         destCourseName: t.string,
     }),
     GenericPluginMarkup,
