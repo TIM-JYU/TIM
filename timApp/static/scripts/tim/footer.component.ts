@@ -94,7 +94,6 @@ export class FooterComponent {
             showReportContentDialog({currentUrl: windowUrl})
         );
         if (response.ok) {
-            // console.log("Results are in " + JSON.stringify(response.result));
         }
     }
 }
