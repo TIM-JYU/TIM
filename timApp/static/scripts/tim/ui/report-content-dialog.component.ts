@@ -6,14 +6,23 @@ import {FormsModule} from "@angular/forms";
 import {AngularDialogComponent} from "tim/ui/angulardialog/angular-dialog-component.directive";
 import {HttpClient, HttpClientModule} from "@angular/common/http";
 import {toPromise} from "tim/util/utils";
+import {showMessageDialog} from "tim/ui/showMessageDialog";
 
 export interface IReportContentParams {
     currentUrl: string;
 }
 
+export interface IContentReport {
+    reason: string;
+    name: string;
+    email: string;
+    reportedUrl: string;
+}
+
 @Component({
     selector: "report-content-dialog",
     template: `
+        <div class="modal-bg"></div>
         <tim-dialog-frame>
             <ng-container i18n header>
                 Report content
@@ -54,7 +63,12 @@ export interface IReportContentParams {
                                 name="emailInput" 
                                 [(ngModel)]="email" 
                                 placeholder="Email"
+                                maxlength="256"
                                 i18n>
+                        <div *ngIf="emailField.invalid && (emailField.dirty || emailField.touched)" class="alert alert-danger">
+                            <small *ngIf="emailField.errors?.email" i18n>Please enter a valid email address.</small>
+                            <small *ngIf="emailField.errors?.maxlenght" i18n>The email address cannot exceed 256 characters.</small>
+                        </div>
                         <small class="help-block" i18n>Enter your email if you'd like us to contact you about your report.</small>
                     </div>
                     <div class="form-group" [ngClass]="{'has-error': reasonfield.invalid && reasonfield.touched}">
@@ -65,10 +79,12 @@ export interface IReportContentParams {
                                 name="reportText" 
                                 rows="5"
                                 [(ngModel)]="reason" 
-                                #reasonfield="ngModel" 
+                                #reasonfield="ngModel"
+                                maxlength="2000"
                                 required></textarea>
-                        <div *ngIf="reasonfield.invalid && reasonfield.touched" class="alert alert-danger">
+                        <div *ngIf="reasonfield.invalid && (reasonfield.dirty || reasonfield.touched)" class="alert alert-danger">
                             <small *ngIf="reasonfield.errors?.required" i18n>This field is required.</small>    
+                            <small *ngIf="reasonfield.errors?.maxlenght" i18n>The description cannot exceed 2000 characters.</small>    
                         </div>
                         <small class="help-block" i18n>Please explain what you found harmful or inappropriate. Be as specific as possible.</small>
                     </div>
@@ -83,7 +99,7 @@ export interface IReportContentParams {
 })
 export class ReportContentDialogComponent extends AngularDialogComponent<
     IReportContentParams,
-    any
+    IContentReport
 > {
     protected dialogName = "ReportContent";
     reason = "";
@@ -115,13 +131,18 @@ export class ReportContentDialogComponent extends AngularDialogComponent<
             reportedUrl: this.reportedUrl,
         };
 
-        const r = await toPromise(this.http.post("/report", json_payload));
-        if (r.ok) {
-            console.log(r.result);
+        const r = await toPromise(
+            this.http.post<{status: "ok"}>("/report", json_payload)
+        );
+        if (!r.ok) {
+            await showMessageDialog(r.result.error.error);
+            return;
+        } else {
+            await showMessageDialog(
+                "Thank you for your report. The report has been sent to TIM administrators."
+            );
         }
     }
-
-    protected readonly JSON = JSON;
 }
 
 @NgModule({

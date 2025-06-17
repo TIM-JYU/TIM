@@ -91,6 +91,8 @@ HELP_EMAIL = "tim@jyu.fi"
 # Default sender address for email.
 MAIL_FROM = "tim@jyu.fi"
 
+CONTENT_REPORT_EMAIL = "tim@jyu.fi"
+
 ERROR_EMAIL = "wuff-reports@tim.jyu.fi"
 WUFF_EMAIL = "wuff@tim.jyu.fi"
 NOREPLY_EMAIL = "no-reply@tim.jyu.fi"
