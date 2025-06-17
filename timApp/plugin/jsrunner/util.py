@@ -193,6 +193,7 @@ class SendAssessmentsToSisuData(TypedDict):
     sendMailTo: list[str]
     users: list[str]
     destCourse: str
+    destCourseGroup: str | None
 
 
 class FieldSaveRequest(TypedDict, total=False):
@@ -588,6 +589,8 @@ def _verify_sisu_assessments(
     jsrunner_groups: list[str] | None = (
         plugin.values.get("groups", None) if plugin else None
     )
+    if sisu_assessments["destCourseGroup"]:
+        jsrunner_groups = [sisu_assessments["destCourseGroup"]]
     if jsrunner_groups:
         jsrunner_groups = [g for g in jsrunner_groups if g != ALL_ANSWERED_WILDCARD]
     if not jsrunner_groups:
@@ -617,6 +620,8 @@ def _handle_send_sisu_assessments(
     jsrunner_groups: list[str] | None = (
         plugin.values.get("groups", None) if plugin else None
     )
+    if sisu_assessments["destCourseGroup"]:
+        jsrunner_groups = [sisu_assessments["destCourseGroup"]]
     if jsrunner_groups:
         jsrunner_groups = [g for g in jsrunner_groups if g != ALL_ANSWERED_WILDCARD]
     if not jsrunner_groups:
