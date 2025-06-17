@@ -457,6 +457,9 @@ RUN bash -c "opam repo add --all-switches --set-default coq-released https://coq
     coq-math-classes && \
     opam clean -a -c -s --logs"
 
+# Install qrcode and polyline
+RUN $PIP_INSTALL qrcode polyline && bash -c "${APT_CLEANUP}"
+
 USER agent
 
 FROM complete AS sudo
