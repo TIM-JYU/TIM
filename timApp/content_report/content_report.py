@@ -2,12 +2,9 @@ from flask import Response, Blueprint
 
 from timApp.util.flask.requesthelper import use_model
 from timApp.util.flask.responsehelper import ok_response
-from timApp.util.flask.typedblueprint import TypedBlueprint
 from dataclasses import dataclass, field
 from timApp.notification.send_email import send_email
 from timApp.tim_app import app
-
-from marshmallow import Schema, fields
 
 content_report = Blueprint("content_report", __name__, url_prefix="")
 
@@ -32,17 +29,15 @@ def report_content(report: ContentReport) -> Response:
     
     {'User name: ' + report.name if report.name else 'Name not supplied'}.
 
-    {'User wishes a followup email to address: ' + report.email if report.email else 'Email not supplied'}
+    {'User wishes a follow up email to address: ' + report.email if report.email else 'Email not supplied'}
 
     """
 
-    mail_subject = f"Content Report for {report.reportedUrl}"
-    user_email = report.email if report.email else ""
-    reply_addresses = f'{app.config["HELP_EMAIL"]}, ' + user_email
+    reply_addresses = ",".join([app.config["CONTENT_REPORT_EMAIL"], report.email])
 
     send_email(
-        rcpt=app.config["HELP_EMAIL"],
-        subject=mail_subject,
+        rcpt=app.config["CONTENT_REPORT_EMAIL"],
+        subject="New Content Report",
         mail_from=app.config["MAIL_FROM"],
         reply_to=reply_addresses,
         msg=report_message,
