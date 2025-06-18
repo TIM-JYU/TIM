@@ -17,7 +17,6 @@ from types import TracebackType, FrameType
 from typing import Any, Sequence, Callable, TypeVar, Iterable
 
 import dateutil.parser
-import jinja2
 import pytz
 import requests
 from lxml.html import HtmlElement
@@ -506,17 +505,6 @@ def collect_errors_from_hosts(futures: list[Future], hosts: list[str]) -> list[s
     for f, h in zip(futures, hosts):
         wait_response_and_collect_error(f, h, errors)
     return errors
-
-
-def render_raw_template_string(template: str, **context: Any) -> str:
-    """
-    Renders a Jinja2 template outside Flask's context. Skips any injected variables.
-
-    :param template: Template to render.
-    :param context: Specific values to inject.
-    :return: Rendered template.
-    """
-    return jinja2.Template(template).render(**context)
 
 
 TItem = TypeVar("TItem")

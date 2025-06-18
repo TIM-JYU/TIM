@@ -32,7 +32,8 @@ from timApp.user.user import User
 from timApp.util.flask.requesthelper import RouteException, NotExist
 from timApp.util.flask.responsehelper import json_response, text_response
 from timApp.util.flask.typedblueprint import TypedBlueprint
-from timApp.util.utils import cache_folder_path, render_raw_template_string
+from timApp.util.utils import cache_folder_path
+from tim_common.utils import render_raw_template_string
 from tim_common.html_sanitize import sanitize_html
 
 styles = TypedBlueprint("styles", __name__, url_prefix="/styles")

@@ -1,6 +1,7 @@
 """Answer-related routes."""
 import json
 import re
+import shutil
 from collections import defaultdict
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
@@ -159,10 +160,11 @@ from timApp.util.get_fields import (
     ALL_ANSWERED_WILDCARD,
     GetFieldsAccess,
 )
-from timApp.util.logger import log_info
+from timApp.util.logger import log_info, log_warning
 from timApp.util.utils import (
     get_current_time,
     convert_email_to_lower,
+    cache_folder_path,
 )
 from timApp.util.utils import local_timezone
 from timApp.util.utils import try_load_json, seq_to_str
@@ -1579,6 +1581,7 @@ def set_model_answer_info(tim_vars: dict, context_user: UserContext, plugin: Plu
     if not model_answer_info.get("answer"):
         tim_vars.pop("modelAnswer", None)
         return
+    model_answer_info.pop("externalTemplates", None)
     model_answer_info.pop("answer", None)
     lock = model_answer_info.get("lock", True)
     if lock:
@@ -2076,6 +2079,27 @@ def get_jsframe_data(task_id: str, user_id: str) -> Response:
         # return json_response({})
 
 
+MODEL_ANSWER_EXTERNAL_FILES_CACHE = cache_folder_path / "model_answer_externals"
+
+
+@answers.get("/modelAnswer/clearCache")
+def clear_model_answer_cache() -> Response:
+    """
+    Clear the cache for model answer external files.
+    """
+    cache_count = 0
+    if MODEL_ANSWER_EXTERNAL_FILES_CACHE.exists():
+        try:
+            cache_count = len(list(MODEL_ANSWER_EXTERNAL_FILES_CACHE.iterdir()))
+            shutil.rmtree(MODEL_ANSWER_EXTERNAL_FILES_CACHE)
+        except Exception as e:
+            log_warning(f"Failed to clear model answer external files cache: {e}")
+            raise RouteException(
+                "Failed to clear cache for model answer external files"
+            )
+    return json_response({"result": "Model answer cache cleared", "count": cache_count})
+
+
 @answers.get("/getModelAnswer/<task_id>")
 def get_model_answer(task_id: str) -> Response:
     tid = TaskId.parse(task_id)
@@ -2159,11 +2183,14 @@ def get_model_answer(task_id: str) -> Response:
             log_task_block(
                 f"set task {tid.doc_task} accessible_to at {current_time} via modelAnswer"
             )
+    answer_expanded = model_answer_info.get_expanded_answer(
+        cache_dir=MODEL_ANSWER_EXTERNAL_FILES_CACHE
+    )
     dumbo_opts = plug.par.get_dumbo_options(
         base_opts=doc.get_settings().get_dumbo_options()
     )
     answer_html = md_to_html(
-        model_answer_info.answer, dumbo_options=dumbo_opts, ignore_errors=True
+        answer_expanded, dumbo_options=dumbo_opts, ignore_errors=True
     )
     points_map: dict[int, float] | None = None
     if plug.known.modelAnswer.hidePoints and plug.known.show_points():
@@ -2176,7 +2203,7 @@ def get_model_answer(task_id: str) -> Response:
             raise RouteException(str(e))
     res = {"answer": answer_html, "points_map": points_map}
     if is_teacher:
-        res["md"] = model_answer_info.answer
+        res["md"] = answer_expanded
     return json_response(res)
 
 
