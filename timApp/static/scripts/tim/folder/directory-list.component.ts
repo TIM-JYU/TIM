@@ -35,11 +35,11 @@ const AccessLevelBadgeInfo: Record<AccessLevelBadge, string> = {
             <tr>
                 <th></th>
                 <th>Name</th>
-                <th *ngIf="displayAccessBadges" (click)="showAccessBadges = !showAccessBadges">{{showAccessBadges ? "Access" : "A" }}</th>
-                <th *ngIf="displayDocumentTags" (click)="showTags = !showTags">{{ showTags ? "Tags" : "T"}}</th>
                 <th>Last modified</th>
+                <th *ngIf="displayAccessBadges" (click)="showAccessBadges = !showAccessBadges">{{showAccessBadges ? "Access" : "A" }}</th>
                 <th>Owners</th>
                 <th>Rights</th>
+                <th *ngIf="displayDocumentTags" (click)="showTags = !showTags">{{ showTags ? "Tags" : "T"}}</th>
                 <th class="gray" (click)="showId = !showId">Id</th>
             </tr>
             </thead>
@@ -67,21 +67,13 @@ const AccessLevelBadgeInfo: Record<AccessLevelBadge, string> = {
                 <td>
                     <a href="/view/{{ item.path }}">{{ item.title }}</a>&ngsp;
                 </td>
+                <td>{{ item.modified }}</td>
                 <td *ngIf="displayAccessBadges" class="col-access-badges">
                     <ng-container  *ngIf="showAccessBadges">
                         <span class="accessbadge ab-{{ getItemBadgeName(item.id).toLowerCase() }}" 
                               title="{{ AccessLevelBadgeInfo[getItemBadge(item.id)] }}">{{ getItemBadgeName(item.id) }}</span>
                     </ng-container>
                 </td>
-                <td *ngIf="displayDocumentTags" class="col-item-tags">
-                    <ng-container *ngIf="showTags">
-                        <span class="itemtags" *ngFor="let tag of getItemTags(item)">
-                            <span class="itemtag tagtype-{{ getTagTypeString(tag) }}" 
-                              title="{{ tag.name }} {{ tag.expires ? '(expires on ' + tag.expires.toDate() + ')' : '' }}">{{ tag.name }}</span>
-                        </span>
-                    </ng-container>
-                </td>
-                <td>{{ item.modified }}</td>
                 <td>{{ listOwnerNames(item) }}</td>
                 <td>
                     <a title="Edit" *ngIf="item.rights.editable && !item.isFolder"
@@ -91,6 +83,14 @@ const AccessLevelBadgeInfo: Record<AccessLevelBadge, string> = {
                             class="glyphicon glyphicon-cog"></i></a>
                     &ngsp;<a title="Teacher" *ngIf="item.rights.teacher && !item.isFolder"
                        href="/teacher/{{ item.path }}"><i class="glyphicon glyphicon-education"></i></a>
+                </td>
+                <td *ngIf="displayDocumentTags" class="col-item-tags">
+                    <ng-container *ngIf="showTags">
+                        <span class="itemtags" *ngFor="let tag of getItemTags(item)">
+                            <span class="itemtag tagtype-{{ getTagTypeString(tag) }}" 
+                              title="{{ tag.name }} {{ tag.expires ? '(expires on ' + tag.expires.toDate() + ')' : '' }}">{{ tag.name }}</span>
+                        </span>
+                    </ng-container>
                 </td>
                 <td *ngIf="showId">
                     {{item.id}}
