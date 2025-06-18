@@ -3,8 +3,8 @@ import type {DocumentOrFolder, IFolder, IItem, ITag} from "tim/item/IItem";
 import {TagType} from "tim/item/IItem";
 import {Users} from "tim/user/userService";
 import {folderglobals, genericglobals} from "tim/util/globals";
-import {to} from "tim/util/utils";
-import {$http} from "tim/util/ngimport";
+import {toPromise} from "tim/util/utils";
+import {HttpClient} from "@angular/common/http";
 
 const MESSAGE_LIST_ARCHIVE_FOLDER_PREFIX = "archives/";
 const TIM_MESSAGES_FOLDER_PREFIX = "messages/tim-messages";
@@ -88,7 +88,7 @@ const AccessLevelBadgeInfo: Record<AccessLevelBadge, string> = {
                     <ng-container *ngIf="showTags">
                         <span class="itemtags" *ngFor="let tag of getItemTags(item)">
                             <span class="itemtag tagtype-{{ getTagTypeString(tag) }}" 
-                              title="{{ tag.name }} {{ tag.expires ? '(expires on ' + tag.expires.toDate() + ')' : '' }}">{{ tag.name }}</span>
+                              title="{{ tag.name }} {{ tag.expires ? '(expires on ' + tag.expires!.toDate() + ')' : '' }}">{{ tag.name }}</span>
                         </span>
                     </ng-container>
                 </td>
@@ -131,7 +131,7 @@ export class DirectoryListComponent {
     displayAccessBadges: boolean;
     displayDocumentTags: boolean;
 
-    constructor() {
+    constructor(private http: HttpClient) {
         const fg = folderglobals();
         this.itemList = fg.items;
         this.item = fg.curr_item;
@@ -155,12 +155,12 @@ export class DirectoryListComponent {
         // this.item is the current directory folder
         if (this.displayAccessBadges) {
             this.getAccessLevelBadges(this.item).then((value) => {
-                this.itemBadges = value ?? {};
+                this.itemBadges = value;
             });
         }
         if (this.displayDocumentTags) {
             this.getFolderItemTags(this.item).then((value) => {
-                this.itemTags = value ?? {};
+                this.itemTags = value;
             });
         }
     }
@@ -172,14 +172,16 @@ export class DirectoryListComponent {
     async getAccessLevelBadges(
         parentFolder: IItem
     ): Promise<Record<number, AccessLevelBadge>> {
-        const res = await to(
-            $http.get<Record<number, number>>(
-                `/items/getBadges/${parentFolder.id}`
-            )
+        const resp = await toPromise(
+            this.http.get<Record<number, number>>("/items/getBadges", {
+                params: {
+                    folder_id: parentFolder.id,
+                },
+            })
         );
         let badges: Record<number, AccessLevelBadge> = {};
-        if (res.ok) {
-            badges = res.result.data;
+        if (resp.ok) {
+            badges = resp.result;
             return badges;
         }
         return {};
@@ -202,13 +204,15 @@ export class DirectoryListComponent {
     async getFolderItemTags(
         parentFolder: IItem
     ): Promise<Record<number, ITag[]>> {
-        const res = await to(
-            $http.get<Record<number, ITag[]>>(
-                `/tags/getTags/${parentFolder.id}`
-            )
+        const resp = await toPromise(
+            this.http.get<Record<number, ITag[]>>("/tags/getTags", {
+                params: {
+                    folder_id: parentFolder.id,
+                },
+            })
         );
-        if (res.ok) {
-            return res.result.data;
+        if (resp.ok) {
+            return resp.result;
         }
         return {};
     }

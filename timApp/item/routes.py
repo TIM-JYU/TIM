@@ -1454,11 +1454,13 @@ def get_item(item_id: int):
     return json_response(i)
 
 
-@view_page.get("/items/getBadges/<int:folder_id>")
+@view_page.get("/items/getBadges")
 def get_item_access_badges(folder_id: int) -> Response:
     """Return access level information for items in the current directory"""
     user = get_current_user_object()
-    folder = Folder.find_by_id(folder_id)
+    folder = Folder.get_by_id(folder_id)
+    if not folder:
+        return json_response({})
     items: list[Item] = []
     viewable_folders = [
         f for f in folder.get_all_folders() if user.has_view_access(i=f)

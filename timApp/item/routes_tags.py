@@ -220,7 +220,7 @@ def get_tags(doc: str) -> Response:
     return json_response(tags, date_conversion=True)
 
 
-@tags_blueprint.get("/getTags/<int:folder_id>")
+@tags_blueprint.get("/getTags")
 def get_tags_for_folder_items(folder_id: int) -> Response:
     """
     Gets the list of tags for each item in a TIM folder.
@@ -228,9 +228,9 @@ def get_tags_for_folder_items(folder_id: int) -> Response:
     :param folder_id: The target folder id.
     :returns A dict of the folder ids and TagInfo-objects, keyed by the folder id, converted into JSON.
     """
-    folder = Folder.find_by_id(folder_id)
+    folder = Folder.get_by_id(folder_id)
     if not folder:
-        raise NotExist()
+        return json_response({})
     verify_view_access(folder)
     item_tags: dict[int, list[TagInfo]] = {}
 
