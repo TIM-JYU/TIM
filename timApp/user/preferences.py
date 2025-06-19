@@ -41,6 +41,8 @@ class Preferences:
     max_uncollapsed_toc_items: int | None = None
     parmenu_position: int = ParMenuPosition.Right
     always_show_header_menu: bool = False
+    display_dir_list_badges: bool = False
+    display_dir_list_tags: bool = False
 
     @staticmethod
     def from_json(j: dict) -> "Preferences":

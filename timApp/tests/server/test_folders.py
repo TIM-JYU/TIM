@@ -105,6 +105,7 @@ class FolderTest(TimRouteTest):
                         "teacher": True,
                     },
                     "unpublished": True,
+                    "visibility": 5,
                     "public": True,
                 },
                 {
@@ -128,6 +129,7 @@ class FolderTest(TimRouteTest):
                         "teacher": True,
                     },
                     "unpublished": False,
+                    "visibility": 1,
                     "public": True,
                 },
             ],
@@ -163,6 +165,7 @@ class FolderTest(TimRouteTest):
                         "teacher": False,
                     },
                     "unpublished": False,
+                    "visibility": 1,
                     "public": True,
                 }
             ],
@@ -686,6 +689,7 @@ class FolderContentTest(TimRouteTest):
                     },
                     "title": doctitle,
                     "unpublished": False,
+                    "visibility": 1,
                 }
             ],
         )

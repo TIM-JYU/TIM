@@ -1600,3 +1600,39 @@ tim-rights-editor {
     opacity: 0.5;
     pointer-events: all;
 }
+
+
+// Badges colors
+
+.accessbadge {
+    &.ab-public {
+        --directory-list-badge-color: #{$access-badges-base-color};
+    }
+    &.ab-logged-in {
+        --directory-list-badge-color: #{lighten($access-badges-base-color, 10%)};
+    }
+    &.ab-organization {
+        --directory-list-badge-color: #{lighten($access-badges-base-color, 10%)};
+    }
+    &.ab-limited {
+        --directory-list-badge-color: #{lighten($access-badges-base-color, 10%)};
+    }
+    &.ab-private {
+        --directory-list-badge-color: #{lighten($access-badges-base-color, 40%)};
+    }
+}
+
+.itemtags {
+    .tagtype-group {
+        --directory-list-badge-bg-color: #{$basic-color};
+    }
+    .tagtype-coursecode {
+        --directory-list-badge-bg-color: #{$item-badge-color};
+    }
+    .tagtype-regular {
+        --directory-list-badge-bg-color: #{$item-badge-color};
+    }
+    .tagtype-subject {
+        --directory-list-badge-bg-color: #{$item-badge-color};
+    }
+}

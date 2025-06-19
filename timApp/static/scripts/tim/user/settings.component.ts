@@ -490,12 +490,30 @@ type StyleSelectionType =
             </bootstrap-form-panel>
             <bootstrap-form-panel [disabled]="saving" title="Other settings" i18n-title anchorId="prefs_misc"
                                   [showHeadingAnchors]="true">
-                <div class="checkbox" id="othersettings"><label>
+                <div class="checkbox" id="othersettings">
+                    <label>
                     <input type="checkbox" name="auto_mark_all_read" [(ngModel)]="settings.auto_mark_all_read"
                            [disabled]="saving">
                     <ng-container i18n>Automatically mark document as read when opening it for the first time
                     </ng-container>
-                </label></div>
+                    </label>
+                </div>
+                <div class="checkbox"  id="othersettings_badges">
+                    <label>
+                    <input type="checkbox" name="display_dir_list_badges" [(ngModel)]="settings.display_dir_list_badges"
+                           [disabled]="saving">
+                    <ng-container i18n>Directory listing: Display access badges for folder items.
+                    </ng-container>
+                    </label>
+                </div>
+                <div class="checkbox" id="othersettings_tags">
+                    <label>
+                    <input type="checkbox" name="display_dir_list_tags" [(ngModel)]="settings.display_dir_list_tags"
+                           [disabled]="saving">
+                    <ng-container i18n>Directory listing: Display document tags for folder items.
+                    </ng-container>
+                    </label>
+                </div>
                 <settings-button-panel [saved]="submit">
                     <button class="btn btn-default" (click)="clearLocalStorage()" i18n>Clear local settings storage
                     </button>
