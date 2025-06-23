@@ -59,7 +59,7 @@ import {to2} from "tim/util/utils";
                                         Accessibility statement
                                     </a>
                                     <br>
-                                    <a (click)="reportContent()" i18n>Report content</a>
+                                    <a (click)="reportContent()" role="button" i18n>Report content</a>
                                 </ng-container>
                             </div>
                         </div>
