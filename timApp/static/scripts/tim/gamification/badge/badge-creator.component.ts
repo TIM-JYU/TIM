@@ -508,7 +508,7 @@ export class BadgeCreatorComponent implements OnInit {
      *
      * @returns {Promise<void>} Resolves when the cancellation process is complete and the UI is updated.
      */
-    async onCancel() {
+    async onCancel(): Promise<void> {
         this.emptyForm();
         await this.getBadges();
         this.badgeFormShowing = false;
@@ -523,41 +523,30 @@ export class BadgeCreatorComponent implements OnInit {
      */
     private async getBadges() {
         // FIXME: show error if there is no context group
-        if (this.selectedContextGroup !== undefined) {
-            const response = toPromise(
-                this.http.get<[]>(`/all_badges/${this.selectedContextGroup}`)
-            );
+        const response = await toPromise(
+            this.http.get<IBadge[]>(`/badges`, {
+                params: {
+                    context_group: this.selectedContextGroup!,
+                },
+            })
+        );
 
-            const result = await response;
-
-            if (result.ok) {
-                this.hasPermissionToHandleBadges = true;
-                if (result.result !== undefined) {
-                    this.all_badges = result.result;
-                    this.all_badges.reverse();
-                    this.onSortChange(this.selectedSort);
-                }
-            }
-            const error = await this.badgeService.checkConnectionError(
-                this.alerts
-            );
-            // FIXME: show connection error instead of silently returning
-            if (error) {
-                return;
-            }
-            if (!result.ok) {
-                this.badgeService.showError(
-                    this.alerts,
-                    {
-                        data: {
-                            error: result.result.error.error,
-                        },
-                    },
-                    "danger"
-                );
-                return;
-            }
+        if (response.ok) {
+            this.hasPermissionToHandleBadges = true;
+            this.all_badges = response.result.reverse();
+            this.onSortChange(this.selectedSort);
+            return;
         }
+
+        this.badgeService.showError(
+            this.alerts,
+            {
+                data: {
+                    error: response.result.error.error,
+                },
+            },
+            "danger"
+        );
     }
 
     /**
@@ -568,7 +557,7 @@ export class BadgeCreatorComponent implements OnInit {
      * @returns {Promise<void>} Resolves when the badge changes are successfully saved, or an error is handled.
      *
      */
-    async saveBadgeChanges() {
+    async saveBadgeChanges(): Promise<void> {
         if (this.editingBadge) {
             Object.assign(this.editingBadge, this.badgeForm.value);
             const response = toPromise(

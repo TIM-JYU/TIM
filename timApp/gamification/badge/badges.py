@@ -9,15 +9,15 @@ from timApp.timdb.sqa import db
 from timApp.timdb.types import datetime_tz
 
 
-class Badge(db.Model):
+class BadgeTemplate(db.Model):
     """
-    A badge that can be given to a user.
+    A badge template created by a user (usually a teacher) for a specific user group (context group).
     """
 
-    __tablename__ = "badge"
+    __tablename__ = "badgetemplate"
 
     id: Mapped[int] = mapped_column(primary_key=True, nullable=False)
-    """Identifier of the badge"""
+    """Identifier of the badge template"""
 
     title: Mapped[str] = mapped_column(nullable=False)
     """Title of the badge"""
@@ -32,41 +32,29 @@ class Badge(db.Model):
     """Shape of the badge"""
 
     image: Mapped[int] = mapped_column(nullable=False)
-    """Image of the badge"""
+    """Image for the badge"""
 
     context_group: Mapped[int] = mapped_column(
         ForeignKey("usergroup.id"), nullable=False
     )
-    """Context group where the badge belongs to"""
+    """Context group where the badge template belongs to"""
 
     active: Mapped[bool] = mapped_column(nullable=False)
-    """Active status of the badge. If the badge is deleted this turns to false."""
+    """Active status of the badge template. If the badge is deleted this turns to false."""
 
     created_by: Mapped[int] = mapped_column(
         ForeignKey("useraccount.id"), nullable=False
     )
-    """Useraccount that created the badge"""
+    """Useraccount that created the badge template"""
 
     created: Mapped[datetime_tz] = mapped_column(nullable=False)
-    """Timestamp when the badge was created."""
-
-    modified_by: Mapped[Optional[int]] = mapped_column(ForeignKey("useraccount.id"))
-    """Useraccount that modified the badge"""
+    """Timestamp when the badge template was created."""
 
     modified: Mapped[Optional[datetime_tz]] = mapped_column()
-    """Timestamp when the badge was modified."""
-
-    deleted_by: Mapped[Optional[int]] = mapped_column(ForeignKey("useraccount.id"))
-    """Useraccount that deleted the badge"""
+    """Timestamp when the badge template was modified."""
 
     deleted: Mapped[Optional[datetime_tz]] = mapped_column()
-    """Timestamp when the badge was deleted."""
-
-    restored_by: Mapped[Optional[int]] = mapped_column(ForeignKey("useraccount.id"))
-    """Useraccount that restored the badge"""
-
-    restored: Mapped[Optional[datetime_tz]] = mapped_column()
-    """Timestamp when the badge was restored."""
+    """Timestamp when the badge template was deleted."""
 
     def to_json(self) -> dict:
         """
@@ -84,40 +72,36 @@ class Badge(db.Model):
             "active": self.active,
             "created_by": self.created_by,
             "created": self.created,
-            "modified_by": self.modified_by,
             "modified": self.modified,
-            "deleted_by": self.deleted_by,
             "deleted": self.deleted,
-            "restored_by": self.restored_by,
-            "restored": self.restored,
         }
 
     @staticmethod
-    def get_by_id(badge_id: int) -> Badge | None:
-        return db.session.get(Badge, badge_id)
+    def get_by_id(badge_id: int) -> BadgeTemplate | None:
+        return db.session.get(BadgeTemplate, badge_id)
 
 
-class BadgeGiven(db.Model):
+class Badge(db.Model):
     """
     A badge that is given to a user with an optional message.
     """
 
-    __tablename__ = "badgegiven"
+    __tablename__ = "badge"
 
     id: Mapped[int] = mapped_column(primary_key=True, nullable=False)
-    """Identifier of the given badge."""
-
-    message: Mapped[str] = mapped_column()
-    """Message of the given badge."""
-
-    badge_id: Mapped[int] = mapped_column(ForeignKey("badge.id"), nullable=False)
     """Identifier of the badge."""
 
+    message: Mapped[str] = mapped_column()
+    """Message of the badge."""
+
+    badge_id: Mapped[int] = mapped_column(ForeignKey("badge.id"), nullable=False)
+    """Identifier of the badge template."""
+
     group_id: Mapped[int] = mapped_column(ForeignKey("usergroup.id"), nullable=False)
-    """Identifier of the usergroup that the badge is given."""
+    """Identifier of the usergroup that received the badge"""
 
     active: Mapped[bool] = mapped_column(nullable=False)
-    """Active status of the given badge. If the badge is withdrawn this turns to false."""
+    """Active status of the badge. If the badge is withdrawn this turns to false."""
 
     given_by: Mapped[int] = mapped_column(ForeignKey("useraccount.id"), nullable=False)
     """Useraccount that gave the badge."""
@@ -125,19 +109,8 @@ class BadgeGiven(db.Model):
     given: Mapped[datetime_tz] = mapped_column(nullable=False)
     """Timestamp when the badge was given."""
 
-    withdrawn_by: Mapped[Optional[int]] = mapped_column(ForeignKey("useraccount.id"))
-    """Useraccount that withdrew the badge."""
-
     withdrawn: Mapped[Optional[datetime_tz]] = mapped_column()
     """Timestamp when the badge was withdrawn."""
-
-    undo_withdrawn_by: Mapped[Optional[int]] = mapped_column(
-        ForeignKey("useraccount.id")
-    )
-    """Useraccount that undoed the badge withdrawal."""
-
-    undo_withdrawn: Mapped[Optional[datetime_tz]] = mapped_column()
-    """Timestamp when the badge withdrawal was undoed."""
 
     def to_json(self) -> dict:
         """
@@ -152,12 +125,9 @@ class BadgeGiven(db.Model):
             "active": self.active,
             "given_by": self.given_by,
             "given": self.given,
-            "withdrawn_by": self.withdrawn_by,
             "withdrawn": self.withdrawn,
-            "undo_withdrawn_by": self.undo_withdrawn_by,
-            "undo_withdrawn": self.undo_withdrawn,
         }
 
     @staticmethod
-    def get_by_id(badge_given_id: int) -> BadgeGiven | None:
-        return db.session.get(BadgeGiven, badge_given_id)
+    def get_by_id(badge_id: int) -> Badge | None:
+        return db.session.get(Badge, badge_id)

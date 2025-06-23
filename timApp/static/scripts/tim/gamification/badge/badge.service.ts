@@ -37,18 +37,18 @@ export class BadgeService {
      * @return IBadge[]
      */
     async getBadges(id: number, contextGroup: string) {
-        const result = await toPromise(
-            this.http.get<[]>(`/groups_badges/${id}/${contextGroup}`)
+        const resp = await toPromise(
+            this.http.get<IBadge[]>(`/group_badges`, {
+                params: {
+                    group_id: id,
+                    context_group: contextGroup,
+                },
+            })
         );
-        const userBadges: IBadge[] = [];
-        if (result.ok) {
-            if (result.result != undefined) {
-                for (const alkio of result.result) {
-                    userBadges.push(alkio);
-                }
-            }
+        if (resp.ok) {
+            return resp.result.reverse();
         }
-        return userBadges.reverse();
+        return [];
     }
 
     /**

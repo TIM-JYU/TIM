@@ -44,7 +44,7 @@ from timApp.document.translation.translator import (
     TranslationServiceKey,
 )
 from timApp.folder.folder import Folder
-from timApp.gamification.badge.badges import Badge, BadgeGiven
+from timApp.gamification.badge.badges import BadgeTemplate, Badge
 from timApp.item.block import Block
 from timApp.item.blockassociation import BlockAssociation
 from timApp.item.blockrelevance import BlockRelevance
@@ -154,8 +154,8 @@ all_models = (
     AnswerUpload,
     AskedJson,
     AskedQuestion,
+    BadgeTemplate,
     Badge,
-    BadgeGiven,
     Block,
     BlockAccess,
     BlockAssociation,
