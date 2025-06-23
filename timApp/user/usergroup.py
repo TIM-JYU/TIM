@@ -303,9 +303,7 @@ class UserGroup(db.Model, TimeStampMixin, SCIMEntity):
         return UserGroup.get_or_create_group(haka_group_name)
 
     @staticmethod
-    @cache.memoize(timeout=86400)
     def get_organizations() -> list[UserGroup]:
-        """This database fetch is cached, since new UserGroups for organisations are rarely created."""
         return list(
             run_sql(
                 select(UserGroup).filter(
