@@ -10637,19 +10637,19 @@ Separate multiple addresses with commas or write each address on a new line.</ta
         </context-group>
       </trans-unit>
       <trans-unit id="5382311376767899711" datatype="html">
-        <source> Page URL <x id="START_TAG_SPAN" ctype="x-span" equiv-text="&lt;span class=&quot;label label-info&quot;&gt;"/>(optional)<x id="CLOSE_TAG_SPAN" ctype="x-span" equiv-text="&lt;/span&gt;"/></source>
-        <target state="new"> Page URL <x id="START_TAG_SPAN" ctype="x-span" equiv-text="&lt;span class=&quot;label label-info&quot;&gt;"/>(optional)<x id="CLOSE_TAG_SPAN" ctype="x-span" equiv-text="&lt;/span&gt;"/></target>
+        <source> Page URL <x id="START_TAG_SPAN" ctype="x-span" equiv-text="&lt;span&gt;"/>(optional)<x id="CLOSE_TAG_SPAN" ctype="x-span" equiv-text="&lt;/span&gt;"/></source>
+        <target state="new"> Page URL <x id="START_TAG_SPAN" ctype="x-span" equiv-text="&lt;span&gt;"/>(optional)<x id="CLOSE_TAG_SPAN" ctype="x-span" equiv-text="&lt;/span&gt;"/></target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/ui/report-content-dialog.component.ts</context>
-          <context context-type="linenumber">29,31</context>
+          <context context-type="linenumber">49,51</context>
         </context-group>
       </trans-unit>
       <trans-unit id="5369335165199679048" datatype="html">
-        <source> Your Email <x id="START_TAG_SPAN" ctype="x-span" equiv-text="&lt;span class=&quot;label label-info&quot;&gt;"/>(optional)<x id="CLOSE_TAG_SPAN" ctype="x-span" equiv-text="&lt;/span&gt;"/></source>
-        <target state="new"> Your Email <x id="START_TAG_SPAN" ctype="x-span" equiv-text="&lt;span class=&quot;label label-info&quot;&gt;"/>(optional)<x id="CLOSE_TAG_SPAN" ctype="x-span" equiv-text="&lt;/span&gt;"/></target>
+        <source> Your Email <x id="START_TAG_SPAN" ctype="x-span" equiv-text="&lt;span&gt;"/>(optional)<x id="CLOSE_TAG_SPAN" ctype="x-span" equiv-text="&lt;/span&gt;"/></source>
+        <target state="new"> Your Email <x id="START_TAG_SPAN" ctype="x-span" equiv-text="&lt;span&gt;"/>(optional)<x id="CLOSE_TAG_SPAN" ctype="x-span" equiv-text="&lt;/span&gt;"/></target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/ui/report-content-dialog.component.ts</context>
-          <context context-type="linenumber">42,44</context>
+          <context context-type="linenumber">76,78</context>
         </context-group>
       </trans-unit>
       <trans-unit id="452949630448939191" datatype="html">
@@ -10658,14 +10658,6 @@ Separate multiple addresses with commas or write each address on a new line.</ta
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/ui/report-content-dialog.component.ts</context>
           <context context-type="linenumber">57</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="1417693714872528491" datatype="html">
-        <source>This field is required.</source>
-        <target state="new">This field is required.</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/ui/report-content-dialog.component.ts</context>
-          <context context-type="linenumber">67</context>
         </context-group>
       </trans-unit>
       <trans-unit id="568459468942408959" datatype="html">
@@ -10722,6 +10714,86 @@ Separate multiple addresses with commas or write each address on a new line.</ta
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/footer.component.ts</context>
           <context context-type="linenumber">62,63</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="2330390142673252276" datatype="html">
+        <source>Get current url</source>
+        <target state="new">Get current url</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/ui/report-content-dialog.component.ts</context>
+          <context context-type="linenumber">62,63</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="2913965832166752123" datatype="html">
+        <source>Please check the url address. You can only report addresses from TIM.</source>
+        <target state="new">Please check the url address. You can only report addresses from TIM.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/ui/report-content-dialog.component.ts</context>
+          <context context-type="linenumber">66,67</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="1872608021372632073" datatype="html">
+        <source>Fill with user email</source>
+        <target state="new">Fill with user email</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/ui/report-content-dialog.component.ts</context>
+          <context context-type="linenumber">92,93</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="2446227100022235850" datatype="html">
+        <source>Please enter a valid email address.</source>
+        <target state="new">Please enter a valid email address.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/ui/report-content-dialog.component.ts</context>
+          <context context-type="linenumber">96,97</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="6287738615734758922" datatype="html">
+        <source>The email address cannot exceed 256 characters.</source>
+        <target state="new">The email address cannot exceed 256 characters.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/ui/report-content-dialog.component.ts</context>
+          <context context-type="linenumber">97,98</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="5962072938234411707" datatype="html">
+        <source><x id="START_TAG_SPAN" ctype="x-span" equiv-text="&quot;glyphicon glyphicon-exclamation-sign&quot;&gt;"/><x id="CLOSE_TAG_SPAN" ctype="x-span" equiv-text="This field"/> This field is required.</source>
+        <target state="new"><x id="START_TAG_SPAN" ctype="x-span" equiv-text="&quot;glyphicon glyphicon-exclamation-sign&quot;&gt;"/><x id="CLOSE_TAG_SPAN" ctype="x-span" equiv-text="This field"/> This field is required.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/ui/report-content-dialog.component.ts</context>
+          <context context-type="linenumber">115,116</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="7523042633016688692" datatype="html">
+        <source>The description cannot exceed 2000 characters.</source>
+        <target state="new">The description cannot exceed 2000 characters.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/ui/report-content-dialog.component.ts</context>
+          <context context-type="linenumber">116</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="4120435970812709184" datatype="html">
+        <source><x id="START_TAG_STRONG" ctype="x-strong" equiv-text="Than"/>Thank you for your report.<x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong&gt;"/></source>
+        <target state="new"><x id="START_TAG_STRONG" ctype="x-strong" equiv-text="Than"/>Thank you for your report.<x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong&gt;"/></target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/ui/report-content-dialog.component.ts</context>
+          <context context-type="linenumber">130,131</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="3765149214612773760" datatype="html">
+        <source>Your message has been sent to the TIM administrators. We appreciate your help in keeping our content accurate and safe.</source>
+        <target state="new">Your message has been sent to the TIM administrators. We appreciate your help in keeping our content accurate and safe.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/ui/report-content-dialog.component.ts</context>
+          <context context-type="linenumber">131,132</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="397098723873502323" datatype="html">
+        <source>Done</source>
+        <target state="new">Done</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/ui/report-content-dialog.component.ts</context>
+          <context context-type="linenumber">133,134</context>
         </context-group>
       </trans-unit>
     </body>
