@@ -23,7 +23,7 @@ export class GroupService {
      */
     async getUsersFromGroup(group: string): Promise<IUser[]> {
         const response = await toPromise(
-            this.http.get<[IUser]>(`/groups/usergroups_members/${group}`)
+            this.http.get<IUser[]>(`/groups/usergroups_members/${group}`)
         );
         if (response.ok) {
             return response.result;
@@ -42,23 +42,23 @@ export class GroupService {
     }
 
     /**
-     * Hakee kaikki "aliryhmät", johon käyttäjä kuuluu.
-     * @param group ryhmä, jonka avulla aliryhmät haetaan
-     * @param userid käyttäjän id
+     * Retrieves all groups with the specified group name prefix, that the user belongs to.
+     * @param group group name prefix
+     * @param userId user's id
      */
-    async getUserSubGroups(group: string, userid: number) {
-        const result = await toPromise(
-            this.http.get<[]>(`/groups/users_subgroups/${userid}/${group}`)
+    async getUserSubGroups(group: string, userId: number) {
+        const resp = await toPromise(
+            this.http.get<IBadgeGroup[]>(`/groups/prefix_groups`, {
+                params: {
+                    user_id: userId,
+                    group: group,
+                },
+            })
         );
-        const userSubGroups: IBadgeGroup[] = [];
-        if (result.ok) {
-            if (result.result != undefined) {
-                for (const alkio of result.result) {
-                    userSubGroups.push(alkio);
-                }
-            }
+        if (resp.ok) {
+            return resp.result;
         }
-        return userSubGroups;
+        return [];
     }
 
     /**
@@ -105,10 +105,9 @@ export class GroupService {
      */
     async updateGroupName(group_name: string, new_name: string) {
         const response = toPromise(
-            this.http.post<{ok: boolean}>(
-                `/groups/pretty_name/${group_name}/${new_name}`,
-                {}
-            )
+            this.http.post<{ok: boolean}>(`/groups/pretty_name/${group_name}`, {
+                new_name: new_name,
+            })
         );
         return await response;
     }

@@ -946,8 +946,8 @@ class DocSettings:
     def get_edit_buttons(self, default=None) -> list[dict[str, str]] | None:
         return self.get_setting_or_default("edit_buttons", [])
 
-    def pretty_name_edit_for_member(self) -> bool:
-        return self.get_setting_or_default("prettyNameEditForMember", False)
+    def allow_name_edit_by_group_members(self) -> bool:
+        return self.get_setting_or_default("allowNameEditByGroupMembers", False)
 
 
 def resolve_settings_for_pars(pars: Iterable[DocParagraph]) -> YamlBlock:
