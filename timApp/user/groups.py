@@ -13,6 +13,7 @@ from timApp.auth.accesshelper import (
     AccessDenied,
     verify_logged_in,
     verify_teacher_access,
+    verify_view_access,
 )
 from timApp.auth.accesstype import AccessType
 from timApp.auth.auth_models import BlockAccess
@@ -22,7 +23,6 @@ from timApp.auth.sessioninfo import (
 )
 from timApp.document.create_item import apply_template, create_document
 from timApp.document.docinfo import DocInfo
-from timApp.gamification.badge.routes import check_group_member, verify_access
 from timApp.item.validation import ItemValidationRule
 from timApp.notification.send_email import multi_send_email
 from timApp.timdb.sqa import db, run_sql
@@ -513,7 +513,9 @@ def get_subgroups(group_name_prefix: str) -> Response:
     :return: List of user groups sorted by name
     """
     context_usergroup = UserGroup.get_by_name(group_name_prefix)
-    verify_access("teacher", context_usergroup, user_group_name=group_name_prefix)
+    if not context_usergroup:
+        raise NotExist(f"{context_usergroup} not found.")
+    verify_teacher_access(context_usergroup.admin_doc)
 
     subgroups = (
         run_sql(
@@ -533,7 +535,7 @@ def get_subgroups(group_name_prefix: str) -> Response:
     return json_response(subgroups_json)
 
 
-@groups.get("/users_subgroups/<user_id>/<group_name_prefix>")
+@groups.get("/prefix_groups")
 def get_users_subgroups(user_id: int, group_name_prefix: str) -> Response:
     """
     Fetches user groups that user with given user_id belongs. Fetched user groups also
@@ -549,16 +551,14 @@ def get_users_subgroups(user_id: int, group_name_prefix: str) -> Response:
     current_user = get_current_user_object()
     if current_user.id != user.id:
         context_usergroup = UserGroup.get_by_name(group_name_prefix)
-        verify_access("teacher", context_usergroup, user_group_name=group_name_prefix)
+        verify_teacher_access(context_usergroup.admin_doc)
 
-    users_groups = user.groups
+    ugs = user.groups
     users_subgroups_json = []
-    for users_group in users_groups:
-        if (
-            users_group.name[: len(group_name_prefix)] == group_name_prefix
-            and users_group.name != group_name_prefix
-        ):
-            users_subgroups_json.append(users_group.to_json())
+    for ug in ugs:
+        if ug.name.startswith(group_name_prefix):
+            group = dict(id=ug.id, name=ug.name, description=ug.human_name)
+            users_subgroups_json.append(group)
     return json_response(users_subgroups_json)
 
 
@@ -576,71 +576,30 @@ def get_personal_group(name: str) -> Response:
         return json_response(user.get_personal_group())
 
 
-@groups.get("/usergroups_members/<usergroup_name>")
-def usergroups_members(usergroup_name: str) -> Response:
+@groups.get("/members")
+def get_usergroup_members(group_name: str) -> Response:
     """
     Fetches user group's members.
-    :param usergroup_name: User group's name
-    :return: List of users
+    :param group_name: User group's name
+    :return: Alphabetically sorted list of users
     """
-    context_usergroup = UserGroup.get_by_name(usergroup_name)
-    if not context_usergroup:
-        raise NotExist(f'User group "{usergroup_name}" not found')
-
+    ug = UserGroup.get_by_name(group_name)
+    raise_group_not_found_if_none(group_name, ug)
     current_user = get_current_user_object()
-    in_group = check_group_member(current_user, context_usergroup.id)
-    if not in_group:
-        verify_access("view", context_usergroup, user_group_name=usergroup_name)
 
-    return json_response(
-        sorted(list(context_usergroup.users), key=attrgetter("real_name"))
-    )
+    if ug not in current_user.groups:
+        verify_view_access(ug.admin_doc)
 
-
-def pretty_name_access_checks(group_name):
-    """
-    Does the access checks of pretty name related routes.
-    :param group_name: Name of the group
-    :return:
-    """
-    group = UserGroup.get_by_name(group_name)
-    raise_group_not_found_if_none(group_name, group)
-    block = group.admin_doc
-    doc_entries = block.docentries
-    settings = doc_entries[0].document.get_settings()
-
-    current_user = get_current_user_object()
-    in_group = check_group_member(current_user, group.id)
-    if in_group:
-        if not settings.pretty_name_edit_for_member():
-            verify_teacher_access(
-                block,
-                message=f'Sorry, you don\'t have permission to use this resource. If you are a teacher of "{group_name}", please contact TIM admin.',
-            )
-    else:
-        verify_teacher_access(
-            block,
-            message=f'Sorry, you don\'t have permission to use this resource. If you are a teacher of "{group_name}", please contact TIM admin.',
-        )
-
-    return group, block
+    return json_response(sorted(list(ug.users), key=attrgetter("real_name")))
 
 
 @groups.get("/pretty_name/<group_name>")
 def pretty_name(group_name: str) -> Response:
-    """
-    Fetches group data including group's admin_doc's description (pretty_name).
-    :param group_name: Name of the group
-    :return: Group data in json format
-    """
-    (group, block) = pretty_name_access_checks(group_name)
+    group = UserGroup.get_by_name(group_name)
     return json_response(group.human_name)
-    # return json_response(
-    #     {"id": group.id, "name": group.name, "description": block.description}
-    # )
 
 
-@groups.post("/pretty_name/<group_name>/<new_name>")
+@groups.post("/pretty_name/<group_name>")
 def change_pretty_name(group_name: str, new_name: str) -> Response:
     """
     Changes group's admin_doc's description (pretty name)
@@ -648,11 +607,25 @@ def change_pretty_name(group_name: str, new_name: str) -> Response:
     :param new_name: New group's admin_doc's description (pretty name)
     :return: Group data in json format
     """
-    (group, block) = pretty_name_access_checks(group_name)
+    group = UserGroup.get_by_name(group_name)
+    raise_group_not_found_if_none(group_name, group)
+
+    doc_entries = group.admin_doc.docentries
+    settings = doc_entries[0].document.get_settings()
+
+    current_user = get_current_user_object()
+    if (
+        not (group in current_user.groups)
+        and not settings.allow_name_edit_by_group_members()
+    ):
+        verify_teacher_access(
+            group.admin_doc,
+            message=f'Sorry, you don\'t have permission to use this resource. If you are a teacher of "{group_name}", please contact TIM admin.',
+        )
 
     group.admin_doc.description = new_name
     db.session.commit()
 
     return json_response(
-        {"id": group.id, "name": group.name, "description": block.description}
+        {"id": group.id, "name": group.name, "description": group.admin_doc.description}
     )

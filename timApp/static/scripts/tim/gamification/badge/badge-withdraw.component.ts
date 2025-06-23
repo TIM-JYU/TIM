@@ -457,31 +457,21 @@ export class BadgeWithdrawComponent implements OnInit {
      * If http get request returns error, showError method is called via badgeService.
      */
     private async fetchUsers() {
-        const result = await toPromise(
-            this.http.get<[IUser]>(
+        const response = await toPromise(
+            this.http.get<IUser[]>(
                 `/groups/usergroups_members/${this.badgegroupContext!}`
             )
         );
-        const users: IUser[] = [];
-        if (result.ok) {
-            if (result.result != undefined) {
-                for (const alkio of result.result) {
-                    users.push(alkio);
-                }
-            }
-        }
-        // FIXME: this connection check is pointless
-        const error = await this.badgeService.checkConnectionError(this.alerts);
-        if (error) {
-            return;
-        }
-        if (!result.ok) {
+        let users: IUser[];
+        if (response.ok) {
+            users = response.result;
+        } else {
             this.hasPermissionToHandleBadges = false;
             this.badgeService.showError(
                 this.alerts,
                 {
                     data: {
-                        error: result.result.error.error,
+                        error: response.result.error.error,
                     },
                 },
                 "danger"

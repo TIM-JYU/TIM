@@ -4,18 +4,17 @@ from dataclasses import dataclass
 from operator import attrgetter
 from pathlib import Path
 from flask import Response, current_app
-from sqlalchemy import select, or_, func, desc
+from sqlalchemy import select, func, desc
 from timApp.auth.accesshelper import (
     verify_teacher_access,
     verify_view_access,
 )
 from timApp.auth.sessioninfo import get_current_user_object
-from timApp.gamification.badge.badges import Badge, BadgeGiven
+from timApp.gamification.badge.badges import BadgeTemplate, Badge
 from timApp.timdb.sqa import db, run_sql
 from timApp.timdb.types import datetime_tz
 from timApp.user.user import User
 from timApp.user.usergroup import UserGroup
-from timApp.user.usergroupmember import UserGroupMember
 from timApp.util.flask.requesthelper import NotExist
 from timApp.util.flask.responsehelper import (
     json_response,
@@ -38,12 +37,8 @@ class BadgeModel:
     active: bool
     created_by: int
     created: datetime_tz
-    modified_by: int | None
     modified: datetime_tz | None
-    deleted_by: int | None
     deleted: datetime_tz | None
-    restored_by: int | None
-    restored: datetime_tz | None
 
 
 def log_badge_event(log_info: dict) -> None:
@@ -58,100 +53,24 @@ def log_badge_event(log_info: dict) -> None:
         f.write(to_json_str(log_info) + "\n")
 
 
-def check_group_member(current_user: User, usergroup: int) -> bool:
-    """
-    Checks whether logged in user is a member of user group.
-    :param current_user: Logged in user
-    :param usergroup: User group to check
-    :return: True if user is member of user group, false otherwise
-    """
-    context_usergroup = (
-        run_sql(select(UserGroup).filter(UserGroup.id == usergroup)).scalars().first()
-    )
-    allowed_member = None
-    if context_usergroup:
-        allowed_member = (
-            run_sql(
-                select(UserGroupMember).filter(
-                    UserGroupMember.user_id == current_user.id,
-                    UserGroupMember.usergroup_id == context_usergroup.id,
-                    or_(
-                        UserGroupMember.membership_end > datetime_tz.now(),
-                        UserGroupMember.membership_end == None,
-                    ),
-                )
-            )
-            .scalars()
-            .first()
-        )
-    if allowed_member:
-        return True
-    else:
-        return False
-
-
-def verify_access(
-    access_type: str,
-    user_group: UserGroup | None,
-    user_group_name: str | None = None,
-    user_group_id: int | None = None,
-) -> None:
-    """
-    Checks whether logged in user has particular access to a given user group.
-    :param access_type: Access type. Either 'teacher' or 'view'.
-    :param user_group: User group to check.
-    :param user_group_name: Name of user group.
-    :param user_group_id: ID of user group.
-    :return:
-    """
-    if not user_group:
-        if user_group_name:
-            raise NotExist(f'User group "{user_group_name}" not found')
-        elif user_group_id:
-            raise NotExist(f'User group with id "{user_group_id}" not found')
-        else:
-            raise NotExist(f"User group not found")
-
-    block = user_group.admin_doc
-    if not block:
-        raise NotExist(f'Admin doc for user group "{user_group.name}" not found')
-
-    if access_type == "teacher":
-        verify_teacher_access(
-            block,
-            message=f'Sorry, you don\'t have permission to use this resource. If you are a teacher of "{user_group.name}", please contact TIM admin.',
-        )
-    elif access_type == "view":
-        verify_view_access(
-            block,
-            message=f"Sorry, you don't have permission to use this resource.",
-        )
-
-
-@badges_blueprint.get("/check_connection")
-def check_connection() -> Response:
-    """
-    Checks connection to backend.
-    :return: True in json response if connection is working
-    """
-    return json_response(True)
-
-
 @badges_blueprint.get("/all_badges/<context_group>")
 def all_badges(context_group: str) -> Response:
     """
-    Fetches all badges in specific context_group. Sorted by created-timestamp.
+    Fetches all badge templates for a specific context_group. Sorted by created-timestamp.
     :param context_group: Context group to get badges from
     :return: Badges in json response format
     """
     context_usergroup = UserGroup.get_by_name(context_group)
-    verify_access("teacher", context_usergroup, user_group_name=context_group)
+    verify_teacher_access(context_usergroup.admin_doc)
 
     badges = (
         run_sql(
-            select(Badge)
-            .filter(Badge.active, (Badge.context_group == context_usergroup.id))
-            .order_by(Badge.created),
+            select(BadgeTemplate)
+            .filter(
+                BadgeTemplate.active,
+                (BadgeTemplate.context_group == context_usergroup.id),
+            )
+            .order_by(BadgeTemplate.created),
         )
         .scalars()
         .all()
@@ -182,9 +101,9 @@ def create_badge(
     :return: Created badge in json format
     """
     context_usergroup = UserGroup.get_by_name(context_group)
-    verify_access("teacher", context_usergroup, user_group_name=context_group)
+    verify_teacher_access(context_usergroup.admin_doc)
 
-    badge = Badge(
+    badge = BadgeTemplate(
         active=True,
         context_group=context_usergroup.id,
         title=title,
@@ -237,7 +156,9 @@ def modify_badge(
     :return: Modified badge in json format
     """
     context_usergroup = UserGroup.get_by_id(context_group)
-    verify_access("teacher", context_usergroup, user_group_id=context_group)
+    if not context_usergroup:
+        raise NotExist(f"{context_group} does not exist")
+    verify_teacher_access(context_usergroup.admin_doc)
 
     new_badge = {
         "context_group": context_group,
@@ -249,10 +170,10 @@ def modify_badge(
         "modified_by": get_current_user_object().id,
         "modified": datetime_tz.now(),
     }
-    old_badge = run_sql(select(Badge).filter_by(id=badge_id)).scalars().first()
+    old_badge = run_sql(select(BadgeTemplate).filter_by(id=badge_id)).scalars().first()
     if old_badge is None:
         raise NotExist(f'Badge with id "{badge_id}" not found')
-    Badge.query.filter_by(id=badge_id).update(new_badge)
+    BadgeTemplate.query.filter_by(id=badge_id).update(new_badge)
     db.session.commit()
     if current_app.config["BADGE_LOG_FILE"]:
         log_badge_event(
@@ -281,17 +202,19 @@ def deactivate_badge(badge_id: int, context_group: str) -> Response:
     :return: Info of deleted badge in json format
     """
     context_usergroup = UserGroup.get_by_name(context_group)
-    verify_access("teacher", context_usergroup, user_group_name=context_group)
+    if not context_usergroup:
+        raise NotExist(f"{context_group} does not exist")
+    verify_teacher_access(context_usergroup.admin_doc)
 
     new_badge = {
         "active": False,
         "deleted_by": get_current_user_object().id,
         "deleted": datetime_tz.now(),
     }
-    old_badge = run_sql(select(Badge).filter_by(id=badge_id)).scalars().first()
+    old_badge = run_sql(select(BadgeTemplate).filter_by(id=badge_id)).scalars().first()
     if old_badge is None:
         raise NotExist(f'Badge with id "{badge_id}" not found')
-    Badge.query.filter_by(id=badge_id).update(new_badge)
+    BadgeTemplate.query.filter_by(id=badge_id).update(new_badge)
     db.session.commit()
     if current_app.config["BADGE_LOG_FILE"]:
         log_badge_event(
@@ -305,7 +228,7 @@ def deactivate_badge(badge_id: int, context_group: str) -> Response:
     return json_response(new_badge, 200)
 
 
-@badges_blueprint.get("/groups_badges/<group_id>/<context_group>")
+@badges_blueprint.get("/group_badges")
 def get_groups_badges(group_id: int, context_group: str) -> Response:
     """
     Fetches badges that are given to a user group. Sorted by given-timestamp.
@@ -323,18 +246,16 @@ def get_groups_badges(group_id: int, context_group: str) -> Response:
         raise NotExist(f'User group "{context_group}" not found')
 
     current_user = get_current_user_object()
-    in_group = check_group_member(current_user, group_id)
-    if not in_group:
-        try:
-            verify_access("view", usergroup, user_group_id=group_id)
-        except NotExist:
-            verify_access("teacher", context_usergroup, user_group_name=context_group)
+
+    if not usergroup in current_user.groups:
+        if not verify_view_access(usergroup.admin_doc, require=False):
+            verify_teacher_access(context_usergroup.admin_doc)
 
     groups_badges_given = (
         run_sql(
-            select(BadgeGiven)
-            .filter(BadgeGiven.active, BadgeGiven.group_id == group_id)
-            .order_by(BadgeGiven.given)
+            select(Badge)
+            .filter(Badge.active, Badge.group_id == group_id)
+            .order_by(Badge.given)
         )
         .scalars()
         .all()
@@ -347,10 +268,11 @@ def get_groups_badges(group_id: int, context_group: str) -> Response:
 
     badges = (
         run_sql(
-            select(Badge)
+            select(BadgeTemplate)
             .filter_by(active=True)
             .filter(
-                Badge.context_group == context_usergroup.id, Badge.id.in_(badge_ids)
+                BadgeTemplate.context_group == context_usergroup.id,
+                BadgeTemplate.id.in_(badge_ids),
             )
         )
         .scalars()
@@ -373,21 +295,13 @@ def get_groups_badges(group_id: int, context_group: str) -> Response:
                     "message": badge_given.message,
                     "given_by": badge_given.given_by,
                     "given": badge_given.given,
-                    "withdrawn_by": badge_given.withdrawn_by,
                     "withdrawn": badge_given.withdrawn,
-                    "undo_withdrawn_by": badge_given.undo_withdrawn_by,
-                    "undo_withdrawn": badge_given.undo_withdrawn,
                 }
             )
 
             user_fields = [
                 "created_by",
-                "modified_by",
-                "deleted_by",
-                "restored_by",
                 "given_by",
-                "withdrawn_by",
-                "undo_withdrawn_by",
             ]
             for field in user_fields:
                 uid = badge_json.get(field)
@@ -406,18 +320,16 @@ def get_badge_holders(badge_id: int) -> Response:
     :param badge_id: Badge ID
     :return: List of users and list of user groups in json format
     """
-    badge = Badge.get_by_id(badge_id)
+    badge = BadgeTemplate.get_by_id(badge_id)
     if not badge:
         raise NotExist(f'Badge with id "{badge_id}" not found')
     context_usergroup = UserGroup.get_by_id(badge.context_group)
-    verify_access("teacher", context_usergroup, user_group_id=badge.context_group)
+    if not context_usergroup:
+        raise NotExist(f"{context_usergroup} not found")
+    verify_teacher_access(context_usergroup.admin_doc)
 
     badges_given = (
-        run_sql(
-            select(BadgeGiven).filter(
-                BadgeGiven.badge_id == badge_id, BadgeGiven.active
-            )
-        )
+        run_sql(select(Badge).filter(Badge.badge_id == badge_id, Badge.active))
         .scalars()
         .all()
     )
@@ -461,16 +373,18 @@ def give_badge(
     :param message: Message to give to the userg roup when the badge is given
     :return: Given badge in json format
     """
-    badge = Badge.get_by_id(badge_id)
+    badge = BadgeTemplate.get_by_id(badge_id)
     if not badge:
         raise NotExist(f'Badge with id "{badge_id}" not found')
     usergroup = UserGroup.get_by_id(group_id)
     if not usergroup:
         raise NotExist(f'User group with id "{group_id}" not found')
     context_usergroup = UserGroup.get_by_name(context_group)
-    verify_access("teacher", context_usergroup, user_group_name=context_group)
+    if not context_usergroup:
+        raise NotExist(f"{context_group} not found")
+    verify_teacher_access(context_usergroup.admin_doc)
 
-    badge_given = BadgeGiven(
+    badge_given = Badge(
         active=True,
         group_id=group_id,
         badge_id=badge_id,
@@ -503,18 +417,19 @@ def withdraw_badge(badge_given_id: int, context_group: str) -> Response:
     :param badge_given_id: ID of the badgegiven
     :return: info of withdrawn badge in json format
     """
-    badge_given_old = BadgeGiven.get_by_id(badge_given_id)
+    badge_given_old = Badge.get_by_id(badge_given_id)
     if not badge_given_old:
         raise NotExist(f'Given badge with id "{badge_given_id}" not found')
     context_usergroup = UserGroup.get_by_name(context_group)
-    verify_access("teacher", context_usergroup, user_group_name=context_group)
+    if not context_usergroup:
+        raise NotExist(f"{context_group} not found")
+    verify_teacher_access(context_usergroup.admin_doc)
 
     badge_given_new = {
         "active": False,
-        "withdrawn_by": get_current_user_object().id,
         "withdrawn": datetime_tz.now(),
     }
-    BadgeGiven.query.filter_by(id=badge_given_id).update(badge_given_new)
+    Badge.query.filter_by(id=badge_given_id).update(badge_given_new)
     db.session.commit()
     if current_app.config["BADGE_LOG_FILE"]:
         log_badge_event(
@@ -522,7 +437,6 @@ def withdraw_badge(badge_given_id: int, context_group: str) -> Response:
                 "event": "withdraw_badge",
                 "timestamp": badge_given_new["withdrawn"],
                 "id": badge_given_id,
-                "executor": badge_given_new["withdrawn_by"],
                 "active": badge_given_new["active"],
             }
         )
@@ -541,20 +455,20 @@ def podium(group_name_prefix: str) -> Response:
         raise NotExist(f'User group "{group_name_prefix}" not found')
 
     current_user = get_current_user_object()
-    in_group = check_group_member(current_user, context_usergroup.id)
-    if not in_group:
-        verify_access("teacher", context_usergroup, user_group_name=group_name_prefix)
+
+    if not context_usergroup in current_user.groups:
+        verify_teacher_access(context_usergroup.admin_doc)
 
     results = run_sql(
-        select(UserGroup.name, func.count(BadgeGiven.id).label("badge_count"))
+        select(UserGroup.name, func.count(Badge.id).label("badge_count"))
         .filter(
             UserGroup.name.like(group_name_prefix + "%"),
             UserGroup.name != group_name_prefix,
         )
-        .outerjoin(BadgeGiven, BadgeGiven.group_id == UserGroup.id)
-        .where(BadgeGiven.active.is_(True))
-        .outerjoin(Badge, Badge.id == BadgeGiven.badge_id)
+        .outerjoin(Badge, Badge.group_id == UserGroup.id)
         .where(Badge.active.is_(True))
+        .outerjoin(BadgeTemplate, BadgeTemplate.id == Badge.badge_id)
+        .where(BadgeTemplate.active.is_(True))
         .group_by(UserGroup.id, UserGroup.name)
         .order_by(desc("badge_count"))
         .limit(5)

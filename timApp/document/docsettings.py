@@ -735,8 +735,8 @@ class DocSettings:
     def custom_index(self) -> list[tuple[Any, Any]]:
         return self.get_setting_or_default("customIndex", [])
 
-    def pretty_name_edit_for_member(self) -> bool:
-        return self.get_setting_or_default("prettyNameEditForMember", False)
+    def allow_name_edit_by_group_members(self) -> bool:
+        return self.get_setting_or_default("allowNameEditByGroupMembers", False)
 
 
 def resolve_settings_for_pars(pars: Iterable[DocParagraph]) -> YamlBlock:
