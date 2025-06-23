@@ -44,7 +44,7 @@ export interface IContentReportResponse {
                     <fieldset [disabled]="showOk" [ngClass]="{'text-muted': showOk}">
                         <div class="form-group">
                             <div class="row">
-                                <div class="col-lg-6">
+                                <div class="col-lg-12">
                                     <label i18n for="idUrl">
                                         Page URL
                                         <span>(optional)</span>
@@ -71,7 +71,7 @@ export interface IContentReportResponse {
                         </div>
                         <div class="form-group">
                             <div class="row">
-                                <div class="col-lg-6">
+                                <div class="col-lg-12">
                                     <label i18n for="idEmail">
                                         Your Email
                                         <span>(optional)</span>
@@ -195,13 +195,10 @@ export class ReportContentDialogComponent extends AngularDialogComponent<
             return;
         } else {
             if (r.result.status == "error") {
-                switch (r.result.description) {
-                    case "invalid_email":
-                        this.email_error = true;
-                        break;
-                    case "invalid_url":
-                        this.urlError = true;
-                        break;
+                if (r.result.description == "invalid_email") {
+                    this.email_error = true;
+                } else if (r.result.description == "invalid_url") {
+                    this.urlError = true;
                 }
             } else {
                 this.showOk = true;
