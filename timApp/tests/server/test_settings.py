@@ -46,7 +46,6 @@ class SettingsTest(TimRouteTest):
                         },
                         "title": "document 2",
                         "unpublished": True,
-                        "visibility": 5,
                     }
                 ],
                 "owned_folders": [
@@ -72,7 +71,6 @@ class SettingsTest(TimRouteTest):
                         },
                         "title": "Test user 1",
                         "unpublished": True,
-                        "visibility": 5,
                     }
                 ],
                 "owned_lectures": [],
