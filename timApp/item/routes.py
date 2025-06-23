@@ -1460,11 +1460,9 @@ def get_item_access_badges(folder_id: int) -> Response:
     user = get_current_user_object()
     folder = Folder.get_by_id(folder_id)
     if not folder:
-        return json_response({})
+        raise NotExist("Folder not found")
     items: list[Item] = []
-    viewable_folders = [
-        f for f in folder.get_all_folders() if user.has_view_access(i=f)
-    ]
+    viewable_folders = [f for f in folder.get_all_folders() if user.has_view_access(f)]
     items.extend(viewable_folders)
     items.extend(folder.get_all_documents(filter_user=user))
 

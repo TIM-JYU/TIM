@@ -230,7 +230,7 @@ def get_tags_for_folder_items(folder_id: int) -> Response:
     """
     folder = Folder.get_by_id(folder_id)
     if not folder:
-        return json_response({})
+        raise NotExist("Folder not found")
     verify_view_access(folder)
     item_tags: dict[int, list[TagInfo]] = {}
 
