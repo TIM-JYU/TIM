@@ -91,7 +91,6 @@ class CoursesTest(TimRouteTest):
                     ],
                     "title": d.title,
                     "unpublished": True,
-                    "visibility": 5,
                 }
             ],
         )

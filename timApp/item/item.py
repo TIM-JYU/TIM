@@ -134,24 +134,22 @@ class Item(ItemBase):
         if self.block is None:
             return ItemVisibility.NONE
 
-        block_access_ids = [
+        groups_with_access = set(
             usergroup_id for (usergroup_id, accesstype) in self.block.accesses.keys()
-        ]
+        )
 
         # Special groups:
-        # Anon users == 1 == PUBLIC
-        # Logged-in users == 0 == (LOGGED_IN - 2)
-        if ItemVisibility.PUBLIC.value in block_access_ids:
+        if UserGroup.get_anonymous_group().id in groups_with_access:
             return ItemVisibility.PUBLIC
-        if (ItemVisibility.LOGGED_IN.value - 2) in block_access_ids:
+        if UserGroup.get_logged_in_group().id in groups_with_access:
             return ItemVisibility.LOGGED_IN
 
         # There is currently no good way to avoid calling get_organizations()
         # for each item when viewing folder items. However, we utilize caching
         # for that method, so it shouldn't be a problem.
-        for group in UserGroup.get_organizations():
-            if group.id in block_access_ids:
-                return ItemVisibility.ORGANIZATION
+        org_group_ids = set(ug.id for ug in UserGroup.get_organizations())
+        if org_group_ids.intersection(groups_with_access):
+            return ItemVisibility.ORGANIZATION
 
         # Specific rights that are not special groups
         for ba in self.block.accesses.values():
@@ -232,7 +230,6 @@ class Item(ItemBase):
             "rights": get_user_rights_for_item(self, curr_user),
             "unpublished": self.block.is_unpublished() if self.block else False,
             "public": self.public,
-            "visibility": self.visibility,
             # We only add tags if they've already been loaded.
             **include_if_loaded("tags", self.block),
             **include_if_loaded("relevance", self.block),
