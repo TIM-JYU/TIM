@@ -124,13 +124,6 @@ def get_organizations() -> Response:
     return json_response(UserGroup.get_organizations())
 
 
-@groups.get("/getOrgs/ids")
-def get_current_orgs_usergroup_ids() -> Response:
-    orgs = UserGroup.get_organizations()
-    ids = [org.id for org in orgs]
-    return json_response(ids)
-
-
 @groups.get("/show/<group_name>")
 def show_members(group_name: str) -> Response:
     ug = get_group_or_abort(group_name)
