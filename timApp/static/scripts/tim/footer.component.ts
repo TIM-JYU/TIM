@@ -89,7 +89,6 @@ export class FooterComponent {
 
     async reportContent() {
         const windowUrl = window.location.href;
-        // TODO: Sanitation. Remove any tokens etc. to protect user
         const response = await to2(
             showReportContentDialog({currentUrl: windowUrl})
         );

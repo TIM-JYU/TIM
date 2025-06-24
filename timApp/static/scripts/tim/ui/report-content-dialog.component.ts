@@ -6,7 +6,6 @@ import {FormsModule} from "@angular/forms";
 import {AngularDialogComponent} from "tim/ui/angulardialog/angular-dialog-component.directive";
 import {HttpClient, HttpClientModule} from "@angular/common/http";
 import {toPromise} from "tim/util/utils";
-import {showMessageDialog} from "tim/ui/showMessageDialog";
 import {TooltipModule} from "ngx-bootstrap/tooltip";
 import {Users} from "tim/user/userService";
 
@@ -30,11 +29,11 @@ export interface IContentReportResponse {
     template: `
         <tim-dialog-frame>
             <ng-container i18n header>
-                Report content
+                Report inappropriate content
             </ng-container>
             <ng-container body>
                 <div class="page-header">
-                    <h1 i18n>Report Content</h1>
+                    <h1 i18n>Report inappropriate Content</h1>
                 </div>
                 <div i18n class="help-block">
                     <p>You can use this form to report any harmful or inappropriate content you have encountered while using TIM.</p>
@@ -46,7 +45,7 @@ export interface IContentReportResponse {
                             <div class="row">
                                 <div class="col-lg-12">
                                     <label i18n for="idUrl">
-                                        Page URL
+                                        Page address
                                         <span>(optional)</span>
                                     </label>
                                     <div class="input-group">
@@ -59,11 +58,11 @@ export interface IContentReportResponse {
                                                 (ngModelChange)="clearUrlError()"
                                                 i18n>
                                         <span class="input-group-btn">
-                                            <button class="btn btn-primary" (click)="getUrl()" i18n>Get current url</button>
+                                            <button class="btn btn-primary" (click)="getUrl()" i18n>Fill current address</button>
                                         </span>
                                     </div>
                                     <div *ngIf="urlError" class="alert alert-danger">
-                                        <small *ngIf="urlError" i18n>Please check the url address. You can only report addresses from TIM.</small>
+                                        <small *ngIf="urlError" i18n>Please check the page address. You can only report addresses from TIM.</small>
                                     </div>
                                     <small class="help-block" i18n>This is the page where you encountered the issue. You can change it if you're reporting a different page.</small>
                                 </div>
@@ -89,7 +88,7 @@ export interface IContentReportResponse {
                                                 (ngModelChange)="clearEmailError()"
                                                 i18n>
                                         <span class="input-group-btn">
-                                            <button class="btn btn-primary" (click)="getUserMail()" [disabled]="!isLoggedIn()" i18n>Fill with user email</button>
+                                            <button class="btn btn-primary" (click)="getUserMail()" [disabled]="!isLoggedIn()" i18n>Fill user email</button>
                                         </span>
                                         </div>
                                         <div *ngIf="emailfield.invalid && (emailfield.dirty || emailfield.touched) || email_error" class="alert alert-danger">
@@ -121,6 +120,14 @@ export interface IContentReportResponse {
                 </form>           
             </ng-container>
             <ng-container footer>
+                <div *ngIf="showError">
+                    <div class="alert alert-danger alert-dismissible">
+                        <button type="button" class="close" (click)="dismissAlert()"><span>&times;</span></button>
+                        <p class="text-left" i18n><strong><span class="glyphicon glyphicon-exclamation-sign"></span> There was an error.</strong></p>
+                        <p class="text-left">{{errorMsg}}</p>
+                        <p class="text-left" i18n>Your report was not sent.</p>
+                    </div>
+                </div>
                 <div *ngIf="!showOk">
                     <button class="timButton" (click)="sendMail()" [disabled]="reportForm.invalid" i18n>Report Page</button>
                     <button class="btn btn-default" (click)="dismiss()" i18n>Cancel</button>
@@ -147,7 +154,9 @@ export class ReportContentDialogComponent extends AngularDialogComponent<
     reportedUrl = "";
     private currentUser = Users.getCurrent();
     showOk: boolean = false;
+    showError: boolean = false;
     email_error: boolean = false;
+    errorMsg: string = "";
     urlError: boolean = false;
 
     constructor(private http: HttpClient) {
@@ -180,6 +189,11 @@ export class ReportContentDialogComponent extends AngularDialogComponent<
         this.urlError = false;
     }
 
+    dismissAlert() {
+        this.showError = false;
+        this.errorMsg = "";
+    }
+
     async sendMail() {
         const json_payload = {
             reason: this.reason,
@@ -191,8 +205,13 @@ export class ReportContentDialogComponent extends AngularDialogComponent<
             this.http.post<IContentReportResponse>("/report", json_payload)
         );
         if (!r.ok) {
-            await showMessageDialog(r.result.error.error);
-            return;
+            this.showError = true;
+            const status = r.result.status ?? 0;
+            if (status <= 0) {
+                this.errorMsg = $localize`Could not load task data. Check your internet connection and try again.`;
+            } else if (status >= 500) {
+                this.errorMsg = $localize`There is an issue with the server. Try to save your work and reload the page.`;
+            }
         } else {
             if (r.result.status == "error") {
                 if (r.result.description == "invalid_email") {
