@@ -1,6 +1,7 @@
 """Routes for document view."""
 import dataclasses
 import html
+import logging
 import time
 from difflib import context_diff
 from typing import Union, Any, ValuesView, Generator
@@ -1451,6 +1452,25 @@ def get_item(item_id: int):
         raise NotExist("Item not found")
     verify_view_access(i)
     return json_response(i)
+
+
+@view_page.get("/items/getBadges")
+def get_item_access_badges(folder_id: int) -> Response:
+    """Return access level information for items in the current directory"""
+    user = get_current_user_object()
+    folder = Folder.get_by_id(folder_id)
+    if not folder:
+        raise NotExist("Folder not found")
+    items: list[Item] = []
+    viewable_folders = [f for f in folder.get_all_folders() if user.has_view_access(f)]
+    items.extend(viewable_folders)
+    items.extend(folder.get_all_documents(filter_user=user))
+
+    badges = dict()
+    for item in items:
+        badges[int(item.id)] = item.visibility.value
+
+    return json_response(badges)
 
 
 @view_page.post("/items/relevance/set/<int:item_id>")

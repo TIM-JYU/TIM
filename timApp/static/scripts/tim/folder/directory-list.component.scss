@@ -1,3 +1,28 @@
 .icon-inline {
   margin-left: 0.5em;
 }
+
+.accessbadge, .itemtag {
+    border: solid 1px;
+    border-radius: 5px;
+    padding: 2px 5px;
+    font-size: x-small;
+    user-select: none;
+}
+
+.accessbadge {
+    border-color: var(--directory-list-badge-color, transparent);
+    color: var(--directory-list-badge-color);
+}
+
+.itemtags {
+    margin-left: 0.2em;
+    display: inline-flex;
+    flex-wrap: wrap;
+}
+
+.itemtag {
+    border: var(--directory-list-badge-bg-color, transparent);
+    color: #fff;
+    background-color: var(--directory-list-badge-bg-color, transparent);
+}

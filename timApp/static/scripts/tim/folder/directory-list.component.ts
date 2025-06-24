@@ -1,10 +1,31 @@
 import {Component} from "@angular/core";
-import type {DocumentOrFolder, IFolder, IItem} from "tim/item/IItem";
+import type {DocumentOrFolder, IFolder, IItem, ITag} from "tim/item/IItem";
+import {TagType} from "tim/item/IItem";
 import {Users} from "tim/user/userService";
-import {folderglobals} from "tim/util/globals";
+import {folderglobals, genericglobals} from "tim/util/globals";
+import {toPromise} from "tim/util/utils";
+import {HttpClient} from "@angular/common/http";
 
 const MESSAGE_LIST_ARCHIVE_FOLDER_PREFIX = "archives/";
 const TIM_MESSAGES_FOLDER_PREFIX = "messages/tim-messages";
+
+enum AccessLevelBadge {
+    NO_BADGE = 0,
+    PUBLIC = 1,
+    LOGGED_IN = 2,
+    ORGANIZATION = 3, // Haka organizations
+    LIMITED = 4, // custom groups, users, etc.
+    PRIVATE = 5, // only owner(s)
+}
+
+const AccessLevelBadgeInfo: Record<AccessLevelBadge, string> = {
+    [AccessLevelBadge.NO_BADGE]: "",
+    [AccessLevelBadge.PUBLIC]: $localize`Item is visible publicly (ie. to everyone), including anonymous users.`,
+    [AccessLevelBadge.LOGGED_IN]: $localize`Item is visible to logged-in users.`,
+    [AccessLevelBadge.ORGANIZATION]: $localize`Item is visible to groups belonging to a Haka organization.`,
+    [AccessLevelBadge.LIMITED]: $localize`Item is visible only to specific users, check the Manage-page for details.`,
+    [AccessLevelBadge.PRIVATE]: $localize`Item is visible only to its owners.`,
+};
 
 @Component({
     selector: "tim-index",
@@ -14,10 +35,11 @@ const TIM_MESSAGES_FOLDER_PREFIX = "messages/tim-messages";
             <tr>
                 <th></th>
                 <th>Name</th>
-                <th></th>
                 <th>Last modified</th>
+                <th *ngIf="displayAccessBadges" (click)="showAccessBadges = !showAccessBadges">{{showAccessBadges ? "Access" : "A" }}</th>
                 <th>Owners</th>
                 <th>Rights</th>
+                <th *ngIf="displayDocumentTags" (click)="showTags = !showTags">{{ showTags ? "Tags" : "T"}}</th>
                 <th class="gray" (click)="showId = !showId">Id</th>
             </tr>
             </thead>
@@ -29,7 +51,8 @@ const TIM_MESSAGES_FOLDER_PREFIX = "messages/tim-messages";
                     </a>
                 </td>
                 <td><a href="/view/{{ item.location }}">Go to parent folder</a></td>
-                <td></td>
+                <td *ngIf="displayAccessBadges"></td>
+                <td *ngIf="displayDocumentTags"></td>
                 <td></td>
                 <td></td>
                 <td></td>
@@ -43,11 +66,14 @@ const TIM_MESSAGES_FOLDER_PREFIX = "messages/tim-messages";
                 </td>
                 <td>
                     <a href="/view/{{ item.path }}">{{ item.title }}</a>&ngsp;
-                    <a><i *ngIf="item.unpublished" class="glyphicon glyphicon-lock"
-                          title="Unpublished item"></i></a>
                 </td>
-                <td></td>
                 <td>{{ item.modified }}</td>
+                <td *ngIf="displayAccessBadges" class="col-access-badges">
+                    <ng-container  *ngIf="showAccessBadges">
+                        <span class="accessbadge ab-{{ getItemBadgeName(item.id).toLowerCase() }}" 
+                              title="{{ AccessLevelBadgeInfo[getItemBadge(item.id)] }}">{{ getItemBadgeName(item.id) }}</span>
+                    </ng-container>
+                </td>
                 <td>{{ listOwnerNames(item) }}</td>
                 <td>
                     <a title="Edit" *ngIf="item.rights.editable && !item.isFolder"
@@ -57,6 +83,14 @@ const TIM_MESSAGES_FOLDER_PREFIX = "messages/tim-messages";
                             class="glyphicon glyphicon-cog"></i></a>
                     &ngsp;<a title="Teacher" *ngIf="item.rights.teacher && !item.isFolder"
                        href="/teacher/{{ item.path }}"><i class="glyphicon glyphicon-education"></i></a>
+                </td>
+                <td *ngIf="displayDocumentTags" class="col-item-tags">
+                    <ng-container *ngIf="showTags">
+                        <span class="itemtags" *ngFor="let tag of getItemTags(item)">
+                            <span class="itemtag tagtype-{{ getTagTypeString(tag) }}" 
+                              title="{{ tag.name }} {{ tag.expires ? '(expires on ' + tag.expires!.toDate() + ')' : '' }}">{{ tag.name }}</span>
+                        </span>
+                    </ng-container>
                 </td>
                 <td *ngIf="showId">
                     {{item.id}}
@@ -86,15 +120,24 @@ const TIM_MESSAGES_FOLDER_PREFIX = "messages/tim-messages";
 })
 export class DirectoryListComponent {
     itemList: DocumentOrFolder[];
+    itemBadges: Record<number, AccessLevelBadge>;
+    itemTags: Record<number, ITag[]>;
     item: IFolder;
     canCreate: boolean;
+    // TODO: persist these visibility modifiers via user settings
     showId = false;
+    showTags = true;
+    showAccessBadges = true;
+    displayAccessBadges: boolean;
+    displayDocumentTags: boolean;
 
-    constructor() {
+    constructor(private http: HttpClient) {
         const fg = folderglobals();
         this.itemList = fg.items;
         this.item = fg.curr_item;
         this.canCreate = Users.isRealUser();
+        this.itemBadges = {};
+        this.itemTags = {};
 
         // TODO: Allow to sort all columns instead
         if (
@@ -103,9 +146,88 @@ export class DirectoryListComponent {
         ) {
             this.itemList = this.itemList.sort((a, b) => b.id - a.id);
         }
+
+        this.displayAccessBadges =
+            genericglobals().userPrefs.display_dir_list_badges;
+        this.displayDocumentTags =
+            genericglobals().userPrefs.display_dir_list_tags;
+
+        // this.item is the current directory folder
+        if (this.displayAccessBadges) {
+            this.getAccessLevelBadges(this.item).then((value) => {
+                this.itemBadges = value;
+            });
+        }
+        if (this.displayDocumentTags) {
+            this.getFolderItemTags(this.item).then((value) => {
+                this.itemTags = value;
+            });
+        }
     }
 
     listOwnerNames(i: IItem) {
         return i.owners.map((o) => o.name).join(", ");
     }
+
+    async getAccessLevelBadges(
+        parentFolder: IItem
+    ): Promise<Record<number, AccessLevelBadge>> {
+        const resp = await toPromise(
+            this.http.get<Record<number, number>>("/items/getBadges", {
+                params: {
+                    folder_id: parentFolder.id,
+                },
+            })
+        );
+        let badges: Record<number, AccessLevelBadge> = {};
+        if (resp.ok) {
+            badges = resp.result;
+            return badges;
+        }
+        return {};
+    }
+
+    getItemBadge(itemId: number) {
+        return this.itemBadges[itemId];
+    }
+
+    getItemBadgeName(itemId: number) {
+        const name = AccessLevelBadge[this.itemBadges[itemId]];
+        if (name) {
+            return (
+                name[0] + name.substring(1, name.length).toLowerCase()
+            ).replace("_", "-");
+        }
+        return "";
+    }
+
+    async getFolderItemTags(
+        parentFolder: IItem
+    ): Promise<Record<number, ITag[]>> {
+        const resp = await toPromise(
+            this.http.get<Record<number, ITag[]>>("/tags/getTags", {
+                params: {
+                    folder_id: parentFolder.id,
+                },
+            })
+        );
+        if (resp.ok) {
+            return resp.result;
+        }
+        return {};
+    }
+
+    getItemTags(item: IItem) {
+        return this.itemTags[item.id];
+    }
+
+    getTagTypeString(tag: ITag) {
+        return tag.name.startsWith("group:")
+            ? "group"
+            : TagType[tag.type].toLowerCase();
+    }
+
+    protected readonly AccessLevelBadge = AccessLevelBadge;
+    protected readonly AccessLevelBadgeInfo = AccessLevelBadgeInfo;
+    protected readonly TagType = TagType;
 }

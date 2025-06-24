@@ -195,6 +195,8 @@ export interface ISettings {
     quick_select_style_doc_ids: number[];
     parmenu_position: number;
     always_show_header_menu: boolean;
+    display_dir_list_badges: boolean;
+    display_dir_list_tags: boolean;
 }
 
 export interface ILectureInfoGlobals extends IDocumentGlobals {

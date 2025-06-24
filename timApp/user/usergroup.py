@@ -36,6 +36,7 @@ from timApp.user.special_group_names import (
 )
 from timApp.user.usergroupdoc import UserGroupDoc
 from timApp.user.usergroupmember import UserGroupMember, membership_current
+from timApp.util.flask.cache import cache
 
 if TYPE_CHECKING:
     from timApp.item.block import Block
