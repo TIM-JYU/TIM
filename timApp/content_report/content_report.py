@@ -1,5 +1,4 @@
 from flask import Response, request
-
 from timApp.util.flask.responsehelper import json_response
 from timApp.notification.send_email import send_email
 from timApp.tim_app import app
@@ -23,17 +22,26 @@ def report_content(
         return json_response({"status": "error", "description": "invalid_email"})
 
     # If given, the url address should start with the host name
-    if not (
-        reportedUrl is None or reportedUrl == ""
-    ) and not reportedUrl.strip().startswith(request.host_url):
-        return json_response(
-            {
-                "status": "error",
-                "description": "invalid_url",
-                "host": request.host_url,
-                "reportedUrl": reportedUrl,
-            }
-        )
+    if not (reportedUrl is None or reportedUrl == ""):
+        # Handle difference in http or https protocols between user and host
+
+        def find_domain(s: str) -> str:
+            alku = s.find(":")
+            alku = alku + 2 if alku > 0 else 0
+            return s[alku : reportedUrl[alku:].find("/") + 1]
+
+        host_address = find_domain(request.host_url)
+        user_url_parsed = find_domain(reportedUrl)
+
+        if not (user_url_parsed.startswith(host_address)):
+            return json_response(
+                {
+                    "status": "error",
+                    "description": "invalid_url",
+                    "host": user_url_parsed,
+                    "reportedUrl": host_address,
+                }
+            )
 
     sanitized_reason = sanitize_html(reason)
 
