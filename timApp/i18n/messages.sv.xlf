@@ -10628,22 +10628,6 @@ Separate multiple addresses with commas or write each address on a new line.</ta
           <context context-type="linenumber">507,508</context>
         </context-group>
       </trans-unit>
-      <trans-unit id="1935891093549754733" datatype="html">
-        <source> Report content </source>
-        <target state="new"> Report content </target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/ui/report-content-dialog.component.ts</context>
-          <context context-type="linenumber">16,18</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="5382311376767899711" datatype="html">
-        <source> Page URL <x id="START_TAG_SPAN" ctype="x-span" equiv-text="&lt;span&gt;"/>(optional)<x id="CLOSE_TAG_SPAN" ctype="x-span" equiv-text="&lt;/span&gt;"/></source>
-        <target state="new"> Page URL <x id="START_TAG_SPAN" ctype="x-span" equiv-text="&lt;span&gt;"/>(optional)<x id="CLOSE_TAG_SPAN" ctype="x-span" equiv-text="&lt;/span&gt;"/></target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/ui/report-content-dialog.component.ts</context>
-          <context context-type="linenumber">49,51</context>
-        </context-group>
-      </trans-unit>
       <trans-unit id="5369335165199679048" datatype="html">
         <source> Your Email <x id="START_TAG_SPAN" ctype="x-span" equiv-text="&lt;span&gt;"/>(optional)<x id="CLOSE_TAG_SPAN" ctype="x-span" equiv-text="&lt;/span&gt;"/></source>
         <target state="new"> Your Email <x id="START_TAG_SPAN" ctype="x-span" equiv-text="&lt;span&gt;"/>(optional)<x id="CLOSE_TAG_SPAN" ctype="x-span" equiv-text="&lt;/span&gt;"/></target>
@@ -10826,6 +10810,22 @@ Separate multiple addresses with commas or write each address on a new line.</ta
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/ui/report-content-dialog.component.ts</context>
           <context context-type="linenumber">128,129</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="6699791699859977301" datatype="html">
+        <source>Could not connect to server. Check your internet connection and try again.</source>
+        <target state="new">Could not connect to server. Check your internet connection and try again.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/ui/report-content-dialog.component.ts</context>
+          <context context-type="linenumber">211</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="2170321853448003764" datatype="html">
+        <source>There is an issue with the server. Make a copy of your message and refresh the page, or contact TIM support directly at tim@jyu.fi.</source>
+        <target state="new">There is an issue with the server. Make a copy of your message and refresh the page, or contact TIM support directly at tim@jyu.fi.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/ui/report-content-dialog.component.ts</context>
+          <context context-type="linenumber">213</context>
         </context-group>
       </trans-unit>
     </body>
