@@ -26,7 +26,14 @@ def report_content(
     if not (
         reportedUrl is None or reportedUrl == ""
     ) and not reportedUrl.strip().startswith(request.host_url):
-        return json_response({"status": "error", "description": "invalid_url"})
+        return json_response(
+            {
+                "status": "error",
+                "description": "invalid_url",
+                "host": request.host_url,
+                "reportedUrl": reportedUrl,
+            }
+        )
 
     sanitized_reason = sanitize_html(reason)
 
