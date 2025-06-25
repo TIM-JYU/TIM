@@ -25,30 +25,37 @@ def report_content(
     if not (reportedUrl is None or reportedUrl == ""):
         # Handle difference in http or https protocols between user and host
 
-        def find_domain(s: str) -> str:
-            alku = s.find(":")
-            alku = alku + 2 if alku > 0 else 0
-            return s[alku : reportedUrl[alku:].find("/") + 1]
+        # def find_domain(s: str) -> str:
+        #     alku = s.find(":")
+        #     alku = alku + 2 if alku > 0 else 0
+        #     return s[alku : reportedUrl[alku:].find("/") + 1]
 
-        host_address = find_domain(request.host_url)
-        user_url_parsed = find_domain(reportedUrl)
+        # host_address = find_domain(request.host_url)
+        # user_url_parsed = find_domain(reportedUrl)
 
-        if not (user_url_parsed.startswith(host_address)):
+        user_url_parts = reportedUrl.strip(" /").partition("://")
+        user_url_parsed = user_url_parts[2] if user_url_parts[2] else user_url_parts[0]
+
+        host_url_parsed = request.host_url.rstrip("/").partition("://")[2]
+
+        # if not (user_url_parsed.startswith(host_address)):
+        if not (user_url_parsed.startswith(host_url_parsed)):
             return json_response(
                 {
                     "status": "error",
                     "description": "invalid_url",
-                    "host": user_url_parsed,
-                    "reportedUrl": host_address,
                 }
             )
 
     sanitized_reason = sanitize_html(reason)
+    sanitized_url = ""
+    if reportedUrl:
+        sanitized_url = sanitize_html(reportedUrl)
 
     report_message = f"""
     User Submitted Content Report for a TIM Page
 
-    User has reported harmful or inappropriate content in the page: {reportedUrl}.
+    User has reported harmful or inappropriate content in the page: {sanitized_url}.
 
     Description: {sanitized_reason}
 
