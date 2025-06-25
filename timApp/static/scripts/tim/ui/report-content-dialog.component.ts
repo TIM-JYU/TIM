@@ -22,8 +22,6 @@ export interface IContentReport {
 export interface IContentReportResponse {
     status: string;
     description?: string;
-    host?: string;
-    reportedUrl?: string;
 }
 
 @Component({
@@ -64,7 +62,7 @@ export interface IContentReportResponse {
                                         </span>
                                     </div>
                                     <div *ngIf="urlError" class="alert alert-danger">
-                                        <small *ngIf="urlError" i18n>Please check the page address. You can only report addresses from TIM. {{urlMessage}}</small>
+                                        <small *ngIf="urlError" i18n>Please check the page address. You can only report addresses from TIM.</small>
                                     </div>
                                     <small class="help-block" i18n>This is the page where you encountered the issue. You can change it if you're reporting a different page.</small>
                                 </div>
@@ -221,11 +219,6 @@ export class ReportContentDialogComponent extends AngularDialogComponent<
                     this.email_error = true;
                 } else if (r.result.description == "invalid_url") {
                     this.urlError = true;
-                    this.urlMessage =
-                        "reported Url: " +
-                        r.result.reportedUrl +
-                        " Host: " +
-                        r.result.host;
                 }
             } else {
                 this.showOk = true;
