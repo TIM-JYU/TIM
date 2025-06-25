@@ -10875,14 +10875,6 @@ Syötä useiden käyttäjien osoitteet allekkain tai pilkulla erotettuina.</targ
           <context context-type="linenumber">61,62</context>
         </context-group>
       </trans-unit>
-      <trans-unit id="4890967305882645389" datatype="html">
-        <source>Please check the page address. You can only report addresses from TIM.</source>
-        <target state="translated">Tarkista sivun osoite. Voit antaa ilmoituksen vain TIM:n osoitteista.</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/ui/report-content-dialog.component.ts</context>
-          <context context-type="linenumber">65,66</context>
-        </context-group>
-      </trans-unit>
       <trans-unit id="5726155981923810218" datatype="html">
         <source>Fill user email</source>
         <target state="translated">Lisää käyttäjän sähköposti</target>
@@ -10921,6 +10913,14 @@ Syötä useiden käyttäjien osoitteet allekkain tai pilkulla erotettuina.</targ
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/ui/report-content-dialog.component.ts</context>
           <context context-type="linenumber">213</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="3342050790592923737" datatype="html">
+        <source>Please check the page address. You can only report addresses from TIM. <x id="INTERPOLATION" equiv-text="{{urlMessage}}"/></source>
+        <target state="translated">Ole hyvä ja tarkista osoite. Voit ilmoittaa vain TIM osoitteita. <x id="INTERPOLATION" equiv-text="{{urlMessage}}"/></target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/ui/report-content-dialog.component.ts</context>
+          <context context-type="linenumber">67,68</context>
         </context-group>
       </trans-unit>
     </body>
