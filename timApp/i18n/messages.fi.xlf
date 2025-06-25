@@ -10723,22 +10723,6 @@ Syötä useiden käyttäjien osoitteet allekkain tai pilkulla erotettuina.</targ
           <context context-type="linenumber">507,508</context>
         </context-group>
       </trans-unit>
-      <trans-unit id="1935891093549754733" datatype="html">
-        <source> Report content </source>
-        <target state="translated">Ilmoita haitallisesta sisällöstä</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/ui/report-content-dialog.component.ts</context>
-          <context context-type="linenumber">16,18</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="5382311376767899711" datatype="html">
-        <source> Page URL <x id="START_TAG_SPAN" ctype="x-span" equiv-text="&lt;span>"/>(optional)<x id="CLOSE_TAG_SPAN" ctype="x-span" equiv-text="&lt;/span>"/></source>
-        <target state="translated"> Sivun URL <x id="START_TAG_SPAN" ctype="x-span" equiv-text="&lt;span>"/>(vapaaehtoinen)<x id="CLOSE_TAG_SPAN" ctype="x-span" equiv-text="&lt;/span>"/></target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/ui/report-content-dialog.component.ts</context>
-          <context context-type="linenumber">49,51</context>
-        </context-group>
-      </trans-unit>
       <trans-unit id="5369335165199679048" datatype="html">
         <source> Your Email <x id="START_TAG_SPAN" ctype="x-span" equiv-text="&lt;span>"/>(optional)<x id="CLOSE_TAG_SPAN" ctype="x-span" equiv-text="&lt;/span>"/></source>
         <target state="translated"> Sähköpostiosoitteesi <x id="START_TAG_SPAN" ctype="x-span" equiv-text="&lt;span>"/>(vapaaehtoinen)<x id="CLOSE_TAG_SPAN" ctype="x-span" equiv-text="&lt;/span>"/></target>
@@ -10921,6 +10905,22 @@ Syötä useiden käyttäjien osoitteet allekkain tai pilkulla erotettuina.</targ
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/ui/report-content-dialog.component.ts</context>
           <context context-type="linenumber">128,129</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="6699791699859977301" datatype="html">
+        <source>Could not connect to server. Check your internet connection and try again.</source>
+        <target state="translated">Palvelimeen ei saatu yhteyttä. Tarkista verkkoyhteytesi ja yritä uudelleen.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/ui/report-content-dialog.component.ts</context>
+          <context context-type="linenumber">211</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="2170321853448003764" datatype="html">
+        <source>There is an issue with the server. Make a copy of your message and refresh the page, or contact TIM support directly at tim@jyu.fi.</source>
+        <target state="translated">Palvelimen kanssa on ongelmia. Tee kopio viestistäsi ja päivitä sivu, tai ota suoraan yhteyttä TIM-tukeen osoitteessa tim@jyu.fi.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/ui/report-content-dialog.component.ts</context>
+          <context context-type="linenumber">213</context>
         </context-group>
       </trans-unit>
       <trans-unit id="7416659172020658801" datatype="html">

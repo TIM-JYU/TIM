@@ -208,9 +208,9 @@ export class ReportContentDialogComponent extends AngularDialogComponent<
             this.showError = true;
             const status = r.result.status ?? 0;
             if (status <= 0) {
-                this.errorMsg = $localize`Could not load task data. Check your internet connection and try again.`;
+                this.errorMsg = $localize`Could not connect to server. Check your internet connection and try again.`;
             } else if (status >= 500) {
-                this.errorMsg = $localize`There is an issue with the server. Try to save your work and reload the page.`;
+                this.errorMsg = $localize`There is an issue with the server. Make a copy of your message and refresh the page, or contact TIM support directly at tim@jyu.fi.`;
             }
         } else {
             if (r.result.status == "error") {
