@@ -140,6 +140,7 @@ TIM_SAFE_ATTRS_MAP = {
     "acronym": ["title"],
     "img": ["src", "width", "height"],
     "a": ["href", "title", "target"],
+    "tim-copy-folder": ["copy-from", "copy-to"],
 }
 
 TIM_SAFE_ATTRS = frozenset(
