@@ -2,9 +2,9 @@ import type {OnInit} from "@angular/core";
 import {Component, Input} from "@angular/core";
 import {showMessageDialog} from "tim/ui/showMessageDialog";
 import {HttpClient} from "@angular/common/http";
-import type {IFolder} from "tim/item/IItem";
-import {IItem} from "tim/item/IItem";
+import type {DocumentOrFolder, IDocument, IFolder} from "tim/item/IItem";
 import {toPromise} from "tim/util/utils";
+import {itemglobals} from "tim/util/globals";
 
 type PreviewList = {from: string; to: string}[];
 
@@ -22,21 +22,39 @@ const DEFAULT_COPY_OPTIONS: CopyOptions = {
 
 const COPY_HELP_ADDRESS: string = "/view/tim/TIM-ohjeet#hakemistonkopionti";
 
+interface IBasicInfo {
+    id: number;
+    type: string;
+    title: string;
+    location: string;
+    short_name: string;
+}
+
 @Component({
     selector: "tim-copy-folder",
     template: `
         <form>
-            <p i18n>You can copy all documents and folders in this folder to another folder.</p>
+            <div *ngIf="copyFrom && sourceInfo; else sourceNotGiven">
+                <p>You can copy all documents and folders from </p>
+                <pre>{{ copyFrom }}</pre>
+                <p>to another folder.</p>
+            </div>
+            <ng-template #sourceNotGiven>
+                <p i18n>You can copy all documents and folders in this folder to another folder.</p>
+            </ng-template>
             <p i18n>Copy options</p>
             <div class="cb-group">
                 <div class="checkbox">
-                    <label><input type="checkbox" name="copy-active-rights" [(ngModel)]="copyOptions.copy_active_rights"><ng-container i18n> Copy active access rights</ng-container></label>
+                    <label><input type="checkbox" name="copy-active-rights"
+                                  [(ngModel)]="copyOptions.copy_active_rights"><ng-container i18n> Copy active access rights</ng-container></label>
                 </div>
                 <div class="checkbox">
-                    <label><input type="checkbox" name="copy-expired-rights" [(ngModel)]="copyOptions.copy_expired_rights"><ng-container i18n> Copy expired access rights</ng-container></label>
+                    <label><input type="checkbox" name="copy-expired-rights"
+                                  [(ngModel)]="copyOptions.copy_expired_rights"><ng-container i18n> Copy expired access rights</ng-container></label>
                 </div>
                 <div class="checkbox">
-                    <label><input type="checkbox" name="stop-errors" [(ngModel)]="copyOptions.stop_on_errors"><ng-container i18n> Stop copying on errors</ng-container></label>
+                    <label><input type="checkbox" name="stop-errors" [(ngModel)]="copyOptions.stop_on_errors"><ng-container i18n> Stop
+                        copying on errors</ng-container></label>
                 </div>
             </div>
             <div class="form-group" timErrorState>
@@ -54,8 +72,8 @@ const COPY_HELP_ADDRESS: string = "/view/tim/TIM-ohjeet#hakemistonkopionti";
                 <tim-error-message></tim-error-message>
             </div>
             <div class="form-group">
-                <button (click)="copyFolderPreview(copyFolderPath, copyFolderExclude)" class="timButton"
-                        [disabled]="copyFolderPath == item.path || copyPath.invalid"
+                <button (click)="copyFolderPreview(copyFolderPath, copyFolderExclude, sourceInfo ? sourceInfo.id : undefined)" class="timButton"
+                        [disabled]="copyFolderPath == currentItem.path || copyPath.invalid"
                         *ngIf="copyingFolder == 'notcopying'" i18n>Copy preview...
                 </button>
             </div>
@@ -91,20 +109,29 @@ const COPY_HELP_ADDRESS: string = "/view/tim/TIM-ohjeet#hakemistonkopionti";
             <tim-alert severity="warning" *ngIf="destExists" i18n>
                 The destination folder already exists. Make sure this is intended before copying.
             </tim-alert>
+            <div *ngIf="!sourceInfo">
             <button (click)="copyFolder(copyFolderPath, copyFolderExclude)" class="timButton"
-                    *ngIf="copyFolderPath != item.path &&
+                    *ngIf="copyFolderPath != currentItem.path &&
                      previewLength > 0 &&
-                     copyingFolder == 'notcopying'" [disabled]="allSelected()" i18n>Copy
+                     copyingFolder == 'notcopying' && !sourceInfo">Copy
             </button>
+            </div>
+            <div *ngIf="sourceInfo">
+                <button (click)="copyFolder(copyFolderPath, copyFolderExclude, sourceInfo.id)" class="timButton"
+                    *ngIf="copyFolderPath != currentItem.path &&
+                     previewLength > 0 &&
+                     copyingFolder == 'notcopying' && sourceInfo" [disabled]="allSelected()" i18n>Copy
+                </button>
+            </div>
             <span *ngIf="copyingFolder == 'copying'"><tim-loading></tim-loading><ng-container i18n> Copying, this might take a while...</ng-container></span>
             <span *ngIf="copyingFolder == 'finished'">
-                <ng-container i18n>Folder </ng-container>{{ item.name }}<ng-container i18n> copied to</ng-container>
+                <ng-container i18n>Folder </ng-container>{{ currentItem.name }}<ng-container i18n> copied to</ng-container>
                 <a href="/manage/{{ newFolder?.path }}" [innerText]="newFolder?.path"></a>.
             </span>
             <div *ngIf="copyErrors">
                 <p i18n>The following errors occurred while copying:</p>
                 <ul>
-                    <li *ngFor="let e of copyErrors">{{e}}</li>
+                    <li *ngFor="let e of copyErrors">{{ e }}</li>
                 </ul>
             </div>
         </form>
@@ -113,7 +140,9 @@ const COPY_HELP_ADDRESS: string = "/view/tim/TIM-ohjeet#hakemistonkopionti";
 })
 export class CopyFolderComponent implements OnInit {
     copyingFolder: "notcopying" | "copying" | "finished";
-    @Input() item!: IItem;
+    @Input() copyFrom?: string;
+    @Input() copyTo!: string;
+    currentItem: DocumentOrFolder;
     copyPreviewList?: PreviewList;
     destExists?: boolean;
     copyFolderPath!: string;
@@ -121,12 +150,14 @@ export class CopyFolderComponent implements OnInit {
     newFolder?: IFolder;
     copyOptions: CopyOptions = {...DEFAULT_COPY_OPTIONS};
     copyErrors?: string[];
+    sourceInfo?: IBasicInfo;
     excludedItems: Set<string>;
     copyHelp: string = COPY_HELP_ADDRESS;
 
     constructor(private http: HttpClient) {
         this.copyingFolder = "notcopying";
         this.copyFolderExclude = "";
+        this.currentItem = itemglobals().curr_item;
         this.excludedItems = new Set<string>();
     }
 
@@ -135,14 +166,37 @@ export class CopyFolderComponent implements OnInit {
     }
 
     ngOnInit() {
-        this.copyFolderPath = this.item.path;
+        if (this.copyTo) {
+            this.copyFolderPath = this.copyTo;
+        } else {
+            this.copyFolderPath = this.currentItem.path;
+        }
+        if (this.copyFrom) {
+            this.fetchItemBasicInfo(this.copyFrom);
+        }
     }
 
-    async copyFolderPreview(path: string, exclude: string) {
+    private async fetchItemBasicInfo(itemPath: string) {
+        const r = await toPromise(
+            this.http.get<IBasicInfo>(`/itemInfo/${itemPath}`)
+        );
+        if (!r.ok) {
+            return;
+        } else {
+            this.sourceInfo = r.result;
+        }
+    }
+
+    async copyFolderPreview(
+        path: string,
+        exclude: string,
+        itemId: number = this.currentItem.id
+    ) {
         this.copyingFolder = "notcopying";
+
         const r = await toPromise(
             this.http.post<{preview: PreviewList; dest_exists: boolean}>(
-                `/copy/${this.item.id}/preview`,
+                `/copy/${itemId}/preview`,
                 {
                     destination: path,
                     exclude: exclude,
@@ -157,7 +211,11 @@ export class CopyFolderComponent implements OnInit {
         }
     }
 
-    async copyFolder(path: string, exclude: string) {
+    async copyFolder(
+        path: string,
+        exclude: string,
+        itemId: number = this.currentItem.id
+    ) {
         this.copyingFolder = "copying";
         const excludingRe = this.makeRegularExpressionFromSet(
             this.excludedItems,
@@ -165,7 +223,7 @@ export class CopyFolderComponent implements OnInit {
         );
         const r = await toPromise(
             this.http.post<{new_folder?: IFolder; errors: string[]}>(
-                `/copy/${this.item.id}`,
+                `/copy/${itemId}`,
                 {
                     destination: path,
                     exclude: excludingRe,

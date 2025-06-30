@@ -118,6 +118,7 @@ TIM_SAFE_TAGS = [
     "tim-steps",
     "tim-participant-list",
     "tim-course-manager",
+    "tim-copy-folder",
     "tim-badge",
     "tim-badge-creator",
     "tim-badge-viewer",
@@ -135,6 +136,7 @@ TIM_SAFE_ATTRS_MAP = {
     "acronym": ["title"],
     "img": ["src", "width", "height"],
     "a": ["href", "title", "target"],
+    "tim-copy-folder": ["copy-from", "copy-to"],
 }
 
 TIM_SAFE_ATTRS = frozenset(
@@ -162,6 +164,8 @@ TIM_SAFE_ATTRS = frozenset(
         "color",
         "compact",
         "coords",
+        "copy-from",
+        "copy-to",
         "datetime",
         "dir",
         "disabled",
