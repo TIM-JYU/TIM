@@ -2,7 +2,7 @@ import type {OnInit} from "@angular/core";
 import {Component, Input} from "@angular/core";
 import {showMessageDialog} from "tim/ui/showMessageDialog";
 import {HttpClient} from "@angular/common/http";
-import type {DocumentOrFolder, IDocument, IFolder} from "tim/item/IItem";
+import type {DocumentOrFolder, IFolder} from "tim/item/IItem";
 import {toPromise} from "tim/util/utils";
 import {itemglobals} from "tim/util/globals";
 
@@ -35,8 +35,8 @@ interface IBasicInfo {
     template: `
         <form>
             <div *ngIf="copyFrom && sourceInfo; else sourceNotGiven">
-                <p>You can copy all documents and folders from </p>
-                <pre>{{ copyFrom }}</pre>
+                <p>You can copy all documents and folders from folder </p>
+                <pre>{{ sourcePath }}</pre>
                 <p>to another folder.</p>
             </div>
             <ng-template #sourceNotGiven>
@@ -73,7 +73,7 @@ interface IBasicInfo {
             </div>
             <div class="form-group">
                 <button (click)="copyFolderPreview(copyFolderPath, copyFolderExclude, sourceInfo ? sourceInfo.id : undefined)" class="timButton"
-                        [disabled]="copyFolderPath == currentItem.path || copyPath.invalid"
+                        [disabled]="copyFolderPath == (sourcePath ? sourcePath : currentItem.path) || copyPath.invalid"
                         *ngIf="copyingFolder == 'notcopying'" i18n>Copy preview...
                 </button>
             </div>
@@ -110,17 +110,17 @@ interface IBasicInfo {
                 The destination folder already exists. Make sure this is intended before copying.
             </tim-alert>
             <div *ngIf="!sourceInfo">
-            <button (click)="copyFolder(copyFolderPath, copyFolderExclude)" class="timButton"
-                    *ngIf="copyFolderPath != currentItem.path &&
-                     previewLength > 0 &&
-                     copyingFolder == 'notcopying' && !sourceInfo">Copy
-            </button>
+                <button (click)="copyFolder(copyFolderPath, copyFolderExclude)" class="timButton"
+                        *ngIf="copyFolderPath != currentItem.path &&
+                         previewLength > 0 &&
+                         copyingFolder == 'notcopying' ">Copy
+                </button>
             </div>
             <div *ngIf="sourceInfo">
                 <button (click)="copyFolder(copyFolderPath, copyFolderExclude, sourceInfo.id)" class="timButton"
-                    *ngIf="copyFolderPath != currentItem.path &&
-                     previewLength > 0 &&
-                     copyingFolder == 'notcopying' && sourceInfo" [disabled]="allSelected()" i18n>Copy
+                        *ngIf="copyFolderPath != sourcePath &&
+                         previewLength > 0 &&
+                         copyingFolder == 'notcopying' " [disabled]="allSelected()" i18n>Copy
                 </button>
             </div>
             <span *ngIf="copyingFolder == 'copying'"><tim-loading></tim-loading><ng-container i18n> Copying, this might take a while...</ng-container></span>
@@ -141,7 +141,7 @@ interface IBasicInfo {
 export class CopyFolderComponent implements OnInit {
     copyingFolder: "notcopying" | "copying" | "finished";
     @Input() copyFrom?: string;
-    @Input() copyTo!: string;
+    @Input() copyTo?: string;
     currentItem: DocumentOrFolder;
     copyPreviewList?: PreviewList;
     destExists?: boolean;
@@ -151,6 +151,7 @@ export class CopyFolderComponent implements OnInit {
     copyOptions: CopyOptions = {...DEFAULT_COPY_OPTIONS};
     copyErrors?: string[];
     sourceInfo?: IBasicInfo;
+    sourcePath?: string;
     excludedItems: Set<string>;
     copyHelp: string = COPY_HELP_ADDRESS;
 
@@ -184,6 +185,8 @@ export class CopyFolderComponent implements OnInit {
             return;
         } else {
             this.sourceInfo = r.result;
+            this.sourcePath =
+                this.sourceInfo?.location + "/" + this.sourceInfo?.short_name;
         }
     }
 
