@@ -61,6 +61,32 @@ const DEFAULT_COPY_OPTIONS: CopyOptions = {
                     <span [innerText]="p.to"></span>
                 </li>
             </ul>
+            <div class="panel panel-default" *ngIf="previewLength > 0">
+                <div class="panel-heading">Exclude folder or document items</div>
+                    <div class="panel-body">
+                        <p>These are the items that will be copied. To exclude an item, simply uncheck its corresponding checkbox.</p>
+                    </div>
+                <table class="table-responsive">
+                    <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Select</th>
+                            <th>From</th>
+                            <th></th>
+                            <th>To</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr *ngFor="let i of copyPreviewList">
+                            <td><input type="checkbox"></td>
+                            <td><span [innerText]="i.from"></span></td>
+                            <td><i class="glyphicon glyphicon-arrow-right"></i></td>
+                            <td><span [innerText]="i.to"></span></td>
+                        </tr>
+                    </tbody>
+                    </table>
+                </table>
+            </div>
             <p *ngIf="previewLength == 0">Nothing would be copied.</p>
             <tim-alert severity="warning" *ngIf="destExists">
                 The destination folder already exists. Make sure this is intended before copying.
