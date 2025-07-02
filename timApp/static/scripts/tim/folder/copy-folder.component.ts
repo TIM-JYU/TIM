@@ -33,44 +33,44 @@ interface IBasicInfo {
     template: `
         <form>
             <div *ngIf="copyFrom && sourceInfo; else sourceNotGiven">
-                <p>You can copy all documents and folders from folder </p>
+                <p i18n>You can copy all documents and folders from folder </p>
                 <pre>{{ sourcePath }}</pre>
-                <p>to another folder.</p>
+                <p i18n>to another folder.</p>
             </div>
             <ng-template #sourceNotGiven>
-                <p>You can copy all documents and folders in this folder to another folder.</p>
+                <p i18n>You can copy all documents and folders in this folder to another folder.</p>
             </ng-template>
-            <p>Copy options</p>
+            <p i18n>Copy options</p>
             <div class="cb-group">
                 <div class="checkbox">
-                    <label><input type="checkbox" name="copy-active-rights"
+                    <label i18n><input type="checkbox" name="copy-active-rights"
                                   [(ngModel)]="copyOptions.copy_active_rights"> Copy active access rights</label>
                 </div>
                 <div class="checkbox">
-                    <label><input type="checkbox" name="copy-expired-rights"
+                    <label i18n><input type="checkbox" name="copy-expired-rights"
                                   [(ngModel)]="copyOptions.copy_expired_rights"> Copy expired access rights</label>
                 </div>
                 <div class="checkbox">
-                    <label><input type="checkbox" name="stop-errors" [(ngModel)]="copyOptions.stop_on_errors"> Stop
+                    <label i18n><input type="checkbox" name="stop-errors" [(ngModel)]="copyOptions.stop_on_errors"> Stop
                         copying on errors</label>
                 </div>
             </div>
             <div class="form-group" timErrorState>
-                <label for="destination" class="control-label">Destination:</label>
+                <label for="destination" class="control-label" i18n>Destination:</label>
                 <input name="copyPath" class="form-control" timLocation id="destination" type="text" autocomplete="off"
                        [(ngModel)]="copyFolderPath" (ngModelChange)="copyParamChanged()" #copyPath="ngModel">
                 <tim-error-message></tim-error-message>
             </div>
-            <p>You can optionally exclude some documents/folders from being copied.</p>
+            <p i18n>You can optionally exclude some documents/folders from being copied.</p>
             <div class="form-group" timErrorState>
-                <label for="exclude" class="control-label">Exclude documents/folders that match:</label>
+                <label for="exclude" class="control-label" i18n>Exclude documents/folders that match:</label>
                 <input name="exclude" class="form-control" id="exclude" type="text" autocomplete="off"
                        [(ngModel)]="copyFolderExclude" (ngModelChange)="copyParamChanged()">
                 <tim-error-message></tim-error-message>
             </div>
             <button (click)="copyFolderPreview(copyFolderPath, copyFolderExclude, sourceInfo ? sourceInfo.id : undefined)" class="timButton"
                     [disabled]="copyFolderPath == (sourcePath ? sourcePath : currentItem.path) || copyPath.invalid"
-                    *ngIf="copyingFolder == 'notcopying'">Copy preview...
+                    *ngIf="copyingFolder == 'notcopying'" i18n>Copy preview...
             </button>
             <ul *ngIf="previewLength > 0">
                 <li *ngFor="let p of copyPreviewList">
@@ -79,8 +79,8 @@ interface IBasicInfo {
                     <span [innerText]="p.to"></span>
                 </li>
             </ul>
-            <p *ngIf="previewLength == 0">Nothing would be copied.</p>
-            <tim-alert severity="warning" *ngIf="destExists">
+            <p *ngIf="previewLength == 0" i18n>Nothing would be copied.</p>
+            <tim-alert severity="warning" *ngIf="destExists" i18n>
                 The destination folder already exists. Make sure this is intended before copying.
             </tim-alert>
             <div *ngIf="!sourceInfo">
@@ -94,16 +94,16 @@ interface IBasicInfo {
                 <button (click)="copyFolder(copyFolderPath, copyFolderExclude, sourceInfo.id)" class="timButton"
                         *ngIf="copyFolderPath != sourcePath &&
                          previewLength > 0 &&
-                         copyingFolder == 'notcopying' ">Copy
+                         copyingFolder == 'notcopying' " i18n>Copy
                 </button>
             </div>
-            <span *ngIf="copyingFolder == 'copying'"><tim-loading></tim-loading> Copying, this might take a while...</span>
-            <span *ngIf="copyingFolder == 'finished'">
+            <span *ngIf="copyingFolder == 'copying'" i18n><tim-loading></tim-loading> Copying, this might take a while...</span>
+            <span *ngIf="copyingFolder == 'finished'" i18n>
                 Folder {{ currentItem.name }} copied to
                 <a href="/manage/{{ newFolder?.path }}" [innerText]="newFolder?.path"></a>.
             </span>
             <div *ngIf="copyErrors">
-                <p>The following errors occurred while copying:</p>
+                <p i18n>The following errors occurred while copying:</p>
                 <ul>
                     <li *ngFor="let e of copyErrors">{{ e }}</li>
                 </ul>
