@@ -35,9 +35,9 @@ interface IBasicInfo {
     template: `
         <form>
             <div *ngIf="copyFrom && sourceInfo; else sourceNotGiven">
-                <p>You can copy all documents and folders from folder </p>
+                <p i18n>You can copy all documents and folders from folder </p>
                 <pre>{{ sourcePath }}</pre>
-                <p>to another folder.</p>
+                <p i18n>to another folder.</p>
             </div>
             <ng-template #sourceNotGiven>
                 <p i18n>You can copy all documents and folders in this folder to another folder.</p>
@@ -105,7 +105,7 @@ interface IBasicInfo {
                     </table>
                 </div>
             </div>
-            <p *ngIf="previewLength == 0 || allSelected()">Nothing would be copied.</p>
+            <p *ngIf="previewLength == 0 || allSelected()" i18n>Nothing would be copied.</p>
             <tim-alert severity="warning" *ngIf="destExists" i18n>
                 The destination folder already exists. Make sure this is intended before copying.
             </tim-alert>
