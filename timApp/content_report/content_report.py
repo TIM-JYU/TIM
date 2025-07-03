@@ -38,14 +38,10 @@ def report_content(
                 }
             )
 
-    sanitized_url = ""
-    if reportedUrl:
-        sanitized_url = sanitize_html(reportedUrl)
-
     report_message = f"""
     User Submitted Content Report for a TIM Page
 
-    {'User has reported harmful or inappropriate content in the page: ' + sanitized_url if sanitized_url else 'User reports harmful or inappropriate content in TIM. Url not supplied.'}
+    {'User has reported harmful or inappropriate content in the page: ' + reportedUrl if reportedUrl else 'User has reported harmful or inappropriate content in TIM. URL not supplied.'}
 
     Description: {reason}
 
