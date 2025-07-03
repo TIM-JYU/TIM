@@ -50,24 +50,19 @@ const DEFAULT_COPY_OPTIONS: CopyOptions = {
                        [(ngModel)]="copyFolderExclude" (ngModelChange)="copyParamChanged()">
                 <tim-error-message></tim-error-message>
             </div>
-            <button (click)="copyFolderPreview(copyFolderPath, copyFolderExclude)" class="timButton"
-                    [disabled]="copyFolderPath == item.path || copyPath.invalid"
-                    *ngIf="copyingFolder == 'notcopying'">Copy preview...
-            </button>
-            <ul *ngIf="previewLength > 0">
-                <li *ngFor="let p of copyPreviewList">
-                    <span [innerText]="p.from"></span>
-                    <i class="glyphicon glyphicon-arrow-right"></i>
-                    <span [innerText]="p.to"></span>
-                </li>
-            </ul>
+            <div class="form-group">
+                <button (click)="copyFolderPreview(copyFolderPath, copyFolderExclude)" class="timButton"
+                        [disabled]="copyFolderPath == item.path || copyPath.invalid"
+                        *ngIf="copyingFolder == 'notcopying'">Copy preview...
+                </button>
+            </div>
             <div class="panel panel-default" *ngIf="previewLength > 0">
                 <div class="panel-heading">Exclude folder or document items</div>
                     <div class="panel-body">
                         <p>These are the items that will be copied. To exclude an item, simply uncheck its corresponding checkbox.</p>
                     </div>
                 <table class="table-responsive">
-                    <table class="table">
+                    <table class="table table-hover">
                     <thead>
                         <tr>
                             <th>Select</th>
@@ -77,11 +72,11 @@ const DEFAULT_COPY_OPTIONS: CopyOptions = {
                         </tr>
                     </thead>
                     <tbody>
-                        <tr *ngFor="let i of copyPreviewList">
-                            <td><input type="checkbox"></td>
-                            <td><span [innerText]="i.from"></span></td>
+                        <tr *ngFor="let listItem of copyPreviewList; let i = index" (click)="toggleCheckbox($event)">
+                            <td><input type="checkbox" name="{{'chb' + i}}"></td>
+                            <td><span [innerText]="listItem.from"></span></td>
                             <td><i class="glyphicon glyphicon-arrow-right"></i></td>
-                            <td><span [innerText]="i.to"></span></td>
+                            <td><span [innerText]="listItem.to"></span></td>
                         </tr>
                     </tbody>
                     </table>
@@ -189,5 +184,25 @@ export class CopyFolderComponent implements OnInit {
         this.copyPreviewList = undefined;
         this.destExists = undefined;
         this.copyErrors = undefined;
+    }
+
+    toggleCheckbox(event: MouseEvent) {
+        const eventTarget = event.target as HTMLElement;
+
+        if (eventTarget.tagName.toLowerCase() === "input") {
+            return;
+        }
+
+        const row = eventTarget.closest("tr");
+        if (!row) {
+            return;
+        }
+
+        const checkbox = row.querySelector(
+            "input[type='checkbox']"
+        ) as HTMLInputElement;
+        if (checkbox) {
+            checkbox.checked = !checkbox.checked;
+        }
     }
 }
