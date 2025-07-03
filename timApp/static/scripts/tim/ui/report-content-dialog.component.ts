@@ -142,6 +142,7 @@ export interface IContentReportResponse {
             </ng-container>
         </tim-dialog-frame>
     `,
+    styleUrls: ["./report-content-dialog.component.scss"],
 })
 export class ReportContentDialogComponent extends AngularDialogComponent<
     IReportContentParams,
