@@ -27,7 +27,7 @@ export interface IContentReportResponse {
 @Component({
     selector: "report-content-dialog",
     template: `
-        <tim-dialog-frame>
+        <tim-dialog-frame [minimizable]="false">
             <ng-container i18n header>
                 Report inappropriate content
             </ng-container>
