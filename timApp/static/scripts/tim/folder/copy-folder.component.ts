@@ -65,7 +65,7 @@ const DEFAULT_COPY_OPTIONS: CopyOptions = {
                     <table class="table table-hover">
                     <thead>
                         <tr>
-                            <th>Select</th>
+                            <th><input type="{{ alldeselect ? 'Select all' : 'Deselect all' }}" [checked]="alldeselect" (change)="toggleAll($event)"></th>
                             <th>From</th>
                             <th></th>
                             <th>To</th>
@@ -73,7 +73,7 @@ const DEFAULT_COPY_OPTIONS: CopyOptions = {
                     </thead>
                     <tbody>
                         <tr *ngFor="let listItem of copyPreviewList; let i = index" (click)="toggleCheckbox($event)">
-                            <td><input type="checkbox" name="{{'chb' + i}}"></td>
+                            <td><input type="checkbox" name="{{'chb' + i}}" (change)="checkboxToggleChange(listItem)"></td>
                             <td><span [innerText]="listItem.from"></span></td>
                             <td><i class="glyphicon glyphicon-arrow-right"></i></td>
                             <td><span [innerText]="listItem.to"></span></td>
@@ -116,10 +116,12 @@ export class CopyFolderComponent implements OnInit {
     newFolder?: IFolder;
     copyOptions: CopyOptions = {...DEFAULT_COPY_OPTIONS};
     copyErrors?: string[];
+    alldeselect: boolean;
 
     constructor(private http: HttpClient) {
         this.copyingFolder = "notcopying";
         this.copyFolderExclude = "";
+        this.alldeselect = false;
     }
 
     get previewLength() {
@@ -188,21 +190,24 @@ export class CopyFolderComponent implements OnInit {
 
     toggleCheckbox(event: MouseEvent) {
         const eventTarget = event.target as HTMLElement;
-
         if (eventTarget.tagName.toLowerCase() === "input") {
             return;
         }
-
         const row = eventTarget.closest("tr");
         if (!row) {
             return;
         }
-
         const checkbox = row.querySelector(
             "input[type='checkbox']"
         ) as HTMLInputElement;
         if (checkbox) {
             checkbox.checked = !checkbox.checked;
         }
+    }
+
+    toggleAll(event: Event) {}
+
+    checkboxToggleChange(listItem: {from: string; to: string}) {
+        let escapedItemRegexp: string = "";
     }
 }
