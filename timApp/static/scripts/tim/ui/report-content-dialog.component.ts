@@ -51,7 +51,7 @@ export interface IContentReportResponse {
                                         Page address
                                         <span>(optional)</span>
                                     </label>
-                                    <div class="input-group">
+                                    <div class="input-group" [ngClass]="{'has-error': urlError}">
                                         <input 
                                                 class="form-control"
                                                 id="idUrl" 
@@ -78,7 +78,7 @@ export interface IContentReportResponse {
                                         Your Email
                                         <span>(optional)</span>
                                     </label>
-                                    <div class="input-group">
+                                    <div class="input-group" [ngClass]="{'has-error': email_error}">
                                         <input 
                                                 class="form-control"
                                                 id="idEmail" 
@@ -187,12 +187,10 @@ export class ReportContentDialogComponent extends AngularDialogComponent<
 
     clearEmailError() {
         this.email_error = false;
-        this.showError = false;
     }
 
     clearUrlError() {
         this.urlError = false;
-        this.showError = false;
     }
 
     dismissAlert() {
@@ -216,11 +214,11 @@ export class ReportContentDialogComponent extends AngularDialogComponent<
             if (status <= 0) {
                 this.errorMsg = $localize`Could not connect to server. Check your internet connection and try again.`;
             } else if (r.result.error.error == "invalid_email") {
+                this.showError = false;
                 this.email_error = true;
-                this.errorMsg = $localize`The email address is invalid.`;
             } else if (r.result.error.error == "invalid_url") {
+                this.showError = false;
                 this.urlError = true;
-                this.errorMsg = $localize`The reported page address is invalid.`;
             } else if (status >= 500) {
                 this.errorMsg = $localize`There is an issue with the server. Make a copy of your message and refresh the page, or contact TIM support directly at tim@jyu.fi.`;
             }

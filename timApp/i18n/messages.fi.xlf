@@ -8897,8 +8897,8 @@
         </context-group>
       </trans-unit>
       <trans-unit id="187187500641108332" datatype="html">
-        <source><x id="INTERPOLATION" equiv-text="Folder() ?? 'Enter the location or leave empty'}}"/></source>
-        <target state="new"><x id="INTERPOLATION" equiv-text="Folder() ?? 'Enter the location or leave empty'}}"/></target>
+        <source><x id="INTERPOLATION" equiv-text="Folder() ?? &apos;Enter the location or leave empty&apos;}}"/></source>
+        <target state="new"><x id="INTERPOLATION" equiv-text="Folder() ?? &apos;Enter the location or leave empty&apos;}}"/></target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/user-group-dialog.component.ts</context>
           <context context-type="linenumber">61,62</context>
@@ -10917,22 +10917,6 @@ Syötä useiden käyttäjien osoitteet allekkain tai pilkulla erotettuina.</targ
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/ui/report-content-dialog.component.ts</context>
           <context context-type="linenumber">120,121</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="7271539637870485137" datatype="html">
-        <source>The email address is invalid.</source>
-        <target state="translated">Sähköpostiosoite on virheellinen.</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/ui/report-content-dialog.component.ts</context>
-          <context context-type="linenumber">220</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="2801541784998973995" datatype="html">
-        <source>The reported page address is invalid.</source>
-        <target state="translated">Ilmoitettu sivun osoite on virheellinen.</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/ui/report-content-dialog.component.ts</context>
-          <context context-type="linenumber">223</context>
         </context-group>
       </trans-unit>
     </body>
