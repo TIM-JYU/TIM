@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from itertools import accumulate
-from typing import Iterable, Generator, TYPE_CHECKING
+from typing import Iterable, Generator, TYPE_CHECKING, Optional
 
 from sqlalchemy import select, Result
 from sqlalchemy.orm import selectinload
@@ -13,6 +13,7 @@ from timApp.document.specialnames import (
     PREAMBLE_FOLDER_NAME,
     DEFAULT_PREAMBLE_DOC,
 )
+from timApp.document.usercontext import UserContext
 from timApp.document.viewcontext import default_view_ctx
 from timApp.item.item import Item
 from timApp.markdown.markdownconverter import expand_macros_info
@@ -23,6 +24,7 @@ from tim_common.utils import safe_parse_item_list
 
 if TYPE_CHECKING:
     from timApp.document.translation.translation import Translation
+    from timApp.document.docentry import DocEntry
 
 
 class DocInfo(Item):
@@ -173,88 +175,105 @@ class DocInfo(Item):
         ):
             return []
 
-        from timApp.document.docentry import DocEntry
-        from timApp.document.translation.translation import Translation
         from timApp.auth.sessioninfo import user_context_with_logged_in_or_anon
 
         user_ctx = user_context_with_logged_in_or_anon()
 
-        def get_docs(doc_paths: list[str]) -> list[tuple[DocEntry, Translation | None]]:
-            doc_paths_index_map = {path: i for i, path in enumerate(doc_paths)}
-            docs_q: Result[tuple[DocEntry, Translation | None]] = run_sql(
-                select(DocEntry, Translation)
-                .select_from(DocEntry)
-                .filter(DocEntry.name.in_(doc_paths))
-                .outerjoin(
-                    Translation,
-                    (Translation.src_docid == DocEntry.id)
-                    & (Translation.lang_id == self.lang_id),
-                )
-            )
-
-            docs = []
-
-            for de, tr in docs_q:  # type: DocEntry, Translation | None
-                d = tr or de
-                path = d.path_without_lang
-                if (
-                    preamble_path_part not in path
-                    and not user_ctx.user.has_view_access(d)
-                ):
-                    continue
-                docs.append((de, tr))
-
-            # The query may return the documents in a different order than requested
-            # Therefore, we sort documents by the original path order
-            docs.sort(key=lambda x: doc_paths_index_map[x[0].path])
-            return docs
-
-        result = get_docs(paths)
+        result = self._load_preamble_docs(paths, user_ctx, preamble_path_part)
         preamble_docs = []
         for de, tr in result:
             d = tr or de  # preamble either has the corresponding translation or not
             preamble_docs.append(d)
             d.document.ref_doc_cache = self.document.ref_doc_cache
 
-            settings = d.document.get_settings()
-            extra_preambles = settings.extra_preambles()
-            if extra_preambles:
-                macro_info = settings.get_macroinfo(default_view_ctx, user_ctx)
-                macro_info.macro_map.update(
-                    {
-                        "ref_docid": self.id,
-                        "ref_docpath": doc_path,
-                    }
-                )
-
-                if isinstance(extra_preambles, str):
-                    extra_preamble_doc_paths = safe_parse_item_list(
-                        expand_macros_info(
-                            extra_preambles, macro_info, ignore_errors=True
-                        )
-                    )
-                else:
-                    extra_preamble_doc_paths = [
-                        expand_macros_info(ep, macro_info, ignore_errors=True)
-                        for ep in extra_preambles
-                    ]
-                # Strip any extra spaces and remove any falsy values (empty strings) if they get evaluated as such
-                # Also remove any self-references
-                extra_preamble_doc_paths = list(
-                    dict.fromkeys(
-                        edp_t
-                        for edp in extra_preamble_doc_paths
-                        if (edp_t := edp.strip()) and edp_t != doc_path
-                    )
-                )
-                # TODO: Should extraPreambles be recursive?
-                extra_docs = get_docs(extra_preamble_doc_paths)
-                for edr, etr in extra_docs:
-                    ed = etr or edr
-                    preamble_docs.append(ed)
-                    ed.document.ref_doc_cache = self.document.ref_doc_cache
+            preamble_docs.extend(
+                self._load_extra_preambles(d, user_ctx, preamble_path_part)
+            )
 
         return preamble_docs
+
+    def _load_preamble_docs(
+        self,
+        doc_paths: list[str],
+        user_ctx: UserContext,
+        preamble_path_part: str,
+    ) -> list[tuple["DocEntry", Optional["Translation"]]]:
+        from timApp.document.docentry import DocEntry
+        from timApp.document.translation.translation import Translation
+
+        doc_paths_index_map = {path: i for i, path in enumerate(doc_paths)}
+        docs_q: Result[tuple[DocEntry, Translation | None]] = run_sql(
+            select(DocEntry, Translation)
+            .select_from(DocEntry)
+            .filter(DocEntry.name.in_(doc_paths))
+            .outerjoin(
+                Translation,
+                (Translation.src_docid == DocEntry.id)
+                & (Translation.lang_id == self.lang_id),
+            )
+        )
+
+        docs = []
+
+        for de, tr in docs_q:  # type: DocEntry, Translation | None
+            d = tr or de
+            path = d.path_without_lang
+            if preamble_path_part not in path and not user_ctx.user.has_view_access(d):
+                continue
+            docs.append((de, tr))
+
+        # The query may return the documents in a different order than requested
+        # Therefore, we sort documents by the original path order
+        docs.sort(key=lambda x: doc_paths_index_map[x[0].path])
+        return docs
+
+    def _load_extra_preambles(
+        self,
+        from_doc: DocInfo,
+        user_ctx: UserContext,
+        preamble_path_part: str,
+    ) -> list[DocInfo]:
+        result = []
+        cur_doc_path = self.path_without_lang
+        settings = from_doc.document.get_settings()
+        extra_preambles = settings.extra_preambles()
+        if extra_preambles:
+            macro_info = settings.get_macroinfo(default_view_ctx, user_ctx)
+            macro_info.macro_map.update(
+                {
+                    "ref_docid": self.id,
+                    "ref_docpath": cur_doc_path,
+                }
+            )
+
+            if isinstance(extra_preambles, str):
+                extra_preamble_doc_paths = safe_parse_item_list(
+                    expand_macros_info(extra_preambles, macro_info, ignore_errors=True)
+                )
+            else:
+                extra_preamble_doc_paths = [
+                    expand_macros_info(ep, macro_info, ignore_errors=True)
+                    for ep in extra_preambles
+                ]
+            # Strip any extra spaces and remove any falsy values (empty strings) if they get evaluated as such
+            # Also remove any self-references
+            extra_preamble_doc_paths = list(
+                dict.fromkeys(
+                    edp_t
+                    for edp in extra_preamble_doc_paths
+                    if (edp_t := edp.strip()) and edp_t != cur_doc_path
+                )
+            )
+            # TODO: Should extraPreambles be recursive?
+            extra_docs = self._load_preamble_docs(
+                extra_preamble_doc_paths, user_ctx, preamble_path_part
+            )
+            for edr, etr in extra_docs:  # type: DocEntry, Translation | None
+                ed = etr or edr
+                result.append(ed)
+                ed.document.ref_doc_cache = self.document.ref_doc_cache
+
+        return result
 
     def get_changelog_with_names(self, length=None, complete: bool = False):
         if not length:
