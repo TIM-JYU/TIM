@@ -20,8 +20,12 @@ export interface IContentReport {
 }
 
 export interface IContentReportResponse {
-    status: string;
-    description?: string;
+    ok: boolean;
+    result: {
+        data?: string;
+        error?: string;
+        status?: string;
+    };
 }
 
 @Component({
@@ -33,11 +37,10 @@ export interface IContentReportResponse {
             </ng-container>
             <ng-container body>
                 <div class="page-header">
-                    <h1 i18n>Report inappropriate Content</h1>
+                    <h1 i18n>Report inappropriate content</h1>
                 </div>
                 <div i18n class="help-block">
-                    <p>You can use this form to report any harmful or inappropriate content you have encountered while using TIM.</p>
-                    <p>If you would like the TIM administrators to follow up with you, you may optionally include you email address.</p>
+                    <p>Use this form to report any harmful or inappropriate content you encounter on TIM. If you would like a response from the TIM administrators, please provide your email address.</p>
                 </div>
                 <form #reportForm="ngForm">
                     <fieldset [disabled]="showOk" [ngClass]="{'text-muted': showOk}">
@@ -64,7 +67,7 @@ export interface IContentReportResponse {
                                     <div *ngIf="urlError" class="alert alert-danger">
                                         <small *ngIf="urlError" i18n>Please check the page address. You can only report addresses from TIM.</small>
                                     </div>
-                                    <small class="help-block" i18n>This is the page where you encountered the issue. You can change it if you're reporting a different page.</small>
+                                    <small class="help-block" i18n>This is the page address where you encountered the issue. If you are reporting a problem on a different page, please paste the correct address here.</small>
                                 </div>
                             </div>
                         </div>
@@ -95,7 +98,7 @@ export interface IContentReportResponse {
                                             <small *ngIf="emailfield.errors?.email || email_error" i18n>Please enter a valid email address.</small>
                                             <small *ngIf="emailfield.errors?.maxlenght" i18n>The email address cannot exceed 256 characters.</small>
                                     </div>
-                                    <small class="help-block" i18n>Enter your email if you'd like us to contact you about your report.</small>
+                                    <small class="help-block" i18n>Please provide your email address if you wish for the TIM administrators to follow up with you regarding this report.</small>
                                 </div>
                             </div>
                         </div>
@@ -114,7 +117,7 @@ export interface IContentReportResponse {
                                 <small *ngIf="reasonfield.errors?.required" i18n><span class="glyphicon glyphicon-exclamation-sign"></span> This field is required.</small>    
                                 <small *ngIf="reasonfield.errors?.maxlenght" i18n>The description cannot exceed 2000 characters.</small>    
                             </div>
-                            <small class="help-block" i18n>Please explain what you found harmful or inappropriate. Be as specific as possible.</small>
+                            <small class="help-block" i18n>Explain why you think the content is inappropriate. Be as specific as possible.</small>
                         </div>
                     </fieldset>
                 </form>           
@@ -129,7 +132,7 @@ export interface IContentReportResponse {
                     </div>
                 </div>
                 <div *ngIf="!showOk">
-                    <button class="timButton" (click)="sendMail()" [disabled]="reportForm.invalid" i18n>Report Page</button>
+                    <button class="timButton" (click)="sendMail()" [disabled]="reportForm.invalid || showError || urlError || email_error" i18n>Report Page</button>
                     <button class="btn btn-default" (click)="dismiss()" i18n>Cancel</button>
                 </div>
                 <div *ngIf="showOk">
@@ -159,7 +162,6 @@ export class ReportContentDialogComponent extends AngularDialogComponent<
     email_error: boolean = false;
     errorMsg: string = "";
     urlError: boolean = false;
-    urlMessage: string = "";
 
     constructor(private http: HttpClient) {
         super();
@@ -185,10 +187,12 @@ export class ReportContentDialogComponent extends AngularDialogComponent<
 
     clearEmailError() {
         this.email_error = false;
+        this.showError = false;
     }
 
     clearUrlError() {
         this.urlError = false;
+        this.showError = false;
     }
 
     dismissAlert() {
@@ -211,19 +215,17 @@ export class ReportContentDialogComponent extends AngularDialogComponent<
             const status = r.result.status ?? 0;
             if (status <= 0) {
                 this.errorMsg = $localize`Could not connect to server. Check your internet connection and try again.`;
+            } else if (r.result.error.error == "invalid_email") {
+                this.email_error = true;
+                this.errorMsg = $localize`The email address is invalid.`;
+            } else if (r.result.error.error == "invalid_url") {
+                this.urlError = true;
+                this.errorMsg = $localize`The reported page address is invalid.`;
             } else if (status >= 500) {
                 this.errorMsg = $localize`There is an issue with the server. Make a copy of your message and refresh the page, or contact TIM support directly at tim@jyu.fi.`;
             }
         } else {
-            if (r.result.status == "error") {
-                if (r.result.description == "invalid_email") {
-                    this.email_error = true;
-                } else if (r.result.description == "invalid_url") {
-                    this.urlError = true;
-                }
-            } else {
-                this.showOk = true;
-            }
+            this.showOk = true;
         }
     }
 }

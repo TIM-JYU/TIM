@@ -89,8 +89,6 @@ export class FooterComponent {
 
     async reportContent() {
         const windowUrl = window.location.href;
-        await to2(
-            showReportContentDialog({currentUrl: windowUrl})
-        );
+        await to2(showReportContentDialog({currentUrl: windowUrl}));
     }
 }

@@ -1,11 +1,12 @@
 from flask import Response, request
+
+from timApp.util.flask.requesthelper import RouteException
 from timApp.util.flask.responsehelper import json_response
 from timApp.notification.send_email import send_email
 from timApp.tim_app import app
 
 from timApp.util.flask.typedblueprint import TypedBlueprint
 from timApp.util.utils import get_current_time, is_valid_email
-from tim_common.html_sanitize import sanitize_html
 
 content_report = TypedBlueprint("content_report", __name__, url_prefix="")
 
@@ -19,7 +20,7 @@ def report_content(
     now = get_current_time()
 
     if not (email is None or email == "") and not is_valid_email(email):
-        return json_response({"status": "error", "description": "invalid_email"})
+        raise RouteException("invalid_email")
 
     # If given, the url address should start with the host name
     if not (reportedUrl is None or reportedUrl == ""):
@@ -31,12 +32,7 @@ def report_content(
         host_url_parsed = request.host_url.rstrip("/").partition("://")[2]
 
         if not (user_url_parsed.startswith(host_url_parsed)):
-            return json_response(
-                {
-                    "status": "error",
-                    "description": "invalid_url",
-                }
-            )
+            raise RouteException("invalid_url")
 
     report_message = f"""
     User Submitted Content Report for a TIM Page
