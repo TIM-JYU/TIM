@@ -2,6 +2,8 @@ import {Component} from "@angular/core";
 import {getVisibilityVars} from "tim/timRoot";
 import {documentglobals, genericglobals} from "tim/util/globals";
 import {Users} from "tim/user/userService";
+import {showReportContentDialog} from "tim/ui/showReportContentDialog";
+import {to2} from "tim/util/utils";
 
 @Component({
     selector: "tim-footer",
@@ -56,6 +58,8 @@ import {Users} from "tim/user/userService";
                                        href="/view/{{footerDocs.accessibilityStatement}}" i18n>
                                         Accessibility statement
                                     </a>
+                                    <br>
+                                    <a (click)="reportContent()" role="button" i18n>Report inappropriate content</a>
                                 </ng-container>
                             </div>
                         </div>
@@ -81,5 +85,10 @@ export class FooterComponent {
         }
         // For languages not handled, default to english
         return link + "/en-US";
+    }
+
+    async reportContent() {
+        const windowUrl = window.location.href;
+        await to2(showReportContentDialog({currentUrl: windowUrl}));
     }
 }
