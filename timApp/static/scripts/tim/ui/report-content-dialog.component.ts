@@ -19,15 +19,6 @@ export interface IContentReport {
     reportedUrl: string;
 }
 
-export interface IContentReportResponse {
-    ok: boolean;
-    result: {
-        data?: string;
-        error?: string;
-        status?: string;
-    };
-}
-
 @Component({
     selector: "report-content-dialog",
     template: `
@@ -205,9 +196,7 @@ export class ReportContentDialogComponent extends AngularDialogComponent<
             reportedUrl: this.reportedUrl,
         };
 
-        const r = await toPromise(
-            this.http.post<IContentReportResponse>("/report", json_payload)
-        );
+        const r = await toPromise(this.http.post("/report", json_payload));
         if (!r.ok) {
             this.showError = true;
             const status = r.result.status ?? 0;
