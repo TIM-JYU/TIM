@@ -214,9 +214,14 @@ class DocInfo(Item):
         )
 
         docs = []
+        doc_ids: set[int] = set()
 
         for de, tr in docs_q:  # type: DocEntry, Translation | None
             d = tr or de
+            # Technically, we can have duplicates through aliases, so we need to dedupe here
+            if d.id in doc_ids:
+                continue
+            doc_ids.add(d.id)
             path = d.path_without_lang
             if preamble_path_part not in path and not user_ctx.user.has_view_access(d):
                 continue
