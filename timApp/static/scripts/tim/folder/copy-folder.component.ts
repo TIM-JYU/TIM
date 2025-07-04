@@ -65,15 +65,15 @@ const DEFAULT_COPY_OPTIONS: CopyOptions = {
                     <table class="table table-hover">
                     <thead>
                         <tr>
-                            <th><input type="{{ alldeselect ? 'Select all' : 'Deselect all' }}" [checked]="alldeselect" (change)="toggleAll($event)"></th>
+                            <th><input title="{{ alldeselect ? 'Select all' : 'Deselect all' }}" type="checkbox" [checked]="alldeselect" (change)="toggleAll($event)"></th>
                             <th>From</th>
                             <th></th>
                             <th>To</th>
                         </tr>
                     </thead>
                     <tbody>
-                        <tr *ngFor="let listItem of copyPreviewList; let i = index" (click)="toggleCheckbox($event)">
-                            <td><input type="checkbox" name="{{'chb' + i}}" (change)="checkboxToggleChange(listItem)"></td>
+                        <tr *ngFor="let listItem of copyPreviewList; let i = index" (click)="handleCheckboxOrRowToggle($event, listItem)" [ngClass]="{'text-muted': !checkbox.checked, 'active': !checkbox.checked}">
+                            <td><input type="checkbox" name="{{'chb' + i}}" #checkbox checked></td>
                             <td><span [innerText]="listItem.from"></span></td>
                             <td><i class="glyphicon glyphicon-arrow-right"></i></td>
                             <td><span [innerText]="listItem.to"></span></td>
@@ -117,11 +117,13 @@ export class CopyFolderComponent implements OnInit {
     copyOptions: CopyOptions = {...DEFAULT_COPY_OPTIONS};
     copyErrors?: string[];
     alldeselect: boolean;
+    excludedItems: string[];
 
     constructor(private http: HttpClient) {
         this.copyingFolder = "notcopying";
         this.copyFolderExclude = "";
         this.alldeselect = false;
+        this.excludedItems = [];
     }
 
     get previewLength() {
@@ -188,10 +190,15 @@ export class CopyFolderComponent implements OnInit {
         this.copyErrors = undefined;
     }
 
-    toggleCheckbox(event: MouseEvent) {
+    handleCheckboxOrRowToggle(
+        event: MouseEvent,
+        item: {from: string; to: string}
+    ) {
+        let changeCheckedState: boolean = true;
         const eventTarget = event.target as HTMLElement;
         if (eventTarget.tagName.toLowerCase() === "input") {
-            return;
+            // If checkbox is pressed directly, prevent double checking
+            changeCheckedState = false;
         }
         const row = eventTarget.closest("tr");
         if (!row) {
@@ -201,13 +208,16 @@ export class CopyFolderComponent implements OnInit {
             "input[type='checkbox']"
         ) as HTMLInputElement;
         if (checkbox) {
-            checkbox.checked = !checkbox.checked;
+            if (changeCheckedState) {
+                checkbox.checked = !checkbox.checked;
+            }
+            if (!checkbox.checked) {
+                this.excludedItems.push(item.from);
+            }
         }
     }
 
-    toggleAll(event: Event) {}
-
-    checkboxToggleChange(listItem: {from: string; to: string}) {
-        let escapedItemRegexp: string = "";
+    toggleAll(event: Event) {
+        console.log(this.excludedItems);
     }
 }
