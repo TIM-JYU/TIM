@@ -1,7 +1,7 @@
 from flask import Response, request
 
 from timApp.util.flask.requesthelper import RouteException
-from timApp.util.flask.responsehelper import json_response
+from timApp.util.flask.responsehelper import json_response, ok_response
 from timApp.notification.send_email import send_email
 from timApp.tim_app import app
 
@@ -57,4 +57,4 @@ def report_content(
         msg=report_message,
     )
 
-    return json_response({"status": "ok"})
+    return ok_response()
