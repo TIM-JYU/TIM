@@ -10739,52 +10739,12 @@ Syötä useiden käyttäjien osoitteet allekkain tai pilkulla erotettuina.</targ
           <context context-type="linenumber">57</context>
         </context-group>
       </trans-unit>
-      <trans-unit id="4544877121833907946" datatype="html">
-        <source><x id="START_PARAGRAPH" ctype="x-p" equiv-text="&lt;p>"/>You can use this form to report any harmful or inappropriate content you have encountered while using TIM.<x id="CLOSE_PARAGRAPH" ctype="x-p" equiv-text="&lt;/p>"/><x id="START_PARAGRAPH" ctype="x-p" equiv-text="&lt;p>"/>If you would like the TIM administrators to follow up with you, you may optionally include you email address.<x id="CLOSE_PARAGRAPH" ctype="x-p" equiv-text="&lt;/p>"/></source>
-        <target state="translated"><x id="START_PARAGRAPH" ctype="x-p" equiv-text="&lt;p>"/>Tällä lomakkeella voit ilmoittaa haitallisesta tai sopimattomasta sisällöstä, johon olet törmännyt TIM:n käytön aikana. <x id="CLOSE_PARAGRAPH" ctype="x-p" equiv-text="&lt;/p>"/><x id="START_PARAGRAPH" ctype="x-p" equiv-text="&lt;p>"/>Jos haluat, että TIM:n ylläpitäjät ottavat sinuun yhteyttä, voit halutessasi ilmoittaa sähköpostiosoitteesi.<x id="CLOSE_PARAGRAPH" ctype="x-p" equiv-text="&lt;/p>"/></target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/ui/report-content-dialog.component.ts</context>
-          <context context-type="linenumber">24,25</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="8414879883786537714" datatype="html">
-        <source>Please explain what you found harmful or inappropriate. Be as specific as possible.</source>
-        <target state="translated">Selitä, mitä pidit haitallisena tai sopimattomana. Kirjoita mahdollisimman yksityiskohtaisesti.</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/ui/report-content-dialog.component.ts</context>
-          <context context-type="linenumber">71</context>
-        </context-group>
-      </trans-unit>
       <trans-unit id="6151928365554450816" datatype="html">
         <source>Report Page</source>
         <target state="translated">Ilmoita sisällöstä</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/ui/report-content-dialog.component.ts</context>
           <context context-type="linenumber">76</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="4096818040903036257" datatype="html">
-        <source>This is the page where you encountered the issue. You can change it if you're reporting a different page.</source>
-        <target state="translated">Tämä on sivu, jolla ongelma ilmeni. Voit muuttaa sitä, jos haluat ilmoittaa jostain muusta sivusta.</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/ui/report-content-dialog.component.ts</context>
-          <context context-type="linenumber">40</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="6860144309922719886" datatype="html">
-        <source>Enter your email if you'd like us to contact you about your report.</source>
-        <target state="translated">Kirjoita sähköpostiosoitteesi, jos haluat, että otamme sinuun yhteyttä ilmoituksestasi.</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/ui/report-content-dialog.component.ts</context>
-          <context context-type="linenumber">56</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="6456781411935518667" datatype="html">
-        <source>Report content</source>
-        <target state="translated">Ilmoita asiaton sisältö</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/footer.component.ts</context>
-          <context context-type="linenumber">62,63</context>
         </context-group>
       </trans-unit>
       <trans-unit id="2446227100022235850" datatype="html">
@@ -10851,14 +10811,6 @@ Syötä useiden käyttäjien osoitteet allekkain tai pilkulla erotettuina.</targ
           <context context-type="linenumber">32</context>
         </context-group>
       </trans-unit>
-      <trans-unit id="6140792203245567328" datatype="html">
-        <source>Report inappropriate Content</source>
-        <target state="translated">Ilmoita asiaton sisältö</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/ui/report-content-dialog.component.ts</context>
-          <context context-type="linenumber">36,37</context>
-        </context-group>
-      </trans-unit>
       <trans-unit id="8959949608841060449" datatype="html">
         <source> Page address <x id="START_TAG_SPAN" ctype="x-span" equiv-text="&lt;span>"/>(optional)<x id="CLOSE_TAG_SPAN" ctype="x-span" equiv-text="&lt;/span>"/></source>
         <target state="translated"> Sivun osoite <x id="START_TAG_SPAN" ctype="x-span" equiv-text="&lt;span>"/>(vapaaehtoinen)<x id="CLOSE_TAG_SPAN" ctype="x-span" equiv-text="&lt;/span>"/></target>
@@ -10921,6 +10873,66 @@ Syötä useiden käyttäjien osoitteet allekkain tai pilkulla erotettuina.</targ
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/ui/report-content-dialog.component.ts</context>
           <context context-type="linenumber">65,66</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="5227627642850381764" datatype="html">
+        <source>Report inappropriate content</source>
+        <target state="translated">Ilmoita asiaton sisältö</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/footer.component.ts</context>
+          <context context-type="linenumber">62,63</context>
+        </context-group>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/ui/report-content-dialog.component.ts</context>
+          <context context-type="linenumber">40,41</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="7537003864277929073" datatype="html">
+        <source><x id="START_PARAGRAPH" ctype="x-p" equiv-text="Use this"/>Use this form to report any harmful or inappropriate content you encounter on TIM. If you would like a response from the TIM administrators, please provide your email address.<x id="CLOSE_PARAGRAPH" ctype="x-p" equiv-text="&lt;/p>"/></source>
+        <target state="translated"><x id="START_PARAGRAPH" ctype="x-p" equiv-text="Use this"/>Tällä lomakkeella voit ilmoittaa TIM-palvelussa havaitsemastasi haitallisesta tai sopimattomasta sisällöstä. Jos haluat TIM-ylläpidon vastaavan sinulle, ole hyvä ja anna sähköpostiosoitteesi.<x id="CLOSE_PARAGRAPH" ctype="x-p" equiv-text="&lt;/p>"/></target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/ui/report-content-dialog.component.ts</context>
+          <context context-type="linenumber">43,44</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="793497416353063752" datatype="html">
+        <source>This is the page address where you encountered the issue. If you are reporting a problem on a different page, please paste the correct address here.</source>
+        <target state="translated">Tämä on sivun osoite, jossa havaitsit ongelman. Jos ilmoitat ongelmasta jollakin muulla sivulla, liitä oikea osoite tähän.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/ui/report-content-dialog.component.ts</context>
+          <context context-type="linenumber">70,71</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="6334384804553156455" datatype="html">
+        <source>Please provide your email address if you wish for the TIM administrators to follow up with you regarding this report.</source>
+        <target state="translated">Anna sähköpostiosoitteesi, jos haluat, että TIM:n ylläpitäjät ottavat sinuun yhteyttä tämän raportin osalta.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/ui/report-content-dialog.component.ts</context>
+          <context context-type="linenumber">101,102</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="4678590939146937144" datatype="html">
+        <source>Explain why you think the content is inappropriate. Be as specific as possible.</source>
+        <target state="translated">Selitä, miksi sisältö on mielestäsi sopimatonta. Kerro mahdollisimman tarkasti.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/ui/report-content-dialog.component.ts</context>
+          <context context-type="linenumber">120,121</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="7271539637870485137" datatype="html">
+        <source>The email address is invalid.</source>
+        <target state="translated">Sähköpostiosoite on virheellinen.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/ui/report-content-dialog.component.ts</context>
+          <context context-type="linenumber">220</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="2801541784998973995" datatype="html">
+        <source>The reported page address is invalid.</source>
+        <target state="translated">Ilmoitettu sivun osoite on virheellinen.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/ui/report-content-dialog.component.ts</context>
+          <context context-type="linenumber">223</context>
         </context-group>
       </trans-unit>
       <trans-unit id="7416659172020658801" datatype="html">
