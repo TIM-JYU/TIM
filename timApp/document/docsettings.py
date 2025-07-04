@@ -120,6 +120,7 @@ class DocSettingTypes:
     loginCodes: bool
     loginMessage: str
     customIndex: list[tuple[Any, Any]]
+    extraGroupPreambleFolder: str | None = None
 
 
 doc_setting_field_map: dict[str, Field] = {
@@ -703,6 +704,9 @@ class DocSettings:
 
     def extra_preambles(self) -> list[str] | str | None:
         return self.get_setting_or_default("extraPreambles", None)
+
+    def extra_group_preambles_folder(self) -> str | None:
+        return self.get_setting_or_default("extraGroupPreambleFolder", None)
 
     def lazy_answers(self) -> bool:
         return self.get_setting_or_default("lazyAnswers", False)

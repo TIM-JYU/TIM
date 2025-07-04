@@ -1,9 +1,13 @@
 from __future__ import annotations
 
+import re
+from heapq import heappush, heappop
 from itertools import accumulate
-from typing import Iterable, Generator, TYPE_CHECKING
+from typing import Iterable, Generator, TYPE_CHECKING, Optional, Collection
 
-from sqlalchemy import select, Result
+import sqlalchemy
+from sqlalchemy import select, Result, String
+from sqlalchemy.dialects.postgresql import array, ARRAY
 from sqlalchemy.orm import selectinload
 
 from timApp.document.docparagraph import DocParagraph
@@ -13,16 +17,24 @@ from timApp.document.specialnames import (
     PREAMBLE_FOLDER_NAME,
     DEFAULT_PREAMBLE_DOC,
 )
+from timApp.document.usercontext import UserContext
 from timApp.document.viewcontext import default_view_ctx
 from timApp.item.item import Item
 from timApp.markdown.markdownconverter import expand_macros_info
 from timApp.notification.notification import Notification
 from timApp.timdb.sqa import db, run_sql
+from timApp.user.usergroup import UserGroup
 from timApp.util.utils import get_current_time, partition
 from tim_common.utils import safe_parse_item_list
 
 if TYPE_CHECKING:
     from timApp.document.translation.translation import Translation
+    from timApp.document.docentry import DocEntry
+
+GROUP_PREAMBLE_PREFIX = "preamble"
+GROUP_PREAMBLE_PATTERN = re.compile(
+    rf"^{GROUP_PREAMBLE_PREFIX}-(?P<group_name>.+?)-(?P<priority>\d+)$"
+)
 
 
 class DocInfo(Item):
@@ -173,88 +185,218 @@ class DocInfo(Item):
         ):
             return []
 
-        from timApp.document.docentry import DocEntry
-        from timApp.document.translation.translation import Translation
         from timApp.auth.sessioninfo import user_context_with_logged_in_or_anon
 
         user_ctx = user_context_with_logged_in_or_anon()
 
-        def get_docs(doc_paths: list[str]) -> list[tuple[DocEntry, Translation | None]]:
-            doc_paths_index_map = {path: i for i, path in enumerate(doc_paths)}
-            docs_q: Result[tuple[DocEntry, Translation | None]] = run_sql(
-                select(DocEntry, Translation)
-                .select_from(DocEntry)
-                .filter(DocEntry.name.in_(doc_paths))
-                .outerjoin(
-                    Translation,
-                    (Translation.src_docid == DocEntry.id)
-                    & (Translation.lang_id == self.lang_id),
-                )
-            )
-
-            docs = []
-
-            for de, tr in docs_q:  # type: DocEntry, Translation | None
-                d = tr or de
-                path = d.path_without_lang
-                if (
-                    preamble_path_part not in path
-                    and not user_ctx.user.has_view_access(d)
-                ):
-                    continue
-                docs.append((de, tr))
-
-            # The query may return the documents in a different order than requested
-            # Therefore, we sort documents by the original path order
-            docs.sort(key=lambda x: doc_paths_index_map[x[0].path])
-            return docs
-
-        result = get_docs(paths)
+        result = self._load_preamble_docs(paths, user_ctx, preamble_path_part)
         preamble_docs = []
         for de, tr in result:
             d = tr or de  # preamble either has the corresponding translation or not
             preamble_docs.append(d)
             d.document.ref_doc_cache = self.document.ref_doc_cache
 
-            settings = d.document.get_settings()
-            extra_preambles = settings.extra_preambles()
-            if extra_preambles:
-                macro_info = settings.get_macroinfo(default_view_ctx, user_ctx)
-                macro_info.macro_map.update(
-                    {
-                        "ref_docid": self.id,
-                        "ref_docpath": doc_path,
-                    }
-                )
+            preamble_docs.extend(
+                self._load_extra_preambles(d, user_ctx, preamble_path_part)
+            )
 
-                if isinstance(extra_preambles, str):
-                    extra_preamble_doc_paths = safe_parse_item_list(
-                        expand_macros_info(
-                            extra_preambles, macro_info, ignore_errors=True
-                        )
-                    )
-                else:
-                    extra_preamble_doc_paths = [
-                        expand_macros_info(ep, macro_info, ignore_errors=True)
-                        for ep in extra_preambles
-                    ]
-                # Strip any extra spaces and remove any falsy values (empty strings) if they get evaluated as such
-                # Also remove any self-references
-                extra_preamble_doc_paths = list(
-                    dict.fromkeys(
-                        edp_t
-                        for edp in extra_preamble_doc_paths
-                        if (edp_t := edp.strip()) and edp_t != doc_path
-                    )
-                )
-                # TODO: Should extraPreambles be recursive?
-                extra_docs = get_docs(extra_preamble_doc_paths)
-                for edr, etr in extra_docs:
-                    ed = etr or edr
-                    preamble_docs.append(ed)
-                    ed.document.ref_doc_cache = self.document.ref_doc_cache
+            preamble_docs.extend(self._load_extra_group_preambles(d, user_ctx))
 
         return preamble_docs
+
+    def _load_preamble_docs(
+        self,
+        doc_paths: list[str],
+        user_ctx: UserContext,
+        preamble_path_part: str,
+    ) -> list[tuple["DocEntry", Optional["Translation"]]]:
+        from timApp.document.docentry import DocEntry
+        from timApp.document.translation.translation import Translation
+
+        doc_paths_index_map = {path: i for i, path in enumerate(doc_paths)}
+        docs_q: Result[tuple[DocEntry, Translation | None]] = run_sql(
+            select(DocEntry, Translation)
+            .select_from(DocEntry)
+            .filter(DocEntry.name.in_(doc_paths))
+            .outerjoin(
+                Translation,
+                (Translation.src_docid == DocEntry.id)
+                & (Translation.lang_id == self.lang_id),
+            )
+        )
+
+        docs = []
+        doc_ids: set[int] = set()
+
+        for de, tr in docs_q:  # type: DocEntry, Translation | None
+            d = tr or de
+            # Technically, we can have duplicates through aliases, so we need to dedupe here
+            if d.id in doc_ids:
+                continue
+            doc_ids.add(d.id)
+            path = d.path_without_lang
+            if preamble_path_part not in path and not user_ctx.user.has_view_access(d):
+                continue
+            docs.append((de, tr))
+
+        # The query may return the documents in a different order than requested
+        # Therefore, we sort documents by the original path order
+        docs.sort(key=lambda x: doc_paths_index_map[x[0].path])
+        return docs
+
+    def _load_extra_preambles(
+        self,
+        preamble_doc: DocInfo,
+        user_ctx: UserContext,
+        preamble_path_part: str,
+    ) -> list[DocInfo]:
+        result = []
+        cur_doc_path = self.path_without_lang
+        settings = preamble_doc.document.get_settings()
+
+        extra_preambles = settings.extra_preambles()
+        if not extra_preambles:
+            return result
+
+        macro_info = settings.get_macroinfo(default_view_ctx, user_ctx)
+        macro_info.macro_map.update(
+            {
+                "ref_docid": self.id,
+                "ref_docpath": cur_doc_path,
+            }
+        )
+
+        if isinstance(extra_preambles, str):
+            extra_preamble_doc_paths = safe_parse_item_list(
+                expand_macros_info(extra_preambles, macro_info, ignore_errors=True)
+            )
+        else:
+            extra_preamble_doc_paths = [
+                expand_macros_info(ep, macro_info, ignore_errors=True)
+                for ep in extra_preambles
+            ]
+        # Strip any extra spaces and remove any falsy values (empty strings) if they get evaluated as such
+        # Also remove any self-references
+        extra_preamble_doc_paths = list(
+            dict.fromkeys(
+                edp_t
+                for edp in extra_preamble_doc_paths
+                if (edp_t := edp.strip()) and edp_t != cur_doc_path
+            )
+        )
+        # TODO: Should extraPreambles be recursive?
+        extra_docs = self._load_preamble_docs(
+            extra_preamble_doc_paths, user_ctx, preamble_path_part
+        )
+        for edr, etr in extra_docs:  # type: DocEntry, Translation | None
+            ed = etr or edr
+            result.append(ed)
+            ed.document.ref_doc_cache = self.document.ref_doc_cache
+
+        return result
+
+    def _load_extra_group_preambles(
+        self,
+        preamble_doc: DocInfo,
+        user_ctx: UserContext,
+    ) -> list[DocInfo]:
+        from timApp.document.docentry import DocEntry
+
+        result = []
+        settings = preamble_doc.document.get_settings()
+        extra_group_preambles_folder = settings.extra_group_preambles_folder()
+
+        if not extra_group_preambles_folder:
+            return result
+
+        # Normalize; the path is always assumed to be relative to the root
+        extra_group_preambles_folder = extra_group_preambles_folder.strip("/")
+
+        # If the current doc is in the extra group preambles folder, we don't need to load anything
+        # to prevent recursion.
+        if self.path.startswith(f"{extra_group_preambles_folder}/"):
+            return result
+
+        # Fetch all potential group preamble documents
+        #  1. Get the groups that the current user belongs to
+        #  2. Find all documents that have the path of "extra_group_preambles_folder/<group_name>-"
+        #  3. Process the document paths
+        #     - Check the doc path is of format <group_name>-<priority>
+        # In general, we expect N(groups) << N(documents), so we separately fetch groups and construct
+        # a custom OR query to find the potential group preamble documents.
+        # This way we can make use of DocEntry.name being indexed.
+        user_group_names: set[str] = set(
+            run_sql(
+                user_ctx.user.get_groups(
+                    include_special=False, include_expired=False
+                ).with_only_columns(UserGroup.name)
+            )
+            .scalars()
+            .all()
+        )
+        group_preamble_candidates_condition = DocEntry.name.like(
+            sqlalchemy.any_(
+                sqlalchemy.cast(
+                    [
+                        f"{extra_group_preambles_folder}/{GROUP_PREAMBLE_PREFIX}-{group_name}-%"
+                        for group_name in user_group_names
+                    ],
+                    ARRAY(String),
+                )
+            )
+        )
+        potential_group_preamble_doc_paths_query = select(DocEntry.name).filter(
+            group_preamble_candidates_condition
+        )
+        potential_group_preamble_doc_paths = (
+            run_sql(potential_group_preamble_doc_paths_query).scalars().unique()
+        )
+
+        group_preamble_docs_queue = []
+
+        for doc_path in potential_group_preamble_doc_paths:  # type: str
+            last_part = doc_path.rsplit("/", 1)[-1]
+            match = GROUP_PREAMBLE_PATTERN.match(last_part)
+            if not match:
+                continue
+            group_name = match.group("group_name")
+            if group_name not in user_group_names:
+                continue
+            # We have a valid group preamble document
+            # Add it to the list of group preamble docs by its priority
+            # Note: Python's priority queue is a min-heap, so we use negative priority
+            heappush(
+                group_preamble_docs_queue, (-int(match.group("priority")), doc_path)
+            )
+
+        if not group_preamble_docs_queue:
+            return result
+
+        # Now, pick the preambles with the top priority
+        final_group_preamble_paths = []
+        priority, doc_path = heappop(group_preamble_docs_queue)
+        final_group_preamble_paths.append(doc_path)
+        # If there are multiple preambles with the same priority, we pick them all;
+        # this is why we peek the element before popping it.
+        while group_preamble_docs_queue:
+            next_priority, doc_path = heappop(group_preamble_docs_queue)
+            if next_priority != priority:
+                break
+            final_group_preamble_paths.append(doc_path)
+
+        # The final list has the group preamble document paths
+        # We can finally load the documents, but in reverse to ensure those with the higher priority apply last.
+        group_preamble_docs = self._load_preamble_docs(
+            final_group_preamble_paths[::-1],
+            user_ctx,
+            preamble_path_part="",  # Empty, because the check has already been done while fetching
+        )
+        for edr, etr in group_preamble_docs:  # type: DocEntry, Translation | None
+            ed = etr or edr
+            result.append(ed)
+            ed.document.ref_doc_cache = self.document.ref_doc_cache
+
+        return result
 
     def get_changelog_with_names(self, length=None, complete: bool = False):
         if not length:

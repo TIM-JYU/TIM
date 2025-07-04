@@ -3,6 +3,8 @@ from unittest.mock import patch, Mock
 
 from lxml import html
 
+from timApp.auth.accesstype import AccessType
+from timApp.document.docentry import DocEntry
 from timApp.document.docinfo import DocInfo
 from timApp.document.docparagraph import DocParagraph
 from timApp.document.specialnames import (
@@ -13,6 +15,7 @@ from timApp.document.specialnames import (
 from timApp.document.yamlblock import YamlBlock
 from timApp.tests.server.timroutetest import TimRouteTest
 from timApp.timdb.sqa import db
+from timApp.user.usergroup import UserGroup
 
 
 class PreambleTestBase(TimRouteTest):
@@ -378,4 +381,78 @@ class PreambleTest4(TimRouteTest):
             "have distinct ids from the preamble documents. "
             "Conflicting ids:",
             self.get(preamble.url),
+        )
+
+
+class PreambleTest5(TimRouteTest):
+    def test_extra_group_preambles(self):
+        self.test_user_1.make_admin()
+        db.session.commit()
+        self.login_test1()
+
+        ug1 = UserGroup.create("testgroup1")
+        ug2 = UserGroup.create("testgroup2")
+        ug3 = UserGroup.create("testgroup3")
+
+        self.test_user_2.add_to_group(ug1, None)
+        self.test_user_2.add_to_group(ug2, None)
+        self.test_user_3.add_to_group(ug2, None)
+        self.test_user_3.add_to_group(ug3, None)
+        db.session.commit()
+
+        folder = self.current_user.get_personal_folder().path
+        group_preamble_path = f"{folder}/group_preambles"
+        self.create_folder(group_preamble_path)
+
+        p1 = self.create_doc(f"{group_preamble_path}/preamble-testgroup1-1")
+        p1.document.set_settings({"macros": {"is_testgroup1_1": True}})
+        p2 = self.create_doc(f"{group_preamble_path}/preamble-testgroup2-2")
+        p2.document.set_settings({"macros": {"is_testgroup2_2": True}})
+        p3 = self.create_doc(f"{group_preamble_path}/preamble-testgroup3-2")
+        p3.document.set_settings({"macros": {"is_testgroup3_2": True}})
+
+        d = self.create_doc(f"{folder}/testdoc")
+        self.test_user_2.grant_access(d, AccessType.view)
+        self.test_user_3.grant_access(d, AccessType.view)
+        db.session.commit()
+
+        p = self.create_preamble_for(d)
+        p.document.set_settings({"extraGroupPreambleFolder": group_preamble_path})
+
+        self.login_test2()
+        d = DocEntry.find_by_path(f"{folder}/testdoc")
+        d._preamble_docs = None  # Clear cached preamble docs
+        d.document.settings_cache = None  # Clear cached settings
+        macros_dict = d.document.get_settings().get_dict().get("macros", {})
+
+        self.assertFalse(
+            macros_dict.get("is_testgroup1_1", False),
+            "testgroup1-1 preamble should not load for testuser2 (priority 1)",
+        )
+        self.assertTrue(
+            macros_dict.get("is_testgroup2_2", False),
+            "testgroup2-2 preamble should load for testuser2 (priority 2)",
+        )
+        self.assertFalse(
+            macros_dict.get("is_testgroup3_2", False),
+            "testgroup3-2 preamble should not load for testuser2 (not in group)",
+        )
+
+        self.login_test3()
+        d = DocEntry.find_by_path(f"{folder}/testdoc")
+        d._preamble_docs = None  # Clear cached preamble docs
+        d.document.settings_cache = None  # Clear cached settings
+        macros_dict = d.document.get_settings().get_dict().get("macros", {})
+
+        self.assertFalse(
+            macros_dict.get("is_testgroup1_1", False),
+            "testgroup1-1 preamble should not load for testuser3 (not in group)",
+        )
+        self.assertTrue(
+            macros_dict.get("is_testgroup2_2", False),
+            "testgroup2-2 preamble should load for testuser3 (priority 2)",
+        )
+        self.assertTrue(
+            macros_dict.get("is_testgroup3_2", False),
+            "testgroup3-2 preamble should load for testuser3 (priority 2)",
         )
