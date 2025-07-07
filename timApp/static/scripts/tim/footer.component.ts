@@ -1,7 +1,6 @@
 import {Component, inject} from "@angular/core";
 import {getVisibilityVars} from "tim/timRoot";
 import {documentglobals, genericglobals} from "tim/util/globals";
-import {Users} from "tim/user/userService";
 import {showReportContentDialog} from "tim/ui/showReportContentDialog";
 import {to2} from "tim/util/utils";
 import {LinkLanguageService} from "tim/user/link-language.service";

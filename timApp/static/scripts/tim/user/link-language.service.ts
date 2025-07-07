@@ -1,5 +1,5 @@
-import {Users} from "./userService";
 import {Injectable} from "@angular/core";
+import {Users} from "tim/user/userService";
 
 @Injectable({providedIn: "root"})
 export class LinkLanguageService {
