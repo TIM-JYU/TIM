@@ -8897,8 +8897,8 @@
         </context-group>
       </trans-unit>
       <trans-unit id="187187500641108332" datatype="html">
-        <source><x id="INTERPOLATION" equiv-text="Folder() ?? &apos;Enter the location or leave empty&apos;}}"/></source>
-        <target state="new"><x id="INTERPOLATION" equiv-text="Folder() ?? &apos;Enter the location or leave empty&apos;}}"/></target>
+        <source><x id="INTERPOLATION" equiv-text="Folder() ?? 'Enter the location or leave empty'}}"/></source>
+        <target state="new"><x id="INTERPOLATION" equiv-text="Folder() ?? 'Enter the location or leave empty'}}"/></target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/user-group-dialog.component.ts</context>
           <context context-type="linenumber">61,62</context>
@@ -10917,6 +10917,22 @@ Syötä useiden käyttäjien osoitteet allekkain tai pilkulla erotettuina.</targ
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/ui/report-content-dialog.component.ts</context>
           <context context-type="linenumber">120,121</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="1876317285885218816" datatype="html">
+        <source>If you do not receive the message within 5 minutes, verify that your email address is entered correctly above. Additionally, check your Spam or Junk folder in case the message was filtered.</source>
+        <target state="translated">Jos et saa viestiä 5 minuutin kuluessa, varmista, että sähköpostiosoitteesi on syötetty oikein. Tarkista myös roskapostikansiosi, sillä viesti on voinut joutua suodatetuksi.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/user/login-dialog.component.ts</context>
+          <context context-type="linenumber">209,210</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="6518048135226350997" datatype="html">
+        <source><x id="TAG_INPUT" ctype="x-input" equiv-text="&quot;checkbox&quot; name=&quot;agree-checkbox&quot; [(ngModel)]=&quot;agreeToTerms&quot; [disabled]=&quot;emailSent&quot;>"/> I have read and agree to the <x id="START_LINK" ctype="x-a" equiv-text="&lt;a href=&quot;{{linkLang.getLangLink('/view/' + termsOfServicePath)}}&quot;>"/>Terms of Service.<x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a>"/></source>
+        <target state="translated"><x id="TAG_INPUT" ctype="x-input" equiv-text="&quot;checkbox&quot; name=&quot;agree-checkbox&quot; [(ngModel)]=&quot;agreeToTerms&quot; [disabled]=&quot;emailSent&quot;>"/>Olen lukenut ja hyväksyn <x id="START_LINK" ctype="x-a" equiv-text="&lt;a href=&quot;{{linkLang.getLangLink('/view/' + termsOfServicePath)}}&quot;>"/>Käyttöehdot.<x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a>"/></target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/user/login-dialog.component.ts</context>
+          <context context-type="linenumber">225,227</context>
         </context-group>
       </trans-unit>
       <trans-unit id="7416659172020658801" datatype="html">

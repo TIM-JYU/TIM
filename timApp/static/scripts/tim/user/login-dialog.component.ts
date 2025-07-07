@@ -3,7 +3,13 @@
  */
 
 import {AngularDialogComponent} from "tim/ui/angulardialog/angular-dialog-component.directive";
-import {Component, ElementRef, NgModule, ViewChild} from "@angular/core";
+import {
+    Component,
+    ElementRef,
+    inject,
+    NgModule,
+    ViewChild,
+} from "@angular/core";
 import type {IVisibilityVars} from "tim/timRoot";
 import {getVisibilityVars} from "tim/timRoot";
 import {DialogModule} from "tim/ui/angulardialog/dialog.module";
@@ -22,6 +28,7 @@ import type {ILoginResponse} from "tim/user/userService";
 import {Users} from "tim/user/userService";
 import {CommonModule} from "@angular/common";
 import {PurifyModule} from "tim/util/purify.module";
+import {LinkLanguageService} from "tim/user/link-language.service";
 
 interface INameResponse {
     status: "name";
@@ -199,6 +206,7 @@ interface ISimpleRegistrationResponse {
                                        autocomplete="username"
                                        placeholder="Email or username"
                                        type="text"/>
+                                <small class="help-block" *ngIf="emailSent" i18n>If you do not receive the message within 5 minutes, verify that your email address is entered correctly above. Additionally, check your Spam or Junk folder in case the message was filtered.</small>
                                 <label [ngStyle]="urlStyle" for="url" class="control-label" i18n>Do not type anything
                                     here</label>
                                 <input class="form-control"
@@ -212,8 +220,14 @@ interface ISimpleRegistrationResponse {
                                        placeholder="Do not type anything here"
                                        type="text"/>
                             </div>
+                            <div class="checkbox" *ngIf="termsOfServicePath">
+                                <label [ngClass]="{'text-muted': emailSent}" i18n>
+                                    <input type="checkbox" name="agree-checkbox" [(ngModel)]="agreeToTerms" [disabled]="emailSent">
+                                    I have read and agree to the <a [href]="linkLang.getLangLink('/view/' + termsOfServicePath)" target="_blank" rel="noopener noreferrer">Terms of Service.</a>
+                                </label>
+                            </div>
                             <button (click)="provideEmail()"
-                                    [disabled]="!email"
+                                    [disabled]="!email || !agreeToTerms"
                                     *ngIf="!emailSent"
                                     class="timButton" i18n>
                                 Continue
@@ -365,6 +379,9 @@ export class LoginDialogComponent extends AngularDialogComponent<
     config = genericglobals().config;
     idps: IDiscoveryFeedEntry[] = [];
     protected dialogName = "login";
+    agreeToTerms = false;
+    termsOfServicePath = genericglobals().footerDocs.termsOfService;
+    linkLang: LinkLanguageService = inject(LinkLanguageService);
 
     // Reserve space for possible login error so that it will be directly visible and not behind a scrollbar.
     // TODO: This is probably no longer needed because the login dialog will resize itself whenever the dialog DOM
@@ -493,7 +510,7 @@ export class LoginDialogComponent extends AngularDialogComponent<
     }
 
     public async provideEmail() {
-        if (!this.email || this.signUpRequestInProgress) {
+        if (!this.email || this.signUpRequestInProgress || !this.agreeToTerms) {
             return;
         }
         const r = await this.sendRequest("/emailSignup", {
