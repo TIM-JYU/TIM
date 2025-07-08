@@ -59,21 +59,21 @@ const DEFAULT_COPY_OPTIONS: CopyOptions = {
             <div class="panel panel-default" *ngIf="previewLength > 0">
                 <div class="panel-heading">Exclude folder or document items</div>
                     <div class="panel-body">
-                        <p>These are the items that will be copied. To exclude an item, simply uncheck its corresponding checkbox.</p>
+                        <p>These are the items that will be copied. To exclude an item, simply check its corresponding checkbox.</p>
                     </div>
                 <table class="table-responsive">
                     <table class="table table-hover">
                     <thead>
                         <tr>
-                            <th><input title="{{ alldeselect ? 'Select all' : 'Deselect all' }}" type="checkbox" [checked]="alldeselect" (change)="toggleAll($event)"></th>
+                            <th><input type="checkbox" [checked]="allSelected()" (change)="toggleAll($event)"></th>
                             <th>From</th>
                             <th></th>
                             <th>To</th>
                         </tr>
                     </thead>
                     <tbody>
-                        <tr *ngFor="let listItem of copyPreviewList; let i = index" (click)="handleCheckboxOrRowToggle($event, listItem)" [ngClass]="{'text-muted': !checkbox.checked, 'active': !checkbox.checked}">
-                            <td><input type="checkbox" name="{{'chb' + i}}" #checkbox checked></td>
+                        <tr *ngFor="let listItem of copyPreviewList" (click)="toggleItem(listItem)" [ngClass]="{'active text-muted': isSelected(listItem)}">
+                            <td><input type="checkbox" [checked]="isSelected(listItem)" (click)="toggleItem(listItem); $event.stopPropagation()"></td>
                             <td><span [innerText]="listItem.from"></span></td>
                             <td><i class="glyphicon glyphicon-arrow-right"></i></td>
                             <td><span [innerText]="listItem.to"></span></td>
@@ -82,14 +82,14 @@ const DEFAULT_COPY_OPTIONS: CopyOptions = {
                     </table>
                 </table>
             </div>
-            <p *ngIf="previewLength == 0">Nothing would be copied.</p>
+            <p *ngIf="previewLength == 0 || allSelected()">Nothing would be copied.</p>
             <tim-alert severity="warning" *ngIf="destExists">
                 The destination folder already exists. Make sure this is intended before copying.
             </tim-alert>
             <button (click)="copyFolder(copyFolderPath, copyFolderExclude)" class="timButton"
                     *ngIf="copyFolderPath != item.path &&
                      previewLength > 0 &&
-                     copyingFolder == 'notcopying'">Copy
+                     copyingFolder == 'notcopying'" [disabled]="allSelected()">Copy
             </button>
             <span *ngIf="copyingFolder == 'copying'"><tim-loading></tim-loading> Copying, this might take a while...</span>
             <span *ngIf="copyingFolder == 'finished'">
@@ -116,14 +116,12 @@ export class CopyFolderComponent implements OnInit {
     newFolder?: IFolder;
     copyOptions: CopyOptions = {...DEFAULT_COPY_OPTIONS};
     copyErrors?: string[];
-    alldeselect: boolean;
-    excludedItems: string[];
+    excludedItems: Set<string>;
 
     constructor(private http: HttpClient) {
         this.copyingFolder = "notcopying";
         this.copyFolderExclude = "";
-        this.alldeselect = false;
-        this.excludedItems = [];
+        this.excludedItems = new Set<string>();
     }
 
     get previewLength() {
@@ -155,12 +153,16 @@ export class CopyFolderComponent implements OnInit {
 
     async copyFolder(path: string, exclude: string) {
         this.copyingFolder = "copying";
+        const excludingRe = this.makeRegularExpressionFromSet(
+            this.excludedItems,
+            exclude
+        );
         const r = await toPromise(
             this.http.post<{new_folder?: IFolder; errors: string[]}>(
                 `/copy/${this.item.id}`,
                 {
                     destination: path,
-                    exclude: exclude,
+                    exclude: excludingRe,
                     copy_options: this.copyOptions,
                 }
             )
@@ -188,36 +190,43 @@ export class CopyFolderComponent implements OnInit {
         this.copyPreviewList = undefined;
         this.destExists = undefined;
         this.copyErrors = undefined;
+        this.excludedItems.clear();
     }
 
-    handleCheckboxOrRowToggle(
-        event: MouseEvent,
-        item: {from: string; to: string}
-    ) {
-        let changeCheckedState: boolean = true;
-        const eventTarget = event.target as HTMLElement;
-        if (eventTarget.tagName.toLowerCase() === "input") {
-            // If checkbox is pressed directly, prevent double checking
-            changeCheckedState = false;
+    toggleItem(item: {from: string; to: string}) {
+        if (this.excludedItems.has(item.from)) {
+            this.excludedItems.delete(item.from);
+        } else {
+            this.excludedItems.add(item.from);
         }
-        const row = eventTarget.closest("tr");
-        if (!row) {
-            return;
-        }
-        const checkbox = row.querySelector(
-            "input[type='checkbox']"
-        ) as HTMLInputElement;
-        if (checkbox) {
-            if (changeCheckedState) {
-                checkbox.checked = !checkbox.checked;
-            }
-            if (!checkbox.checked) {
-                this.excludedItems.push(item.from);
-            }
-        }
+    }
+
+    isSelected(item: {from: string; to: string}) {
+        return this.excludedItems.has(item.from);
+    }
+
+    allSelected() {
+        return this.excludedItems.size === this.copyPreviewList?.length;
     }
 
     toggleAll(event: Event) {
-        console.log(this.excludedItems);
+        const checked = (event.target as HTMLInputElement).checked;
+        if (checked) {
+            this.copyPreviewList?.forEach((item) => {
+                this.excludedItems.add(item.from);
+            });
+        } else {
+            this.excludedItems.clear();
+        }
+    }
+
+    makeRegularExpressionFromSet(names: Set<string>, expression: string) {
+        for (const item of names) {
+            const escapedItem = item.replace(/[./]/g, "\\$&");
+            expression = expression + "|\\b" + escapedItem + "\\b";
+        }
+        return expression.startsWith("|")
+            ? expression.substring(1)
+            : expression;
     }
 }
