@@ -19,7 +19,7 @@ import type {JsonValue} from "tim/util/jsonvalue";
 import {saveCurrentScreenPar} from "tim/document/parhelpers";
 import {genericglobals, isDocumentGlobals} from "tim/util/globals";
 import {$http} from "tim/util/ngimport";
-import type {IOkResponse, Result, ToReturn} from "tim/util/utils";
+import {getLangLink, IOkResponse, Result, ToReturn} from "tim/util/utils";
 import {capitalizeFirstLetter, mapSuccess, to} from "tim/util/utils";
 import type {IDiscoveryFeedEntry} from "tim/user/haka-login.component";
 import {HakaLoginComponent, loadIdPs} from "tim/user/haka-login.component";
@@ -28,7 +28,6 @@ import type {ILoginResponse} from "tim/user/userService";
 import {Users} from "tim/user/userService";
 import {CommonModule} from "@angular/common";
 import {PurifyModule} from "tim/util/purify.module";
-import {LinkLanguageService} from "tim/user/link-language.service";
 
 interface INameResponse {
     status: "name";
@@ -223,7 +222,7 @@ interface ISimpleRegistrationResponse {
                             <div class="checkbox" *ngIf="termsOfServicePath">
                                 <label [ngClass]="{'text-muted': emailSent}" i18n>
                                     <input type="checkbox" name="agree-checkbox" [(ngModel)]="agreeToTerms" [disabled]="emailSent">
-                                    I have read and agree to the <a [href]="linkLang.getLangLink('/view/' + termsOfServicePath)" target="_blank" rel="noopener noreferrer">Terms of Service.</a>
+                                    I have read and agree to the <a [href]="getLangLink('/view/' + termsOfServicePath)" target="_blank" rel="noopener noreferrer">Terms of Service.</a>
                                 </label>
                             </div>
                             <button (click)="provideEmail()"
@@ -382,7 +381,6 @@ export class LoginDialogComponent extends AngularDialogComponent<
     agreeToTerms = false;
     termsOfServicePath = genericglobals().footerDocs.termsOfService;
     termsPathNotSet = true;
-    linkLang: LinkLanguageService = inject(LinkLanguageService);
 
     // Reserve space for possible login error so that it will be directly visible and not behind a scrollbar.
     // TODO: This is probably no longer needed because the login dialog will resize itself whenever the dialog DOM
@@ -680,6 +678,8 @@ export class LoginDialogComponent extends AngularDialogComponent<
         }
         this.focusPassword = true;
     }
+
+    protected readonly getLangLink = getLangLink;
 }
 
 @NgModule({

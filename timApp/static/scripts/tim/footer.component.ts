@@ -2,8 +2,7 @@ import {Component, inject} from "@angular/core";
 import {getVisibilityVars} from "tim/timRoot";
 import {documentglobals, genericglobals} from "tim/util/globals";
 import {showReportContentDialog} from "tim/ui/showReportContentDialog";
-import {to2} from "tim/util/utils";
-import {LinkLanguageService} from "tim/user/link-language.service";
+import {getLangLink, to2} from "tim/util/utils";
 
 @Component({
     selector: "tim-footer",
@@ -49,7 +48,7 @@ import {LinkLanguageService} from "tim/user/link-language.service";
                                     </a>
                                     <ng-container *ngIf="footerDocs.termsOfService">
                                         <br>
-                                        <a href="{{linkLang.getLangLink('/view/' + footerDocs.termsOfService)}}" i18n>
+                                        <a href="{{getLangLink('/view/' + footerDocs.termsOfService)}}" i18n>
                                             Terms of Service
                                         </a>
                                     </ng-container>
@@ -76,7 +75,7 @@ export class FooterComponent {
     config = genericglobals().config;
     layout = genericglobals().layout;
     footerDocs = genericglobals().footerDocs;
-    linkLang = inject(LinkLanguageService);
+    protected readonly getLangLink = getLangLink;
 
     async reportContent() {
         const windowUrl = window.location.href;
