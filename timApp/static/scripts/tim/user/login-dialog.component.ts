@@ -3,13 +3,7 @@
  */
 
 import {AngularDialogComponent} from "tim/ui/angulardialog/angular-dialog-component.directive";
-import {
-    Component,
-    ElementRef,
-    inject,
-    NgModule,
-    ViewChild,
-} from "@angular/core";
+import {Component, ElementRef, NgModule, ViewChild} from "@angular/core";
 import type {IVisibilityVars} from "tim/timRoot";
 import {getVisibilityVars} from "tim/timRoot";
 import {DialogModule} from "tim/ui/angulardialog/dialog.module";
@@ -222,7 +216,7 @@ interface ISimpleRegistrationResponse {
                             <div class="checkbox" *ngIf="termsOfServicePath">
                                 <label [ngClass]="{'text-muted': emailSent}" i18n>
                                     <input type="checkbox" name="agree-checkbox" [(ngModel)]="agreeToTerms" [disabled]="emailSent">
-                                    I have read and agree to the <a [href]="getLangLink('/view/' + termsOfServicePath)" target="_blank" rel="noopener noreferrer">Terms of Service.</a>
+                                    I have read and agree to the <a [href]="termsOfServiceLink" target="_blank" rel="noopener noreferrer">Terms of Service.</a>
                                 </label>
                             </div>
                             <button (click)="provideEmail()"
@@ -679,7 +673,9 @@ export class LoginDialogComponent extends AngularDialogComponent<
         this.focusPassword = true;
     }
 
-    protected readonly getLangLink = getLangLink;
+    get termsOfServiceLink() {
+        return getLangLink("/view/" + this.termsOfServicePath);
+    }
 }
 
 @NgModule({
