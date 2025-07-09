@@ -13,8 +13,13 @@ import type {JsonValue} from "tim/util/jsonvalue";
 import {saveCurrentScreenPar} from "tim/document/parhelpers";
 import {genericglobals, isDocumentGlobals} from "tim/util/globals";
 import {$http} from "tim/util/ngimport";
-import {getLangLink, IOkResponse, Result, ToReturn} from "tim/util/utils";
-import {capitalizeFirstLetter, mapSuccess, to} from "tim/util/utils";
+import type {IOkResponse, Result, ToReturn} from "tim/util/utils";
+import {
+    capitalizeFirstLetter,
+    getLangLink,
+    mapSuccess,
+    to,
+} from "tim/util/utils";
 import type {IDiscoveryFeedEntry} from "tim/user/haka-login.component";
 import {HakaLoginComponent, loadIdPs} from "tim/user/haka-login.component";
 import {UserCodeLoginComponent} from "tim/user/user-code-login.component";
