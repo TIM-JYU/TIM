@@ -13,6 +13,7 @@ import {lastValueFrom} from "rxjs";
 import {HttpErrorResponse, HttpParams} from "@angular/common/http";
 import type {IGroup} from "tim/user/IUser";
 import {$rootScope, $timeout} from "tim/util/ngimport";
+import {Users} from "tim/user/userService";
 
 const blacklist = new Set([
     "name",
@@ -1099,4 +1100,19 @@ export function splitItems(itemsString: string): string[] {
         .split("\n")
         .flatMap((n) => n.split(/[,;]/))
         .map((n) => n.replace(/^ *- */, "").trim());
+}
+
+/**
+ * Return the given link with added translation address.
+ * If language is not handled return link ending in en-US.
+ * @param link
+ */
+export function getLangLink(link: string): string {
+    const currentLang = Users.getCurrentLanguage();
+    // For the basecase, with language fi, return unmodified link
+    if (currentLang == "fi") {
+        return link;
+    }
+    // For languages not handled, default to english
+    return link + "/en-US";
 }
