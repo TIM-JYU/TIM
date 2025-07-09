@@ -227,7 +227,7 @@ interface ISimpleRegistrationResponse {
                                 </label>
                             </div>
                             <button (click)="provideEmail()"
-                                    [disabled]="!email || !agreeToTerms"
+                                    [disabled]="!email || !(agreeToTerms || termsPathNotSet)"
                                     *ngIf="!emailSent"
                                     class="timButton" i18n>
                                 Continue
@@ -381,6 +381,7 @@ export class LoginDialogComponent extends AngularDialogComponent<
     protected dialogName = "login";
     agreeToTerms = false;
     termsOfServicePath = genericglobals().footerDocs.termsOfService;
+    termsPathNotSet = true;
     linkLang: LinkLanguageService = inject(LinkLanguageService);
 
     // Reserve space for possible login error so that it will be directly visible and not behind a scrollbar.
@@ -412,6 +413,10 @@ export class LoginDialogComponent extends AngularDialogComponent<
 
         if (this.config.simpleLoginCustomLoginMessage != null) {
             this.loginMessage = this.config.simpleLoginCustomLoginMessage;
+        }
+
+        if (this.termsOfServicePath) {
+            this.termsPathNotSet = false;
         }
 
         const params = this.data;
@@ -510,7 +515,11 @@ export class LoginDialogComponent extends AngularDialogComponent<
     }
 
     public async provideEmail() {
-        if (!this.email || this.signUpRequestInProgress || !this.agreeToTerms) {
+        if (
+            !this.email ||
+            this.signUpRequestInProgress ||
+            !(this.agreeToTerms || this.termsPathNotSet)
+        ) {
             return;
         }
         const r = await this.sendRequest("/emailSignup", {
