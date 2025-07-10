@@ -219,9 +219,9 @@ interface ISimpleRegistrationResponse {
                                        type="text"/>
                             </div>
                             <div class="checkbox" *ngIf="termsOfServicePath">
-                                <label [ngClass]="{'text-muted': emailSent}" i18n>
+                                <label [ngClass]="{'text-muted': emailSent}">
                                     <input type="checkbox" name="agree-checkbox" [(ngModel)]="agreeToTerms" [disabled]="emailSent">
-                                    I have read and agree to the <a [href]="termsOfServiceLink" target="_blank" rel="noopener noreferrer">Terms of Service.</a>
+                                    <ng-container i18n>I have read and agree to the </ng-container><a [href]="termsOfServiceLink" target="_blank" rel="noopener noreferrer"><ng-container i18n>Terms of Service.</ng-container></a>
                                 </label>
                             </div>
                             <button (click)="provideEmail()"
