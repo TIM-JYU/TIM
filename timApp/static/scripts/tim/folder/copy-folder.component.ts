@@ -20,6 +20,8 @@ const DEFAULT_COPY_OPTIONS: CopyOptions = {
     stop_on_errors: true,
 };
 
+const COPY_HELP_ADDRESS: string = "/view/tim/TIM-ohjeet#hakemistonkopionti";
+
 @Component({
     selector: "tim-copy-folder",
     template: `
@@ -43,7 +45,8 @@ const DEFAULT_COPY_OPTIONS: CopyOptions = {
                        [(ngModel)]="copyFolderPath" (ngModelChange)="copyParamChanged()" #copyPath="ngModel">
                 <tim-error-message></tim-error-message>
             </div>
-            <p>You can optionally exclude some documents/folders from being copied.</p>
+            <p>You can optionally enter a regular expression to exclude specific documents or folders from being copied.</p> 
+            <p *ngIf="copyHelp">For more information on copying see the <a [href]="copyHelp">help page</a>.</p>
             <div class="form-group" timErrorState>
                 <label for="exclude" class="control-label">Exclude documents/folders that match:</label>
                 <input name="exclude" class="form-control" id="exclude" type="text" autocomplete="off"
@@ -117,6 +120,7 @@ export class CopyFolderComponent implements OnInit {
     copyOptions: CopyOptions = {...DEFAULT_COPY_OPTIONS};
     copyErrors?: string[];
     excludedItems: Set<string>;
+    copyHelp: string = COPY_HELP_ADDRESS;
 
     constructor(private http: HttpClient) {
         this.copyingFolder = "notcopying";
