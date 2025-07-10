@@ -197,16 +197,33 @@ export class CopyFolderComponent implements OnInit {
         this.excludedItems.clear();
     }
 
+    private getSubFolders(path: string) {
+        const splitPath = path.split("/");
+        const subFolders = [];
+        let current = "";
+        for (let i = 0; i < splitPath.length - 1; i++) {
+            current = current ? current + "/" + splitPath[i] : splitPath[i];
+            subFolders.push(current);
+        }
+        // remove the root folder
+        subFolders.shift();
+        return subFolders;
+    }
+
     toggleItem(item: {from: string; to: string}) {
         const path = item.from;
         if (this.excludedItems.has(path)) {
             this.excludedItems.delete(path);
+            const subFolders = this.getSubFolders(path);
+            subFolders.forEach((item) => {
+                this.excludedItems.delete(item);
+            });
         } else {
             this.excludedItems.add(path);
             // Any items that are children of this item are also excluded
-            this.copyPreviewList?.forEach((prevItem) => {
-                if (prevItem.from.startsWith(path)) {
-                    this.excludedItems.add(prevItem.from);
+            this.copyPreviewList?.forEach((previewItem) => {
+                if (previewItem.from.startsWith(path)) {
+                    this.excludedItems.add(previewItem.from);
                 }
             });
         }
@@ -235,8 +252,9 @@ export class CopyFolderComponent implements OnInit {
         const escapedCharacters = /[\-\[\]\/{}.()*+?\\^$|]/g;
         for (const item of names) {
             const escapedItem = item.replace(escapedCharacters, "\\$&");
-            expression = expression + "|\\b" + escapedItem + "\\b";
+            expression = expression + "|^" + escapedItem + "$";
         }
+        console.log(expression);
         return expression.startsWith("|")
             ? expression.substring(1)
             : expression;
