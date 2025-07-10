@@ -215,8 +215,8 @@ export class CopyFolderComponent implements OnInit {
         if (this.excludedItems.has(path)) {
             this.excludedItems.delete(path);
             const subFolders = this.getSubFolders(path);
-            subFolders.forEach((item) => {
-                this.excludedItems.delete(item);
+            subFolders.forEach((subFolderItem) => {
+                this.excludedItems.delete(subFolderItem);
             });
         } else {
             this.excludedItems.add(path);
