@@ -64,26 +64,28 @@ const COPY_HELP_ADDRESS: string = "/view/tim/TIM-ohjeet#hakemistonkopionti";
                     <div class="panel-body">
                         <p>These are the items that will be copied. To exclude an item, simply check its corresponding checkbox.</p>
                     </div>
-                <table class="table-responsive">
-                    <table class="table table-hover">
-                    <thead>
-                        <tr>
-                            <th><input type="checkbox" [checked]="allSelected()" (change)="toggleAll($event)"></th>
-                            <th>From</th>
-                            <th></th>
-                            <th>To</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr *ngFor="let listItem of copyPreviewList" (click)="toggleItem(listItem)" [ngClass]="{'active text-muted': isSelected(listItem)}">
-                            <td><input type="checkbox" [checked]="isSelected(listItem)" (click)="toggleItem(listItem); $event.stopPropagation()"></td>
-                            <td><span [innerText]="listItem.from"></span></td>
-                            <td><i class="glyphicon glyphicon-arrow-right"></i></td>
-                            <td><span [innerText]="listItem.to"></span></td>
-                        </tr>
-                    </tbody>
+                <div class="scrollable-table">
+                    <table class="table-responsive">
+                        <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th><input type="checkbox" [checked]="allSelected()" (change)="toggleAll($event)"></th>
+                                <th>From</th>
+                                <th></th>
+                                <th>To</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr *ngFor="let listItem of copyPreviewList" (click)="toggleItem(listItem)" [ngClass]="{'active text-muted': isSelected(listItem)}">
+                                <td><input type="checkbox" [checked]="isSelected(listItem)" (click)="toggleItem(listItem); $event.stopPropagation()"></td>
+                                <td><span [innerText]="listItem.from"></span></td>
+                                <td><i class="glyphicon glyphicon-arrow-right"></i></td>
+                                <td><span [innerText]="listItem.to"></span></td>
+                            </tr>
+                        </tbody>
+                        </table>
                     </table>
-                </table>
+                </div>
             </div>
             <p *ngIf="previewLength == 0 || allSelected()">Nothing would be copied.</p>
             <tim-alert severity="warning" *ngIf="destExists">
