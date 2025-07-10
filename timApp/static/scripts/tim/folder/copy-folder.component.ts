@@ -194,10 +194,17 @@ export class CopyFolderComponent implements OnInit {
     }
 
     toggleItem(item: {from: string; to: string}) {
-        if (this.excludedItems.has(item.from)) {
-            this.excludedItems.delete(item.from);
+        const path = item.from;
+        if (this.excludedItems.has(path)) {
+            this.excludedItems.delete(path);
         } else {
-            this.excludedItems.add(item.from);
+            this.excludedItems.add(path);
+            // Any items that are children of this item are also excluded
+            this.copyPreviewList?.forEach((prevItem) => {
+                if (prevItem.from.startsWith(path)) {
+                    this.excludedItems.add(prevItem.from);
+                }
+            });
         }
     }
 
@@ -221,8 +228,9 @@ export class CopyFolderComponent implements OnInit {
     }
 
     makeRegularExpressionFromSet(names: Set<string>, expression: string) {
+        const escapedCharacters = /[\-\[\]\/{}.()*+?\\^$|]/g;
         for (const item of names) {
-            const escapedItem = item.replace(/[./]/g, "\\$&");
+            const escapedItem = item.replace(escapedCharacters, "\\$&");
             expression = expression + "|\\b" + escapedItem + "\\b";
         }
         return expression.startsWith("|")
