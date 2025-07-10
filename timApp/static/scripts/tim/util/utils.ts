@@ -1114,5 +1114,5 @@ export function getLangLink(link: string): string {
         return link;
     }
     // For languages not handled, default to english
-    return link + "/en-US";
+    return link + "/en";
 }
