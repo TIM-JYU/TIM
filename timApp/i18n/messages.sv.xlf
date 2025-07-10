@@ -10832,12 +10832,20 @@ Separate multiple addresses with commas or write each address on a new line.</ta
           <context context-type="linenumber">209,210</context>
         </context-group>
       </trans-unit>
-      <trans-unit id="6518048135226350997" datatype="html">
-        <source><x id="TAG_INPUT" ctype="x-input" equiv-text="&quot;checkbox&quot; name=&quot;agree-checkbox&quot; [(ngModel)]=&quot;agreeToTerms&quot; [disabled]=&quot;emailSent&quot;&gt;"/> I have read and agree to the <x id="START_LINK" ctype="x-a" equiv-text="&lt;a href=&quot;{{linkLang.getLangLink(&apos;/view/&apos; + termsOfServicePath)}}&quot;&gt;"/>Terms of Service.<x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a&gt;"/></source>
-        <target state="new"><x id="TAG_INPUT" ctype="x-input" equiv-text="&quot;checkbox&quot; name=&quot;agree-checkbox&quot; [(ngModel)]=&quot;agreeToTerms&quot; [disabled]=&quot;emailSent&quot;&gt;"/> I have read and agree to the <x id="START_LINK" ctype="x-a" equiv-text="&lt;a href=&quot;{{linkLang.getLangLink(&apos;/view/&apos; + termsOfServicePath)}}&quot;&gt;"/>Terms of Service.<x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a&gt;"/></target>
+      <trans-unit id="5252011853704992482" datatype="html">
+        <source>I have read and agree to the </source>
+        <target state="new">I have read and agree to the </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/login-dialog.component.ts</context>
-          <context context-type="linenumber">225,227</context>
+          <context context-type="linenumber">224</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="2099768926011797391" datatype="html">
+        <source>Terms of Service.</source>
+        <target state="new">Terms of Service.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/user/login-dialog.component.ts</context>
+          <context context-type="linenumber">224</context>
         </context-group>
       </trans-unit>
       <trans-unit id="7271539637870485137" datatype="html">
