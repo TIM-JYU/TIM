@@ -14,7 +14,12 @@ import {saveCurrentScreenPar} from "tim/document/parhelpers";
 import {genericglobals, isDocumentGlobals} from "tim/util/globals";
 import {$http} from "tim/util/ngimport";
 import type {IOkResponse, Result, ToReturn} from "tim/util/utils";
-import {capitalizeFirstLetter, mapSuccess, to} from "tim/util/utils";
+import {
+    capitalizeFirstLetter,
+    getLangLink,
+    mapSuccess,
+    to,
+} from "tim/util/utils";
 import type {IDiscoveryFeedEntry} from "tim/user/haka-login.component";
 import {HakaLoginComponent, loadIdPs} from "tim/user/haka-login.component";
 import {UserCodeLoginComponent} from "tim/user/user-code-login.component";
@@ -199,6 +204,7 @@ interface ISimpleRegistrationResponse {
                                        autocomplete="username"
                                        placeholder="Email or username"
                                        type="text"/>
+                                <small class="help-block" *ngIf="emailSent" i18n>If you do not receive the message within 5 minutes, verify that your email address is entered correctly above. Additionally, check your Spam or Junk folder in case the message was filtered.</small>
                                 <label [ngStyle]="urlStyle" for="url" class="control-label" i18n>Do not type anything
                                     here</label>
                                 <input class="form-control"
@@ -212,8 +218,14 @@ interface ISimpleRegistrationResponse {
                                        placeholder="Do not type anything here"
                                        type="text"/>
                             </div>
+                            <div class="checkbox" *ngIf="termsOfServicePath">
+                                <label [ngClass]="{'text-muted': emailSent}">
+                                    <input type="checkbox" name="agree-checkbox" [(ngModel)]="agreeToTerms" [disabled]="emailSent">
+                                    <ng-container i18n>I have read and agree to the </ng-container><a [href]="termsOfServiceLink" target="_blank" rel="noopener noreferrer"><ng-container i18n>Terms of Service.</ng-container></a>
+                                </label>
+                            </div>
                             <button (click)="provideEmail()"
-                                    [disabled]="!email"
+                                    [disabled]="!email || !(agreeToTerms || termsPathNotSet)"
                                     *ngIf="!emailSent"
                                     class="timButton" i18n>
                                 Continue
@@ -365,6 +377,9 @@ export class LoginDialogComponent extends AngularDialogComponent<
     config = genericglobals().config;
     idps: IDiscoveryFeedEntry[] = [];
     protected dialogName = "login";
+    agreeToTerms = false;
+    termsOfServicePath = genericglobals().footerDocs.termsOfService;
+    termsPathNotSet = true;
 
     // Reserve space for possible login error so that it will be directly visible and not behind a scrollbar.
     // TODO: This is probably no longer needed because the login dialog will resize itself whenever the dialog DOM
@@ -395,6 +410,10 @@ export class LoginDialogComponent extends AngularDialogComponent<
 
         if (this.config.simpleLoginCustomLoginMessage != null) {
             this.loginMessage = this.config.simpleLoginCustomLoginMessage;
+        }
+
+        if (this.termsOfServicePath) {
+            this.termsPathNotSet = false;
         }
 
         const params = this.data;
@@ -493,7 +512,11 @@ export class LoginDialogComponent extends AngularDialogComponent<
     }
 
     public async provideEmail() {
-        if (!this.email || this.signUpRequestInProgress) {
+        if (
+            !this.email ||
+            this.signUpRequestInProgress ||
+            !(this.agreeToTerms || this.termsPathNotSet)
+        ) {
             return;
         }
         const r = await this.sendRequest("/emailSignup", {
@@ -653,6 +676,10 @@ export class LoginDialogComponent extends AngularDialogComponent<
             await this.continueSimpleLogin();
         }
         this.focusPassword = true;
+    }
+
+    get termsOfServiceLink() {
+        return getLangLink("/view/" + this.termsOfServicePath);
     }
 }
 
