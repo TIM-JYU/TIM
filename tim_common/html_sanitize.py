@@ -118,6 +118,7 @@ TIM_SAFE_TAGS = [
     "tim-steps",
     "tim-participant-list",
     "tim-course-manager",
+    "tim-copy-folder",
 ]
 
 TIM_SAFE_ATTRS_MAP = {
@@ -154,6 +155,8 @@ TIM_SAFE_ATTRS = frozenset(
         "color",
         "compact",
         "coords",
+        "copy-from",
+        "copy-to",
         "datetime",
         "dir",
         "disabled",

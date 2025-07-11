@@ -10943,6 +10943,142 @@ Syötä useiden käyttäjien osoitteet allekkain tai pilkulla erotettuina.</targ
           <context context-type="linenumber">224</context>
         </context-group>
       </trans-unit>
+      <trans-unit id="491697219808104137" datatype="html">
+        <source>You can copy all documents and folders from folder </source>
+        <target state="translated">Voit kopioida kaikki asiakirjat ja kansiot kansiosta</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/folder/copy-folder.component.ts</context>
+          <context context-type="linenumber">36,37</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="6021380561456852386" datatype="html">
+        <source>to another folder.</source>
+        <target state="translated">toiseen kansioon.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/folder/copy-folder.component.ts</context>
+          <context context-type="linenumber">38,39</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="9054131468802299331" datatype="html">
+        <source>You can copy all documents and folders in this folder to another folder.</source>
+        <target state="translated">Voit kopioida kaikki tässä kansiossa olevat asiakirjat ja kansiot toiseen kansioon.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/folder/copy-folder.component.ts</context>
+          <context context-type="linenumber">41,42</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="8724125301600901569" datatype="html">
+        <source>Copy options</source>
+        <target state="translated">Kopiointiasetukset</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/folder/copy-folder.component.ts</context>
+          <context context-type="linenumber">43,44</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="5646035883377382015" datatype="html">
+        <source>Destination:</source>
+        <target state="translated">Kohdekansio:</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/folder/copy-folder.component.ts</context>
+          <context context-type="linenumber">59,60</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="4217278029977509999" datatype="html">
+        <source>You can optionally exclude some documents/folders from being copied.</source>
+        <target state="translated">Voit halutessasi sulkea joitakin asiakirjoja/kansioita kopioinnin ulkopuolelle.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/folder/copy-folder.component.ts</context>
+          <context context-type="linenumber">64,65</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="7648491229604756233" datatype="html">
+        <source>Exclude documents/folders that match:</source>
+        <target state="translated">Jätä pois asiakirjat/kansiot, jotka sisältävät vastaavuuden:</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/folder/copy-folder.component.ts</context>
+          <context context-type="linenumber">66,67</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="7259476176756479954" datatype="html">
+        <source>Copy preview... </source>
+        <target state="translated">Kopioinnin esikatselu...</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/folder/copy-folder.component.ts</context>
+          <context context-type="linenumber">73,74</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="1201994481266057161" datatype="html">
+        <source>Nothing would be copied.</source>
+        <target state="translated">Mitään ei kopioitaisi.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/folder/copy-folder.component.ts</context>
+          <context context-type="linenumber">82,83</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="4467315881384291593" datatype="html">
+        <source> The destination folder already exists. Make sure this is intended before copying. </source>
+        <target state="translated"> Kohdekansio on jo olemassa. Ennen kopioimista varmista, että tämä on aiottua.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/folder/copy-folder.component.ts</context>
+          <context context-type="linenumber">84</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="5351591262168826856" datatype="html">
+        <source>Copy </source>
+        <target state="translated">Kopioi</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/folder/copy-folder.component.ts</context>
+          <context context-type="linenumber">98</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="6078474349091158570" datatype="html">
+        <source><x id="START_TAG_TIM_LOADING" ctype="x-tim_loading" equiv-text=">"/><x id="CLOSE_TAG_TIM_LOADING" ctype="x-tim_loading" equiv-text="Copying, th"/> Copying, this might take a while...</source>
+        <target state="translated"><x id="START_TAG_TIM_LOADING" ctype="x-tim_loading" equiv-text=">"/><x id="CLOSE_TAG_TIM_LOADING" ctype="x-tim_loading" equiv-text="Copying, th"/> Kopioidaan. Tämä voi kestää jonkin aikaa...</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/folder/copy-folder.component.ts</context>
+          <context context-type="linenumber">100,101</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="3568703193230308609" datatype="html">
+        <source> Folder <x id="INTERPOLATION" equiv-text="{{ currentItem.name }}"/> copied to <x id="START_LINK" ctype="x-a" equiv-text="&lt;a href=&quot;/manage/{{ newFolder?.path }}&quot; [innerText]=&quot;newFolder?.path&quot;>"/><x id="CLOSE_LINK" ctype="x-a" equiv-text="."/>. </source>
+        <target state="translated"> Folder <x id="INTERPOLATION" equiv-text="{{ currentItem.name }}"/> kopioitu kohteeseen <x id="START_LINK" ctype="x-a" equiv-text="&lt;a href=&quot;/manage/{{ newFolder?.path }}&quot; [innerText]=&quot;newFolder?.path&quot;>"/><x id="CLOSE_LINK" ctype="x-a" equiv-text="."/>. </target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/folder/copy-folder.component.ts</context>
+          <context context-type="linenumber">102,104</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="2996339800309212628" datatype="html">
+        <source>The following errors occurred while copying:</source>
+        <target state="translated">Kopioinnin aikana tapahtui seuraavat virheet:</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/folder/copy-folder.component.ts</context>
+          <context context-type="linenumber">106,107</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="8767771164964795111" datatype="html">
+        <source><x id="TAG_INPUT" ctype="x-input" equiv-text="&quot;checkbox&quot; name=&quot;copy-active-rights&quot;                                   [(ngModel)]=&quot;copyOptions.copy_active_rights&quot;>"/> Copy active access rights</source>
+        <target state="translated"><x id="TAG_INPUT" ctype="x-input" equiv-text="&quot;checkbox&quot; name=&quot;copy-active-rights&quot;                                   [(ngModel)]=&quot;copyOptions.copy_active_rights&quot;>"/> Kopioi aktiiviset käyttöoikeudet</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/folder/copy-folder.component.ts</context>
+          <context context-type="linenumber">46,48</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="401066251813288390" datatype="html">
+        <source><x id="TAG_INPUT" ctype="x-input" equiv-text="&quot;checkbox&quot; name=&quot;copy-expired-rights&quot;                                   [(ngModel)]=&quot;copyOptions.copy_expired_rights&quot;>"/> Copy expired access rights</source>
+        <target state="translated"><x id="TAG_INPUT" ctype="x-input" equiv-text="&quot;checkbox&quot; name=&quot;copy-expired-rights&quot;                                   [(ngModel)]=&quot;copyOptions.copy_expired_rights&quot;>"/> Kopioi vanhentuneet käyttöoikeudet</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/folder/copy-folder.component.ts</context>
+          <context context-type="linenumber">50,52</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="8659545883769858044" datatype="html">
+        <source><x id="TAG_INPUT" ctype="x-input" equiv-text="&quot;checkbox&quot; name=&quot;stop-errors&quot; [(ngModel)]=&quot;copyOptions.stop_on_errors&quot;>"/> Stop copying on errors</source>
+        <target state="translated"><x id="TAG_INPUT" ctype="x-input" equiv-text="&quot;checkbox&quot; name=&quot;stop-errors&quot; [(ngModel)]=&quot;copyOptions.stop_on_errors&quot;>"/> Lopeta kopiointi virheiden yhteydessä</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/folder/copy-folder.component.ts</context>
+          <context context-type="linenumber">54,55</context>
+        </context-group>
+      </trans-unit>
     </body>
   </file>
 </xliff>
