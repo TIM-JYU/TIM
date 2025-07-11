@@ -20,6 +20,8 @@ const DEFAULT_COPY_OPTIONS: CopyOptions = {
     stop_on_errors: true,
 };
 
+const COPY_HELP_ADDRESS: string = "/view/tim/TIM-ohjeet#hakemistonkopionti";
+
 @Component({
     selector: "tim-copy-folder",
     template: `
@@ -43,32 +45,56 @@ const DEFAULT_COPY_OPTIONS: CopyOptions = {
                        [(ngModel)]="copyFolderPath" (ngModelChange)="copyParamChanged()" #copyPath="ngModel">
                 <tim-error-message></tim-error-message>
             </div>
-            <p>You can optionally exclude some documents/folders from being copied.</p>
+            <p>You can optionally enter a regular expression to exclude specific documents or folders from being copied.</p> 
+            <p *ngIf="copyHelp">For more information on copying see the <a [href]="copyHelp">help page</a>.</p>
             <div class="form-group" timErrorState>
                 <label for="exclude" class="control-label">Exclude documents/folders that match:</label>
                 <input name="exclude" class="form-control" id="exclude" type="text" autocomplete="off"
                        [(ngModel)]="copyFolderExclude" (ngModelChange)="copyParamChanged()">
                 <tim-error-message></tim-error-message>
             </div>
-            <button (click)="copyFolderPreview(copyFolderPath, copyFolderExclude)" class="timButton"
-                    [disabled]="copyFolderPath == item.path || copyPath.invalid"
-                    *ngIf="copyingFolder == 'notcopying'">Copy preview...
-            </button>
-            <ul *ngIf="previewLength > 0">
-                <li *ngFor="let p of copyPreviewList">
-                    <span [innerText]="p.from"></span>
-                    <i class="glyphicon glyphicon-arrow-right"></i>
-                    <span [innerText]="p.to"></span>
-                </li>
-            </ul>
-            <p *ngIf="previewLength == 0">Nothing would be copied.</p>
+            <div class="form-group">
+                <button (click)="copyFolderPreview(copyFolderPath, copyFolderExclude)" class="timButton"
+                        [disabled]="copyFolderPath == item.path || copyPath.invalid"
+                        *ngIf="copyingFolder == 'notcopying'">Copy preview...
+                </button>
+            </div>
+            <div class="panel panel-default" *ngIf="previewLength > 0">
+                <div class="panel-heading">Exclude folder or document items</div>
+                    <div class="panel-body">
+                        <p>These are the items that will be copied. To exclude an item, simply check its corresponding checkbox.</p>
+                    </div>
+                <div class="scrollable-table">
+                    <table class="table-responsive">
+                        <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th><input type="checkbox" [checked]="allSelected()" (change)="toggleAll($event)"></th>
+                                <th>From</th>
+                                <th></th>
+                                <th>To</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr *ngFor="let listItem of copyPreviewList" (click)="toggleItem(listItem)" [ngClass]="{'active text-muted': isSelected(listItem)}">
+                                <td><input type="checkbox" [checked]="isSelected(listItem)" (click)="toggleItem(listItem); $event.stopPropagation()"></td>
+                                <td><span [innerText]="listItem.from"></span></td>
+                                <td><i class="glyphicon glyphicon-arrow-right"></i></td>
+                                <td><span [innerText]="listItem.to"></span></td>
+                            </tr>
+                        </tbody>
+                        </table>
+                    </table>
+                </div>
+            </div>
+            <p *ngIf="previewLength == 0 || allSelected()">Nothing would be copied.</p>
             <tim-alert severity="warning" *ngIf="destExists">
                 The destination folder already exists. Make sure this is intended before copying.
             </tim-alert>
             <button (click)="copyFolder(copyFolderPath, copyFolderExclude)" class="timButton"
                     *ngIf="copyFolderPath != item.path &&
                      previewLength > 0 &&
-                     copyingFolder == 'notcopying'">Copy
+                     copyingFolder == 'notcopying'" [disabled]="allSelected()">Copy
             </button>
             <span *ngIf="copyingFolder == 'copying'"><tim-loading></tim-loading> Copying, this might take a while...</span>
             <span *ngIf="copyingFolder == 'finished'">
@@ -95,10 +121,13 @@ export class CopyFolderComponent implements OnInit {
     newFolder?: IFolder;
     copyOptions: CopyOptions = {...DEFAULT_COPY_OPTIONS};
     copyErrors?: string[];
+    excludedItems: Set<string>;
+    copyHelp: string = COPY_HELP_ADDRESS;
 
     constructor(private http: HttpClient) {
         this.copyingFolder = "notcopying";
         this.copyFolderExclude = "";
+        this.excludedItems = new Set<string>();
     }
 
     get previewLength() {
@@ -130,12 +159,16 @@ export class CopyFolderComponent implements OnInit {
 
     async copyFolder(path: string, exclude: string) {
         this.copyingFolder = "copying";
+        const excludingRe = this.makeRegularExpressionFromSet(
+            this.excludedItems,
+            exclude
+        );
         const r = await toPromise(
             this.http.post<{new_folder?: IFolder; errors: string[]}>(
                 `/copy/${this.item.id}`,
                 {
                     destination: path,
-                    exclude: exclude,
+                    exclude: excludingRe,
                     copy_options: this.copyOptions,
                 }
             )
@@ -163,5 +196,69 @@ export class CopyFolderComponent implements OnInit {
         this.copyPreviewList = undefined;
         this.destExists = undefined;
         this.copyErrors = undefined;
+        this.excludedItems.clear();
+    }
+
+    private getSubFolders(path: string) {
+        const splitPath = path.split("/");
+        const subFolders = [];
+        let current = "";
+        for (let i = 0; i < splitPath.length - 1; i++) {
+            current = current ? current + "/" + splitPath[i] : splitPath[i];
+            subFolders.push(current);
+        }
+        // remove the root folder
+        subFolders.shift();
+        return subFolders;
+    }
+
+    toggleItem(item: {from: string; to: string}) {
+        const path = item.from;
+        if (this.excludedItems.has(path)) {
+            this.excludedItems.delete(path);
+            const subFolders = this.getSubFolders(path);
+            subFolders.forEach((subFolderItem) => {
+                this.excludedItems.delete(subFolderItem);
+            });
+        } else {
+            this.excludedItems.add(path);
+            // Any items that are children of this item are also excluded
+            this.copyPreviewList?.forEach((previewItem) => {
+                if (previewItem.from.startsWith(path)) {
+                    this.excludedItems.add(previewItem.from);
+                }
+            });
+        }
+    }
+
+    isSelected(item: {from: string; to: string}) {
+        return this.excludedItems.has(item.from);
+    }
+
+    allSelected() {
+        return this.excludedItems.size === this.copyPreviewList?.length;
+    }
+
+    toggleAll(event: Event) {
+        const checked = (event.target as HTMLInputElement).checked;
+        if (checked) {
+            this.copyPreviewList?.forEach((item) => {
+                this.excludedItems.add(item.from);
+            });
+        } else {
+            this.excludedItems.clear();
+        }
+    }
+
+    makeRegularExpressionFromSet(names: Set<string>, expression: string) {
+        const escapedCharacters = /[\-\[\]\/{}.()*+?\\^$|]/g;
+        for (const item of names) {
+            const escapedItem = item.replace(escapedCharacters, "\\$&");
+            expression = expression + "|^" + escapedItem + "$";
+        }
+        console.log(expression);
+        return expression.startsWith("|")
+            ? expression.substring(1)
+            : expression;
     }
 }
