@@ -62,7 +62,7 @@ const COPY_HELP_ADDRESS: string = "/view/tim/TIM-ohjeet#hakemistonkopionti";
             <div class="panel panel-default" *ngIf="previewLength > 0">
                 <div class="panel-heading">Exclude folder or document items</div>
                     <div class="panel-body">
-                        <p>These are the items that will be copied. To exclude an item, simply check its corresponding checkbox.</p>
+                        <p>These are the items that will be copied. Select the items you want to exclude from being copied.</p>
                     </div>
                 <div class="scrollable-table">
                     <table class="table-responsive">
@@ -256,7 +256,6 @@ export class CopyFolderComponent implements OnInit {
             const escapedItem = item.replace(escapedCharacters, "\\$&");
             expression = expression + "|^" + escapedItem + "$";
         }
-        console.log(expression);
         return expression.startsWith("|")
             ? expression.substring(1)
             : expression;
