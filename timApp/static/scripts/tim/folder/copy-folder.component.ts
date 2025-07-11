@@ -26,29 +26,29 @@ const COPY_HELP_ADDRESS: string = "/view/tim/TIM-ohjeet#hakemistonkopionti";
     selector: "tim-copy-folder",
     template: `
         <form>
-            <p>You can copy all documents and folders in this folder to another folder.</p>
-            <p>Copy options</p>
+            <p i18n>You can copy all documents and folders in this folder to another folder.</p>
+            <p i18n>Copy options</p>
             <div class="cb-group">
                 <div class="checkbox">
-                    <label><input type="checkbox" name="copy-active-rights" [(ngModel)]="copyOptions.copy_active_rights"> Copy active access rights</label>
+                    <label><input type="checkbox" name="copy-active-rights" [(ngModel)]="copyOptions.copy_active_rights"><ng-container i18n> Copy active access rights</ng-container></label>
                 </div>
                 <div class="checkbox">
-                    <label><input type="checkbox" name="copy-expired-rights" [(ngModel)]="copyOptions.copy_expired_rights"> Copy expired access rights</label>
+                    <label><input type="checkbox" name="copy-expired-rights" [(ngModel)]="copyOptions.copy_expired_rights"><ng-container i18n> Copy expired access rights</ng-container></label>
                 </div>
                 <div class="checkbox">
-                    <label><input type="checkbox" name="stop-errors" [(ngModel)]="copyOptions.stop_on_errors"> Stop copying on errors</label>
+                    <label><input type="checkbox" name="stop-errors" [(ngModel)]="copyOptions.stop_on_errors"><ng-container i18n> Stop copying on errors</ng-container></label>
                 </div>
             </div>
             <div class="form-group" timErrorState>
-                <label for="destination" class="control-label">Destination:</label>
+                <label for="destination" class="control-label" i18n>Destination:</label>
                 <input name="copyPath" class="form-control" timLocation id="destination" type="text" autocomplete="off"
                        [(ngModel)]="copyFolderPath" (ngModelChange)="copyParamChanged()" #copyPath="ngModel">
                 <tim-error-message></tim-error-message>
             </div>
-            <p>You can optionally enter a regular expression to exclude specific documents or folders from being copied.</p> 
-            <p *ngIf="copyHelp">For more information on copying see the <a [href]="copyHelp">help page</a>.</p>
+            <p i18n>You can optionally enter a regular expression to exclude specific documents or folders from being copied.</p> 
+            <p *ngIf="copyHelp"><ng-container i18n>For more information on copying see the </ng-container><a [href]="copyHelp"><ng-container i18n>help page</ng-container></a>.</p>
             <div class="form-group" timErrorState>
-                <label for="exclude" class="control-label">Exclude documents/folders that match:</label>
+                <label for="exclude" class="control-label" i18n>Exclude documents/folders that match:</label>
                 <input name="exclude" class="form-control" id="exclude" type="text" autocomplete="off"
                        [(ngModel)]="copyFolderExclude" (ngModelChange)="copyParamChanged()">
                 <tim-error-message></tim-error-message>
@@ -56,13 +56,13 @@ const COPY_HELP_ADDRESS: string = "/view/tim/TIM-ohjeet#hakemistonkopionti";
             <div class="form-group">
                 <button (click)="copyFolderPreview(copyFolderPath, copyFolderExclude)" class="timButton"
                         [disabled]="copyFolderPath == item.path || copyPath.invalid"
-                        *ngIf="copyingFolder == 'notcopying'">Copy preview...
+                        *ngIf="copyingFolder == 'notcopying'" i18n>Copy preview...
                 </button>
             </div>
             <div class="panel panel-default" *ngIf="previewLength > 0">
-                <div class="panel-heading">Exclude folder or document items</div>
+                <div class="panel-heading" i18n>Exclude folder or document items</div>
                     <div class="panel-body">
-                        <p>These are the items that will be copied. Select the items you want to exclude from being copied.</p>
+                        <p i18n>These are the items that will be copied. Select the items you want to exclude from being copied.</p>
                     </div>
                 <div class="scrollable-table">
                     <table class="table-responsive">
@@ -70,9 +70,9 @@ const COPY_HELP_ADDRESS: string = "/view/tim/TIM-ohjeet#hakemistonkopionti";
                         <thead>
                             <tr>
                                 <th><input type="checkbox" [checked]="allSelected()" (change)="toggleAll($event)"></th>
-                                <th>From</th>
+                                <th i18n="Column name for source folders|tableHeader">From</th>
                                 <th></th>
-                                <th>To</th>
+                                <th i18n="Column name for target folders|tableHeader">To</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -88,21 +88,21 @@ const COPY_HELP_ADDRESS: string = "/view/tim/TIM-ohjeet#hakemistonkopionti";
                 </div>
             </div>
             <p *ngIf="previewLength == 0 || allSelected()">Nothing would be copied.</p>
-            <tim-alert severity="warning" *ngIf="destExists">
+            <tim-alert severity="warning" *ngIf="destExists" i18n>
                 The destination folder already exists. Make sure this is intended before copying.
             </tim-alert>
             <button (click)="copyFolder(copyFolderPath, copyFolderExclude)" class="timButton"
                     *ngIf="copyFolderPath != item.path &&
                      previewLength > 0 &&
-                     copyingFolder == 'notcopying'" [disabled]="allSelected()">Copy
+                     copyingFolder == 'notcopying'" [disabled]="allSelected()" i18n>Copy
             </button>
-            <span *ngIf="copyingFolder == 'copying'"><tim-loading></tim-loading> Copying, this might take a while...</span>
+            <span *ngIf="copyingFolder == 'copying'"><tim-loading></tim-loading><ng-container i18n> Copying, this might take a while...</ng-container></span>
             <span *ngIf="copyingFolder == 'finished'">
-                Folder {{ item.name }} copied to
+                <ng-container i18n>Folder </ng-container>{{ item.name }}<ng-container i18n> copied to</ng-container>
                 <a href="/manage/{{ newFolder?.path }}" [innerText]="newFolder?.path"></a>.
             </span>
             <div *ngIf="copyErrors">
-                <p>The following errors occurred while copying:</p>
+                <p i18n>The following errors occurred while copying:</p>
                 <ul>
                     <li *ngFor="let e of copyErrors">{{e}}</li>
                 </ul>
