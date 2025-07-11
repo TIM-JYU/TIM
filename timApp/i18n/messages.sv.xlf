@@ -10824,6 +10824,30 @@ Separate multiple addresses with commas or write each address on a new line.</ta
           <context context-type="linenumber">120,121</context>
         </context-group>
       </trans-unit>
+      <trans-unit id="1876317285885218816" datatype="html">
+        <source>If you do not receive the message within 5 minutes, verify that your email address is entered correctly above. Additionally, check your Spam or Junk folder in case the message was filtered.</source>
+        <target state="new">If you do not receive the message within 5 minutes, verify that your email address is entered correctly above. Additionally, check your Spam or Junk folder in case the message was filtered.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/user/login-dialog.component.ts</context>
+          <context context-type="linenumber">209,210</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="5252011853704992482" datatype="html">
+        <source>I have read and agree to the </source>
+        <target state="new">I have read and agree to the </target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/user/login-dialog.component.ts</context>
+          <context context-type="linenumber">224</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="2099768926011797391" datatype="html">
+        <source>Terms of Service.</source>
+        <target state="new">Terms of Service.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/user/login-dialog.component.ts</context>
+          <context context-type="linenumber">224</context>
+        </context-group>
+      </trans-unit>
     </body>
   </file>
 </xliff>
