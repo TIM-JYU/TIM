@@ -583,7 +583,6 @@ def get_events(opts: FilterOptions) -> Response:
 
     :return: User's events in JSON format or HTTP 400 if failed
     """
-    verify_logged_in()
     cur_user = get_current_user_object()
     events = events_of_user(cur_user, opts)
     # TODO: This needs further optimization
@@ -605,7 +604,6 @@ def get_event(event_id: int) -> Response:
     :param event_id: event id
     :return: Event in JSON format
     """
-    verify_logged_in()
     event = Event.get_by_id(event_id)
     if event is None:
         raise NotExist(f"Event not found by the id of {event_id}")

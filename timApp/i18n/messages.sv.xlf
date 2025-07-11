@@ -10848,6 +10848,14 @@ Separate multiple addresses with commas or write each address on a new line.</ta
           <context context-type="linenumber">224</context>
         </context-group>
       </trans-unit>
+      <trans-unit id="621813871663860791" datatype="html">
+        <source>You need to log in to book events</source>
+        <target state="new">You need to log in to book events</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/calendar/calendar-event-dialog.component.ts</context>
+          <context context-type="linenumber">752</context>
+        </context-group>
+      </trans-unit>
     </body>
   </file>
 </xliff>
