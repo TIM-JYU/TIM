@@ -55,6 +55,7 @@
             var bookmarks = {{ bookmarks|tojson }};
             var locale = {{locale|tojson}};
             var lectureInfo = {{lecture_info|tojson}};
+            var latest_tos_date = {{ latest_tos_date | tojson }};
             var footerDocs = {
                 privacyNotice: {{ config.PRIVACY_NOTICE_DOC|tojson }},
                 accessibilityStatement: {{ config.ACCESSIBILITY_STATEMENT_DOC|tojson }},

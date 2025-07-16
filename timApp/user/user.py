@@ -1607,6 +1607,7 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
                 "folder": self.get_personal_folder() if self.logged_in else None,
                 "consent": self.consent,
                 "last_name": self.last_name,
+                "tos_accepted_at": self.tos_accepted_at,
             }
 
         if contacts:

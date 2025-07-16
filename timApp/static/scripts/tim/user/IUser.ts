@@ -49,6 +49,7 @@ export interface IFullUser extends IUser {
     consent: ConsentType | undefined;
     folder: IFolder | null; // Folder is null only when not logged in.
     last_name: string | null;
+    tos_accepted_at?: string | null;
 }
 
 export interface ICurrentUser extends IFullUser {
