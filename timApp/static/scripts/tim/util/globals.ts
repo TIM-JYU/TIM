@@ -90,6 +90,7 @@ export interface IGenericGlobals {
     layout: ILayout;
     footerDocs: IFooterDocs;
     lectureInfo: {in_lecture: boolean; is_lecturer: boolean};
+    latest_tos_date: string | null;
 }
 
 export interface IErrorGlobals extends IGenericGlobals {
