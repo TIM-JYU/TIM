@@ -87,6 +87,7 @@ from timApp.securitytxt.routes import securitytxt
 from timApp.sisu.scim import scim
 from timApp.sisu.sisu import sisu
 from timApp.idesupport.routes import ide
+from timApp.termsofservice.tos_acceptance import tos_accepted
 from timApp.tim_app import app
 from timApp.timdb.sqa import db
 from timApp.upload.upload import upload
@@ -160,6 +161,7 @@ blueprints = [
     scheduling,
     mailman_events,
     user_sessions,
+    tos_accepted,
     # plugins
     calendar_plugin,
     exam_group_manager_plugin,
@@ -264,7 +266,10 @@ def get_tos_date() -> datetime | None:
     tos_path = current_app.config["TERMS_OF_SERVICE_DOC"]
     if tos_path:
         tos_doc = Item.find_by_path(tos_path)
-        return tos_doc.last_modified
+        if tos_doc:
+            return tos_doc.last_modified
+        else:
+            return None
     else:
         return None
 
