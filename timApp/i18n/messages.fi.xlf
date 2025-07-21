@@ -11139,6 +11139,70 @@ Syötä useiden käyttäjien osoitteet allekkain tai pilkulla erotettuina.</targ
           <context context-type="linenumber">128</context>
         </context-group>
       </trans-unit>
+      <trans-unit id="2037530438482013410" datatype="html">
+        <source> Terms of Service Update </source>
+        <target state="translated"> Käyttöehtojen päivitys </target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/ui/tos-dialog.component.ts</context>
+          <context context-type="linenumber">20</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="7673566870612739975" datatype="html">
+        <source>We have updated our Terms of Service</source>
+        <target state="translated">Olemme päivittäneet käyttöehtoja</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/ui/tos-dialog.component.ts</context>
+          <context context-type="linenumber">24,25</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="2414550148019983499" datatype="html">
+        <source>To continue using TIM, you need to review and agree to the updated terms.</source>
+        <target state="translated">Jatkaaksesi TIM:n käyttöä sinun on tarkistettava ja hyväksyttävä päivitetyt ehdot.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/ui/tos-dialog.component.ts</context>
+          <context context-type="linenumber">25,26</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="676312643420183536" datatype="html">
+        <source>By marking the checkbox and clicking "Confirm", you confirm that you have read and accepted the Terms of Service.</source>
+        <target state="translated">Merkkaamalla valintaruudun ja napsauttamalla ”Vahvista” vahvistat, että olet lukenut ja hyväksynyt käyttöehdot.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/ui/tos-dialog.component.ts</context>
+          <context context-type="linenumber">26,27</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="7965632846269223613" datatype="html">
+        <source>Could not save the agreement: Anonymous users cannot perform this action.</source>
+        <target state="translated">Hyväksyntää ei voitu tallentaa: Anonyymit käyttäjät eivät voi suorittaa tätä toimintoa.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/ui/tos-dialog.component.ts</context>
+          <context context-type="linenumber">75</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="6510841402924705360" datatype="html">
+        <source>Could not save the agreement. Try to refresh the page, if the problem persists you can contact TIM support at tim@jyu.fi</source>
+        <target state="translated">Hyväksyntää ei voitu tallentaa. Yritä päivittää sivu, jos ongelma jatkuu, voit ottaa yhteyttä TIM tukeen osoitteessa tim@jyu.fi</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/ui/tos-dialog.component.ts</context>
+          <context context-type="linenumber">77</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="6077020405693328783" datatype="html">
+        <source> Confirm</source>
+        <target state="translated"> Vahvista</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/ui/tos-dialog.component.ts</context>
+          <context context-type="linenumber">46</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="5609403425822167661" datatype="html">
+        <source> Log out</source>
+        <target state="translated"> Kirjaudu ulos</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/ui/tos-dialog.component.ts</context>
+          <context context-type="linenumber">47</context>
+        </context-group>
+      </trans-unit>
       <trans-unit id="7416659172020658801" datatype="html">
         <source>Create a new badge</source>
         <target state="new">Create a new badge</target>

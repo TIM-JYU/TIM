@@ -88,7 +88,6 @@ import type {
 import type {ReviewCanvasComponent} from "tim/plugin/reviewcanvas/review-canvas.component";
 import type {IRight} from "tim/item/access-role.service";
 import {UnbrokenSelection} from "tim/document/editing/unbrokenSelection";
-import {showTosAgreementDialog} from "tim/ui/showTosAgreementDialog";
 
 markAsUsed(interceptor);
 
@@ -326,10 +325,6 @@ export class ViewCtrl implements IController {
 
     private editMenuButtonChecked = false;
 
-    private readonly tos_accepted_str: string | null;
-    private readonly tos_modified_date_str: string | null;
-    private readonly inTosPage: boolean;
-
     constructor(sc: IScope) {
         timLogTime("ViewCtrl start", "view");
         const dg = documentglobals();
@@ -343,27 +338,6 @@ export class ViewCtrl implements IController {
         this.teacherMode = dg.teacherMode;
         this.velpMode = dg.velpMode;
         this.scope = sc;
-
-        this.tos_modified_date_str = documentglobals().latest_tos_date;
-        this.tos_accepted_str = documentglobals().current_user.tos_accepted_at;
-        this.inTosPage =
-            documentglobals().curr_item.path ===
-            documentglobals().footerDocs.termsOfService;
-
-        if (
-            this.tos_modified_date_str &&
-            Users.isRealUser() &&
-            !this.inTosPage
-        ) {
-            if (!this.tos_accepted_str) {
-                this.openTosDialog();
-            } else if (
-                Date.parse(this.tos_accepted_str) <
-                Date.parse(this.tos_modified_date_str)
-            ) {
-                this.openTosDialog();
-            }
-        }
 
         if (Users.isInAnswerReview) {
             document.querySelector("body")?.classList.add("answer-review-mode");
@@ -520,10 +494,6 @@ export class ViewCtrl implements IController {
         timLogTime("ViewCtrl end", "view");
 
         this.editingHandler.updateEditBarState();
-    }
-
-    private async openTosDialog() {
-        await to2(showTosAgreementDialog());
     }
 
     private async startDocumentStatePolling() {

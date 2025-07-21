@@ -7,6 +7,8 @@ import {FormsModule} from "@angular/forms";
 import {genericglobals} from "tim/util/globals";
 import {getLangLink, toPromise} from "tim/util/utils";
 import {HttpClient} from "@angular/common/http";
+import type {IUser} from "tim/user/IUser";
+import {Users} from "tim/user/userService";
 
 @Component({
     selector: "tos-dialog",
@@ -15,11 +17,13 @@ import {HttpClient} from "@angular/common/http";
         </div>
         <tim-dialog-frame [minimizable]="false" [showCloseIcon]="false">
             <ng-container i18n header>
-                Terms of Service Agreement
+                Terms of Service Update
             </ng-container>
             <ng-container body>
             <div class="modal-body">
-                <p>The Terms of Services have been updated and to continue to use TIM, your agreement is needed.</p>
+                <h3 i18n>We have updated our Terms of Service</h3>
+                <p i18n>To continue using TIM, you need to review and agree to the updated terms.</p>
+                <p i18n>By marking the checkbox and clicking "Confirm", you confirm that you have read and accepted the Terms of Service.</p>
                 <div class="form-group">
                     <div class="checkbox">
                         <label>
@@ -34,12 +38,13 @@ import {HttpClient} from "@angular/common/http";
                 <div *ngIf="errorMessage">
                     <div class="alert alert-danger alert-dismissible">
                         <button type="button" class="close" (click)="dismissAlert()"><span>&times;</span></button>
-                        <p class="text-left" i18n><strong><span class="glyphicon glyphicon-exclamation-sign"></span> There was an error.</strong></p>
+                        <p class="text-left"><strong><span class="glyphicon glyphicon-exclamation-sign"></span><ng-container> There was an error.</ng-container></strong></p>
                         <p class="text-left">{{errorMessage}}</p>
                     </div>
                 </div>
                 <div class="form-group">
-                    <button class="timButton" [disabled]="!agreeToTerms" (click)="confirmAgreement()" i18n>Confirm</button>
+                    <button class="timButton" [disabled]="!agreeToTerms" (click)="confirmAgreement()"><span class="glyphicon glyphicon-ok"></span><ng-container i18n> Confirm</ng-container></button>
+                    <button class="timButton btn-danger" (click)="beginLogout()"><span class="glyphicon glyphicon-remove"></span><ng-container i18n> Log out</ng-container></button>
                 </div>
             </ng-container>
         </tim-dialog-frame>
@@ -66,7 +71,14 @@ export class TosDialogComponent extends AngularDialogComponent<
         this.errorMessage = "";
         const r = await toPromise(this.http.post("/tosagree", {}));
         if (!r.ok) {
-            this.errorMessage = $localize`Could not save the agreement: ${r.result.error.error}`;
+            const status = r.result.status ?? 0;
+            if (status <= 0) {
+                this.errorMessage = $localize`Could not connect to server. Check your internet connection and try again.`;
+            } else if (r.result.error.error === "anonymous user error") {
+                this.errorMessage = $localize`Could not save the agreement: Anonymous users cannot perform this action.`;
+            } else {
+                this.errorMessage = $localize`Could not save the agreement. Try to refresh the page, if the problem persists you can contact TIM support at tim@jyu.fi`;
+            }
         } else {
             this.dismiss();
         }
@@ -74,6 +86,15 @@ export class TosDialogComponent extends AngularDialogComponent<
 
     dismissAlert() {
         this.errorMessage = "";
+    }
+
+    logout(user: IUser) {
+        Users.logout(user);
+    }
+
+    beginLogout() {
+        const user = Users.getCurrent();
+        this.logout(user);
     }
 }
 @NgModule({
