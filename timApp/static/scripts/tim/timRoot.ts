@@ -1,10 +1,17 @@
-import {getUrlParams} from "tim/util/utils";
-import {genericglobals, isDocumentGlobals, someglobals} from "tim/util/globals";
+import {getUrlParams, to2} from "tim/util/utils";
+import {
+    documentglobals,
+    genericglobals,
+    isDocumentGlobals,
+    someglobals,
+} from "tim/util/globals";
 import {Users} from "tim/user/userService";
 import type {BookmarksComponent} from "tim/sidebarmenu/util/bookmarks.component";
 import {setRoot} from "tim/rootinstance";
 import {showMessageDialog} from "tim/ui/showMessageDialog";
 import {timApp} from "tim/app";
+import {showTosAgreementDialog} from "tim/ui/showTosAgreementDialog";
+import type {IDocument} from "tim/item/IItem";
 
 export interface IVisibilityVars {
     footer?: boolean;
@@ -165,6 +172,10 @@ export class RootCtrl {
     public bookmarksCtrl: BookmarksComponent | undefined;
     private hide = getVisibilityVars();
 
+    private tos_accepted_str: string | null = "";
+    private tos_modified_date_str: string | null = "";
+    private inTosPage: boolean = false;
+
     registerBookmarks(bookmarksCtrl: BookmarksComponent) {
         this.bookmarksCtrl = bookmarksCtrl;
     }
@@ -212,6 +223,37 @@ export class RootCtrl {
                 }
             }
         }
+        this.checkTosAcceptance();
+    }
+
+    private checkTosAcceptance() {
+        this.tos_modified_date_str = documentglobals().latest_tos_date;
+        this.tos_accepted_str = documentglobals().current_user.tos_accepted_at;
+        const currentPage: IDocument | undefined = documentglobals().curr_item;
+        if (currentPage) {
+            this.inTosPage =
+                documentglobals().curr_item.path ===
+                documentglobals().footerDocs.termsOfService;
+        }
+
+        if (
+            this.tos_modified_date_str &&
+            Users.isRealUser() &&
+            !this.inTosPage
+        ) {
+            if (!this.tos_accepted_str) {
+                this.openTosDialog();
+            } else if (
+                Date.parse(this.tos_accepted_str) <
+                Date.parse(this.tos_modified_date_str)
+            ) {
+                this.openTosDialog();
+            }
+        }
+    }
+
+    private async openTosDialog() {
+        await to2(showTosAgreementDialog());
     }
 }
 
