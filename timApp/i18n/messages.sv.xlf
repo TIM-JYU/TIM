@@ -10976,14 +10976,6 @@ Separate multiple addresses with commas or write each address on a new line.</ta
           <context context-type="linenumber">101</context>
         </context-group>
       </trans-unit>
-      <trans-unit id="1040341291976790929" datatype="html">
-        <source> copied to</source>
-        <target state="new"> copied to</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/folder/copy-folder.component.ts</context>
-          <context context-type="linenumber">101</context>
-        </context-group>
-      </trans-unit>
       <trans-unit id="8982532068172415683" datatype="html">
         <source>Exclude folder or document items</source>
         <target state="new">Exclude folder or document items</target>
@@ -11019,6 +11011,38 @@ Separate multiple addresses with commas or write each address on a new line.</ta
         </context-group>
         <note priority="1" from="description">tableHeader</note>
         <note priority="1" from="meaning">Column name for target folders</note>
+      </trans-unit>
+      <trans-unit id="491697219808104137" datatype="html">
+        <source>You can copy all documents and folders from folder </source>
+        <target state="new">You can copy all documents and folders from folder </target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/folder/copy-folder.component.ts</context>
+          <context context-type="linenumber">38,39</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="6021380561456852386" datatype="html">
+        <source>to another folder.</source>
+        <target state="new">to another folder.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/folder/copy-folder.component.ts</context>
+          <context context-type="linenumber">40,41</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="1201994481266057161" datatype="html">
+        <source>Nothing would be copied.</source>
+        <target state="new">Nothing would be copied.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/folder/copy-folder.component.ts</context>
+          <context context-type="linenumber">108,109</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="4460586915252709323" datatype="html">
+        <source> copied to </source>
+        <target state="new"> copied to </target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/folder/copy-folder.component.ts</context>
+          <context context-type="linenumber">128</context>
+        </context-group>
       </trans-unit>
     </body>
   </file>
