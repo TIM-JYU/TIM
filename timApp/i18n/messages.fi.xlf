@@ -11155,22 +11155,6 @@ Syötä useiden käyttäjien osoitteet allekkain tai pilkulla erotettuina.</targ
           <context context-type="linenumber">24,25</context>
         </context-group>
       </trans-unit>
-      <trans-unit id="2414550148019983499" datatype="html">
-        <source>To continue using TIM, you need to review and agree to the updated terms.</source>
-        <target state="translated">Jatkaaksesi TIM:n käyttöä sinun on tarkistettava ja hyväksyttävä päivitetyt ehdot.</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/ui/tos-dialog.component.ts</context>
-          <context context-type="linenumber">25,26</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="676312643420183536" datatype="html">
-        <source>By marking the checkbox and clicking "Confirm", you confirm that you have read and accepted the Terms of Service.</source>
-        <target state="translated">Merkkaamalla valintaruudun ja napsauttamalla ”Vahvista” vahvistat, että olet lukenut ja hyväksynyt käyttöehdot.</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/ui/tos-dialog.component.ts</context>
-          <context context-type="linenumber">26,27</context>
-        </context-group>
-      </trans-unit>
       <trans-unit id="7965632846269223613" datatype="html">
         <source>Could not save the agreement: Anonymous users cannot perform this action.</source>
         <target state="translated">Hyväksyntää ei voitu tallentaa: Anonyymit käyttäjät eivät voi suorittaa tätä toimintoa.</target>
@@ -11201,6 +11185,22 @@ Syötä useiden käyttäjien osoitteet allekkain tai pilkulla erotettuina.</targ
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/ui/tos-dialog.component.ts</context>
           <context context-type="linenumber">47</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="5490996627311304999" datatype="html">
+        <source>To continue using TIM, please review and accept the updated terms.</source>
+        <target state="translated">Jos haluat jatkaa TIMin käyttöä, tarkista ja hyväksy päivitetyt ehdot.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/ui/tos-dialog.component.ts</context>
+          <context context-type="linenumber">25,26</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="8343193648246401401" datatype="html">
+        <source>By checking the box and clicking "Confirm", you acknowledge that you have read and agree to the Terms of Service.</source>
+        <target state="translated">Merkitsemällä laatikon ja napsauttamalla ”Vahvista” ilmoitat lukeneesi ja hyväksyväsi käyttöehdot.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/ui/tos-dialog.component.ts</context>
+          <context context-type="linenumber">26,27</context>
         </context-group>
       </trans-unit>
     </body>
