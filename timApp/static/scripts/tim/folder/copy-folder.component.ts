@@ -180,16 +180,12 @@ export class CopyFolderComponent implements OnInit {
         }
     }
 
-    async copyFolderPreview(
-        path: string,
-        exclude: string,
-        itemId: number = this.currentItem.id
-    ) {
+    async copyFolderPreview(path: string, exclude: string) {
         this.copyingFolder = "notcopying";
 
         const r = await toPromise(
             this.http.post<{preview: PreviewList; dest_exists: boolean}>(
-                `/copy/${itemId}/preview`,
+                `/copy/${this.currentItem.id}/preview`,
                 {
                     destination: path,
                     exclude: exclude,
@@ -204,11 +200,7 @@ export class CopyFolderComponent implements OnInit {
         }
     }
 
-    async copyFolder(
-        path: string,
-        exclude: string,
-        itemId: number = this.currentItem.id
-    ) {
+    async copyFolder(path: string, exclude: string) {
         this.copyingFolder = "copying";
         const excludingRe = this.makeRegularExpressionFromSet(
             this.excludedItems,
@@ -216,7 +208,7 @@ export class CopyFolderComponent implements OnInit {
         );
         const r = await toPromise(
             this.http.post<{new_folder?: IFolder; errors: string[]}>(
-                `/copy/${itemId}`,
+                `/copy/${this.currentItem.id}`,
                 {
                     destination: path,
                     exclude: excludingRe,
