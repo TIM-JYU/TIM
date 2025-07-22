@@ -22,6 +22,7 @@ export const AnswerBrowserSettings = t.partial({
     autosave: t.boolean,
     limitPoints: nullable(PointsLimiterSettings),
     clearAlertsOnAnswer: t.boolean,
+    showMaxPoints: t.boolean,
 });
 export interface IAnswerBrowserSettings
     extends t.TypeOf<typeof AnswerBrowserSettings> {

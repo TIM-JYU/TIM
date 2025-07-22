@@ -147,6 +147,7 @@ const DEFAULT_MARKUP_CONFIG: IAnswerBrowserSettings = {
     validOnlyText: $localize`Show valid only`,
     showReview: false,
     showInitialAskNew: true,
+    showMaxPoints: false,
 };
 
 @Component({
