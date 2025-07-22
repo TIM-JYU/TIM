@@ -276,6 +276,7 @@ class AnswerBrowserInfo:
     autosave: bool | None | Missing = missing
     limitPoints: PointsLimiterInfo | Missing | None = missing
     clearAlertsOnAnswer: bool | None | Missing = missing
+    showMaxPoints: bool | None | Missing = missing
 
 
 @dataclass
