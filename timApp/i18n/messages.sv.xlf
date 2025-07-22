@@ -11060,22 +11060,6 @@ Separate multiple addresses with commas or write each address on a new line.</ta
           <context context-type="linenumber">24,25</context>
         </context-group>
       </trans-unit>
-      <trans-unit id="2414550148019983499" datatype="html">
-        <source>To continue using TIM, you need to review and agree to the updated terms.</source>
-        <target state="new">To continue using TIM, you need to review and agree to the updated terms.</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/ui/tos-dialog.component.ts</context>
-          <context context-type="linenumber">25,26</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="676312643420183536" datatype="html">
-        <source>By marking the checkbox and clicking &quot;Confirm&quot;, you confirm that you have read and accepted the Terms of Service.</source>
-        <target state="new">By marking the checkbox and clicking &quot;Confirm&quot;, you confirm that you have read and accepted the Terms of Service.</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/ui/tos-dialog.component.ts</context>
-          <context context-type="linenumber">26,27</context>
-        </context-group>
-      </trans-unit>
       <trans-unit id="7965632846269223613" datatype="html">
         <source>Could not save the agreement: Anonymous users cannot perform this action.</source>
         <target state="new">Could not save the agreement: Anonymous users cannot perform this action.</target>
@@ -11106,6 +11090,22 @@ Separate multiple addresses with commas or write each address on a new line.</ta
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/ui/tos-dialog.component.ts</context>
           <context context-type="linenumber">47</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="5490996627311304999" datatype="html">
+        <source>To continue using TIM, please review and accept the updated terms.</source>
+        <target state="new">To continue using TIM, please review and accept the updated terms.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/ui/tos-dialog.component.ts</context>
+          <context context-type="linenumber">25,26</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="8343193648246401401" datatype="html">
+        <source>By checking the box and clicking &quot;Confirm&quot;, you acknowledge that you have read and agree to the Terms of Service.</source>
+        <target state="new">By checking the box and clicking &quot;Confirm&quot;, you acknowledge that you have read and agree to the Terms of Service.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/ui/tos-dialog.component.ts</context>
+          <context context-type="linenumber">26,27</context>
         </context-group>
       </trans-unit>
       <trans-unit id="7271539637870485137" datatype="html">
