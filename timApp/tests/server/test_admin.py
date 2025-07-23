@@ -135,6 +135,7 @@ class SearchTest(TimRouteTest):
                     "last_name": None,
                     "name": "testuser1",
                     "real_name": "Test user 1",
+                    "tos_accepted_at": None,
                 },
                 {
                     "consent": None,
@@ -191,6 +192,7 @@ class SearchTest(TimRouteTest):
                     "last_name": None,
                     "name": "testuser2",
                     "real_name": "Test user 2",
+                    "tos_accepted_at": None,
                 },
                 {
                     "consent": None,
@@ -247,6 +249,7 @@ class SearchTest(TimRouteTest):
                     "last_name": None,
                     "name": "testuser3",
                     "real_name": "Test user 3",
+                    "tos_accepted_at": None,
                 },
             ],
         )
