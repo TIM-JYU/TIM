@@ -460,10 +460,27 @@ def update_users(ug: UserGroup, args: SCIMGroupModel) -> None:
                 user = existing_accounts_by_email_dict.get(u.primary_email)
                 if user:
                     if not user.is_email_user:
-                        raise SCIMException(
-                            422,
-                            f"Key (email)=({user.email}) already exists. Conflicting username is: {u.value}",
-                        )
+                        # Special case: if the user is from HAKA and has unique codes set,
+                        # we can technically update the user's information.
+                        # We rely on Haka information being correct, so we can be sure that
+                        # the imported user and the existing users match.
+                        # By changing the name, we enable the grade export API to work, which expects
+                        # the JYU name. However, this is a workaround since user logging in via Haka will
+                        # switch the username back.
+                        # Since this is a workaround, we hide it behind an optional flag.
+                        #
+                        # FIXME: Always trust users from Haka, but instead of changing the username,
+                        #        save the SCIM username as a field to be used for grade exporting.
+                        allow_info_update = current_app.config[
+                            "SCIM_ALLOW_UPDATE_HAKA_USER_INFO"
+                        ]
+                        if not allow_info_update or (
+                            user.origin != UserOrigin.Haka or not user.uniquecodes
+                        ):
+                            raise SCIMException(
+                                422,
+                                f"Key (email)=({user.email}) already exists. Conflicting username is: {u.value}",
+                            )
                     user.update_info(
                         UserInfo(
                             username=u.value,
