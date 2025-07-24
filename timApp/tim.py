@@ -1,11 +1,12 @@
 import re
 import time
 import traceback
+from datetime import datetime
 from urllib.parse import urlparse
 
 import bs4
 from bs4 import BeautifulSoup
-from flask import Response
+from flask import Response, current_app
 from flask import g
 from flask import redirect
 from flask import render_template
@@ -45,6 +46,7 @@ from timApp.document.routes import doc_bp
 from timApp.document.translation.routes import tr_bp
 from timApp.gamification.generateMap import generateMap
 from timApp.item.distribute_rights import dist_bp
+from timApp.item.item import Item
 from timApp.item.manage import manage_page
 from timApp.item.routes import view_page
 from timApp.item.routes_tags import tags_blueprint
@@ -84,6 +86,7 @@ from timApp.securitytxt.routes import securitytxt
 from timApp.sisu.scim import scim
 from timApp.sisu.sisu import sisu
 from timApp.idesupport.routes import ide
+from timApp.termsofservice.tos_acceptance import tos_accepted
 from timApp.tim_app import app
 from timApp.timdb.sqa import db
 from timApp.upload.upload import upload
@@ -156,6 +159,7 @@ blueprints = [
     scheduling,
     mailman_events,
     user_sessions,
+    tos_accepted,
     # plugins
     calendar_plugin,
     exam_group_manager_plugin,
@@ -248,10 +252,24 @@ def inject_user() -> dict:
         other_users=get_other_users_as_list(),
         locale=get_locale(),
         prefs=get_current_user_object().get_prefs(),
+        latest_tos_date=get_tos_date(),
     )
     if logged_in() and app.config["BOOKMARKS_ENABLED"]:
         r["bookmarks"] = get_current_user_object().bookmarks.as_dict()
     return r
+
+
+def get_tos_date() -> datetime | None:
+    """Returns the date when tos document was last modified."""
+    tos_path = current_app.config["TERMS_OF_SERVICE_DOC"]
+    if tos_path:
+        tos_doc = Item.find_by_path(tos_path)
+        if tos_doc:
+            return tos_doc.last_modified
+        else:
+            return None
+    else:
+        return None
 
 
 @app.get("/js/<path:path>")

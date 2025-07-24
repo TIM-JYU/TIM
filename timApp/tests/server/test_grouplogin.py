@@ -15,6 +15,7 @@ class GroupLoginTest(TimRouteTest):
                 "consent": None,
                 "real_name": TEST_USER_1_NAME,
                 "last_name": None,
+                "tos_accepted_at": None,
                 "group": {"id": gid, "name": "testuser1"},
                 "groups": [{"id": gid, "name": "testuser1", "external_id": None}],
             },
@@ -32,6 +33,7 @@ class GroupLoginTest(TimRouteTest):
                 "consent": None,
                 "real_name": TEST_USER_1_NAME,
                 "last_name": None,
+                "tos_accepted_at": None,
                 "group": {"id": gid, "name": "testuser1"},
                 "groups": [{"id": gid, "name": "testuser1", "external_id": None}],
             },
@@ -68,6 +70,7 @@ class GroupLoginTest(TimRouteTest):
                     "id": 0,
                     "name": "Anonymous",
                     "last_name": None,
+                    "tos_accepted_at": None,
                     "real_name": "Anonymous user",
                     "group": {"id": 1, "name": "Anonymous users"},
                     "groups": [

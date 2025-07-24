@@ -413,7 +413,8 @@ def email_signup_finish(
                 email=nu_email,
                 password=password,
                 origin=UserOrigin.Email,
-            )
+            ),
+            tos_accepted=bool(current_app.config["TERMS_OF_SERVICE_DOC"]),
         )
         db.session.flush()
 
