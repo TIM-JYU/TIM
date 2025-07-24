@@ -49,6 +49,7 @@ import {Users} from "tim/user/userService";
             </ng-container>
         </tim-dialog-frame>
     `,
+    styleUrls: ["tos-dialog.component.scss"],
 })
 export class TosDialogComponent extends AngularDialogComponent<
     null,
