@@ -172,10 +172,6 @@ export class RootCtrl {
     public bookmarksCtrl: BookmarksComponent | undefined;
     private hide = getVisibilityVars();
 
-    private tos_accepted_str: string | null = "";
-    private tos_modified_date_str: string | null = "";
-    private inTosPage: boolean = false;
-
     registerBookmarks(bookmarksCtrl: BookmarksComponent) {
         this.bookmarksCtrl = bookmarksCtrl;
     }
@@ -227,25 +223,29 @@ export class RootCtrl {
     }
 
     private checkTosAcceptance() {
-        this.tos_modified_date_str = documentglobals().latest_tos_date;
-        this.tos_accepted_str = documentglobals().current_user.tos_accepted_at;
+        const latestTosDate = documentglobals().latest_tos_date;
+        const tosAcceptedAt = documentglobals().current_user.tos_accepted_at;
         const currentPage: IDocument | undefined = documentglobals().curr_item;
-        if (currentPage) {
-            this.inTosPage =
-                documentglobals().curr_item.path ===
-                documentglobals().footerDocs.termsOfService;
-        }
+        const tosPath = documentglobals().footerDocs.termsOfService;
+        let inTosPage = false;
 
-        if (
-            this.tos_modified_date_str &&
-            Users.isRealUser() &&
-            !this.inTosPage
-        ) {
-            if (!this.tos_accepted_str) {
-                this.openTosDialog();
-            } else if (
-                Date.parse(this.tos_accepted_str) <
-                Date.parse(this.tos_modified_date_str)
+        if (tosPath && currentPage) {
+            const splitPath = currentPage.path.split("/");
+            const splitFooterPath = tosPath.split("/");
+            // Remove language code if present
+            if (
+                splitPath[splitPath.length - 1] !==
+                splitFooterPath[splitFooterPath.length - 1]
+            ) {
+                splitPath.pop();
+            }
+            const currentPath = splitPath.join("/");
+            inTosPage = currentPath === tosPath;
+        }
+        if (latestTosDate && Users.isRealUser() && !inTosPage) {
+            if (
+                !tosAcceptedAt ||
+                Date.parse(tosAcceptedAt) < Date.parse(latestTosDate)
             ) {
                 this.openTosDialog();
             }
