@@ -2100,6 +2100,12 @@ ${fhtml}
         return this.markup.runningText;
     }
 
+    getDeadline(): string | undefined {
+        const name = this.getName();
+
+        return "";
+    }
+
     buttonText() {
         const txt = super.buttonText();
         if (txt) {
