@@ -1,6 +1,8 @@
-from flask import Response
+from flask import Response, current_app
+from datetime import datetime
 
 from timApp.auth.sessioninfo import get_current_user_object
+from timApp.item.item import Item
 from timApp.timdb.sqa import db
 from timApp.util.flask.responsehelper import ok_response
 from timApp.util.flask.typedblueprint import TypedBlueprint
@@ -19,3 +21,16 @@ def tosagree() -> Response:
             curr_user.tos_accepted_at = now
             db.session.commit()
     return ok_response()
+
+
+def get_tos_date() -> datetime | None:
+    """Returns the date when tos document was last modified."""
+    tos_path = current_app.config["TERMS_OF_SERVICE_DOC"]
+    if tos_path:
+        tos_doc = Item.find_by_path(tos_path)
+        if tos_doc:
+            return tos_doc.last_modified
+        else:
+            return None
+    else:
+        return None

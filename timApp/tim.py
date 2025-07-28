@@ -1,12 +1,11 @@
 import re
 import time
 import traceback
-from datetime import datetime
 from urllib.parse import urlparse
 
 import bs4
 from bs4 import BeautifulSoup
-from flask import Response, current_app
+from flask import Response
 from flask import g
 from flask import redirect
 from flask import render_template
@@ -87,7 +86,7 @@ from timApp.securitytxt.routes import securitytxt
 from timApp.sisu.scim import scim
 from timApp.sisu.sisu import sisu
 from timApp.idesupport.routes import ide
-from timApp.termsofservice.tos_acceptance import tos_accepted
+from timApp.termsofservice.tos_acceptance import tos_accepted, get_tos_date
 from timApp.tim_app import app
 from timApp.timdb.sqa import db
 from timApp.upload.upload import upload
@@ -259,19 +258,6 @@ def inject_user() -> dict:
     if logged_in() and app.config["BOOKMARKS_ENABLED"]:
         r["bookmarks"] = get_current_user_object().bookmarks.as_dict()
     return r
-
-
-def get_tos_date() -> datetime | None:
-    """Returns the date when tos document was last modified."""
-    tos_path = current_app.config["TERMS_OF_SERVICE_DOC"]
-    if tos_path:
-        tos_doc = Item.find_by_path(tos_path)
-        if tos_doc:
-            return tos_doc.last_modified
-        else:
-            return None
-    else:
-        return None
 
 
 @app.get("/js/<path:path>")
