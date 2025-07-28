@@ -1888,6 +1888,18 @@ export class AnswerBrowserComponent
         }
         this.clearError("taskinfo");
         this.taskInfo = r.result.data;
+        const plugin = this.getPluginComponent();
+        if (plugin && plugin.setInvalidMarkerData()) {
+            if (this.pluginMarkup()?.invalidMarker?.deadline) {
+                plugin.setInvalidMarkerData(
+                    this.pluginMarkup()?.invalidMarker?.deadline
+                );
+            }
+            if (this.pluginMarkup()?.invalidMarker?.modelAnswerLock) {
+            }
+            this.pluginMarkup()?.invalidMarker?.modelAnswerLock;
+            // plugin.setDeadline(this.taskInfo.
+        }
         if (r.result.data.modelAnswer) {
             this.modelAnswer = r.result.data.modelAnswer;
             // Don't show "Show model answer" when it's disabled for viewers
