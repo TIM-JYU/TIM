@@ -1,5 +1,6 @@
 from flask import Response, current_app
 from datetime import datetime
+from functools import cache
 
 from timApp.auth.sessioninfo import get_current_user_object
 from timApp.item.item import Item
@@ -23,6 +24,7 @@ def tosagree() -> Response:
     return ok_response()
 
 
+@cache
 def get_tos_date() -> datetime | None:
     """Returns the date when tos document was last modified."""
     tos_path = current_app.config["TERMS_OF_SERVICE_DOC"]

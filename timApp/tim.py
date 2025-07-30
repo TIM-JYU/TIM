@@ -46,7 +46,6 @@ from timApp.document.translation.routes import tr_bp
 from timApp.gamification.generateMap import generateMap
 from timApp.gamification.badge.routes import badges_blueprint
 from timApp.item.distribute_rights import dist_bp
-from timApp.item.item import Item
 from timApp.item.manage import manage_page
 from timApp.item.routes import view_page
 from timApp.item.routes_tags import tags_blueprint
