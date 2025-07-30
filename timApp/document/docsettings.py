@@ -120,7 +120,8 @@ class DocSettingTypes:
     loginCodes: bool
     loginMessage: str
     customIndex: list[tuple[Any, Any]]
-    extraGroupPreambleFolder: str | None = None
+    extraGroupPreambleFolder: str | None
+    showSettingsTypes: list[str]
     prettyNameEditForMember: bool
 
 
@@ -738,6 +739,9 @@ class DocSettings:
 
     def custom_index(self) -> list[tuple[Any, Any]]:
         return self.get_setting_or_default("customIndex", [])
+
+    def show_settings_types(self) -> set[str]:
+        return set(self.get_setting_or_default("showSettingsTypes", []))
 
     def allow_name_edit_by_group_members(self) -> bool:
         return self.get_setting_or_default("allowNameEditByGroupMembers", False)

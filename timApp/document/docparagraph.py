@@ -63,6 +63,7 @@ class DocParagraph:
     __slots__ = {
         "__is_ref",
         "__is_setting",
+        "__setting_type",
         "__rands",
         "__rnd_seed",
         "answer_nr",
@@ -400,6 +401,7 @@ class DocParagraph:
 
         self.__is_ref = self.is_par_reference() or self.is_area_reference()
         self.__is_setting = "settings" in self.attrs
+        self.__setting_type = self.attrs.get("settings", None)
 
     def get_doc_id(self) -> int:
         """Returns the Document id to which this paragraph is attached."""
@@ -1222,6 +1224,10 @@ class DocParagraph:
     def is_setting(self) -> bool:
         """Returns whether this paragraph is a settings paragraph."""
         return self.__is_setting
+
+    def settings_type(self) -> str | None:
+        """Returns the type of the settings paragraph."""
+        return self.get_attr("settings", None)
 
     def from_preamble(self) -> DocInfo | None:
         """Returns the preamble document for this paragraph if the paragraph has been copied from a preamble."""
