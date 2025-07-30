@@ -43,7 +43,10 @@ import {
     getParContainerElem,
 } from "tim/document/structure/create";
 import type {UserListController} from "tim/answer/userlistController";
-import type {AnswerBrowserComponent} from "tim/answer/answer-browser.component";
+import type {
+    AnswerBrowserComponent,
+    InvalidMarkerData,
+} from "tim/answer/answer-browser.component";
 import type {PluginLoaderComponent} from "tim/plugin/plugin-loader.component";
 import type {IAnswer} from "tim/answer/IAnswer";
 import type {IPluginInfoResponse} from "tim/editor/parCompiler";
@@ -129,7 +132,7 @@ export interface ITimComponent extends IUnsavedComponent {
     resetChanges: () => void;
     setAnswer: (content: Record<string, unknown>) => ISetAnswerResult;
     setData?(data: unknown, save: boolean): void;
-    setInvalidMarkerData?: (data: string) => void;
+    setInvalidMarkerData?: (data: InvalidMarkerData) => void;
 }
 
 /**
