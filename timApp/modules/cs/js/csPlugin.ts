@@ -84,6 +84,7 @@ import type {FormulaEvent} from "./editor/math-editor/symbol-button-menu.compone
 import {selectFormulaFromPreview} from "./editor/math-editor/formula-utils";
 import {LATEX_BUTTONS} from "./editor/math-editor/default-symbol-buttons";
 import {FormulaEditorComponent} from "./editor/math-editor/formula-editor.component";
+import {InvalidMarkerData} from "tim/answer/answer-browser.component";
 
 // TODO better name?
 interface Vid {
@@ -1276,6 +1277,9 @@ export class CsController extends CsBase implements ITimComponent {
     private clearSaved: boolean = false;
     private originalUserInput?: string;
     exportingMD = false;
+    pluginActivated: boolean = false;
+    taskDeadline?: string;
+    modelAnswerLock?: boolean;
 
     @ViewChild("externalEditor")
     set externalEditorViewSetter(newValue: EditorComponent | undefined) {
@@ -1625,6 +1629,12 @@ export class CsController extends CsBase implements ITimComponent {
         // }
         return getFormBehavior(this.markup.form, FormModeOption.NoForm);
         // return getFormBehavior(this.markup.form, FormModeOption.Undecided);
+    }
+
+    setInvalidMarkerData(data: InvalidMarkerData) {
+        this.pluginActivated = true;
+        this.taskDeadline = data.deadline;
+        this.modelAnswerLock = data.modelAnswerLock;
     }
 
     setAnswer(content: Record<string, unknown>): ISetAnswerResult {
@@ -2098,12 +2108,6 @@ ${fhtml}
 
     get runningText() {
         return this.markup.runningText;
-    }
-
-    getDeadline(): string | undefined {
-        const name = this.getName();
-
-        return "";
     }
 
     buttonText() {
@@ -4427,6 +4431,10 @@ ${fhtml}
                             title="(Ctrl-S)"
                             (click)="runCode()"
                             [innerHTML]="buttonText()"></button>
+                    &nbsp;
+                    <span *ngIf="taskDeadline" class="glyphicon glyphicon-hourglass text-danger"></span>
+                    <span *ngIf="modelAnswerLock" class="glyphicon glyphicon-lock text-danger"></span>
+                    <span>Aktivoitu {{pluginActivated}}</span>
                     &nbsp;
                     <button *ngIf="mdSaveButton" [disabled]="!mdHtml" class="timButton btn-sm"
                             (click)="exportMDAsImg()">{{mdSaveButton}}

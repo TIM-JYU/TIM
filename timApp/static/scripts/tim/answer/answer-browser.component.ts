@@ -142,6 +142,11 @@ export type AnswerBrowserData =
           answernr: number | undefined;
       };
 
+export interface InvalidMarkerData {
+    deadline?: string;
+    modelAnswerLock?: boolean;
+}
+
 const DEFAULT_MARKUP_CONFIG: IAnswerBrowserSettings = {
     pointsStep: 0,
     validOnlyText: $localize`Show valid only`,
@@ -1888,18 +1893,6 @@ export class AnswerBrowserComponent
         }
         this.clearError("taskinfo");
         this.taskInfo = r.result.data;
-        const plugin = this.getPluginComponent();
-        if (plugin && plugin.setInvalidMarkerData()) {
-            if (this.pluginMarkup()?.invalidMarker?.deadline) {
-                plugin.setInvalidMarkerData(
-                    this.pluginMarkup()?.invalidMarker?.deadline
-                );
-            }
-            if (this.pluginMarkup()?.invalidMarker?.modelAnswerLock) {
-            }
-            this.pluginMarkup()?.invalidMarker?.modelAnswerLock;
-            // plugin.setDeadline(this.taskInfo.
-        }
         if (r.result.data.modelAnswer) {
             this.modelAnswer = r.result.data.modelAnswer;
             // Don't show "Show model answer" when it's disabled for viewers
@@ -1922,6 +1915,31 @@ export class AnswerBrowserComponent
         this.showNewTask = this.isAndSetShowNewTask();
         if (this.taskInfo.buttonNewTask) {
             this.buttonNewTask = this.taskInfo.buttonNewTask;
+        }
+        const plugin = this.getPluginComponent();
+        const markerData: InvalidMarkerData = {
+            deadline: "",
+            modelAnswerLock: false,
+        };
+        if (plugin && plugin.setInvalidMarkerData) {
+            console.log("Nimi:");
+            console.log(plugin.getName());
+            console.log("Markup: ");
+            console.log(plugin.markup);
+            console.log("Taskinfo: ");
+            console.log(this.taskInfo);
+            if (this.taskInfo.deadline && plugin.markup.invalidMarker) {
+                console.log("Deadline asetettu");
+                markerData.deadline = this.taskInfo.deadline;
+            }
+            if (this.taskInfo.modelAnswer && plugin.markup.invalidMarker) {
+                console.log("Modelanswerlock asetettu");
+                markerData.modelAnswerLock = this.taskInfo.modelAnswer.lock;
+            }
+
+            console.log(markerData);
+            plugin.setInvalidMarkerData(markerData);
+            console.log("___________________________");
         }
     }
 
