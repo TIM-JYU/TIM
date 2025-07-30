@@ -297,6 +297,9 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
     origin: Mapped[Optional[UserOrigin]]
     """How the user registered to TIM."""
 
+    tos_accepted_at: Mapped[Optional[datetime]]
+    """The date when user accepted the Terms of Service."""
+
     uniquecodes: Mapped[Dict[Tuple[int, str], "PersonalUniqueCode"]] = relationship(
         back_populates="user",
         collection_class=attribute_keyed_dict("user_collection_key"),
@@ -673,6 +676,7 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
         info: UserInfo,
         is_admin: bool = False,
         uid: int | None = None,
+        tos_accepted: bool = False,
     ) -> tuple["User", UserGroup]:
         p_hash = (
             create_password_hash(info.password)
@@ -689,6 +693,8 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
             pass_=p_hash,
             origin=info.origin,
         )
+        if tos_accepted:
+            user.tos_accepted_at = get_current_time()
         if info.email:
             primary_email = UserContact(
                 contact=info.email,
@@ -1601,6 +1607,7 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
                 "folder": self.get_personal_folder() if self.logged_in else None,
                 "consent": self.consent,
                 "last_name": self.last_name,
+                "tos_accepted_at": self.tos_accepted_at,
             }
 
         if contacts:

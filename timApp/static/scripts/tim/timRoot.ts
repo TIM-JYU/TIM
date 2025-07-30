@@ -1,10 +1,17 @@
-import {getUrlParams} from "tim/util/utils";
-import {genericglobals, isDocumentGlobals, someglobals} from "tim/util/globals";
+import {getUrlParams, to2} from "tim/util/utils";
+import {
+    documentglobals,
+    genericglobals,
+    isDocumentGlobals,
+    someglobals,
+} from "tim/util/globals";
 import {Users} from "tim/user/userService";
 import type {BookmarksComponent} from "tim/sidebarmenu/util/bookmarks.component";
 import {setRoot} from "tim/rootinstance";
 import {showMessageDialog} from "tim/ui/showMessageDialog";
 import {timApp} from "tim/app";
+import {showTosAgreementDialog} from "tim/ui/showTosAgreementDialog";
+import type {IDocument} from "tim/item/IItem";
 
 export interface IVisibilityVars {
     footer?: boolean;
@@ -212,6 +219,38 @@ export class RootCtrl {
                 }
             }
         }
+        this.checkTosAcceptance();
+    }
+
+    private checkTosAcceptance() {
+        const latestTosDate = documentglobals().latest_tos_date;
+        const tosAcceptedAt = documentglobals().current_user.tos_accepted_at;
+        const currentPage: IDocument | undefined = documentglobals().curr_item;
+        const tosPath = documentglobals().footerDocs.termsOfService;
+        let inTosPage = false;
+
+        if (tosPath && currentPage) {
+            const langPostfix = currentPage.lang_id
+                ? `/${currentPage.lang_id}`
+                : "";
+            const currentPathNoLangCode = currentPage.path.substring(
+                0,
+                currentPage.path.length - langPostfix.length
+            );
+            inTosPage = currentPathNoLangCode === tosPath;
+        }
+        if (latestTosDate && Users.isRealUser() && !inTosPage) {
+            if (
+                !tosAcceptedAt ||
+                Date.parse(tosAcceptedAt) < Date.parse(latestTosDate)
+            ) {
+                this.openTosDialog();
+            }
+        }
+    }
+
+    private async openTosDialog() {
+        await to2(showTosAgreementDialog());
     }
 }
 

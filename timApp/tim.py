@@ -84,6 +84,7 @@ from timApp.securitytxt.routes import securitytxt
 from timApp.sisu.scim import scim
 from timApp.sisu.sisu import sisu
 from timApp.idesupport.routes import ide
+from timApp.termsofservice.tos_acceptance import tos_accepted, get_tos_date
 from timApp.tim_app import app
 from timApp.timdb.sqa import db
 from timApp.upload.upload import upload
@@ -156,6 +157,7 @@ blueprints = [
     scheduling,
     mailman_events,
     user_sessions,
+    tos_accepted,
     # plugins
     calendar_plugin,
     exam_group_manager_plugin,
@@ -248,6 +250,7 @@ def inject_user() -> dict:
         other_users=get_other_users_as_list(),
         locale=get_locale(),
         prefs=get_current_user_object().get_prefs(),
+        latest_tos_date=get_tos_date(),
     )
     if logged_in() and app.config["BOOKMARKS_ENABLED"]:
         r["bookmarks"] = get_current_user_object().bookmarks.as_dict()
