@@ -230,17 +230,14 @@ export class RootCtrl {
         let inTosPage = false;
 
         if (tosPath && currentPage) {
-            const splitPath = currentPage.path.split("/");
-            const splitFooterPath = tosPath.split("/");
-            // Remove language code if present
-            if (
-                splitPath[splitPath.length - 1] !==
-                splitFooterPath[splitFooterPath.length - 1]
-            ) {
-                splitPath.pop();
-            }
-            const currentPath = splitPath.join("/");
-            inTosPage = currentPath === tosPath;
+            const langPostfix = currentPage.lang_id
+                ? `/${currentPage.lang_id}`
+                : "";
+            const currentPathNoLangCode = currentPage.path.substring(
+                0,
+                currentPage.path.length - langPostfix.length
+            );
+            inTosPage = currentPathNoLangCode === tosPath;
         }
         if (latestTosDate && Users.isRealUser() && !inTosPage) {
             if (
