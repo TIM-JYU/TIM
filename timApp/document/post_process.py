@@ -90,11 +90,8 @@ def post_process_pars(
 
     # Process user-specific macros.
     env = macroinfo.jinja_env
-    for (
-        p
-    ) in (
-        final_pars
-    ):  # update only user specific, because others are done in a cache pahes
+    # update only user specific, because others are done in a cache
+    for p in final_pars:
         if (
             not p.is_plugin() and not p.is_setting()
         ):  # TODO: Think if plugins still needs to expand macros?
@@ -149,6 +146,7 @@ def post_process_pars(
                 d = p.prepare(view_ctx)
                 d.output = " "
     else:
+        display_types = settings.show_settings_types()
         ids = doc.get_par_ids()
         first_par = doc.get_paragraph(ids[0]) if ids else None
         last_par = doc.get_paragraph(ids[-1]) if ids else None
@@ -159,7 +157,7 @@ def post_process_pars(
         )
         if not show_settings_yaml:
             for p in final_pars:
-                if p.is_setting():
+                if p.is_setting() and p.settings_type() not in display_types:
                     d = p.prepare(view_ctx)
                     d.output = " "
 

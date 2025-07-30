@@ -120,7 +120,8 @@ class DocSettingTypes:
     loginCodes: bool
     loginMessage: str
     customIndex: list[tuple[Any, Any]]
-    extraGroupPreambleFolder: str | None = None
+    extraGroupPreambleFolder: str | None
+    showSettingsTypes: list[str]
 
 
 doc_setting_field_map: dict[str, Field] = {
@@ -737,6 +738,9 @@ class DocSettings:
 
     def custom_index(self) -> list[tuple[Any, Any]]:
         return self.get_setting_or_default("customIndex", [])
+
+    def show_settings_types(self) -> set[str]:
+        return set(self.get_setting_or_default("showSettingsTypes", []))
 
 
 def resolve_settings_for_pars(pars: Iterable[DocParagraph]) -> YamlBlock:
