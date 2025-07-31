@@ -1277,9 +1277,10 @@ export class CsController extends CsBase implements ITimComponent {
     private clearSaved: boolean = false;
     private originalUserInput?: string;
     exportingMD = false;
-    pluginActivated: boolean = false;
     taskDeadline?: string;
     modelAnswerLock?: boolean;
+    deadlineTooltip?: string;
+    modelAnswerLockTooltip?: string;
 
     @ViewChild("externalEditor")
     set externalEditorViewSetter(newValue: EditorComponent | undefined) {
@@ -1588,6 +1589,9 @@ export class CsController extends CsBase implements ITimComponent {
         this.docLink = "Document";
         this.muokattu = false;
         this.editorIndex = 0;
+
+        this.deadlineTooltip = $localize`The task deadline has passed. You may still submit a solution, but it will be marked as invalid and won't be eligible for points or grading.`;
+        this.modelAnswerLockTooltip = $localize`You’ve already unlocked the model solution, so any further submissions will be saved but won’t earn points or be graded.`;
     }
 
     onIframeLoad(e: Event) {
@@ -1629,12 +1633,6 @@ export class CsController extends CsBase implements ITimComponent {
         // }
         return getFormBehavior(this.markup.form, FormModeOption.NoForm);
         // return getFormBehavior(this.markup.form, FormModeOption.Undecided);
-    }
-
-    setInvalidMarkerData(data: InvalidMarkerData) {
-        this.pluginActivated = true;
-        this.taskDeadline = data.deadline;
-        this.modelAnswerLock = data.modelAnswerLock;
     }
 
     setAnswer(content: Record<string, unknown>): ISetAnswerResult {
@@ -2446,6 +2444,7 @@ ${fhtml}
         //  It's unclear if getCode should handle this already.
         this.showCodeNow();
         this.updateRunChanged();
+        this.updateInvalidMarkerData();
     }
 
     ngOnDestroy() {
@@ -3916,6 +3915,39 @@ ${fhtml}
         }
     }
 
+    async updateInvalidMarkerData() {
+        const taskId = this.getTaskId()?.docTask();
+        if (!taskId) {
+            return;
+        }
+        const ab = await this.vctrl.getAnswerBrowserAsync(taskId);
+        if (!ab) {
+            return;
+        }
+        await ab.loader.abLoad.promise;
+        console.log("Hello", ab.taskInfo);
+        if (
+            ab.taskInfo?.deadline &&
+            Date.parse(ab.taskInfo?.deadline) < Date.now()
+        ) {
+            this.taskDeadline = ab.taskInfo?.deadline;
+        }
+        if (ab.taskInfo?.modelAnswer?.alreadyLocked) {
+            this.modelAnswerLock = ab.taskInfo?.modelAnswer?.lock;
+        }
+    }
+
+    async updateInvalidMarkers() {
+        await this.updateInvalidMarkerData();
+    }
+
+    setInvalidMarkerData(data: InvalidMarkerData) {
+        // this.taskDeadline = data.deadline;
+        // this.modelAnswerLock = data.modelAnswerLock;
+        // PÄivitetään varoitukset
+        this.updateInvalidMarkerData();
+    }
+
     write(s: string) {
         this.result += s;
     }
@@ -4432,9 +4464,8 @@ ${fhtml}
                             (click)="runCode()"
                             [innerHTML]="buttonText()"></button>
                     &nbsp;
-                    <span *ngIf="taskDeadline" class="glyphicon glyphicon-hourglass text-danger"></span>
-                    <span *ngIf="modelAnswerLock" class="glyphicon glyphicon-lock text-danger"></span>
-                    <span>Aktivoitu {{pluginActivated}}</span>
+                    <span *ngIf="taskDeadline" [tooltip]="deadlineTooltip" placement="bottom" class="glyphicon glyphicon-hourglass text-danger"></span>
+                    <span *ngIf="modelAnswerLock" [tooltip]="modelAnswerLockTooltip" placement="bottom" class="glyphicon glyphicon-lock text-danger"></span>
                     &nbsp;
                     <button *ngIf="mdSaveButton" [disabled]="!mdHtml" class="timButton btn-sm"
                             (click)="exportMDAsImg()">{{mdSaveButton}}

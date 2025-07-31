@@ -33,6 +33,7 @@ import {
 } from "tim/plugin/attributes";
 import {AngularPluginBase} from "tim/plugin/angular-plugin-base.directive";
 import {CommonModule} from "@angular/common";
+import {TooltipModule} from "ngx-bootstrap/tooltip";
 
 const PluginMarkupFields = t.intersection([
     GenericPluginMarkup,
@@ -75,8 +76,11 @@ const PluginFields = t.intersection([
                             [disabled]="isRunning || isInvalid() || (disableUnchanged && !isUnSaved())"
                             (click)="saveText()"></button>
                     <a href="" *ngIf="undoButton && isUnSaved()" title="{{undoTitle}}" (click)="tryResetChanges($event)">
-                    &nbsp;{{undoButton}}
+                    &nbsp;{{undoButton}} 
                     </a>
+                    &nbsp;
+                    <span *ngIf="taskDeadline" [tooltip]="deadlineTooltip" placement="bottom" class="glyphicon glyphicon-hourglass text-danger"></span>
+                    <span *ngIf="modelAnswerLock" [tooltip]="modelAnswerLockTooltip" placement="bottom" class="glyphicon glyphicon-lock text-danger"></span>
                     &nbsp;&nbsp;
                     <a class="questionAddedNew" *ngIf="hasTeacherRight() && !isInvalid()" (click)="questionClicked()">
                         <span class="glyphicon glyphicon-question-sign" i18n-title title="Ask question"></span>
@@ -117,6 +121,10 @@ export class QstComponent
     private changes = false;
     saveFailed = false;
     private enabled = true;
+    taskDeadline?: string;
+    modelAnswerLock?: boolean;
+    deadlineTooltip?: string;
+    modelAnswerLockTooltip?: string;
 
     constructor(
         el: ElementRef<HTMLElement>,
@@ -184,6 +192,9 @@ export class QstComponent
             enabled: this.enabled,
         });
         this.button = this.buttonText() ?? $localize`Save`;
+        this.deadlineTooltip = $localize`The task deadline has passed. You may still submit a solution, but it will be marked as invalid and won't be eligible for points or grading.`;
+        this.modelAnswerLockTooltip = $localize`You’ve already unlocked the model solution, so any further submissions will be saved but won’t earn points or be graded.`;
+        this.updateInvalidMarkerData();
     }
 
     ngOnDestroy() {
@@ -380,6 +391,31 @@ export class QstComponent
             invalid: true,
         };
     }
+
+    async updateInvalidMarkerData() {
+        const taskId = this.getTaskId()?.docTask();
+        if (!taskId) {
+            return;
+        }
+        const ab = await this.vctrl.getAnswerBrowserAsync(taskId);
+        if (!ab) {
+            return;
+        }
+        await ab.loader.abLoad.promise;
+        if (
+            ab.taskInfo?.deadline &&
+            Date.parse(ab.taskInfo?.deadline) < Date.now()
+        ) {
+            this.taskDeadline = ab.taskInfo?.deadline;
+        }
+        if (ab.taskInfo?.modelAnswer?.alreadyLocked) {
+            this.modelAnswerLock = ab.taskInfo?.modelAnswer?.lock;
+        }
+    }
+
+    async updateInvalidMarkers() {
+        await this.updateInvalidMarkerData();
+    }
 }
 
 @NgModule({
@@ -391,6 +427,7 @@ export class QstComponent
         TimUtilityModule,
         AnswerSheetModule,
         PurifyModule,
+        TooltipModule,
     ],
 })
 export class QstModule implements DoBootstrap {
