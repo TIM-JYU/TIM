@@ -133,6 +133,7 @@ export interface ITimComponent extends IUnsavedComponent {
     setAnswer: (content: Record<string, unknown>) => ISetAnswerResult;
     setData?(data: unknown, save: boolean): void;
     setInvalidMarkerData?: (data: InvalidMarkerData) => void;
+    updateInvalidMarkers?: () => Promise<void>;
 }
 
 /**

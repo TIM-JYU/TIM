@@ -1432,6 +1432,10 @@ export class AnswerBrowserComponent
         if (this.modelAnswer?.lock) {
             this.modelAnswer.alreadyLocked = true;
             this.viewctrl.informAboutLock(this.taskId);
+            const plugin = this.getPluginComponent();
+            if (plugin?.updateInvalidMarkers) {
+                await plugin.updateInvalidMarkers();
+            }
         }
         if (r.result.data.points_map) {
             this.setPointsToAnswers(r.result.data.points_map);
@@ -1921,26 +1925,26 @@ export class AnswerBrowserComponent
             deadline: "",
             modelAnswerLock: false,
         };
-        if (plugin && plugin.setInvalidMarkerData) {
-            console.log("Nimi:");
-            console.log(plugin.getName());
-            console.log("Markup: ");
-            console.log(plugin.markup);
-            console.log("Taskinfo: ");
-            console.log(this.taskInfo);
-            if (this.taskInfo.deadline && plugin.markup.invalidMarker) {
-                console.log("Deadline asetettu");
-                markerData.deadline = this.taskInfo.deadline;
-            }
-            if (this.taskInfo.modelAnswer && plugin.markup.invalidMarker) {
-                console.log("Modelanswerlock asetettu");
-                markerData.modelAnswerLock = this.taskInfo.modelAnswer.lock;
-            }
-
-            console.log(markerData);
-            plugin.setInvalidMarkerData(markerData);
-            console.log("___________________________");
-        }
+        // if (plugin && plugin.setInvalidMarkerData) {
+        //     console.log("Nimi:");
+        //     console.log(plugin.getName());
+        //     console.log("Markup: ");
+        //     console.log(plugin.markup);
+        //     console.log("Taskinfo: ");
+        //     console.log(this.taskInfo);
+        //     if (this.taskInfo.deadline && plugin.markup.invalidMarker) {
+        //         console.log("Deadline asetettu");
+        //         markerData.deadline = this.taskInfo.deadline;
+        //     }
+        //     if (this.taskInfo.modelAnswer && plugin.markup.invalidMarker) {
+        //         console.log("Modelanswerlock asetettu");
+        //         markerData.modelAnswerLock = this.taskInfo.modelAnswer.lock;
+        //     }
+        //
+        //     console.log(markerData);
+        //     plugin.setInvalidMarkerData(markerData);
+        //     console.log("___________________________");
+        // }
     }
 
     async checkUsers(force?: boolean) {

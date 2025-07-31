@@ -20,6 +20,7 @@ import {GitRegComponent} from "./gitreg";
 import {CsErrorComponent} from "./language_error";
 import {CsUtilityModule} from "./util/module";
 import {EditorModule} from "./editor/module";
+import {TooltipModule} from "ngx-bootstrap/tooltip";
 
 @NgModule({
     declarations: [
@@ -50,6 +51,7 @@ import {EditorModule} from "./editor/module";
         TimUtilityModule,
         CsUtilityModule,
         PurifyModule,
+        TooltipModule,
     ],
 })
 export class CsPluginModule implements DoBootstrap {
