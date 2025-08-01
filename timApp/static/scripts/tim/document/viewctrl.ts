@@ -43,10 +43,7 @@ import {
     getParContainerElem,
 } from "tim/document/structure/create";
 import type {UserListController} from "tim/answer/userlistController";
-import type {
-    AnswerBrowserComponent,
-    InvalidMarkerData,
-} from "tim/answer/answer-browser.component";
+import type {AnswerBrowserComponent} from "tim/answer/answer-browser.component";
 import type {PluginLoaderComponent} from "tim/plugin/plugin-loader.component";
 import type {IAnswer} from "tim/answer/IAnswer";
 import type {IPluginInfoResponse} from "tim/editor/parCompiler";
@@ -91,6 +88,7 @@ import type {
 import type {ReviewCanvasComponent} from "tim/plugin/reviewcanvas/review-canvas.component";
 import type {IRight} from "tim/item/access-role.service";
 import {UnbrokenSelection} from "tim/document/editing/unbrokenSelection";
+import type {InvalidMarkerState} from "tim/plugin/angular-plugin-base.directive";
 
 markAsUsed(interceptor);
 
@@ -132,8 +130,7 @@ export interface ITimComponent extends IUnsavedComponent {
     resetChanges: () => void;
     setAnswer: (content: Record<string, unknown>) => ISetAnswerResult;
     setData?(data: unknown, save: boolean): void;
-    setInvalidMarkerData?: (data: InvalidMarkerData) => void;
-    updateInvalidMarkers?: () => Promise<void>;
+    getInvalidMarkerState?(): Promise<InvalidMarkerState | undefined>;
 }
 
 /**

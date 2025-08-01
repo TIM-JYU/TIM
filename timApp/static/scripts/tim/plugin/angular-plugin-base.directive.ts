@@ -34,6 +34,11 @@ export interface PluginJson {
     json: string;
 }
 
+export interface InvalidMarkerState {
+    deadline?: string;
+    modelAnswerLock?: string;
+}
+
 /**
  * Base class for all Angular plugin components.
  */
@@ -275,4 +280,32 @@ export abstract class AngularPluginBase<
     abstract getAttributeType(): T;
 
     abstract getDefaultMarkup(): Partial<MarkupType>;
+
+    async getInvalidMarkerState(): Promise<InvalidMarkerState | undefined> {
+        const taskId = this.getTaskId()?.docTask();
+        // defaultDeadlineTooltip = $localize`The task deadline has passed. You may still submit a solution, but it will be marked as invalid and won't be eligible for points or grading.`;
+        // defaultModelAnswerLockTooltip = $localize`You’ve already unlocked the model solution, so any further submissions will be saved but won’t earn points or be graded.`;
+        if (!taskId) {
+            return undefined;
+        }
+        const ab = await this.vctrl.getAnswerBrowserAsync(taskId);
+        if (!ab) {
+            return undefined;
+        }
+        await ab.loader.abLoad.promise;
+        console.log("Hello", ab.taskInfo);
+        const markerInfo = this.markup.invalidMarker;
+        if (
+            ab.taskInfo?.deadline &&
+            Date.parse(ab.taskInfo?.deadline) < Date.now() &&
+            markerInfo?.deadline
+        ) {
+            const deadlineTooltip = markerInfo.deadline;
+            return {deadline: deadlineTooltip};
+        }
+        if (ab.taskInfo?.modelAnswer?.alreadyLocked) {
+            const modelAnswerLock = markerInfo?.modelAnswerLock;
+            return {modelAnswerLock: modelAnswerLock};
+        }
+    }
 }
