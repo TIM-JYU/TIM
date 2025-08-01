@@ -8,6 +8,7 @@ import {GraphVizComponent} from "tim/plugin/graph-viz/graph-viz.component";
 import {VariablesComponent} from "tim/plugin/variables/variables.component";
 import {registerPlugin} from "tim/plugin/pluginRegistry";
 import {CommonModule} from "@angular/common";
+import {TooltipModule} from "ngx-bootstrap/tooltip";
 import {CsRunnerComponent} from "./csPlugin";
 import {CsTextComponent} from "./text";
 import {CsConsoleComponent} from "./console";
@@ -20,7 +21,6 @@ import {GitRegComponent} from "./gitreg";
 import {CsErrorComponent} from "./language_error";
 import {CsUtilityModule} from "./util/module";
 import {EditorModule} from "./editor/module";
-import {TooltipModule} from "ngx-bootstrap/tooltip";
 
 @NgModule({
     declarations: [

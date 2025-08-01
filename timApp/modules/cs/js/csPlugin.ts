@@ -65,6 +65,7 @@ import {InputDialogKind} from "tim/ui/input-dialog.kind";
 import {showInputDialog} from "tim/ui/showInputDialog";
 import html2canvas from "html2canvas";
 import {vctrlInstance} from "tim/document/viewctrlinstance";
+import type {InvalidMarkerData} from "tim/answer/answer-browser.component";
 import type {
     SimcirConnectorDef,
     SimcirDeviceInstance,
@@ -84,7 +85,6 @@ import type {FormulaEvent} from "./editor/math-editor/symbol-button-menu.compone
 import {selectFormulaFromPreview} from "./editor/math-editor/formula-utils";
 import {LATEX_BUTTONS} from "./editor/math-editor/default-symbol-buttons";
 import {FormulaEditorComponent} from "./editor/math-editor/formula-editor.component";
-import {InvalidMarkerData} from "tim/answer/answer-browser.component";
 
 // TODO better name?
 interface Vid {
@@ -3926,9 +3926,11 @@ ${fhtml}
         }
         await ab.loader.abLoad.promise;
         console.log("Hello", ab.taskInfo);
+        const markerInfo = this.markup.invalidMarker;
         if (
             ab.taskInfo?.deadline &&
-            Date.parse(ab.taskInfo?.deadline) < Date.now()
+            Date.parse(ab.taskInfo?.deadline) < Date.now() &&
+            markerInfo?.deadline
         ) {
             this.taskDeadline = ab.taskInfo?.deadline;
         }

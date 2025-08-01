@@ -1920,11 +1920,11 @@ export class AnswerBrowserComponent
         if (this.taskInfo.buttonNewTask) {
             this.buttonNewTask = this.taskInfo.buttonNewTask;
         }
-        const plugin = this.getPluginComponent();
-        const markerData: InvalidMarkerData = {
-            deadline: "",
-            modelAnswerLock: false,
-        };
+        // const plugin = this.getPluginComponent();
+        // const markerData: InvalidMarkerData = {
+        //     deadline: "",
+        //     modelAnswerLock: false,
+        // };
         // if (plugin && plugin.setInvalidMarkerData) {
         //     console.log("Nimi:");
         //     console.log(plugin.getName());
