@@ -294,17 +294,22 @@ export abstract class AngularPluginBase<
         }
         await ab.loader.abLoad.promise;
         const markerInfo = this.markup.invalidMarker;
+        if (!markerInfo) {
+            return undefined;
+        }
+        const result: InvalidMarkerState = {};
+        const deadlineTooltip = markerInfo.deadline;
         if (
             ab.taskInfo?.deadline &&
-            Date.parse(ab.taskInfo?.deadline) < Date.now() &&
-            markerInfo?.deadline
+            Date.parse(ab.taskInfo.deadline) < Date.now() &&
+            deadlineTooltip
         ) {
-            const deadlineTooltip = markerInfo.deadline;
-            return {deadline: deadlineTooltip};
+            result.deadline = deadlineTooltip;
         }
-        if (ab.taskInfo?.modelAnswer?.alreadyLocked) {
-            const modelAnswerLock = markerInfo?.modelAnswerLock;
-            return {modelAnswerLock: modelAnswerLock};
+        const modelAnswerLock = markerInfo.modelAnswerLock;
+        if (ab.taskInfo?.modelAnswer?.alreadyLocked && modelAnswerLock) {
+            result.modelAnswerLock = modelAnswerLock;
         }
+        return result;
     }
 }
