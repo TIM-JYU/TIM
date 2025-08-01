@@ -293,7 +293,6 @@ export abstract class AngularPluginBase<
             return undefined;
         }
         await ab.loader.abLoad.promise;
-        console.log("Hello", ab.taskInfo);
         const markerInfo = this.markup.invalidMarker;
         if (
             ab.taskInfo?.deadline &&
