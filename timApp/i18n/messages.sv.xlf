@@ -11108,6 +11108,30 @@ Separate multiple addresses with commas or write each address on a new line.</ta
           <context context-type="linenumber">26,27</context>
         </context-group>
       </trans-unit>
+      <trans-unit id="3715478772695986047" datatype="html">
+        <source>The task deadline has passed. You may still submit a solution, but it will be marked as invalid and won&apos;t be eligible for points or grading.</source>
+        <target state="new">The task deadline has passed. You may still submit a solution, but it will be marked as invalid and won&apos;t be eligible for points or grading.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">modules/cs/js/csPlugin.ts</context>
+          <context context-type="linenumber">1593</context>
+        </context-group>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/qst/qst.component.ts</context>
+          <context context-type="linenumber">195</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="7941960797047616838" datatype="html">
+        <source>You’ve already unlocked the model solution, so any further submissions will be saved but won’t earn points or be graded.</source>
+        <target state="new">You’ve already unlocked the model solution, so any further submissions will be saved but won’t earn points or be graded.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">modules/cs/js/csPlugin.ts</context>
+          <context context-type="linenumber">1594</context>
+        </context-group>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/qst/qst.component.ts</context>
+          <context context-type="linenumber">196</context>
+        </context-group>
+      </trans-unit>
       <trans-unit id="7271539637870485137" datatype="html">
         <source>The email address is invalid.</source>
         <target state="new">The email address is invalid.</target>

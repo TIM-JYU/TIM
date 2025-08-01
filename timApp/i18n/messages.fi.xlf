@@ -11203,6 +11203,30 @@ Syötä useiden käyttäjien osoitteet allekkain tai pilkulla erotettuina.</targ
           <context context-type="linenumber">26,27</context>
         </context-group>
       </trans-unit>
+      <trans-unit id="3715478772695986047" datatype="html">
+        <source>The task deadline has passed. You may still submit a solution, but it will be marked as invalid and won't be eligible for points or grading.</source>
+        <target state="translated">Tehtävän määräaika on umpeutunut. Voit silti lähettää ratkaisun, mutta se merkitään epävalidiksi eikä siitä anneta pisteitä tai arvosanaa.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">modules/cs/js/csPlugin.ts</context>
+          <context context-type="linenumber">1593</context>
+        </context-group>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/qst/qst.component.ts</context>
+          <context context-type="linenumber">195</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="7941960797047616838" datatype="html">
+        <source>You’ve already unlocked the model solution, so any further submissions will be saved but won’t earn points or be graded.</source>
+        <target state="translated">Olet jo avannut malliratkaisun, joten kaikki uudet lähetetyt vastaukset tallennetaan, mutta niistä ei anneta pisteitä eikä niitä arvioida.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">modules/cs/js/csPlugin.ts</context>
+          <context context-type="linenumber">1594</context>
+        </context-group>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/qst/qst.component.ts</context>
+          <context context-type="linenumber">196</context>
+        </context-group>
+      </trans-unit>
       <trans-unit id="7416659172020658801" datatype="html">
         <source>Create a new badge</source>
         <target state="new">Create a new badge</target>
