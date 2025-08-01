@@ -32,6 +32,7 @@ import {
     nullable,
 } from "tim/plugin/attributes";
 import {AngularPluginBase} from "tim/plugin/angular-plugin-base.directive";
+import type {InvalidMarkerState} from "tim/plugin/angular-plugin-base.directive";
 import {CommonModule} from "@angular/common";
 import {TooltipModule} from "ngx-bootstrap/tooltip";
 
@@ -64,9 +65,9 @@ const PluginFields = t.intersection([
             <h4 *ngIf="getHeader()" [innerHtml]="getHeader() | purify"></h4>
             <p *ngIf="stem" class="stem" [innerHtml]="stem | purify"></p>
             <tim-answer-sheet
-                    [questiondata]="preview"
-                    [customHeader]="markup['customHeader']"
-                    (onAnswerChange)="updateAnswer($event)">
+                [questiondata]="preview"
+                [customHeader]="markup['customHeader']"
+                (onAnswerChange)="updateAnswer($event)">
             </tim-answer-sheet>
             <div class="csRunMenuArea">
                 <div class="csRunMenu">
@@ -75,18 +76,22 @@ const PluginFields = t.intersection([
                             *ngIf="(button && !isAutosave) || saveFailed"
                             [disabled]="isRunning || isInvalid() || (disableUnchanged && !isUnSaved())"
                             (click)="saveText()"></button>
-                    <a href="" *ngIf="undoButton && isUnSaved()" title="{{undoTitle}}" (click)="tryResetChanges($event)">
-                    &nbsp;{{undoButton}} 
+                    <a href="" *ngIf="undoButton && isUnSaved()" title="{{undoTitle}}"
+                       (click)="tryResetChanges($event)">
+                        &nbsp;{{ undoButton }}
                     </a>
                     &nbsp;
-                    <span *ngIf="taskDeadline" [tooltip]="deadlineTooltip" placement="bottom" class="glyphicon glyphicon-hourglass text-danger"></span>
-                    <span *ngIf="modelAnswerLock" [tooltip]="modelAnswerLockTooltip" placement="bottom" class="glyphicon glyphicon-lock text-danger"></span>
+                    <span *ngIf="invalidMarker?.deadline" [tooltip]="invalidMarker?.deadline" placement="bottom"
+                          class="glyphicon glyphicon-hourglass text-danger"></span>
+                    <span *ngIf="invalidMarker?.modelAnswerLock" [tooltip]="invalidMarker?.modelAnswerLock"
+                          placement="bottom"
+                          class="glyphicon glyphicon-lock text-danger"></span>
                     &nbsp;&nbsp;
                     <a class="questionAddedNew" *ngIf="hasTeacherRight() && !isInvalid()" (click)="questionClicked()">
                         <span class="glyphicon glyphicon-question-sign" i18n-title title="Ask question"></span>
                     </a>
                     &ngsp;
-                    <span class="qstResult" *ngIf="result">{{result}}</span>
+                    <span class="qstResult" *ngIf="result">{{ result }}</span>
                 </div>
             </div>
             <p class="plgfooter" [innerHtml]="getFooter() | purify"></p>
@@ -121,10 +126,7 @@ export class QstComponent
     private changes = false;
     saveFailed = false;
     private enabled = true;
-    taskDeadline?: string;
-    modelAnswerLock?: boolean;
-    deadlineTooltip?: string;
-    modelAnswerLockTooltip?: string;
+    invalidMarker?: InvalidMarkerState;
 
     constructor(
         el: ElementRef<HTMLElement>,
@@ -192,9 +194,11 @@ export class QstComponent
             enabled: this.enabled,
         });
         this.button = this.buttonText() ?? $localize`Save`;
-        this.deadlineTooltip = $localize`The task deadline has passed. You may still submit a solution, but it will be marked as invalid and won't be eligible for points or grading.`;
-        this.modelAnswerLockTooltip = $localize`You’ve already unlocked the model solution, so any further submissions will be saved but won’t earn points or be graded.`;
-        this.updateInvalidMarkerData();
+        this.getInvalidMarkerState().then((r) => {
+            if (r) {
+                this.invalidMarker = r;
+            }
+        });
     }
 
     ngOnDestroy() {
@@ -390,31 +394,6 @@ export class QstComponent
             isTask: true,
             invalid: true,
         };
-    }
-
-    async updateInvalidMarkerData() {
-        const taskId = this.getTaskId()?.docTask();
-        if (!taskId) {
-            return;
-        }
-        const ab = await this.vctrl.getAnswerBrowserAsync(taskId);
-        if (!ab) {
-            return;
-        }
-        await ab.loader.abLoad.promise;
-        if (
-            ab.taskInfo?.deadline &&
-            Date.parse(ab.taskInfo?.deadline) < Date.now()
-        ) {
-            this.taskDeadline = ab.taskInfo?.deadline;
-        }
-        if (ab.taskInfo?.modelAnswer?.alreadyLocked) {
-            this.modelAnswerLock = ab.taskInfo?.modelAnswer?.lock;
-        }
-    }
-
-    async updateInvalidMarkers() {
-        await this.updateInvalidMarkerData();
     }
 }
 

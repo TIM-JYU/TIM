@@ -142,11 +142,6 @@ export type AnswerBrowserData =
           answernr: number | undefined;
       };
 
-export interface InvalidMarkerData {
-    deadline?: string;
-    modelAnswerLock?: boolean;
-}
-
 const DEFAULT_MARKUP_CONFIG: IAnswerBrowserSettings = {
     pointsStep: 0,
     validOnlyText: $localize`Show valid only`,
@@ -1433,8 +1428,8 @@ export class AnswerBrowserComponent
             this.modelAnswer.alreadyLocked = true;
             this.viewctrl.informAboutLock(this.taskId);
             const plugin = this.getPluginComponent();
-            if (plugin?.updateInvalidMarkers) {
-                await plugin.updateInvalidMarkers();
+            if (plugin?.getInvalidMarkerState?.()) {
+                await plugin?.getInvalidMarkerState();
             }
         }
         if (r.result.data.points_map) {
