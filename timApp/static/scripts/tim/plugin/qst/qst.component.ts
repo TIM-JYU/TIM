@@ -32,7 +32,6 @@ import {
     nullable,
 } from "tim/plugin/attributes";
 import {AngularPluginBase} from "tim/plugin/angular-plugin-base.directive";
-import type {InvalidMarkerState} from "tim/plugin/angular-plugin-base.directive";
 import {CommonModule} from "@angular/common";
 import {TooltipModule} from "ngx-bootstrap/tooltip";
 
@@ -81,11 +80,13 @@ const PluginFields = t.intersection([
                         &nbsp;{{ undoButton }}
                     </a>
                     <ng-container *ngIf="invalidMarker">&nbsp;</ng-container>
-                    <span *ngIf="invalidMarker?.deadline" [tooltip]="invalidMarker?.deadline" placement="bottom"
+                    <span *ngIf="invalidMarker" [tooltip]="poptemplate" placement="bottom"
                           class="glyphicon glyphicon-lock text-danger"></span>
-                    <span *ngIf="invalidMarker?.modelAnswerLock" [tooltip]="invalidMarker?.modelAnswerLock"
-                          placement="bottom"
-                          class="glyphicon glyphicon-lock text-danger"></span>
+                    <ng-template #poptemplate>
+                        <div *ngFor="let ttip of invalidMarkerTooltip">
+                            <span [innerText]="ttip"></span>
+                        </div>
+                    </ng-template>
                     &nbsp;&nbsp;
                     <a class="questionAddedNew" *ngIf="hasTeacherRight() && !isInvalid()" (click)="questionClicked()">
                         <span class="glyphicon glyphicon-question-sign" i18n-title title="Ask question"></span>
@@ -126,7 +127,8 @@ export class QstComponent
     private changes = false;
     saveFailed = false;
     private enabled = true;
-    invalidMarker?: InvalidMarkerState;
+    invalidMarkerTooltip?: string[];
+    invalidMarker = false;
 
     constructor(
         el: ElementRef<HTMLElement>,
@@ -194,10 +196,20 @@ export class QstComponent
             enabled: this.enabled,
         });
         this.button = this.buttonText() ?? $localize`Save`;
-        this.getInvalidMarkerState().then((r) => {
-            if (r) {
-                this.invalidMarker = r;
+        this.getInvalidMarkerState().then((markerState) => {
+            if (!markerState) {
+                return;
             }
+            this.invalidMarkerTooltip = [];
+            const {deadline, modelAnswerLock} = markerState;
+
+            if (deadline) {
+                this.invalidMarkerTooltip.push(deadline);
+            }
+            if (modelAnswerLock) {
+                this.invalidMarkerTooltip.push(modelAnswerLock);
+            }
+            this.invalidMarker = this.invalidMarkerTooltip.length > 0;
         });
     }
 
