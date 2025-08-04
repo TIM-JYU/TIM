@@ -8897,8 +8897,8 @@
         </context-group>
       </trans-unit>
       <trans-unit id="187187500641108332" datatype="html">
-        <source><x id="INTERPOLATION" equiv-text="Folder() ?? 'Enter the location or leave empty'}}"/></source>
-        <target state="new"><x id="INTERPOLATION" equiv-text="Folder() ?? 'Enter the location or leave empty'}}"/></target>
+        <source><x id="INTERPOLATION" equiv-text="Folder() ?? &apos;Enter the location or leave empty&apos;}}"/></source>
+        <target state="new"><x id="INTERPOLATION" equiv-text="Folder() ?? &apos;Enter the location or leave empty&apos;}}"/></target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/user-group-dialog.component.ts</context>
           <context context-type="linenumber">61,62</context>
@@ -11155,14 +11155,6 @@ Syötä useiden käyttäjien osoitteet allekkain tai pilkulla erotettuina.</targ
           <context context-type="linenumber">24,25</context>
         </context-group>
       </trans-unit>
-      <trans-unit id="7965632846269223613" datatype="html">
-        <source>Could not save the agreement: Anonymous users cannot perform this action.</source>
-        <target state="translated">Hyväksyntää ei voitu tallentaa: Anonyymit käyttäjät eivät voi suorittaa tätä toimintoa.</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/ui/tos-dialog.component.ts</context>
-          <context context-type="linenumber">75</context>
-        </context-group>
-      </trans-unit>
       <trans-unit id="6510841402924705360" datatype="html">
         <source>Could not save the agreement. Try to refresh the page, if the problem persists you can contact TIM support at tim@jyu.fi</source>
         <target state="translated">Hyväksyntää ei voitu tallentaa. Yritä päivittää sivu, jos ongelma jatkuu, voit ottaa yhteyttä TIM tukeen osoitteessa tim@jyu.fi</target>
@@ -11201,30 +11193,6 @@ Syötä useiden käyttäjien osoitteet allekkain tai pilkulla erotettuina.</targ
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/ui/tos-dialog.component.ts</context>
           <context context-type="linenumber">26,27</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="3715478772695986047" datatype="html">
-        <source>The task deadline has passed. You may still submit a solution, but it will be marked as invalid and won't be eligible for points or grading.</source>
-        <target state="translated">Tehtävän määräaika on umpeutunut. Voit silti lähettää ratkaisun, mutta se merkitään epävalidiksi eikä siitä anneta pisteitä tai arvosanaa.</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">modules/cs/js/csPlugin.ts</context>
-          <context context-type="linenumber">1593</context>
-        </context-group>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/plugin/qst/qst.component.ts</context>
-          <context context-type="linenumber">195</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="7941960797047616838" datatype="html">
-        <source>You’ve already unlocked the model solution, so any further submissions will be saved but won’t earn points or be graded.</source>
-        <target state="translated">Olet jo avannut malliratkaisun, joten kaikki uudet lähetetyt vastaukset tallennetaan, mutta niistä ei anneta pisteitä eikä niitä arvioida.</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">modules/cs/js/csPlugin.ts</context>
-          <context context-type="linenumber">1594</context>
-        </context-group>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/plugin/qst/qst.component.ts</context>
-          <context context-type="linenumber">196</context>
         </context-group>
       </trans-unit>
     </body>
