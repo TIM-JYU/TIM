@@ -55,7 +55,6 @@ import {
 } from "tim/util/utils";
 import {TimDefer} from "tim/util/timdefer";
 import {AngularPluginBase} from "tim/plugin/angular-plugin-base.directive";
-import type {InvalidMarkerState} from "tim/plugin/angular-plugin-base.directive";
 import deepEqual from "deep-equal";
 import type {ITemplateParam} from "tim/ui/showTemplateReplaceDialog";
 import {
@@ -4442,11 +4441,6 @@ ${fhtml}
                             (click)="runCode()"
                             [innerHTML]="buttonText()"></button>
                     &nbsp;
-<!--                    <span *ngIf="invalidMarker?.deadline" [tooltip]="invalidMarker?.deadline" placement="bottom"-->
-<!--                          class="glyphicon glyphicon-lock text-danger"></span>-->
-<!--                    <span *ngIf="invalidMarker?.modelAnswerLock" [tooltip]="invalidMarker?.modelAnswerLock" placement="bottom"-->
-<!--                          class="glyphicon glyphicon-lock text-danger"></span>-->
-<!--                    <ng-container *ngIf="invalidMarker">&nbsp;</ng-container>-->
                     <span *ngIf="invalidMarker" [tooltip]="poptemplate" placement="bottom"
                           class="glyphicon glyphicon-lock text-danger"></span>
                     <ng-template #poptemplate>
