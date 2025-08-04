@@ -1277,7 +1277,8 @@ export class CsController extends CsBase implements ITimComponent {
     private clearSaved: boolean = false;
     private originalUserInput?: string;
     exportingMD = false;
-    invalidMarker?: InvalidMarkerState;
+    invalidMarkerTooltip?: string[];
+    invalidMarker = false;
 
     @ViewChild("externalEditor")
     set externalEditorViewSetter(newValue: EditorComponent | undefined) {
@@ -2439,10 +2440,20 @@ ${fhtml}
         this.showCodeNow();
         this.updateRunChanged();
 
-        this.getInvalidMarkerState().then((r) => {
-            if (r) {
-                this.invalidMarker = r;
+        this.getInvalidMarkerState().then((markerState) => {
+            if (!markerState) {
+                return;
             }
+            this.invalidMarkerTooltip = [];
+            const {deadline, modelAnswerLock} = markerState;
+
+            if (deadline) {
+                this.invalidMarkerTooltip.push(deadline);
+            }
+            if (modelAnswerLock) {
+                this.invalidMarkerTooltip.push(modelAnswerLock);
+            }
+            this.invalidMarker = this.invalidMarkerTooltip.length > 0;
         });
     }
 
@@ -4431,11 +4442,20 @@ ${fhtml}
                             (click)="runCode()"
                             [innerHTML]="buttonText()"></button>
                     &nbsp;
-                    <span *ngIf="invalidMarker?.deadline" [tooltip]="invalidMarker?.deadline" placement="bottom"
+<!--                    <span *ngIf="invalidMarker?.deadline" [tooltip]="invalidMarker?.deadline" placement="bottom"-->
+<!--                          class="glyphicon glyphicon-lock text-danger"></span>-->
+<!--                    <span *ngIf="invalidMarker?.modelAnswerLock" [tooltip]="invalidMarker?.modelAnswerLock" placement="bottom"-->
+<!--                          class="glyphicon glyphicon-lock text-danger"></span>-->
+<!--                    <ng-container *ngIf="invalidMarker">&nbsp;</ng-container>-->
+                    <span *ngIf="invalidMarker" [tooltip]="poptemplate" placement="bottom"
                           class="glyphicon glyphicon-lock text-danger"></span>
-                    <span *ngIf="invalidMarker?.modelAnswerLock" [tooltip]="invalidMarker?.modelAnswerLock" placement="bottom"
-                          class="glyphicon glyphicon-lock text-danger"></span>
+                    <ng-template #poptemplate>
+                        <div *ngFor="let ttip of invalidMarkerTooltip">
+                            <span [innerText]="ttip"></span>
+                        </div>
+                    </ng-template>
                     <ng-container *ngIf="invalidMarker">&nbsp;</ng-container>
+                    
                     <button *ngIf="mdSaveButton" [disabled]="!mdHtml" class="timButton btn-sm"
                             (click)="exportMDAsImg()">{{ mdSaveButton }}
                     </button>
