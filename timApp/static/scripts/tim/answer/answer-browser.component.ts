@@ -1915,31 +1915,6 @@ export class AnswerBrowserComponent
         if (this.taskInfo.buttonNewTask) {
             this.buttonNewTask = this.taskInfo.buttonNewTask;
         }
-        // const plugin = this.getPluginComponent();
-        // const markerData: InvalidMarkerData = {
-        //     deadline: "",
-        //     modelAnswerLock: false,
-        // };
-        // if (plugin && plugin.setInvalidMarkerData) {
-        //     console.log("Nimi:");
-        //     console.log(plugin.getName());
-        //     console.log("Markup: ");
-        //     console.log(plugin.markup);
-        //     console.log("Taskinfo: ");
-        //     console.log(this.taskInfo);
-        //     if (this.taskInfo.deadline && plugin.markup.invalidMarker) {
-        //         console.log("Deadline asetettu");
-        //         markerData.deadline = this.taskInfo.deadline;
-        //     }
-        //     if (this.taskInfo.modelAnswer && plugin.markup.invalidMarker) {
-        //         console.log("Modelanswerlock asetettu");
-        //         markerData.modelAnswerLock = this.taskInfo.modelAnswer.lock;
-        //     }
-        //
-        //     console.log(markerData);
-        //     plugin.setInvalidMarkerData(markerData);
-        //     console.log("___________________________");
-        // }
     }
 
     async checkUsers(force?: boolean) {
