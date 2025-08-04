@@ -4432,10 +4432,10 @@ ${fhtml}
                             [innerHTML]="buttonText()"></button>
                     &nbsp;
                     <span *ngIf="invalidMarker?.deadline" [tooltip]="invalidMarker?.deadline" placement="bottom"
-                          class="glyphicon glyphicon-hourglass text-danger"></span>
+                          class="glyphicon glyphicon-lock text-danger"></span>
                     <span *ngIf="invalidMarker?.modelAnswerLock" [tooltip]="invalidMarker?.modelAnswerLock" placement="bottom"
                           class="glyphicon glyphicon-lock text-danger"></span>
-                    &nbsp;
+                    <ng-container *ngIf="invalidMarker">&nbsp;</ng-container>
                     <button *ngIf="mdSaveButton" [disabled]="!mdHtml" class="timButton btn-sm"
                             (click)="exportMDAsImg()">{{ mdSaveButton }}
                     </button>
