@@ -283,8 +283,6 @@ export abstract class AngularPluginBase<
 
     async getInvalidMarkerState(): Promise<InvalidMarkerState | undefined> {
         const taskId = this.getTaskId()?.docTask();
-        // defaultDeadlineTooltip = $localize`The task deadline has passed. You may still submit a solution, but it will be marked as invalid and won't be eligible for points or grading.`;
-        // defaultModelAnswerLockTooltip = $localize`You’ve already unlocked the model solution, so any further submissions will be saved but won’t earn points or be graded.`;
         if (!taskId) {
             return undefined;
         }
