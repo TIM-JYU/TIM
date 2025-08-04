@@ -80,9 +80,9 @@ const PluginFields = t.intersection([
                        (click)="tryResetChanges($event)">
                         &nbsp;{{ undoButton }}
                     </a>
-                    &nbsp;
+                    <ng-container *ngIf="invalidMarker">&nbsp;</ng-container>
                     <span *ngIf="invalidMarker?.deadline" [tooltip]="invalidMarker?.deadline" placement="bottom"
-                          class="glyphicon glyphicon-hourglass text-danger"></span>
+                          class="glyphicon glyphicon-lock text-danger"></span>
                     <span *ngIf="invalidMarker?.modelAnswerLock" [tooltip]="invalidMarker?.modelAnswerLock"
                           placement="bottom"
                           class="glyphicon glyphicon-lock text-danger"></span>
