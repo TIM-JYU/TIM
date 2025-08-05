@@ -35,8 +35,6 @@ export interface PluginJson {
 }
 
 export interface InvalidMarkerState {
-    // deadline?: string;
-    // modelAnswerLock?: string;
     toolTipTexts: string[];
     invalidMarkerSet: boolean;
 }
