@@ -2439,21 +2439,7 @@ ${fhtml}
         this.showCodeNow();
         this.updateRunChanged();
 
-        this.getInvalidMarkerState().then((markerState) => {
-            if (!markerState) {
-                return;
-            }
-            this.invalidMarkerTooltip = [];
-            const {deadline, modelAnswerLock} = markerState;
-
-            if (deadline) {
-                this.invalidMarkerTooltip.push(deadline);
-            }
-            if (modelAnswerLock) {
-                this.invalidMarkerTooltip.push(modelAnswerLock);
-            }
-            this.invalidMarker = this.invalidMarkerTooltip.length > 0;
-        });
+        this.getInvalidMarkerTooltip();
     }
 
     ngOnDestroy() {
@@ -4161,6 +4147,12 @@ ${fhtml}
         if (save) {
             await this.runCode();
         }
+    }
+
+    private async getInvalidMarkerTooltip() {
+        const result = await this.getInvalidMarkerState();
+        this.invalidMarkerTooltip = result?.toolTipTexts ?? [];
+        this.invalidMarker = result?.invalidMarkerSet ?? false;
     }
 
     updateRunChanged(): boolean {

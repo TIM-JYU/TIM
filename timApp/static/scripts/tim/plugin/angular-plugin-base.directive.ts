@@ -35,8 +35,10 @@ export interface PluginJson {
 }
 
 export interface InvalidMarkerState {
-    deadline?: string;
-    modelAnswerLock?: string;
+    // deadline?: string;
+    // modelAnswerLock?: string;
+    toolTipTexts: string[];
+    invalidMarkerSet: boolean;
 }
 
 /**
@@ -295,19 +297,23 @@ export abstract class AngularPluginBase<
         if (!markerInfo) {
             return undefined;
         }
-        const result: InvalidMarkerState = {};
+        const toolTips: string[] = [];
         const deadlineTooltip = markerInfo.deadline;
         if (
             ab.taskInfo?.deadline &&
             Date.parse(ab.taskInfo.deadline) < Date.now() &&
             deadlineTooltip
         ) {
-            result.deadline = deadlineTooltip;
+            toolTips.push(deadlineTooltip);
         }
         const modelAnswerLock = markerInfo.modelAnswerLock;
         if (ab.taskInfo?.modelAnswer?.alreadyLocked && modelAnswerLock) {
-            result.modelAnswerLock = modelAnswerLock;
+            toolTips.push(modelAnswerLock);
         }
-        return result;
+        const showInvalidMarker = toolTips.length > 0;
+        return {
+            toolTipTexts: toolTips,
+            invalidMarkerSet: showInvalidMarker,
+        };
     }
 }
