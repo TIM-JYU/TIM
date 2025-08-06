@@ -30,7 +30,10 @@ import {MarkupErrorComponent} from "tim/ui/markup-error.component";
 import {CloseButtonComponent} from "tim/ui/close-button.component";
 import {CommonModule} from "@angular/common";
 import {PrintButtonComponent} from "tim/ui/print-button.component";
-import {CreateItemComponent} from "tim/item/create-item.component";
+import {
+    AutofocusDirective,
+    CreateItemComponent,
+} from "tim/item/create-item.component";
 import {PurifyModule} from "tim/util/purify.module";
 
 @NgModule({
@@ -63,6 +66,7 @@ import {PurifyModule} from "tim/util/purify.module";
         SwitchButtonComponent,
         PrintButtonComponent,
         CreateItemComponent,
+        AutofocusDirective,
     ],
     exports: [
         MarkupErrorComponent,
