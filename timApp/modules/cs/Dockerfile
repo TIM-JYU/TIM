@@ -169,7 +169,7 @@ ENV \
     # Do not generate certificate
     DOTNET_GENERATE_ASPNET_CERTIFICATE=false \
     # Version channel from which to install dotnet
-    DOTNET_VERSION_CHANNEL=8.0 \
+    DOTNET_VERSION_CHANNEL=9.0 \
     # Enable correct mode for dotnet watch (only mode supported in a container)
     DOTNET_USE_POLLING_FILE_WATCHER=true \
     # Skip extraction of XML docs - generally not useful within an image/container - helps performance
