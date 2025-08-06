@@ -169,7 +169,7 @@ ENV \
     # Do not generate certificate
     DOTNET_GENERATE_ASPNET_CERTIFICATE=false \
     # Version channel from which to install dotnet
-    DOTNET_VERSION_CHANNEL=8.0 \
+    DOTNET_VERSION_CHANNEL=9.0 \
     # Enable correct mode for dotnet watch (only mode supported in a container)
     DOTNET_USE_POLLING_FILE_WATCHER=true \
     # Skip extraction of XML docs - generally not useful within an image/container - helps performance
@@ -280,7 +280,7 @@ RUN wget -q https://github.com/industrial-optimization-group/DESDEO/releases/dow
     tar -xzf solver_binaries.tgz -C /etc/desdeo/solver_binaries && \
     rm solver_binaries.tgz
 ENV PATH=$PATH:/etc/desdeo/solver_binaries/ampl.linux-intel64
-RUN $PIP_INSTALL desdeo && bash -c "${APT_CLEANUP}"
+RUN $PIP_INSTALL git+https://github.com/industrial-optimization-group/DESDEO.git && bash -c "${APT_CLEANUP}"
 
 # sktime
 RUN bash -c "$PIP_INSTALL sktime[all_extras] && ${APT_CLEANUP}"
