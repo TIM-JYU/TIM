@@ -1,12 +1,33 @@
 import type {AlertSeverity} from "tim/ui/formErrorMessage";
 import {getURLParameter, toPromise} from "tim/util/utils";
-import type {OnInit} from "@angular/core";
+import {
+    Directive,
+    OnChanges,
+    OnInit,
+    ElementRef,
+    SimpleChanges,
+} from "@angular/core";
 import {Component, Input, ViewChild} from "@angular/core";
 import {slugify} from "tim/util/slugify";
 import type {ITaggedItem} from "tim/item/IItem";
 import {TagType} from "tim/item/IItem";
 import {HttpClient} from "@angular/common/http";
 import {NgModel} from "@angular/forms";
+
+@Directive({
+    selector: "[autofocus]",
+})
+export class AutofocusDirective implements OnChanges {
+    @Input() autofocus = false;
+
+    constructor(private elementRef: ElementRef<HTMLInputElement>) {}
+
+    ngOnChanges(changes: SimpleChanges) {
+        if (this.autofocus && changes.autofocus.currentValue) {
+            setTimeout(() => this.elementRef.nativeElement.focus(), 0);
+        }
+    }
+}
 
 @Component({
     selector: "create-item",
@@ -23,7 +44,7 @@ import {NgModel} from "@angular/forms";
                 <label>
                     {{itemType | titlecase}} title:
                     <input class="form-control" required [(ngModel)]="itemTitle" name="itemTitle"
-                           type="text" (input)="titleChanged()">
+                           type="text" (input)="titleChanged()" [autofocus]="autofocus" (keydown.enter)="!(f.invalid || creating || !canCopy) ? createItem() : null">
                 </label>
                 <tim-error-message></tim-error-message>
             </div>
@@ -84,6 +105,7 @@ export class CreateItemComponent implements OnInit {
     tagsWithExpirations = false;
     @Input() sourceLocation?: string;
     @Input() showButton = true;
+    @Input() autofocus = false;
 
     canCopy: boolean = true;
     private originalLocation?: string;

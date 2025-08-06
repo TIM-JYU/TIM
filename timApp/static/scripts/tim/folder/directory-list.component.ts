@@ -100,19 +100,19 @@ const AccessLevelBadgeInfo: Record<AccessLevelBadge, string> = {
         </table>
         <p *ngIf="itemList.length == 0">There are no items to show.</p>
         <tabset *ngIf="canCreate">
-            <tab [active]="false">
+            <tab [active]="false" (selectTab)="tabSelection(0)">
                         <ng-template tabHeading>
                             <span>Create a new document</span>
                             <span class="glyphicon glyphicon-file icon-inline" aria-hidden="true"></span>
                         </ng-template>
-                <create-item itemType="document" itemLocation="{{ item.path }}"></create-item>
+                <create-item itemType="document" itemLocation="{{ item.path }}" [autofocus]="activeTab === 0"></create-item>
             </tab>
-            <tab [active]="false">
+            <tab [active]="false" (selectTab)="tabSelection(1)">
                         <ng-template tabHeading>
                             <span>Create a new folder</span>
                             <span class="glyphicon glyphicon-folder-open icon-inline" aria-hidden="true"></span>
                         </ng-template>
-                <create-item itemType="folder" itemLocation="{{ item.path }}"></create-item>
+                <create-item itemType="folder" itemLocation="{{ item.path }}" [autofocus]="activeTab === 1"></create-item>
             </tab>
         </tabset>
     `,
@@ -130,6 +130,7 @@ export class DirectoryListComponent {
     showAccessBadges = true;
     displayAccessBadges: boolean;
     displayDocumentTags: boolean;
+    activeTab: number = -1;
 
     constructor(private http: HttpClient) {
         const fg = folderglobals();
@@ -199,6 +200,10 @@ export class DirectoryListComponent {
             ).replace("_", "-");
         }
         return "";
+    }
+
+    protected tabSelection(tabNum: number) {
+        this.activeTab = tabNum;
     }
 
     async getFolderItemTags(
