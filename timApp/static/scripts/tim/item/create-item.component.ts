@@ -1,12 +1,7 @@
 import type {AlertSeverity} from "tim/ui/formErrorMessage";
 import {getURLParameter, toPromise} from "tim/util/utils";
-import {
-    Directive,
-    OnChanges,
-    OnInit,
-    ElementRef,
-    SimpleChanges,
-} from "@angular/core";
+import type {OnChanges, OnInit, SimpleChanges} from "@angular/core";
+import {Directive, ElementRef} from "@angular/core";
 import {Component, Input, ViewChild} from "@angular/core";
 import {slugify} from "tim/util/slugify";
 import type {ITaggedItem} from "tim/item/IItem";
