@@ -30,11 +30,9 @@ import {MarkupErrorComponent} from "tim/ui/markup-error.component";
 import {CloseButtonComponent} from "tim/ui/close-button.component";
 import {CommonModule} from "@angular/common";
 import {PrintButtonComponent} from "tim/ui/print-button.component";
-import {
-    AutofocusDirective,
-    CreateItemComponent,
-} from "tim/item/create-item.component";
+import {CreateItemComponent} from "tim/item/create-item.component";
 import {PurifyModule} from "tim/util/purify.module";
+import {InputAutofocusDirective} from "tim/item/input-autofocus.directive";
 
 @NgModule({
     providers: [SessionVerify],
@@ -66,7 +64,7 @@ import {PurifyModule} from "tim/util/purify.module";
         SwitchButtonComponent,
         PrintButtonComponent,
         CreateItemComponent,
-        AutofocusDirective,
+        InputAutofocusDirective,
     ],
     exports: [
         MarkupErrorComponent,
@@ -94,6 +92,7 @@ import {PurifyModule} from "tim/util/purify.module";
         BookmarkNamePipe,
         SwitchButtonComponent,
         CreateItemComponent,
+        InputAutofocusDirective,
     ],
     imports: [CommonModule, FormsModule, PurifyModule, ReactiveFormsModule],
 })

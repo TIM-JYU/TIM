@@ -105,14 +105,14 @@ const AccessLevelBadgeInfo: Record<AccessLevelBadge, string> = {
                             <span>Create a new document</span>
                             <span class="glyphicon glyphicon-file icon-inline" aria-hidden="true"></span>
                         </ng-template>
-                <create-item itemType="document" itemLocation="{{ item.path }}" [autofocus]="activeTab === 0"></create-item>
+                <create-item itemType="document" itemLocation="{{ item.path }}" [inputAutofocus]="activeTab === 0"></create-item>
             </tab>
             <tab [active]="false" (selectTab)="tabSelection(1)">
                         <ng-template tabHeading>
                             <span>Create a new folder</span>
                             <span class="glyphicon glyphicon-folder-open icon-inline" aria-hidden="true"></span>
                         </ng-template>
-                <create-item itemType="folder" itemLocation="{{ item.path }}" [autofocus]="activeTab === 1"></create-item>
+                <create-item itemType="folder" itemLocation="{{ item.path }}" [inputAutofocus]="activeTab === 1"></create-item>
             </tab>
         </tabset>
     `,
