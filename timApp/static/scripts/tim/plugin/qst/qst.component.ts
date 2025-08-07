@@ -33,6 +33,7 @@ import {
 } from "tim/plugin/attributes";
 import {AngularPluginBase} from "tim/plugin/angular-plugin-base.directive";
 import {CommonModule} from "@angular/common";
+import {TooltipModule} from "ngx-bootstrap/tooltip";
 
 const PluginMarkupFields = t.intersection([
     GenericPluginMarkup,
@@ -63,9 +64,9 @@ const PluginFields = t.intersection([
             <h4 *ngIf="getHeader()" [innerHtml]="getHeader() | purify"></h4>
             <p *ngIf="stem" class="stem" [innerHtml]="stem | purify"></p>
             <tim-answer-sheet
-                    [questiondata]="preview"
-                    [customHeader]="markup['customHeader']"
-                    (onAnswerChange)="updateAnswer($event)">
+                [questiondata]="preview"
+                [customHeader]="markup['customHeader']"
+                (onAnswerChange)="updateAnswer($event)">
             </tim-answer-sheet>
             <div class="csRunMenuArea">
                 <div class="csRunMenu">
@@ -74,15 +75,24 @@ const PluginFields = t.intersection([
                             *ngIf="(button && !isAutosave) || saveFailed"
                             [disabled]="isRunning || isInvalid() || (disableUnchanged && !isUnSaved())"
                             (click)="saveText()"></button>
-                    <a href="" *ngIf="undoButton && isUnSaved()" title="{{undoTitle}}" (click)="tryResetChanges($event)">
-                    &nbsp;{{undoButton}}
+                    <a href="" *ngIf="undoButton && isUnSaved()" title="{{undoTitle}}"
+                       (click)="tryResetChanges($event)">
+                        &nbsp;{{ undoButton }}
                     </a>
+                    <ng-container *ngIf="invalidMarker">&nbsp;</ng-container>
+                    <span *ngIf="invalidMarker" [tooltip]="poptemplate" placement="bottom"
+                          class="glyphicon glyphicon-lock text-danger"></span>
+                    <ng-template #poptemplate>
+                        <div *ngFor="let ttip of invalidMarkerTooltip">
+                            <span [innerText]="ttip"></span>
+                        </div>
+                    </ng-template>
                     &nbsp;&nbsp;
                     <a class="questionAddedNew" *ngIf="hasTeacherRight() && !isInvalid()" (click)="questionClicked()">
                         <span class="glyphicon glyphicon-question-sign" i18n-title title="Ask question"></span>
                     </a>
                     &ngsp;
-                    <span class="qstResult" *ngIf="result">{{result}}</span>
+                    <span class="qstResult" *ngIf="result">{{ result }}</span>
                 </div>
             </div>
             <p class="plgfooter" [innerHtml]="getFooter() | purify"></p>
@@ -117,6 +127,8 @@ export class QstComponent
     private changes = false;
     saveFailed = false;
     private enabled = true;
+    invalidMarkerTooltip?: string[];
+    invalidMarker = false;
 
     constructor(
         el: ElementRef<HTMLElement>,
@@ -184,12 +196,19 @@ export class QstComponent
             enabled: this.enabled,
         });
         this.button = this.buttonText() ?? $localize`Save`;
+        this.getInvalidMarkerTooltip();
     }
 
     ngOnDestroy() {
         if (!this.pluginMeta.isPreview()) {
             this.vctrl.removeTimComponent(this);
         }
+    }
+
+    private async getInvalidMarkerTooltip() {
+        const result = await this.getInvalidMarkerState();
+        this.invalidMarkerTooltip = result?.toolTipTexts ?? [];
+        this.invalidMarker = result?.invalidMarkerSet ?? false;
     }
 
     getHeader() {
@@ -391,6 +410,7 @@ export class QstComponent
         TimUtilityModule,
         AnswerSheetModule,
         PurifyModule,
+        TooltipModule,
     ],
 })
 export class QstModule implements DoBootstrap {

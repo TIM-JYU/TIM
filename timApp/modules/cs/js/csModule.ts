@@ -8,6 +8,7 @@ import {GraphVizComponent} from "tim/plugin/graph-viz/graph-viz.component";
 import {VariablesComponent} from "tim/plugin/variables/variables.component";
 import {registerPlugin} from "tim/plugin/pluginRegistry";
 import {CommonModule} from "@angular/common";
+import {TooltipModule} from "ngx-bootstrap/tooltip";
 import {CsRunnerComponent} from "./csPlugin";
 import {CsTextComponent} from "./text";
 import {CsConsoleComponent} from "./console";
@@ -50,6 +51,7 @@ import {EditorModule} from "./editor/module";
         TimUtilityModule,
         CsUtilityModule,
         PurifyModule,
+        TooltipModule,
     ],
 })
 export class CsPluginModule implements DoBootstrap {
