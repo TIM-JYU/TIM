@@ -2,6 +2,7 @@ import base64
 import json
 import os
 import re
+from collections import defaultdict
 from dataclasses import dataclass, field
 from typing import List
 
@@ -38,9 +39,12 @@ from timApp.printing.printsettings import PrintFormat
 from timApp.timdb.sqa import run_sql
 from timApp.user.user import User
 from timApp.util.flask.requesthelper import NotExist, RouteException
+from tim_common.dumboclient import call_dumbo
 from tim_common.marshmallow_dataclass import class_schema
 
 IDE_TASK_TAG = "ideTask"  # Identification tag for the TIDE-task
+IDE_HANDOUT_FOR_TAG = "handoutForIdeTask"
+IDE_HEADER_FOR_TAG = "headerForIdeTask"
 
 
 @dataclass
@@ -521,11 +525,44 @@ def get_ide_tasks_implementation(
     verify_view_access(doc, user=user)
 
     user_ctx = UserContext.from_one_user(u=user)
+    view_ctx = default_view_ctx
+    settings = doc.document.get_settings()
+    macroinfo = settings.get_macroinfo(view_ctx, user_ctx)
+    macroinfo.macro_map.update({"ide": True})
 
     pars = doc.document.get_paragraphs()
 
     tasks = []
+    task_stems: dict[str, list[DocParagraph]] = defaultdict(list)
+    task_headers: dict[str, DocParagraph] = {}
+    current_tag_stack = []
 
+    # First pass: collect all paragraphs for handouts
+    for p in pars:
+        visited_tags = set()
+        if not p.attrs:
+            continue
+        handout_for_tag = p.attrs.get(IDE_HANDOUT_FOR_TAG, None)
+        if handout_for_tag and (ide_task_id is None or ide_task_id == handout_for_tag):
+            if p.attrs.get("area"):
+                current_tag_stack.append(handout_for_tag)
+            else:
+                task_stems[handout_for_tag].append(p)
+                visited_tags.add(handout_for_tag)
+        if current_tag_stack:
+            if p.attrs.get("area_end"):
+                current_tag_stack.pop()
+            for stem_tag in current_tag_stack:
+                if stem_tag in visited_tags:
+                    continue
+                task_stems[stem_tag].append(p)
+                visited_tags.add(stem_tag)
+
+        header_for_tag = p.attrs.get(IDE_HEADER_FOR_TAG, None)
+        if header_for_tag and (ide_task_id is None or ide_task_id == header_for_tag):
+            task_headers[header_for_tag] = p
+
+    # Second pass: collect all tasks and render custom handout stems
     for p in pars:
         tag: str | None = "???"
         try:
@@ -541,8 +578,32 @@ def get_ide_tasks_implementation(
                     task = get_ide_user_plugin_data(
                         doc=doc, par=p, user_ctx=user_ctx, ide_task_id=tag
                     )
-                    if task:
-                        tasks.append(task)
+
+                    if not task:
+                        continue
+
+                    if stems := task_stems.get(tag):
+                        rendered_stem_blocks = call_dumbo(
+                            [
+                                p.get_expanded_markdown(macroinfo, ignore_errors=True)
+                                for p in stems
+                            ]
+                        )
+                        task.stem = "\n".join(rendered_stem_blocks)
+
+                    if header := task_headers.get(tag):
+                        rendered_header = call_dumbo(
+                            [
+                                header.get_expanded_markdown(
+                                    macroinfo, ignore_errors=True
+                                )
+                            ]
+                        )[0]
+                        task.header = BeautifulSoup(
+                            rendered_header, features="lxml"
+                        ).get_text()
+
+                    tasks.append(task)
         except Exception as e:
             task = TIDEPluginData(
                 task_files=[],
