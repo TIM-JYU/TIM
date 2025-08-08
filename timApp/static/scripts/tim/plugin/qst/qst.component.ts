@@ -79,9 +79,9 @@ const PluginFields = t.intersection([
                        (click)="tryResetChanges($event)">
                         &nbsp;{{ undoButton }}
                     </a>
-                    <ng-container *ngIf="invalidMarker">&nbsp;</ng-container>
+                    <ng-container *ngIf="invalidMarker">&nbsp;&nbsp;&nbsp;&nbsp;</ng-container>
                     <span *ngIf="invalidMarker" [tooltip]="poptemplate" placement="bottom"
-                          class="glyphicon glyphicon-lock text-danger"></span>
+                          class="glyphicon glyphicon-lock text-warning"></span>
                     <ng-template #poptemplate>
                         <div *ngFor="let ttip of invalidMarkerTooltip">
                             <span [innerText]="ttip"></span>
@@ -203,6 +203,10 @@ export class QstComponent
         if (!this.pluginMeta.isPreview()) {
             this.vctrl.removeTimComponent(this);
         }
+    }
+
+    async updateInvalidMarkerState() {
+        await this.getInvalidMarkerTooltip();
     }
 
     private async getInvalidMarkerTooltip() {

@@ -4149,6 +4149,10 @@ ${fhtml}
         }
     }
 
+    async updateInvalidMarkerState() {
+        await this.getInvalidMarkerTooltip();
+    }
+
     private async getInvalidMarkerTooltip() {
         const result = await this.getInvalidMarkerState();
         this.invalidMarkerTooltip = result?.toolTipTexts ?? [];
@@ -4433,8 +4437,9 @@ ${fhtml}
                             (click)="runCode()"
                             [innerHTML]="buttonText()"></button>
                     &nbsp;
+                    <ng-container *ngIf="invalidMarker">&nbsp;</ng-container>
                     <span *ngIf="invalidMarker" [tooltip]="poptemplate" placement="bottom"
-                          class="glyphicon glyphicon-lock text-danger"></span>
+                          class="glyphicon glyphicon-lock text-warning"></span>
                     <ng-template #poptemplate>
                         <div *ngFor="let ttip of invalidMarkerTooltip">
                             <span [innerText]="ttip"></span>
