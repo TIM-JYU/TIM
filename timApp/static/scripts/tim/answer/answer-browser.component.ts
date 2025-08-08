@@ -1428,8 +1428,8 @@ export class AnswerBrowserComponent
             this.modelAnswer.alreadyLocked = true;
             this.viewctrl.informAboutLock(this.taskId);
             const plugin = this.getPluginComponent();
-            if (plugin?.getInvalidMarkerState?.()) {
-                await plugin?.getInvalidMarkerState();
+            if (plugin?.updateInvalidMarkerState?.()) {
+                await plugin?.updateInvalidMarkerState();
             }
         }
         if (r.result.data.points_map) {
