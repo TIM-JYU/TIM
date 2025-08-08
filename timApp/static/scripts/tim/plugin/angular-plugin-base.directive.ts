@@ -34,6 +34,11 @@ export interface PluginJson {
     json: string;
 }
 
+export interface InvalidMarkerState {
+    toolTipTexts: string[];
+    invalidMarkerSet: boolean;
+}
+
 /**
  * Base class for all Angular plugin components.
  */
@@ -275,4 +280,38 @@ export abstract class AngularPluginBase<
     abstract getAttributeType(): T;
 
     abstract getDefaultMarkup(): Partial<MarkupType>;
+
+    async getInvalidMarkerState(): Promise<InvalidMarkerState | undefined> {
+        const taskId = this.getTaskId()?.docTask();
+        if (!taskId) {
+            return undefined;
+        }
+        const ab = await this.vctrl.getAnswerBrowserAsync(taskId);
+        if (!ab) {
+            return undefined;
+        }
+        await ab.loader.abLoad.promise;
+        const markerInfo = this.markup.invalidMarker;
+        if (!markerInfo) {
+            return undefined;
+        }
+        const toolTips: string[] = [];
+        const deadlineTooltip = markerInfo.deadline;
+        if (
+            ab.taskInfo?.deadline &&
+            Date.parse(ab.taskInfo.deadline) < Date.now() &&
+            deadlineTooltip
+        ) {
+            toolTips.push(deadlineTooltip);
+        }
+        const modelAnswerLock = markerInfo.modelAnswerLock;
+        if (ab.taskInfo?.modelAnswer?.alreadyLocked && modelAnswerLock) {
+            toolTips.push(modelAnswerLock);
+        }
+        const showInvalidMarker = toolTips.length > 0;
+        return {
+            toolTipTexts: toolTips,
+            invalidMarkerSet: showInvalidMarker,
+        };
+    }
 }

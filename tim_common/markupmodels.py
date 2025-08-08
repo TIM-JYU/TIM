@@ -280,6 +280,12 @@ class AnswerBrowserInfo:
 
 
 @dataclass
+class InvalidMarkerSettings:
+    deadline: str | None | Missing = missing
+    modelAnswerLock: str | None | Missing = missing
+
+
+@dataclass
 class GenericMarkupModel(KnownMarkupFields):
     """Specifies which fields the editor can use in the plugin markup.
     This base class defines some fields that are applicable to all plugins.
@@ -309,6 +315,7 @@ class GenericMarkupModel(KnownMarkupFields):
     answerBrowser: AnswerBrowserInfo | Missing | None = missing
     spellcheck: bool | None | Missing = missing
     warningFilter: str | Missing | None = missing
+    invalidMarker: InvalidMarkerSettings | Missing | None = missing
 
     def get_visible_data(self) -> dict:
         assert isinstance(self.hidden_keys, list)
