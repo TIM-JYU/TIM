@@ -194,6 +194,11 @@ class TIDETaskInfo:
     Header of the plugin
     """
 
+    description: str | None = None
+    """
+    Description of the plugin. Works the same as the header, but only shown in the IDE.
+    """
+
     stem: str | None = None
     """Stem of the plugin"""
 
@@ -765,7 +770,7 @@ def get_ide_user_plugin_data(
     return TIDEPluginData(
         task_files=json_ide_files,
         supplementary_files=supplementary_files,
-        header=task_info.header,
+        header=task_info.description or task_info.header,
         stem=task_info.stem,
         type=task_info.type,
         path=doc.path,
