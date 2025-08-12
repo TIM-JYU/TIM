@@ -13,6 +13,11 @@ export const PointsLimiterSettings = t.partial({
 export interface IPointsLimiterSettings
     extends t.TypeOf<typeof PointsLimiterSettings> {}
 
+export const InvalidMarkerSettings = t.partial({
+    deadline: t.string,
+    modelAnswerLock: t.string,
+});
+
 export const AnswerBrowserSettings = t.partial({
     pointsStep: nullable(t.number),
     validOnlyText: t.string,
@@ -75,6 +80,7 @@ export const GenericPluginMarkup = t.partial({
     saveTeacher: t.boolean,
     spellcheck: t.boolean,
     eagerlyLoadState: t.boolean,
+    invalidMarker: nullable(InvalidMarkerSettings),
 });
 
 export const Info = nullable(
