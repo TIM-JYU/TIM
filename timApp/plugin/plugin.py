@@ -85,6 +85,7 @@ NO_ANSWERBROWSER_PLUGINS = {
     "steps",
     "timMenu",
     "symbolbutton",
+    "groupJoin",
 }
 
 # FIXME: Instead of defining max points counter here, plugins should return this
