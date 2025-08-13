@@ -272,7 +272,7 @@ RUN $PIP_INSTALL pyod && bash -c "${APT_CLEANUP}"
 # pyqula
 RUN $PIP_INSTALL pyqula && bash -c "${APT_CLEANUP}"
 
-# DESDEO
+# DESDEO (
 # First, download and untargz the binaries from https://github.com/industrial-optimization-group/DESDEO/releases/download/supplementary/solver_binaries.tgz
 # into /etc/desdeo/solver_binaries
 RUN wget -q https://github.com/industrial-optimization-group/DESDEO/releases/download/supplementary/solver_binaries.tgz && \
@@ -280,7 +280,7 @@ RUN wget -q https://github.com/industrial-optimization-group/DESDEO/releases/dow
     tar -xzf solver_binaries.tgz -C /etc/desdeo/solver_binaries && \
     rm solver_binaries.tgz
 ENV PATH=$PATH:/etc/desdeo/solver_binaries/ampl.linux-intel64
-RUN $PIP_INSTALL git+https://github.com/industrial-optimization-group/DESDEO.git && bash -c "${APT_CLEANUP}"
+RUN $PIP_INSTALL git+https://github.com/industrial-optimization-group/DESDEO.git@4d3bb915a1dd9a3e6c4f8d6eb90fa32052b6d1a8 && bash -c "${APT_CLEANUP}"
 
 # sktime
 RUN bash -c "$PIP_INSTALL sktime[all_extras] && ${APT_CLEANUP}"
