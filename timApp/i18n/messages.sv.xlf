@@ -11100,6 +11100,14 @@ Separate multiple addresses with commas or write each address on a new line.</ta
           <context context-type="linenumber">26,27</context>
         </context-group>
       </trans-unit>
+      <trans-unit id="4524017100327483982" datatype="html">
+        <source>Select a group</source>
+        <target state="new">Select a group</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/groupJoin/group-join.component.ts</context>
+          <context context-type="linenumber">62,63</context>
+        </context-group>
+      </trans-unit>
     </body>
   </file>
 </xliff>

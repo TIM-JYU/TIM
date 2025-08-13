@@ -33,6 +33,10 @@ const PluginMarkup = t.intersection([
             leaveConfirmTitle: nullable(t.string),
             leaveConfirmMessage: nullable(t.string),
         }),
+        groupsSelect: t.partial({
+            name: t.string,
+            options: t.record(t.string, t.array(t.string)),
+        }),
     }),
     t.type({
         join: withDefault(t.boolean, true),
@@ -51,8 +55,19 @@ type JoinGroupResult = {ok: boolean; result: Record<string, string>};
 @Component({
     selector: "tim-group-join",
     template: `
+        <form>
+            <div *ngIf="markup['groupsSelect']" class="form-group">
+                <label for="tim-group-join-select">{{markup['groupsSelect'].name}}</label>
+                <select class="form-control" id="tim-group-join-select" name="tim-group-join-select" [(ngModel)]="selectedGroupSelection">
+                    <option [value]="undefined" disabled selected i18n>Select a group</option>
+                    <option *ngFor="let group of markup['groupsSelect'].options | keyvalue" [value]="group.key">
+                        {{group.key}}
+                    </option>
+                </select>
+            </div>
+        </form>
         <div class="button-panel">
-            <button class="timButton" [disabled]="!enabled || loading" (click)="process()">{{status}}</button>
+            <button class="timButton" [disabled]="!enabled || loading || (markup['groupsSelect'] && !selectedGroupSelection)" (click)="process()">{{status}}</button>
             <tim-loading *ngIf="loading"></tim-loading>
         </div>
         <tim-alert *ngIf="errorMessage" severity="danger" i18n>Could not change group membership: {{ errorMessage }}</tim-alert>
@@ -88,7 +103,18 @@ export class GroupJoinComponent extends AngularPluginBase<
     docPath?: string;
     requiresTaskId = false;
 
+    selectedGroupSelection?: string;
+
     get groups() {
+        if (this.selectedGroupSelection) {
+            return (
+                this.markup.groupsSelect?.options?.[
+                    this.selectedGroupSelection
+                ] ??
+                this.markup.groups ??
+                []
+            );
+        }
         return this.markup.groups ?? [];
     }
 
@@ -103,7 +129,7 @@ export class GroupJoinComponent extends AngularPluginBase<
         this.leaveText = this.markup.texts?.leave ?? this.leaveText;
         this.leftText = this.markup.texts?.left ?? this.leftText;
 
-        if (this.markup.groups?.length) {
+        if (this.markup.groups?.length && !this.markup.groupsSelect) {
             const currentGroups = new Set(
                 Users.getCurrent().groups.map((g) => g.name)
             );
@@ -165,7 +191,7 @@ export class GroupJoinComponent extends AngularPluginBase<
 
         const r = await toPromise(
             this.http.post<JoinGroupResult>("/groupJoin/joinGroups", {
-                groups: this.markup.groups,
+                groups: this.groups,
             })
         );
 

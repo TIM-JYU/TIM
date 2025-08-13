@@ -48,6 +48,12 @@ class GroupJoinTexts:
 
 
 @dataclass
+class GroupSelectMarkup:
+    name: str | None | Missing = missing
+    options: dict[str, list[str]] = field(default_factory=dict)
+
+
+@dataclass
 class GroupJoinMarkupModel(GenericMarkupModel):
     groups: list[str] = field(default_factory=list)
     join: bool = True
@@ -55,6 +61,7 @@ class GroupJoinMarkupModel(GenericMarkupModel):
     confirm: bool = False
     autoRefresh: bool = False
     texts: GroupJoinTexts = field(default_factory=GroupJoinTexts)
+    groupsSelect: GroupSelectMarkup | None | Missing = missing
 
 
 @dataclass
