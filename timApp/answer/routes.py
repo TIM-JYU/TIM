@@ -31,6 +31,7 @@ from timApp.answer.answers import (
     FormatOptions,
     AnswerPrintOptions,
     get_all_answers,
+    get_points_by_rule,
 )
 from timApp.answer.backup import send_answer_backup_if_enabled
 from timApp.answer.exportedanswer import ExportedAnswer
@@ -495,6 +496,57 @@ def get_globals_for_tasks(task_ids: list[TaskId], answer_map: dict[str, dict]) -
     for answer, _ in run_sql(answers_all):
         asd = answer.to_json()
         answer_map[answer.task_id] = asd
+
+
+@answers.get("/pointsrulepoints")
+def get_points_for_display(doc_id: int) -> Response:
+    """
+    Route for getting points by points rule for displaying on page along tasks
+
+    :return:
+    """
+    curr_user = get_current_user_object()
+    if not curr_user.is_real_user:
+        raise RouteException("User has to be logged in to perform this action.")
+
+    doc_info = get_doc_or_abort(doc_id)
+    doc = doc_info.document
+    doc_settings = doc.get_settings()
+    points_rule = doc_settings.point_sum_rule()
+
+    if not points_rule:
+        raise RouteException("No points rule for this document.")
+
+    view_ctx = default_view_ctx
+    doc_paragraphs = dereference_pars(
+        doc.get_paragraphs(), context_doc=doc, view_ctx=view_ctx
+    )
+
+    task_ids, _, _ = find_task_ids(
+        doc_paragraphs,
+        view_ctx,
+        UserContext.from_one_user(curr_user),
+    )
+
+    info = get_points_by_rule(
+        points_rule,
+        task_ids,
+        [curr_user.get_user_id()],
+    )
+
+    if points_rule and not points_rule.count_all:
+        total_tasks = len(points_rule.groups)
+    else:
+        total_tasks = len(task_ids)
+
+    return json_response(
+        {
+            "total_points": info[0]["total_points"],
+            "tasks_done": info[0]["task_count"],
+            "total_tasks": total_tasks,
+            "groups": info[0].get("groups"),
+        }
+    )
 
 
 @answers.post("/userAnswersForTasks")

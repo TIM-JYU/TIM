@@ -1,0 +1,236 @@
+import {Component, NgModule} from "@angular/core";
+import {HttpClient} from "@angular/common/http";
+import {TimUtilityModule} from "./tim-utility.module";
+import {CommonModule} from "@angular/common";
+import {toPromise} from "tim/util/utils";
+import {documentglobals} from "tim/util/globals";
+
+export interface TaskGroup {
+    groupName: string;
+    groupTasksDone?: number;
+    groupTasksTotalSum: number;
+    groupTasksSum: number;
+}
+
+export interface TaskInfo {
+    total_points: number;
+    tasks_done: number;
+    total_tasks: number;
+    groups: any;
+}
+
+interface GroupCircle {
+    name: string;
+    percent: number;
+    cx: number;
+    cy: number;
+}
+
+interface Group {
+    name: string;
+    task_count: number;
+    task_sum: number;
+    text: string;
+    total_sum: number;
+}
+
+@Component({
+    selector: "points-display",
+    template: `
+        <div >
+            <svg xmlns="http://www.w3.org/2000/svg" [attr.viewBox]="'0 ' + '0 ' + imgSize + ' ' +  imgSize" [attr.height]="pixelSize" [attr.width]="pixelSize" role="img">
+                <defs>
+                    <filter id="shadow">
+                        <feDropShadow dx="0.7" dy="0.8" stdDeviation="1.5"></feDropShadow>
+                    </filter>
+                </defs>
+                <title>Progress: </title>
+                <circle class="progress-circle-bg" [attr.r]="mainCircleRadius" [attr.cx]="centerX"  [attr.cy]="centerY" [attr.stroke-width]="progressStrokeWidth" filter="url(#shadow)"></circle>
+                <g [attr.transform]="'rotate(' + '-90,' + centerX + ',' + centerY + ')'">
+                    <circle [attr.r]="mainCircleRadius" [attr.cx]="centerX" [attr.cy]="centerY" [attr.stroke-width]="progressStrokeWidth"
+                            class="progress-circle-fg"
+                            [attr.stroke-dasharray]="circumference"
+                            [attr.stroke-dashoffset]="mainDashOffset"
+                            (click)="showSatellites()"></circle>
+                </g>
+                <text [attr.x]="centerX" [attr.y]="textCenterY" class="progress-text" text-anchor="middle">{{donePercentage}} %</text>
+                <g>
+                    <g *ngFor="let sat of satellites; index as i" class="sat-initial" [ngClass]="{'visible-sat': satellitesVisible}">
+                        <circle [attr.r]="satelliteR" [attr.cx]="sat.cx" [attr.cy]="sat.cy" fill="none" [attr.stroke-width]="satelliteStrokeWidth" class="sat-bg" filter="url(#shadow)"></circle>
+                        <g [attr.transform]="'rotate(' + '-90,' + sat.cx + ',' + sat.cy + ')'">
+                            <circle [attr.r]="satelliteR" [attr.cx]="sat.cx" [attr.cy]="sat.cy" 
+                                    [attr.stroke-width]="satelliteStrokeWidth" fill="none" stroke="red"
+                                    class="sat-progress-initial"
+                                    [attr.stroke]="satelliteStrokeColor(i)"
+                                    [ngClass]="{'visible-sat': satellitesVisible}"
+                                    [attr.stroke-dasharray]="satelliteCircumference"
+                                    [attr.stroke-dashoffset]="satelliteDashOffset(sat)"></circle>
+                        </g>
+                        <text [attr.x]="sat.cx"  [attr.y]="sat.cy + 4" text-anchor="middle" class="sat-text">{{sat.percent}}</text>
+                    </g>
+                </g>
+            </svg>
+            <p>Tasks done: {{tasksDone}}</p>
+            <p>TotalTasks: {{totalTasks}}</p>
+            <p>Total points: {{totalPoints}}</p>
+        </div>
+        
+    `,
+    styleUrls: ["./points-display.component.scss"],
+})
+export class PointsDisplayComponent {
+    totalTasks: number;
+    tasksDone: number;
+    totalPoints: number;
+    docId: number;
+    groups: any;
+    satellites: GroupCircle[] = [];
+    processedGroups: Group[] = [];
+    satellitesVisible = false;
+
+    readonly imgSize = 200;
+    readonly pixelSize = 200;
+    readonly mainCircleRadius = 40;
+    readonly progressStrokeWidth = 5;
+    readonly circumference = 2 * Math.PI * this.mainCircleRadius;
+
+    readonly centerX = this.imgSize / 2;
+    readonly centerY = this.imgSize / 2;
+    readonly textCenterY = this.centerY + 7;
+
+    readonly satelliteR = 20;
+    readonly satelliteStrokeWidth = 1;
+    readonly gap = 5 + this.progressStrokeWidth + this.satelliteStrokeWidth;
+    readonly arcspanDec = 120;
+    readonly satelliteCircumference = 2 * Math.PI * this.satelliteR;
+    readonly colorList = [
+        "#f3a122",
+        "#f981ca",
+        "#1bc5fa",
+        "#f3e725",
+        "#c33f33",
+        "#01d375",
+        "#5243af",
+        "#eeb46c",
+        "#0c5b8e",
+        "#b5cb75",
+        "#f469a4",
+        "#01affe",
+    ];
+
+    constructor(private http: HttpClient) {
+        this.docId = documentglobals().curr_item.id;
+        this.totalTasks = 0;
+        this.tasksDone = 0;
+        this.totalPoints = 0;
+        this.groups = {};
+    }
+
+    ngOnInit() {
+        this.getSatellitesAndGroups();
+    }
+
+    satelliteStrokeColor(i: number) {
+        if (i >= this.colorList.length) {
+            i = i - this.colorList.length;
+        }
+        return this.colorList[i];
+    }
+
+    calculateSatellites(
+        groups: Group[],
+        mainR: number,
+        satR: number,
+        gap: number,
+        arcSpanDec: number
+    ) {
+        const n = groups.length;
+        if (n == 0) {
+            console.log("Vielä tyhjä");
+            return [];
+        }
+
+        console.log(n);
+        const arcSpandRad = (arcSpanDec * Math.PI) / 180;
+        const startAngle = -arcSpandRad / 2;
+        const step = n > 1 ? arcSpandRad / (n - 1) : 0;
+        // R is the distance between circle centers plus the gap
+        const R = mainR + gap + satR;
+        console.log("R", R);
+        this.satellites = groups.map((g, i) => {
+            const angle = startAngle + i * step;
+            const cx = this.centerX + R * Math.sin(angle);
+            const cy = this.centerY + -R * Math.cos(angle);
+            const percent = +((g.task_sum / g.total_sum) * 100).toFixed(2);
+            console.log({...g, cx, cy, percent});
+            return {...g, cx, cy, percent};
+        });
+    }
+
+    get mainDashOffset() {
+        return this.circumference * (1 - this.donePercentage / 100);
+    }
+
+    get donePercentage() {
+        if (this.tasksDone === 0) {
+            return 0;
+        }
+        return +((this.tasksDone / this.totalTasks) * 100).toFixed(2);
+    }
+
+    satelliteDashOffset(sat: GroupCircle) {
+        return this.satelliteCircumference - (1 - sat.percent / 100);
+    }
+
+    showSatellites() {
+        this.satellitesVisible = !this.satellitesVisible;
+    }
+
+    async getSatellitesAndGroups() {
+        await this.getTasksInfo();
+        this.calculateSatellites(
+            this.processedGroups,
+            this.mainCircleRadius,
+            this.satelliteR,
+            this.gap,
+            this.arcspanDec
+        );
+    }
+
+    async getTasksInfo() {
+        const params = {doc_id: this.docId};
+        const r = await toPromise(
+            this.http.get<TaskInfo>("/pointsrulepoints", {
+                params: params,
+            })
+        );
+        if (!r.ok) {
+            return;
+        } else {
+            this.tasksDone = r.result.tasks_done;
+            this.totalTasks = r.result.total_tasks;
+            this.totalPoints = r.result.total_points;
+            this.groups = r.result.groups;
+            const names = Object.keys(this.groups);
+            for (const name of names) {
+                const {task_count, task_sum, text, total_sum} =
+                    this.groups[name];
+                const newGroup: Group = {
+                    name: name,
+                    task_count: task_count,
+                    task_sum: task_sum,
+                    text: text,
+                    total_sum: total_sum,
+                };
+                this.processedGroups.push(newGroup);
+            }
+            console.log("Prosessoidut ryhmät: ", this.processedGroups);
+        }
+    }
+}
+@NgModule({
+    declarations: [PointsDisplayComponent],
+    exports: [PointsDisplayComponent],
+    imports: [TimUtilityModule, CommonModule],
+})
+export class PointsDisplayModule {}
