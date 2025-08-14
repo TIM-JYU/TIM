@@ -37,6 +37,7 @@
 
             <!-- Pandoc document conversion-->
             <uib-tab heading="Import document" index="'pandoc'" ng-show="$ctrl.getOptions().showDocumentImport">
+                <ng-container class="inlineEditorDiv">
                 <div id="import_instructions">
                     <strong>{{$ctrl.docImportHelp.heading}}</strong><br/>
                     {{$ctrl.docImportHelp.shortHelp}}<br/>
@@ -51,6 +52,7 @@
                     <a ng-href="{{$ctrl.uploadedFile}}">{{$ctrl.uploadedFile}}</a>
                 </span>
                 <div class="error" ng-show="$ctrl.file.error" ng-bind="$ctrl.file.error"></div>
+                </ng-container>
                 <span>
                 </span>
                 <tim-editor-entry ng-repeat="e in $ctrl.getPandocTab().entries" data="e"></tim-editor-entry>
