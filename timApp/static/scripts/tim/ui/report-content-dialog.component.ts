@@ -8,6 +8,7 @@ import {HttpClient, HttpClientModule} from "@angular/common/http";
 import {toPromise} from "tim/util/utils";
 import {TooltipModule} from "ngx-bootstrap/tooltip";
 import {Users} from "tim/user/userService";
+import {PointsDisplayModule} from "tim/ui/points-display.component";
 
 export interface IReportContentParams {
     currentUrl: string;
@@ -32,6 +33,7 @@ export interface IContentReport {
                 </div>
                 <div i18n class="help-block">
                     <p>Use this form to report any harmful or inappropriate content you encounter on TIM. If you would like a response from the TIM administrators, please provide your email address.</p>
+                    <points-display></points-display>
                 </div>
                 <form #reportForm="ngForm">
                     <fieldset [disabled]="showOk" [ngClass]="{'text-muted': showOk}">
@@ -227,6 +229,7 @@ export class ReportContentDialogComponent extends AngularDialogComponent<
         FormsModule,
         HttpClientModule,
         TooltipModule,
+        PointsDisplayModule,
     ],
 })
 export class ReportContentDialogModule {}

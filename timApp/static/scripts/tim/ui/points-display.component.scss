@@ -1,0 +1,53 @@
+.task-progress {
+  position: fixed;
+  right: 1.2em;
+  bottom: 1.2em;
+}
+
+.progress-circle-bg {
+  stroke: whitesmoke;
+  fill: none;
+}
+
+.progress-circle-fg {
+  stroke: #004494;
+  fill: white;
+}
+
+.progress-text {
+  font-size: 0.7em;
+  font-weight: 600;
+}
+
+.sat-bg {
+  stroke: whitesmoke;
+  fill: none;
+}
+
+.sat-initial {
+  opacity: 0;
+  transform: scale(0,0);
+  transform-origin: center;
+  transition-property: opacity, transform;
+  transition-duration: 0.3s;
+  transition-behavior: allow-discrete;
+}
+
+.visible-sat {
+  opacity: 1;
+  transform: scale(1,1);
+
+  @starting-style {
+    opacity: 0;
+    transform: scale(0,0);
+  }
+}
+
+.sat-progress-initial {
+  fill: none;
+}
+
+.sat-text {
+  font-size: 0.7em;
+  font-weight: 600;
+}
