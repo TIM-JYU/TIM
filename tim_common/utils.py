@@ -158,3 +158,52 @@ def render_raw_template_string(template: str, **context: Any) -> str:
     :return: Rendered template.
     """
     return jinja2.Template(template).render(**context)
+
+
+_REDOUBLE = re.compile(r"[^0-9,.e\-+]+")
+_REDOUBLE_NO_SCIENTIFIC = re.compile(r"[^0-9,.\-+]+")
+
+
+def get_double(c: float | int | str, allow_scientific: bool = True) -> float:
+    """
+    Converts a value to a double (float) type.
+
+    :param c: Value to convert, can be float, int, or str.
+    :param allow_scientific: If True, allows scientific notation in the string.
+    :return: Converted double value.
+    """
+    if isinstance(c, float):
+        return c
+    if isinstance(c, int):
+        return c
+    if isinstance(c, str):
+        c = (
+            _REDOUBLE.sub("", c)
+            if allow_scientific
+            else _REDOUBLE_NO_SCIENTIFIC.sub("", c)
+        )
+        c = c.replace(",", ".")
+        if c.startswith("e"):
+            c = "1" + c
+        return float(c)
+    return 0
+
+
+def try_get_double(
+    val: float | int | str,
+    default: float = 0.0,
+    allow_scientific: bool = True,
+) -> float:
+    """
+    Try to get a double value from the command line arguments.
+    If the value is not convertible to float, return the default value.
+
+    :param val: Value to convert, can be float, int, or str.
+    :param default: Default value to return if conversion fails.
+    :param allow_scientific: If True, allows scientific notation in the string.
+    :return: The converted double value or the default value.
+    """
+    try:
+        return get_double(val, allow_scientific=allow_scientific)
+    except (ValueError, TypeError):
+        return default
