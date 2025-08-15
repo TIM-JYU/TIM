@@ -782,15 +782,24 @@ tools.print(tools.getDouble("otherdoc"));
     def test_plugininfo_fields(self):
         fd = self.create_doc(
             initial_par="""
-#- {#foo1 plugin=textfield}
+``` {#foo1 plugin=textfield}
+pointsRule:
+  maxPoints: 1.0
+```
 
 #- {#foo2 plugin=textfield}
 
 #- {#bar1 plugin=textfield}
 
-#- {#bar2 plugin=textfield}
+``` {#bar2 plugin=textfield}
+pointsRule:
+  maxPoints: 1.5
+```
 
-#- {#bar3 plugin=textfield}
+``` {#bar3 plugin=textfield}
+pointsRule:
+  maxPoints: "0.5 kissa"
+```
 """
         )
         fd.document.set_settings(
@@ -810,8 +819,11 @@ tools.print(tools.getDouble("otherdoc"));
         fields:
          - plugininfo:{fd.id}.foos.count=foocount
          - plugininfo:{fd.id}.bars.count=barcount
+         - plugininfo:{fd.id}.foos.max_points=foopoints
+         - plugininfo:{fd.id}.bars.max_points=barpoints
          - plugininfo:count=thiscount
          - plugininfo:{fd.id}.count=fdcount
+         - plugininfo:{fd.id}.max_points=fdpoints
          - plugininfo:{fd.id}.task_names=fdnames
          - plugininfo:{fd.id}.task_ids=fdids
         group: testuser1
@@ -820,6 +832,9 @@ tools.print(tools.getDouble("otherdoc"));
         tools.print(tools.getInt("barcount"));
         tools.print(tools.getInt("thiscount"));
         tools.print(tools.getInt("fdcount"));
+        tools.print(tools.getDouble("foopoints"));
+        tools.print(tools.getDouble("barpoints"));
+        tools.print(tools.getDouble("fdpoints"));
         tools.print(tools.getValue("fdnames"));
         tools.print(tools.getValue("fdids"));
         !!"""
@@ -844,6 +859,9 @@ tools.print(tools.getDouble("otherdoc"));
                     "3\n"
                     "10\n"
                     "5\n"
+                    "1\n"
+                    "2\n"
+                    "3\n"
                     '["foo1","foo2","bar1","bar2","bar3"]\n'
                     f'["{fd.id}.foo1","{fd.id}.foo2","{fd.id}.bar1","{fd.id}.bar2","{fd.id}.bar3"]\n',
                 }
