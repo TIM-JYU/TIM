@@ -23,7 +23,7 @@ import {NgModel} from "@angular/forms";
                 <label>
                     {{itemType | titlecase}} title:
                     <input class="form-control" required [(ngModel)]="itemTitle" name="itemTitle"
-                           type="text" (input)="titleChanged()">
+                           type="text" (input)="titleChanged()" focusMe [enable]="enable" (keydown.enter)="!(f.invalid || creating || !canCopy) ? createItem() : null">
                 </label>
                 <tim-error-message></tim-error-message>
             </div>
@@ -84,6 +84,7 @@ export class CreateItemComponent implements OnInit {
     tagsWithExpirations = false;
     @Input() sourceLocation?: string;
     @Input() showButton = true;
+    @Input() enable = false;
 
     canCopy: boolean = true;
     private originalLocation?: string;
