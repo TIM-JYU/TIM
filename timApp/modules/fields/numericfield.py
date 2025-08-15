@@ -19,7 +19,7 @@ from tim_common.pluginserver_flask import (
     PluginAnswerWeb,
     PluginReqs,
 )
-from tim_common.utils import Missing
+from tim_common.utils import Missing, get_double
 
 NumericfieldStateModel = TextfieldStateModel
 
@@ -100,23 +100,6 @@ size="{{cols}}"></span></label>
 </div>""".strip(),
         **asdict(m.markup),
     )
-
-
-REDOUBLE = re.compile(r"[^0-9,.e\-+]+")
-
-
-def get_double(c: float | int | str) -> float:
-    if isinstance(c, float):
-        return c
-    if isinstance(c, int):
-        return c
-    if isinstance(c, str):
-        c = REDOUBLE.sub("", c)
-        c = c.replace(",", ".")
-        if c.startswith("e"):
-            c = "1" + c
-        return float(c)
-    return 0
 
 
 class NumericFieldAnswerWeb(PluginAnswerWeb, total=False):
