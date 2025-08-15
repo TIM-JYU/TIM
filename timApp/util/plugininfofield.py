@@ -8,10 +8,11 @@ from timApp.answer.pointsumrule import PointSumRule
 from timApp.document.docinfo import DocInfo
 from timApp.document.usercontext import UserContext
 from timApp.document.viewcontext import ViewContext
-from timApp.plugin.plugin import find_task_ids
+from timApp.plugin.plugin import find_task_ids, Plugin, CachedPluginFinder
 from timApp.plugin.taskid import TaskId
+from tim_common.utils import try_get_double
 
-PLUGININFO_FIELDS = {"count", "task_names", "task_ids"}
+PLUGININFO_FIELDS = {"count", "task_names", "task_ids", "max_points"}
 plugininfo_re = re.compile(
     r"plugininfo:((?P<doc>\d+)\.)?(?P<field>[a-zA-Z0-9öäåÖÄÅ_-]+)(?:.(?P<subfield>[a-zA-Z0-9öäåÖÄÅ_-]+))?"
 )
@@ -91,6 +92,8 @@ def get_plugininfo_field_values(
 
     result: dict[str, Any] = {}
 
+    cpf = CachedPluginFinder(doc_map, user_ctx, view_ctx)
+
     for doc_id, fields in fields_by_doc:
         fs = list(fields)
         d = doc_obj.document if (doc_obj := doc_map.get(doc_id)) else doc.document
@@ -109,6 +112,16 @@ def get_plugininfo_field_values(
                     val = [tid.task_name for tid in matched_tids]
                 case "task_ids":
                     val = [tid.doc_task for tid in matched_tids]
+                case "max_points":
+                    plugins = [p for tid in matched_tids if (p := cpf.find(tid))]
+                    val = sum(
+                        try_get_double(
+                            plugin.max_points() or 0,
+                            default=0,
+                            allow_scientific=False,
+                        )
+                        for plugin in plugins
+                    )
                 case _:
                     val = 0.0
 
