@@ -96,18 +96,25 @@ def create_special_usergroups(sess):
     sess.add(groupadmin_group)
 
 
-def create_anonymous_user(name: str, real_name: str) -> User:
+def create_anonymous_user(
+    name: str,
+    real_name: str,
+    add_id_to_real_name: bool = False,
+) -> User:
     """Creates a new anonymous user.
 
     :param name: The name of the user to be created.
     :param real_name: The real name of the user.
+    :param add_id_to_real_name: If True, the user's ID is appended to the real name.
     :returns: The id of the newly created user.
 
     """
 
     next_id = db.session.scalar(select(func.min(User.id))) - 1
+    full_name = real_name if not add_id_to_real_name else f"{real_name} {abs(next_id)}"
     u, _ = User.create_with_group(
-        UserInfo(username=name + str(abs(next_id)), full_name=real_name), uid=next_id
+        UserInfo(username=f"{name}{str(abs(next_id))}", full_name=full_name),
+        uid=next_id,
     )
     db.session.add(u)
     return u
