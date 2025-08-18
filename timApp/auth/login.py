@@ -626,7 +626,7 @@ def quick_login(
 def log_in_as_anonymous(sess: SessionMixin) -> User:
     user_name = "Anonymous"
     user_real_name = "Guest"
-    user = create_anonymous_user(user_name, user_real_name)
+    user = create_anonymous_user(user_name, user_real_name, add_id_to_real_name=True)
     db.session.flush()
     sess["user_id"] = user.id
     return user
