@@ -9,8 +9,14 @@
   fill: none;
 }
 
+.progress-circle-fg:hover {
+  cursor: pointer;
+  fill: ghostwhite;
+}
+
+
 .progress-circle-fg {
-  stroke: #004494;
+  //stroke: #004494;
   fill: white;
 }
 
@@ -21,7 +27,7 @@
 
 .sat-bg {
   stroke: whitesmoke;
-  fill: none;
+  fill: white;
 }
 
 .sat-initial {

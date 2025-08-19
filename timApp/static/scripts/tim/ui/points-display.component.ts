@@ -4,6 +4,8 @@ import {TimUtilityModule} from "./tim-utility.module";
 import {CommonModule} from "@angular/common";
 import {toPromise} from "tim/util/utils";
 import {documentglobals} from "tim/util/globals";
+import {ITaskScoreInfo} from "tim/sidebarmenu/services/scoreboard.service";
+import {TooltipModule} from "ngx-bootstrap/tooltip";
 
 export interface TaskGroup {
     groupName: string;
@@ -17,6 +19,8 @@ export interface TaskInfo {
     tasks_done: number;
     total_tasks: number;
     groups: any;
+    point_dict: ITaskScoreInfo;
+    total_maximum: number;
 }
 
 interface GroupCircle {
@@ -24,6 +28,7 @@ interface GroupCircle {
     percent: number;
     cx: number;
     cy: number;
+    text: string;
 }
 
 interface Group {
@@ -44,29 +49,37 @@ interface Group {
                         <feDropShadow dx="0.7" dy="0.8" stdDeviation="1.5"></feDropShadow>
                     </filter>
                 </defs>
-                <title>Progress: </title>
-                <circle class="progress-circle-bg" [attr.r]="mainCircleRadius" [attr.cx]="centerX"  [attr.cy]="centerY" [attr.stroke-width]="progressStrokeWidth" filter="url(#shadow)"></circle>
-                <g [attr.transform]="'rotate(' + '-90,' + centerX + ',' + centerY + ')'">
-                    <circle [attr.r]="mainCircleRadius" [attr.cx]="centerX" [attr.cy]="centerY" [attr.stroke-width]="progressStrokeWidth"
-                            class="progress-circle-fg"
-                            [attr.stroke-dasharray]="circumference"
-                            [attr.stroke-dashoffset]="mainDashOffset"
-                            (click)="showSatellites()"></circle>
+                <g [tooltip]="'Total tasks done: ' + donePercentage + '%'" container="body">
+                    <circle class="progress-circle-bg" [attr.r]="mainCircleRadius" [attr.cx]="centerX"
+                            [attr.cy]="centerY" 
+                            [attr.stroke-width]="progressStrokeWidth" 
+                            filter="url(#shadow)"></circle>
+                    <g [attr.transform]="'rotate(' + '-90,' + centerX + ',' + centerY + ')'">
+                        <circle [attr.r]="mainCircleRadius" [attr.cx]="centerX" [attr.cy]="centerY" [attr.stroke-width]="progressStrokeWidth"
+                                class="progress-circle-fg"
+                                [attr.stroke]="mainCircleStrokeColor"
+                                [attr.stroke-dasharray]="circumference"
+                                [attr.stroke-dashoffset]="mainDashOffset"
+                                (click)="showSatellites()"></circle>
+                    </g>
+                    <text [attr.x]="centerX" [attr.y]="textCenterY" class="progress-text" text-anchor="middle">{{donePercentage}}%</text>
                 </g>
-                <text [attr.x]="centerX" [attr.y]="textCenterY" class="progress-text" text-anchor="middle">{{donePercentage}} %</text>
                 <g>
-                    <g *ngFor="let sat of satellites; index as i" class="sat-initial" [ngClass]="{'visible-sat': satellitesVisible}">
-                        <circle [attr.r]="satelliteR" [attr.cx]="sat.cx" [attr.cy]="sat.cy" fill="none" [attr.stroke-width]="satelliteStrokeWidth" class="sat-bg" filter="url(#shadow)"></circle>
+                    <g *ngFor="let sat of satellites; index as i" class="sat-initial" [ngClass]="{'visible-sat': satellitesVisible}" [tooltip]="sat.text" container="body" triggers="hover click">
+                        <circle [attr.r]="satelliteR" [attr.cx]="sat.cx" [attr.cy]="sat.cy" 
+                                fill="none" [attr.stroke-width]="satelliteStrokeWidth" 
+                                class="sat-bg" filter="url(#shadow)">
+                        </circle>
                         <g [attr.transform]="'rotate(' + '-90,' + sat.cx + ',' + sat.cy + ')'">
                             <circle [attr.r]="satelliteR" [attr.cx]="sat.cx" [attr.cy]="sat.cy" 
-                                    [attr.stroke-width]="satelliteStrokeWidth" fill="none" stroke="red"
+                                    [attr.stroke-width]="satelliteStrokeWidth" fill="white"
                                     class="sat-progress-initial"
-                                    [attr.stroke]="satelliteStrokeColor(i)"
+                                    [attr.stroke]="pickSatelliteStrokeColor(i)"
                                     [ngClass]="{'visible-sat': satellitesVisible}"
                                     [attr.stroke-dasharray]="satelliteCircumference"
                                     [attr.stroke-dashoffset]="satelliteDashOffset(sat)"></circle>
                         </g>
-                        <text [attr.x]="sat.cx"  [attr.y]="sat.cy + 4" text-anchor="middle" class="sat-text">{{sat.percent}}</text>
+                        <text [attr.x]="sat.cx"  [attr.y]="sat.cy + 4" text-anchor="middle" class="sat-text">{{sat.percent}}%</text>
                     </g>
                 </g>
             </svg>
@@ -74,7 +87,6 @@ interface Group {
             <p>TotalTasks: {{totalTasks}}</p>
             <p>Total points: {{totalPoints}}</p>
         </div>
-        
     `,
     styleUrls: ["./points-display.component.scss"],
 })
@@ -87,6 +99,12 @@ export class PointsDisplayComponent {
     satellites: GroupCircle[] = [];
     processedGroups: Group[] = [];
     satellitesVisible = false;
+    pointsDict: any;
+    arcspanDeg;
+    colorList: string[];
+    mainCircleStrokeColor;
+    satelliteR = 20;
+    totalMaximum: number;
 
     readonly imgSize = 200;
     readonly pixelSize = 200;
@@ -98,22 +116,21 @@ export class PointsDisplayComponent {
     readonly centerY = this.imgSize / 2;
     readonly textCenterY = this.centerY + 7;
 
-    readonly satelliteR = 20;
-    readonly satelliteStrokeWidth = 1;
+    readonly satelliteStrokeWidth = 3;
     readonly gap = 5 + this.progressStrokeWidth + this.satelliteStrokeWidth;
-    readonly arcspanDec = 120;
     readonly satelliteCircumference = 2 * Math.PI * this.satelliteR;
-    readonly colorList = [
-        "#f3a122",
-        "#f981ca",
-        "#1bc5fa",
-        "#f3e725",
+    readonly defaultMainCircleStrokeColor = "#004494";
+    readonly defaultColorList = [
         "#c33f33",
         "#01d375",
+        "#1bc5fa",
+        "#f981ca",
+        "#f3e725",
         "#5243af",
         "#eeb46c",
         "#0c5b8e",
         "#b5cb75",
+        "#f3a122",
         "#f469a4",
         "#01affe",
     ];
@@ -123,16 +140,33 @@ export class PointsDisplayComponent {
         this.totalTasks = 0;
         this.tasksDone = 0;
         this.totalPoints = 0;
+        this.totalMaximum = 0;
         this.groups = {};
+        this.pointsDict = {};
+        this.arcspanDeg = 120;
+
+        const settingsPalette =
+            documentglobals().docSettings.progressCirclePalette;
+        if (settingsPalette) {
+            this.mainCircleStrokeColor = settingsPalette[0];
+            settingsPalette.length > 1
+                ? (this.colorList = settingsPalette.slice(1))
+                : (this.colorList = settingsPalette);
+        } else {
+            this.mainCircleStrokeColor = this.defaultMainCircleStrokeColor;
+            this.colorList = this.defaultColorList;
+        }
     }
 
     ngOnInit() {
         this.getSatellitesAndGroups();
     }
 
-    satelliteStrokeColor(i: number) {
-        if (i >= this.colorList.length) {
-            i = i - this.colorList.length;
+    pickSatelliteStrokeColor(i: number) {
+        const cll = this.colorList.length;
+        if (cll == 1) return this.colorList[0];
+        if (i >= cll) {
+            i = i % cll;
         }
         return this.colorList[i];
     }
@@ -142,27 +176,34 @@ export class PointsDisplayComponent {
         mainR: number,
         satR: number,
         gap: number,
-        arcSpanDec: number
+        arcSpanDeg: number
     ) {
         const n = groups.length;
         if (n == 0) {
-            console.log("Vielä tyhjä");
             return [];
         }
-
-        console.log(n);
-        const arcSpandRad = (arcSpanDec * Math.PI) / 180;
+        const arcSpandRad = (arcSpanDeg * Math.PI) / 180;
         const startAngle = -arcSpandRad / 2;
         const step = n > 1 ? arcSpandRad / (n - 1) : 0;
         // R is the distance between circle centers plus the gap
         const R = mainR + gap + satR;
-        console.log("R", R);
         this.satellites = groups.map((g, i) => {
             const angle = startAngle + i * step;
             const cx = this.centerX + R * Math.sin(angle);
             const cy = this.centerY + -R * Math.cos(angle);
-            const percent = +((g.task_sum / g.total_sum) * 100).toFixed(2);
-            console.log({...g, cx, cy, percent});
+            let done = 0;
+            let total = 0;
+            if (this.pointsDict[g.name]) {
+                done = this.pointsDict[g.name].points;
+                total = this.pointsDict[g.name].maxPoints;
+            }
+            const percent = +((done / total) * 100).toFixed(2);
+            console.log("Laskettu satelliitti: ", {
+                ...g,
+                cx,
+                cy,
+                percent,
+            });
             return {...g, cx, cy, percent};
         });
     }
@@ -172,14 +213,14 @@ export class PointsDisplayComponent {
     }
 
     get donePercentage() {
-        if (this.tasksDone === 0) {
+        if (this.tasksDone === 0 || !this.pointsDict) {
             return 0;
         }
-        return +((this.tasksDone / this.totalTasks) * 100).toFixed(2);
+        return +((this.totalPoints / this.totalMaximum) * 100).toFixed(2);
     }
 
     satelliteDashOffset(sat: GroupCircle) {
-        return this.satelliteCircumference - (1 - sat.percent / 100);
+        return this.satelliteCircumference * (1 - sat.percent / 100);
     }
 
     showSatellites() {
@@ -193,7 +234,7 @@ export class PointsDisplayComponent {
             this.mainCircleRadius,
             this.satelliteR,
             this.gap,
-            this.arcspanDec
+            this.arcspanDeg
         );
     }
 
@@ -211,6 +252,9 @@ export class PointsDisplayComponent {
             this.totalTasks = r.result.total_tasks;
             this.totalPoints = r.result.total_points;
             this.groups = r.result.groups;
+            this.pointsDict = r.result.point_dict;
+            this.totalMaximum = r.result.total_maximum;
+            console.log(this.totalMaximum);
             const names = Object.keys(this.groups);
             for (const name of names) {
                 const {task_count, task_sum, text, total_sum} =
@@ -223,14 +267,23 @@ export class PointsDisplayComponent {
                     total_sum: total_sum,
                 };
                 this.processedGroups.push(newGroup);
+                // Grow the arcspan according to the number of groups
+                const n = this.processedGroups.length;
+                const incr = n > 5 ? 25 : 20;
+                this.arcspanDeg = Math.min(60 + n * incr, 280);
+                // When sufficiently many satellites decrease the size of each
+                if (n >= 9) {
+                    this.satelliteR = this.satelliteR * 0.8;
+                }
             }
             console.log("Prosessoidut ryhmät: ", this.processedGroups);
+            console.log("Pisteistä tietoja: ", this.pointsDict);
         }
     }
 }
 @NgModule({
     declarations: [PointsDisplayComponent],
     exports: [PointsDisplayComponent],
-    imports: [TimUtilityModule, CommonModule],
+    imports: [TimUtilityModule, CommonModule, TooltipModule],
 })
 export class PointsDisplayModule {}

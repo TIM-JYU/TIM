@@ -35,6 +35,7 @@ from timApp.answer.answers import (
 )
 from timApp.answer.backup import send_answer_backup_if_enabled
 from timApp.answer.exportedanswer import ExportedAnswer
+from timApp.answer.pointsumrule import PointCountMethod
 from timApp.auth.accesshelper import (
     verify_logged_in,
     get_doc_or_abort,
@@ -85,6 +86,7 @@ from timApp.item.block import Block, BlockType
 from timApp.item.manage import (
     log_task_block,
 )
+from timApp.item.scoreboard import get_score_infos, TaskScoreInfo
 from timApp.item.tag import (
     Tag,
     ANSWER_REVIEW_GROUP_TAG_PREFIX,
@@ -512,9 +514,9 @@ def get_points_for_display(doc_id: int) -> Response:
     doc_info = get_doc_or_abort(doc_id)
     doc = doc_info.document
     doc_settings = doc.get_settings()
-    points_rule = doc_settings.point_sum_rule()
+    point_sum_rule = doc_settings.point_sum_rule()
 
-    if not points_rule:
+    if not point_sum_rule:
         raise RouteException("No points rule for this document.")
 
     view_ctx = default_view_ctx
@@ -522,20 +524,90 @@ def get_points_for_display(doc_id: int) -> Response:
         doc.get_paragraphs(), context_doc=doc, view_ctx=view_ctx
     )
 
+    user_ctx = UserContext.from_one_user(curr_user)
+
     task_ids, _, _ = find_task_ids(
         doc_paragraphs,
         view_ctx,
-        UserContext.from_one_user(curr_user),
+        user_ctx=user_ctx,
     )
 
     info = get_points_by_rule(
-        points_rule,
+        point_sum_rule,
         task_ids,
         [curr_user.get_user_id()],
     )
 
-    if points_rule and not points_rule.count_all:
-        total_tasks = len(points_rule.groups)
+    count_method = (
+        point_sum_rule.point_count_method if point_sum_rule else PointCountMethod.latest
+    )
+
+    point_dict: dict[str, TaskScoreInfo] = {}
+    for task in task_ids:
+        if count_method == PointCountMethod.max:
+            user_points = max(
+                (
+                    a.points
+                    for a in curr_user.get_answers_for_task(task.doc_task)
+                    if a.points is not None
+                ),
+                default=0,
+            )
+        elif count_method == PointCountMethod.latest:
+            latest_answer = curr_user.get_answers_for_task(task.doc_task).first()
+            user_points = (
+                latest_answer.points
+                if latest_answer and latest_answer.points is not None
+                else 0
+            )
+        else:
+            raise Exception(f"Unexpected count_method: {count_method}")
+
+        plugin, _ = Plugin.from_task_id(task.doc_task, user_ctx, view_ctx)
+        max_points = plugin.max_points()
+        if not max_points:
+            continue
+        try:
+            max_points_float = float(max_points)
+        except ValueError:
+            continue
+        if max_points_float == 0.0:
+            continue
+
+        task_name = task.task_name
+
+        included_groupless = True
+        included_groups = []
+        groups = []
+        if point_sum_rule is not None:
+            groups = list(point_sum_rule.find_groups(task.doc_task))
+            included_groups = point_sum_rule.scoreboard.groups
+            if not included_groups:
+                included_groups = groups
+            elif "*" not in included_groups:
+                included_groupless = False
+
+        if groups:
+            groups = [g for g in groups if g in included_groups]
+
+            for group in groups:
+                task_points = point_dict.get(group)
+                if task_points:
+                    task_points.maxPoints += max_points_float
+                    task_points.points += user_points
+                else:
+                    point_dict[group] = TaskScoreInfo(
+                        group, task_name, user_points, max_points_float
+                    )
+        elif included_groupless:
+            point_dict[task_name] = TaskScoreInfo(
+                task_name, task_name, user_points, max_points_float
+            )
+
+    tasks = list(point_dict.values())
+
+    if point_sum_rule and not point_sum_rule.count_all:
+        total_tasks = len(point_sum_rule.groups)
     else:
         total_tasks = len(task_ids)
 
@@ -545,6 +617,7 @@ def get_points_for_display(doc_id: int) -> Response:
             "tasks_done": info[0]["task_count"],
             "total_tasks": total_tasks,
             "groups": info[0].get("groups"),
+            "point_dict": point_dict,
         }
     )
 
