@@ -637,13 +637,11 @@ def get_tally_field_values(
                 # The value can be None if the user has not done any tasks with points, so we use another sentinel.
                 value = r.get(field.field, missing)
                 if value is missing:
-                    value = groups[
-                        field.field
-                    ]  # The group should exist because the field was validated above.
+                    value = groups.get(field.field, None) or {}
                     value = (
                         value.get(normalize_tally_subfield(field.subfield), None)
                         if field.subfield
-                        else value["total_sum"]
+                        else value.get("total_sum", None)
                     )
                 tally_field_values[u.id].append((value, alias or field.doc_and_field))
     return tally_field_values
