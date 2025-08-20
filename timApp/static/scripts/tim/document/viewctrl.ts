@@ -88,6 +88,7 @@ import type {
 import type {ReviewCanvasComponent} from "tim/plugin/reviewcanvas/review-canvas.component";
 import type {IRight} from "tim/item/access-role.service";
 import {UnbrokenSelection} from "tim/document/editing/unbrokenSelection";
+import {showPointsDisplay} from "tim/ui/showPoints-display";
 
 markAsUsed(interceptor);
 
@@ -871,6 +872,10 @@ export class ViewCtrl implements IController {
             (this.docSettings.sync_answerbrowsers ?? this.syncAnswerBrowsers) ||
             getViewName() === "review";
         window.addEventListener("focus", this.focusChanged, true);
+
+        if (documentglobals().docSettings.show_progress_display_circle) {
+            showPointsDisplay();
+        }
     }
 
     lastActiveInput?: HTMLInputElement | HTMLTextAreaElement;

@@ -122,6 +122,7 @@ class DocSettingTypes:
     customIndex: list[tuple[Any, Any]]
     extraGroupPreambleFolder: str | None
     showSettingsTypes: list[str]
+    showProgressDisplayCircle: bool
     progressCirclePalette: list[str] | None
 
 
@@ -742,6 +743,9 @@ class DocSettings:
 
     def show_settings_types(self) -> set[str]:
         return set(self.get_setting_or_default("showSettingsTypes", []))
+
+    def show_progress_display_circle(self) -> bool:
+        return self.get_setting_or_default("showProgressDisplayCircle", False)
 
 
 def resolve_settings_for_pars(pars: Iterable[DocParagraph]) -> YamlBlock:

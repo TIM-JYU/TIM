@@ -121,6 +121,7 @@ from timApp.plugin.plugin import (
     NEVERLAZY,
     TaskNotFoundException,
     find_task_ids,
+    CachedPluginFinder,
 )
 from timApp.plugin.plugin import find_plugin_from_document
 from timApp.plugin.pluginControl import pluginify
@@ -164,6 +165,7 @@ from timApp.util.get_fields import (
     GetFieldsAccess,
 )
 from timApp.util.logger import log_info, log_warning
+from timApp.util.plugininfofield import group_task_ids_by_rule, PluginInfoField
 from timApp.util.utils import (
     get_current_time,
     convert_email_to_lower,
@@ -175,6 +177,7 @@ from timApp.velp.annotations import get_annotations_with_comments_in_document
 from tim_common.dumboclient import call_dumbo
 from tim_common.markupmodels import asdict_skip_missing
 from tim_common.pluginserver_flask import value_or_default
+from tim_common.utils import try_get_double
 
 PRE_POST_ERROR = """
 You must have at least one
@@ -513,6 +516,7 @@ def get_points_for_display(doc_id: int) -> Response:
 
     doc_info = get_doc_or_abort(doc_id)
     doc = doc_info.document
+    doc_map = {doc_id: doc_info}
     doc_settings = doc.get_settings()
     point_sum_rule = doc_settings.point_sum_rule()
 
@@ -526,6 +530,8 @@ def get_points_for_display(doc_id: int) -> Response:
 
     user_ctx = UserContext.from_one_user(curr_user)
 
+    cpf = CachedPluginFinder(doc_map, user_ctx, view_ctx)
+
     task_ids, _, _ = find_task_ids(
         doc_paragraphs,
         view_ctx,
@@ -537,6 +543,8 @@ def get_points_for_display(doc_id: int) -> Response:
         task_ids,
         [curr_user.get_user_id()],
     )
+
+    grouped_tasks = group_task_ids_by_rule(task_ids, point_sum_rule)
 
     count_method = (
         point_sum_rule.point_count_method if point_sum_rule else PointCountMethod.latest
@@ -604,7 +612,21 @@ def get_points_for_display(doc_id: int) -> Response:
                 task_name, task_name, user_points, max_points_float
             )
 
-    tasks = list(point_dict.values())
+    result: dict[str, Any] = {}
+    for g in point_sum_rule.groups.values():
+        matched_tids = grouped_tasks.get(g.name, [])
+        plugins = [p for tid in matched_tids if (p := cpf.find(tid))]
+        val = sum(
+            try_get_double(
+                plugin.max_points() or 0,
+                default=0,
+                allow_scientific=False,
+            )
+            for plugin in plugins
+        )
+        result[g.name] = val
+
+    total_maximum = result.get(point_sum_rule.total[0], 0)
 
     if point_sum_rule and not point_sum_rule.count_all:
         total_tasks = len(point_sum_rule.groups)
@@ -618,6 +640,7 @@ def get_points_for_display(doc_id: int) -> Response:
             "total_tasks": total_tasks,
             "groups": info[0].get("groups"),
             "point_dict": point_dict,
+            "total_maximum": total_maximum,
         }
     )
 

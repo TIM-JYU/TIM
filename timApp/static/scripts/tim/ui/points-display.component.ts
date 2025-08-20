@@ -6,24 +6,18 @@ import {toPromise} from "tim/util/utils";
 import {documentglobals} from "tim/util/globals";
 import {ITaskScoreInfo} from "tim/sidebarmenu/services/scoreboard.service";
 import {TooltipModule} from "ngx-bootstrap/tooltip";
+import {AngularDialogComponent} from "tim/ui/angulardialog/angular-dialog-component.directive";
 
-export interface TaskGroup {
-    groupName: string;
-    groupTasksDone?: number;
-    groupTasksTotalSum: number;
-    groupTasksSum: number;
-}
-
-export interface TaskInfo {
+export interface ITaskInfo {
     total_points: number;
     tasks_done: number;
     total_tasks: number;
-    groups: any;
+    groups: IGroup[];
     point_dict: ITaskScoreInfo;
     total_maximum: number;
 }
 
-interface GroupCircle {
+interface IGroupCircle {
     name: string;
     percent: number;
     cx: number;
@@ -31,7 +25,7 @@ interface GroupCircle {
     text: string;
 }
 
-interface Group {
+interface IGroup {
     name: string;
     task_count: number;
     task_sum: number;
@@ -42,14 +36,14 @@ interface Group {
 @Component({
     selector: "points-display",
     template: `
-        <div >
+        <div class="task-progress">
             <svg xmlns="http://www.w3.org/2000/svg" [attr.viewBox]="'0 ' + '0 ' + imgSize + ' ' +  imgSize" [attr.height]="pixelSize" [attr.width]="pixelSize" role="img">
                 <defs>
                     <filter id="shadow">
                         <feDropShadow dx="0.7" dy="0.8" stdDeviation="1.5"></feDropShadow>
                     </filter>
                 </defs>
-                <g [tooltip]="'Total tasks done: ' + donePercentage + '%'" container="body">
+                <g [tooltip]="'Total tasks done: ' + donePercentage + '%'" container="body" triggers="hover click">
                     <circle class="progress-circle-bg" [attr.r]="mainCircleRadius" [attr.cx]="centerX"
                             [attr.cy]="centerY" 
                             [attr.stroke-width]="progressStrokeWidth" 
@@ -83,31 +77,32 @@ interface Group {
                     </g>
                 </g>
             </svg>
-            <p>Tasks done: {{tasksDone}}</p>
-            <p>TotalTasks: {{totalTasks}}</p>
-            <p>Total points: {{totalPoints}}</p>
         </div>
     `,
     styleUrls: ["./points-display.component.scss"],
 })
-export class PointsDisplayComponent {
+export class PointsDisplayComponent extends AngularDialogComponent<
+    unknown,
+    unknown
+> {
+    protected dialogName = "Points display";
     totalTasks: number;
     tasksDone: number;
     totalPoints: number;
     docId: number;
     groups: any;
-    satellites: GroupCircle[] = [];
-    processedGroups: Group[] = [];
+    satellites: IGroupCircle[] = [];
+    processedGroups: IGroup[] = [];
     satellitesVisible = false;
     pointsDict: any;
     arcspanDeg;
     colorList: string[];
     mainCircleStrokeColor;
-    satelliteR = 20;
+    satelliteR = 25;
     totalMaximum: number;
 
-    readonly imgSize = 200;
-    readonly pixelSize = 200;
+    readonly imgSize = 220;
+    readonly pixelSize = 120;
     readonly mainCircleRadius = 40;
     readonly progressStrokeWidth = 5;
     readonly circumference = 2 * Math.PI * this.mainCircleRadius;
@@ -136,6 +131,7 @@ export class PointsDisplayComponent {
     ];
 
     constructor(private http: HttpClient) {
+        super();
         this.docId = documentglobals().curr_item.id;
         this.totalTasks = 0;
         this.tasksDone = 0;
@@ -172,7 +168,7 @@ export class PointsDisplayComponent {
     }
 
     calculateSatellites(
-        groups: Group[],
+        groups: IGroup[],
         mainR: number,
         satR: number,
         gap: number,
@@ -197,7 +193,7 @@ export class PointsDisplayComponent {
                 done = this.pointsDict[g.name].points;
                 total = this.pointsDict[g.name].maxPoints;
             }
-            const percent = +((done / total) * 100).toFixed(2);
+            const percent = +((done / total) * 100).toFixed(0);
             console.log("Laskettu satelliitti: ", {
                 ...g,
                 cx,
@@ -216,10 +212,10 @@ export class PointsDisplayComponent {
         if (this.tasksDone === 0 || !this.pointsDict) {
             return 0;
         }
-        return +((this.totalPoints / this.totalMaximum) * 100).toFixed(2);
+        return +((this.totalPoints / this.totalMaximum) * 100).toFixed(0);
     }
 
-    satelliteDashOffset(sat: GroupCircle) {
+    satelliteDashOffset(sat: IGroupCircle) {
         return this.satelliteCircumference * (1 - sat.percent / 100);
     }
 
@@ -241,7 +237,7 @@ export class PointsDisplayComponent {
     async getTasksInfo() {
         const params = {doc_id: this.docId};
         const r = await toPromise(
-            this.http.get<TaskInfo>("/pointsrulepoints", {
+            this.http.get<ITaskInfo>("/pointsrulepoints", {
                 params: params,
             })
         );
@@ -254,12 +250,11 @@ export class PointsDisplayComponent {
             this.groups = r.result.groups;
             this.pointsDict = r.result.point_dict;
             this.totalMaximum = r.result.total_maximum;
-            console.log(this.totalMaximum);
             const names = Object.keys(this.groups);
             for (const name of names) {
                 const {task_count, task_sum, text, total_sum} =
                     this.groups[name];
-                const newGroup: Group = {
+                const newGroup: IGroup = {
                     name: name,
                     task_count: task_count,
                     task_sum: task_sum,
@@ -269,15 +264,13 @@ export class PointsDisplayComponent {
                 this.processedGroups.push(newGroup);
                 // Grow the arcspan according to the number of groups
                 const n = this.processedGroups.length;
-                const incr = n > 5 ? 25 : 20;
+                const incr = n > 5 ? 35 : 25;
                 this.arcspanDeg = Math.min(60 + n * incr, 280);
                 // When sufficiently many satellites decrease the size of each
-                if (n >= 9) {
+                if (n > 9) {
                     this.satelliteR = this.satelliteR * 0.8;
                 }
             }
-            console.log("Prosessoidut ryhmät: ", this.processedGroups);
-            console.log("Pisteistä tietoja: ", this.pointsDict);
         }
     }
 }
