@@ -546,72 +546,6 @@ def get_points_for_display(doc_id: int) -> Response:
 
     grouped_tasks = group_task_ids_by_rule(task_ids, point_sum_rule)
 
-    count_method = (
-        point_sum_rule.point_count_method if point_sum_rule else PointCountMethod.latest
-    )
-
-    point_dict: dict[str, TaskScoreInfo] = {}
-    for task in task_ids:
-        if count_method == PointCountMethod.max:
-            user_points = max(
-                (
-                    a.points
-                    for a in curr_user.get_answers_for_task(task.doc_task)
-                    if a.points is not None
-                ),
-                default=0,
-            )
-        elif count_method == PointCountMethod.latest:
-            latest_answer = curr_user.get_answers_for_task(task.doc_task).first()
-            user_points = (
-                latest_answer.points
-                if latest_answer and latest_answer.points is not None
-                else 0
-            )
-        else:
-            raise Exception(f"Unexpected count_method: {count_method}")
-
-        plugin, _ = Plugin.from_task_id(task.doc_task, user_ctx, view_ctx)
-        max_points = plugin.max_points()
-        if not max_points:
-            continue
-        try:
-            max_points_float = float(max_points)
-        except ValueError:
-            continue
-        if max_points_float == 0.0:
-            continue
-
-        task_name = task.task_name
-
-        included_groupless = True
-        included_groups = []
-        groups = []
-        if point_sum_rule is not None:
-            groups = list(point_sum_rule.find_groups(task.doc_task))
-            included_groups = point_sum_rule.scoreboard.groups
-            if not included_groups:
-                included_groups = groups
-            elif "*" not in included_groups:
-                included_groupless = False
-
-        if groups:
-            groups = [g for g in groups if g in included_groups]
-
-            for group in groups:
-                task_points = point_dict.get(group)
-                if task_points:
-                    task_points.maxPoints += max_points_float
-                    task_points.points += user_points
-                else:
-                    point_dict[group] = TaskScoreInfo(
-                        group, task_name, user_points, max_points_float
-                    )
-        elif included_groupless:
-            point_dict[task_name] = TaskScoreInfo(
-                task_name, task_name, user_points, max_points_float
-            )
-
     result: dict[str, Any] = {}
     for g in point_sum_rule.groups.values():
         matched_tids = grouped_tasks.get(g.name, [])
@@ -628,19 +562,13 @@ def get_points_for_display(doc_id: int) -> Response:
 
     total_maximum = result.get(point_sum_rule.total[0], 0)
 
-    if point_sum_rule and not point_sum_rule.count_all:
-        total_tasks = len(point_sum_rule.groups)
-    else:
-        total_tasks = len(task_ids)
-
     return json_response(
         {
             "total_points": info[0]["total_points"],
             "tasks_done": info[0]["task_count"],
-            "total_tasks": total_tasks,
             "groups": info[0].get("groups"),
-            "point_dict": point_dict,
             "total_maximum": total_maximum,
+            "group_max_points": result,
         }
     )
 

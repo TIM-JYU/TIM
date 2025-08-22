@@ -10,10 +10,10 @@ import {TimUtilityModule} from "tim/ui/tim-utility.module";
 export interface ITaskInfo {
     total_points: number;
     tasks_done: number;
-    total_tasks: number;
     groups: Groups;
     point_dict: ITaskScoreInfo;
     total_maximum: number;
+    group_max_points: GroupMaxPoints;
 }
 
 interface IGroupCircle {
@@ -33,6 +33,7 @@ interface IGroup {
 }
 
 type Groups = Record<string, IGroup>;
+type GroupMaxPoints = Record<string, number>;
 
 @Component({
     selector: "points-display",
@@ -44,7 +45,7 @@ type Groups = Record<string, IGroup>;
                         <feDropShadow dx="0.7" dy="0.8" stdDeviation="1.5"></feDropShadow>
                     </filter>
                 </defs>
-                <g [tooltip]="'Total tasks done: ' + donePercentage + '%'" container="body" triggers="hover click">
+                <g [tooltip]="'Total tasks done'" container="body" triggers="hover click">
                     <circle class="progress-circle-bg" [attr.r]="mainCircleRadius" [attr.cx]="centerX"
                             [attr.cy]="centerY" 
                             [attr.stroke-width]="progressStrokeWidth" 
@@ -84,7 +85,6 @@ type Groups = Record<string, IGroup>;
 })
 export class PointsDisplayComponent {
     protected dialogName = "Points display";
-    totalTasks: number;
     tasksDone: number;
     totalPoints: number;
     docId: number;
@@ -92,12 +92,11 @@ export class PointsDisplayComponent {
     satellites: IGroupCircle[] = [];
     processedGroups: IGroup[] = [];
     satellitesVisible = false;
-    pointsDict: any;
-    arcspanDeg;
     colorList: string[];
     mainCircleStrokeColor;
     satelliteR = 25;
     totalMaximum: number;
+    private groupMaxPoints: GroupMaxPoints;
 
     readonly imgSize = 220;
     readonly pixelSize = 120;
@@ -128,15 +127,16 @@ export class PointsDisplayComponent {
         "#01affe",
     ];
 
+    readonly satScaleNumThreshold = 9;
+    readonly satReductionFactor = 0.9;
+
     constructor(private http: HttpClient) {
         this.docId = documentglobals().curr_item.id;
-        this.totalTasks = 0;
         this.tasksDone = 0;
         this.totalPoints = 0;
         this.totalMaximum = 0;
         this.groups = {};
-        this.pointsDict = {};
-        this.arcspanDeg = 120;
+        this.groupMaxPoints = {};
 
         const settingsPalette =
             documentglobals().docSettings.progressCirclePalette;
@@ -171,13 +171,13 @@ export class PointsDisplayComponent {
         groups: IGroup[],
         mainR: number,
         satR: number,
-        gap: number,
-        arcSpanDeg: number
+        gap: number
     ) {
         const n = groups.length;
         if (n == 0) {
             return [];
         }
+        const arcSpanDeg = this.calculateArcspan(n);
         const arcSpandRad = (arcSpanDeg * Math.PI) / 180;
         const startAngle = -arcSpandRad / 2;
         const step = n > 1 ? arcSpandRad / (n - 1) : 0;
@@ -187,21 +187,15 @@ export class PointsDisplayComponent {
             const angle = startAngle + i * step;
             const cx = this.centerX + R * Math.sin(angle);
             const cy = this.centerY + -R * Math.cos(angle);
-            let done = 0;
-            let total = 0;
-            if (this.pointsDict[g.name]) {
-                done = this.pointsDict[g.name].points;
-                total = this.pointsDict[g.name].maxPoints;
-            }
+            const done = g.total_sum;
+            const total = this.groupMaxPoints[g.name] ?? 0;
             const percent = +((done / total) * 100).toFixed(0);
-            console.log("Laskettu satelliitti: ", {
-                ...g,
-                cx,
-                cy,
-                percent,
-            });
             return {...g, cx, cy, percent};
         });
+        // When sufficiently many satellites decrease the size of each
+        if (n >= this.satScaleNumThreshold) {
+            this.satelliteR = this.satelliteR * this.satReductionFactor;
+        }
     }
 
     get mainDashOffset() {
@@ -209,7 +203,7 @@ export class PointsDisplayComponent {
     }
 
     get donePercentage() {
-        if (this.tasksDone === 0 || !this.pointsDict) {
+        if (this.tasksDone === 0 || !this.totalMaximum) {
             return 0;
         }
         return +((this.totalPoints / this.totalMaximum) * 100).toFixed(0);
@@ -229,9 +223,18 @@ export class PointsDisplayComponent {
             this.processedGroups,
             this.mainCircleRadius,
             this.satelliteR,
-            this.gap,
-            this.arcspanDeg
+            this.gap
         );
+    }
+
+    calculateArcspan(n: number) {
+        const threshold = 5;
+        const largeAngleFactor = 35;
+        const smallAngleFactor = 25;
+        const maximumAngle = 280;
+        const baseAngle = 60;
+        const incr = n > threshold ? largeAngleFactor : smallAngleFactor;
+        return Math.min(baseAngle + n * incr, maximumAngle);
     }
 
     async getTasksInfo() {
@@ -245,11 +248,9 @@ export class PointsDisplayComponent {
             return;
         } else {
             this.tasksDone = r.result.tasks_done;
-            this.totalTasks = r.result.total_tasks;
             this.totalPoints = r.result.total_points;
             this.groups = r.result.groups;
-            this.pointsDict = r.result.point_dict;
-            console.log("PointsDict:", this.pointsDict);
+            this.groupMaxPoints = r.result.group_max_points;
             this.totalMaximum = r.result.total_maximum;
             const names = Object.keys(this.groups);
             console.log("Ryhmät: ", this.groups);
@@ -264,14 +265,6 @@ export class PointsDisplayComponent {
                     total_sum: total_sum,
                 };
                 this.processedGroups.push(newGroup);
-                // Grow the arcspan according to the number of groups
-                const n = this.processedGroups.length;
-                const incr = n > 5 ? 35 : 25;
-                this.arcspanDeg = Math.min(60 + n * incr, 280);
-                // When sufficiently many satellites decrease the size of each
-                if (n > 9) {
-                    this.satelliteR = this.satelliteR * 0.8;
-                }
             }
         }
     }
