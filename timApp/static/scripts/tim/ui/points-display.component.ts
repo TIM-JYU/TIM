@@ -1,18 +1,17 @@
 import {Component, NgModule} from "@angular/core";
 import {HttpClient} from "@angular/common/http";
-import {TimUtilityModule} from "./tim-utility.module";
 import {CommonModule} from "@angular/common";
 import {toPromise} from "tim/util/utils";
 import {documentglobals} from "tim/util/globals";
-import {ITaskScoreInfo} from "tim/sidebarmenu/services/scoreboard.service";
+import type {ITaskScoreInfo} from "tim/sidebarmenu/services/scoreboard.service";
 import {TooltipModule} from "ngx-bootstrap/tooltip";
-import {AngularDialogComponent} from "tim/ui/angulardialog/angular-dialog-component.directive";
+import {TimUtilityModule} from "tim/ui/tim-utility.module";
 
 export interface ITaskInfo {
     total_points: number;
     tasks_done: number;
     total_tasks: number;
-    groups: IGroup[];
+    groups: Groups;
     point_dict: ITaskScoreInfo;
     total_maximum: number;
 }
@@ -32,6 +31,8 @@ interface IGroup {
     text: string;
     total_sum: number;
 }
+
+type Groups = Record<string, IGroup>;
 
 @Component({
     selector: "points-display",
@@ -81,16 +82,13 @@ interface IGroup {
     `,
     styleUrls: ["./points-display.component.scss"],
 })
-export class PointsDisplayComponent extends AngularDialogComponent<
-    unknown,
-    unknown
-> {
+export class PointsDisplayComponent {
     protected dialogName = "Points display";
     totalTasks: number;
     tasksDone: number;
     totalPoints: number;
     docId: number;
-    groups: any;
+    groups: Groups;
     satellites: IGroupCircle[] = [];
     processedGroups: IGroup[] = [];
     satellitesVisible = false;
@@ -131,7 +129,6 @@ export class PointsDisplayComponent extends AngularDialogComponent<
     ];
 
     constructor(private http: HttpClient) {
-        super();
         this.docId = documentglobals().curr_item.id;
         this.totalTasks = 0;
         this.tasksDone = 0;
@@ -145,9 +142,11 @@ export class PointsDisplayComponent extends AngularDialogComponent<
             documentglobals().docSettings.progressCirclePalette;
         if (settingsPalette) {
             this.mainCircleStrokeColor = settingsPalette[0];
-            settingsPalette.length > 1
-                ? (this.colorList = settingsPalette.slice(1))
-                : (this.colorList = settingsPalette);
+            if (settingsPalette.length > 1) {
+                this.colorList = settingsPalette.slice(1);
+            } else {
+                this.colorList = settingsPalette;
+            }
         } else {
             this.mainCircleStrokeColor = this.defaultMainCircleStrokeColor;
             this.colorList = this.defaultColorList;
@@ -160,8 +159,9 @@ export class PointsDisplayComponent extends AngularDialogComponent<
 
     pickSatelliteStrokeColor(i: number) {
         const cll = this.colorList.length;
-        if (cll == 1) return this.colorList[0];
-        if (i >= cll) {
+        if (cll == 1) {
+            return this.colorList[0];
+        } else if (i >= cll) {
             i = i % cll;
         }
         return this.colorList[i];
@@ -249,8 +249,10 @@ export class PointsDisplayComponent extends AngularDialogComponent<
             this.totalPoints = r.result.total_points;
             this.groups = r.result.groups;
             this.pointsDict = r.result.point_dict;
+            console.log("PointsDict:", this.pointsDict);
             this.totalMaximum = r.result.total_maximum;
             const names = Object.keys(this.groups);
+            console.log("Ryhmät: ", this.groups);
             for (const name of names) {
                 const {task_count, task_sum, text, total_sum} =
                     this.groups[name];
