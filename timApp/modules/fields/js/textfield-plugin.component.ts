@@ -340,7 +340,7 @@ export class TextfieldPluginComponent
                 this.resetField();
             } else {
                 try {
-                    this.userword = content.c;
+                    this.userword = this.formatReadonlyStyle(content.c);
                 } catch (e) {
                     this.userword = "";
                     ok = false;
