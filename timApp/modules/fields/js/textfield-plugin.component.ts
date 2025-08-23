@@ -449,7 +449,9 @@ export class TextfieldPluginComponent
                 this.userword = u.email ?? "";
             }
         } else {
-            this.userword = this.markup.initword ?? "";
+            this.userword = this.formatReadonlyStyle(
+                this.markup.initword ?? ""
+            );
         }
         this.initialValue = this.userword;
         this.result = undefined;
