@@ -253,10 +253,12 @@ export class TextfieldPluginComponent
     ngOnInit() {
         super.ngOnInit();
 
-        this.userword = valueOr(
-            this.attrsall.state?.c,
-            this.markup.initword ?? ""
-        ).toString();
+        this.userword = this.formatReadonlyStyle(
+            valueOr(
+                this.attrsall.state?.c,
+                this.markup.initword ?? ""
+            ).toString()
+        );
         if (!this.attrsall.preview) {
             this.vctrl.addTimComponent(this);
         }
@@ -317,7 +319,7 @@ export class TextfieldPluginComponent
 
     resetChanges(): void {
         this.zone.run(() => {
-            this.userword = this.initialValue;
+            this.userword = this.formatReadonlyStyle(this.initialValue);
             this.changes = false;
             this.saveFailed = false;
             this.redAlert = false;
@@ -384,7 +386,7 @@ export class TextfieldPluginComponent
             user_id: uid.toString(),
         });
         if (r.ok && r.result.user_id == uid) {
-            this.userword = r.result.content.c ?? "";
+            this.userword = this.formatReadonlyStyle(r.result.content.c ?? "");
         }
         if (!r.ok) {
             this.errormessage = $localize`Error rendering text, please try again`;
@@ -396,6 +398,14 @@ export class TextfieldPluginComponent
                 $(this.plainTextSpan.nativeElement)
             );
         }
+    }
+
+    private formatReadonlyStyle(answer: string) {
+        const ros = this.markup.readOnlyStyle;
+        if (ros === "url") {
+            return `<a href="${answer}">${answer}</a>`;
+        }
+        return answer;
     }
 
     /**
@@ -504,7 +514,7 @@ export class TextfieldPluginComponent
             return true;
         }
         const ros = this.markup.readOnlyStyle;
-        if (ros === "htmlalways") {
+        if (ros === "htmlalways" || ros == "url") {
             return true;
         }
         return (
