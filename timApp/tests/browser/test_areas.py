@@ -365,7 +365,7 @@ par8
             ],
         )
 
-        self.find_element_by_text("areatitle").click()
+        self.find_element("div.areatitle").click()
 
         # Start and end inside a collapsible area.
         menu = self.select_pars(".par6", ".par7")
@@ -415,12 +415,12 @@ par4
         self.goto_document(d)
         self.use_left_menu()
         self.disable_ace()
-        self.find_element_by_text("areatitle").click()
+        self.find_element("div.areatitle").click()
 
         # Start outside a collapsible area, end inside.
         menu = self.select_pars(".par1", ".par3", toggle_edit=True)
         self.edit_selection_and_save(menu)
-        self.find_element_by_text("areatitle").click()
+        self.find_element("div.areatitle").click()
         pars = self.find_par_elems()
         self.check_par_texts(
             pars,
