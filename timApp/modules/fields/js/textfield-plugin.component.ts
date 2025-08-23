@@ -403,6 +403,9 @@ export class TextfieldPluginComponent
     private formatReadonlyStyle(answer: string) {
         const ros = this.markup.readOnlyStyle;
         if (ros === "url") {
+            if (answer == this.markup.initword) {
+                return answer;
+            }
             return `<a href="${answer}">${answer}</a>`;
         }
         return answer;
