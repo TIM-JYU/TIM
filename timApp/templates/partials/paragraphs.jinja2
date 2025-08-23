@@ -179,7 +179,8 @@
             {% else %}
                 <i class="areatoggle glyphicon glyphicon-minus"></i>
             {% endif %}
-            <div class="areatitle">{{ (t.output|safe) or ('&nbsp;'|safe) }}</div>
+            {% set task_id = attrs['taskId'] %}
+            <div class="areatitle"{% if task_id %} id="{{ task_id }}"{% endif %}>{{ (t.output|safe) or ('&nbsp;'|safe) }}</div>
             {% if not should_mark_all_read and not hide_readmarks and t.status %}
             <div class="{{ t.status.class_str }}" title="Click to mark this area as read"></div>
             {% endif %}
