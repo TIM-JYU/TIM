@@ -257,13 +257,14 @@ def now(frmt=0):
     return fmt_date(datetime.now(), str(frmt))
 
 
-def fmt_date(d, frmt=""):
+def fmt_date(d, frmt="", weekdays="ma|ti|ke|to|pe|la|su"):
     """
-    Format date using extended %d1 and %m1 for one number values
+    Format date using extended %d1, %m1 and %A1 for one number values
     see: timApp/tests/unit/test_datefilters.py
 
     :param d: date to format
     :param frmt: Python format
+    :param weekdays: pipe separated list of weekday names, used for %w
     :return: string from d an format
     """
     if isinstance(d, str):
@@ -273,6 +274,10 @@ def fmt_date(d, frmt=""):
     if frmt == "":
         return str(ds) + "." + str(ms)
     frmt = frmt.replace("%d1", ds).replace("%m1", ms)
+    if "%A1" in frmt:
+        wd = d.weekday()
+        weekdays = weekdays.split("|")
+        frmt = frmt.replace("%A1", weekdays[wd % len(weekdays)])
     return d.strftime(frmt)
 
 
