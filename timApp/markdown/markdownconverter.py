@@ -276,8 +276,8 @@ def fmt_date(d, frmt="", weekdays="ma|ti|ke|to|pe|la|su"):
     frmt = frmt.replace("%d1", ds).replace("%m1", ms)
     if "%A1" in frmt:
         wd = d.weekday()
-        weekdays = weekdays.split("|")
-        frmt = frmt.replace("%A1", weekdays[wd % len(weekdays)])
+        weekdays_list = weekdays.split("|")
+        frmt = frmt.replace("%A1", weekdays_list[wd % len(weekdays_list)])
     return d.strftime(frmt)
 
 
