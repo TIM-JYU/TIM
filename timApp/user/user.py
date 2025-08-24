@@ -897,6 +897,11 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
     def get_groups(
         self, include_special: bool = True, include_expired: bool = True
     ) -> Select:
+        if self.is_current_user and not self.skip_access_lock:
+            locked_groups = get_locked_active_groups()
+            if locked_groups is not None:
+                return select(UserGroup).filter(UserGroup.id.in_(locked_groups))
+
         special_groups = [ANONYMOUS_GROUPNAME]
         if self.logged_in:
             special_groups.append(LOGGED_IN_GROUPNAME)
@@ -908,10 +913,6 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
         )
         if include_special:
             group_condition = group_condition | UserGroup.name.in_(special_groups)
-        if self.is_current_user and not self.skip_access_lock:
-            locked_groups = get_locked_active_groups()
-            if locked_groups is not None:
-                group_condition &= UserGroup.id.in_(locked_groups)
         return select(UserGroup).filter(group_condition)
 
     def add_to_group(
