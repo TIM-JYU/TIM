@@ -58,6 +58,8 @@ export interface IDocSettings {
     redirectAnonymousNoRight?: string;
     disable_answer?: string;
     nonAnswerAnnotationsDisabled?: string;
+    show_progress_display_circle?: boolean;
+    progressCirclePalette?: string[];
 }
 
 export interface ISlideDocSettings extends IDocSettings {
