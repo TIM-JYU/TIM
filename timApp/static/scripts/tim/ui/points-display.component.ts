@@ -1,4 +1,5 @@
-import {Component, NgModule} from "@angular/core";
+import type {OnDestroy, OnInit} from "@angular/core";
+import {Component, HostListener, NgModule} from "@angular/core";
 import {HttpClient} from "@angular/common/http";
 import {CommonModule} from "@angular/common";
 import {toPromise} from "tim/util/utils";
@@ -6,6 +7,7 @@ import {documentglobals} from "tim/util/globals";
 import type {ITaskScoreInfo} from "tim/sidebarmenu/services/scoreboard.service";
 import {TooltipModule} from "ngx-bootstrap/tooltip";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
+import {from, interval, Subject, switchMap, takeUntil} from "rxjs";
 
 export interface ITaskInfo {
     total_points: number;
@@ -83,7 +85,7 @@ type GroupMaxPoints = Record<string, number>;
     `,
     styleUrls: ["./points-display.component.scss"],
 })
-export class PointsDisplayComponent {
+export class PointsDisplayComponent implements OnInit, OnDestroy {
     protected dialogName = "Points display";
     tasksDone: number;
     totalPoints: number;
@@ -130,6 +132,9 @@ export class PointsDisplayComponent {
     readonly satScaleNumThreshold = 9;
     readonly satReductionFactor = 0.9;
 
+    private destroy$ = new Subject<void>();
+    private pollingStop$ = new Subject<void>();
+
     constructor(private http: HttpClient) {
         this.docId = documentglobals().curr_item.id;
         this.tasksDone = 0;
@@ -155,6 +160,38 @@ export class PointsDisplayComponent {
 
     ngOnInit() {
         this.getSatellitesAndGroups();
+
+        this.initiatePolling();
+    }
+
+    ngOnDestroy() {
+        this.destroy$.next();
+        this.destroy$.complete();
+    }
+
+    stopPolling() {
+        this.pollingStop$.next();
+    }
+
+    initiatePolling() {
+        this.stopPolling();
+
+        interval(30000)
+            .pipe(
+                switchMap(() => from(this.updateSatellites())),
+                takeUntil(this.destroy$),
+                takeUntil(this.pollingStop$)
+            )
+            .subscribe();
+    }
+
+    @HostListener("document:visibilitychange", [])
+    onVisibilityChange() {
+        if (document.hidden) {
+            this.stopPolling();
+        } else {
+            this.initiatePolling();
+        }
     }
 
     pickSatelliteStrokeColor(i: number) {
@@ -188,13 +225,34 @@ export class PointsDisplayComponent {
             const cx = this.centerX + R * Math.sin(angle);
             const cy = this.centerY + -R * Math.cos(angle);
             const done = g.total_sum;
-            const total = this.groupMaxPoints[g.name] ?? 0;
-            const percent = +((done / total) * 100).toFixed(0);
+            const total = this.groupMaxPoints[g.name] ?? NaN;
+            const percent = this.calculatePercentage(done, total);
             return {...g, cx, cy, percent};
         });
         // When sufficiently many satellites decrease the size of each
         if (n >= this.satScaleNumThreshold) {
             this.satelliteR = this.satelliteR * this.satReductionFactor;
+        }
+    }
+
+    async updateSatellites() {
+        this.processedGroups = [];
+        await this.getTasksInfo();
+        const updateMap = new Map(
+            this.processedGroups.map((g) => {
+                const percent = this.calculatePercentage(
+                    g.total_sum,
+                    this.groupMaxPoints[g.name]
+                );
+                return [g.name, percent];
+            })
+        );
+        for (const sat of this.satellites) {
+            const name = sat.name;
+            const updatePercent = updateMap.get(name);
+            if (updatePercent) {
+                sat.percent = updatePercent;
+            }
         }
     }
 
@@ -206,7 +264,11 @@ export class PointsDisplayComponent {
         if (this.tasksDone === 0 || !this.totalMaximum) {
             return 0;
         }
-        return +((this.totalPoints / this.totalMaximum) * 100).toFixed(0);
+        return this.calculatePercentage(this.tasksDone, this.totalMaximum);
+    }
+
+    calculatePercentage(done: number, total: number) {
+        return total > 0 ? +((done / total) * 100).toFixed(0) : 0;
     }
 
     satelliteDashOffset(sat: IGroupCircle) {
@@ -253,7 +315,6 @@ export class PointsDisplayComponent {
             this.groupMaxPoints = r.result.group_max_points;
             this.totalMaximum = r.result.total_maximum;
             const names = Object.keys(this.groups);
-            console.log("Ryhmät: ", this.groups);
             for (const name of names) {
                 const {task_count, task_sum, text, total_sum} =
                     this.groups[name];
