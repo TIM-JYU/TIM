@@ -165,6 +165,7 @@ export class PointsDisplayComponent implements OnInit, OnDestroy {
     }
 
     ngOnDestroy() {
+        this.stopPolling();
         this.destroy$.next();
         this.destroy$.complete();
     }
@@ -225,7 +226,7 @@ export class PointsDisplayComponent implements OnInit, OnDestroy {
             const cx = this.centerX + R * Math.sin(angle);
             const cy = this.centerY + -R * Math.cos(angle);
             const done = g.total_sum;
-            const total = this.groupMaxPoints[g.name] ?? NaN;
+            const total = this.groupMaxPoints[g.name];
             const percent = this.calculatePercentage(done, total);
             return {...g, cx, cy, percent};
         });
@@ -264,11 +265,14 @@ export class PointsDisplayComponent implements OnInit, OnDestroy {
         if (this.tasksDone === 0 || !this.totalMaximum) {
             return 0;
         }
-        return this.calculatePercentage(this.tasksDone, this.totalMaximum);
+        return this.calculatePercentage(this.totalPoints, this.totalMaximum);
     }
 
     calculatePercentage(done: number, total: number) {
-        return total > 0 ? +((done / total) * 100).toFixed(0) : 0;
+        if (!(total > 0)) {
+            return 0;
+        }
+        return +((done / total) * 100).toFixed(0);
     }
 
     satelliteDashOffset(sat: IGroupCircle) {
