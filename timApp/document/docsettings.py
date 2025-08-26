@@ -68,6 +68,14 @@ class IdeDocument:
     path: str
 
 
+@dataclass
+class TaskSummaryCircleSettings:
+    show: bool = False
+    poll: int | None = None
+    listen_new_answers: bool = False
+    color_palette: list[str] | None = None
+
+
 DISABLE_ANSWER_REVIEW_MODE = "answer_review"
 
 
@@ -122,8 +130,7 @@ class DocSettingTypes:
     customIndex: list[tuple[Any, Any]]
     extraGroupPreambleFolder: str | None
     showSettingsTypes: list[str]
-    showProgressDisplayCircle: bool
-    progressCirclePalette: list[str] | None
+    task_summary_circle: TaskSummaryCircleSettings
 
 
 doc_setting_field_map: dict[str, Field] = {
@@ -743,9 +750,6 @@ class DocSettings:
 
     def show_settings_types(self) -> set[str]:
         return set(self.get_setting_or_default("showSettingsTypes", []))
-
-    def show_progress_display_circle(self) -> bool:
-        return self.get_setting_or_default("showProgressDisplayCircle", False)
 
 
 def resolve_settings_for_pars(pars: Iterable[DocParagraph]) -> YamlBlock:

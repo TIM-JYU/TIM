@@ -88,6 +88,8 @@ import type {
 import type {ReviewCanvasComponent} from "tim/plugin/reviewcanvas/review-canvas.component";
 import type {IRight} from "tim/item/access-role.service";
 import {UnbrokenSelection} from "tim/document/editing/unbrokenSelection";
+import {setPointsDisplay} from "tim/ui/pointsDisplayInstance";
+import {PointsDisplayComponent} from "tim/ui/points-display.component";
 
 markAsUsed(interceptor);
 
@@ -499,7 +501,7 @@ export class ViewCtrl implements IController {
         this.editingHandler.updateEditBarState();
 
         this.pointsDisplayCircleVisible =
-            this.docSettings.show_progress_display_circle;
+            this.docSettings.task_summary_circle?.show;
     }
 
     private async startDocumentStatePolling() {

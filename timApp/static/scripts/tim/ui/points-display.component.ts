@@ -8,6 +8,7 @@ import type {ITaskScoreInfo} from "tim/sidebarmenu/services/scoreboard.service";
 import {TooltipModule} from "ngx-bootstrap/tooltip";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {from, interval, Subject, switchMap, takeUntil} from "rxjs";
+import {setPointsDisplay} from "tim/ui/pointsDisplayInstance";
 
 export interface ITaskInfo {
     total_points: number;
@@ -98,6 +99,7 @@ export class PointsDisplayComponent implements OnInit, OnDestroy {
     mainCircleStrokeColor;
     satelliteR = 25;
     totalMaximum: number;
+    poll?: number;
     private groupMaxPoints: GroupMaxPoints;
 
     readonly imgSize = 220;
@@ -143,8 +145,9 @@ export class PointsDisplayComponent implements OnInit, OnDestroy {
         this.groups = {};
         this.groupMaxPoints = {};
 
-        const settingsPalette =
-            documentglobals().docSettings.progressCirclePalette;
+        const settings = documentglobals().docSettings.task_summary_circle;
+
+        const settingsPalette = settings?.color_palette;
         if (settingsPalette) {
             this.mainCircleStrokeColor = settingsPalette[0];
             if (settingsPalette.length > 1) {
@@ -156,12 +159,19 @@ export class PointsDisplayComponent implements OnInit, OnDestroy {
             this.mainCircleStrokeColor = this.defaultMainCircleStrokeColor;
             this.colorList = this.defaultColorList;
         }
+
+        if (settings?.poll) {
+            this.poll = settings.poll;
+        }
     }
 
     ngOnInit() {
+        setPointsDisplay(this);
         this.getSatellitesAndGroups();
 
-        this.initiatePolling();
+        if (this.poll) {
+            this.initiatePolling();
+        }
     }
 
     ngOnDestroy() {
@@ -175,11 +185,16 @@ export class PointsDisplayComponent implements OnInit, OnDestroy {
     }
 
     initiatePolling() {
+        if (!this.poll) {
+            return;
+        }
         this.stopPolling();
 
-        interval(30000)
+        const intervalValue = this.poll * 1000;
+
+        interval(intervalValue)
             .pipe(
-                switchMap(() => from(this.updateSatellites())),
+                switchMap(() => from(this.updatePointsInfo())),
                 takeUntil(this.destroy$),
                 takeUntil(this.pollingStop$)
             )
@@ -188,6 +203,9 @@ export class PointsDisplayComponent implements OnInit, OnDestroy {
 
     @HostListener("document:visibilitychange", [])
     onVisibilityChange() {
+        if (!this.poll) {
+            return;
+        }
         if (document.hidden) {
             this.stopPolling();
         } else {
@@ -236,7 +254,7 @@ export class PointsDisplayComponent implements OnInit, OnDestroy {
         }
     }
 
-    async updateSatellites() {
+    async updatePointsInfo() {
         this.processedGroups = [];
         await this.getTasksInfo();
         const updateMap = new Map(
