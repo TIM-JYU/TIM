@@ -78,7 +78,7 @@ type GroupMaxPoints = Record<string, number>;
                                     [attr.stroke-dasharray]="satelliteCircumference"
                                     [attr.stroke-dashoffset]="satelliteDashOffset(sat)"></circle>
                         </g>
-                        <text [attr.x]="sat.cx"  [attr.y]="sat.cy + 4" text-anchor="middle" class="sat-text">{{sat.percent}}%</text>
+                        <text [attr.x]="sat.cx"  [attr.y]="sat.cy + 6" text-anchor="middle" class="sat-text">{{sat.percent}}%</text>
                     </g>
                 </g>
             </svg>
@@ -190,8 +190,9 @@ export class PointsDisplayComponent implements OnInit, OnDestroy {
         }
         this.stopPolling();
 
-        const intervalValue = this.poll * 1000;
-
+        const pollingMinTime = 5000;
+        const intervalValue =
+            this.poll >= 5 ? this.poll * 1000 : pollingMinTime;
         interval(intervalValue)
             .pipe(
                 switchMap(() => from(this.updatePointsInfo())),
