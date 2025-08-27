@@ -48,7 +48,7 @@ type GroupMaxPoints = Record<string, number>;
                         <feDropShadow dx="0.7" dy="0.8" stdDeviation="1.5"></feDropShadow>
                     </filter>
                 </defs>
-                <g [tooltip]="'Total tasks done'" container="body" triggers="hover click">
+                <g [tooltip]="'Total tasks done'" container="body" triggers="hover">
                     <circle class="progress-circle-bg" [attr.r]="mainCircleRadius" [attr.cx]="centerX"
                             [attr.cy]="centerY" 
                             [attr.stroke-width]="progressStrokeWidth" 

@@ -28,6 +28,8 @@
 .progress-text {
   font-size: 1.5em;
   font-weight: 600;
+  pointer-events: none;
+  user-select: none;
 }
 
 .sat-bg {
@@ -61,4 +63,6 @@
 .sat-text {
   font-size: 1.2em;
   font-weight: 600;
+  pointer-events: none;
+  user-select: none;
 }
