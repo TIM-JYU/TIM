@@ -1,4 +1,4 @@
-import {PointsDisplayComponent} from "./points-display.component";
+import type {PointsDisplayComponent} from "tim/ui/points-display.component";
 
 export let pointsDisplayInstance: PointsDisplayComponent | undefined;
 

@@ -88,8 +88,6 @@ import type {
 import type {ReviewCanvasComponent} from "tim/plugin/reviewcanvas/review-canvas.component";
 import type {IRight} from "tim/item/access-role.service";
 import {UnbrokenSelection} from "tim/document/editing/unbrokenSelection";
-import {setPointsDisplay} from "tim/ui/pointsDisplayInstance";
-import {PointsDisplayComponent} from "tim/ui/points-display.component";
 
 markAsUsed(interceptor);
 
