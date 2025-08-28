@@ -1,4 +1,5 @@
-import type {OnDestroy, OnInit} from "@angular/core";
+import type { OnDestroy, OnInit} from "@angular/core";
+import {ElementRef, ViewChild} from "@angular/core";
 import {Component, HostListener, NgModule} from "@angular/core";
 import {HttpClient} from "@angular/common/http";
 import {CommonModule} from "@angular/common";
@@ -41,7 +42,7 @@ type GroupMaxPoints = Record<string, number>;
 @Component({
     selector: "points-display",
     template: `
-        <div class="task-progress">
+        <div class="task-progress" #progressContainer>
             <svg xmlns="http://www.w3.org/2000/svg" [attr.viewBox]="'0 ' + '0 ' + imgSize + ' ' +  imgSize" [attr.height]="pixelSize" [attr.width]="pixelSize" role="img">
                 <defs>
                     <filter id="shadow">
@@ -137,6 +138,8 @@ export class PointsDisplayComponent implements OnInit, OnDestroy {
     private destroy$ = new Subject<void>();
     private pollingStop$ = new Subject<void>();
 
+    @ViewChild("progressContainer") circleRef!: ElementRef<HTMLDivElement>;
+
     constructor(private http: HttpClient) {
         this.docId = documentglobals().curr_item.id;
         this.tasksDone = 0;
@@ -211,6 +214,14 @@ export class PointsDisplayComponent implements OnInit, OnDestroy {
             this.stopPolling();
         } else {
             this.initiatePolling();
+        }
+    }
+
+    @HostListener("document:click", ["$event.target"])
+    onOutsideClick(target: HTMLElement) {
+        const progressCircleRef = this.circleRef.nativeElement;
+        if (progressCircleRef && !progressCircleRef.contains(target)) {
+            this.hideSatellites();
         }
     }
 
@@ -300,6 +311,10 @@ export class PointsDisplayComponent implements OnInit, OnDestroy {
 
     showSatellites() {
         this.satellitesVisible = !this.satellitesVisible;
+    }
+
+    hideSatellites() {
+        this.satellitesVisible = false;
     }
 
     async getSatellitesAndGroups() {

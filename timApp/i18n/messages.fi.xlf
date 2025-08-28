@@ -11203,6 +11203,14 @@ Syötä useiden käyttäjien osoitteet allekkain tai pilkulla erotettuina.</targ
           <context context-type="linenumber">62,63</context>
         </context-group>
       </trans-unit>
+      <trans-unit id="1925391275220880233" datatype="html">
+        <source>Total tasks done</source>
+        <target state="translated">Tehtyjen tehtävien kokonaismäärä</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/ui/points-display.component.ts</context>
+          <context context-type="linenumber">103</context>
+        </context-group>
+      </trans-unit>
     </body>
   </file>
 </xliff>
