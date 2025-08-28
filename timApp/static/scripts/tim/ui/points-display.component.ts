@@ -48,7 +48,7 @@ type GroupMaxPoints = Record<string, number>;
                         <feDropShadow dx="0.7" dy="0.8" stdDeviation="1.5"></feDropShadow>
                     </filter>
                 </defs>
-                <g [tooltip]="'Total tasks done'" container="body" triggers="hover">
+                <g [tooltip]="mainCircleTooltipText" container="body" triggers="hover">
                     <circle class="progress-circle-bg" [attr.r]="mainCircleRadius" [attr.cx]="centerX"
                             [attr.cy]="centerY" 
                             [attr.stroke-width]="progressStrokeWidth" 
@@ -87,7 +87,6 @@ type GroupMaxPoints = Record<string, number>;
     styleUrls: ["./points-display.component.scss"],
 })
 export class PointsDisplayComponent implements OnInit, OnDestroy {
-    protected dialogName = "Points display";
     tasksDone: number;
     totalPoints: number;
     docId: number;
@@ -100,6 +99,7 @@ export class PointsDisplayComponent implements OnInit, OnDestroy {
     satelliteR = 25;
     totalMaximum: number;
     poll?: number;
+    mainCircleTooltipText = $localize`Total tasks done`;
     private groupMaxPoints: GroupMaxPoints;
 
     readonly imgSize = 220;
@@ -145,9 +145,9 @@ export class PointsDisplayComponent implements OnInit, OnDestroy {
         this.groups = {};
         this.groupMaxPoints = {};
 
-        const settings = documentglobals().docSettings.task_summary_circle;
+        const settings = documentglobals().docSettings;
 
-        const settingsPalette = settings?.color_palette;
+        const settingsPalette = settings.task_summary_circle?.color_palette;
         if (settingsPalette) {
             this.mainCircleStrokeColor = settingsPalette[0];
             if (settingsPalette.length > 1) {
@@ -160,8 +160,8 @@ export class PointsDisplayComponent implements OnInit, OnDestroy {
             this.colorList = this.defaultColorList;
         }
 
-        if (settings?.poll) {
-            this.poll = settings.poll;
+        if (settings.task_summary_circle?.poll) {
+            this.poll = settings.task_summary_circle.poll;
         }
     }
 
