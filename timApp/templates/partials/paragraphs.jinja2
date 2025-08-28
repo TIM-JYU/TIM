@@ -155,6 +155,8 @@
              t="{{ t.hash }}"
              attrs="{{ t.attrs_str }}"
              data-area="{{ ai.name }}"
+             {% if t.attrs['toggle-group'] %}data-toggle-group="{{ t.attrs['toggle-group'] }}"{% endif %}
+             {% if t.attrs['toggle-group-collection'] %}data-toggle-group-collection="{{ t.attrs['toggle-group-collection'] }}"{% endif %}
         {% if t.from_preamble %}
              data-from-preamble="{{ t.from_preamble|safe }}"
         {% endif %}
