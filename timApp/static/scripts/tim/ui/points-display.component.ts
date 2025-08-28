@@ -1,4 +1,4 @@
-import type { OnDestroy, OnInit} from "@angular/core";
+import type {OnDestroy, OnInit} from "@angular/core";
 import {ElementRef, ViewChild} from "@angular/core";
 import {Component, HostListener, NgModule} from "@angular/core";
 import {HttpClient} from "@angular/common/http";
