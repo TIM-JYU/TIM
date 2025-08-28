@@ -16,6 +16,15 @@ import type {ViewCtrl} from "tim/document/viewctrl";
 import {onClick} from "tim/document/eventhandlers";
 import type {INameAreaOptions} from "tim/document/editing/name-area-dialog.component";
 
+export function getCollapseControlForElement(elem: Element) {
+    const area = createParContext(elem);
+    const {areasBeforeRef, areasAfterRef} = getContextualAreaInfo(area);
+    const ar =
+        areasAfterRef[areasAfterRef.length - 1] ??
+        areasBeforeRef[areasBeforeRef.length - 1];
+    return ar.collapse;
+}
+
 export class AreaHandler {
     public selectedAreaName: string | undefined;
     public sc: IScope;
@@ -38,15 +47,16 @@ export class AreaHandler {
                 return;
             }
             const elem = $this[0];
-            const area = createParContext(elem);
-            const {areasBeforeRef, areasAfterRef} = getContextualAreaInfo(area);
-            const ar =
-                areasAfterRef[areasAfterRef.length - 1] ??
-                areasBeforeRef[areasBeforeRef.length - 1];
-            if (!ar.collapse) {
+            const collapse = getCollapseControlForElement(elem);
+            if (!collapse) {
                 return;
             }
-            ar.collapse.toggle();
+
+            if (!elem.dataset.toggleGroup) {
+                collapse.toggle();
+            } else {
+                collapse.toggleGroup();
+            }
         });
 
         onClick(".toggleAreaButton", ($this, e) => {
