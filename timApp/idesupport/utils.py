@@ -540,7 +540,7 @@ def get_ide_tasks_implementation(
     # First pass: collect all paragraphs for handouts
     for p in pars:
         visited_tags = set()
-        if not p.attrs:
+        if not p.attrs and not current_tag_stack:
             continue
         handout_for_tag = p.attrs.get(IDE_HANDOUT_FOR_TAG, None)
         if handout_for_tag and (ide_task_id is None or ide_task_id == handout_for_tag):
