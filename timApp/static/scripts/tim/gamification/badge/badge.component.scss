@@ -1,8 +1,15 @@
+.material-symbols-outlined {
+    font-size: 40px;
+    margin-top: 3px;
+    text-align: center;
+}
+
 .badge {
     font-family: system-ui;
     font-weight: bolder;
     text-align: center;
     position: relative;
+    margin: 1.5em 3em;
     display: inline-block;
     top: 0;
     transition: all 0.2s ease;
@@ -44,6 +51,7 @@
     height: 7.6em;
     position: relative;
     border-radius: 10px;
+    display: inline-block;
     transition: all 0.2s ease;
     filter: drop-shadow(0 0 5px var(--glow-light, rgba(255, 0, 0, 0.2)));
     animation: pulse 6s infinite;
@@ -114,6 +122,21 @@
   animation: pulse 6s infinite;
 }
 
+
+.badge.flower:before, .badge.flower:after {
+    position: absolute;
+    width: inherit;
+    height: inherit;
+    border-radius: inherit;
+    background: inherit;
+    content: "";
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    margin: auto;
+}
+
 .badge.flower:before {
     transform: rotate(60deg);
 }
@@ -140,14 +163,35 @@
   margin-left: 0;
 }
 
+
 .badge:hover {
     top: -4px;
+}
+
+.badge .circle {
+    width: 50px;
+    height: 50px;
+    position: absolute;
+    background: #fff;
+    z-index: 10;
+    border-radius: 50%;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    margin: auto;
+}
+
+.badge .circle i.fa {
+    font-size: 2em;
+    margin-top: 8px;
 }
 
 .badge .font {
     display: inline-block;
     margin-top: 1em;
 }
+
 
 .badge .ribbon {
     position: absolute;
@@ -159,6 +203,7 @@
     min-width: 100px;
     z-index: 1;
     color: #fff;
+    bottom: 12px;
     left: 50%;
     height: auto;
     font-size: 12px;
@@ -236,6 +281,11 @@
     color: #00944a;
     --glow-light: transparent;
     --glow-strong: transparent;
+}
+
+.gold {
+    background: linear-gradient(to bottom right, #e6ce6a 0%, #b7892b 100%);
+    color: #b7892b;
 }
 
 .gray {
@@ -400,6 +450,8 @@
 }
 
 .badge-container {
+  position: relative;
+  display: inline-block;
   padding: 10px;
   cursor: pointer;
 }
@@ -434,6 +486,7 @@
     border-color: transparent transparent rgba(0, 0, 0, 0.85) transparent;
 }
 
+/* Show the tooltip when hovering over the badge */
 .badge-container:hover .tooltip {
   visibility: visible;
   opacity: 1;

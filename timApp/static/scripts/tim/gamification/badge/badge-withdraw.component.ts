@@ -427,6 +427,11 @@ export class BadgeWithdrawComponent implements OnInit {
         this.userAssign = bool;
     }
 
+    handleSwap(bool: boolean) {
+        this.selectedBadge = null;
+        this.userAssign = bool;
+    }
+
     /**
      * Sets every group's ID and users to groupUsersMap.
      * Adds every user's ID's, that belong to any group to groupedUserIds table.
