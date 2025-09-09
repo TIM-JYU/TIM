@@ -148,7 +148,7 @@ class DocSettingTypes:
     edit_buttons: list[dict[str, str]]
     __static_macros: dict[str, Any]
     __static_macros_hash: str
-    prettyNameEditForMember: bool
+    allowNameEditByGroupMembers: bool
 
 
 doc_setting_type_hints = get_type_hints(DocSettingTypes)
