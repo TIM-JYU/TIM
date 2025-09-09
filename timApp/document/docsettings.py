@@ -122,7 +122,7 @@ class DocSettingTypes:
     customIndex: list[tuple[Any, Any]]
     extraGroupPreambleFolder: str | None
     showSettingsTypes: list[str]
-    prettyNameEditForMember: bool
+    allowNameEditByGroupMembers: bool
 
 
 doc_setting_field_map: dict[str, Field] = {
