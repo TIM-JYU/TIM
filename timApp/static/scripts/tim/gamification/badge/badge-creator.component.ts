@@ -524,11 +524,10 @@ export class BadgeCreatorComponent implements OnInit {
     private async getBadges() {
         // FIXME: show error if there is no context group
         const response = await toPromise(
-            this.http.get<IBadge[]>(`/badges`, {
-                params: {
-                    context_group: this.selectedContextGroup!,
-                },
-            })
+            this.http.get<IBadge[]>(
+                `/badges/all_badges/${this.selectedContextGroup!}`,
+                {}
+            )
         );
 
         if (response.ok) {
