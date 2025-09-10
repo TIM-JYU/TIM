@@ -623,8 +623,9 @@ def change_pretty_name(group_name: str, new_name: str) -> Response:
             message=f'Sorry, you don\'t have permission to use this resource. If you are a teacher of "{group_name}", please contact TIM admin.',
         )
 
-    group.admin_doc.description = new_name
-    db.session.commit()
+    if len(new_name) > 0:
+        group.admin_doc.description = new_name
+        db.session.commit()
 
     return json_response(
         {"id": group.id, "name": group.name, "description": group.admin_doc.description}

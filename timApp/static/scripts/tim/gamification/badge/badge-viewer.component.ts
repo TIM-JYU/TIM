@@ -301,7 +301,7 @@ export class BadgeViewerComponent implements OnInit {
             await this.badgeService.activeDialogRef.result;
         } catch (error) {
         } finally {
-            this.badgeService.activeDialogRef = null;
+            // this.badgeService.activeDialogRef = null;
         }
     }
 

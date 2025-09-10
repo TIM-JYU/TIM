@@ -535,22 +535,22 @@ def get_ide_tasks_implementation(
     tasks = []
     task_stems: dict[str, list[DocParagraph]] = defaultdict(list)
     task_headers: dict[str, DocParagraph] = {}
-    current_tag_stack = []
+    current_tag_stack: list[str] = []
 
     # First pass: collect all paragraphs for handouts
     for p in pars:
         visited_tags = set()
         if not p.attrs and not current_tag_stack:
             continue
-        handout_for_tag = p.attrs.get(IDE_HANDOUT_FOR_TAG, None)
+        handout_for_tag = p.attrs.get(IDE_HANDOUT_FOR_TAG, None) if p.attrs else None
         if handout_for_tag and (ide_task_id is None or ide_task_id == handout_for_tag):
-            if p.attrs.get("area"):
+            if p.attrs is not None and p.attrs.get("area"):
                 current_tag_stack.append(handout_for_tag)
             else:
                 task_stems[handout_for_tag].append(p)
                 visited_tags.add(handout_for_tag)
         if current_tag_stack:
-            if p.attrs.get("area_end"):
+            if p.attrs is not None and p.attrs.get("area_end"):
                 current_tag_stack.pop()
             for stem_tag in current_tag_stack:
                 if stem_tag in visited_tags:
@@ -558,7 +558,7 @@ def get_ide_tasks_implementation(
                 task_stems[stem_tag].append(p)
                 visited_tags.add(stem_tag)
 
-        header_for_tag = p.attrs.get(IDE_HEADER_FOR_TAG, None)
+        header_for_tag = p.attrs.get(IDE_HEADER_FOR_TAG, None) if p.attrs else None
         if header_for_tag and (ide_task_id is None or ide_task_id == header_for_tag):
             task_headers[header_for_tag] = p
 
