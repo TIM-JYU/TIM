@@ -4,6 +4,7 @@ import {Subject} from "rxjs";
 import {toPromise} from "tim/util/utils";
 import type {IBadge, IErrorAlert} from "tim/gamification/badge/badge.interface";
 import {sortLang} from "tim/user/IUser";
+import type {AngularDialogComponent} from "tim/ui/angulardialog/angular-dialog-component.directive";
 
 interface IBadgeData {
     context_group?: string;
@@ -20,7 +21,9 @@ export class BadgeService {
     private groupNameUpdated = new Subject<{id: number; newName: string}>();
     updateBadgeList$ = this.updateBadgeSubject.asObservable();
     groupNameUpdated$ = this.groupNameUpdated.asObservable();
-    public activeDialogRef: any = null;
+    public activeDialogRef:
+        | AngularDialogComponent<{message: string; modal: boolean}, unknown>
+        | undefined;
     alerts: Array<IErrorAlert> = [];
 
     notifyBadgeViewerUpdate() {
@@ -112,7 +115,7 @@ export class BadgeService {
     closeActiveDialog(): void {
         if (this.activeDialogRef) {
             this.activeDialogRef.close({});
-            this.activeDialogRef = null;
+            // this.activeDialogRef = null;
         }
     }
 
