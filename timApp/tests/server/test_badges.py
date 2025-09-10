@@ -18,12 +18,12 @@ class BadgeTestAllBadges(TimRouteTest):
         self.commit_db()
 
         # fetch all badges when no badges created
-        result_ab_empty = self.get(f"/all_badges/{group1_name}")
+        result_ab_empty = self.get(f"/badges/all_badges/{group1_name}")
         self.assertEqual([], result_ab_empty)
 
         # create a badge in 2 different context groups
         result_cb_1 = self.post(
-            "/create_badge",
+            "/badges/create_badge",
             data={
                 "context_group": group1_name,
                 "title": "Coordinator",
@@ -34,7 +34,7 @@ class BadgeTestAllBadges(TimRouteTest):
             },
         )
         result_cb_2 = self.post(
-            "/create_badge",
+            "/badges/create_badge",
             data={
                 "context_group": group2_name,
                 "title": "Quick",
@@ -46,7 +46,7 @@ class BadgeTestAllBadges(TimRouteTest):
         )
 
         # fetch all badges in 2 different context groups after creating a badge in both of them
-        result_ab_1 = self.get(f"/all_badges/{group1_name}")
+        result_ab_1 = self.get(f"/badges/all_badges/{group1_name}")
         self.assertEqual(
             [
                 {
@@ -70,7 +70,7 @@ class BadgeTestAllBadges(TimRouteTest):
             ],
             result_ab_1,
         )
-        result_ab_2 = self.get(f"/all_badges/{group2_name}")
+        result_ab_2 = self.get(f"/badges/all_badges/{group2_name}")
         self.assertEqual(
             [
                 {
@@ -99,7 +99,7 @@ class BadgeTestAllBadges(TimRouteTest):
 
         # fetch all badges when user doesn't have teacher access to the context group
         self.get(
-            f"/all_badges/{group1_name}",
+            f"/badges/all_badges/{group1_name}",
             expect_content=f'Sorry, you don\'t have permission to use this resource. If you are a teacher of "{group1_name}", please contact TIM admin.',
             expect_status=403,
         )
@@ -117,7 +117,7 @@ class BadgeTestCreate(TimRouteTest):
 
         # create a badge
         result_cb = self.post(
-            "/create_badge",
+            "/badges/create_badge",
             data={
                 "context_group": group1_name,
                 "title": "Coordinator",
@@ -150,7 +150,7 @@ class BadgeTestCreate(TimRouteTest):
         )
 
         # fetch all badges after a badge is created
-        result_ab_nonempty = self.get(f"/all_badges/{group1_name}")
+        result_ab_nonempty = self.get(f"/badges/all_badges/{group1_name}")
         self.assertEqual(
             [
                 {
@@ -179,7 +179,7 @@ class BadgeTestCreate(TimRouteTest):
 
         # create a badge when user doesn't have teacher access to the context group
         self.post(
-            f"/create_badge",
+            f"/badges/create_badge",
             data={
                 "context_group": group1_name,
                 "title": "The Boss",
@@ -205,7 +205,7 @@ class BadgeTestModify(TimRouteTest):
 
         # create a badge
         result_cb = self.post(
-            "/create_badge",
+            "/badges/create_badge",
             data={
                 "context_group": group1_name,
                 "title": "Coordinator",
@@ -218,7 +218,7 @@ class BadgeTestModify(TimRouteTest):
 
         # modify a badge
         result_mb = self.post(
-            "/modify_badge",
+            "/badges/modify_badge",
             data={
                 "badge_id": 1,
                 "context_group": 9,
@@ -244,7 +244,7 @@ class BadgeTestModify(TimRouteTest):
         )
 
         # fetch all badges after a badge is created and modified
-        result_ab_nonempty = self.get(f"/all_badges/{group1_name}")
+        result_ab_nonempty = self.get(f"/badges/all_badges/{group1_name}")
         self.assertEqual(
             [
                 {
@@ -273,7 +273,7 @@ class BadgeTestModify(TimRouteTest):
 
         # modify a badge when user doesn't have teacher access to the context group
         self.post(
-            f"/modify_badge",
+            f"/badges/modify_badge",
             data={
                 "badge_id": 1,
                 "context_group": 9,
@@ -300,7 +300,7 @@ class BadgeTestDelete(TimRouteTest):
 
         # create a badge
         result_cb = self.post(
-            "/create_badge",
+            "/badges/create_badge",
             data={
                 "context_group": group1_name,
                 "title": "Coordinator",
@@ -315,7 +315,7 @@ class BadgeTestDelete(TimRouteTest):
 
         # delete a badge when user doesn't have teacher access to the context group
         self.post(
-            f"/deactivate_badge",
+            f"/badges/deactivate_badge",
             data={
                 "badge_id": 1,
                 "context_group": group1_name,
@@ -328,7 +328,7 @@ class BadgeTestDelete(TimRouteTest):
 
         # delete a badge
         result_db = self.post(
-            "/deactivate_badge",
+            "/badges/deactivate_badge",
             data={
                 "badge_id": 1,
                 "context_group": group1_name,
@@ -360,7 +360,7 @@ class BadgeTestDeleteGiven(TimRouteTest):
 
         # create a badge
         result_cb = self.post(
-            "/create_badge",
+            "/badges/create_badge",
             data={
                 "context_group": group1_name,
                 "title": "Coordinator",
@@ -373,7 +373,7 @@ class BadgeTestDeleteGiven(TimRouteTest):
 
         # give a badge
         result_giba = self.post(
-            "/give_badge",
+            "/badges/give_badge",
             data={
                 "context_group": group1_name,
                 "group_id": self.test_user_2.get_personal_group().id,
@@ -384,7 +384,7 @@ class BadgeTestDeleteGiven(TimRouteTest):
 
         # delete an already given badge and check that it's not given anymore
         self.post(
-            f"/deactivate_badge",
+            f"/badges/deactivate_badge",
             data={
                 "badge_id": 1,
                 "context_group": group1_name,
@@ -428,7 +428,7 @@ class BadgeTestGroupsBadges(TimRouteTest):
 
         # create 2 badges to different context groups
         result_cb_1 = self.post(
-            "/create_badge",
+            "/badges/create_badge",
             data={
                 "context_group": group1_name,
                 "title": "Coordinator",
@@ -440,7 +440,7 @@ class BadgeTestGroupsBadges(TimRouteTest):
             expect_status=200,
         )
         result_cb_2 = self.post(
-            "/create_badge",
+            "/badges/create_badge",
             data={
                 "context_group": group2_name,
                 "title": "King",
@@ -453,12 +453,12 @@ class BadgeTestGroupsBadges(TimRouteTest):
         )
 
         # fetch groups badges when no badges given
-        result_grba_empty = self.get(f"/groups_badges/10/{group1_name}")
+        result_grba_empty = self.get(f"/badges/group_badges/10/{group1_name}")
         self.assertEqual([], result_grba_empty)
 
         # give 2 badges from different context groups to testuser2
         result_giba_1 = self.post(
-            f"/give_badge",
+            f"/badges/give_badge",
             data={
                 "context_group": group1_name,
                 "group_id": self.test_user_2.get_personal_group().id,
@@ -468,7 +468,7 @@ class BadgeTestGroupsBadges(TimRouteTest):
             expect_status=200,
         )
         result_giba_2 = self.post(
-            f"/give_badge",
+            f"/badges/give_badge",
             data={
                 "context_group": group2_name,
                 "group_id": self.test_user_2.get_personal_group().id,
@@ -480,7 +480,7 @@ class BadgeTestGroupsBadges(TimRouteTest):
 
         # fetch personal groups badges of testuser2 from context group es_25
         self.get(
-            f"/groups_badges/{self.test_user_2.get_personal_group().id}/{group1_name}",
+            f"/badges/group_badges/{self.test_user_2.get_personal_group().id}/{group1_name}",
             expect_content=[
                 {
                     "id": 1,
@@ -521,7 +521,7 @@ class BadgeTestGroupsBadges(TimRouteTest):
 
         # fetch personal groups badges of testuser2 from context group es_26
         self.get(
-            f"/groups_badges/{self.test_user_2.get_personal_group().id}/{group2_name}",
+            f"/badges/group_badges/{self.test_user_2.get_personal_group().id}/{group2_name}",
             expect_content=[
                 {
                     "id": 2,
@@ -563,7 +563,7 @@ class BadgeTestGroupsBadges(TimRouteTest):
         # fetch groups badges when user has teacher access to the context group
         # and is not included in the subgroup
         self.get(
-            f"/groups_badges/10/{group1_name}",
+            f"/badges/group_badges/10/{group1_name}",
             expect_content=[],
             expect_status=200,
         )
@@ -573,7 +573,7 @@ class BadgeTestGroupsBadges(TimRouteTest):
         # fetch groups badges when user doesn't have teacher access to the context group
         # and is included in the subgroup
         self.get(
-            f"/groups_badges/10/{group1_name}",
+            f"/badges/group_badges/10/{group1_name}",
             expect_content=[],
             expect_status=200,
         )
@@ -583,7 +583,7 @@ class BadgeTestGroupsBadges(TimRouteTest):
         # fetch groups badges when user doesn't have teacher access to the context group
         # and is not included in the context group
         self.get(
-            f"/groups_badges/10/{group1_name}",
+            f"/badges/group_badges/10/{group1_name}",
             expect_content=f"Sorry, you don't have permission to use this resource.",
             expect_status=403,
         )
@@ -635,7 +635,7 @@ class BadgeTestBadgeHolders(TimRouteTest):
 
         # create a badge
         result_cb = self.post(
-            "/create_badge",
+            "/badges/create_badge",
             data={
                 "context_group": group1_name,
                 "title": "Coordinator",
@@ -652,7 +652,7 @@ class BadgeTestBadgeHolders(TimRouteTest):
 
         # give a badge to a group
         result_giba_g = self.post(
-            "/give_badge",
+            "/badges/give_badge",
             data={
                 "context_group": group1_name,
                 "group_id": 10,
@@ -663,7 +663,7 @@ class BadgeTestBadgeHolders(TimRouteTest):
 
         # give a badge to a personal group
         result_giba_pg = self.post(
-            "/give_badge",
+            "/badges/give_badge",
             data={
                 "context_group": group1_name,
                 "group_id": self.test_user_2.get_personal_group().id,
@@ -673,7 +673,7 @@ class BadgeTestBadgeHolders(TimRouteTest):
         )
 
         # check if a badge is given to some usergroups after a badge given to a group and to a personal group
-        result_bg_nonempty = self.get("/badge_holders/1")
+        result_bg_nonempty = self.get("/badges/badge_holders/1")
         self.assertEqual(
             [
                 [
@@ -699,7 +699,7 @@ class BadgeTestBadgeHolders(TimRouteTest):
 
         # fetch all usergroups that holds certain badge when user doesn't have teacher access to the context group
         self.get(
-            "badge_holders/1",
+            "badges/badge_holders/1",
             expect_content=f'Sorry, you don\'t have permission to use this resource. If you are a teacher of "{group1_name}", please contact TIM admin.',
             expect_status=403,
         )
@@ -728,7 +728,7 @@ class BadgeTestGiveBadge(TimRouteTest):
 
         # create a badge
         result_cb = self.post(
-            "/create_badge",
+            "/badges/create_badge",
             data={
                 "context_group": group1_name,
                 "title": "Coordinator",
@@ -741,7 +741,7 @@ class BadgeTestGiveBadge(TimRouteTest):
 
         # give a badge to a group
         result_giba = self.post(
-            "/give_badge",
+            "/badges/give_badge",
             data={
                 "context_group": group1_name,
                 "group_id": 10,
@@ -767,7 +767,7 @@ class BadgeTestGiveBadge(TimRouteTest):
         )
 
         # fetch groups badges after given a badge to it
-        result_grba = self.get(f"/groups_badges/10/{group1_name}")
+        result_grba = self.get(f"/badges/group_badges/10/{group1_name}")
         self.assertEqual(
             [
                 {
