@@ -464,7 +464,7 @@ export class BadgeCreatorComponent implements OnInit {
         if (this.badgeForm.valid) {
             this.newBadge = this.badgeForm.value as IBadge;
             const response = toPromise(
-                this.http.post<{ok: boolean}>("/create_badge", {
+                this.http.post<{ok: boolean}>("/badges/create_badge", {
                     context_group: this.selectedContextGroup,
                     title: this.newBadge.title,
                     color: this.newBadge.color,
@@ -560,7 +560,7 @@ export class BadgeCreatorComponent implements OnInit {
         if (this.editingBadge) {
             Object.assign(this.editingBadge, this.badgeForm.value);
             const response = toPromise(
-                this.http.post<{ok: boolean}>("/modify_badge", {
+                this.http.post<{ok: boolean}>("/badges/modify_badge", {
                     badge_id: this.editingBadge.id,
                     context_group: this.editingBadge.context_group,
                     title: this.editingBadge.title,
@@ -618,7 +618,7 @@ export class BadgeCreatorComponent implements OnInit {
                         personal_user: string | null;
                     }>
                 >;
-            }>(`/badge_holders/${this.clickedBadge!.id}`)
+            }>(`/badges/badge_holders/${this.clickedBadge!.id}`)
         );
 
         return (
@@ -658,7 +658,7 @@ export class BadgeCreatorComponent implements OnInit {
         ) {
             if (this.editingBadge) {
                 const response = await toPromise(
-                    this.http.post<{ok: boolean}>("/deactivate_badge", {
+                    this.http.post<{ok: boolean}>("/badges/deactivate_badge", {
                         badge_id: this.editingBadge.id,
                         context_group: this.selectedContextGroup,
                     })
