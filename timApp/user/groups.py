@@ -4,7 +4,8 @@ from enum import Flag
 from operator import attrgetter
 from typing import Any
 
-from flask import Response, current_app
+import requests
+from flask import Response, current_app, request
 from sqlalchemy import select
 
 from timApp.auth.accesshelper import (
@@ -535,7 +536,7 @@ def get_subgroups(group_name_prefix: str) -> Response:
     return json_response(subgroups_json)
 
 
-@groups.get("/prefix_groups")
+@groups.get("/prefix_groups/<int:user_id>/<group_name_prefix>")
 def get_users_subgroups(user_id: int, group_name_prefix: str) -> Response:
     """
     Fetches user groups that user with given user_id belongs. Fetched user groups also
@@ -576,7 +577,7 @@ def get_personal_group(name: str) -> Response:
         return json_response(user.get_personal_group())
 
 
-@groups.get("/members")
+@groups.get("/members/<group_name>")
 def get_usergroup_members(group_name: str) -> Response:
     """
     Fetches user group's members.
