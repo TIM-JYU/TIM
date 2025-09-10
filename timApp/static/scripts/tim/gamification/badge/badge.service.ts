@@ -82,7 +82,7 @@ export class BadgeService {
      */
     async assignBadges(data: IBadgeData) {
         const result = await toPromise(
-            this.http.post<{ok: boolean}>("/give_badge", {
+            this.http.post<{ok: boolean}>("/badges/give_badge", {
                 context_group: data.context_group,
                 group_id: data.group_id,
                 badge_id: data.badge_id,
