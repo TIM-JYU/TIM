@@ -17,7 +17,7 @@ export class GroupService {
     constructor(private http: HttpClient) {}
 
     /**
-     * Retrives a list of users belonging to a specific group
+     * Retrieves a list of users belonging to a specific group
      * @param group
      * @return list of users in the group
      */
@@ -32,8 +32,8 @@ export class GroupService {
     }
 
     /**
-     * Hakee kaikki "aliryhmät", jotka alkaa annetulla <group> parametrilla.
-     * @param group ryhmä, jonka avulla aliryhmät haetaan
+     * Retrieves all sub-groups whose name starts with the given prefix.
+     * @param group group name prefix
      */
     async getSubGroups(group: string) {
         return await toPromise(
