@@ -64,6 +64,15 @@ def log_badge_event(log_info: dict) -> None:
         f.write(to_json_str(log_info) + "\n")
 
 
+@badges_blueprint.get("/check_connection")
+def check_connection() -> Response:
+    """
+    Checks connection to backend.
+    :return: True in json response if connection is working
+    """
+    return json_response(True)
+
+
 @badges_blueprint.get("/all_badges/<context_group>")
 def all_badges(context_group: str) -> Response:
     """

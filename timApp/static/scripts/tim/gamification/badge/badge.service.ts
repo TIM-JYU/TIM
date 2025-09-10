@@ -333,7 +333,9 @@ export class BadgeService {
      * If no errors, returns false.
      */
     async checkConnectionError(alerts: IErrorAlert[]) {
-        const result = await toPromise(this.http.get(`/check_connection/`));
+        const result = await toPromise(
+            this.http.get(`/badges/check_connection/`)
+        );
         if (!result.ok) {
             this.showError(
                 alerts,

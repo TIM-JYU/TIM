@@ -729,14 +729,14 @@ class UsersSubgroupsTest(TimRouteTest):
 
         # fetch users subgroups when there are not any
         result_usg_empty = self.get(
-            f"/groups/users_subgroups/{self.test_user_3.id}/{group1_name}"
+            f"/groups/prefix_groups/{self.test_user_3.id}/{group1_name}"
         )
         self.assertEqual([], result_usg_empty)
 
         # fetch users subgroups when user has teacher access to the context group
         # and is not the user with given user id
         self.get(
-            f"/groups/users_subgroups/{self.test_user_2.id}/{group1_name}",
+            f"/groups/prefix_groups/{self.test_user_2.id}/{group1_name}",
             expect_content=[{"id": 10, "name": subgroup1_name}],
             expect_status=200,
         )
@@ -746,7 +746,7 @@ class UsersSubgroupsTest(TimRouteTest):
         # fetch users subgroups when user doesn't have teacher access to the context group
         # and is the user with given user id
         self.get(
-            f"/groups/users_subgroups/{self.test_user_2.id}/{group1_name}",
+            f"/groups/prefix_groups/{self.test_user_2.id}/{group1_name}",
             expect_content=[{"id": 10, "name": subgroup1_name}],
             expect_status=200,
         )
@@ -756,7 +756,7 @@ class UsersSubgroupsTest(TimRouteTest):
         # fetch users subgroups when user doesn't have teacher access to the context group
         # and is not the user with given user id
         self.get(
-            f"/groups/users_subgroups/{self.test_user_2.id}/{group1_name}",
+            f"/groups/prefix_groups/{self.test_user_2.id}/{group1_name}",
             expect_content=f'Sorry, you don\'t have permission to use this resource. If you are a teacher of "{group1_name}", please contact TIM admin.',
             expect_status=403,
         )
@@ -765,12 +765,12 @@ class UsersSubgroupsTest(TimRouteTest):
 
         # fetch users subgroups with different erroneous data
         self.get(
-            f"/groups/users_subgroups/100/{group1_name}",
+            f"/groups/prefix_groups/100/{group1_name}",
             expect_status=404,
             expect_content='User with id "100" not found',
         )
         self.get(
-            f"/groups/users_subgroups/{self.test_user_2.id}/nonexistent_group",
+            f"/groups/prefix_groups/{self.test_user_2.id}/nonexistent_group",
             expect_status=404,
             expect_content='User group "nonexistent_group" not found',
         )
@@ -829,14 +829,14 @@ class UsergroupsMembersTest(TimRouteTest):
         )
 
         # fetch usergroup's members when there are not any
-        result_ugm_empty = self.get(f"/groups/usergroups_members/{subgroup2_name}")
+        result_ugm_empty = self.get(f"/groups/members/{subgroup2_name}")
         self.assertEqual(
             [],
             result_ugm_empty,
         )
 
         # fetch usergroup's members when there are 2
-        result_ugm_nonempty = self.get(f"/groups/usergroups_members/{subgroup1_name}")
+        result_ugm_nonempty = self.get(f"/groups/members/{subgroup1_name}")
         self.assertEqual(
             [
                 {
@@ -853,7 +853,7 @@ class UsergroupsMembersTest(TimRouteTest):
 
         # fetch usergroup's members when user doesn't have view access to the usergroup and belongs to usergroup
         self.get(
-            f"/groups/usergroups_members/{subgroup1_name}",
+            f"/groups/members/{subgroup1_name}",
             expect_content=[
                 {
                     "id": self.test_user_2.id,
@@ -869,7 +869,7 @@ class UsergroupsMembersTest(TimRouteTest):
 
         # fetch usergroup's members when user doesn't have view access to the usergroup and doesn't belong to usergroup
         self.get(
-            f"/groups/usergroups_members/{subgroup1_name}",
+            f"/groups/members/{subgroup1_name}",
             expect_content=f"Sorry, you don't have permission to use this resource.",
             expect_status=403,
         )
@@ -878,7 +878,7 @@ class UsergroupsMembersTest(TimRouteTest):
 
         # fetch usergroup's members with erroneous data
         self.get(
-            f"/groups/usergroups_members/nonexistent_group",
+            f"/groups/members/nonexistent_group",
             expect_status=404,
             expect_content='User group "nonexistent_group" not found',
         )

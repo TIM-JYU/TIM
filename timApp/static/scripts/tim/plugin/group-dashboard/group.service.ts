@@ -23,7 +23,7 @@ export class GroupService {
      */
     async getUsersFromGroup(group: string): Promise<IUser[]> {
         const response = await toPromise(
-            this.http.get<IUser[]>(`/groups/usergroups_members/${group}`)
+            this.http.get<IUser[]>(`/groups/members/${group}`)
         );
         if (response.ok) {
             return response.result;
