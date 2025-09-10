@@ -1,9 +1,10 @@
 import type {OnInit} from "@angular/core";
-import {Component, Input, NgModule, EventEmitter, Output} from "@angular/core";
+import {Component, Input, NgModule} from "@angular/core";
 import {CommonModule} from "@angular/common";
 import {FormControl, ReactiveFormsModule, Validators} from "@angular/forms";
-import {manageglobals} from "tim/util/globals";
+import {genericglobals, manageglobals} from "tim/util/globals";
 import type {IFolder, IFullDocument} from "tim/item/IItem";
+import type {BadgeGroupInfo} from "tim/plugin/group-dashboard/group.service";
 import {GroupService} from "tim/plugin/group-dashboard/group.service";
 import type {ICurrentUser} from "tim/user/IUser";
 import {toPromise} from "tim/util/utils";
@@ -84,22 +85,25 @@ export class NameChangerComponent implements OnInit {
             return;
         }
 
-        const result = await toPromise(
-            this.http.get<any>(`/groups/pretty_name/${this.group}`)
+        const response = await toPromise(
+            this.http.post<BadgeGroupInfo>(
+                `/groups/pretty_name/${this.group}`,
+                ""
+            )
         );
-        if (!result.ok) {
+        if (!response.ok) {
             this.badgeService.showError(
                 this.alerts,
                 {
                     data: {
-                        error: result.result.error.error,
+                        error: response.result.error.error,
                     },
                 },
                 "danger"
             );
             return;
         }
-        const fetchedGroup = result.result;
+        const fetchedGroup = response.result;
 
         this.groupName = fetchedGroup.name;
         this.group_id = fetchedGroup.id;
@@ -107,7 +111,10 @@ export class NameChangerComponent implements OnInit {
         this.prettyName = fetchedGroup.description || "";
         this.displayedName = this.showFullName ? this.groupName : this.subGroup;
 
-        this.canEditName = fetchedGroup.edit_access || true;
+        this.canEditName =
+            genericglobals().current_user.groups.find(
+                (g) => g.id == this.group_id
+            ) !== undefined;
     }
 
     /**
