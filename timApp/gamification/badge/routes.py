@@ -26,7 +26,7 @@ from timApp.util.flask.responsehelper import (
 )
 from timApp.util.flask.typedblueprint import TypedBlueprint
 
-badges_blueprint = TypedBlueprint("badges", __name__)
+badges_blueprint = TypedBlueprint("badges", __name__, url_prefix="/badges")
 
 
 @dataclass
