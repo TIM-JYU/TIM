@@ -1,7 +1,7 @@
 import {HttpClient} from "@angular/common/http";
 import type {IBadgeGroup} from "tim/gamification/badge/badge.interface";
 import type {IGroup, IUser} from "tim/user/IUser";
-import {AngularError, Result, toPromise} from "tim/util/utils";
+import {toPromise} from "tim/util/utils";
 import {Injectable} from "@angular/core";
 
 export type BadgeGroupInfo = {
