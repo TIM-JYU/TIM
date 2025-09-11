@@ -48,12 +48,9 @@ export class GroupService {
      */
     async getUserSubGroups(group: string, userId: number) {
         const resp = await toPromise(
-            this.http.get<IBadgeGroup[]>(`/groups/prefix_groups`, {
-                params: {
-                    user_id: userId,
-                    group: group,
-                },
-            })
+            this.http.get<IBadgeGroup[]>(
+                `/groups/prefix_groups/${userId}/${group}`
+            )
         );
         if (resp.ok) {
             return resp.result;

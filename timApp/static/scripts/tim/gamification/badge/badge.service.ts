@@ -41,12 +41,9 @@ export class BadgeService {
      */
     async getBadges(id: number, contextGroup: string) {
         const resp = await toPromise(
-            this.http.get<IBadge[]>(`/group_badges`, {
-                params: {
-                    group_id: id,
-                    context_group: contextGroup,
-                },
-            })
+            this.http.get<IBadge[]>(
+                `/badges/group_badges/${id}/${contextGroup}`
+            )
         );
         if (resp.ok) {
             return resp.result.reverse();
@@ -61,7 +58,7 @@ export class BadgeService {
      */
     async withdrawBadge(badgeGivenID: number, contextGroup: string) {
         const result = await toPromise(
-            this.http.post<{ok: boolean}>("/withdraw_badge", {
+            this.http.post<{ok: boolean}>("/badges/withdraw_badge", {
                 badge_given_id: badgeGivenID,
                 context_group: contextGroup,
             })
