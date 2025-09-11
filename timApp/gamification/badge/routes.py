@@ -81,9 +81,9 @@ def all_badges(context_group: str) -> Response:
     :return: Badges in json response format
     """
     context_usergroup = UserGroup.get_by_name(context_group)
-    if not context_usergroup:
-        raise NotExist(f"Context group {context_group} does not exist")
-    verify_teacher_access(check_and_coerce_not_none(context_usergroup.admin_doc))
+    # if not context_usergroup:
+    #     raise NotExist(f"Context group {context_group} does not exist")
+    verify_access("teacher", context_usergroup, user_group_name=context_group)
 
     badges = (
         run_sql(
@@ -123,9 +123,9 @@ def create_badge(
     :return: Created badge in json format
     """
     context_usergroup = UserGroup.get_by_name(context_group)
-    if not context_usergroup:
-        raise NotExist(f"Context group {context_group} does not exist")
-    verify_teacher_access(check_and_coerce_not_none(context_usergroup.admin_doc))
+    # if not context_usergroup:
+    #     raise NotExist(f"Context group {context_group} does not exist")
+    verify_access("teacher", context_usergroup, user_group_name=context_group)
 
     badge = BadgeTemplate(
         active=True,
@@ -180,9 +180,9 @@ def modify_badge(
     :return: Modified badge in json format
     """
     context_usergroup = UserGroup.get_by_id(context_group)
-    if not context_usergroup:
-        raise NotExist(f"Context group {context_group} does not exist")
-    verify_teacher_access(check_and_coerce_not_none(context_usergroup.admin_doc))
+    # if not context_usergroup:
+    #     raise NotExist(f"Context group {context_group} does not exist")
+    verify_access("teacher", context_usergroup, user_group_id=context_group)
 
     new_badge = {
         "context_group": context_group,
@@ -217,7 +217,7 @@ def modify_badge(
     return json_response(new_badge, 200)
 
 
-@badges_blueprint.post("/deactivate_badge/<int:badge_id>/<context_group>")
+@badges_blueprint.post("/deactivate_badge")
 def deactivate_badge(badge_id: int, context_group: str) -> Response:
     """
     Deactivates a badge.
@@ -226,9 +226,9 @@ def deactivate_badge(badge_id: int, context_group: str) -> Response:
     :return: Info of deleted badge in json format
     """
     context_usergroup = UserGroup.get_by_name(context_group)
-    if not context_usergroup:
-        raise NotExist(f"Context group {context_group} does not exist")
-    verify_teacher_access(check_and_coerce_not_none(context_usergroup.admin_doc))
+    # if not context_usergroup:
+    #     raise NotExist(f"Context group {context_group} does not exist")
+    verify_access("teacher", context_usergroup, user_group_name=context_group)
 
     new_badge = {
         "active": False,
@@ -435,9 +435,9 @@ def get_badge_holders(badge_id: int) -> Response:
     if not badge:
         raise NotExist(f'Badge with id "{badge_id}" not found')
     context_usergroup = UserGroup.get_by_id(badge.context_group)
-    if not context_usergroup:
-        raise NotExist(f"Context group {badge.context_group} does not exist")
-    verify_teacher_access(check_and_coerce_not_none(context_usergroup.admin_doc))
+    # if not context_usergroup:
+    #     raise NotExist(f"Context group {badge.context_group} does not exist")
+    verify_access("teacher", context_usergroup, user_group_id=badge.context_group)
 
     badges_given = (
         run_sql(select(Badge).filter(Badge.badge_id == badge_id, Badge.active))
@@ -491,9 +491,9 @@ def give_badge(
     if not usergroup:
         raise NotExist(f'User group with id "{group_id}" not found')
     context_usergroup = UserGroup.get_by_name(context_group)
-    if not context_usergroup:
-        raise NotExist(f"{context_group} not found")
-    verify_teacher_access(check_and_coerce_not_none(context_usergroup.admin_doc))
+    # if not context_usergroup:
+    #     raise NotExist(f"{context_group} not found")
+    verify_access("teacher", context_usergroup, user_group_name=context_group)
 
     badge_given = Badge(
         active=True,
@@ -532,9 +532,9 @@ def withdraw_badge(badge_given_id: int, context_group: str) -> Response:
     if not badge_given_old:
         raise NotExist(f'Given badge with id "{badge_given_id}" not found')
     context_usergroup = UserGroup.get_by_name(context_group)
-    if not context_usergroup:
-        raise NotExist(f"{context_group} not found")
-    verify_teacher_access(check_and_coerce_not_none(context_usergroup.admin_doc))
+    # if not context_usergroup:
+    #     raise NotExist(f"{context_group} not found")
+    verify_access("teacher", context_usergroup, user_group_name=context_group)
 
     badge_given_new = {
         "active": False,
@@ -568,7 +568,7 @@ def podium(group_name_prefix: str) -> Response:
     current_user = get_current_user_object()
 
     if not context_usergroup in current_user.groups:
-        verify_teacher_access(check_and_coerce_not_none(context_usergroup.admin_doc))
+        verify_access("teacher", context_usergroup, user_group_name=group_name_prefix)
 
     results = run_sql(
         select(UserGroup.name, func.count(Badge.id).label("badge_count"))

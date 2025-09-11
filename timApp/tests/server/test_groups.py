@@ -737,7 +737,13 @@ class UsersSubgroupsTest(TimRouteTest):
         # and is not the user with given user id
         self.get(
             f"/groups/prefix_groups/{self.test_user_2.id}/{group1_name}",
-            expect_content=[{"id": 10, "name": subgroup1_name}],
+            expect_content=[
+                {
+                    "description": subgroup1_name,
+                    "id": 10,
+                    "name": subgroup1_name,
+                }
+            ],
             expect_status=200,
         )
 
@@ -747,7 +753,9 @@ class UsersSubgroupsTest(TimRouteTest):
         # and is the user with given user id
         self.get(
             f"/groups/prefix_groups/{self.test_user_2.id}/{group1_name}",
-            expect_content=[{"id": 10, "name": subgroup1_name}],
+            expect_content=[
+                {"description": subgroup1_name, "id": 10, "name": subgroup1_name}
+            ],
             expect_status=200,
         )
 
@@ -782,22 +790,18 @@ class UserAndPersonalGroupTest(TimRouteTest):
         self.login_test2()
 
         # fetch user and his/her personal usergroup
-        result_uapg = self.get(
-            f"/groups/user_and_personal_group/{self.test_user_2.name}"
-        )
+        result_uapg = self.get(f"/groups/personal_group/{self.test_user_2.name}")
         self.assertEqual(
-            [
-                {
+            {
+                "id": self.test_user_2.get_personal_group().id,
+                "name": self.test_user_2.get_personal_group().name,
+                "personal_user": {
                     "id": self.test_user_2.id,
                     "name": self.test_user_2.name,
                     "real_name": self.test_user_2.real_name,
                     "email": self.test_user_2.email,
                 },
-                {
-                    "id": self.test_user_2.get_personal_group().id,
-                    "name": self.test_user_2.get_personal_group().name,
-                },
-            ],
+            },
             result_uapg,
         )
 
@@ -805,7 +809,7 @@ class UserAndPersonalGroupTest(TimRouteTest):
 
         # fetch user and his/her personal usergroup with erroneous data
         self.get(
-            f"/groups/user_and_personal_group/nonexistent_user",
+            f"/groups/personal_group/nonexistent_user",
             expect_status=404,
             expect_content='User "nonexistent_user" not found',
         )
@@ -909,18 +913,14 @@ class GroupNameChangerTest(TimRouteTest):
         self.get(
             f"/groups/pretty_name/{subgroup1_name}",
             expect_status=200,
-            expect_content={
-                "id": 10,
-                "name": subgroup1_name,
-                "description": subgroup1_name,
-            },
+            expect_content=subgroup1_name,
         )
 
         self.login_test3()
 
         # try to edit group's pretty name when logged in user isn't included in the group and isn't teacher of the group
         self.post(
-            f"/groups/change_pretty_name/{subgroup1_name}/Hevoset",
+            f"/groups/pretty_name/{subgroup1_name}/Hevoset",
             expect_status=403,
             expect_content=f'Sorry, you don\'t have permission to use this resource. If you are a teacher of "{subgroup1_name}", please contact TIM admin.',
         )
@@ -935,7 +935,7 @@ class GroupNameChangerTest(TimRouteTest):
         # edit group's pretty name when logged in user is included in the group
         # but editing is prohibited in document settings
         self.post(
-            f"/groups/change_pretty_name/{subgroup1_name}/Hevoset",
+            f"/groups/pretty_name/{subgroup1_name}/Hevoset",
             expect_status=403,
             expect_content=f'Sorry, you don\'t have permission to use this resource. If you are a teacher of "{subgroup1_name}", please contact TIM admin.',
         )
@@ -949,7 +949,7 @@ class GroupNameChangerTest(TimRouteTest):
 
         # edit group's pretty name when logged in user is teacher of the group
         self.post(
-            f"/groups/change_pretty_name/{subgroup1_name}/Hevoset",
+            f"/groups/pretty_name/{subgroup1_name}/Hevoset",
             expect_status=200,
             expect_content={
                 "id": 10,
@@ -960,23 +960,19 @@ class GroupNameChangerTest(TimRouteTest):
         self.get(
             f"/groups/pretty_name/{subgroup1_name}",
             expect_status=200,
-            expect_content={
-                "id": 10,
-                "name": subgroup1_name,
-                "description": "Hevoset",
-            },
+            expect_content="Hevoset",
         )
 
         # fetch group's pretty name with erroneous data
         self.get(
             f"/groups/pretty_name/nonexistent_group",
-            expect_status=400,
+            expect_status=404,
             expect_content='User group "nonexistent_group" not found',
         )
 
         # edit group's pretty name with erroneous data
         self.post(
-            f"/groups/change_pretty_name/nonexistent_group/Horses",
-            expect_status=400,
+            f"/groups/pretty_name/nonexistent_group/Horses",
+            expect_status=404,
             expect_content='User group "nonexistent_group" not found',
         )
