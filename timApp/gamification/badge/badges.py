@@ -94,7 +94,9 @@ class Badge(db.Model):
     message: Mapped[str] = mapped_column()
     """Message of the badge."""
 
-    badge_id: Mapped[int] = mapped_column(ForeignKey("badge.id"), nullable=False)
+    badge_id: Mapped[int] = mapped_column(
+        ForeignKey("badgetemplate.id"), nullable=False
+    )
     """Identifier of the badge template."""
 
     group_id: Mapped[int] = mapped_column(ForeignKey("usergroup.id"), nullable=False)

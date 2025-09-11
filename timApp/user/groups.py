@@ -574,7 +574,10 @@ def get_personal_group(name: str) -> Response:
     if not user:
         raise NotExist(f'User "{name}" not found')
     else:
-        return json_response(user.get_personal_group())
+        p_group = user.get_personal_group()
+        p_group_json = p_group.to_json()
+        p_group_json["personal_user"] = user
+        return json_response(p_group_json)
 
 
 @groups.get("/members/<group_name>")
