@@ -56,14 +56,10 @@ class BadgeTestAllBadges(TimRouteTest):
                     "created": result_cb_1["created"],
                     "created_by": self.test_user_1.id,
                     "deleted": None,
-                    "deleted_by": None,
                     "description": "Great coordination",
                     "id": 1,
                     "image": 1,
                     "modified": None,
-                    "modified_by": None,
-                    "restored": None,
-                    "restored_by": None,
                     "shape": "hexagon",
                     "title": "Coordinator",
                 }
@@ -80,14 +76,10 @@ class BadgeTestAllBadges(TimRouteTest):
                     "created": result_cb_2["created"],
                     "created_by": self.test_user_1.id,
                     "deleted": None,
-                    "deleted_by": None,
                     "description": "Very fast",
                     "id": 2,
                     "image": 4,
                     "modified": None,
-                    "modified_by": None,
-                    "restored": None,
-                    "restored_by": None,
                     "shape": "rectangle",
                     "title": "Quick",
                 }
@@ -135,14 +127,10 @@ class BadgeTestCreate(TimRouteTest):
                 "created": result_cb["created"],
                 "created_by": self.test_user_1.id,
                 "deleted": None,
-                "deleted_by": None,
                 "description": "Great coordination",
                 "id": 1,
                 "image": 1,
                 "modified": None,
-                "modified_by": None,
-                "restored": None,
-                "restored_by": None,
                 "shape": "hexagon",
                 "title": "Coordinator",
             },
@@ -160,14 +148,10 @@ class BadgeTestCreate(TimRouteTest):
                     "created": result_cb["created"],
                     "created_by": self.test_user_1.id,
                     "deleted": None,
-                    "deleted_by": None,
                     "description": "Great coordination",
                     "id": 1,
                     "image": 1,
                     "modified": None,
-                    "modified_by": None,
-                    "restored": None,
-                    "restored_by": None,
                     "shape": "hexagon",
                     "title": "Coordinator",
                 }
@@ -236,7 +220,6 @@ class BadgeTestModify(TimRouteTest):
                 "description": "Most valuable player",
                 "image": 3,
                 "modified": result_mb["modified"],
-                "modified_by": self.test_user_1.id,
                 "shape": "hexagon",
                 "title": "MVP",
             },
@@ -254,14 +237,10 @@ class BadgeTestModify(TimRouteTest):
                     "created": result_cb["created"],
                     "created_by": self.test_user_1.id,
                     "deleted": None,
-                    "deleted_by": None,
                     "description": "Most valuable player",
                     "id": 1,
                     "image": 3,
                     "modified": result_mb["modified"],
-                    "modified_by": self.test_user_1.id,
-                    "restored": None,
-                    "restored_by": None,
                     "shape": "hexagon",
                     "title": "MVP",
                 }
@@ -338,13 +317,12 @@ class BadgeTestDelete(TimRouteTest):
             {
                 "active": False,
                 "deleted": result_db["deleted"],
-                "deleted_by": self.test_user_1.id,
             },
             result_db,
         )
 
         # fetch all badges after a badge is created and deleted
-        result_db = self.get(f"/all_badges/{group1_name}")
+        result_db = self.get(f"/badges/all_badges/{group1_name}")
         self.assertEqual([], result_db)
 
 
@@ -392,7 +370,7 @@ class BadgeTestDeleteGiven(TimRouteTest):
             expect_status=200,
         )
         self.get(
-            f"/groups_badges/{self.test_user_2.get_personal_group().id}/{group1_name}",
+            f"/badges/group_badges/{self.test_user_2.get_personal_group().id}/{group1_name}",
             expect_content=[],
             expect_status=200,
         )
@@ -490,28 +468,16 @@ class BadgeTestGroupsBadges(TimRouteTest):
                     "given_by": self.test_user_1.id,
                     "given_by_name": self.test_user_1.real_name,
                     "given": result_giba_1["given"],
-                    "withdrawn_by": None,
-                    "withdrawn_by_name": None,
                     "withdrawn": None,
-                    "undo_withdrawn_by": None,
-                    "undo_withdrawn_by_name": None,
-                    "undo_withdrawn": None,
                     "color": "blue",
                     "context_group": 9,
                     "created": result_cb_1["created"],
                     "created_by": self.test_user_1.id,
                     "created_by_name": self.test_user_1.real_name,
                     "deleted": None,
-                    "deleted_by": None,
-                    "deleted_by_name": None,
                     "description": "Great coordination",
                     "image": 1,
                     "modified": None,
-                    "modified_by": None,
-                    "modified_by_name": None,
-                    "restored": None,
-                    "restored_by": None,
-                    "restored_by_name": None,
                     "shape": "hexagon",
                     "title": "Coordinator",
                 }
@@ -531,28 +497,16 @@ class BadgeTestGroupsBadges(TimRouteTest):
                     "given_by": self.test_user_1.id,
                     "given_by_name": self.test_user_1.real_name,
                     "given": result_giba_2["given"],
-                    "withdrawn_by": None,
-                    "withdrawn_by_name": None,
                     "withdrawn": None,
-                    "undo_withdrawn_by": None,
-                    "undo_withdrawn_by_name": None,
-                    "undo_withdrawn": None,
                     "color": "yellow",
                     "context_group": 11,
                     "created": result_cb_2["created"],
                     "created_by": self.test_user_1.id,
                     "created_by_name": self.test_user_1.real_name,
                     "deleted": None,
-                    "deleted_by": None,
-                    "deleted_by_name": None,
                     "description": "You rule!",
                     "image": 2,
                     "modified": None,
-                    "modified_by": None,
-                    "modified_by_name": None,
-                    "restored": None,
-                    "restored_by": None,
-                    "restored_by_name": None,
                     "shape": "hexagon",
                     "title": "King",
                 }
@@ -606,7 +560,7 @@ class BadgeTestGroupsBadgesView(TimRouteTest):
         # fetch groups badges when user has view access to the subgroup
         # and is not included in the subgroup
         self.get(
-            f"/groups_badges/10/{group1_name}",
+            f"/badges/group_badges/10/{group1_name}",
             expect_content=[],
             expect_status=200,
         )
@@ -647,7 +601,7 @@ class BadgeTestBadgeHolders(TimRouteTest):
         )
 
         # check if a badge is given to some usergroups when no badges given
-        result_bg_empty = self.get("/badge_holders/1")
+        result_bg_empty = self.get("/badges/badge_holders/1")
         self.assertEqual([[], []], result_bg_empty)
 
         # give a badge to a group
@@ -699,7 +653,7 @@ class BadgeTestBadgeHolders(TimRouteTest):
 
         # fetch all usergroups that holds certain badge when user doesn't have teacher access to the context group
         self.get(
-            "badges/badge_holders/1",
+            "/badges/badge_holders/1",
             expect_content=f'Sorry, you don\'t have permission to use this resource. If you are a teacher of "{group1_name}", please contact TIM admin.',
             expect_status=403,
         )
@@ -755,10 +709,7 @@ class BadgeTestGiveBadge(TimRouteTest):
                 "active": True,
                 "given_by": self.test_user_1.id,
                 "given": result_giba["given"],
-                "withdrawn_by": None,
                 "withdrawn": None,
-                "undo_withdrawn_by": None,
-                "undo_withdrawn": None,
                 "group_id": 10,
                 "badge_id": 1,
                 "message": "Great work!",
@@ -774,12 +725,9 @@ class BadgeTestGiveBadge(TimRouteTest):
                     "id": 1,
                     "active": True,
                     "given_by": self.test_user_1.id,
-                    "given_by_name": self.test_user_1.real_name,
+                    "given_by_name": "Test user 1",
                     "given": result_giba["given"],
-                    "withdrawn_by": None,
                     "withdrawn": None,
-                    "undo_withdrawn_by": None,
-                    "undo_withdrawn": None,
                     "message": "Great work!",
                     "badgegiven_id": 1,
                     "color": "blue",
@@ -788,20 +736,11 @@ class BadgeTestGiveBadge(TimRouteTest):
                     "created_by": 2,
                     "created_by_name": "Test user 1",
                     "deleted": None,
-                    "deleted_by": None,
-                    "deleted_by_name": None,
                     "description": "Great coordination",
                     "image": 1,
                     "modified": None,
-                    "modified_by": None,
-                    "modified_by_name": None,
-                    "restored": None,
-                    "restored_by": None,
-                    "restored_by_name": None,
                     "shape": "hexagon",
                     "title": "Coordinator",
-                    "undo_withdrawn_by_name": None,
-                    "withdrawn_by_name": None,
                 }
             ],
             result_grba,
@@ -811,7 +750,7 @@ class BadgeTestGiveBadge(TimRouteTest):
 
         # give a badge when user doesn't have teacher access to the context group
         self.post(
-            f"/give_badge",
+            f"/badges/give_badge",
             data={
                 "context_group": group1_name,
                 "group_id": 10,
@@ -839,7 +778,7 @@ class BadgeTestWithdrawBadge(TimRouteTest):
 
         # create a badge
         result_cb = self.post(
-            "/create_badge",
+            "/badges/create_badge",
             data={
                 "context_group": group1_name,
                 "title": "Coordinator",
@@ -852,7 +791,7 @@ class BadgeTestWithdrawBadge(TimRouteTest):
 
         # give a badge to a personal group
         result_giba = self.post(
-            "/give_badge",
+            "/badges/give_badge",
             data={
                 "context_group": group1_name,
                 "group_id": self.test_user_2.get_personal_group().id,
@@ -865,7 +804,7 @@ class BadgeTestWithdrawBadge(TimRouteTest):
 
         # withdraw a badge when user doesn't have teacher access to the context group
         self.post(
-            f"/withdraw_badge",
+            f"/badges/withdraw_badge",
             data={
                 "badge_given_id": 1,
                 "context_group": group1_name,
@@ -878,7 +817,7 @@ class BadgeTestWithdrawBadge(TimRouteTest):
 
         # withdraw a badge
         result_wb = self.post(
-            "/withdraw_badge",
+            "/badges/withdraw_badge",
             data={
                 "badge_given_id": 1,
                 "context_group": group1_name,
@@ -887,7 +826,6 @@ class BadgeTestWithdrawBadge(TimRouteTest):
         self.assertEqual(
             {
                 "active": False,
-                "withdrawn_by": self.test_user_1.id,
                 "withdrawn": result_wb["withdrawn"],
             },
             result_wb,
@@ -895,7 +833,7 @@ class BadgeTestWithdrawBadge(TimRouteTest):
 
         # fetch personal groups badges after given a badge to it and withdrawn the badge
         result_grba = self.get(
-            f"/groups_badges/{self.test_user_2.get_personal_group().id}/{group1_name}"
+            f"/badges/group_badges/{self.test_user_2.get_personal_group().id}/{group1_name}"
         )
         self.assertEqual(
             [],
@@ -906,7 +844,7 @@ class BadgeTestWithdrawBadge(TimRouteTest):
 class BadgeTestPodium(TimRouteTest):
     def give_badge(self, group_id):
         self.post(
-            f"/give_badge",
+            f"/badges/give_badge",
             data={
                 "context_group": "es_28",
                 "group_id": group_id,
@@ -926,7 +864,7 @@ class BadgeTestPodium(TimRouteTest):
         self.commit_db()
 
         # get podium when no subgroups in context group
-        self.get(f"/podium/{group1_name}", expect_content=[], expect_status=200)
+        self.get(f"/badges/podium/{group1_name}", expect_content=[], expect_status=200)
 
         # create 6 subgroups in es_28
         subgroup1_name = "es_28-cats"
@@ -952,7 +890,7 @@ class BadgeTestPodium(TimRouteTest):
 
         # create a badge
         self.post(
-            f"/create_badge",
+            f"/badges/create_badge",
             data={
                 "context_group": group1_name,
                 "title": "Coordinator",
@@ -971,7 +909,7 @@ class BadgeTestPodium(TimRouteTest):
 
         # get podium after 6 subgroups created and badges given to some of them
         self.get(
-            f"/podium/{group1_name}",
+            f"/badges/podium/{group1_name}",
             expect_content=[
                 {"badge_count": 2, "group_name": subgroup1_name},
                 {"badge_count": 1, "group_name": subgroup3_name},
@@ -991,7 +929,7 @@ class BadgeTestPodium(TimRouteTest):
 
         # get podium after badges given to all of 6 subgroups
         self.get(
-            f"/podium/{group1_name}",
+            f"/badges/podium/{group1_name}",
             expect_content=[
                 {"badge_count": 6, "group_name": subgroup4_name},
                 {"badge_count": 5, "group_name": subgroup5_name},
@@ -1006,7 +944,7 @@ class BadgeTestPodium(TimRouteTest):
 
         # get podium when user is not a part of the context group and doesn't have teacher access to context group
         self.get(
-            f"/podium/{group1_name}",
+            f"/badges/podium/{group1_name}",
             expect_content=f'Sorry, you don\'t have permission to use this resource. If you are a teacher of "{group1_name}", please contact TIM admin.',
             expect_status=403,
         )
@@ -1015,7 +953,7 @@ class BadgeTestPodium(TimRouteTest):
 
         # delete an already given badge and get podium after that
         self.post(
-            f"/deactivate_badge",
+            f"/badges/deactivate_badge",
             data={
                 "badge_id": 1,
                 "context_group": group1_name,
@@ -1023,7 +961,7 @@ class BadgeTestPodium(TimRouteTest):
             expect_status=200,
         )
         self.get(
-            f"/podium/{group1_name}",
+            f"/badges/podium/{group1_name}",
             expect_content=[],
             expect_status=200,
         )
@@ -1043,7 +981,7 @@ class BadgeTestErroneousData(TimRouteTest):
             data={"names": ["testuser2"]},
         )
         self.post(
-            f"/create_badge",
+            f"/badges/create_badge",
             data={
                 "context_group": group1_name,
                 "title": "Coordinator",
@@ -1055,7 +993,7 @@ class BadgeTestErroneousData(TimRouteTest):
             expect_status=200,
         )
         self.post(
-            f"/give_badge",
+            f"/badges/give_badge",
             data={
                 "context_group": group1_name,
                 "group_id": self.test_user_2.get_personal_group().id,
@@ -1067,14 +1005,14 @@ class BadgeTestErroneousData(TimRouteTest):
 
         # fetch all badges in context with erroneous data
         self.get(
-            f"/all_badges/nonexistent_group",
+            f"/badges/all_badges/nonexistent_group",
             expect_status=404,
             expect_content='User group "nonexistent_group" not found',
         )
 
         # create a badge with erroneous data
         self.post(
-            f"/create_badge",
+            f"/badges/create_badge",
             data={
                 "context_group": "nonexistent_group",
                 "title": "Coordinator",
@@ -1089,7 +1027,7 @@ class BadgeTestErroneousData(TimRouteTest):
 
         # modify a badge with different erroneous data
         self.post(
-            f"/modify_badge",
+            f"/badges/modify_badge",
             data={
                 "badge_id": 100,
                 "context_group": 9,
@@ -1103,7 +1041,7 @@ class BadgeTestErroneousData(TimRouteTest):
             expect_content='Badge with id "100" not found',
         )
         self.post(
-            f"/modify_badge",
+            f"/badges/modify_badge",
             data={
                 "badge_id": 1,
                 "context_group": 100,
@@ -1119,7 +1057,7 @@ class BadgeTestErroneousData(TimRouteTest):
 
         # delete a badge with different erroneous data
         self.post(
-            f"/deactivate_badge",
+            f"/badges/deactivate_badge",
             data={
                 "badge_id": 100,
                 "context_group": group1_name,
@@ -1128,7 +1066,7 @@ class BadgeTestErroneousData(TimRouteTest):
             expect_content='Badge with id "100" not found',
         )
         self.post(
-            f"/deactivate_badge",
+            f"/badges/deactivate_badge",
             data={
                 "badge_id": 1,
                 "context_group": "nonexistent_group",
@@ -1139,26 +1077,26 @@ class BadgeTestErroneousData(TimRouteTest):
 
         # fetch groups badges with different erroneous data
         self.get(
-            f"/groups_badges/100/{group1_name}",
+            f"/badges/group_badges/100/{group1_name}",
             expect_status=404,
             expect_content='User group with id "100" not found',
         )
         self.get(
-            f"/groups_badges/{self.test_user_2.get_personal_group().id}/nonexistent_group",
+            f"/badges/group_badges/{self.test_user_2.get_personal_group().id}/nonexistent_group",
             expect_status=404,
             expect_content='User group "nonexistent_group" not found',
         )
 
         # check with erroneous data if a badge is given to someone
         self.get(
-            "/badge_holders/100",
+            "/badges/badge_holders/100",
             expect_status=404,
             expect_content='Badge with id "100" not found',
         )
 
         # give a badge with different erroneous data
         self.post(
-            f"/give_badge",
+            f"/badges/give_badge",
             data={
                 "context_group": "nonexistent_group",
                 "group_id": self.test_user_2.get_personal_group().id,
@@ -1169,7 +1107,7 @@ class BadgeTestErroneousData(TimRouteTest):
             expect_content='User group "nonexistent_group" not found',
         )
         self.post(
-            f"/give_badge",
+            f"/badges/give_badge",
             data={
                 "context_group": group1_name,
                 "group_id": 100,
@@ -1180,7 +1118,7 @@ class BadgeTestErroneousData(TimRouteTest):
             expect_content='User group with id "100" not found',
         )
         self.post(
-            f"/give_badge",
+            f"/badges/give_badge",
             data={
                 "context_group": group1_name,
                 "group_id": self.test_user_2.get_personal_group().id,
@@ -1193,7 +1131,7 @@ class BadgeTestErroneousData(TimRouteTest):
 
         # withdraw a badge with different erroneous data
         self.post(
-            f"/withdraw_badge",
+            f"/badges/withdraw_badge",
             data={
                 "badge_given_id": 100,
                 "context_group": group1_name,
@@ -1202,7 +1140,7 @@ class BadgeTestErroneousData(TimRouteTest):
             expect_content='Given badge with id "100" not found',
         )
         self.post(
-            f"/withdraw_badge",
+            f"/badges/withdraw_badge",
             data={
                 "badge_given_id": 1,
                 "context_group": "nonexistent_group",
@@ -1213,7 +1151,7 @@ class BadgeTestErroneousData(TimRouteTest):
 
         # get podium with erroneous data
         self.get(
-            f"/podium/nonexistent_group",
+            f"/badges/podium/nonexistent_group",
             expect_status=404,
             expect_content='User group "nonexistent_group" not found',
         )
