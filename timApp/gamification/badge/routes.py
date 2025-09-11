@@ -5,9 +5,7 @@ from dataclasses import dataclass
 from operator import attrgetter
 from pathlib import Path
 from flask import Response, current_app
-from sqlalchemy import select, func, desc
-from sqlalchemy.orm import InstrumentedAttribute
-
+from sqlalchemy import select, func, desc, or_
 from timApp.auth.accesshelper import (
     verify_teacher_access,
     verify_view_access,
@@ -19,12 +17,14 @@ from timApp.timdb.sqa import db, run_sql
 from timApp.timdb.types import datetime_tz
 from timApp.user.user import User
 from timApp.user.usergroup import UserGroup
+from timApp.user.usergroupmember import UserGroupMember
 from timApp.util.flask.requesthelper import NotExist
 from timApp.util.flask.responsehelper import (
     json_response,
     to_json_str,
 )
 from timApp.util.flask.typedblueprint import TypedBlueprint
+from timApp.util.logger import log_info
 
 badges_blueprint = TypedBlueprint("badges", __name__, url_prefix="/badges")
 
@@ -252,6 +252,76 @@ def deactivate_badge(badge_id: int, context_group: str) -> Response:
     return json_response(new_badge, 200)
 
 
+def check_group_member(current_user: User, usergroup: int) -> bool:
+    """
+    Checks whether logged in user is a member of user group.
+    :param current_user: Logged in user
+    :param usergroup: User group to check
+    :return: True if user is member of user group, false otherwise
+    """
+    context_usergroup = (
+        run_sql(select(UserGroup).filter(UserGroup.id == usergroup)).scalars().first()
+    )
+    allowed_member = None
+    if context_usergroup:
+        allowed_member = (
+            run_sql(
+                select(UserGroupMember).filter(
+                    UserGroupMember.user_id == current_user.id,
+                    UserGroupMember.usergroup_id == context_usergroup.id,
+                    or_(
+                        UserGroupMember.membership_end > datetime_tz.now(),
+                        UserGroupMember.membership_end == None,
+                    ),
+                )
+            )
+            .scalars()
+            .first()
+        )
+    if allowed_member:
+        return True
+    else:
+        return False
+
+
+def verify_access(
+    access_type: str,
+    user_group: UserGroup | None,
+    user_group_name: str | None = None,
+    user_group_id: int | None = None,
+) -> None:
+    """
+    Checks whether logged in user has particular access to a given user group.
+    :param access_type: Access type. Either 'teacher' or 'view'.
+    :param user_group: User group to check.
+    :param user_group_name: Name of user group.
+    :param user_group_id: ID of user group.
+    :return:
+    """
+    if not user_group:
+        if user_group_name:
+            raise NotExist(f'User group "{user_group_name}" not found')
+        elif user_group_id:
+            raise NotExist(f'User group with id "{user_group_id}" not found')
+        else:
+            raise NotExist(f"User group not found")
+
+    block = user_group.admin_doc
+    if not block:
+        raise NotExist(f'Admin doc for user group "{user_group.name}" not found')
+
+    if access_type == "teacher":
+        verify_teacher_access(
+            block,
+            message=f'Sorry, you don\'t have permission to use this resource. If you are a teacher of "{user_group.name}", please contact TIM admin.',
+        )
+    elif access_type == "view":
+        verify_view_access(
+            block,
+            message=f"Sorry, you don't have permission to use this resource.",
+        )
+
+
 @badges_blueprint.get("/group_badges/<int:group_id>/<context_group>")
 def get_groups_badges(group_id: int, context_group: str) -> Response:
     """
@@ -270,14 +340,27 @@ def get_groups_badges(group_id: int, context_group: str) -> Response:
         raise NotExist(f'User group "{context_group}" not found')
 
     current_user = get_current_user_object()
+    in_group = check_group_member(current_user, group_id)
+    if not in_group:
+        try:
+            verify_access("view", usergroup, user_group_id=group_id)
+        except NotExist:
+            verify_access("teacher", context_usergroup, user_group_name=context_group)
 
-    if not usergroup in current_user.groups:
-        if not verify_view_access(
-            check_and_coerce_not_none(usergroup.admin_doc), require=False
-        ):
-            verify_teacher_access(
-                check_and_coerce_not_none(context_usergroup.admin_doc)
-            )
+    # log_info(f"Current user's groups: {current_user.groups}")
+    #
+    # if usergroup not in current_user.groups:
+    #     block = usergroup.admin_doc
+    #     if not block:
+    #         raise NotExist(f"No admin doc for group id {group_id}")
+    #     if not verify_view_access(block, require=False):
+    #         block = context_usergroup.admin_doc
+    #         if not block:
+    #             raise NotExist(f"No admin doc for context group {context_group}")
+    #         verify_teacher_access(
+    #             block,
+    #             message=f'Sorry, you don\'t have permission to use this resource. If you are a teacher of "{context_group}", please contact TIM admin.',
+    #         )
 
     groups_badges_given = (
         run_sql(
