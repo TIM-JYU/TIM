@@ -244,6 +244,7 @@ def do_create_group_impl(group_path: str, group_name: str) -> tuple[UserGroup, D
     if UserGroup.get_by_name(group_name):
         raise RouteException("User group already exists.")
 
+    group_name = group_name.strip()
     validate_groupname(group_name)
 
     # To support legacy code:
