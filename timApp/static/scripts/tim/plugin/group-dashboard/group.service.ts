@@ -1,7 +1,7 @@
 import {HttpClient} from "@angular/common/http";
 import type {IBadgeGroup} from "tim/gamification/badge/badge.interface";
 import type {IGroup, IUser} from "tim/user/IUser";
-import {toPromise} from "tim/util/utils";
+import {AngularError, Result, toPromise} from "tim/util/utils";
 import {Injectable} from "@angular/core";
 
 export type BadgeGroupInfo = {
@@ -67,14 +67,6 @@ export class GroupService {
         return await toPromise(
             this.http.get<IGroup>(`/groups/personal_group/${userName}`)
         );
-        // const response = await toPromise(
-        //     this.http.get<IGroup>(`/groups/personal_group/${userName}`)
-        // );
-        // if (response.ok) {
-        //     return response.result;
-        // } else {
-        //     return response.result.error;
-        // }
     }
 
     /**
