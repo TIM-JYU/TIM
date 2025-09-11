@@ -191,7 +191,7 @@ def modify_badge(
         "shape": shape,
         "image": image,
         "description": description,
-        "modified_by": get_current_user_object().id,
+        # "modified_by": get_current_user_object().id,
         "modified": datetime_tz.now(),
     }
     old_badge = run_sql(select(BadgeTemplate).filter_by(id=badge_id)).scalars().first()
@@ -205,7 +205,7 @@ def modify_badge(
                 "event": "modify_badge",
                 "timestamp": new_badge["modified"],
                 "id": badge_id,
-                "executor": new_badge["modified_by"],
+                # "executor": new_badge["modified_by"],
                 "context_group": new_badge["context_group"],
                 "title": new_badge["title"],
                 "color": new_badge["color"],
@@ -217,7 +217,7 @@ def modify_badge(
     return json_response(new_badge, 200)
 
 
-@badges_blueprint.post("/deactivate_badge")
+@badges_blueprint.post("/deactivate_badge/<int:badge_id>/<context_group>")
 def deactivate_badge(badge_id: int, context_group: str) -> Response:
     """
     Deactivates a badge.
@@ -232,7 +232,7 @@ def deactivate_badge(badge_id: int, context_group: str) -> Response:
 
     new_badge = {
         "active": False,
-        "deleted_by": get_current_user_object().id,
+        # "deleted_by": get_current_user_object().id,
         "deleted": datetime_tz.now(),
     }
     old_badge = run_sql(select(BadgeTemplate).filter_by(id=badge_id)).scalars().first()
@@ -246,13 +246,13 @@ def deactivate_badge(badge_id: int, context_group: str) -> Response:
                 "event": "delete_badge",
                 "timestamp": new_badge["deleted"],
                 "id": badge_id,
-                "executor": new_badge["deleted_by"],
+                # "executor": new_badge["deleted_by"],
             }
         )
     return json_response(new_badge, 200)
 
 
-@badges_blueprint.get("/group_badges")
+@badges_blueprint.get("/group_badges/<int:group_id>/<context_group>")
 def get_groups_badges(group_id: int, context_group: str) -> Response:
     """
     Fetches badges that are given to a user group. Sorted by given-timestamp.

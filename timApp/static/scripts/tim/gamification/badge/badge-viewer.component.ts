@@ -187,6 +187,8 @@ export class BadgeViewerComponent implements OnInit {
         );
         if (response.ok) {
             this.personalGroup = response.result;
+            console.log(this.personalGroup);
+            console.log(this.personalGroup?.personal_user);
             this.realName = this.personalGroup.personal_user!.real_name;
             this.getUserSubGroups(
                 this.badgegroupContext,
@@ -361,7 +363,7 @@ export class BadgeViewerComponent implements OnInit {
         this.emptyTable(this.badges);
         const result = await toPromise(
             this.http.get<IBadge[]>(
-                `/groups_badges/${this.personalGroup!.id}/${this
+                `/badges/group_badges/${this.personalGroup!.id}/${this
                     .badgegroupContext!}`
             )
         );
