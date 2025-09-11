@@ -4,8 +4,7 @@ from enum import Flag
 from operator import attrgetter
 from typing import Any
 
-import requests
-from flask import Response, current_app, request
+from flask import Response, current_app
 from sqlalchemy import select
 
 from timApp.auth.accesshelper import (
@@ -576,9 +575,8 @@ def get_personal_group(name: str) -> Response:
         raise NotExist(f'User "{name}" not found')
     else:
         p_group = user.get_personal_group()
-        p_group_json = p_group.to_json()
-        p_group_json["personal_user"] = user
-        return json_response(p_group_json)
+        p_group.load_personal_user()
+        return json_response(p_group)
 
 
 @groups.get("/members/<group_name>")

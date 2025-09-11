@@ -187,8 +187,8 @@ export class BadgeViewerComponent implements OnInit {
         );
         if (response.ok) {
             this.personalGroup = response.result;
-            console.log(this.personalGroup);
-            console.log(this.personalGroup?.personal_user);
+            // console.log(this.personalGroup);
+            // console.log(this.personalGroup?.personal_user);
             this.realName = this.personalGroup.personal_user!.real_name;
             this.getUserSubGroups(
                 this.badgegroupContext,

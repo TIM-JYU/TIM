@@ -570,14 +570,11 @@ export class BadgeWithdrawComponent implements OnInit {
             return;
         }
         let pGroup: IGroup | undefined;
-        this.groupService
-            .getPersonalGroup(this.selectedUser.name)
-            .then((response) => {
-                if (response.ok) {
-                    pGroup = response.result;
-                }
-            });
-        if (pGroup) {
+        const response = await this.groupService.getPersonalGroup(
+            this.selectedUser.name
+        );
+        if (response.ok) {
+            pGroup = response.result;
             this.userBadges = await this.badgeService.getBadges(
                 pGroup.id,
                 this.badgegroupContext
