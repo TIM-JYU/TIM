@@ -16,6 +16,8 @@ import type {
     IAnswerSaveEvent,
 } from "tim/answer/answer-browser.component";
 import {$http, $httpProvider, $q} from "tim/util/ngimport";
+import {documentglobals} from "tim/util/globals";
+import {pointsDisplayInstance} from "tim/ui/pointsDisplayInstance";
 
 export function handleAnswerResponse(
     taskIdFull: string,
@@ -32,6 +34,13 @@ export function handleAnswerResponse(
     const ab = v.getAnswerBrowser(taskId);
     if (ab) {
         ab.registerNewAnswer(params);
+    }
+    if (documentglobals().docSettings.task_summary_circle?.listen_new_answers) {
+        const tsc = pointsDisplayInstance;
+        console.log(tsc);
+        if (tsc) {
+            tsc.updatePointsInfo();
+        }
     }
 }
 
