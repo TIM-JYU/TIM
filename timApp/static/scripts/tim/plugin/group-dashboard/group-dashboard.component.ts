@@ -107,7 +107,6 @@ export class GroupDashboardComponent implements OnInit {
     groupId: number | undefined;
     contextGroup: string | undefined;
     members: IBadgeUser[] = [];
-    // members: IUser[] = [];
     title: string | undefined;
     currentUserName: string | undefined;
     canViewAllBadges: boolean = false;
@@ -124,36 +123,12 @@ export class GroupDashboardComponent implements OnInit {
             this.contextGroup = this.groupService.getContextGroup(this.group);
             this.currentUserName = manageglobals().current_user.name;
 
-            // this.initChainForGroupData();
             this.getGroupName().then((_) => {
                 this.members = this.getMembers();
-                this.getUserBadges(); // .then();
-                this.fetchGroupBadges(); // .then();
+                this.getUserBadges();
+                this.fetchGroupBadges();
             });
         }
-    }
-
-    step1() {
-        this.getGroupName();
-        this.step2();
-    }
-    step2() {
-        this.members = this.getMembers();
-        this.step3();
-    }
-    step3() {
-        this.getUserBadges();
-        this.step4();
-    }
-    step4() {
-        this.fetchGroupBadges();
-    }
-
-    initChainForGroupData() {
-        this.step1();
-        // this.step2();
-        // this.step3();
-        // this.step4();
     }
 
     /**
@@ -195,19 +170,10 @@ export class GroupDashboardComponent implements OnInit {
      * updates member view and member count in user interface
      */
     getMembers() {
-        console.log(`GET GROUP MEMEBERS FROM GROUP: ${this.group}`);
         let members: IUser[] = [];
         this.groupService
             .getUsersFromGroup(this.group)
             .then((v) => (members = v));
-
-        for (const m of members) {
-            console.log(
-                `MEMBER: id: ${m.id}, name: ${m.name}, real_name: ${
-                    m.real_name ?? ""
-                }`
-            );
-        }
         return members as IBadgeUser[];
     }
 
@@ -228,9 +194,9 @@ export class GroupDashboardComponent implements OnInit {
             }
 
             let personalGroup: IGroup | undefined;
-            this.groupService.getPersonalGroup(user.name).then((result) => {
-                if (result.ok) {
-                    personalGroup = result.result;
+            this.groupService.getPersonalGroup(user.name).then((response) => {
+                if (response.ok) {
+                    personalGroup = response.result;
                 } else {
                     personalGroup = undefined;
                 }
@@ -265,8 +231,7 @@ export class GroupDashboardComponent implements OnInit {
      * Updates the group's badge list and adds to the total badge count.
      */
     async fetchGroupBadges() {
-        if (this.groupId !== undefined) {
-            console.log("SUCCESFULLY GOT GROUP ID");
+        if (this.groupId != undefined) {
             const groupBadges = await this.badgeService.getBadges(
                 this.groupId,
                 this.contextGroup!
@@ -275,13 +240,11 @@ export class GroupDashboardComponent implements OnInit {
                 this.groupBadges = groupBadges;
                 this.totalBadges += groupBadges.length;
             } else {
+                console.error(
+                    "group-dashboard.component.ts: fetchGroupBadges():: group id was undefined."
+                );
                 return;
             }
-        } else {
-            console.error(
-                "group-dashboard.component.ts: fetchGroupBadges():: group id was undefined"
-            );
-            return;
         }
     }
 

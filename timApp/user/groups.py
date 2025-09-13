@@ -41,7 +41,7 @@ from timApp.user.user import (
 )
 from timApp.user.usergroup import UserGroup
 from timApp.util.flask.requesthelper import load_data_from_req, RouteException, NotExist
-from timApp.util.flask.responsehelper import json_response
+from timApp.util.flask.responsehelper import json_response, ok_response
 from timApp.util.flask.typedblueprint import TypedBlueprint
 from timApp.util.logger import log_info
 from timApp.util.utils import (
@@ -612,7 +612,7 @@ def pretty_name(group_name: str) -> Response:
 @groups.get("/groupinfo/<group_name>")
 def get_groupinfo_with_pretty_name(group_name: str) -> Response:
     group = UserGroup.get_by_name(group_name)
-    # verify_access("view", group, user_group_name=group_name)
+    verify_access("view", group, user_group_name=group_name)
     return json_response(
         {"id": group.id, "name": group.name, "description": group.admin_doc.description}
     )
@@ -630,24 +630,6 @@ def change_pretty_name(group_name: str, new_name: str) -> Response:
     # raise_group_not_found_if_none(group_name, group)
     if not group:
         raise NotExist(f'User group "{group_name}" not found')
-
-    # If new_name attribute is empty, return group info
-    # as if it was a request to get the group information and not to change the group name
-    # NOTE: these or their calling functions should probably be refactored
-    # if not new_name or len(new_name.strip()) == 0:
-    #     # log_info("")
-    #     verify_view_access(
-    #         group.admin_doc,
-    #         message=f'Sorry, you don\'t have permission to use this resource. If you are a teacher of "{group_name}", please contact TIM admin.',
-    #     )
-    #     return json_response(
-    #         {
-    #             "id": group.id,
-    #             "name": group.name,
-    #             "description": group.admin_doc.description,
-    #         }
-    #     )
-
     doc_entries = group.admin_doc.docentries
     settings = doc_entries[0].document.get_settings()
 
@@ -671,3 +653,13 @@ def change_pretty_name(group_name: str, new_name: str) -> Response:
     return json_response(
         {"id": group.id, "name": group.name, "description": group.admin_doc.description}
     )
+
+
+@groups.get("/hasTeacherRightTo/<int:group_id>")
+def get_has_teacher_right_to_group(group_id: int) -> Response:
+    group = UserGroup.get_by_id(group_id)
+    verify_teacher_access(
+        group.admin_doc,
+        message="'Sorry, you don't have permission to use this resource.",
+    )
+    return ok_response()
