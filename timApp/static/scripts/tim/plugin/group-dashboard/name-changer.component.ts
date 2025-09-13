@@ -86,10 +86,7 @@ export class NameChangerComponent implements OnInit {
         }
 
         const response = await toPromise(
-            this.http.post<BadgeGroupInfo>(
-                `/groups/pretty_name/${this.group}`,
-                ""
-            )
+            this.http.get<BadgeGroupInfo>(`/groups/groupinfo/${this.group}`)
         );
         if (!response.ok) {
             this.badgeService.showError(
