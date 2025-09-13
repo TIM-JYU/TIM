@@ -79,7 +79,7 @@ export class BadgeLeaderboardComponent implements OnInit {
                         badge_count: number;
                         prettyName: string;
                     }[]
-                >(`/podium/${this.badgegroupContext}`)
+                >(`/badges/podium/${this.badgegroupContext}`)
             );
 
             this.top_five = result ?? [];

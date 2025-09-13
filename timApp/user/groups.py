@@ -43,6 +43,7 @@ from timApp.user.usergroup import UserGroup
 from timApp.util.flask.requesthelper import load_data_from_req, RouteException, NotExist
 from timApp.util.flask.responsehelper import json_response
 from timApp.util.flask.typedblueprint import TypedBlueprint
+from timApp.util.logger import log_info
 from timApp.util.utils import (
     remove_path_special_chars,
     get_current_time,
@@ -608,6 +609,15 @@ def pretty_name(group_name: str) -> Response:
     return json_response(group.human_name)
 
 
+@groups.get("/groupinfo/<group_name>")
+def get_groupinfo_with_pretty_name(group_name: str) -> Response:
+    group = UserGroup.get_by_name(group_name)
+    # verify_access("view", group, user_group_name=group_name)
+    return json_response(
+        {"id": group.id, "name": group.name, "description": group.admin_doc.description}
+    )
+
+
 @groups.post("/pretty_name/<group_name>/<new_name>")
 def change_pretty_name(group_name: str, new_name: str) -> Response:
     """
@@ -621,6 +631,23 @@ def change_pretty_name(group_name: str, new_name: str) -> Response:
     if not group:
         raise NotExist(f'User group "{group_name}" not found')
 
+    # If new_name attribute is empty, return group info
+    # as if it was a request to get the group information and not to change the group name
+    # NOTE: these or their calling functions should probably be refactored
+    # if not new_name or len(new_name.strip()) == 0:
+    #     # log_info("")
+    #     verify_view_access(
+    #         group.admin_doc,
+    #         message=f'Sorry, you don\'t have permission to use this resource. If you are a teacher of "{group_name}", please contact TIM admin.',
+    #     )
+    #     return json_response(
+    #         {
+    #             "id": group.id,
+    #             "name": group.name,
+    #             "description": group.admin_doc.description,
+    #         }
+    #     )
+
     doc_entries = group.admin_doc.docentries
     settings = doc_entries[0].document.get_settings()
 
@@ -632,9 +659,14 @@ def change_pretty_name(group_name: str, new_name: str) -> Response:
             message=f'Sorry, you don\'t have permission to use this resource. If you are a teacher of "{group_name}", please contact TIM admin.',
         )
 
-    if len(new_name) > 0:
-        group.admin_doc.description = new_name
+    if len(new_name.strip()) > 0:
+        group_doc = group.admin_doc
+        log_info(f"GROUP DESCRIPTION: {group_doc.description}")
+        group_doc.description = new_name
         db.session.commit()
+        log_info(f"GROUP DESCRIPTION AFTER COMMIT: {group_doc.description}")
+    else:
+        raise RouteException("Group name cannot be empty")
 
     return json_response(
         {"id": group.id, "name": group.name, "description": group.admin_doc.description}
