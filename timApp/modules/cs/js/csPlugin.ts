@@ -3324,9 +3324,9 @@ ${fhtml}
     async showTauno() {
         const v = this.getVid();
         let p = "";
-        let tt = "/cs/tauno/index.html?lang=" + this.markup.lang + "&";
+        let tt = "/cs/tauno/tauno.html?lang=" + this.markup.lang + "&";
         if (this.markup.taunotype && this.markup.taunotype === "ptauno") {
-            tt = "/cs/tauno/index.html?lang=" + this.markup.lang + "&s&";
+            tt = "/cs/tauno/tauno.html?lang=" + this.markup.lang + "&s&";
         }
         let taunoUrl = tt; // +"?"; // t=1,2,3,4,5,6&ma=4&mb=5&ialku=0&iloppu=5";
         const s = this.markup.table;
