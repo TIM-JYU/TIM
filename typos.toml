@@ -14,6 +14,7 @@ extend-exclude = [
     "timApp/static/ohj1/",
     "timApp/modules/cs/static/ohj2/",
     "timApp/modules/cs/static/WeScheme/",
+    "timApp/modules/cs/tauno/",
     "test_signup.py",
     "test_csplugin_replace_code.py",
     "full.render.js",
