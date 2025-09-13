@@ -12,13 +12,9 @@ import {HttpClient} from "@angular/common/http";
 import {PurifyModule} from "tim/util/purify.module";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import type {IGroup, IUser} from "tim/user/IUser";
+import type {BadgeGroupInfo} from "tim/plugin/group-dashboard/group.service";
 
 // FIXME: temp interfaces, get rid of these
-export interface IPrettyName {
-    id: number;
-    name: string;
-    description: string;
-}
 export interface IBadgeUser extends IUser {
     badges: IBadge[];
 }
@@ -127,11 +123,37 @@ export class GroupDashboardComponent implements OnInit {
         if (this.group) {
             this.contextGroup = this.groupService.getContextGroup(this.group);
             this.currentUserName = manageglobals().current_user.name;
-            this.getGroupName(); // .then();
-            this.members = this.getMembers();
-            this.getUserBadges(); // .then();
-            this.fetchGroupBadges(); // .then();
+
+            // this.initChainForGroupData();
+            this.getGroupName().then((_) => {
+                this.members = this.getMembers();
+                this.getUserBadges(); // .then();
+                this.fetchGroupBadges(); // .then();
+            });
         }
+    }
+
+    step1() {
+        this.getGroupName();
+        this.step2();
+    }
+    step2() {
+        this.members = this.getMembers();
+        this.step3();
+    }
+    step3() {
+        this.getUserBadges();
+        this.step4();
+    }
+    step4() {
+        this.fetchGroupBadges();
+    }
+
+    initChainForGroupData() {
+        this.step1();
+        // this.step2();
+        // this.step3();
+        // this.step4();
     }
 
     /**
@@ -144,7 +166,7 @@ export class GroupDashboardComponent implements OnInit {
      */
     async getGroupName() {
         const result = await toPromise(
-            this.http.get<IPrettyName>(`/groups/groupinfo/${this.group}`)
+            this.http.get<BadgeGroupInfo>(`/groups/groupinfo/${this.group}`)
         );
         if (!result.ok) {
             this.badgeService.showError(
@@ -158,14 +180,13 @@ export class GroupDashboardComponent implements OnInit {
             );
             return;
         }
-        const group = result.result;
+        const groupInfo = result.result;
 
-        if (group) {
-            this.displayName = group.description || "";
-            this.groupId = group.id;
-            if (group.id === undefined) {
-                console.error("GROUP ID IS UNDEFINED");
-            }
+        if (groupInfo !== undefined) {
+            console.log(`GROUPINFO: group.id == ${groupInfo.id}`);
+
+            this.displayName = groupInfo.description || "";
+            this.groupId = groupInfo.id;
         }
     }
 
@@ -228,10 +249,7 @@ export class GroupDashboardComponent implements OnInit {
                     }
                 } else {
                     console.error(
-                        "group-dashboard.component.ts: getUserBadges():: PERSONAL GROUP ID WAS UNDEFINED"
-                    );
-                    console.log(
-                        "group-dashboard.component.ts: getUserBadges():: PERSONAL GROUP ID WAS UNDEFINED"
+                        "group-dashboard.component.ts: getUserBadges():: personal group id was undefined."
                     );
                     return;
                 }
@@ -248,6 +266,7 @@ export class GroupDashboardComponent implements OnInit {
      */
     async fetchGroupBadges() {
         if (this.groupId !== undefined) {
+            console.log("SUCCESFULLY GOT GROUP ID");
             const groupBadges = await this.badgeService.getBadges(
                 this.groupId,
                 this.contextGroup!
@@ -260,10 +279,7 @@ export class GroupDashboardComponent implements OnInit {
             }
         } else {
             console.error(
-                "group-dashboard.component.ts: fetchGroupBadges():: GROUP ID WAS UNDEFINED"
-            );
-            console.log(
-                "group-dashboard.component.ts: fetchGroupBadges():: GROUP ID WAS UNDEFINED"
+                "group-dashboard.component.ts: fetchGroupBadges():: group id was undefined"
             );
             return;
         }
