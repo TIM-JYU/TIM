@@ -47,16 +47,18 @@ export interface IBadgeUser extends IUser {
         <h3>{{displayName}}'s <ng-container i18n>badges</ng-container></h3>
         <div class="group-badge-area">
             <div i18n *ngIf="groupBadges.length === 0">No group badges yet.</div>
-    <span *ngFor="let badge of groupBadges" class="badge">
-        <tim-badge class
-            [title]="badge.title"
-            [color]="badge.color"
-            [shape]="badge.shape"
-            [image]="badge.image"
-            [description]="badge.description"
-            [message]="badge.message">
-        </tim-badge>
-    </span>
+            <ng-container *ngIf="groupBadges.length > 0">
+                <span *ngFor="let badge of groupBadges" class="badge">
+                    <tim-badge class
+                        [title]="badge.title"
+                        [color]="badge.color"
+                        [shape]="badge.shape"
+                        [image]="badge.image"
+                        [description]="badge.description"
+                        [message]="badge.message">
+                    </tim-badge>
+                </span>
+            </ng-container>
 </div>
         <h3 i18n>Statistics</h3>
 <div class="stat-summary">
@@ -109,6 +111,7 @@ export class GroupDashboardComponent implements OnInit {
     groupId: number | undefined;
     contextGroup: string | undefined;
     members: IBadgeUser[] = [];
+    // members: IUser[] = [];
     title: string | undefined;
     currentUserName: string | undefined;
     canViewAllBadges: boolean = false;
@@ -124,10 +127,10 @@ export class GroupDashboardComponent implements OnInit {
         if (this.group) {
             this.contextGroup = this.groupService.getContextGroup(this.group);
             this.currentUserName = manageglobals().current_user.name;
-            this.getGroupName().then();
+            this.getGroupName(); // .then();
             this.members = this.getMembers();
-            this.getUserBadges().then();
-            this.fetchGroupBadges().then();
+            this.getUserBadges(); // .then();
+            this.fetchGroupBadges(); // .then();
         }
     }
 
@@ -141,7 +144,7 @@ export class GroupDashboardComponent implements OnInit {
      */
     async getGroupName() {
         const result = await toPromise(
-            this.http.get<IPrettyName>(`/groups/pretty_name/${this.group}`)
+            this.http.get<IPrettyName>(`/groups/groupinfo/${this.group}`)
         );
         if (!result.ok) {
             this.badgeService.showError(
@@ -160,6 +163,9 @@ export class GroupDashboardComponent implements OnInit {
         if (group) {
             this.displayName = group.description || "";
             this.groupId = group.id;
+            if (group.id === undefined) {
+                console.error("GROUP ID IS UNDEFINED");
+            }
         }
     }
 
@@ -168,10 +174,19 @@ export class GroupDashboardComponent implements OnInit {
      * updates member view and member count in user interface
      */
     getMembers() {
+        console.log(`GET GROUP MEMEBERS FROM GROUP: ${this.group}`);
         let members: IUser[] = [];
         this.groupService
             .getUsersFromGroup(this.group)
-            .then((result) => (members = result));
+            .then((v) => (members = v));
+
+        for (const m of members) {
+            console.log(
+                `MEMBER: id: ${m.id}, name: ${m.name}, real_name: ${
+                    m.real_name ?? ""
+                }`
+            );
+        }
         return members as IBadgeUser[];
     }
 
@@ -196,12 +211,12 @@ export class GroupDashboardComponent implements OnInit {
                 if (result.ok) {
                     personalGroup = result.result;
                 } else {
-                    // personalGroup = null;
+                    personalGroup = undefined;
                 }
             });
 
-            if (personalGroup) {
-                if (personalGroup.id) {
+            if (personalGroup != undefined) {
+                if (personalGroup.id != undefined) {
                     const badges = await this.badgeService.getBadges(
                         personalGroup.id,
                         this.contextGroup!
@@ -212,6 +227,12 @@ export class GroupDashboardComponent implements OnInit {
                         badgeCount += badges.length;
                     }
                 } else {
+                    console.error(
+                        "group-dashboard.component.ts: getUserBadges():: PERSONAL GROUP ID WAS UNDEFINED"
+                    );
+                    console.log(
+                        "group-dashboard.component.ts: getUserBadges():: PERSONAL GROUP ID WAS UNDEFINED"
+                    );
                     return;
                 }
             }
@@ -226,14 +247,24 @@ export class GroupDashboardComponent implements OnInit {
      * Updates the group's badge list and adds to the total badge count.
      */
     async fetchGroupBadges() {
-        const groupBadges = await this.badgeService.getBadges(
-            this.groupId!,
-            this.contextGroup!
-        );
-        if (groupBadges) {
-            this.groupBadges = groupBadges;
-            this.totalBadges += groupBadges.length;
+        if (this.groupId !== undefined) {
+            const groupBadges = await this.badgeService.getBadges(
+                this.groupId,
+                this.contextGroup!
+            );
+            if (groupBadges) {
+                this.groupBadges = groupBadges;
+                this.totalBadges += groupBadges.length;
+            } else {
+                return;
+            }
         } else {
+            console.error(
+                "group-dashboard.component.ts: fetchGroupBadges():: GROUP ID WAS UNDEFINED"
+            );
+            console.log(
+                "group-dashboard.component.ts: fetchGroupBadges():: GROUP ID WAS UNDEFINED"
+            );
             return;
         }
     }
