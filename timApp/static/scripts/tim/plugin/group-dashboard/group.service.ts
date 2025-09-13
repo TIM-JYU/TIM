@@ -75,13 +75,11 @@ export class GroupService {
      * @returns An object containing the group's id, name, and description, or null if the fetch fails.
      */
     async getCurrentGroup(groupName: string) {
-        const response = toPromise(
+        const response = await toPromise(
             this.http.get<BadgeGroupInfo>(`/groups/pretty_name/${groupName}`)
         );
-        const result = await response;
-
-        if (result.ok) {
-            return result.result;
+        if (response.ok) {
+            return response.result;
         }
     }
 
@@ -96,7 +94,7 @@ export class GroupService {
         const response = toPromise(
             this.http.post<{ok: boolean}>(
                 `/groups/pretty_name/${group_name}/${new_name}`,
-                ""
+                {}
             )
         );
         return await response;
