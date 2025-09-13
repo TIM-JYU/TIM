@@ -108,10 +108,18 @@ export class NameChangerComponent implements OnInit {
         this.prettyName = fetchedGroup.description || "";
         this.displayedName = this.showFullName ? this.groupName : this.subGroup;
 
+        // TODO: error handling / error messages for user
+        const teacherRightQuery = await toPromise(
+            this.http.get<boolean>(`/groups/hasTeacherRightTo/${this.group_id}`)
+        );
+        let teacherRight: boolean = false;
+        if (teacherRightQuery.ok) {
+            teacherRight = true;
+        }
         this.canEditName =
             genericglobals().current_user.groups.find(
                 (g) => g.id == this.group_id
-            ) !== undefined;
+            ) !== undefined || teacherRight;
     }
 
     /**
