@@ -395,7 +395,7 @@ body {
     overflow-y: scroll;
   padding-left: 1em;
   padding-top: 5px;
-  float: left;
+  /*float: left;*/
   min-height: 200px;
   max-height: 22em;
 }
