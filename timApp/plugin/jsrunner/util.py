@@ -360,7 +360,7 @@ def save_fields(
             )
         ):
             raise AccessDenied(f"Missing teacher access for document {dib.id}")
-        task_override_permission_map[task] = False
+        task_override_permission_map[t_id.doc_task] = False
         try:
             vr = verify_task_access(
                 dib,
@@ -371,7 +371,9 @@ def save_fields(
                 view_ctx,
             )
             plugin: PluginType | Plugin = vr.plugin
-            task_override_permission_map[task] = bool(plugin.known.saveSingleAnswer)
+            task_override_permission_map[t_id.doc_task] = bool(
+                plugin.known.saveSingleAnswer
+            )
         except TaskNotFoundException as e:
             if not allow_missing:
                 if ignore_missing:
