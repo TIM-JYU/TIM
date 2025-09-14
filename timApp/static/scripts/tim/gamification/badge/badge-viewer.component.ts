@@ -161,12 +161,12 @@ export class BadgeViewerComponent implements OnInit {
         this.availableColors = this.badgeService.getAvailableColors();
         if (Users.isLoggedIn()) {
             this.initializeData().then(() => {
-                this.getBadges();
+                this.getBadges().then();
             });
         }
         this.subscription = this.badgeService.updateBadgeList$.subscribe(() => {
-            this.getBadges();
-            this.getGroupBadges();
+            this.getBadges().then();
+            this.getGroupBadges().then();
         });
         this.subscription.add(
             this.badgeService.groupNameUpdated$.subscribe((update) => {
@@ -175,11 +175,9 @@ export class BadgeViewerComponent implements OnInit {
         );
     }
 
-    // FIXME: this method lack a clear purpose, get rid of this
     /**
      * Checks if badgeuser or badgegroupContext are falsy.
      * Fetches user's personal group with userContext.
-     * Sets this.realName with personalGroup.
      * Calls getUserSubGroups method.
      */
     private async initializeData() {
@@ -191,17 +189,27 @@ export class BadgeViewerComponent implements OnInit {
         );
         if (response.ok) {
             this.personalGroup = response.result;
-            // console.log(this.personalGroup);
-            // console.log(this.personalGroup?.personal_user);
-            this.realName = this.personalGroup.personal_user!.real_name;
-            this.getUserSubGroups(
-                this.badgegroupContext,
-                this.personalGroup.id
-            );
-        } else {
-            // TODO: display error
-            return;
         }
+
+        let user: IUser;
+        if (genericglobals().current_user.name == this.badgeuserContext) {
+            const u = genericglobals().current_user;
+            this.realName = u.real_name;
+            user = {
+                id: u.id,
+                name: u.name,
+                real_name: u.real_name,
+                student_id: u.student_id,
+                email: u.email,
+            };
+        } else {
+            // TODO: error handling if user not found
+            user = genericglobals().other_users.filter(
+                (u) => u.name == this.badgeuserContext
+            )[0];
+            this.realName = user.real_name;
+        }
+        await this.getUserSubGroups(this.badgegroupContext, user.id);
     }
 
     /**
@@ -403,8 +411,6 @@ export class BadgeViewerComponent implements OnInit {
     /**
      * Gets the user's subgroups under the specified main group.
      *
-     * **Comment prettyname section**
-     *
      * @param groupContext Main group
      * @param userID User's id
      */
@@ -413,13 +419,10 @@ export class BadgeViewerComponent implements OnInit {
             groupContext,
             userID
         );
-        this.getGroupBadges();
+        await this.getGroupBadges();
 
         for (const sb of this.userSubGroups) {
-            const prettyName = await this.groupService.getCurrentGroup(sb.name);
-            if (prettyName) {
-                this.groupPrettyNames.set(sb.id, prettyName.description);
-            }
+            this.groupPrettyNames.set(sb.id, sb.description);
         }
     }
 

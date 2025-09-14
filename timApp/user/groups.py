@@ -550,7 +550,13 @@ def get_users_subgroups(user_id: int, group_name_prefix: str) -> Response:
     """
     user = User.get_by_id(user_id)
     if not user:
-        raise NotExist(f'User with id "{user_id}" not found')
+        # we got the user's personal group's id, get the user from the personal group
+        ug = UserGroup.get_by_id(user_id)
+        if not ug:
+            raise NotExist(f'User with id "{user_id}" not found')
+        user = ug.personal_user if hasattr(ug, "personal_user") else None
+        if not user:
+            raise NotExist(f'User with id "{user_id}" not found')
 
     current_user = get_current_user_object()
     if current_user.id != user.id:
