@@ -11108,22 +11108,6 @@ Separate multiple addresses with commas or write each address on a new line.</ta
           <context context-type="linenumber">62,63</context>
         </context-group>
       </trans-unit>
-      <trans-unit id="7271539637870485137" datatype="html">
-        <source>The email address is invalid.</source>
-        <target state="new">The email address is invalid.</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/ui/report-content-dialog.component.ts</context>
-          <context context-type="linenumber">220</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="2801541784998973995" datatype="html">
-        <source>The reported page address is invalid.</source>
-        <target state="new">The reported page address is invalid.</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/ui/report-content-dialog.component.ts</context>
-          <context context-type="linenumber">223</context>
-        </context-group>
-      </trans-unit>
       <trans-unit id="7416659172020658801" datatype="html">
         <source>Create a new badge</source>
         <target state="new">Create a new badge</target>
@@ -11770,6 +11754,14 @@ Separate multiple addresses with commas or write each address on a new line.</ta
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/group-dashboard/name-changer.component.ts</context>
           <context context-type="linenumber">24</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="1857600886131654201" datatype="html">
+        <source>My Badges</source>
+        <target state="new">My Badges</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/gamification/badge/badge-viewer.component.ts</context>
+          <context context-type="linenumber">41</context>
         </context-group>
       </trans-unit>
     </body>
