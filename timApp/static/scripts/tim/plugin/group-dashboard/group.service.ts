@@ -76,7 +76,7 @@ export class GroupService {
      */
     async getCurrentGroup(groupName: string) {
         const response = await toPromise(
-            this.http.get<BadgeGroupInfo>(`/groups/pretty_name/${groupName}`)
+            this.http.get<BadgeGroupInfo>(`/groups/groupinfo/${groupName}`)
         );
         if (response.ok) {
             return response.result;
