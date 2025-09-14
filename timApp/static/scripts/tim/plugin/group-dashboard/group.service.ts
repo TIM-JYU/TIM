@@ -109,4 +109,19 @@ export class GroupService {
         const parts = fullName.split("-");
         return parts[0];
     }
+
+    /**
+     * Queries whether the current user has teacher rights to the specified usergroup.
+     * @param group_id The group's id number
+     */
+    async queryTeacherRightsToGroup(group_id: number): Promise<boolean> {
+        // TODO: error handling / error messages for user
+        const teacherRightQuery = await toPromise(
+            this.http.get<boolean>(`/groups/hasTeacherRightTo/${group_id}`)
+        );
+        if (teacherRightQuery.ok) {
+            return true;
+        }
+        return false;
+    }
 }

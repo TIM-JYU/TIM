@@ -21,6 +21,7 @@ import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {toPromise} from "tim/util/utils";
 import {GroupService} from "tim/plugin/group-dashboard/group.service";
 import {PurifyModule} from "tim/util/purify.module";
+import {genericglobals} from "tim/util/globals";
 
 @Component({
     selector: "tim-badge-viewer",
@@ -36,7 +37,10 @@ import {PurifyModule} from "tim/util/purify.module";
         
         <ng-container *ngIf="hasPermissionToHandleBadges">
         <div class="viewer-container">
-            <h2 class="badge-heading"><ng-container i18n>Badges</ng-container> ({{realName}})</h2>
+            <h2 class="badge-heading">
+                <ng-container *ngIf="genericglobals().current_user.name == this.badgeuserContext" i18n>My Badges</ng-container>
+                <span *ngIf="genericglobals().current_user.name != this.badgeuserContext"><ng-container i18n>Badges</ng-container> ({{realName}})</span>
+            </h2>
             <ng-container *ngIf="badges.length === 0">
                 <p class="no-badges-txt" i18n>No user badges</p>
             </ng-container>
@@ -485,6 +489,8 @@ export class BadgeViewerComponent implements OnInit {
             table.pop();
         }
     }
+
+    protected readonly genericglobals = genericglobals;
 }
 
 @NgModule({
