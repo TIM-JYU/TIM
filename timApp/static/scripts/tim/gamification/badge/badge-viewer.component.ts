@@ -203,10 +203,7 @@ export class BadgeViewerComponent implements OnInit {
                 email: u.email,
             };
         } else {
-            // TODO: error handling if user not found
-            user = genericglobals().other_users.filter(
-                (u) => u.name == this.badgeuserContext
-            )[0];
+            user = this.personalGroup!.personal_user!;
             this.realName = user.real_name;
         }
         await this.getUserSubGroups(this.badgegroupContext, user.id);
