@@ -13,7 +13,6 @@ from timApp.auth.accesshelper import (
     AccessDenied,
     verify_logged_in,
     verify_teacher_access,
-    verify_view_access,
 )
 from timApp.auth.accesstype import AccessType
 from timApp.auth.auth_models import BlockAccess
@@ -36,6 +35,7 @@ from timApp.user.user import (
     User,
     view_access_set,
     edit_access_set,
+    teacher_access_set,
     UserInfo,
     UserOrigin,
 )
@@ -658,8 +658,5 @@ def change_pretty_name(group_name: str, new_name: str) -> Response:
 @groups.get("/hasTeacherRightTo/<int:group_id>")
 def get_has_teacher_right_to_group(group_id: int) -> Response:
     group = UserGroup.get_by_id(group_id)
-    verify_teacher_access(
-        group.admin_doc,
-        message="'Sorry, you don't have permission to use this resource.",
-    )
+    verify_group_access(group, teacher_access_set)
     return ok_response()

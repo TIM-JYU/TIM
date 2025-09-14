@@ -4,10 +4,11 @@ import {CommonModule} from "@angular/common";
 import {BadgeService} from "tim/gamification/badge/badge.service";
 import {manageglobals} from "tim/util/globals";
 import {NameChangerModule} from "tim/plugin/group-dashboard/name-changer.component";
-import type {IBadge, IErrorAlert} from "tim/gamification/badge/badge.interface";
+import type {IErrorAlert} from "tim/gamification/badge/badge.interface";
+import type {IBadge} from "tim/gamification/badge/badge.interface";
 import {BadgeModule} from "tim/gamification/badge/badge.component";
 import {GroupService} from "tim/plugin/group-dashboard/group.service";
-import {toPromise} from "tim/util/utils";
+import {to2, toPromise} from "tim/util/utils";
 import {HttpClient} from "@angular/common/http";
 import {PurifyModule} from "tim/util/purify.module";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
@@ -124,9 +125,12 @@ export class GroupDashboardComponent implements OnInit {
             this.currentUserName = manageglobals().current_user.name;
 
             this.getGroupName().then((_) => {
-                this.members = this.getMembers();
-                this.getUserBadges();
-                this.fetchGroupBadges();
+                this.getMembers(); // .then((r) => r);
+                // .then((__) => {
+                //     this.getUserBadges();
+                // });
+                // this.getUserBadges().then((r) => r);
+                this.fetchGroupBadges(); // .then((r) => r);
             });
         }
     }
@@ -140,28 +144,32 @@ export class GroupDashboardComponent implements OnInit {
      * @returns group data
      */
     async getGroupName() {
-        const result = await toPromise(
+        const response = await toPromise(
             this.http.get<BadgeGroupInfo>(`/groups/groupinfo/${this.group}`)
         );
-        if (!result.ok) {
+
+        // FIXME: why are we using BadgeService to show the error?
+        if (!response.ok) {
             this.badgeService.showError(
                 this.alerts,
                 {
                     data: {
-                        error: result.result.error.error,
+                        error: response.result.error.error,
                     },
                 },
                 "danger"
             );
             return;
         }
-        const groupInfo = result.result;
+        const groupInfo = response.result;
 
         if (groupInfo !== undefined) {
-            console.log(`GROUPINFO: group.id == ${groupInfo.id}`);
-
             this.displayName = groupInfo.description || "";
             this.groupId = groupInfo.id;
+        } else {
+            console.error(
+                `Invalid group information for group '${this.group}': group id is undefined.`
+            );
         }
     }
 
@@ -169,12 +177,59 @@ export class GroupDashboardComponent implements OnInit {
      * Fetches a list of users belonging to current group,
      * updates member view and member count in user interface
      */
-    getMembers() {
+    async getMembers() {
         let members: IUser[] = [];
-        this.groupService
-            .getUsersFromGroup(this.group)
-            .then((v) => (members = v));
-        return members as IBadgeUser[];
+
+        const response = await to2(
+            this.groupService.getUsersFromGroup(this.group)
+        );
+        if (response.ok) {
+            members = response.result;
+        }
+
+        this.members = [];
+        for (const m of members) {
+            const u: IBadgeUser = {
+                id: m.id,
+                name: m.name,
+                real_name: m.real_name,
+                email: m.email,
+                student_id: m.student_id,
+                badges: await this.getBadgesForUser(m.name),
+            };
+            this.members.push(u);
+        }
+    }
+
+    /**
+     * Get badges for a specific user if
+     *  - the specified user is the current user (users can always view their own badges)
+     *  - the current user has at least teacher rights to the context group that the specified user belongs to
+     * @param user_id
+     */
+    async getBadgesForUser(username: string): Promise<IBadge[]> {
+        let badges: IBadge[] = [];
+
+        // No access checks needed here, there are done on the server when getting badges from db
+        // const teacherRight = await this.groupService.queryTeacherRightsToGroup(
+        //     this.groupId!
+        // );
+        // const current_user = genericglobals().current_user;
+        // if (current_user.name == username || teacherRight) {
+        const personal_group_query = await this.groupService.getPersonalGroup(
+            username
+        );
+        let personal_group: IGroup | undefined;
+        if (personal_group_query.ok) {
+            personal_group = personal_group_query.result;
+            badges = await this.badgeService.getBadges(
+                personal_group.id,
+                this.group
+            );
+        }
+        // }
+
+        return badges;
     }
 
     /**
@@ -187,11 +242,10 @@ export class GroupDashboardComponent implements OnInit {
     async getUserBadges() {
         let badgeCount = 0;
         const badgePromises = this.members.map(async (user) => {
-            const isCurrentUser = user.name === this.currentUserName;
-
-            if (!this.canViewAllBadges && !isCurrentUser) {
-                return;
-            }
+            // const isCurrentUser = user.name === this.currentUserName;
+            // if (!this.canViewAllBadges && !isCurrentUser) {
+            //     return;
+            // }
 
             let personalGroup: IGroup | undefined;
             this.groupService.getPersonalGroup(user.name).then((response) => {
