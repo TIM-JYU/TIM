@@ -111,10 +111,17 @@ export class NameChangerComponent implements OnInit {
         const teacherRight = await this.groupService.queryTeacherRightsToGroup(
             this.group_id
         );
-        this.canEditName =
+
+        if (teacherRight) {
+            this.canEditName = true;
+        }
+        if (
             genericglobals().current_user.groups.find(
                 (g) => g.id == this.group_id
-            ) !== undefined || teacherRight;
+            ) !== undefined
+        ) {
+            this.canEditName = true;
+        }
     }
 
     /**
