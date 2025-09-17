@@ -641,7 +641,10 @@ def change_pretty_name(group_name: str, new_name: str) -> Response:
 
     current_user = get_current_user_object()
     in_group = group in current_user.groups
-    if not in_group or (in_group and not settings.allow_name_edit_by_group_members()):
+    log_info(f"{current_user.name} {in_group} {group.name}")
+    if (
+        not in_group
+    ):  # or (in_group and not settings.allow_name_edit_by_group_members()):
         verify_teacher_access(
             group.admin_doc,
             message=f'Sorry, you don\'t have permission to use this resource. If you are a teacher of "{group_name}", please contact TIM admin.',
