@@ -564,14 +564,15 @@ def get_users_subgroups(user_id: int, group_name_prefix: str) -> Response:
             raise NotExist(f'User with id "{user_id}" not found')
 
     # # TODO: this will likely need to change since now we will be checking access to the super-groups instead of the sub-group in some cases
-    # group_name_prefix = (
-    #     group_name_prefix
-    #     if not "-" in group_name_prefix
-    #     else group_name_prefix.split("-")[0]
-    # )
+
+    # Specific hack to try to resolve oscar-specific problem with getting user's subgroups
+    supergroup = [c for c in group_name_prefix]
+    supergroup = "".join(supergroup)
+    group_name_prefix = group_name_prefix.split("-")[0]
+
     current_user = get_current_user_object()
     if current_user.id != user.id:
-        context_usergroup = UserGroup.get_by_name(group_name_prefix)
+        context_usergroup = UserGroup.get_by_name(supergroup)
         # verify_teacher_access(context_usergroup.admin_doc)
         verify_access("teacher", context_usergroup, user_group_name=group_name_prefix)
 
