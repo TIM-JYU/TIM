@@ -536,6 +536,7 @@ def get_subgroups(group_name_prefix: str) -> Response:
     subgroups_json = []
     for subgroup in subgroups:
         subgroups_json.append(subgroup.to_json())
+
     return json_response(subgroups_json)
 
 
@@ -604,6 +605,7 @@ def get_usergroup_members(group_name: str) -> Response:
     if ug not in current_user.groups:
         # verify_view_access(ug.admin_doc)
         verify_access("view", ug, user_group_name=group_name)
+    log_info(f"GETTING MEMBERS FOR {group_name}: [{ug.users}]")
 
     return json_response(sorted(list(ug.users), key=attrgetter("real_name")))
 

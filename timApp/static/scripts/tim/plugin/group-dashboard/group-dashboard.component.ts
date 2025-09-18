@@ -121,7 +121,8 @@ export class GroupDashboardComponent implements OnInit {
      */
     ngOnInit() {
         if (this.group) {
-            // FIXME: parsing context group name is wrong!!!!
+            // FIXME: Since the group dashboard is aimed at the group members, there is no reason
+            //  to extract the super-group from the sub-group name.
             // this.contextGroup = this.groupService.getContextGroup(this.group);
             this.contextGroup = this.group;
             this.currentUserName = manageglobals().current_user.name;
