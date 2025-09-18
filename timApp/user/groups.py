@@ -508,18 +508,22 @@ def get_usernames(usernames: list[str]):
     return usernames
 
 
-@groups.get("/subgroups/<group_name_prefix>")
-def get_subgroups(group_name_prefix: str) -> Response:
+@groups.get("/subgroups/<group>")
+def get_subgroups(group: str) -> Response:
     """
     Fetches user groups that have a name that starts with the given prefix but is not the exact prefix.
     :param group_name_prefix: Prefix of the user groups
     :return: List of user groups sorted by name
     """
-    context_usergroup = UserGroup.get_by_name(group_name_prefix)
+
+    context_usergroup = UserGroup.get_by_name(group)
     # if not context_usergroup:
     #     raise NotExist(f"{context_usergroup} not found.")
     # verify_teacher_access(context_usergroup.admin_doc)
-    verify_access("teacher", context_usergroup, user_group_name=group_name_prefix)
+    verify_access("teacher", context_usergroup, user_group_name=group)
+
+    # TODO: better way to get sub-groups
+    group_name_prefix = context_usergroup.name.split("-")[0]
 
     subgroups = (
         run_sql(

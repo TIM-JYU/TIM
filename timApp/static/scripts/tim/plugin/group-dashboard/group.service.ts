@@ -37,11 +37,8 @@ export class GroupService {
      * @param group group name prefix
      */
     async getSubGroups(group: string) {
-        // TODO: implement a better way to get sub groups
-        const group_prefix = group.split("-")[0];
-
         const response = await toPromise(
-            this.http.get<IBadgeGroup[]>(`/groups/subgroups/${group_prefix}`)
+            this.http.get<IBadgeGroup[]>(`/groups/subgroups/${group}`)
         );
         if (response.ok) {
             const gs = [];
