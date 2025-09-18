@@ -26,6 +26,7 @@ export class GroupService {
             this.http.get<IUser[]>(`/groups/members/${group}`)
         );
         if (response.ok) {
+            console.log(response.result);
             return response.result;
         }
         return [];
@@ -36,9 +37,24 @@ export class GroupService {
      * @param group group name prefix
      */
     async getSubGroups(group: string) {
-        return await toPromise(
-            this.http.get<IBadgeGroup[]>(`/groups/subgroups/${group}`)
+        // TODO: implement a better way to get sub groups
+        const group_prefix = group.split("-")[0];
+
+        const response = await toPromise(
+            this.http.get<IBadgeGroup[]>(`/groups/subgroups/${group_prefix}`)
         );
+        if (response.ok) {
+            const gs = [];
+            for (const g of response.result) {
+                gs.push(g.name);
+            }
+            console.log(`GETTING SUBGROUPS FOR ${group}: ${gs}`);
+        }
+        return response;
+
+        // return await toPromise(
+        //     this.http.get<IBadgeGroup[]>(`/groups/subgroups/${group}`)
+        // );
     }
 
     /**
@@ -106,6 +122,8 @@ export class GroupService {
      * @returns The first part of the group name before the dash, representing the context group.
      */
     getContextGroup(fullName: string) {
+        // TODO: this needs to be reworked, since there is no set convention for naming
+        //  subgroups.
         const parts = fullName.split("-");
         return parts[0];
     }
