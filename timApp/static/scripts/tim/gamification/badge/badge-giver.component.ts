@@ -540,22 +540,24 @@ export class BadgeGiverComponent implements OnInit {
 
     async fetchGroups() {
         if (this.badgegroupContext) {
-            this.groupService
-                .getSubGroups(this.badgegroupContext)
-                .then((response) => {
-                    if (response.ok) {
-                        this.groups = response.result;
-                    }
-                });
+            const response = await this.groupService.getSubGroups(
+                this.badgegroupContext
+            );
+            if (response.ok) {
+                this.groups = response.result;
+            }
 
             // FIXME: remove these unnecessary calls to the backend/database as we should already have this information
             //  in each element of this.groups
             for (const group of this.groups) {
-                const prettyName = await this.groupService.getCurrentGroup(
-                    group.name
-                );
-                if (prettyName) {
-                    this.groupPrettyNames.set(group.id, prettyName.description);
+                // const prettyName = await this.groupService.getCurrentGroup(
+                //     group.name
+                // );
+                // if (prettyName) {
+                //     this.groupPrettyNames.set(group.id, prettyName.description);
+                // }
+                if (group.description) {
+                    this.groupPrettyNames.set(group.id, group.description);
                 }
             }
         }

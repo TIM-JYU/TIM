@@ -37,21 +37,21 @@ export class GroupService {
      * @param group group name prefix
      */
     async getSubGroups(group: string) {
-        const response = await toPromise(
-            this.http.get<IBadgeGroup[]>(`/groups/subgroups/${group}`)
-        );
-        if (response.ok) {
-            const gs = [];
-            for (const g of response.result) {
-                gs.push(g.name);
-            }
-            console.log(`GETTING SUBGROUPS FOR ${group}: ${gs}`);
-        }
-        return response;
-
-        // return await toPromise(
+        // const response = await toPromise(
         //     this.http.get<IBadgeGroup[]>(`/groups/subgroups/${group}`)
         // );
+        // if (response.ok) {
+        //     const gs = [];
+        //     for (const g of response.result) {
+        //         gs.push(g.name);
+        //     }
+        //     console.log(`GETTING SUBGROUPS FOR ${group}: ${gs}`);
+        // }
+        // return response;
+
+        return await toPromise(
+            this.http.get<IBadgeGroup[]>(`/groups/subgroups/${group}`)
+        );
     }
 
     /**
