@@ -79,7 +79,7 @@ import {genericglobals} from "tim/util/globals";
                         <p class="no-badges-txt" i18n>No group badges</p>
                     </ng-container>
 
-                    <ng-container *ngIf="groupBadgesMap.get(group.id)?.length || 0 > 0">
+                    <ng-container *ngIf="groupBadgesMap.get(group.id)?.length ?? 0 > 0">
                         <div class="sort-select">
                             <select
                                 [id]="'group-sort-' + group.id"
@@ -394,13 +394,6 @@ export class BadgeViewerComponent implements OnInit {
         }
         this.hasPermissionToHandleBadges = true;
 
-        // const userBadges: IBadge[] = [];
-        // if (result.result != undefined) {
-        //     for (const alkio of result.result) {
-        //         userBadges.push(alkio);
-        //     }
-        // }
-
         this.badges = result.result;
         this.badges = this.badgeService.sortBadges(this.badges, "newest", true);
 
@@ -437,6 +430,11 @@ export class BadgeViewerComponent implements OnInit {
             console.error("Failed to retrieve the context group.");
             return;
         }
+
+        console.log(
+            `User subgroups ${this.userSubGroups.map((g) => g.name).join(", ")}`
+        );
+
         for (const group of this.userSubGroups) {
             this.groupBadgesMap.set(
                 group.id,
