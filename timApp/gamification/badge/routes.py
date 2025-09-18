@@ -340,7 +340,7 @@ def get_groups_badges(group_id: int, context_group: str) -> Response:
         raise NotExist(f'User group "{context_group}" not found')
 
     current_user = get_current_user_object()
-    in_group = check_group_member(current_user, group_id)
+    in_group = check_group_member(current_user, context_usergroup.id)
     if not in_group:
         try:
             verify_access("view", usergroup, user_group_id=group_id)
