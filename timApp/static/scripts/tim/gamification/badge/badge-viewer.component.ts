@@ -394,14 +394,18 @@ export class BadgeViewerComponent implements OnInit {
         }
         this.hasPermissionToHandleBadges = true;
 
-        const userBadges: IBadge[] = [];
-        if (result.result != undefined) {
-            for (const alkio of result.result) {
-                userBadges.push(alkio);
-            }
-        }
-        this.badges = userBadges;
+        // const userBadges: IBadge[] = [];
+        // if (result.result != undefined) {
+        //     for (const alkio of result.result) {
+        //         userBadges.push(alkio);
+        //     }
+        // }
+
+        this.badges = result.result;
         this.badges = this.badgeService.sortBadges(this.badges, "newest", true);
+
+        console.log(`User's badges: ${this.badges}`);
+
         this.onSortChange(this.selectedSort);
     }
 
