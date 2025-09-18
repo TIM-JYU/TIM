@@ -404,7 +404,8 @@ export class BadgeViewerComponent implements OnInit {
         this.badges = result.result;
         this.badges = this.badgeService.sortBadges(this.badges, "newest", true);
 
-        console.log(`User's badges: ${this.badges}`);
+        const badge_titles = this.badges.map((b) => b.title);
+        console.log(`User's badges: ${badge_titles.join(", ")}`);
 
         this.onSortChange(this.selectedSort);
     }
