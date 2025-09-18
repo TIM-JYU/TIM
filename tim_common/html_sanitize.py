@@ -12,6 +12,7 @@ TIM_SAFE_TAGS = [
     "abbr",
     "acronym",
     "aside",
+    "audio",
     "b",
     "blockquote",
     "button",
@@ -124,6 +125,7 @@ TIM_SAFE_TAGS = [
 TIM_SAFE_ATTRS_MAP = {
     "*": ["class", "id", "align"],
     "video": ["src", "controls"],
+    "audio": ["src", "controls"],
     "abbr": ["title"],
     "acronym": ["title"],
     "img": ["src", "width", "height"],
