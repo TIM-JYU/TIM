@@ -661,3 +661,9 @@ If you have any questions or need assistance, feel free to contact {{support_con
 When notifying new users about being added to the group,
 this will be the body of the email.
 """
+
+ADMIN_ACCESS_WARNING = None
+"""
+A warning message shown to admins when they use the platform.
+This can be used to remind admins to use the platform responsibly.
+"""

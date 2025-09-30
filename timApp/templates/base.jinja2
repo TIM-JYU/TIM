@@ -157,6 +157,11 @@
                         <i class="glyphicon glyphicon-info-sign"></i> {{ n|safe }}
                     </div>
                 {% endfor %}
+                {% if current_user and current_user.is_admin and config['ADMIN_ACCESS_WARNING'] %}
+                    <div class="global-notification alert alert-warning {{ c }}">
+                        <i class="glyphicon glyphicon-warning-sign"></i> {{ config['ADMIN_ACCESS_WARNING'] | safe }}
+                    </div>
+                {% endif %}
                 <tim-role-info></tim-role-info>
                 <tim-message-view></tim-message-view>
                 {% with messages = get_flashed_messages(with_categories=True) %}
