@@ -24,6 +24,13 @@ export interface ILoginSettings {
     hide?: ILoginHideSettings;
 }
 
+export interface ITaskSummaryCircleSettings {
+    show?: boolean;
+    poll?: number | null;
+    listen_new_answers?: boolean;
+    color_palette?: string[];
+}
+
 export interface IDocSettings {
     show_velps?: boolean;
     force_velps?: boolean;
@@ -58,6 +65,7 @@ export interface IDocSettings {
     redirectAnonymousNoRight?: string;
     disable_answer?: string;
     nonAnswerAnnotationsDisabled?: string;
+    task_summary_circle?: ITaskSummaryCircleSettings;
 }
 
 export interface ISlideDocSettings extends IDocSettings {

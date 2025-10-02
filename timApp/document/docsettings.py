@@ -68,6 +68,14 @@ class IdeDocument:
     path: str
 
 
+@dataclass
+class TaskSummaryCircleSettings:
+    show: bool = False
+    poll: int | None = None
+    listen_new_answers: bool = False
+    color_palette: list[str] | None = None
+
+
 DISABLE_ANSWER_REVIEW_MODE = "answer_review"
 
 
@@ -122,6 +130,7 @@ class DocSettingTypes:
     customIndex: list[tuple[Any, Any]]
     extraGroupPreambleFolder: str | None
     showSettingsTypes: list[str]
+    task_summary_circle: TaskSummaryCircleSettings
 
 
 doc_setting_field_map: dict[str, Field] = {

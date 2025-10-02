@@ -8,6 +8,7 @@ import {HttpClient, HttpClientModule} from "@angular/common/http";
 import {toPromise} from "tim/util/utils";
 import {TooltipModule} from "ngx-bootstrap/tooltip";
 import {Users} from "tim/user/userService";
+import {PointsDisplayModule} from "tim/ui/points-display.component";
 
 export interface IReportContentParams {
     currentUrl: string;
@@ -227,6 +228,7 @@ export class ReportContentDialogComponent extends AngularDialogComponent<
         FormsModule,
         HttpClientModule,
         TooltipModule,
+        PointsDisplayModule,
     ],
 })
 export class ReportContentDialogModule {}

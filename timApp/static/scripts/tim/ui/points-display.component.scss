@@ -1,0 +1,68 @@
+.task-progress {
+  position: fixed;
+  right: 0px;
+  bottom: 55px;
+}
+
+.task-progress-absolute-pos {
+  position: absolute;
+  right: 0;
+}
+
+.progress-circle-bg {
+  stroke: whitesmoke;
+  fill: none;
+}
+
+.progress-circle-fg:hover {
+  cursor: pointer;
+  fill: ghostwhite;
+}
+
+
+.progress-circle-fg {
+  //stroke: #004494;
+  fill: white;
+}
+
+.progress-text {
+  font-size: 1.5em;
+  font-weight: 600;
+  pointer-events: none;
+  user-select: none;
+}
+
+.sat-bg {
+  stroke: whitesmoke;
+  fill: white;
+}
+
+.sat-initial {
+  opacity: 0;
+  transform: scale(0,0);
+  transform-origin: center;
+  transition-property: opacity, transform;
+  transition-duration: 0.3s;
+  transition-behavior: allow-discrete;
+}
+
+.visible-sat {
+  opacity: 1;
+  transform: scale(1,1);
+
+  @starting-style {
+    opacity: 0;
+    transform: scale(0,0);
+  }
+}
+
+.sat-progress-initial {
+  fill: none;
+}
+
+.sat-text {
+  font-size: 1.2em;
+  font-weight: 600;
+  pointer-events: none;
+  user-select: none;
+}

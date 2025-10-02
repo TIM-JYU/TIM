@@ -31,9 +31,11 @@ from timApp.answer.answers import (
     FormatOptions,
     AnswerPrintOptions,
     get_all_answers,
+    get_points_by_rule,
 )
 from timApp.answer.backup import send_answer_backup_if_enabled
 from timApp.answer.exportedanswer import ExportedAnswer
+from timApp.answer.pointsumrule import PointCountMethod
 from timApp.auth.accesshelper import (
     verify_logged_in,
     get_doc_or_abort,
@@ -84,6 +86,7 @@ from timApp.item.block import Block, BlockType
 from timApp.item.manage import (
     log_task_block,
 )
+from timApp.item.scoreboard import get_score_infos, TaskScoreInfo
 from timApp.item.tag import (
     Tag,
     ANSWER_REVIEW_GROUP_TAG_PREFIX,
@@ -118,6 +121,7 @@ from timApp.plugin.plugin import (
     NEVERLAZY,
     TaskNotFoundException,
     find_task_ids,
+    CachedPluginFinder,
 )
 from timApp.plugin.plugin import find_plugin_from_document
 from timApp.plugin.pluginControl import pluginify
@@ -161,6 +165,7 @@ from timApp.util.get_fields import (
     GetFieldsAccess,
 )
 from timApp.util.logger import log_info, log_warning
+from timApp.util.plugininfofield import group_task_ids_by_rule, PluginInfoField
 from timApp.util.utils import (
     get_current_time,
     convert_email_to_lower,
@@ -172,6 +177,7 @@ from timApp.velp.annotations import get_annotations_with_comments_in_document
 from tim_common.dumboclient import call_dumbo
 from tim_common.markupmodels import asdict_skip_missing
 from tim_common.pluginserver_flask import value_or_default
+from tim_common.utils import try_get_double
 
 PRE_POST_ERROR = """
 You must have at least one
@@ -495,6 +501,76 @@ def get_globals_for_tasks(task_ids: list[TaskId], answer_map: dict[str, dict]) -
     for answer, _ in run_sql(answers_all):
         asd = answer.to_json()
         answer_map[answer.task_id] = asd
+
+
+@answers.get("/pointsrulepoints")
+def get_points_for_display(doc_id: int) -> Response:
+    """
+    Route for getting points by points rule for displaying on page along tasks
+
+    :return:
+    """
+    curr_user = get_current_user_object()
+    if not curr_user.is_real_user:
+        raise RouteException("User has to be logged in to perform this action.")
+
+    doc_info = get_doc_or_abort(doc_id)
+    doc = doc_info.document
+    doc_map = {doc_id: doc_info}
+    doc_settings = doc.get_settings()
+    point_sum_rule = doc_settings.point_sum_rule()
+
+    if not point_sum_rule:
+        raise RouteException("No points rule for this document.")
+
+    view_ctx = default_view_ctx
+    doc_paragraphs = dereference_pars(
+        doc.get_paragraphs(), context_doc=doc, view_ctx=view_ctx
+    )
+
+    user_ctx = UserContext.from_one_user(curr_user)
+
+    cpf = CachedPluginFinder(doc_map, user_ctx, view_ctx)
+
+    task_ids, _, _ = find_task_ids(
+        doc_paragraphs,
+        view_ctx,
+        user_ctx=user_ctx,
+    )
+
+    info = get_points_by_rule(
+        point_sum_rule,
+        task_ids,
+        [curr_user.get_user_id()],
+    )
+
+    grouped_tasks = group_task_ids_by_rule(task_ids, point_sum_rule)
+
+    result: dict[str, Any] = {}
+    for g in point_sum_rule.groups.values():
+        matched_tids = grouped_tasks.get(g.name, [])
+        plugins = [p for tid in matched_tids if (p := cpf.find(tid))]
+        val = sum(
+            try_get_double(
+                plugin.max_points() or 0,
+                default=0,
+                allow_scientific=False,
+            )
+            for plugin in plugins
+        )
+        result[g.name] = val
+
+    total_maximum = result.get(point_sum_rule.total[0], 0)
+
+    return json_response(
+        {
+            "total_points": info[0]["total_points"],
+            "tasks_done": info[0]["task_count"],
+            "groups": info[0].get("groups"),
+            "total_maximum": total_maximum,
+            "group_max_points": result,
+        }
+    )
 
 
 @answers.post("/userAnswersForTasks")

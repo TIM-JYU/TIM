@@ -326,6 +326,8 @@ export class ViewCtrl implements IController {
 
     private editMenuButtonChecked = false;
 
+    public pointsDisplayCircleVisible?;
+
     constructor(sc: IScope) {
         timLogTime("ViewCtrl start", "view");
         const dg = documentglobals();
@@ -495,6 +497,9 @@ export class ViewCtrl implements IController {
         timLogTime("ViewCtrl end", "view");
 
         this.editingHandler.updateEditBarState();
+
+        this.pointsDisplayCircleVisible =
+            this.docSettings.task_summary_circle?.show;
     }
 
     private async startDocumentStatePolling() {
