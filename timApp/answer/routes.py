@@ -2190,7 +2190,10 @@ def get_model_answer(task_id: str) -> Response:
         base_opts=doc.get_settings().get_dumbo_options()
     )
     answer_html = md_to_html(
-        answer_expanded, dumbo_options=dumbo_opts, ignore_errors=True
+        answer_expanded,
+        dumbo_options=dumbo_opts,
+        ignore_errors=True,
+        doc=doc,
     )
     points_map: dict[int, float] | None = None
     if plug.known.modelAnswer.hidePoints and plug.known.show_points():

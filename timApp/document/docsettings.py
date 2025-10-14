@@ -122,6 +122,8 @@ class DocSettingTypes:
     customIndex: list[tuple[Any, Any]]
     extraGroupPreambleFolder: str | None
     showSettingsTypes: list[str]
+    macro_lstrip_blocks: bool
+    macro_trim_blocks: bool
 
 
 doc_setting_field_map: dict[str, Field] = {
@@ -534,7 +536,7 @@ class DocSettings:
         macro_delim = macroinfo.get_macro_delimiter()
         autocounters = self.autocounters()
         return hashfunc(
-            f"{macros}{macro_delim}{charmacros}{self.auto_number_headings()}{self.heading_format()}{self.mathtype()}{self.get_globalmacros()}{self.preamble()}{self.input_format()}{self.smart_punct()}{autocounters}"
+            f"{macros}{macro_delim}{charmacros}{self.auto_number_headings()}{self.heading_format()}{self.mathtype()}{self.get_globalmacros()}{self.preamble()}{self.input_format()}{self.smart_punct()}{autocounters}{self.macro_lstrip_blocks()}{self.macro_trim_blocks()}"
         )
 
     def math_preamble(self):
@@ -741,6 +743,12 @@ class DocSettings:
 
     def show_settings_types(self) -> set[str]:
         return set(self.get_setting_or_default("showSettingsTypes", []))
+
+    def macro_lstrip_blocks(self) -> bool:
+        return self.get_setting_or_default("macro_lstrip_blocks", True)
+
+    def macro_trim_blocks(self) -> bool:
+        return self.get_setting_or_default("macro_trim_blocks", True)
 
 
 def resolve_settings_for_pars(pars: Iterable[DocParagraph]) -> YamlBlock:

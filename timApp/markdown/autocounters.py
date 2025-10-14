@@ -943,7 +943,13 @@ class TimSandboxedEnvironment(SandboxedEnvironment):
     Add auto counters to environment
     """
 
-    def __init__(self, macro_delimiter: str = "%%", autoescape: bool = False) -> None:
+    def __init__(
+        self,
+        macro_delimiter: str = "%%",
+        autoescape: bool = False,
+        lstrip_blocks: bool = True,
+        trim_blocks: bool = True,
+    ) -> None:
         super().__init__(
             variable_start_string=macro_delimiter,
             variable_end_string=macro_delimiter,
@@ -951,8 +957,8 @@ class TimSandboxedEnvironment(SandboxedEnvironment):
             comment_end_string="!!!}",
             block_start_string="{%",
             block_end_string="%}",
-            lstrip_blocks=True,
-            trim_blocks=True,
+            lstrip_blocks=lstrip_blocks,
+            trim_blocks=trim_blocks,
             autoescape=autoescape,
         )
         self.counters: AutoCounters | None = None

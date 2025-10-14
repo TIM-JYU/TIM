@@ -669,7 +669,18 @@ def create_environment(
     macros: dict | None,
     doc: Document | None = None,
 ) -> TimSandboxedEnvironment:
-    env = TimSandboxedEnvironment(macro_delimiter)
+    lstrip_blocks = True
+    trim_blocks = True
+    if doc:
+        doc_settings = doc.get_settings()
+        lstrip_blocks = doc_settings.macro_lstrip_blocks()
+        trim_blocks = doc_settings.macro_trim_blocks()
+
+    env = TimSandboxedEnvironment(
+        macro_delimiter,
+        lstrip_blocks=lstrip_blocks,
+        trim_blocks=trim_blocks,
+    )
     env.filters.update(tim_filters)
     env.filters["isview"] = view_ctx.isview
     env.filters["docsetting"] = GetDocumentSettingMacro(doc).get_document_setting
@@ -689,6 +700,7 @@ def md_to_html(
     macros: dict[str, object] | None = None,
     dumbo_options: DumboOptions = DumboOptions.default(),
     ignore_errors=False,
+    doc: Document | None = None,
 ) -> str:
     """Converts the specified markdown text to HTML.
 
@@ -697,6 +709,7 @@ def md_to_html(
     :param macros: The macros to use.
     :param sanitize: Whether the HTML should be sanitized. Default is True.
     :param text: The text to be converted.
+    :param doc: The document the text belongs to. If provided, document settings will be used for macro expansion.
     :return: A HTML string.
 
     """
@@ -706,7 +719,11 @@ def md_to_html(
         macros,
         settings=None,
         env=create_environment(
-            "%%", user_ctx=None, view_ctx=default_view_ctx, macros=macros
+            "%%",
+            user_ctx=None,
+            view_ctx=default_view_ctx,
+            macros=macros,
+            doc=doc,
         ),
         ignore_errors=ignore_errors,
     )
