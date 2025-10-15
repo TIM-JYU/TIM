@@ -293,6 +293,11 @@ a .glyphicon {
     .text-start .parContent {
         text-align: left !important;
     }
+
+    .hide-table-borders table, th, tr, td {
+        border: none;
+    }
+
     /* ready styles end */
 
     span.button {
