@@ -294,8 +294,10 @@ a .glyphicon {
         text-align: left !important;
     }
 
-    .hide-table-borders table, th, tr, td {
-        border: none !important;
+    .hide-table-borders {
+        table, th, tr, td {
+            border: none !important;
+        }
     }
 
     /* ready styles end */
