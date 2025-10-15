@@ -345,6 +345,20 @@ def check_temp_pw(email_or_username: str, oldpass: str) -> NewUser:
     return valid_nu
 
 
+def get_user_by_email_case_insensitive(email: str) -> User | None:
+    users = User.get_by_email_case_insensitive(email)
+    if not users:
+        return None
+    elif len(users) == 1:
+        return users[0]
+    else:
+        uid = users[0].id
+        users2 = list(filter(lambda u: u.id == uid, users))
+        if len(users2) != len(users):
+            raise RouteException("AmbiguousAccount")
+        return users[0]
+
+
 @login_page.post("/emailSignupFinish")
 def email_signup_finish(
     email: str,
@@ -377,7 +391,7 @@ def email_signup_finish(
     username = nu_email
     real_name = realname
     # Email may include uppercase letters in User, but email seems to always be lowercase in NewUser (see `check_temp_pw`)
-    user = User.get_by_email_case_insensitive(nu_email)
+    user = get_user_by_email_case_insensitive(str(nu_email))
     verify_ip_ok(user)
     if user is not None:
         # User with this email already exists
