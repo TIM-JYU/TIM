@@ -295,7 +295,7 @@ a .glyphicon {
     }
 
     .hide-table-borders table, th, tr, td {
-        border: none;
+        border: none !important;
     }
 
     /* ready styles end */
