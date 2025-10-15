@@ -376,7 +376,8 @@ def email_signup_finish(
     nu_email = nu.email
     username = nu_email
     real_name = realname
-    user = User.get_by_email(nu_email)
+    # Email may include uppercase letters in User, but email seems to always be lowercase in NewUser (see `check_temp_pw`)
+    user = User.get_by_email_case_insensitive(nu_email)
     verify_ip_ok(user)
     if user is not None:
         # User with this email already exists
