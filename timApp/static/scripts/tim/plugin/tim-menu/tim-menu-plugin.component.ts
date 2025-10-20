@@ -493,30 +493,59 @@ export class TimMenuPluginComponent
     /**
      * Checks whether the user has required rights to see the menu item.
      * If no requirements have been set, return true.
+     * Rights can can specified according to users and groups as well,
+     * separating them with a semicolon ';' if necessary.
      * @param item Menu item.
      */
     hasRights(item: ITimMenuItem) {
+        if (
+            item.rights &&
+            !["edit", "teacher", "manage", "owner"].includes(item.rights)
+        ) {
+            function intersect(a: Set<string>, b: Set<string>): Set<string> {
+                if (b.size < a.size) {
+                    [a, b] = [b, a];
+                }
+                const intersection = new Set<string>();
+                for (const itm of a) {
+                    if (b.has(itm)) {
+                        intersection.add(itm);
+                    }
+                }
+                return intersection;
+            }
+
+            // it's a group or user, or a combination of those
+            const rights = new Set(item.rights.split(";").map((r) => r.trim()));
+            const groups = new Set(
+                genericglobals().current_user.groups.map((g) => g.name)
+            );
+
+            return (
+                intersect(groups, rights).size > 0 ||
+                groups.has("Administrators") // for easier debugging
+            );
+        }
+
         // TODO: Limit the amount of checks.
         // If item has no set rights, show to everyone.
         if (!item.rights) {
             return true;
         }
         if (this.userRights) {
-            if (item.rights == "edit") {
-                return this.userRights.editable;
-            }
-            if (item.rights == "teacher") {
-                return this.userRights.teacher;
-            }
-            if (item.rights == "manage") {
-                return this.userRights.manage;
-            }
-            if (item.rights == "owner") {
-                return this.userRights.owner;
-            } else {
-                // Return true, if user has none of the supported rights.
-                // View not included, since it's redundant: without view the whole document is hidden.
-                return true;
+            switch (item.rights) {
+                case "edit":
+                    return this.userRights.editable;
+                case "teacher":
+                    return this.userRights.teacher;
+                case "manage":
+                    return this.userRights.manage;
+                case "owner":
+                    return this.userRights.owner;
+                default:
+                    // Return true, if user has none of the supported rights.
+                    // View not included, since it's redundant: without view the whole document is hidden.
+                    return true;
             }
         } else {
             // Non-logged in users who see the page have only view rights.
