@@ -1,4 +1,6 @@
 import re
+from io import StringIO
+
 from tim_common.fileParams import get_2_items, get_param, QueryClass
 
 
@@ -18,14 +20,7 @@ def replace_code(rules: list, s: str) -> str:
         if cut_replace:
             try:
                 p = re.compile(cut_replace, flags=re.S)
-                result = p.sub(cut_by, result)
-                """ # Who could this ever work?
-                while True:
-                    m = re.search(cut_replace, result, flags=re.S)
-                    if not m:
-                        break
-                    result = result.replace(m.group(1), cut_by)
-                """
+                result = regex_replace_iteratively(p, result, cut_by)
             except Exception as e:
                 msg = str(e)
                 if isinstance(e, IndexError):
@@ -40,6 +35,42 @@ def replace_code(rules: list, s: str) -> str:
                     + result
                 )
     return result
+
+
+def regex_replace_iteratively(pattern: re.Pattern, program: str, by: str) -> str:
+    """
+    Replaces all occurrences of pattern in program with the provided string.
+    This function works by scanning the program string one match at a time
+    and replacing each match with the provided string.
+
+    Note: this is different from existing re module functions as follows since
+    this version handles start of the string (^) and end of the string ($) correctly
+    for each match. Conversely, re.sub, re.split, etc. assume ^ refers to the start
+    of the entire string, making their behaviour unsuitable for our use case.
+
+    :param pattern: compiled regex pattern
+    :param program: program string where to search
+    :param by: string to replace with
+    :return: edited program string
+    """
+    result = StringIO()
+    after = program
+    replacement = f"\n{by}\n" if by else "\n"
+
+    while True:
+        m = pattern.search(after)
+        if not m:
+            break
+
+        before = after[: m.start()]
+        result.write(before)
+        result.write(replacement)
+        after = after[m.end() :]
+
+    if after:
+        result.write(after)
+
+    return result.getvalue()
 
 
 def check_parsons(
