@@ -178,15 +178,14 @@ class AssessmentTableModel implements DataModelProvider {
     private hiddenRows = new Set<number>();
     private hiddenCols = new Set<number>();
     readonly checkedRows = new Set<number>();
-    private readonly colFilters: string[];
+    private readonly colFilters: string[][];
     private selectedFilter = false;
 
     constructor(
         public assessments: IAssessmentExt[],
         private getDataView: () => DataViewComponent | undefined
     ) {
-        this.colFilters = Array(colGetters.length);
-        this.colFilters.fill("");
+        this.colFilters = [Array(colGetters.length).fill("")];
     }
 
     classForCell(rowIndex: number, columnIndex: number): string {
@@ -302,12 +301,16 @@ class AssessmentTableModel implements DataModelProvider {
         return this.assessments[rowIndex].gradeId != null;
     }
 
-    setRowFilter(columnIndex: number, value: string): void {
-        this.colFilters[columnIndex] = value;
+    setRowFilter(
+        filterRowIndex: number,
+        columnIndex: number,
+        value: string
+    ): void {
+        this.colFilters[filterRowIndex][columnIndex] = value;
     }
 
-    getRowFilter(columnIndex: number): string {
-        return this.colFilters[columnIndex] ?? "";
+    getRowFilter(filterRowIndex: number, columnIndex: number): string {
+        return this.colFilters[filterRowIndex][columnIndex] ?? "";
     }
 
     setSelectAll(state: boolean): void {
