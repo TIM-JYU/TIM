@@ -242,6 +242,7 @@ export interface TimTable extends IGenericPluginMarkup {
     headers?: string[];
     saveAttrs?: string[]; // what attributes to save when jsrunner sends data
     headersStyle?: Record<string, string>;
+    pasteTab?: boolean;
     addRowButtonText?: string;
     forcedEditMode?: boolean;
     globalAppendMode?: boolean;
@@ -269,7 +270,8 @@ export interface TimTable extends IGenericPluginMarkup {
     maxWidth?: string; // Possibly obsolete if cell/column layout can be given in data.table.columns
     minWidth?: string;
     singleLine?: boolean;
-    filterRow?: boolean;
+    filterRow?: boolean | number;
+    filters?: Record<number, number | string>[];
     cbColumn?: boolean;
     nrColumn?: boolean | number;
     charRow?: boolean | number;
@@ -607,7 +609,7 @@ export enum ClearSort {
                         <tr *ngIf="data.headers"> <!-- Header row -->
                             <td class="nrcolumn totalnr" *ngIf="data.nrColumn"
                                 (click)="handleClickClearFilters()"
-                                title="Click to show all"
+                                title="Total number of rows. Click to show all"
                             >{{totalRows}}</td>
                             <td *ngIf="data.cbColumn"><input type="checkbox" [(ngModel)]="cbAllFilter"
                                                              (ngModelChange)="handleChangeCheckbox(-1)"
@@ -624,9 +626,12 @@ export enum ClearSort {
                         </tr>
                         </thead>
                         <tbody>
-                        <tr *ngIf="filterRow"> <!-- Filter row -->
-                            <td class="nrcolumn totalnr" *ngIf="data.nrColumn"><span
-                                    *ngIf="hiddenRowCount">{{visibleRowCount}}</span></td>
+                        <tr *ngIf="filterRow>0"> <!-- Filter row -->
+                            <td class="nrcolumn totalnr" *ngIf="data.nrColumn" style="position: relative; text-align: center;">
+                                <span title="Number of matching rows"
+                                    *ngIf="hiddenRowCount">{{visibleRowCount}}</span>
+                                 <div (click)="addFilterRow()" title="Add new filter row" style="font-size: 0.7em; position: absolute; bottom: 2px; cursor: pointer">+</div>
+                            </td>
                             <td *ngIf="data.cbColumn"><input type="checkbox" [(ngModel)]="cbFilter"
                                                              (ngModelChange)="handleChangeFilter()"
                                                              title="Check to show only checked rows"></td>
@@ -635,11 +640,34 @@ export enum ClearSort {
                                 *ngFor="let c of cellDataMatrix[0]; let coli = index" [attr.span]="c.span">
                                 <div class="filterdiv">
                                     <input type="text" (ngModelChange)="handleChangeFilter()"
-                                           [(ngModel)]="filters[coli]"
+                                           [(ngModel)]="filters[0][coli]"
                                            title="Write filter condition">
                                 </div>
                             </td>
-                        </tr> <!-- Now the matrix -->
+                        </tr> 
+                        <tr *ngFor="let frow of otherFilterRows; let i = index; let last= last">
+                            <td class="nrcolumn totalnr" *ngIf="data.nrColumn" style="position: relative; text-align: center;">
+                                <!-- Jos on viimeinen rivi, näytä klikattava miinus -->
+                                <div 
+                                  *ngIf="last"
+                                  (click)="deleteFilterRow()"
+                                  title="Delete filter row"
+                                  style="position: absolute; bottom: 2px; font-size: 0.8em;  cursor: pointer;">
+                                  -
+                                </div>
+                            </td>                            
+                            <td *ngIf="data.cbColumn"></td>
+
+                            <td [hidden]="!showColumn(coli)"
+                                *ngFor="let c of cellDataMatrix[0]; let coli = index" [attr.span]="c.span">
+                                <div class="filterdiv">
+                                    <input type="text" (ngModelChange)="handleChangeFilter()"
+                                           [(ngModel)]="filters[frow.index][coli]"
+                                           title="Write filter condition">
+                                </div>
+                            </td>
+                        </tr>
+                        <!-- Now the matrix -->
                         <tr *ngFor="let rowi of permTable; let i = index"
                             [style]="stylingForRow(rowi)"
                             [class]="classForRow(rowi)"
@@ -767,7 +795,8 @@ export class TimTableComponent
     public shiftDown = false;
     public cbAllFilter = false;
     public cbs: boolean[] = [];
-    public filters: (string | undefined)[] = [];
+    public filters: (string | undefined)[][] = [[]];
+
     public sortDir: number[] = [];
     public sortSymbol: string[] = [];
     public sortSymbolStyle: Record<string, string>[] = [];
@@ -788,7 +817,7 @@ export class TimTableComponent
     private intRowStart = 1;
     private intRow = false;
     cbFilter = false;
-    filterRow = false;
+    filterRow = 0;
     maxRows = "2000em";
     maxCols = maxContentOrFitContent();
     permTable: number[] = [];
@@ -811,6 +840,7 @@ export class TimTableComponent
     private editInputStyles: string = "";
     private editInputClass: string = "";
     headersStyle: Record<string, string> | null = null;
+    pasteTab: boolean = true;
     button: string = "Tallenna";
     hasButton: boolean = true;
     private noNeedFirstClick = false;
@@ -956,9 +986,22 @@ export class TimTableComponent
         this.userdata = this.data.userdata;
         this.reInitialize();
 
-        this.filterRow = this.data.filterRow ?? false;
+        this.filterRow = 0;
+        if (this.data.filterRow === true) {
+            this.filterRow = 1;
+        }
+        if (typeof this.data.filterRow === "number") {
+            this.filterRow = this.data.filterRow;
+        }
+
+        if (this.data.filters) {
+            if (this.data.filters.length > this.filterRow) {
+                this.filterRow = this.data.filters.length;
+            }
+        }
+
         if (this.cellDataMatrix.length <= 2) {
-            this.filterRow = false;
+            this.filterRow = 0;
         }
         this.colDelta = 0;
         this.rowDelta = 0;
@@ -970,9 +1013,9 @@ export class TimTableComponent
             this.colDelta += 1;
         }
         // if ( this.data.headers ) { this.rowDelta += 1; }
-        if (this.filterRow) {
-            this.rowDelta += 1;
-        }
+        this.rowDelta += this.filterRow;
+
+        this.generateFilterRows(this.filterRow);
 
         let tb;
         if (this.data.taskBorders) {
@@ -1020,6 +1063,17 @@ export class TimTableComponent
             if (par) {
                 this.viewctrl.addTable(this, par);
             }
+
+            if (this.data.filters) {
+                for (const [irow, f] of this.data.filters.entries()) {
+                    // eslint-disable-next-line guard-for-in
+                    for (const key in f) {
+                        this.filters[irow][Number(key)] = "" + f[key];
+                    }
+                }
+                await this.updateFilter();
+                this.c();
+            }
         }
         this.currentHiddenRows = new Set(this.data.hiddenRows);
         onClick("body", ($this, e) => {
@@ -1051,6 +1105,36 @@ export class TimTableComponent
             this.error = "Task-mode on but TaskId is missing!";
             this.c();
         }
+    }
+
+    otherFilterRows: {index: number}[] = [];
+
+    generateFilterRows(filterRows: number) {
+        this.otherFilterRows = [];
+        if (filterRows < 2) {
+            return;
+        }
+
+        this.filters = [[]];
+        for (let i = 1; i < filterRows; i++) {
+            this.otherFilterRows.push({index: i});
+            this.filters.push([]);
+        }
+    }
+
+    addFilterRow() {
+        this.filters.push([]);
+        this.otherFilterRows.push({index: this.filterRow});
+        this.filterRow++;
+        this.c();
+    }
+
+    async deleteFilterRow() {
+        this.filters.pop();
+        this.otherFilterRows.pop();
+        this.filterRow--;
+        await this.updateFilter();
+        this.c();
     }
 
     /**
@@ -1328,7 +1412,8 @@ export class TimTableComponent
     }
 
     /**
-     * Adds rows to this.hiddenRows if their row values matches the given filters
+     * Adds rows to this.hiddenRows if their row values matches
+     * the given filters
      * TODO: add also < and > compare
      */
     async updateFilter() {
@@ -4549,7 +4634,11 @@ export class TimTableComponent
     }
 
     async handleClickClearFilters() {
-        this.filters.fill("");
+        this.filters = [];
+        for (let i = 0; i < this.filterRow; i++) {
+            this.filters.push([]);
+        }
+        // this.filters[0].fill("");
         this.cbFilter = false;
         await this.updateFilter();
         this.clearSortOrder();
@@ -4796,12 +4885,16 @@ export class TimTableComponent
         );
     }
 
-    setRowFilter(columnIndex: number, value: string): void {
-        this.filters[columnIndex] = value;
+    setRowFilter(
+        filterRowIndex: number,
+        columnIndex: number,
+        value: string
+    ): void {
+        this.filters[filterRowIndex][columnIndex] = value;
     }
 
-    getRowFilter(columnIndex: number): string {
-        return this.filters[columnIndex] ?? "";
+    getRowFilter(filterRowIndex: number, columnIndex: number): string {
+        return this.filters[filterRowIndex][columnIndex] ?? "";
     }
 
     clearChecked() {

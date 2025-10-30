@@ -27,23 +27,35 @@ export function isMatch<T>(
     return true;
 }
 
-export function buildFilters(filters: (string | undefined)[]) {
-    const filterObjs = [];
-    for (const f of filters) {
-        if (!f) {
-            filterObjs.push(new RegExp(""));
-            continue;
+export function buildFilters(
+    filters: (string | undefined)[][]
+): (ComparatorFilter | RegExp)[][] {
+    const filterObjs: (ComparatorFilter | RegExp)[][] = [];
+    for (const [i, fr] of filters.entries()) {
+        let numberOfNonEmpty = 0;
+        const filterObjsRow: (ComparatorFilter | RegExp)[] = [];
+        for (const f of fr) {
+            if (!f) {
+                filterObjsRow.push(new RegExp(""));
+                continue;
+            }
+            const cmpfltr = ComparatorFilter.makeNumFilter(f);
+            filterObjsRow.push(cmpfltr ?? new RegExp(f.toLowerCase()));
+            numberOfNonEmpty++;
         }
-        const cmpfltr = ComparatorFilter.makeNumFilter(f);
-        filterObjs.push(cmpfltr ?? new RegExp(f.toLowerCase()));
+        if (i === 0 || numberOfNonEmpty > 0) {
+            filterObjs.push(filterObjsRow);
+        }
     }
     return filterObjs;
 }
 
+// filters may have many rows and they are consider as OR.
+// So if any filter row in corresponding column matches, it is a match.
 export function computeHiddenRowsFromFilters<T>(
     data: T[],
     isChecked: (rowIndex: number) => boolean,
-    filters: (string | undefined)[],
+    filters: (string | undefined)[][],
     checkedFilter: boolean,
     contentGetter: (c: T, colIndex: number) => CellType
 ) {
@@ -55,13 +67,21 @@ export function computeHiddenRowsFromFilters<T>(
         return hiddenIndices;
     }
 
-    for (let i = 0; i < data.length; i++) {
+    dataRow: for (let i = 0; i < data.length; i++) {
         if (checkedFilter && !isChecked(i)) {
             hiddenIndices.add(i);
             continue;
         }
-        if (isMatch(filterObjs, data[i], contentGetter)) {
-            continue;
+        for (const [icol, fr] of filterObjs.entries()) {
+            if (!fr || fr.length === 0) {
+                if (icol === 0) {
+                    continue dataRow;
+                }
+                continue;
+            }
+            if (isMatch(fr, data[i], contentGetter)) {
+                continue dataRow;
+            }
         }
         hiddenIndices.add(i);
     }
