@@ -94,7 +94,9 @@ const TableFormMarkup = t.intersection([
         maxWidth: t.string,
         minWidth: t.string,
         maxRows: t.string,
-        filterRow: t.boolean,
+        filterRow: t.union([t.boolean, t.number]),
+        filters: t.array(t.record(t.string, t.union([t.string, t.number]))),
+        // filters: t.array(t.object),
         toolbarTemplates: t.array(t.object),
 
         cbColumn: t.boolean,
@@ -664,6 +666,7 @@ export class TableFormComponent
         this.data.nrColumn = this.markup.nrColumn;
         this.data.charRow = this.markup.charRow;
         this.data.filterRow = this.markup.filterRow;
+        this.data.filters = this.markup.filters;
         this.data.maxRows = this.markup.maxRows;
         this.data.maxCols = this.markup.maxCols;
         this.data.toolbarTemplates = this.markup.toolbarTemplates;
@@ -1104,7 +1107,8 @@ export class TableFormComponent
 
                 const xOffset = memberShipEndColIndex + 1;
 
-                timTable.filters.forEach((value, index) => {
+                // TODO: change to handle other filter rows also
+                timTable.filters[0].forEach((value, index) => {
                     if (!value) {
                         return;
                     }

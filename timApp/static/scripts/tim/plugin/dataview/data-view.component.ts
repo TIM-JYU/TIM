@@ -107,9 +107,13 @@ export interface DataModelProvider {
 
     showRow(rowIndex: number): boolean;
 
-    setRowFilter(columnIndex: number, value: string): void;
+    setRowFilter(
+        filterRowIndex: number,
+        columnIndex: number,
+        value: string
+    ): void;
 
-    getRowFilter(columnIndex: number): string;
+    getRowFilter(filterRowIndex: number, columnIndex: number): string;
 
     handleChangeFilter(): void;
 
@@ -771,6 +775,7 @@ export class DataViewComponent implements AfterViewInit, OnInit {
         if (c.columnFilters) {
             for (let i = 0; i < c.columnFilters.currentValue.length; ++i) {
                 this.modelProvider.setRowFilter(
+                    0, // TODO: when more filter rows, look correct row
                     i,
                     c.columnFilters.currentValue[i]
                 );
@@ -1757,9 +1762,9 @@ export class DataViewComponent implements AfterViewInit, OnInit {
 
                 const filterCell = filters.getCell(0, column);
                 const input = filterCell.getElementsByTagName("input")[0];
-                input.value = this.modelProvider.getRowFilter(columnIndex);
-                input.oninput = this.onFilterInput(input, columnIndex);
-                input.onfocus = this.onFilterFocus(input, columnIndex);
+                input.value = this.modelProvider.getRowFilter(0, columnIndex);
+                input.oninput = this.onFilterInput(input, 0, columnIndex);
+                input.onfocus = this.onFilterFocus(input, 0, columnIndex);
                 input.onblur = this.onFilterBlur(input);
                 if (this.lastFocusedIndex === columnIndex) {
                     input.focus();
@@ -1876,23 +1881,37 @@ export class DataViewComponent implements AfterViewInit, OnInit {
         };
     }
 
-    private onFilterInput(input: HTMLInputElement, columnIndex: number) {
+    private onFilterInput(
+        input: HTMLInputElement,
+        filterRowIndex: number,
+        columnIndex: number
+    ) {
         return () => {
             if (this.modelProvider.isPreview()) {
                 return;
             }
-            this.modelProvider.setRowFilter(columnIndex, input.value);
+            this.modelProvider.setRowFilter(
+                filterRowIndex,
+                columnIndex,
+                input.value
+            );
             this.modelProvider.handleChangeFilter();
         };
     }
 
+    private lastFocusedRowIndex?: number;
     private lastFocusedIndex?: number;
 
-    private onFilterFocus(input: HTMLInputElement, columnIndex: number) {
+    private onFilterFocus(
+        input: HTMLInputElement,
+        filterRowIndex: number,
+        columnIndex: number
+    ) {
         return () => {
             if (this.modelProvider.isPreview()) {
                 return;
             }
+            this.lastFocusedRowIndex = filterRowIndex;
             this.lastFocusedIndex = columnIndex;
         };
     }
@@ -1902,6 +1921,7 @@ export class DataViewComponent implements AfterViewInit, OnInit {
             if (this.modelProvider.isPreview()) {
                 return;
             }
+            this.lastFocusedRowIndex = undefined;
             this.lastFocusedIndex = undefined;
         };
     }

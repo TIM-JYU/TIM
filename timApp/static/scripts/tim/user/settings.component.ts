@@ -976,7 +976,7 @@ export class SettingsComponent implements DoCheck, AfterViewInit {
         const tab = this.styleTable;
         if (tab) {
             tab.reInitialize();
-            tab.filterRow = true;
+            tab.filterRow = 1;
             tab.c();
         }
     }
