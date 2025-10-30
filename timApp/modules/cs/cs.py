@@ -819,7 +819,10 @@ def check_fullprogram(query, cut_errors=False):
     # - "(\n[^\n]*REMOVELINE[^\n]*)"
     if not query.cut_errors:
         query.cut_errors = [
-            {"replace": r"(\n[^\n]*REMOVEBEGIN.*? REMOVEEND[^\n]*)", "by": ""},
+            {
+                "replace": r"(?:\n|^)[^\n]*REMOVEBEGIN[^\n]*\n(.*?)\n[^\n]*REMOVEEND[^\n]*(?:\n|$)",
+                "by": "",
+            },
             {"replace": r"(\n[^\n]*REMOVELINE[^\n]*)", "by": ""},
         ]
 
