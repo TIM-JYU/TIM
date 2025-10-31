@@ -26,6 +26,7 @@ export interface ITimTableToolbarCallbacks {
     getColumnName: () => string;
     setToColumnByIndex: (col: number) => number;
     setToColumnByName: (name: string) => number;
+    fillTableCSV: (s: string) => void;
 }
 
 export interface ITimTableEditorToolbarParams {
@@ -223,6 +224,8 @@ export class TimTableEditorToolbarDialogComponent extends AngularDialogComponent
 
     async changeCellToTableArea() {
         const val = this.callbacks.getCell().trimEnd();
+        await this.callbacks.fillTableCSV(val);
+        /*
         if (val === "") {
             return;
         }
@@ -242,7 +245,7 @@ export class TimTableEditorToolbarDialogComponent extends AngularDialogComponent
         if (!lnsep && !colsep) return;
         let rows = [val];
         if (lnsep) rows = val.split(lnsep);
-        */
+        -/
         const area = [];
         for (const row of result.data) {
             const acols = [];
@@ -253,6 +256,8 @@ export class TimTableEditorToolbarDialogComponent extends AngularDialogComponent
         }
         const templ = {area: area};
         this.callbacks.setCell(templ);
+
+         */
     }
 
     /**

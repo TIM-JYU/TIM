@@ -242,7 +242,7 @@ export interface TimTable extends IGenericPluginMarkup {
     headers?: string[];
     saveAttrs?: string[]; // what attributes to save when jsrunner sends data
     headersStyle?: Record<string, string>;
-    pasteTab?: boolean;
+    pasteTableChars?: Record<string, string[]>;
     addRowButtonText?: string;
     forcedEditMode?: boolean;
     globalAppendMode?: boolean;
@@ -711,7 +711,8 @@ export enum ClearSort {
                     <div #inlineEditor class="timTableEditor inlineEditorDiv no-highlight" *ngIf="currentCell">
                         <input class="editInput" #editInput autocomplete="off"
                                (blur)="smallEditorLostFocus($event)"
-                           (keyup)="handleKeyUpSmallEditor($event)"
+                               (keyup)="handleKeyUpSmallEditor($event)"
+                               (paste)="handleEditInputPaste($event)"
                            [(ngModel)]="currentCell.editedCellContent">
                     <span #inlineEditorButtons
                           class="inlineEditorButtons"
@@ -840,7 +841,8 @@ export class TimTableComponent
     private editInputStyles: string = "";
     private editInputClass: string = "";
     headersStyle: Record<string, string> | null = null;
-    pasteTab: boolean = true;
+    pasteTableChars: Record<string, string[]> = {cr: ["\n"], tab: ["\t", "|"]};
+    pasteTableTabChars: string[] = ["\t", "|"];
     button: string = "Tallenna";
     hasButton: boolean = true;
     private noNeedFirstClick = false;
@@ -973,6 +975,10 @@ export class TimTableComponent
 
         this.headersStyle = this.data.headersStyle ?? null;
 
+        if (this.data.pasteTableChars) {
+            this.pasteTableChars = this.data.pasteTableChars;
+        }
+
         if (!this.headersStyle) {
             this.headersStyle = {
                 // backgroundColor: "lightgray",
@@ -1000,7 +1006,8 @@ export class TimTableComponent
             }
         }
 
-        if (this.cellDataMatrix.length <= 2) {
+        // No filter row if too small table and no predefined filters
+        if (this.cellDataMatrix.length <= 2 && !this.data.filters) {
             this.filterRow = 0;
         }
         this.colDelta = 0;
@@ -1012,6 +1019,9 @@ export class TimTableComponent
         if (this.data.cbColumn) {
             this.colDelta += 1;
         }
+
+        // If ever uncomment next row, check all rowDelta usages
+        // currently rowDelta == filterRow
         // if ( this.data.headers ) { this.rowDelta += 1; }
         this.rowDelta += this.filterRow;
 
@@ -1068,7 +1078,19 @@ export class TimTableComponent
                 for (const [irow, f] of this.data.filters.entries()) {
                     // eslint-disable-next-line guard-for-in
                     for (const key in f) {
-                        this.filters[irow][Number(key)] = "" + f[key];
+                        let colIndex = Number(key);
+                        if (isNaN(colIndex)) {
+                            if (!this.data.headers) {
+                                break;
+                            }
+                            colIndex = this.data.headers.indexOf(key);
+                            if (colIndex < 0) {
+                                break;
+                            }
+                        }
+                        if (key) {
+                            this.filters[irow][colIndex] = "" + f[key];
+                        }
                     }
                 }
                 await this.updateFilter();
@@ -1126,13 +1148,18 @@ export class TimTableComponent
         this.filters.push([]);
         this.otherFilterRows.push({index: this.filterRow});
         this.filterRow++;
+        this.rowDelta++;
         this.c();
     }
 
     async deleteFilterRow() {
+        if (this.filterRow < 1) {
+            return;
+        }
         this.filters.pop();
         this.otherFilterRows.pop();
         this.filterRow--;
+        this.rowDelta--;
         await this.updateFilter();
         this.c();
     }
@@ -1250,6 +1277,7 @@ export class TimTableComponent
                         this.setToColumnByIndex(col),
                     setToColumnByName: (name: string) =>
                         this.setToColumnByName(name),
+                    fillTableCSV: (s: string) => this.fillTableCSV(s),
                 },
                 activeTable: this,
             });
@@ -1836,6 +1864,24 @@ export class TimTableComponent
         this.selectedCells.srows = [];
     }
 
+    /**
+     * Returns currently used real row indecies starting from row
+     * Suppose that row is not hidden.
+     * @param row from which real index to start
+     */
+    getUsedRows(row: number): number[] {
+        const ret: number[] = [row];
+        const srow = this.permTableToScreen[row];
+        for (let sr = srow + 1; sr < this.permTable.length; sr++) {
+            const r = this.permTable[sr];
+            if (this.currentHiddenRows.has(r)) {
+                continue;
+            }
+            ret.push(r);
+        }
+        return ret;
+    }
+
     getSelectedCells(row: number, col: number): ISelectedCells {
         const ret: ICellIndex[] = [];
         const srows: boolean[] = [];
@@ -2391,6 +2437,91 @@ export class TimTableComponent
         if (ch == ChangeDetectionHint.NeedToTrigger) {
             this.c();
         }
+    }
+    /*
+    private static papaInstance: PapaParse | null = null; // typeof PapaType | null = null;
+
+    static async getPapa(): Promise<PapaParse> {
+        if (!TimTableComponent.papaInstance) {
+            TimTableComponent.papaInstance = await import("papaparse");
+        }
+        return TimTableComponent.papaInstance;
+    }
+*/
+    static useFirstFound(val: string, delim: string[], def: string): string {
+        let ret = def;
+        for (const s of delim) {
+            if (val.includes(s)) {
+                ret = s;
+                break;
+            }
+        }
+        return ret;
+    }
+
+    async make2DArryFromCVS(val: string): Promise<string[][]> {
+        // const papa = await TimTableComponent.getPapa();
+        const papaModule = await import("papaparse");
+        const papa = papaModule.default ?? papaModule;
+
+        const crs = this.pasteTableChars?.cr ?? "";
+        const tabs = this.pasteTableChars?.tab ?? "";
+        const def = "½½½½½";
+        const newline: string = TimTableComponent.useFirstFound(val, crs, def);
+        const delimiter: string = TimTableComponent.useFirstFound(
+            val,
+            tabs,
+            def
+        );
+
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore
+        // noinspection JSVoidFunctionReturnValueUsed
+        const result: {data: string[][]} = papa.parse(val, {
+            delimiter: delimiter,
+            newline: newline,
+        }) as unknown as {data: string[][]};
+
+        return result.data;
+    }
+
+    make2DArrayToTemplate(data: string[][]) {
+        const area = [];
+        for (const row of data) {
+            const acols = [];
+            for (const col of row) {
+                acols.push({cell: col});
+            }
+            area.push(acols);
+        }
+        return {area: area};
+    }
+
+    async fillTableCSV(val: string) {
+        const data = await this.make2DArryFromCVS(val);
+        const templ = this.make2DArrayToTemplate(data);
+        await this.handleToolbarSetCell(templ);
+    }
+
+    async handleEditInputPaste(ev: ClipboardEvent) {
+        const input = ev.target as HTMLInputElement;
+        const clipboardData = ev.clipboardData?.getData("text") ?? "";
+        if (
+            !this.pasteTableChars ||
+            Object.keys(this.pasteTableChars).length === 0
+        ) {
+            return;
+        }
+
+        const array2d = await this.make2DArryFromCVS(clipboardData);
+
+        if (!(array2d.length > 1 || array2d[0]?.length > 1)) {
+            return; // just one cell or even less
+        }
+        ev.preventDefault();
+        input.value = array2d[0][0];
+        const templ = this.make2DArrayToTemplate(array2d);
+        await this.handleToolbarSetCell(templ);
     }
 
     async smallEditorLostFocus(_ev: unknown) {
@@ -4003,7 +4134,7 @@ export class TimTableComponent
         cells: ICellIndex[]
     ) {
         // , selectedCells: ISelectedCells) {
-        // no close your eyes!  This is not for children
+        // now close your eyes!  This is not for children
         if (
             !cell ||
             cell.row >= this.cellDataMatrix.length ||
@@ -4081,17 +4212,24 @@ export class TimTableComponent
                         continue;
                     }
 
+                    const usedRows = this.getUsedRows(cell.row);
+
                     for (let r = 0; r < area.length; r++) {
-                        const cellIdx = {row: cell.row + r, col: cell.col};
+                        if (r >= usedRows.length) {
+                            break;
+                        }
+                        const rrow = usedRows[r];
+                        const cellIdx = {row: rrow, col: cell.col};
                         for (let c = 0; c < area[r].length; c++) {
                             cellIdx.col = cell.col + c;
                             const celXY = {x: cellIdx.col, y: cellIdx.row};
-                            const ccells = [celXY];
+                            const ccells = [celXY]; // TODO change to use filtered values
                             // const selCels: ISelectedCells = {cells: [celXY], srows: [],
                             //                                 scol1: cellIdx.col, scol2: cellIdx.col,
                             //                                 srow1: cellIdx.row, srow2: cellIdx.row};
                             const val = area[r][c];
                             if (!val) {
+                                // TODO: think this
                                 continue;
                             }
                             this.doHandleToolbarSetCell(
