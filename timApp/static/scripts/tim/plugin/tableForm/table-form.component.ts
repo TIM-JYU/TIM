@@ -96,6 +96,8 @@ const TableFormMarkup = t.intersection([
         maxRows: t.string,
         filterRow: t.union([t.boolean, t.number]),
         filters: t.array(t.record(t.string, t.union([t.string, t.number]))),
+        pasteTableChars: t.record(t.string, t.array(t.string)),
+
         // filters: t.array(t.object),
         toolbarTemplates: t.array(t.object),
 
@@ -667,6 +669,7 @@ export class TableFormComponent
         this.data.charRow = this.markup.charRow;
         this.data.filterRow = this.markup.filterRow;
         this.data.filters = this.markup.filters;
+        this.data.pasteTableChars = this.markup.pasteTableChars;
         this.data.maxRows = this.markup.maxRows;
         this.data.maxCols = this.markup.maxCols;
         this.data.toolbarTemplates = this.markup.toolbarTemplates;
