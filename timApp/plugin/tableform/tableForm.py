@@ -119,7 +119,8 @@ class TableFormMarkupModel(GenericMarkupModel):
     addedDates: bool | Missing = missing
     emailUsersButtonText: str | Missing | None = missing
     filterRow: int | bool | Missing | None = missing
-    filters: list[dict[int, Any]] | Missing = missing
+    filters: list[dict[str | int, str | int]] | Missing = missing
+    pasteTableChars: dict[str, list[str]] | Missing = missing
     fixedColor: str | Missing | None = missing
     fontSize: str | Missing | None = missing
     forceUpdateButtonText: str | Missing | None = missing
