@@ -79,6 +79,16 @@ interface RunScriptType extends RunScriptModelType {
     running?: number;
 }
 
+const FilterValue = t.record(
+    t.union([t.string, t.number]),
+    t.union([t.string, t.number])
+);
+
+const Filters = t.partial({
+    sort: t.array(t.union([t.string, t.number])),
+    values: t.array(FilterValue),
+});
+
 // interface RunScriptsType extends t.TypeOf<typeof t.array(t.union([t.string, RunScriptModel]))> {}
 
 const TableFormMarkup = t.intersection([
@@ -95,7 +105,7 @@ const TableFormMarkup = t.intersection([
         minWidth: t.string,
         maxRows: t.string,
         filterRow: t.union([t.boolean, t.number]),
-        filters: t.array(t.record(t.string, t.union([t.string, t.number]))),
+        filters: Filters,
         pasteTableChars: t.record(t.string, t.array(t.string)),
 
         // filters: t.array(t.object),
