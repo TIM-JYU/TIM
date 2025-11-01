@@ -29,7 +29,14 @@
 // TODO: Save favorites
 // TODO: TableForm does not support md:
 // TODO: Use Angular's HTTP service instead of AngularJS $http
-
+//
+// TODO: do not paste to locked cells
+// TODO: no default paste to TableForm
+// TODO: filters lost when changed to Edit table
+// TODO: click  lost filters
+// TODO: copy/paste filters
+// TODO: also sort order o filter json
+// TODO: copy table
 import * as t from "io-ts";
 import type {
     AfterViewInit,
@@ -236,6 +243,13 @@ export interface IToolbarTemplate {
     toColName?: string;
 }
 
+export type FilterValue = Record<string, string | number>;
+
+export interface Filters {
+    sort?: (number | string)[]; // list[int | str] | None | Missing
+    values?: FilterValue[]; // list[FilterValue] | None | Missing
+}
+
 export interface TimTable extends IGenericPluginMarkup {
     table: ITable;
     id?: string;
@@ -271,7 +285,7 @@ export interface TimTable extends IGenericPluginMarkup {
     minWidth?: string;
     singleLine?: boolean;
     filterRow?: boolean | number;
-    filters?: Record<number, number | string>[];
+    filters?: Filters;
     cbColumn?: boolean;
     nrColumn?: boolean | number;
     charRow?: boolean | number;
@@ -1001,8 +1015,10 @@ export class TimTableComponent
         }
 
         if (this.data.filters) {
-            if (this.data.filters.length > this.filterRow) {
-                this.filterRow = this.data.filters.length;
+            if (this.data.filters.values) {
+                if (this.data.filters.values.length > this.filterRow) {
+                    this.filterRow = this.data.filters.values.length;
+                }
             }
         }
 
@@ -1074,8 +1090,8 @@ export class TimTableComponent
                 this.viewctrl.addTable(this, par);
             }
 
-            if (this.data.filters) {
-                for (const [irow, f] of this.data.filters.entries()) {
+            if (this.data.filters?.values) {
+                for (const [irow, f] of this.data.filters.values.entries()) {
                     // eslint-disable-next-line guard-for-in
                     for (const key in f) {
                         let colIndex = Number(key);
@@ -1865,11 +1881,14 @@ export class TimTableComponent
     }
 
     /**
-     * Returns currently used real row indecies starting from row
+     * Returns currently used real row indices starting from row
      * Suppose that row is not hidden.
-     * @param row from which real index to start
+     * @param row real index from to start, -1 = from begini
      */
-    getUsedRows(row: number): number[] {
+    getUsedRows(row: number = -1): number[] {
+        if (row < 0) {
+            row = this.permTable[0];
+        }
         const ret: number[] = [row];
         const srow = this.permTableToScreen[row];
         for (let sr = srow + 1; sr < this.permTable.length; sr++) {
@@ -2459,7 +2478,7 @@ export class TimTableComponent
         return ret;
     }
 
-    async make2DArryFromCVS(val: string): Promise<string[][]> {
+    async make2DArrayFromCVS(val: string): Promise<string[][]> {
         // const papa = await TimTableComponent.getPapa();
         const papaModule = await import("papaparse");
         const papa = papaModule.default ?? papaModule;
@@ -2498,7 +2517,7 @@ export class TimTableComponent
     }
 
     async fillTableCSV(val: string) {
-        const data = await this.make2DArryFromCVS(val);
+        const data = await this.make2DArrayFromCVS(val);
         const templ = this.make2DArrayToTemplate(data);
         await this.handleToolbarSetCell(templ);
     }
@@ -2513,7 +2532,7 @@ export class TimTableComponent
             return;
         }
 
-        const array2d = await this.make2DArryFromCVS(clipboardData);
+        const array2d = await this.make2DArrayFromCVS(clipboardData);
 
         if (!(array2d.length > 1 || array2d[0]?.length > 1)) {
             return; // just one cell or even less

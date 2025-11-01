@@ -2,7 +2,9 @@
 TIM example plugin: a tableFormndrome checker.
 """
 import datetime
-import io, json, re
+import io
+import json
+import re
 from dataclasses import dataclass, asdict, field
 from typing import Any, TypedDict, Sequence, Tuple
 from zipfile import ZipFile, ZIP_DEFLATED
@@ -107,6 +109,15 @@ class RunScriptModel:
     interval: int | None = None
 
 
+FilterValue = dict[str | int, str | int]
+
+
+@dataclass
+class Filters:
+    sort: list[int | str] | None | Missing = missing
+    values: list[FilterValue] | None | Missing = missing
+
+
 @dataclass
 class TableFormMarkupModel(GenericMarkupModel):
     anonNames: bool | Missing = missing
@@ -119,7 +130,7 @@ class TableFormMarkupModel(GenericMarkupModel):
     addedDates: bool | Missing = missing
     emailUsersButtonText: str | Missing | None = missing
     filterRow: int | bool | Missing | None = missing
-    filters: list[dict[str | int, str | int]] | Missing = missing
+    filters: Filters | None | Missing = missing
     pasteTableChars: dict[str, list[str]] | Missing = missing
     fixedColor: str | Missing | None = missing
     fontSize: str | Missing | None = missing
