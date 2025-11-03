@@ -821,7 +821,7 @@ def check_fullprogram(query, cut_errors=False):
         query.cut_errors = [
             {
                 "replace": r"(?:\n|^)[^\n]*REMOVEBEGIN[^\n]*\n(.*?)\n[^\n]*REMOVEEND[^\n]*(?:\n|$)",
-                "by": "",
+                "by": "\n",  # The above regex may consume a newline at start or end, so replace with single \n
             },
             {"replace": r"(\n[^\n]*REMOVELINE[^\n]*)", "by": ""},
         ]

@@ -55,7 +55,6 @@ def regex_replace_iteratively(pattern: re.Pattern, program: str, by: str) -> str
     """
     result = StringIO()
     after = program
-    replacement = f"\n{by}\n" if by else "\n"
 
     while True:
         m = pattern.search(after)
@@ -64,7 +63,7 @@ def regex_replace_iteratively(pattern: re.Pattern, program: str, by: str) -> str
 
         before = after[: m.start()]
         result.write(before)
-        result.write(replacement)
+        result.write(by)
         after = after[m.end() :]
 
     if after:
