@@ -29,6 +29,7 @@ const DropdownMarkup = t.intersection([
     t.partial({
         tag: t.string,
         words: t.array(t.string),
+        initialWord: t.string,
         wordAliases: t.record(t.string, t.string),
         ignorestyles: t.boolean,
         clearstyles: t.boolean,
@@ -161,7 +162,8 @@ export class DropdownPluginComponent
     ngOnInit() {
         super.ngOnInit();
 
-        this.selectedWord = this.attrsall.state?.c ?? undefined;
+        this.initialWord = this.markup.initialWord;
+        this.selectedWord = this.attrsall.state?.c ?? this.initialWord;
         this.shuffle = this.markup.shuffle;
         if (this.shuffle && this.markup.words) {
             this.wordList = shuffle(this.markup.words);

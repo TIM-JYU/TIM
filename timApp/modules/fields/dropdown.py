@@ -29,6 +29,7 @@ class DropdownStateModel:
 class DropdownMarkupModel(GenericMarkupModel):
     words: list[str] | Missing = missing
     wordAliases: dict[str, str] | Missing = missing
+    initialWord: str | Missing | None = missing
     instruction: bool | Missing = missing
     radio: bool | Missing = missing
     shuffle: bool | Missing = missing
