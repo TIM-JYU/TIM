@@ -71,8 +71,8 @@ cd cs
 wget https://kurssit.it.jyu.fi/npo/ComTest/ComTest.jar -O ComTest.jar.tmp -nv && mv ComTest.jar.tmp ComTest.jar
 
 cd /cs
-mkdir -p "$DATA_PATH/simcir/check"
 rm -rf "$DATA_PATH/simcir"
+mkdir -p "$DATA_PATH/simcir/check"
 cp -r simcir "$DATA_PATH/simcir"
 cd "$DATA_PATH/simcir/check"
 wget https://gitlab.jyu.fi/arjuvi/logik-py/-/raw/master/simcirtest.py -O simcirtest.py.tmp -nv && mv simcirtest.py.tmp simcirtest.py

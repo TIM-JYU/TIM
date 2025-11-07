@@ -329,7 +329,7 @@ def run2(
         tmpname,
         "--rm=true",
         "--tmpfs",
-        "/cs",
+        "/cs:mode=777",
         *itertools.chain.from_iterable(path_mappings),
         *itertools.chain.from_iterable(user_mappings),
         "-v",
