@@ -27,6 +27,8 @@ export interface ITimTableToolbarCallbacks {
     setToColumnByIndex: (col: number) => number;
     setToColumnByName: (name: string) => number;
     fillTableCSV: (s: string) => void;
+    filterCallback: (cmd: string) => void;
+    editCallback: (cmd: string) => void;
 }
 
 export interface ITimTableEditorToolbarParams {
@@ -49,6 +51,8 @@ const DEFAULT_CELL_BGCOLOR = "#FFFF00";
                         <div class="btn-group" role="menuitem" dropdown *ngIf="canRemoveCells">
                             <button class="timButton btn-xs dropdown-toggle" dropdownToggle>Edit <span class="caret"></span></button>
                             <ul class="dropdown-menu" *dropdownMenu>
+                                <li role="menuitem" (click)="edit('copy')"><a>Copy selcetion</a></li>
+                                <li role="menuitem" (click)="edit('paste')"><a>Paste</a></li>
                                 <li role="menuitem" (click)="removeRow()"><a>Remove row</a></li>
                                 <li role="menuitem" (click)="removeColumn()"><a>Remove column</a></li>
                             </ul>
@@ -61,6 +65,14 @@ const DEFAULT_CELL_BGCOLOR = "#FFFF00";
                                 <li role="menuitem" (click)="addRow(1)"><a>Row below</a></li>
                                 <li role="menuitem" (click)="addColumn(0)"><a>Column to the left</a></li>
                                 <li role="menuitem" (click)="addColumn(1)"><a>Column to the right</a></li>
+                            </ul>
+                        </div>
+                        &ngsp;
+                        <div class="btn-group" role="menuitem" dropdown *ngIf="canFilters">
+                            <button class="timButton btn-xs dropdown-toggle" dropdownToggle>Filter <span class="caret"></span></button>
+                            <ul class="dropdown-menu" *dropdownMenu>
+                                <li role="menuitem" (click)="filter('copy')"><a>Copy filters</a></li>
+                                <li role="menuitem" (click)="filter('paste')"><a>Paste filters</a></li>
                             </ul>
                         </div>
                     </div>
@@ -153,6 +165,7 @@ export class TimTableEditorToolbarDialogComponent extends AngularDialogComponent
     protected dialogName = "TableEditorToolbar";
     canInsertCells = false;
     canRemoveCells = false;
+    canFilters: boolean = true;
 
     ngOnInit() {
         setToolbarInstance(this);
@@ -222,42 +235,9 @@ export class TimTableEditorToolbarDialogComponent extends AngularDialogComponent
         this.callbacks.setCell({style: {textAlign: value}});
     }
 
-    async changeCellToTableArea() {
+    changeCellToTableArea() {
         const val = this.callbacks.getCell().trimEnd();
-        await this.callbacks.fillTableCSV(val);
-        /*
-        if (val === "") {
-            return;
-        }
-        const papa = await import("papaparse");
-        const result = papa.default.parse(val);
-        /*
-        let lnsep;
-        let colsep;
-        let sep = val.indexOf("\n");
-        if (sep >= 0) lnsep = "\n";
-        sep = val.indexOf("\t");
-        if (sep >= 0) colsep = "\t";
-        else {
-            sep = val.indexOf("|");
-            if (sep >= 0) colsep = "|";
-        }
-        if (!lnsep && !colsep) return;
-        let rows = [val];
-        if (lnsep) rows = val.split(lnsep);
-        -/
-        const area = [];
-        for (const row of result.data) {
-            const acols = [];
-            for (const col of row as Array<string>) {
-                acols.push({cell: col});
-            }
-            area.push(acols);
-        }
-        const templ = {area: area};
-        this.callbacks.setCell(templ);
-
-         */
+        this.callbacks.fillTableCSV(val);
     }
 
     /**
@@ -415,6 +395,14 @@ export class TimTableEditorToolbarDialogComponent extends AngularDialogComponent
 
     removeRow() {
         this.callbacks.removeRow();
+    }
+
+    edit(cmd: string) {
+        this.callbacks.editCallback(cmd);
+    }
+
+    filter(cmd: string) {
+        this.callbacks.filterCallback(cmd);
     }
 
     private borderRect() {

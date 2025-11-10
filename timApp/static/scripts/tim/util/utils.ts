@@ -811,6 +811,18 @@ export function copyToClipboard(s: string) {
     void navigator.clipboard.writeText(s);
 }
 
+export async function getClipboardText(): Promise<string | null> {
+    if (navigator?.clipboard && navigator.clipboard.readText) {
+        try {
+            return await navigator.clipboard.readText();
+        } catch (err) {
+            console.error("Clipboard read failed:", err);
+            return null;
+        }
+    }
+    return null;
+}
+
 export const dateFormat = "D.M.YYYY HH:mm:ss";
 
 export function getCookie(name: string) {
