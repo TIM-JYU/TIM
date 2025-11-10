@@ -109,7 +109,7 @@ const TableFormMarkup = t.intersection([
         pasteTableChars: t.record(t.string, t.array(t.string)),
 
         // filters: t.array(t.object),
-        toolbarTemplates: t.array(t.object),
+        toolbarTemplates: t.array(t.UnknownRecord),
 
         cbColumn: t.boolean,
         nrColumn: t.boolean,
@@ -218,7 +218,7 @@ const sortLang = "fi";
     // changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <div class="tableform" *ngIf="showTable">
-            <tim-markup-error *ngIf="markupError" [data]="markupError"></tim-markup-error>
+            <tim-markup-error *ngIf="markupError" [data]="markupError!"></tim-markup-error>
             <h4 *ngIf="header" [innerHtml]="header | purify"></h4>
             <p *ngIf="stem" [innerHtml]="stem | purify"></p>
             <tim-table *ngIf="tableCheck()" [data]="data"
@@ -343,7 +343,6 @@ export class TableFormComponent
     public viewctrl?: ViewCtrl;
     result?: string;
     error?: string;
-    private userfilter = "";
     data: TimTable & {userdata: DataEntity} = {
         hide: {edit: false, insertMenu: true, editMenu: true},
         hiddenRows: [],
@@ -370,7 +369,7 @@ export class TableFormComponent
     private aliases!: Record<string, string>;
     private realnames = false;
     private usernames = false;
-    private emails = false;
+    // private emails = false;  // TODO: not used?
     showTable = false;
     private tableFetched = false;
     private rowKeys!: string[];
@@ -491,12 +490,11 @@ export class TableFormComponent
         return false;
     }
 
-    // noinspection JSUnusedLocalSymbols
     constructor(
         el: ElementRef,
         http: HttpClient,
         domSanitizer: DomSanitizer,
-        private cdr: ChangeDetectorRef
+        _cdr: ChangeDetectorRef
     ) {
         super(el, http, domSanitizer);
         // cdr.detach();
@@ -618,7 +616,6 @@ export class TableFormComponent
             this.data.hide.toolbar = !this.markup.showToolbar;
         }
 
-        this.userfilter = "";
         this.realnames = this.checkToShow(
             this.markup.realnames,
             realNameColIndex,
@@ -629,11 +626,8 @@ export class TableFormComponent
             userNameColIndex,
             true
         );
-        this.emails = this.checkToShow(
-            this.markup.emails,
-            emailColIndex,
-            false
-        );
+        /* TODO: this.emails = */
+        this.checkToShow(this.markup.emails, emailColIndex, false);
         this.checkToShow(this.markup.addedDates, memberShipAddColIndex, false);
         this.checkToShow(
             this.markup.includeUsers !== "current",
@@ -1042,7 +1036,7 @@ export class TableFormComponent
             return;
         }
         await timTable.saveAndCloseSmallEditor();
-        this.doSaveText();
+        await this.doSaveText();
     }
 
     /**
@@ -1323,11 +1317,11 @@ export class TableFormComponent
 
     /**
      * Callback function to be noticed when check boxes are changed in table
-     * @param cbs boolean list of cb-values
+     * @param _cbs boolean list of cb-values
      * @param n number of visible checked cbs
-     * @param index index of clicked cb, may be -1 if header row cb clicked
+     * @param _index index of clicked cb, may be -1 if header row cb clicked
      */
-    cbChanged(cbs: boolean[], n: number, index: number) {
+    cbChanged(_cbs: boolean[], n: number, _index: number) {
         this.cbCount = n;
     }
 
@@ -1519,7 +1513,7 @@ export class TableFormComponent
         timtab.confirmSaved();
         if (this.viewctrl) {
             if (this.markup.autoUpdateFields && changedFields.size > 0) {
-                this.viewctrl.updateFields(Array.from(changedFields));
+                await this.viewctrl.updateFields(Array.from(changedFields));
             }
             if (
                 this.markup.autoUpdateTables &&
@@ -1719,7 +1713,7 @@ Separate multiple addresses with commas or write each address on a new line.`;
     ],
 })
 export class TableFormModule implements DoBootstrap {
-    ngDoBootstrap(appRef: ApplicationRef) {}
+    ngDoBootstrap(_appRef: ApplicationRef) {}
 }
 
 registerPlugin("tableform-runner", TableFormModule, TableFormComponent);
