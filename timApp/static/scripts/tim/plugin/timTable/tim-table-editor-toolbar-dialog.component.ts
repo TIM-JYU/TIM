@@ -51,7 +51,7 @@ const DEFAULT_CELL_BGCOLOR = "#FFFF00";
                         <div class="btn-group" role="menuitem" dropdown *ngIf="canRemoveCells">
                             <button class="timButton btn-xs dropdown-toggle" dropdownToggle>Edit <span class="caret"></span></button>
                             <ul class="dropdown-menu" *dropdownMenu>
-                                <li role="menuitem" (click)="edit('copy')"><a>Copy selcetion</a></li>
+                                <li role="menuitem" (click)="edit('copy')"><a>Copy selection</a></li>
                                 <li role="menuitem" (click)="edit('paste')"><a>Paste</a></li>
                                 <li role="menuitem" (click)="removeRow()"><a>Remove row</a></li>
                                 <li role="menuitem" (click)="removeColumn()"><a>Remove column</a></li>

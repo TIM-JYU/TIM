@@ -30,15 +30,20 @@
 // TODO: TableForm does not support md:
 // TODO: Use Angular's HTTP service instead of AngularJS $http
 //
-// TODO: do not paste to locked cells
-// TODO: do not replicate edited value to locked cells
+// TODO: small editor does no undo \n
 // TODO: no default paste to TableForm
-// TODO: click  lost filters
+// TODO: click somewhere lost filters
 // TODO: copy/paste filters
 // TODO: copy table
 // TODO: filters to toolbar
+
+// done: toolbar must be regonfigured when table changes (like columns added)
+// done: small editor as textarea
 // done: remove selectable when selectiong area
 // done: also sort order to filter json
+// done: do not paste to locked cells
+// done: do not replicate edited value to locked cells
+// done: changed small editor to textarea
 import * as t from "io-ts";
 import type {
     AfterViewInit,
@@ -115,6 +120,7 @@ import {
     StringOrNumber,
     timeout,
     to,
+    insertTextInTextarea,
 } from "tim/util/utils";
 import {TaskId} from "tim/plugin/taskid";
 import {PluginMeta} from "tim/plugin/util";
@@ -131,7 +137,9 @@ import {
 } from "tim/plugin/timTable/toolbarUtils";
 import {createParContext} from "tim/document/structure/create";
 import {CommonModule} from "@angular/common";
-import {installDataWatcher} from "tim/util/dataWatcher";
+
+// Uncomment next if need to data watch some attributes for data changes
+// import {installDataWatcher} from "tim/util/dataWatcher";
 
 const timDateRegex = /^\d{4}-\d{2}-\d{2}[ T]?\d{2}:\d{2}(:\d{2})?$/;
 
@@ -728,12 +736,13 @@ export enum ClearSort {
                 </ng-container>
                 <ng-template #inlineEditorTemplate>
                     <div #inlineEditor class="timTableEditor inlineEditorDiv no-highlight" *ngIf="currentCell">
-                        <input class="editInput" #editInput autocomplete="off"
-                               (blur)="smallEditorLostFocus($event)"
+                        <textarea class="editInput" #editInput autocomplete="off" rows="1"
+                               (blur)="smallEditorLostFocus($event)" 
+                               (keydown)="handleKeyDownSmallEditor($event)"
                                (keyup)="handleKeyUpSmallEditor($event)"
                                (paste)="handleEditInputPaste($event)"
                            [(ngModel)]="currentCell!.editedCellContent"
-                        >
+                        ></textarea>
                     <span #inlineEditorButtons
                           class="inlineEditorButtons"
                           style="position: absolute; width: max-content"
@@ -846,7 +855,7 @@ export class TimTableComponent
     permTable: number[] = [];
     private permTableToScreen: number[] = []; // inverse perm table to get screencoordinate for row
     edited = false;
-    @ViewChild("editInput") private editInput?: ElementRef<HTMLInputElement>;
+    @ViewChild("editInput") private editInput?: ElementRef<HTMLTextAreaElement>;
     @ViewChild("inlineEditor") private editorDiv!: ElementRef<HTMLDivElement>;
     @ViewChild("inlineEditorButtons")
     private editorButtons!: ElementRef<HTMLDivElement>;
@@ -857,7 +866,7 @@ export class TimTableComponent
     private buttonOpenBigEditor!: ElementRef<HTMLButtonElement>;
     @ViewChild("dataViewComponent") dataViewComponent?: DataViewComponent;
     @ViewChildren("editInput") private editInputs?: QueryList<
-        ElementRef<HTMLInputElement>
+        ElementRef<HTMLTextAreaElement>
     >;
     dataView?: DataViewSettings | null;
     private editInputStyles: string = "";
@@ -2684,6 +2693,26 @@ export class TimTableComponent
         return cell;
     }
 
+    handleKeyDownSmallEditor(ev: KeyboardEvent) {
+        if (!this.currentCell) {
+            return;
+        }
+
+        if (isKeyCode(ev, KEY_ENTER)) {
+            if (ev.ctrlKey || ev.metaKey) {
+                // Allow browser to insert newline but stop propagation so global handlers don't intercept.
+                // ev.preventDefault();
+                ev.stopPropagation();
+                return;
+            }
+            // Enter alone: submit the small editor
+            ev.preventDefault();
+            ev.stopPropagation();
+            // await this.saveAndCloseSmallEditor();
+            // this.c();
+        }
+    }
+
     /**
      * Deals with key events
      * @param {KeyboardEvent} ev Pressed key event
@@ -2691,7 +2720,17 @@ export class TimTableComponent
     async handleKeyUpSmallEditor(ev: KeyboardEvent) {
         // Arrow keys
         let ch: ChangeDetectionHint;
-        if (ev.ctrlKey && isArrowKey(ev)) {
+        if (isKeyCode(ev, KEY_ENTER) || ev.key === "Enter") {
+            if (ev.ctrlKey || ev.metaKey) {
+                insertTextInTextarea(this.getEditInputElement(), "\n");
+                ev.stopPropagation();
+                ev.preventDefault();
+                return;
+            }
+        }
+        // For Enter alone nothing extra needed here (handled in keydown).
+
+        if ((ev.ctrlKey || ev.metaKey) && isArrowKey(ev)) {
             ch = await this.handleArrowMovement(ev);
         } else {
             ch = await this.doKeyUpTable(ev);
@@ -2888,6 +2927,10 @@ export class TimTableComponent
         // if (!this.mouseInTable) return;
         if (isKeyCode(ev, KEY_TAB)) {
             ev.preventDefault();
+            return;
+        }
+        if (isKeyCode(ev, KEY_ENTER)) {
+            //
         }
     };
 
@@ -2936,6 +2979,9 @@ export class TimTableComponent
         } else if (isKeyCode(ev, KEY_ENTER)) {
             if (!this.isInEditMode() || !this.viewctrl) {
                 return ChangeDetectionHint.DoNotTrigger;
+            }
+            if (ev.ctrlKey || ev.metaKey) {
+                return ChangeDetectionHint.NeedToTrigger;
             }
             ev.preventDefault();
 
@@ -3599,7 +3645,7 @@ export class TimTableComponent
         }
 
         editinp.width(editOuterWidth);
-        editinp.height(tablecell.innerHeight()! - 2);
+        // editinp.height(tablecell.innerHeight()! - 2);
 
         const inlineEditorButtons = $(this.editorButtons.nativeElement);
         if (this.data.editorButtonsBottom) {
@@ -5008,9 +5054,9 @@ export class TimTableComponent
             return;
         }
         this.editInputStyles = "";
-        this.editInputClass = "";
+        this.editInputClass = "editInput";
         // this.getEditInputElement()!.style.cssText = "";
-        this.getEditInputElement()!.className = "";
+        editInputElement.className = this.editInputClass;
         const stylesNotToClear = ["position", "top", "left", "width", "height"];
         for (const key of Object.keys(styleToHtml)) {
             // TODO: For some reason, the index signature of style property is number, so we need a cast.
@@ -5484,5 +5530,3 @@ export class TimTableModule implements DoBootstrap {
 }
 
 registerPlugin("tim-table", TimTableModule, TimTableComponent);
-
-/* eslint-disable @typescript-eslint/no-explicit-any */

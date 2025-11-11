@@ -152,10 +152,20 @@ td.cbColumn.charRow {
 
 .forcedEditable .lockedCell, .forcedEditable td .lockedCell, .forcedEditable th .lockedCell {
     /* background-color: var(--table-locked-cell-bg); */ /* where is variables defined? */
-    background-color: rgb(244 250 255);
+    background-color: rgb(252 252 252);
 }
 
 .editable .lockedCell, .editable td .lockedCell, .editable th .lockedCell {
     /* background-color: var(--table-locked-cell-bg); */ /* where is variables defined? */
-    background-color: rgb(244 250 255);
+    background-color: rgb(252 252 252);
 }
+
+.editInput {
+  padding: 0.4rem 0.5rem;
+  overflow: auto;
+  white-space: pre; /* preserve newlines */
+  word-wrap: normal; /* prevent wrapping */
+  word-break: normal; /* prevent wrapping */
+  caret-color: auto;
+}
+
