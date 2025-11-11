@@ -1128,3 +1128,53 @@ export function getLangLink(link: string): string {
     // For languages not handled, default to english
     return link + "/en";
 }
+
+/**
+ * Inserts the given text at the
+ * current cursor position in the given textarea.
+ * @param ta Textarea element where to insert text
+ * @param text Text to insert
+ * @returns New cursor position after inserted text,
+ *          or null if textarea is not given
+ */
+export function insertTextInTextarea(
+    ta: HTMLTextAreaElement | null | undefined,
+    text: string
+): number | null {
+    if (!ta) {
+        return null;
+    }
+
+    const start = ta.selectionStart ?? 0;
+    const end = ta.selectionEnd ?? 0;
+    const oldScroll = ta.scrollTop;
+
+    if (typeof ta.setRangeText === "function") {
+        // Use setRangeText so the insertion becomes undoable in the browser
+        ta.setRangeText(text, start, end, "end");
+
+        const newPos = start + text.length;
+        ta.selectionStart = ta.selectionEnd = newPos;
+
+        // Keep visual scroll stable
+        ta.scrollTop = oldScroll;
+
+        // Notify listeners / Angular that the value changed
+        ta.dispatchEvent(new Event("input", {bubbles: true}));
+
+        // Keep focus in textarea
+        ta.focus();
+
+        return newPos;
+    }
+
+    // Fallback for older browsers
+    const oldVal = ta.value;
+    ta.value = oldVal.slice(0, start) + text + oldVal.slice(end);
+
+    const newPos = start + text.length;
+    ta.selectionStart = ta.selectionEnd = newPos;
+    ta.scrollTop = oldScroll;
+    ta.dispatchEvent(new Event("input", {bubbles: true}));
+    return newPos;
+}

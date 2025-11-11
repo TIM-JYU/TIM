@@ -79,13 +79,16 @@ export function isToolbarOpen() {
 
 export async function showTableEditorToolbar(p: ITimTableEditorToolbarParams) {
     if (instance && !instance.isClosed()) {
-        instance.show(p.callbacks, p.activeTable);
-    } else {
-        const {TimTableEditorToolbarDialogComponent} = await import(
-            "./tim-table-editor-toolbar-dialog.component"
-        );
-        await angularDialog.open(TimTableEditorToolbarDialogComponent, p);
+        if (instance.activeTable == p.activeTable) {
+            instance.show(p.callbacks, p.activeTable);
+            return;
+        }
+        instance.hideThis(false);
     }
+    const {TimTableEditorToolbarDialogComponent} = await import(
+        "./tim-table-editor-toolbar-dialog.component"
+    );
+    await angularDialog.open(TimTableEditorToolbarDialogComponent, p);
 }
 
 export function hideToolbar(closingTable: TimTableComponent) {
