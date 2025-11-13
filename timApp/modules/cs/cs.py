@@ -826,6 +826,21 @@ def check_fullprogram(query, cut_errors=False):
             {"replace": r"(\n[^\n]*REMOVELINE[^\n]*)", "by": ""},
         ]
 
+    cut_from_run = get_param_table(query, "cutFromRun")
+    if not cut_from_run:
+        cut_from_run = [
+            {
+                "replace": r"(?:\n|^)[^\n]*NORUNBEGIN[^\n]*\n(.*?)\n[^\n]*NORUNEND[^\n]*(?:\n|$)",
+                "by": "\n",  # The above regex may consume a newline at start or end, so replace with single \n
+            }
+        ]
+        query.cut_errors.append(
+            {"replace": r"(\n[^\n]*NORUNBEGIN[^\n]*)", "by": ""},
+        )
+        query.cut_errors.append(
+            {"replace": r"(\n[^\n]*NORUNEND[^\n]*)", "by": ""},
+        )
+
     query.hide_program = False
     fullprogram = get_param(query, "-fullprogram", None)
     if not fullprogram:
@@ -903,6 +918,8 @@ def check_fullprogram(query, cut_errors=False):
         program = program[1:]  # remove extra \n from begin
     if cut_errors:
         program = replace_code(query.cut_errors, program)
+    else:
+        program = replace_code(cut_from_run, program)
     query.query["replace"] = ["REPLACEBYCODE"]
     query.query["program"] = [program]
     query.query["by"] = [by_code]
