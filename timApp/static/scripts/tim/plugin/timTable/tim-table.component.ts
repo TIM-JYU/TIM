@@ -38,7 +38,7 @@
 // TODO: filters to toolbar
 
 // done: toolbar must be regonfigured when table changes (like columns added)
-// done: small editor as textarea
+// done: small editor as textarea to prevent line breaks
 // done: remove selectable when selectiong area
 // done: also sort order to filter json
 // done: do not paste to locked cells
