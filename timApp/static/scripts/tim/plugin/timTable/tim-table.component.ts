@@ -31,8 +31,7 @@
 // TODO: Use Angular's HTTP service instead of AngularJS $http
 //
 // TODO: click somewhere lost filters (could not reproduce?)
-// TODO: copy/paste filters
-// TODO: filters to toolbar
+// TODO: filters to favorites
 
 // done: toolbar must be reconfigured when table changes (like columns added)
 // done: small editor as textarea to prevent line breaks
@@ -45,6 +44,8 @@
 // done: copy table (works by ctrl-a, ctrl-c)
 // done: undo for paste (and other changes also)
 // done: small editor does not undo \n  (no fix, would be too complex)
+// done: filters to toolbar
+// done: copy/paste filters
 
 import * as t from "io-ts";
 import type {
@@ -255,6 +256,7 @@ export interface IToolbarTemplate {
     columnName?: string[];
     toColIndex?: number;
     toColName?: string;
+    filters?: Filters;
 }
 
 export type FilterValue = Record<string, string | number>;
@@ -1311,7 +1313,7 @@ export class TimTableComponent
         }
     }
 
-    private async filterCallback(cmd: string): Promise<void> {
+    private async filterCallback(cmd: string, value?: string): Promise<void> {
         if (cmd === "copy") {
             const fdStr = this.getFilterDataAsString();
             copyToClipboard(fdStr);
@@ -1323,6 +1325,12 @@ export class TimTableComponent
                 await this.applyFilterDataFromString(fdStr);
             }
             return;
+        }
+        if (cmd === "filters") {
+            if (!value) {
+                return;
+            }
+            await this.applyFilterDataFromString(value);
         }
     }
 
@@ -1550,7 +1558,8 @@ export class TimTableComponent
                     setToColumnByName: (name: string) =>
                         this.setToColumnByName(name),
                     fillTableCSV: (s: string) => this.fillTableCSV(s),
-                    filterCallback: (cmd: string) => this.filterCallback(cmd),
+                    filterCallback: (cmd: string, value?: string) =>
+                        this.filterCallback(cmd, value),
                     editCallback: (cmd: string) => this.editCallback(cmd),
                 },
                 activeTable: this,

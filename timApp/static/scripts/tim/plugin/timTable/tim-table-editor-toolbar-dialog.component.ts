@@ -27,7 +27,7 @@ export interface ITimTableToolbarCallbacks {
     setToColumnByIndex: (col: number) => number;
     setToColumnByName: (name: string) => number;
     fillTableCSV: (s: string) => void;
-    filterCallback: (cmd: string) => void;
+    filterCallback: (cmd: string, value?: string) => void;
     editCallback: (cmd: string) => void;
 }
 
@@ -465,6 +465,13 @@ export class TimTableEditorToolbarDialogComponent extends AngularDialogComponent
                 return;
             }
         }
+        if (templ.filters) {
+            this.callbacks.filterCallback(
+                "filters",
+                JSON.stringify(templ.filters)
+            );
+            return;
+        }
         if (templ.commands) {
             for (const cmd of templ.commands) {
                 const c = cmd.split(" ");
@@ -490,6 +497,7 @@ export class TimTableEditorToolbarDialogComponent extends AngularDialogComponent
                 }
             }
         }
+
         this.setCell(templ);
         if (templ.closeEdit) {
             this.callbacks.closeEditor(true);
