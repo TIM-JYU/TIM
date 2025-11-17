@@ -30,20 +30,22 @@
 // TODO: TableForm does not support md:
 // TODO: Use Angular's HTTP service instead of AngularJS $http
 //
-// TODO: small editor does no undo \n
-// TODO: no default paste to TableForm
-// TODO: click somewhere lost filters
+// TODO: click somewhere lost filters (could not reproduce?)
 // TODO: copy/paste filters
-// TODO: copy table
 // TODO: filters to toolbar
 
-// done: toolbar must be regonfigured when table changes (like columns added)
+// done: toolbar must be reconfigured when table changes (like columns added)
 // done: small editor as textarea to prevent line breaks
 // done: remove selectable when selectiong area
 // done: also sort order to filter json
 // done: do not paste to locked cells
 // done: do not replicate edited value to locked cells
 // done: changed small editor to textarea
+// done: as default do not paste to TableForm
+// done: copy table (works by ctrl-a, ctrl-c)
+// done: undo for paste (and other changes also)
+// done: small editor does not undo \n  (no fix, would be too complex)
+
 import * as t from "io-ts";
 import type {
     AfterViewInit,
@@ -268,6 +270,7 @@ export interface TimTable extends IGenericPluginMarkup {
     headers?: string[];
     saveAttrs?: string[]; // what attributes to save when jsrunner sends data
     headersStyle?: Record<string, string>;
+    allowPasteTable?: boolean;
     pasteTableChars?: Record<string, string[]>;
     addRowButtonText?: string;
     forcedEditMode?: boolean;
@@ -577,7 +580,7 @@ export enum ClearSort {
     template: `
         <div #timTableRunDiv [ngClass]="{csRunDiv: taskBorders, 'no-overflow': dataView}"
              [class.cs-has-header]="data.header"
-             class="timTableRunDiv no-popup-menu" 
+             class="timTableRunDiv no-popup-menu"
              [ngStyle]="dataView ? {} : {
                 'max-height': maxRows,
                 'width': maxCols
@@ -619,6 +622,8 @@ export enum ClearSort {
                            [ngClass]="{editable: isInEditMode() && !isInForcedEditMode(),
                                                   forcedEditable: isInForcedEditMode()}"
                            class="timTableTable"
+                           tabindex="0"
+
                            [ngStyle]="stylingForTable(data.table)" [id]="data.table.id">
                         <col class="nrcolumn" *ngIf="data.nrColumn"/>
                         <col class="cbColumn" *ngIf="data.cbColumn"/>
@@ -667,6 +672,7 @@ export enum ClearSort {
                                 *ngFor="let c of cellDataMatrix[0]; let coli = index" [attr.span]="c.span">
                                 <div class="filterdiv">
                                     <input type="text" (ngModelChange)="handleChangeFilter()"
+                                           (focus)="saveAndCloseSmallEditor()"
                                            [(ngModel)]="filters[0][coli]"
                                            title="Write filter condition">
                                 </div>
@@ -689,6 +695,7 @@ export enum ClearSort {
                                 *ngFor="let c of cellDataMatrix[0]; let coli = index" [attr.span]="c.span">
                                 <div class="filterdiv">
                                     <input type="text" (ngModelChange)="handleChangeFilter()"
+                                           (focus)="saveAndCloseSmallEditor()"
                                            [(ngModel)]="filters[frow.index][coli]"
                                            title="Write filter condition">
                                 </div>
@@ -740,7 +747,6 @@ export enum ClearSort {
                                (blur)="smallEditorLostFocus($event)" 
                                (keydown)="handleKeyDownSmallEditor($event)"
                                (keyup)="handleKeyUpSmallEditor($event)"
-                               (paste)="handleEditInputPaste($event)"
                            [(ngModel)]="currentCell!.editedCellContent"
                         ></textarea>
                     <span #inlineEditorButtons
@@ -815,12 +821,12 @@ export class TimTableComponent
     public activeCell?: ICellCoord;
     public startCell?: ICellCoord;
     private selectedCells: ISelectedCells = {
-        cells: [],
+        cells: [], // cells as indices of original table in visible order
         srows: [],
-        scol1: 0,
-        scol2: 0,
-        srow1: 0,
-        srow2: 0,
+        scol1: 0, // first selected column real index
+        scol2: 0, // last selected column real index
+        srow1: 0, // first selected row real index
+        srow2: 0, // last selected row real index
     };
     public shiftDown = false;
     public cbAllFilter = false;
@@ -872,8 +878,8 @@ export class TimTableComponent
     private editInputStyles: string = "";
     private editInputClass: string = "";
     headersStyle: Record<string, string> | null = null;
+    allowPasteTable: boolean = true;
     pasteTableChars: Record<string, string[]> = {cr: ["\n"], tab: ["\t", "|"]};
-    pasteTableTabChars: string[] = ["\t", "|"];
     button: string = "Tallenna";
     hasButton: boolean = true;
     private noNeedFirstClick = false;
@@ -904,6 +910,8 @@ export class TimTableComponent
     private initialRowCount: number = 0;
     // Number of rows in the table in its original state (i.e. no user state is applied)
     private initialColCount: number = 0;
+
+    private static readonly MAX_UNDO_STACK = 20;
 
     constructor(
         private el: ElementRef,
@@ -1022,6 +1030,8 @@ export class TimTableComponent
             this.pasteTableChars = this.data.pasteTableChars;
         }
 
+        this.allowPasteTable = this.data.allowPasteTable ?? true;
+
         if (!this.headersStyle) {
             this.headersStyle = {
                 // backgroundColor: "lightgray",
@@ -1133,6 +1143,10 @@ export class TimTableComponent
 
         // installDataWatcher(this, "selectedCells", "tim-table-selectedCells");
 
+        const el = this.el.nativeElement as HTMLElement;
+        el.addEventListener("copy", (e) => this.doCopy(e));
+        el.addEventListener("paste", (e) => this.doPaste(e));
+
         if (!this.viewctrl) {
             return;
         }
@@ -1225,6 +1239,31 @@ export class TimTableComponent
         }
     }
 
+    private undoStack: CellAttrToSave[][] = [];
+    private undoEntry: CellAttrToSave[] = [];
+
+    private doUndo = async () => {
+        if (this.undoStack.length < 1) {
+            return;
+        }
+        const undoEntry = this.undoStack.pop()!;
+        await this.setCellStyleAttribute(undoEntry, ClearSort.No);
+        this.edited = true;
+        this.c();
+    };
+
+    private undoStackPush(entry: CellAttrToSave[]) {
+        if (!entry || entry.length === 0) {
+            return;
+        }
+        this.undoStack.push(entry.map((e) => ({...e}))); // push a copy
+        entry.length = 0;
+        // Trim oldest entries to keep stack size <= MAX_UNDO_STACK
+        while (this.undoStack.length > TimTableComponent.MAX_UNDO_STACK) {
+            this.undoStack.shift();
+        }
+    }
+
     private doPaste(e: ClipboardEvent | null = null) {
         if (!this.isCellsSelected() || !this.isInEditMode()) {
             return;
@@ -1233,19 +1272,22 @@ export class TimTableComponent
             return; // do not paste if inline editor is open
         }
         if (e) {
+            if (!this.allowPasteTable) {
+                return;
+            }
             e.preventDefault();
             const clipboardData = e.clipboardData;
             if (clipboardData) {
                 const str = clipboardData.getData("text/plain");
                 if (str) {
-                    void this.fillSelectionByString(str);
+                    void this.fillSelectionByString(str, ClearSort.No);
                 }
             }
             return;
         }
         getClipboardText().then(async (str) => {
             if (str) {
-                await this.fillSelectionByString(str);
+                await this.fillSelectionByString(str, ClearSort.No);
             }
         });
     }
@@ -1257,6 +1299,14 @@ export class TimTableComponent
         }
         if (cmd === "paste") {
             this.doPaste();
+            return;
+        }
+        if (cmd === "undo") {
+            void this.doUndo();
+            return;
+        }
+        if (cmd === "selectAll") {
+            this.selectAllCells();
             return;
         }
     }
@@ -1465,10 +1515,6 @@ export class TimTableComponent
         document.addEventListener("keydown", this.keyDownTable);
         document.addEventListener("keypress", this.keyPressTable);
         // document.addEventListener("click", this.onClick);
-
-        const el = this.timTableRunDiv?.nativeElement ?? document;
-        el.addEventListener("copy", (e) => this.doCopy(e));
-        el.addEventListener("paste", (e) => this.doPaste(e));
     }
 
     private removeListenersAndCloseEditor() {
@@ -2097,6 +2143,43 @@ export class TimTableComponent
         this.allowSelectionInTable(true);
     }
 
+    selectAllCells = () => {
+        this.disableStartCell();
+        const ret: ICellIndex[] = [];
+        const srows: boolean[] = [];
+        let ymin = 1000000;
+        let xmin = 1000000;
+        let ymax = 0;
+        let xmax = 0;
+        for (let sr = 0; sr < this.cellDataMatrix.length; sr++) {
+            const r = this.permTable[sr];
+            if (this.currentHiddenRows.has(r)) {
+                continue;
+            }
+            for (let c = 0; c < this.cellDataMatrix[0].length; c++) {
+                if (this.data.hiddenColumns?.includes(c)) {
+                    continue;
+                }
+                srows[sr] = true;
+                ret.push({x: c, y: r});
+                ymin = Math.min(sr, ymin);
+                ymax = Math.max(sr, ymax);
+                xmin = Math.min(c, xmin);
+                xmax = Math.max(c, xmax);
+            }
+        }
+        this.selectedCells = {
+            cells: ret,
+            srows: srows,
+            scol1: xmin,
+            scol2: xmax,
+            srow1: ymax,
+            srow2: ymax,
+        };
+        this.allowSelectionInTable(false);
+        this.c();
+    };
+
     /**
      * Returns currently used real row indices starting from row
      * Suppose that row is not hidden.
@@ -2219,6 +2302,7 @@ export class TimTableComponent
         ) {
             return;
         }
+        const undoEntry: CellAttrToSave[] = [];
         const cellsToSave: CellToSave[] = [];
         if (this.task) {
             // const cells = this.getSelectedCells(row, col);
@@ -2226,6 +2310,12 @@ export class TimTableComponent
                 if (this.isLockedCell(c.y, c.x)) {
                     continue;
                 }
+                undoEntry.push({
+                    key: "cell",
+                    row: c.y,
+                    col: c.x,
+                    c: this.cellDataMatrix[c.y][c.x].cell as string,
+                });
                 cellsToSave.push({c: cellContent, row: c.y, col: c.x});
                 this.setUserContent(c.y, c.x, cellContent);
             }
@@ -2241,6 +2331,7 @@ export class TimTableComponent
             this.dataViewComponent?.updateCellsContents(
                 selectedCells.cells.map((c) => ({row: c.y, col: c.x}))
             );
+            this.undoStackPush(undoEntry);
             return;
         }
 
@@ -2248,11 +2339,18 @@ export class TimTableComponent
             if (this.isLockedCell(c.y, c.x)) {
                 continue;
             }
+            undoEntry.push({
+                key: "cell",
+                row: c.y,
+                col: c.x,
+                c: this.cellDataMatrix[c.y][c.x].cell as string,
+            });
             cellsToSave.push({c: cellContent, row: c.y, col: c.x});
         }
         if (cellsToSave.length === 0) {
             return;
         }
+        this.undoStackPush(undoEntry);
         const response = await to(
             $http.post<CellResponse[]>("/timTable/saveMultiCell", {
                 docId,
@@ -2760,7 +2858,7 @@ export class TimTableComponent
         return ret;
     }
 
-    async make2DArrayFromCVS(val: string): Promise<string[][]> {
+    async make2DArrayFromCSV(val: string): Promise<string[][]> {
         // const papa = await TimTableComponent.getPapa();
         const papaModule = await import("papaparse");
         const papa = papaModule.default ?? papaModule;
@@ -2799,71 +2897,55 @@ export class TimTableComponent
     }
 
     async fillTableCSV(val: string) {
-        const data = await this.make2DArrayFromCVS(val);
+        const data = await this.make2DArrayFromCSV(val);
         const templ = this.make2DArrayToTemplate(data);
         await this.handleToolbarSetCell(templ);
     }
 
     getSelectionAsString(): string {
         const rows: string[] = [];
-        for (
-            let r = this.selectedCells.srow1;
-            r <= this.selectedCells.srow2;
-            r++
-        ) {
-            if (this.currentHiddenRows.has(this.permTable[r])) {
+        let row: string[] = [];
+        if (this.selectedCells.cells.length == 0) {
+            return "";
+        }
+        let lasty = this.selectedCells.cells[0].y;
+        for (const ci of this.selectedCells.cells) {
+            // header row
+            const y = ci.y;
+            if (lasty !== y) {
+                // new row
+                if (!this.currentHiddenRows.has(lasty)) {
+                    rows.push(row.join("\t"));
+                }
+                row = [];
+                lasty = y;
+            }
+            const x = ci.x;
+            if (this.data.hiddenColumns?.includes(x)) {
                 continue;
             }
-            const row: string[] = [];
-            for (
-                let c = this.selectedCells.scol1;
-                c <= this.selectedCells.scol2;
-                c++
-            ) {
-                if (this.data.hiddenColumns?.includes(c)) {
-                    continue;
-                }
-                const realRow = this.permTable[r];
-                row.push(this.getCellContentString(realRow, c));
-            }
+            row.push(this.getCellContentString(y, x));
+        }
+        if (row.length > 0 && !this.currentHiddenRows.has(lasty)) {
             rows.push(row.join("\t"));
         }
         return rows.join("\n");
     }
 
-    async fillSelectionByString(val: string) {
-        const array2d = await this.make2DArrayFromCVS(val);
+    async fillSelectionByString(
+        val: string,
+        clearSort: ClearSort = ClearSort.Yes
+    ) {
+        const array2d = await this.make2DArrayFromCSV(val);
 
-        if (!(array2d.length > 1 || array2d[0]?.length > 1)) {
-            return; // just one cell or even less
-        }
-        const templ = this.make2DArrayToTemplate(array2d);
-        await this.handleToolbarSetCell(templ);
-    }
-
-    async handleEditInputPaste(ev: ClipboardEvent) {
-        if (this.currentCell) {
-            return; // let the small editor handle it
-        }
-
-        const input = ev.target as HTMLInputElement;
-        const clipboardData = ev.clipboardData?.getData("text") ?? "";
         if (
-            !this.pasteTableChars ||
-            Object.keys(this.pasteTableChars).length === 0
+            array2d.length < 1 ||
+            (array2d.length === 1 && array2d[0]?.length < 1)
         ) {
-            return;
+            return; // nothing to do
         }
-
-        const array2d = await this.make2DArrayFromCVS(clipboardData);
-
-        if (!(array2d.length > 1 || array2d[0]?.length > 1)) {
-            return; // just one cell or even less
-        }
-        ev.preventDefault();
-        input.value = array2d[0][0];
         const templ = this.make2DArrayToTemplate(array2d);
-        await this.handleToolbarSetCell(templ);
+        await this.handleToolbarSetCell(templ, clearSort);
     }
 
     async smallEditorLostFocus(_ev: unknown) {
@@ -2896,8 +2978,40 @@ export class TimTableComponent
         this.c();
     }
 
+    private isInInput(ev: KeyboardEvent): boolean {
+        const target = ev.target as HTMLElement;
+        if (!target) {
+            return false;
+        }
+        const tagName = target.tagName.toLowerCase();
+        if (
+            tagName === "input" ||
+            tagName === "textarea" ||
+            target.isContentEditable
+        ) {
+            return true;
+        }
+        return false;
+    }
+
     private keyDownTable = async (ev: KeyboardEvent) => {
         this.shiftDown = ev.shiftKey;
+
+        if ((ev.ctrlKey || ev.metaKey) && !ev.shiftKey && !this.isInInput(ev)) {
+            if (ev.repeat) {
+                return;
+            }
+            if (ev.key === "z" || ev.key === "Z" || ev.key === "Backspace") {
+                ev.preventDefault();
+                void this.doUndo();
+                return;
+            }
+            if (ev.key === "a" || ev.key === "A") {
+                ev.preventDefault();
+                this.selectAllCells();
+                return;
+            }
+        }
 
         // if (!this.mouseInTable) return;
         // TODO: Check properly if table has focus when preventing default tab behavior
@@ -4382,6 +4496,9 @@ export class TimTableComponent
      * Saves the currently edited cell and closes the simple cell content editor.
      */
     public async saveAndCloseSmallEditor() {
+        if (!this.currentCell) {
+            return;
+        }
         await this.saveCurrentCell();
         this.closeSmallEditor();
     }
@@ -4544,6 +4661,7 @@ export class TimTableComponent
         cells: ICellIndex[]
     ) {
         // now close your eyes!  This is not for children
+        const selfthis = this;
         if (
             !cell ||
             cell.row >= this.cellDataMatrix.length ||
@@ -4580,6 +4698,13 @@ export class TimTableComponent
                             }
                             currentKey = "cell"; // no more toggle in next cells, do like this cell
                         }
+
+                        this.undoEntry.push({
+                            col: c.x,
+                            row: c.y,
+                            key: "cell",
+                            c: this.cellDataMatrix[c.y][c.x].cell as string,
+                        });
 
                         cellsToSave.push({
                             col: c.x,
@@ -4775,6 +4900,15 @@ export class TimTableComponent
                         }
                         if (s || change) {
                             s = String(s);
+                            selfthis.undoEntry.push({
+                                col: c.x,
+                                row: c.y,
+                                key: skey,
+                                c: (skey === "class"
+                                    ? selfthis.cellDataMatrix[c.y][c.x].class
+                                    : selfthis.cellDataMatrix[c.y][c.x]
+                                          .styleCache) as string,
+                            });
                             cellsToSave.push({
                                 col: c.x,
                                 row: c.y,
@@ -4896,8 +5030,12 @@ export class TimTableComponent
         return this.setToColumnByIndex(col);
     }
 
-    async handleToolbarSetCell(value: IToolbarTemplate) {
+    async handleToolbarSetCell(
+        value: IToolbarTemplate,
+        clearSort: ClearSort = ClearSort.Yes
+    ) {
         const cellsToSave: CellAttrToSave[] = [];
+        this.undoEntry = [];
         let startCell = this.activeCell;
         // If just one cell is selected, use that as start cell
         // if multiple cells are selected, use upper left corner as start cell
@@ -4914,7 +5052,7 @@ export class TimTableComponent
             this.selectedCells.cells
         ); // , this.selectedCells);
         if (cellsToSave) {
-            await this.setCellStyleAttribute(cellsToSave);
+            await this.setCellStyleAttribute(cellsToSave, clearSort);
         }
         if (this.selectedCells.cells.length === 1 && value.delta) {
             //
@@ -4943,6 +5081,7 @@ export class TimTableComponent
                 await this.doCellMovementN(-value.delta.y, Direction.Up, false);
             }
         }
+        this.undoStackPush(this.undoEntry);
         this.c();
     }
 
@@ -5076,8 +5215,12 @@ export class TimTableComponent
     /**
      * Tells the server to set a cell style attribute.
      * @param cellsToSave list of cells to save
+     * @param clearSort should sort order be cleared after setting the style
      */
-    async setCellStyleAttribute(cellsToSave: CellAttrToSave[]) {
+    async setCellStyleAttribute(
+        cellsToSave: CellAttrToSave[],
+        clearSort: ClearSort = ClearSort.Yes
+    ) {
         if (!this.viewctrl || !this.activeCell) {
             return;
         }
@@ -5140,7 +5283,7 @@ export class TimTableComponent
         this.data.toolbarTemplates = toolbarTemplates;
 
         // Update display
-        this.reInitialize();
+        this.reInitialize(clearSort);
         this.c();
     }
 

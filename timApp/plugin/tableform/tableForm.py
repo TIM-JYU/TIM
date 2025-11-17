@@ -131,6 +131,7 @@ class TableFormMarkupModel(GenericMarkupModel):
     emailUsersButtonText: str | Missing | None = missing
     filterRow: int | bool | Missing | None = missing
     filters: Filters | None | Missing = missing
+    allowPasteTable: bool | Missing = False
     pasteTableChars: dict[str, list[str]] | Missing = missing
     fixedColor: str | Missing | None = missing
     fontSize: str | Missing | None = missing
