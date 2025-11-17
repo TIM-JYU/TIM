@@ -1160,7 +1160,14 @@ export function insertTextInTextarea(
         ta.scrollTop = oldScroll;
 
         // Notify listeners / Angular that the value changed
-        ta.dispatchEvent(new Event("input", {bubbles: true}));
+        ta.dispatchEvent(
+            new Event("input", {
+                bubbles: true,
+                cancelable: true,
+                inputType: "insertText",
+                data: text,
+            } as InputEventInit)
+        );
 
         // Keep focus in textarea
         ta.focus();
