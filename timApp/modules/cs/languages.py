@@ -1005,24 +1005,55 @@ class Java(Language):
         self.classpath = get_param(query, "-cp", ".") + ":$CLASSPATH"
         self.fileext = "java"
         # print("classpath=", self.classpath)
-        self.package, self.classname = find_java_package(sourcecode)
-        self.javaclassname = self.classname
-        if not self.classname:
-            self.classname = "Prg"
-        if self.package:
-            self.filepath = self.prgpath + "/" + self.package.replace(".", "/")
-            mkdirs(self.filepath)
-            self.javaclassname = self.package + "." + self.classname
+        if isinstance(sourcecode, list):
+            for source in sourcecode:
+                package, classname = find_java_package(source.content)
 
-        self.filename = self.javaclassname + ".java"
-        self.javaname = self.filepath + "/" + self.classname + ".java"
-        self.sourcefilename = self.javaname
+                if "void main(" in source.content:
+                    self.javaclassname = classname
+
+                if not classname:
+                    classname = "Prg"
+
+                filepath = self.filepath
+                if package:
+                    filepath = self.prgpath + "/" + package.replace(".", "/")
+                    mkdirs(filepath)
+
+                    if "void main(" in source.content:
+                        self.javaclassname = package + "." + classname
+
+                source.path = filepath + "/" + classname + ".java"
+        else:
+            self.package, self.classname = find_java_package(sourcecode)
+            self.javaclassname = self.classname
+            if not self.classname:
+                self.classname = "Prg"
+            if self.package:
+                self.filepath = self.prgpath + "/" + self.package.replace(".", "/")
+                mkdirs(self.filepath)
+                self.javaclassname = self.package + "." + self.classname
+
+            self.filename = self.javaclassname + ".java"
+            self.javaname = self.filepath + "/" + self.classname + ".java"
+            self.sourcefilename = self.javaname
+
+    @staticmethod
+    def supports_multifiles():
+        return True
 
     def get_cmdline(self):
         return (
             f"javac --enable-preview --release {JAVA_VERSION} --module-path /javafx-sdk-{JAVAFX_VERSION}/lib"
             + f" --add-modules=ALL-MODULE-PATH -Xlint:all -Xlint:-preview -cp {self.classpath}"
-            + f" {self.javaname}"
+            + f" {self.sources()}"
+        )
+
+    def sources(self):
+        return " ".join(
+            file.path
+            for file in self.sourcefiles
+            if file.path.endswith(f".{self.fileext}")
         )
 
     def run(self, result, sourcelines, points_rule):
