@@ -2014,7 +2014,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                                 err += "Pattern is more than once: " + readpoints + "\n"
                         except:
                             p = 0
-                        give_points(points_rule, "output", p)
+                        give_points(points_rule, is_test + "output", p)
                 except Exception as e:
                     msg = str(e)
                     if isinstance(e, IndexError):
