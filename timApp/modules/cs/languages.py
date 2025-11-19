@@ -1006,9 +1006,11 @@ class Java(Language):
         self.fileext = "java"
         # print("classpath=", self.classpath)
         self.package, self.classname = find_java_package(sourcecode)
-        self.javaclassname = self.classname
         if not self.classname:
-            self.classname = "Prg"
+            self.classname = (
+                self.filename.removesuffix(".java") if self.filename else "Prg"
+            )
+        self.javaclassname = self.classname
         if self.package:
             self.filepath = self.prgpath + "/" + self.package.replace(".", "/")
             mkdirs(self.filepath)
