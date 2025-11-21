@@ -114,6 +114,7 @@ FilterValue = dict[str | int, str | int]
 
 @dataclass
 class Filters:
+    clear: bool | Missing = missing
     sort: list[int | str] | None | Missing = missing
     values: list[FilterValue] | None | Missing = missing
 

@@ -15,7 +15,7 @@ import {CommonModule} from "@angular/common";
 export interface ITimTableToolbarCallbacks {
     setCell: (value: IToolbarTemplate) => void;
     getCell: () => string;
-    addToTemplates: () => void;
+    addToTemplates: (mousedown: boolean) => void;
     addColumn: (offset: number) => void;
     addRow: (offset: number) => void;
     removeColumn: () => void;
@@ -75,6 +75,10 @@ const DEFAULT_CELL_BGCOLOR = "#FFFF00";
                             <ul class="dropdown-menu" *dropdownMenu>
                                 <li role="menuitem" (click)="filter('copy')"><a>Copy filters</a></li>
                                 <li role="menuitem" (click)="filter('paste')"><a>Paste filters</a></li>
+                                <li role="menuitem" (click)="filter('clear')"><a>Clear filters</a></li>
+                                <li role="menuitem" (click)="filter('addrow')"><a>Add filter row</a></li>
+                                <li role="menuitem" (click)="filter('removerow')"><a>Remove last filter row</a></li>
+                                <li role="menuitem" (click)="filter('addtemplate')"><a>Add filters to toolbar</a></li>
                             </ul>
                         </div>
                     </div>
@@ -136,7 +140,8 @@ const DEFAULT_CELL_BGCOLOR = "#FFFF00";
                         <button class="timButton btn-xs"
                                 *ngIf="!hide?.addToTemplates"
                                 title="Add current cell(s) to templates"
-                                (click)="addToTemplates()">
+                                (click)="addToTemplates(false)"
+                                (pointerdown)="addToTemplates(true)">
                             <i class="glyphicon glyphicon-star-empty"></i>
                         </button>
                         &ngsp;
@@ -272,8 +277,8 @@ export class TimTableEditorToolbarDialogComponent extends AngularDialogComponent
     /**
      * Add current cell to templates
      */
-    addToTemplates() {
-        this.callbacks.addToTemplates();
+    addToTemplates(mousedown: boolean = false) {
+        this.callbacks.addToTemplates(mousedown);
     }
 
     /**
