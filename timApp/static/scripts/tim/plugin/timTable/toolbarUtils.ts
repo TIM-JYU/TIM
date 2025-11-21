@@ -63,7 +63,7 @@ export function handleToolbarKey(
         }
         let code = ev.code;
         if (code.startsWith("Key")) {
-            code = code.substr(3).toLowerCase();
+            code = code.substring(3).toLowerCase();
         }
         if (ekey === key || code === key) {
             instance.applyTemplate(templ);

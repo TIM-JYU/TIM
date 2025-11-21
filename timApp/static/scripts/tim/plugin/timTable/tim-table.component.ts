@@ -20,7 +20,6 @@
  * Mostly the screencoordinates starts in code by s like sy, srow and so on.
  */
 // TODO: Static headers and filter rows so they do not scroll
-// TODO: Toolbar visible only when hit an editable field (not locked)
 // TODO: Toolbar shall not steal focus when created first time
 // TODO: save filter and sort conditions
 // TODO: Show sort icons weakly, so old icons with gray
@@ -31,9 +30,9 @@
 // TODO: Use Angular's HTTP service instead of AngularJS $http
 //
 // TODO: click somewhere lost filters (could not reproduce?)
-// TODO: filters to favorites
 
-// done: toolbar must be reconfigured when table changes (like columns added)
+// changes and fixes done 21.11.2025/vesal
+// done: toolbar must be reconfigured when table changes
 // done: small editor as textarea to prevent line breaks
 // done: remove selectable when selectiong area
 // done: also sort order to filter json
@@ -46,6 +45,7 @@
 // done: small editor does not undo \n  (no fix, would be too complex)
 // done: filters to toolbar
 // done: copy/paste filters
+// done: filters to favorites
 
 import * as t from "io-ts";
 import type {
@@ -262,6 +262,7 @@ export interface IToolbarTemplate {
 export type FilterValue = Record<string, string | number>;
 
 export interface Filters {
+    clear?: boolean; // bool | None | Missing
     sort?: (number | string)[]; // list[int | str] | None | Missing
     values?: FilterValue[]; // list[FilterValue] | None | Missing
 }
@@ -673,8 +674,9 @@ export enum ClearSort {
                             <td [hidden]="!showColumn(coli)"
                                 *ngFor="let c of cellDataMatrix[0]; let coli = index" [attr.span]="c.span">
                                 <div class="filterdiv">
-                                    <input type="text" (ngModelChange)="handleChangeFilter()"
-                                           (focus)="saveAndCloseSmallEditor()"
+                                    <input type="text" class="filtter-input"
+                                           (ngModelChange)="handleChangeFilter()"
+                                           (focus)="filterInputFocused()"
                                            [(ngModel)]="filters[0][coli]"
                                            title="Write filter condition">
                                 </div>
@@ -696,8 +698,9 @@ export enum ClearSort {
                             <td [hidden]="!showColumn(coli)"
                                 *ngFor="let c of cellDataMatrix[0]; let coli = index" [attr.span]="c.span">
                                 <div class="filterdiv">
-                                    <input type="text" (ngModelChange)="handleChangeFilter()"
-                                           (focus)="saveAndCloseSmallEditor()"
+                                    <input type="text" class="filtter-input"
+                                           (ngModelChange)="handleChangeFilter()"
+                                           (focus)="filterInputFocused()"
                                            [(ngModel)]="filters[frow.index][coli]"
                                            title="Write filter condition">
                                 </div>
@@ -1193,7 +1196,9 @@ export class TimTableComponent
 
     addFilterRow() {
         this.filters.push([]);
-        this.otherFilterRows.push({index: this.filterRow});
+        if (this.filterRow > 0) {
+            this.otherFilterRows.push({index: this.filterRow});
+        }
         this.filterRow++;
         this.rowDelta++;
         this.c();
@@ -1332,6 +1337,26 @@ export class TimTableComponent
             }
             await this.applyFilterDataFromString(value);
         }
+        if (cmd === "clear") {
+            await this.handleClickClearFilters();
+            return;
+        }
+        if (cmd === "addrow") {
+            this.addFilterRow();
+            return;
+        }
+        if (cmd === "removerow") {
+            await this.deleteFilterRow();
+            return;
+        }
+        if (cmd === "addtemplate") {
+            this.addFilterTemplateToToolbar();
+            return;
+        }
+    }
+
+    private async filterInputFocused() {
+        await this.saveAndCloseSmallEditor();
     }
 
     private async applyFilters(filterData?: Filters): Promise<void> {
@@ -1352,13 +1377,24 @@ export class TimTableComponent
             return headers.indexOf(s);
         }
 
+        if (filterData.clear) {
+            await this.handleClickClearFilters();
+        }
+
         if (filterData.values) {
             for (const [irow, f] of filterData.values.entries()) {
                 // eslint-disable-next-line guard-for-in
                 for (const key in f) {
                     let colIndex = Number(key);
                     colIndex = getColIndex(key, this.data.headers);
-                    if (colIndex >= 0 && key) {
+                    if (
+                        colIndex >= 0 &&
+                        key &&
+                        colIndex < this.cellDataMatrix[0].length
+                    ) {
+                        if (this.filters.length <= irow) {
+                            this.filters.push([]);
+                        }
                         this.filters[irow][colIndex] = "" + f[key];
                     }
                 }
@@ -1401,7 +1437,7 @@ export class TimTableComponent
             // console.error("Error parsing filter data: ", e);
             return;
         }
-        return this.applyFilters(fd);
+        await this.applyFilters(fd);
     }
 
     getFilterDataAsString(): string {
@@ -1543,7 +1579,8 @@ export class TimTableComponent
                 callbacks: {
                     setCell: (val) => this.handleToolbarSetCell(val),
                     getCell: () => this.getCurrentCellAsString(),
-                    addToTemplates: () => this.handleToolbarAddToTemplates(),
+                    addToTemplates: (mousedown: boolean) =>
+                        this.handleToolbarAddToTemplates(mousedown),
                     addColumn: (offset) => this.handleToolbarAddColumn(offset),
                     addRow: (offset) => this.handleToolbarAddRow(offset),
                     removeColumn: () => this.handleToolbarRemoveColumn(),
@@ -5132,7 +5169,83 @@ export class TimTableComponent
         return templ;
     }
 
-    handleToolbarAddToTemplates() {
+    private isFilterInputFocused(): boolean {
+        const ae = document.activeElement as HTMLElement | null;
+        if (!ae) {
+            return false;
+        }
+        if (ae.tagName !== "INPUT") {
+            return false;
+        }
+        if (!ae.classList.contains("filtter-input")) {
+            return false;
+        }
+        // Varmista että input kuuluu tähän komponenttiin
+        if (this.tableElem && !this.tableElem.nativeElement.contains(ae)) {
+            return false;
+        }
+        return true;
+    }
+
+    private filterWasFocused: boolean = false;
+
+    private addTempateToToolbar(templ: IToolbarTemplate | undefined): boolean {
+        if (!templ) {
+            return false;
+        }
+        if (this.data.toolbarTemplates === undefined) {
+            this.data.toolbarTemplates = [];
+        }
+        for (const ob of this.data.toolbarTemplates) {
+            if (angular.equals(ob, templ)) {
+                return false;
+            }
+        }
+        this.data.toolbarTemplates.push(templ);
+        this.c();
+        return true;
+    }
+
+    private addFilterTemplateToToolbar(): boolean {
+        const fdStr = this.getFilterDataAsString();
+        if (!fdStr) {
+            return false;
+        }
+        const filters = this.getFilterData();
+        let title = "";
+        let text = "";
+        if (filters.sort) {
+            const tx = JSON.stringify(filters.sort).replace(/[[\]{}"]/g, "");
+            title = "Sort: " + tx;
+            text = "s" + tx.substring(0, 4);
+        }
+        if (filters.values) {
+            const tx = JSON.stringify(filters.values).replace(/[[\]{}"]/g, "");
+            title = "Filter: " + tx + " " + title;
+            text = "f" + tx.substring(0, 5);
+        }
+        const templ: IToolbarTemplate = {
+            text: text,
+            title: title,
+            favorite: true,
+            filters: filters,
+        };
+        return this.addTempateToToolbar(templ);
+    }
+
+    handleToolbarAddToTemplates(mousedown: boolean = false) {
+        if (mousedown) {
+            // This is needed because focus is lost on click,
+            // so we need to track filter focus separately
+            this.filterWasFocused = this.isFilterInputFocused();
+            return;
+        }
+        if (this.filterWasFocused) {
+            this.filterWasFocused = false;
+            this.addFilterTemplateToToolbar();
+            return;
+        }
+
         const parId = this.getOwnParId();
         if (
             !this.activeCell ||
@@ -5177,23 +5290,8 @@ export class TimTableComponent
             const colId = this.activeCell.col;
             templ = this.getTemplContent(rowId, colId);
         }
-        if (!templ) {
-            return;
-        }
-        if (this.data.toolbarTemplates === undefined) {
-            this.data.toolbarTemplates = [];
-        }
-        let isUnique = true;
-        for (const ob of this.data.toolbarTemplates) {
-            if (angular.equals(ob, templ)) {
-                isUnique = false;
-                break;
-            }
-        }
-        if (isUnique) {
-            this.data.toolbarTemplates.push(templ);
-            this.c();
-        }
+
+        this.addTempateToToolbar(templ);
     }
 
     clearSmallEditorStyles() {
