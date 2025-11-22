@@ -902,7 +902,6 @@ class CSComtest(
         return cmdline
 
     def run(self, result, sourcelines, points_rule):
-        eri = -1
         code, out, err, pwddir = self.runself(
             [
                 "/cs/dotnet/nunit-test-dll",
@@ -912,49 +911,57 @@ class CSComtest(
             ]
         )
         # print(code, out, err)
-        if code == -9:
-            out = "Runtime exceeded, maybe loop forever\n" + out
-            eri = 0
-        out = remove_before("Test.dll", out)
-        out = re.sub(r"\nErrors, Failures and Warnings\n\n", "", out, flags=re.M)
-        out = re.sub(r"Run Settings(.|\n)*Test Count:", "Test Count:", out, flags=re.M)
-        out = re.sub(r"\s*Start time(.|\s)*Duration:.*$", "", out, flags=re.M)
-        out = re.sub(r"Failed Tests(.|\n)*", "", out, flags=re.M)
-        out = out.strip(" \t\n\r")
-        if eri < 0:
-            eri = out.find("Failed : ")
-        if eri < 0:
-            eri = out.find("Error : ")
-        if is_compile_error(out, err):
-            return code, out, err, pwddir
-        if out.find("Unhandled exceptions:") >= 0:
-            if out.find("StackOverflowException:") >= 0:
-                out = out[0:300]
-            return code, out, err, pwddir
-        give_points(points_rule, "testrun")
-        self.run_points_given = True
-        web = result["web"]
-        web["testGreen"] = True
-        if eri >= 0:
-            web["testGreen"] = False
-            web["testRed"] = True
-            web["comtestError"] = ""
-            lines = sourcelines.split("\n")
-            lf = ""
-            lni = out.find(", line ", 0)
-            # copy failed comtest lines from source
-            # In out there is text like: "in method Keskiarvo, line 24"
-            while lni >= 0:  # and not nocode:
-                lns = out[lni + 7 :]
-                lns = lns[0 : lns.find("\n")]
-                lnro = int(lns)
-                web["comtestError"] += lf + str(lnro) + " " + lines[lnro - 1]
-                lni = out.find(", line ", lni + 1)
-                lf = "\n"
-        else:
-            give_points(points_rule, "test")
-            self.run_points_given = True
+        code, out = check_comtest_csharp(
+            self, code, err, out, points_rule, result, sourcelines
+        )
         return code, out, err, pwddir
+
+
+def check_comtest_csharp(self, code, err, out, points_rule, result, sourcelines):
+    eri = -1
+    if code == -9:
+        out = "Runtime exceeded, maybe loop forever\n" + out
+        eri = 0
+    out = remove_before("Test.dll", out)
+    out = re.sub(r"\nErrors, Failures and Warnings\n\n", "", out, flags=re.M)
+    out = re.sub(r"Run Settings(.|\n)*Test Count:", "Test Count:", out, flags=re.M)
+    out = re.sub(r"\s*Start time(.|\s)*Duration:.*$", "", out, flags=re.M)
+    out = re.sub(r"Failed Tests(.|\n)*", "", out, flags=re.M)
+    out = out.strip(" \t\n\r")
+    if eri < 0:
+        eri = out.find("Failed : ")
+    if eri < 0:
+        eri = out.find("Error : ")
+    if is_compile_error(out, err):
+        return code, out
+    if out.find("Unhandled exceptions:") >= 0:
+        if out.find("StackOverflowException:") >= 0:
+            out = out[0:300]
+        return code, out
+    give_points(points_rule, "testrun")
+    self.run_points_given = True
+    web = result["web"]
+    web["testGreen"] = True
+    if eri >= 0:
+        web["testGreen"] = False
+        web["testRed"] = True
+        web["comtestError"] = ""
+        lines = sourcelines.split("\n")
+        lf = ""
+        lni = out.find(", line ", 0)
+        # copy failed comtest lines from source
+        # In out there is text like: "in method Keskiarvo, line 24"
+        while lni >= 0:  # and not nocode:
+            lns = out[lni + 7 :]
+            lns = lns[0 : lns.find("\n")]
+            lnro = int(lns)
+            web["comtestError"] += lf + str(lnro) + " " + lines[lnro - 1]
+            lni = out.find(", line ", lni + 1)
+            lf = "\n"
+    else:
+        give_points(points_rule, "test")
+        self.run_points_given = True
+    return code, out
 
 
 class Shell(Language):
@@ -1314,6 +1321,7 @@ class RunTest(Language, Modifier):
         self.fileext = ""
         self.hide_compile_out = True
         self.run_cmd = get_param(self.query, "testCmd", "")
+        self.test_ttype = get_param(self.query, "testType", "runtest")
 
     def run(self, result, sourcelines, points_rule):
         if not self.run_cmd:
@@ -1322,16 +1330,21 @@ class RunTest(Language, Modifier):
         # FIXME: Introduce some kind of setting to override this behaviour
         if is_compile_error(out, err):
             return -3, out, err, pwddir
-        out, err = check_comtest(
-            self,
-            "runtest",
-            code,
-            out,
-            err,
-            result,
-            points_rule,
-            filter_output=False,
-        )
+        if self.test_ttype == "csharp":
+            out, err = check_comtest_csharp(
+                self, code, err, out, points_rule, result, sourcelines
+            )
+        else:
+            out, err = check_comtest(
+                self,
+                self.test_ttype,
+                code,
+                out,
+                err,
+                result,
+                points_rule,
+                filter_output=False,
+            )
         return code, out, err, pwddir
 
 
