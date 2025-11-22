@@ -911,7 +911,7 @@ class CSComtest(
             ]
         )
         # print(code, out, err)
-        code, out = check_comtest_csharp(
+        out = check_comtest_csharp(
             self, code, err, out, points_rule, result, sourcelines
         )
         return code, out, err, pwddir
@@ -933,11 +933,11 @@ def check_comtest_csharp(self, code, err, out, points_rule, result, sourcelines)
     if eri < 0:
         eri = out.find("Error : ")
     if is_compile_error(out, err):
-        return code, out
+        return out
     if out.find("Unhandled exceptions:") >= 0:
         if out.find("StackOverflowException:") >= 0:
             out = out[0:300]
-        return code, out
+        return out
     give_points(points_rule, "testrun")
     self.run_points_given = True
     web = result["web"]
@@ -961,7 +961,7 @@ def check_comtest_csharp(self, code, err, out, points_rule, result, sourcelines)
     else:
         give_points(points_rule, "test")
         self.run_points_given = True
-    return code, out
+    return out
 
 
 class Shell(Language):
@@ -1333,7 +1333,7 @@ class RunTest(Language, Modifier):
         if is_compile_error(out, err):
             return -3, out, err, pwddir
         if self.test_ttype == "csharp":
-            out, err = check_comtest_csharp(
+            out = check_comtest_csharp(
                 self, code, err, out, points_rule, result, sourcelines
             )
         else:
