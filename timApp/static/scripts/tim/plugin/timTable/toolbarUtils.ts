@@ -8,12 +8,14 @@ import type {
     TimTableEditorToolbarDialogComponent as TimTableEditorToolbarDialogComponentType,
 } from "tim/plugin/timTable/tim-table-editor-toolbar-dialog.component";
 
-export let instance: TimTableEditorToolbarDialogComponentType | undefined;
+export let timTableToolbarInstance:
+    | TimTableEditorToolbarDialogComponentType
+    | undefined;
 
 export function setToolbarInstance(
     t: TimTableEditorToolbarDialogComponentType | undefined
 ) {
-    instance = t;
+    timTableToolbarInstance = t;
 }
 
 export function isToolbarEnabled() {
@@ -24,7 +26,7 @@ export function handleToolbarKey(
     ev: KeyboardEvent,
     toolBarTemplates: IToolbarTemplate[] | undefined
 ) {
-    if (!instance || !toolBarTemplates) {
+    if (!timTableToolbarInstance || !toolBarTemplates) {
         return false;
     }
     for (const templ of toolBarTemplates) {
@@ -42,14 +44,18 @@ export function handleToolbarKey(
             mod = k[0];
             key = k[1];
         }
-        if (mod === "" && key.length === 1 && instance.callbacks.isEdit()) {
+        if (
+            mod === "" &&
+            key.length === 1 &&
+            timTableToolbarInstance.callbacks.isEdit()
+        ) {
             continue; // ei käytetä yhden näppäimen shortcutteja jos ollaan editissä
         }
         if (templ.chars) {
             // regexp for keys to use
             if (ekey.match("^" + templ.chars + "$")) {
                 templ.cell = ekey;
-                instance.applyTemplate(templ);
+                timTableToolbarInstance.applyTemplate(templ);
                 return true;
             }
             continue;
@@ -66,7 +72,7 @@ export function handleToolbarKey(
             code = code.substring(3).toLowerCase();
         }
         if (ekey === key || code === key) {
-            instance.applyTemplate(templ);
+            timTableToolbarInstance.applyTemplate(templ);
             return true;
         }
     }
@@ -74,16 +80,16 @@ export function handleToolbarKey(
 }
 
 export function isToolbarOpen() {
-    return !!instance;
+    return !!timTableToolbarInstance;
 }
 
 export async function showTableEditorToolbar(p: ITimTableEditorToolbarParams) {
-    if (instance && !instance.isClosed()) {
-        if (instance.activeTable == p.activeTable) {
-            instance.show(p.callbacks, p.activeTable);
+    if (timTableToolbarInstance && !timTableToolbarInstance.isClosed()) {
+        if (timTableToolbarInstance.activeTable == p.activeTable) {
+            timTableToolbarInstance.show(p.callbacks, p.activeTable);
             return;
         }
-        instance.hideThis(false);
+        timTableToolbarInstance.hideThis(false);
     }
     const {TimTableEditorToolbarDialogComponent} = await import(
         "./tim-table-editor-toolbar-dialog.component"
@@ -92,7 +98,16 @@ export async function showTableEditorToolbar(p: ITimTableEditorToolbarParams) {
 }
 
 export function hideToolbar(closingTable: TimTableComponent) {
-    if (instance) {
-        instance.hideThis(instance.activeTable != closingTable);
+    if (timTableToolbarInstance) {
+        timTableToolbarInstance.hideThis(
+            timTableToolbarInstance.activeTable != closingTable
+        );
     }
+}
+
+export function isOpenForThisTable(table: TimTableComponent) {
+    return (
+        timTableToolbarInstance?.activeTable == table &&
+        !timTableToolbarInstance.isClosed()
+    );
 }

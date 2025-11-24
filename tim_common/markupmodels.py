@@ -203,6 +203,7 @@ class KnownMarkupFields(HiddenFieldsMixin):
     pointsRule: PointsRule | None | Missing = missing
     pointsText: str | None | Missing = missing
     postprogram: str | Missing = missing
+    postlibraries: list[str] | Missing = missing
     postoutput: str | Missing = missing
     previousTask: PreviousTaskInfo | None | Missing = missing
     saveTeacher: bool | None | Missing = missing

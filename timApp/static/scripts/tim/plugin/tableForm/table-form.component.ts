@@ -130,7 +130,7 @@ const TableFormMarkup = t.intersection([
         fields: t.array(t.string),
         showToolbar: t.boolean,
         hide: t.partial({
-            editMenu: t.boolean,
+            removeMenu: t.boolean,
             insertMenu: t.boolean,
         }),
         sisugroups: t.string,
@@ -345,7 +345,7 @@ export class TableFormComponent
     result?: string;
     error?: string;
     data: TimTable & {userdata: DataEntity} = {
-        hide: {edit: false, insertMenu: true, editMenu: true},
+        hide: {edit: false, insertMenu: true, removeMenu: true},
         hiddenRows: [],
         hiddenColumns: [],
         hideSaveButton: true,
@@ -602,12 +602,12 @@ export class TableFormComponent
         this.data.hiddenColumns = this.markup.hiddenColumns;
 
         // Initialize hide-attribute
-        this.data.hide = {editMenu: true, insertMenu: true};
+        this.data.hide = {removeMenu: true, insertMenu: true};
         if (this.markup.hide) {
             this.data.hide = this.markup.hide; // TODO: TimTablen oletukset tähän
             const hide = this.markup.hide;
-            if (hide.editMenu === undefined) {
-                this.data.hide.editMenu = true;
+            if (hide.removeMenu === undefined) {
+                this.data.hide.removeMenu = true;
             }
             if (hide.insertMenu === undefined) {
                 this.data.hide.insertMenu = true;
