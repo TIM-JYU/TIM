@@ -20,7 +20,6 @@
  * Mostly the screencoordinates starts in code by s like sy, srow and so on.
  */
 // TODO: Static headers and filter rows so they do not scroll
-// TODO: Toolbar shall not steal focus when created first time
 // TODO: save filter and sort conditions
 // TODO: Show sort icons weakly, so old icons with gray
 // TODO: set styles also by list of cells like value
@@ -30,8 +29,9 @@
 // TODO: Use Angular's HTTP service instead of AngularJS $http
 //
 // TODO: click somewhere lost filters (could not reproduce?)
+// TODO: what happends to headers, locked columns and so on when add/remove rows/columns?
 
-// changes and fixes done 21.11.2025/vesal
+// Changes and fixes done 23.11.2025/vesal
 // done: toolbar must be reconfigured when table changes
 // done: small editor as textarea to prevent line breaks
 // done: remove selectable when selectiong area
@@ -46,6 +46,7 @@
 // done: filters to toolbar
 // done: copy/paste filters
 // done: filters to favorites
+// done: Toolbar shall not steal focus when created first time (could not reproduce?)
 
 import * as t from "io-ts";
 import type {
@@ -118,12 +119,12 @@ import {
     defaultErrorMessage,
     defaultTimeout,
     getClipboardText,
+    insertTextInTextarea,
     maxContentOrFitContent,
     scrollToViewInsideParent,
     StringOrNumber,
     timeout,
     to,
-    insertTextInTextarea,
 } from "tim/util/utils";
 import {TaskId} from "tim/plugin/taskid";
 import {PluginMeta} from "tim/plugin/util";
@@ -134,12 +135,14 @@ import {computeHiddenRowsFromFilters} from "tim/plugin/timTable/filtering";
 import {
     handleToolbarKey,
     hideToolbar,
+    isOpenForThisTable,
     isToolbarEnabled,
     isToolbarOpen,
     showTableEditorToolbar,
 } from "tim/plugin/timTable/toolbarUtils";
 import {createParContext} from "tim/document/structure/create";
 import {CommonModule} from "@angular/common";
+import {prepareMenubarItems} from "tim/plugin/timTable/tim-table-editor-toolbar-dialog.component";
 
 // Uncomment next if need to data watch some attributes for data changes
 // import {installDataWatcher} from "tim/util/dataWatcher";
@@ -208,6 +211,10 @@ export interface HideValues {
     edit?: boolean;
     insertMenu?: boolean;
     editMenu?: boolean;
+    removeMenu?: boolean;
+    pasteMenu?: boolean;
+    filterMenu?: boolean;
+    addFilterRow?: boolean;
     toolbar?: boolean;
     editorButtons?: boolean;
     editorPosition?: boolean;
@@ -216,6 +223,10 @@ export interface HideValues {
     delRow?: boolean;
     addCol?: boolean;
     delCol?: boolean;
+    addRowMenu?: boolean;
+    delRowMenu?: boolean;
+    addColMenu?: boolean;
+    delColMenu?: boolean;
     needFirstClick?: boolean;
     sort?: boolean;
     colorPicker?: boolean;
@@ -257,7 +268,16 @@ export interface IToolbarTemplate {
     toColIndex?: number;
     toColName?: string;
     filters?: Filters;
+    menu?: string;
 }
+
+export interface IMenuBarUserEntry {
+    menuName: string;
+    entries: IToolbarTemplate[];
+}
+
+export type IMenuBarUserEntries = IMenuBarUserEntry[];
+export type IMenuBarUserEntriesMap = Record<string, IMenuBarUserEntry>;
 
 export type FilterValue = Record<string, string | number>;
 
@@ -302,6 +322,7 @@ export interface TimTable extends IGenericPluginMarkup {
     maxWidth?: string; // Possibly obsolete if cell/column layout can be given in data.table.columns
     minWidth?: string;
     singleLine?: boolean;
+    forceToolbar?: boolean;
     filterRow?: boolean | number;
     filters?: Filters;
     cbColumn?: boolean;
@@ -603,6 +624,7 @@ export enum ClearSort {
                             (click)="handleClickAddColumn()"><span class="glyphicon glyphicon-plus"></span></button>
                 </div>
                 <ng-container *ngIf="dataView; else tableView">
+                    <!--suppress TypeScriptUnresolvedReference -->
                     <tim-data-view [virtualScrolling]="dataViewVScrolling"
                                    [modelProvider]="this"
                                    [tableClass]="{editable: isInEditMode() && !isInForcedEditMode(),
@@ -612,10 +634,10 @@ export enum ClearSort {
                                    [id]="data.table.id"
                                    [columnIdStart]="nrColStart"
                                    [tableMaxHeight]="maxRows"
-                                   [tableMaxWidth]="dataView?.tableWidth ?? 'max-content'"
-                                   [fixedColumnCount]="dataView?.fixedColumns ?? 0"
+                                   [tableMaxWidth]="dataView.tableWidth"
+                                   [fixedColumnCount]="dataView.fixedColumns"
                                    [headerStyle]="headersStyle"
-                                   [reportSlowLoad]="dataView?.reportSlowLoad ?? true"
+                                   [reportSlowLoad]="dataView.reportSlowLoad"
                                    #dataViewComponent>
                         <ng-container *ngTemplateOutlet="inlineEditorTemplate"></ng-container>
                     </tim-data-view>
@@ -674,7 +696,7 @@ export enum ClearSort {
                             <td [hidden]="!showColumn(coli)"
                                 *ngFor="let c of cellDataMatrix[0]; let coli = index" [attr.span]="c.span">
                                 <div class="filterdiv">
-                                    <input type="text" class="filtter-input"
+                                    <input type="text" class="filter-input"
                                            (ngModelChange)="handleChangeFilter()"
                                            (focus)="filterInputFocused()"
                                            [(ngModel)]="filters[0][coli]"
@@ -698,7 +720,7 @@ export enum ClearSort {
                             <td [hidden]="!showColumn(coli)"
                                 *ngFor="let c of cellDataMatrix[0]; let coli = index" [attr.span]="c.span">
                                 <div class="filterdiv">
-                                    <input type="text" class="filtter-input"
+                                    <input type="text" class="filter-input"
                                            (ngModelChange)="handleChangeFilter()"
                                            (focus)="filterInputFocused()"
                                            [(ngModel)]="filters[frow.index][coli]"
@@ -859,6 +881,7 @@ export class TimTableComponent
     private intRow = false;
     private lockedCells?: string[];
     private lockedColumns?: string[];
+    public lowerRightLocked: ICellCoord = {row: -1, col: -1};
     cbFilter = false;
     filterRow = 0;
     maxRows = "2000em";
@@ -915,6 +938,8 @@ export class TimTableComponent
     private initialRowCount: number = 0;
     // Number of rows in the table in its original state (i.e. no user state is applied)
     private initialColCount: number = 0;
+    public menubarUserItems: IMenuBarUserEntries = [];
+    public menubarReadyItems: IMenuBarUserEntriesMap = {};
 
     private static readonly MAX_UNDO_STACK = 20;
 
@@ -990,17 +1015,51 @@ export class TimTableComponent
             this.hide = {...this.hide, ...this.data.hide};
         }
 
+        if (this.data.task) {
+            if (!this.hide) {
+                this.hide = {};
+            }
+            const hide = this.hide;
+            function defaultHide(
+                key: keyof HideValues,
+                defaultValue: boolean = true
+            ) {
+                if (hide[key] === undefined) {
+                    hide[key] = defaultValue;
+                }
+            }
+            defaultHide("insertMenu");
+            defaultHide("removeMenu");
+        }
+
+        let maxLockedRow = -1;
+        let maxLockedCol = -1;
         if (this.data.lockedCells) {
-            // conecrt all to upper case for easier comparison later
-            this.lockedCells = this.data.lockedCells.map((c) =>
-                c.toUpperCase()
-            );
+            // convert all to upper case for easier comparison later
+            this.lockedCells = this.data.lockedCells.map((c) => {
+                const up = c.toUpperCase();
+                const coord = TimTableComponent.getAddress1(up);
+                if (coord.row > maxLockedRow) {
+                    maxLockedRow = coord.row;
+                }
+                if (coord.col > maxLockedCol) {
+                    maxLockedCol = coord.col;
+                }
+                return up;
+            });
         }
         if (this.data.lockedColumns) {
-            this.lockedColumns = this.data.lockedColumns.map((c) =>
-                c.toUpperCase()
-            );
+            this.lockedColumns = this.data.lockedColumns.map((c) => {
+                const up = c.toUpperCase();
+                const col = TimTableComponent.getColumnFromString(up);
+                if (col > maxLockedCol) {
+                    maxLockedCol = col;
+                }
+                return up;
+            });
         }
+
+        this.lowerRightLocked = {row: maxLockedRow, col: maxLockedCol};
 
         this.dataView = this.data.dataView;
 
@@ -1052,15 +1111,23 @@ export class TimTableComponent
 
         this.filterRow = 0;
         if (this.data.filterRow === true) {
+            // backward compatibility
             this.filterRow = 1;
         }
+        let keepOriginalFilterRow = false;
         if (typeof this.data.filterRow === "number") {
             this.filterRow = this.data.filterRow;
+            if (this.data.filterRow === 0) {
+                keepOriginalFilterRow = true;
+            }
         }
 
         if (this.data.filters) {
             if (this.data.filters.values) {
-                if (this.data.filters.values.length > this.filterRow) {
+                if (
+                    this.data.filters.values.length > this.filterRow &&
+                    !keepOriginalFilterRow
+                ) {
                     this.filterRow = this.data.filters.values.length;
                 }
             }
@@ -1152,6 +1219,11 @@ export class TimTableComponent
         el.addEventListener("copy", (e) => this.doCopy(e));
         el.addEventListener("paste", (e) => this.doPaste(e));
 
+        if (this.data.toolbarTemplates) {
+            [this.menubarUserItems, this.menubarReadyItems] =
+                prepareMenubarItems(this.data.toolbarTemplates);
+        }
+
         if (!this.viewctrl) {
             return;
         }
@@ -1226,7 +1298,6 @@ export class TimTableComponent
     }
 
     private doCopy(e: ClipboardEvent | null = null) {
-        console.log("doCopy");
         if (!this.isCellsSelected()) {
             return;
         }
@@ -1355,7 +1426,10 @@ export class TimTableComponent
         }
     }
 
-    private async filterInputFocused() {
+    protected async filterInputFocused() {
+        if (isToolbarOpen() && !isOpenForThisTable(this)) {
+            await this.openToolbar();
+        }
         await this.saveAndCloseSmallEditor();
     }
 
@@ -1414,7 +1488,10 @@ export class TimTableComponent
                     dir = -1;
                     s = s.substring(1).trim();
                 }
-                const colIndex = getColIndex(s, this.data.headers);
+                let colIndex = getColIndex(s, this.data.headers);
+                if (colIndex < 0) {
+                    colIndex = TimTableComponent.getColumnFromString(s);
+                }
                 if (colIndex >= 0) {
                     this.doSort(colIndex, dir);
                     changeDetected = true;
@@ -1574,7 +1651,11 @@ export class TimTableComponent
     private async openToolbar() {
         // return;
         this.addEventListeners();
-        if (this.isInEditMode() && isToolbarEnabled() && !this.hide.toolbar) {
+        if (
+            (this.isInEditMode() || this.data.forceToolbar) &&
+            isToolbarEnabled() &&
+            !this.hide.toolbar
+        ) {
             await showTableEditorToolbar({
                 callbacks: {
                     setCell: (val) => this.handleToolbarSetCell(val),
@@ -1611,7 +1692,7 @@ export class TimTableComponent
     private async onClick(e: OnClickArg) {
         if (this.mouseInTable) {
             if (
-                this.isInEditMode() &&
+                (this.isInEditMode() || this.data.forceToolbar) &&
                 isToolbarEnabled() &&
                 !this.hide.toolbar
             ) {
@@ -1917,6 +1998,14 @@ export class TimTableComponent
         return (this.editing || this.forcedEditMode) && !this.data.locked;
     }
 
+    public isEditable(): boolean {
+        return (
+            (this.editing || this.forcedEditMode) &&
+            !this.data.locked &&
+            !!this.activeCell
+        );
+    }
+
     getMenuEntry(): IMenuFunctionEntry {
         return {
             func: () => this.toggleEditMode(),
@@ -2052,9 +2141,7 @@ export class TimTableComponent
         if (this.data.saveAttrs) {
             for (const key of this.data.saveAttrs) {
                 // @ts-expect-error
-                const value = this.data[key];
-                // @ts-expect-error
-                params.input.answers[key] = value;
+                params.input.answers[key] = this.data[key];
             }
         }
 
@@ -2753,13 +2840,14 @@ export class TimTableComponent
     }
 
     /**
-     * Get placement, ex. A1 -> 0,0
-     * ex. C5 -> 2,4
+     * Converts column string to index
+     * ex. A -> 0
+     * ex. C -> 2
+     * ex. AA -> 26
      * @param {string} colValue Column value, ex. 'A'
-     * @param {string} rowValue  Row value, ex. '1'
-     * @returns {{col: number, row: number}} Coordinates as index numbers
+     * @returns {number} Column index
      */
-    static getAddress(colValue: string, rowValue: string): ICellCoord {
+    static getColumnFromString(colValue: string): number {
         const charCodeOfA = "A".charCodeAt(0);
         const asciiCharCount = 26;
         let reversedCharacterPlaceInString = 0;
@@ -2770,9 +2858,34 @@ export class TimTableComponent
                 Math.pow(asciiCharCount, reversedCharacterPlaceInString);
             reversedCharacterPlaceInString++;
         }
-        columnIndex = columnIndex - 1;
+        return columnIndex - 1;
+    }
+
+    /**
+     * Get placement, ex. A1 -> 0,0
+     * ex. C5 -> 2,4
+     * @param {string} colValue Column value, ex. 'A'
+     * @param {string} rowValue  Row value, ex. '1'
+     * @returns {{col: number, row: number}} Coordinates as index numbers
+     */
+    static getAddress(colValue: string, rowValue: string): ICellCoord {
+        const columnIndex = TimTableComponent.getColumnFromString(colValue);
         const rowIndex = parseInt(rowValue, 10) - 1;
         return {col: columnIndex, row: rowIndex};
+    }
+
+    /**
+     * Get placement from full reference, ex. A1 -> 0,0
+     * ex. C5 -> 2,4
+     * @param {string} ref Full cell reference, ex. 'A1'
+     * @returns {{col: number, row: number}} Coordinates as index numbers
+     */
+    static getAddress1(ref: string): ICellCoord {
+        const m = ref.toUpperCase().match(/^([A-Z]+)(\d+)$/);
+        if (!m) {
+            throw new Error(`Bad cell reference: ${ref}`);
+        }
+        return TimTableComponent.getAddress(m[1], m[2]);
     }
 
     /**
@@ -3030,14 +3143,11 @@ export class TimTableComponent
             return false;
         }
         const tagName = target.tagName.toLowerCase();
-        if (
+        return (
             tagName === "input" ||
             tagName === "textarea" ||
             target.isContentEditable
-        ) {
-            return true;
-        }
-        return false;
+        );
     }
 
     private keyDownTable = async (ev: KeyboardEvent) => {
@@ -3203,7 +3313,7 @@ export class TimTableComponent
     ): Promise<ChangeDetectionHint> {
         const parId = this.getOwnParId();
         if (
-            !(this.editing || this.task) ||
+            // !(this.editing || this.task) ||
             !this.viewctrl ||
             !parId ||
             this.currentCell?.editorOpen
@@ -3212,18 +3322,19 @@ export class TimTableComponent
         }
 
         const keyCode = getKeyCode(ev);
+        const needLastDir = false; // TODO: when to use true for cursor movement?
         if (keyCode === KEY_DOWN) {
             ev.preventDefault();
-            return this.doCellMovement(Direction.Down, true);
+            return this.doCellMovement(Direction.Down, needLastDir);
         } else if (keyCode === KEY_RIGHT) {
             ev.preventDefault();
-            return this.doCellMovement(Direction.Right, true);
+            return this.doCellMovement(Direction.Right, needLastDir);
         } else if (keyCode === KEY_LEFT) {
             ev.preventDefault();
-            return this.doCellMovement(Direction.Left, true);
+            return this.doCellMovement(Direction.Left, needLastDir);
         } else if (keyCode === KEY_UP) {
             ev.preventDefault();
-            return this.doCellMovement(Direction.Up, true);
+            return this.doCellMovement(Direction.Up, needLastDir);
         }
         return ChangeDetectionHint.DoNotTrigger;
     }
@@ -3266,6 +3377,7 @@ export class TimTableComponent
         }
         let x = this.activeCell.col;
         let y = this.activeCell.row;
+
         if (this.lastDirection && needLastDir) {
             if (UP_OR_DOWN.includes(this.lastDirection.direction)) {
                 if (UP_OR_DOWN.includes(direction)) {
@@ -4247,7 +4359,8 @@ export class TimTableComponent
             this.edited = true;
             this.initUserData(this.userdata);
             const colCount = this.totalCols;
-            // TODO: Move all previous rows if rowId is not the new row. We'd need to take into account locked rows.
+            // TODO: Move all previous rows if rowId is not the new row.
+            // Add just to last row.
             for (let col = 0; col < colCount; col++) {
                 const coords = colnumToLetters(col) + (rowId + 1);
                 this.userdata.cells[coords] = "";
@@ -4276,6 +4389,7 @@ export class TimTableComponent
             this.data = response.result.data;
         }
         this.reInitialize();
+        await this.openToolbar();
     }
 
     /**
@@ -4285,6 +4399,8 @@ export class TimTableComponent
         if (this.viewctrl == null || !this.data.table.rows) {
             return;
         }
+
+        const activeRow = this.activeCell?.row ?? -1;
 
         if (this.currentCell && rowId <= this.currentCell?.row) {
             this.closeSmallEditor();
@@ -4328,7 +4444,12 @@ export class TimTableComponent
             }
             this.data = response.result.data;
         }
-        this.reInitialize();
+        this.reInitialize(ClearSort.Yes); // It is difficult to keep sort order when rows are removed.
+        if (activeRow == this.totalRows) {
+            await this.setActiveCell(this.totalRows - 1, this.activeCell?.col);
+        } else {
+            await this.openToolbar();
+        }
     }
 
     async handleClickAddColumn() {
@@ -4404,7 +4525,8 @@ export class TimTableComponent
             this.data = response.result.data;
         }
 
-        this.reInitialize();
+        this.reInitialize(ClearSort.No);
+        await this.openToolbar();
     }
 
     /**
@@ -4414,6 +4536,8 @@ export class TimTableComponent
         if (this.viewctrl == null) {
             return;
         }
+
+        const activeCol = this.activeCell?.col ?? -1;
 
         const parId = this.getOwnParId();
         const docId = this.viewctrl.item.id;
@@ -4452,6 +4576,11 @@ export class TimTableComponent
             this.data = response.result.data;
         }
         this.reInitialize(ClearSort.No);
+        if (activeCol == this.totalCols) {
+            await this.setActiveCell(this.activeCell?.row, this.totalCols - 1);
+        } else {
+            await this.openToolbar();
+        }
     }
 
     /**
@@ -4538,6 +4667,70 @@ export class TimTableComponent
         this.closeSmallEditor();
     }
 
+    public checkCanAddRow(offset: number): boolean {
+        if (!this.activeCell || !this.isInEditMode()) {
+            return false;
+        }
+        const row = this.activeCell.row + offset;
+        if (this.task) {
+            // TODO: when task can add only at the end
+            return this.cellDataMatrix.length === row;
+        }
+        if (row <= this.lowerRightLocked.row) {
+            return false;
+        }
+        return true;
+    }
+
+    public checkCanRemoveRow(): boolean {
+        if (!this.activeCell || !this.isInEditMode()) {
+            return false;
+        }
+        const row = this.activeCell.row;
+        if (this.task) {
+            // TODO: when task can remove only last row
+            return (
+                this.totalRows > this.initialRowCount &&
+                this.cellDataMatrix.length === row + 1
+            );
+        }
+        if (row <= this.lowerRightLocked.row) {
+            return false;
+        }
+        return true;
+    }
+
+    public checkCanAddColumn(offset: number): boolean {
+        if (!this.activeCell || !this.isInEditMode()) {
+            return false;
+        }
+        const col = this.activeCell.col + offset;
+        if (this.task) {
+            return this.totalCols === col;
+        }
+        if (this.data.headers && col < this.data.headers.length) {
+            return false;
+        }
+        return this.lowerRightLocked.col < col;
+    }
+
+    public checkCanRemoveColumn(): boolean {
+        if (!this.activeCell || !this.isInEditMode()) {
+            return false;
+        }
+        const col = this.activeCell.col;
+        if (this.task) {
+            return (
+                this.totalCols > this.initialColCount &&
+                this.totalCols === col + 1
+            );
+        }
+        if (this.data.headers && col < this.data.headers.length) {
+            return false;
+        }
+        return this.lowerRightLocked.col < col;
+    }
+
     /**
      * Saves the currently edited cell and closes the simple cell content editor.
      */
@@ -4550,7 +4743,7 @@ export class TimTableComponent
     }
 
     async handleToolbarAddColumn(offset: number) {
-        if (this.activeCell) {
+        if (this.activeCell && this.checkCanAddColumn(offset)) {
             const r = await this.addColumn(this.activeCell.col + offset);
             this.c();
             return r;
@@ -4558,7 +4751,7 @@ export class TimTableComponent
     }
 
     async handleToolbarAddRow(offset: number) {
-        if (this.activeCell) {
+        if (this.activeCell && this.checkCanAddRow(offset)) {
             const r = await this.addRow(this.activeCell.row + offset);
             this.c();
             return r;
@@ -4566,7 +4759,7 @@ export class TimTableComponent
     }
 
     async handleToolbarRemoveColumn() {
-        if (this.activeCell) {
+        if (this.activeCell && this.checkCanRemoveColumn()) {
             const r = await this.removeColumn(this.activeCell.col);
             this.c();
             return r;
@@ -4574,7 +4767,7 @@ export class TimTableComponent
     }
 
     async handleToolbarRemoveRow() {
-        if (this.activeCell) {
+        if (this.activeCell && this.checkCanRemoveRow()) {
             const r = await this.removeRow(this.activeCell.row);
             this.c();
             return r;
@@ -5024,12 +5217,11 @@ export class TimTableComponent
         if (!this.currentCell) {
             return "";
         }
-        const str = this.currentCell.editedCellContent;
         // const row = this.cellDataMatrix[this.activeCell.row]; // TODO: check if sorted rowindex?
         // const cell = row[this.activeCell.col];
         // if (cell.cell === null) return "";
         // return "" + cell.cell;
-        return str;
+        return this.currentCell.editedCellContent;
     }
 
     getColumnName() {
@@ -5177,10 +5369,11 @@ export class TimTableComponent
         if (ae.tagName !== "INPUT") {
             return false;
         }
-        if (!ae.classList.contains("filtter-input")) {
+        if (!ae.classList.contains("filter-input")) {
             return false;
         }
         // Varmista että input kuuluu tähän komponenttiin
+        // noinspection RedundantIfStatementJS
         if (this.tableElem && !this.tableElem.nativeElement.contains(ae)) {
             return false;
         }
@@ -5189,7 +5382,7 @@ export class TimTableComponent
 
     private filterWasFocused: boolean = false;
 
-    private addTempateToToolbar(templ: IToolbarTemplate | undefined): boolean {
+    private addTemplateToToolbar(templ: IToolbarTemplate | undefined): boolean {
         if (!templ) {
             return false;
         }
@@ -5230,7 +5423,7 @@ export class TimTableComponent
             favorite: true,
             filters: filters,
         };
-        return this.addTempateToToolbar(templ);
+        return this.addTemplateToToolbar(templ);
     }
 
     handleToolbarAddToTemplates(mousedown: boolean = false) {
@@ -5291,7 +5484,7 @@ export class TimTableComponent
             templ = this.getTemplContent(rowId, colId);
         }
 
-        this.addTempateToToolbar(templ);
+        this.addTemplateToToolbar(templ);
     }
 
     clearSmallEditorStyles() {
