@@ -29,7 +29,6 @@
 // TODO: Use Angular's HTTP service instead of AngularJS $http
 //
 // TODO: click somewhere lost filters (could not reproduce?)
-// TODO: what happends to headers, locked columns and so on when add/remove rows/columns?
 
 // Changes and fixes done 23.11.2025/vesal
 // done: toolbar must be reconfigured when table changes
@@ -47,6 +46,7 @@
 // done: copy/paste filters
 // done: filters to favorites
 // done: Toolbar shall not steal focus when created first time (could not reproduce?)
+// done: headers and locked cells/columns are avoided when add/remove rows/columns
 
 import * as t from "io-ts";
 import type {
@@ -1441,14 +1441,19 @@ export class TimTableComponent
         let changeDetected = false;
 
         function getColIndex(s: string, headers?: string[]): number {
-            const colIndex = Number(s);
+            let colIndex = Number(s);
             if (!isNaN(colIndex)) {
                 return colIndex;
             }
             if (!headers) {
                 return -1;
             }
-            return headers.indexOf(s);
+            colIndex = headers.indexOf(s);
+            if (colIndex >= 0) {
+                return colIndex;
+            }
+            colIndex = TimTableComponent.getColumnFromString(s.toUpperCase());
+            return colIndex;
         }
 
         if (filterData.clear) {
