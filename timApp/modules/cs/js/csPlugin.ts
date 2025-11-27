@@ -2146,10 +2146,7 @@ ${fhtml}
     }
 
     get uploadstem(): string {
-        return valueOr(
-            this.markup.uploadstem,
-            $localize`Upload image or file`
-        );
+        return valueOr(this.markup.uploadstem, $localize`Upload image or file`);
     }
 
     get file() {
@@ -2157,24 +2154,15 @@ ${fhtml}
     }
 
     get showCodeOn() {
-        return valueDefu(
-            this.markup.showCodeOn,
-            $localize`Show complete code`
-        );
+        return valueDefu(this.markup.showCodeOn, $localize`Show complete code`);
     }
 
     get showCodeOff() {
-        return valueOr(
-            this.markup.showCodeOff,
-            $localize`Hide extra code`
-        );
+        return valueOr(this.markup.showCodeOff, $localize`Hide extra code`);
     }
 
     get resetText() {
-        return valueDefu(
-            this.markup.resetText,
-            $localize`Reset`
-        );
+        return valueDefu(this.markup.resetText, $localize`Reset`);
     }
 
     /**
