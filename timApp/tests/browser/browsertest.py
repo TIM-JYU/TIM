@@ -71,6 +71,8 @@ class BrowserTest(LiveServerTestCase, TimRouteTestBase):
         return self.app.test_client()
 
     def setUp(self):
+        # Delay test setup to avoid 'Address already in use' errors in CI.
+        sleep(10)
         TimRouteTestBase.setUp(self)
         self.drv = webdriver.Chrome(options=options)
         # Some CI browser tests run slower and can cause render timeouts without a longer script timeout
