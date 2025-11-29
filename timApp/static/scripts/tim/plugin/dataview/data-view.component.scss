@@ -41,7 +41,7 @@ table {
 }
 
 .data-view:not(.virtual) .fixed-col-header table {
-  border-right-width: 1px;
+  border-right-width: 0;
 }
 
 .ids {
@@ -61,7 +61,7 @@ table {
     overflow-y: hidden;
 
     table {
-      border-right-width: 1px;
+      border-right-width: 0;
     }
   }
 }
@@ -69,8 +69,12 @@ table {
 .data, .ids, .fixed-col-data {
   table {
     border-width: 0;
+    border-bottom-width: 1px;
   }
 }
+
+
+
 
 .summary {
   grid-area: summary;
@@ -85,14 +89,19 @@ table {
     }
 
     td:last-child {
-      border-right-width: 0;
+      /* border-right-width: 0; */
     }
 
     tbody tr td {
       border-bottom: none;
-      border-top: none;
+      /* border-top: none; */
     }
   }
+}
+
+:host ::ng-deep .data-view .virtual td {
+  border-left-width: 1px !important;
+  border-right-width: 0 !important;
 }
 
 table {
@@ -139,11 +148,12 @@ table {
     // So for vscroll mode, handle borders manually
     .ids, .data, .fixed-col-data {
       table {
-        border-collapse: separate;
+        /* border-collapse: separate; */
 
         td {
           border-right-width: 0;
           border-bottom-width: 0;
+          border-left-width: 1px;
         }
       }
     }
@@ -175,6 +185,13 @@ table {
     border-right-width: 0;
   }
 
+  /*
+  .data table td:last-child {
+    border-right-width: 1px;
+  }
+*/
+
+
   .header, .fixed-col-header {
     input {
       // Set as important to prevent existing markup from setting the size
@@ -185,7 +202,7 @@ table {
 
     tbody td {
       border-bottom-width: 0;
-      border-top-width: 0;
+      /* border-top-width: 0; */
     }
 
     thead td {
@@ -207,3 +224,37 @@ table {
     }
   }
 }
+
+/* without this, filter rows are not same height */
+:host ::ng-deep .filter-rows tr {
+   height: 36px !important;
+}
+
+:host ::ng-deep .filter-rows td {
+   border-right-width: 0 !important;
+}
+
+:host ::ng-deep .summary td {
+   border-right-width: 0 !important;
+}
+
+.data table.virtual.forcedEditable.timTableTable {
+    border-right-width: 1px;
+}
+
+:host ::ng-deep table.timTableHeader td, :host ::ng-deep table.timTableHeader th {
+    border-right-width: 1px !important;
+}
+
+/* Does not work as intended???
+.header table {
+    border-right-width: 1px !important;
+}
+
+:host ::ng-deep .data-view .header > table {
+  border-right-style: solid !important;
+  border-right-color: #ccc !important;
+
+  border-right-width: 1px !important;
+}
+*/

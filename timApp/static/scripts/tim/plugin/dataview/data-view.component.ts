@@ -115,6 +115,12 @@ export interface DataModelProvider {
 
     getRowFilter(filterRowIndex: number, columnIndex: number): string;
 
+    getFilterRowCount(): number;
+
+    addFilterRow(): Promise<void>;
+
+    deleteFilterRow(): Promise<void>;
+
     handleChangeFilter(): void;
 
     setRowChecked(rowIndex: number, checked: boolean): void;
@@ -189,14 +195,14 @@ const SLOW_SIZE_MEASURE_THRESHOLD = 0;
             <div class="header" #headerContainer>
                 <table class="timTableHeader" [ngStyle]="tableStyle" #headerTable>
                     <thead #headerIdBody></thead>
-                    <tbody #filterBody></tbody>
+                    <tbody #filterBody  class ="filter-rows"></tbody>
                 </table>
             </div>
             <ng-container *ngIf="fixedColumnCount > 0">
                 <div class="fixed-col-header" #fixedColHeaderContainer>
                     <table [ngStyle]="tableStyle" #fixedColHeaderTable>
                         <thead #fixedColHeaderIdBody></thead>
-                        <tbody #fixedColFilterBody></tbody>
+                        <tbody #fixedColFilterBody class="filter-rows"></tbody>
                     </table>
                 </div>
                 <div class="fixed-col-data" [style.maxHeight]="tableMaxHeight" #fixedDataContainer>
@@ -226,16 +232,33 @@ const SLOW_SIZE_MEASURE_THRESHOLD = 0;
                         </td>
                     </tr>
                     </thead>
-                    <tbody>
+                    <tbody class ="filter-rows">
                     <tr>
-                        <td class="nrcolumn totalnr">
+                        <td class="nrcolumn totalnr" style="position: relative;">
                             <ng-container *ngIf="totalRows != visibleRows">{{visibleRows}}</ng-container>
+                            <div (click)="addFilterRow()" title="Add new filter row" style="font-size: 0.7em; position: absolute; bottom: 2px; cursor: pointer">+</div>
                         </td>
                         <td class="cbColumn" *ngIf="!this.modelProvider.isPreview()">
                             <input type="checkbox"
                                    title="Check to show only checked rows"
                                    [(ngModel)]="cbFilter"
                                    (ngModelChange)="setFilterSelected()">
+                        </td>
+                    </tr>
+                    <tr *ngFor="let frow of filterRowPlaceholders; let i = index; let last= last">
+                        <td class="nrcolumn totalnr" style="position: relative; text-align: center;">
+                            <!-- if last row show - -->
+                            <div 
+                              *ngIf="last"
+                              (click)="deleteFilterRow()"
+                              title="Delete filter row"
+                              style="position: absolute; bottom: 2px; font-size: 0.8em;  cursor: pointer;">
+                              -
+                            </div>
+                            &nbsp;
+                        </td>                            
+                        <td class="cbColumn" *ngIf="!this.modelProvider.isPreview()">
+                            &nbsp;
                         </td>
                     </tr>
                     </tbody>
@@ -414,6 +437,22 @@ export class DataViewComponent implements AfterViewInit, OnInit {
         this.modelProvider.handleChangeCheckbox(-1);
     }
 
+    c() {
+        this.cdr.detectChanges();
+    }
+
+    async addFilterRow() {
+        await this.modelProvider.addFilterRow();
+        this.getFilterRowCount();
+        this.c();
+    }
+
+    async deleteFilterRow() {
+        await this.modelProvider.deleteFilterRow();
+        this.getFilterRowCount();
+        this.c();
+    }
+
     setFilterSelected() {
         this.modelProvider.setSelectedFilter(this.cbFilter);
         this.modelProvider.handleChangeFilter();
@@ -426,9 +465,11 @@ export class DataViewComponent implements AfterViewInit, OnInit {
         this.modelProvider.handleClickClearFilters();
         this.cbFilter = false;
         if (this.filterTableCache) {
-            for (const cell of this.filterTableCache.rows[0].cells) {
-                const input = cell.getElementsByTagName("input")[0];
-                input.value = "";
+            for (const row of this.filterTableCache.rows) {
+                for (const cell of row.cells) {
+                    const input = cell.getElementsByTagName("input")[0];
+                    input.value = "";
+                }
             }
         }
     }
@@ -676,7 +717,7 @@ export class DataViewComponent implements AfterViewInit, OnInit {
         }
         const editor = container.nativeElement.querySelector(".timTableEditor");
         const editInput = container.nativeElement.querySelector(
-            ".timTableEditor>input"
+            ".timTableEditor>textarea"
         );
         const inlineEditorButtons = container.nativeElement.querySelector(
             ".timTableEditor>span"
@@ -1005,11 +1046,11 @@ export class DataViewComponent implements AfterViewInit, OnInit {
         }
         // For height it looks like it's enough to just set the height correctly
         this.idContainer.nativeElement.style.maxHeight = px(
-            this.dataTableHeight
+            this.dataTableHeight + 2
         );
         if (this.fixedDataContainer) {
             this.fixedDataContainer.nativeElement.style.maxHeight = px(
-                this.dataTableHeight
+                this.dataTableHeight + 2
             );
         }
     }
@@ -1077,6 +1118,23 @@ export class DataViewComponent implements AfterViewInit, OnInit {
         }
     }
 
+    protected filterRowPlaceholders: number[] = [];
+
+    private getFilterRowCount(): number {
+        const newCount = this.modelProvider.getFilterRowCount();
+        const cur = this.filterRowPlaceholders.length;
+
+        if (newCount - 1 > cur) {
+            // Kasvatus ilman silmukoita
+            this.filterRowPlaceholders.length = newCount - 1;
+            this.filterRowPlaceholders.fill(0, 0, newCount - 1);
+        } else if (newCount - 1 < cur) {
+            // Pienennys ilman silmukoita
+            this.filterRowPlaceholders.length = Math.max(newCount - 1, 0);
+        }
+        return newCount;
+    }
+
     private updateColumnHeaderCellSizes(updateFixed = true): void {
         const update = (
             axis: GridAxisManager,
@@ -1089,7 +1147,8 @@ export class DataViewComponent implements AfterViewInit, OnInit {
                 return;
             }
             headers.setSize(1, count);
-            filters.setSize(1, count);
+            const filterRows = this.getFilterRowCount();
+            filters.setSize(filterRows, count);
             const sizes = Array.from(new Array(count)).map((value, index) =>
                 this.getHeaderColumnWidth(axis.visibleItems[index + start])
             );
@@ -1259,7 +1318,11 @@ export class DataViewComponent implements AfterViewInit, OnInit {
         );
         this.idTableCache?.setSize(this.viewport.vertical.count, 2);
         this.headerIdTableCache?.setSize(1, this.viewport.horizontal.count);
-        this.filterTableCache?.setSize(1, this.viewport.horizontal.count);
+        const filterRows = this.getFilterRowCount();
+        this.filterTableCache?.setSize(
+            filterRows,
+            this.viewport.horizontal.count
+        );
         const updateCache = (
             rowNumber: number,
             colStart: number,
@@ -1364,7 +1427,7 @@ export class DataViewComponent implements AfterViewInit, OnInit {
             (this.scrollDiff.horizontal != 0 && this.colAxis.isVirtual)
         ) {
             this.updateColumnHeaders(false);
-            this.updateColumnHeaderCellSizes(false);
+            this.updateColumnHeaderCellSizes(true);
 
             for (
                 let rowOrdinal = 0;
@@ -1464,10 +1527,10 @@ export class DataViewComponent implements AfterViewInit, OnInit {
             headerTable.style.width = px(totalWidth);
         }
         if (totalHeight) {
-            table.style.height = px(totalHeight);
-            idTable.style.height = px(totalHeight);
+            table.style.height = px(totalHeight + 2);
+            idTable.style.height = px(totalHeight + 2);
             if (fixedColTable) {
-                fixedColTable.style.height = px(totalHeight);
+                fixedColTable.style.height = px(totalHeight + 2);
             }
         }
         table.style.borderSpacing = px(VIRTUAL_SCROLL_TABLE_BORDER_SPACING);
@@ -1704,9 +1767,16 @@ export class DataViewComponent implements AfterViewInit, OnInit {
 
     private buildColumnHeaderTable(): void {
         this.headerIdTableCache.setSize(1, this.viewport.horizontal.count);
-        this.filterTableCache.setSize(1, this.viewport.horizontal.count);
+        const filterRows = this.getFilterRowCount();
+        this.filterTableCache.setSize(
+            filterRows,
+            this.viewport.horizontal.count
+        );
         this.fixedColHeaderIdTableCache?.setSize(1, this.fixedColumnCount);
-        this.fixedColFilterTableCache?.setSize(1, this.fixedColumnCount);
+        this.fixedColFilterTableCache?.setSize(
+            filterRows,
+            this.fixedColumnCount
+        );
         const colIndices = this.updateColumnHeaders();
         for (const [cell, columnIndex] of colIndices) {
             this.idealColHeaderWidth[columnIndex] = Math.ceil(
@@ -1760,14 +1830,19 @@ export class DataViewComponent implements AfterViewInit, OnInit {
                 applyBasicStyle(sortSymbolEl, style);
                 sortSymbolEl.textContent = symbol;
 
-                const filterCell = filters.getCell(0, column);
-                const input = filterCell.getElementsByTagName("input")[0];
-                input.value = this.modelProvider.getRowFilter(0, columnIndex);
-                input.oninput = this.onFilterInput(input, 0, columnIndex);
-                input.onfocus = this.onFilterFocus(input, 0, columnIndex);
-                input.onblur = this.onFilterBlur(input);
-                if (this.lastFocusedIndex === columnIndex) {
-                    input.focus();
+                for (let fr = 0; fr < this.getFilterRowCount(); fr++) {
+                    const filterCell = filters.getCell(fr, column);
+                    const input = filterCell.getElementsByTagName("input")[0];
+                    input.value = this.modelProvider.getRowFilter(
+                        fr,
+                        columnIndex
+                    );
+                    input.oninput = this.onFilterInput(input, fr, columnIndex);
+                    input.onfocus = this.onFilterFocus(input, fr, columnIndex);
+                    input.onblur = this.onFilterBlur(input);
+                    // if (this.lastFocusedIndex === columnIndex) {
+                    //    input.focus();
+                    // }
                 }
             }
             return colIndices;

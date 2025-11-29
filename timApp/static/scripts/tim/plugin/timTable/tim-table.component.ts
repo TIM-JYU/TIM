@@ -1266,13 +1266,14 @@ export class TimTableComponent
         }
     }
 
-    addFilterRow() {
+    async addFilterRow() {
         this.filters.push([]);
         if (this.filterRow > 0) {
             this.otherFilterRows.push({index: this.filterRow});
         }
         this.filterRow++;
         this.rowDelta++;
+        await this.updateFilter();
         this.c();
     }
 
@@ -2315,6 +2316,9 @@ export class TimTableComponent
             srow2: ymax,
         };
         this.allowSelectionInTable(false);
+        if (this.dataViewComponent) {
+            this.dataViewComponent.markCellsSelected(this.selectedCells.cells);
+        }
         this.c();
     };
 
@@ -2855,6 +2859,7 @@ export class TimTableComponent
     static getColumnFromString(colValue: string): number {
         const charCodeOfA = "A".charCodeAt(0);
         const asciiCharCount = 26;
+        colValue = colValue.toUpperCase();
         let reversedCharacterPlaceInString = 0;
         let columnIndex = 0;
         for (let charIndex = colValue.length - 1; charIndex >= 0; charIndex--) {
@@ -3632,8 +3637,8 @@ export class TimTableComponent
                     h
                 );
             }
+            this.updateSmallEditorPosition(); // TODO: vesa added here, because sometimes it did not update the pos
         }
-        this.updateSmallEditorPosition(); // TODO: vesa added here, because sometimes it did not update the pos
     }
 
     /**
@@ -5916,6 +5921,10 @@ export class TimTableComponent
 
     getRowFilter(filterRowIndex: number, columnIndex: number): string {
         return this.filters[filterRowIndex][columnIndex] ?? "";
+    }
+
+    getFilterRowCount(): number {
+        return this.filterRow;
     }
 
     clearChecked() {
