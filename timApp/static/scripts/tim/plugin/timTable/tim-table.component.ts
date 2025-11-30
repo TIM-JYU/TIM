@@ -29,6 +29,8 @@
 // TODO: Use Angular's HTTP service instead of AngularJS $http
 //
 // TODO: click somewhere lost filters (could not reproduce?)
+// TODO: small editor does not follow cursor in DataView if once moved more than 64 rows
+// TODO: who only 65 rows has borders in dataview?
 
 // Changes and fixes done 23.11.2025/vesal
 // done: toolbar must be reconfigured when table changes
@@ -650,21 +652,21 @@ export enum ClearSort {
                            tabindex="0"
 
                            [ngStyle]="stylingForTable(data.table)" [id]="data.table.id">
-                        <col class="nrcolumn" *ngIf="data.nrColumn"/>
-                        <col class="cbColumn" *ngIf="data.cbColumn"/>
+                        <col class="nr-column" *ngIf="data.nrColumn"/>
+                        <col class="cb-column" *ngIf="data.cbColumn"/>
                         <col *ngFor="let c of columns; let i = index" [span]="c.span" [id]="c.id"
                              [ngStyle]="stylingForColumn(c, i)"/>
                         <thead>
                         <tr *ngIf="data.charRow"> <!--Char coordinate row -->
-                            <td class="nrcolumn charRow" *ngIf="data.nrColumn"></td>
-                            <td class="cbColumn charRow" *ngIf="data.cbColumn"></td>
+                            <td class="nr-column charRow" *ngIf="data.nrColumn"></td>
+                            <td class="cb-column charRow" *ngIf="data.cbColumn"></td>
                             <td class="charRow" [hidden]="!showColumn(coli)"
                                 *ngFor="let c of cellDataMatrix[0]; let coli = index" [attr.span]="c.span">
                                 <span [innerText]="coliToLetters(coli)"></span>
                             </td>
                         </tr>
                         <tr *ngIf="data.headers"> <!-- Header row -->
-                            <td class="nrcolumn totalnr" *ngIf="data.nrColumn"
+                            <td class="nr-column total-nr" *ngIf="data.nrColumn"
                                 (click)="handleClickClearFilters()"
                                 title="Total number of rows. Click to show all"
                             >{{totalRows}}</td>
@@ -683,17 +685,17 @@ export enum ClearSort {
                         </tr>
                         </thead>
                         <tbody>
-                        <tr *ngIf="filterRow>0"> <!-- Filter row -->
-                            <td class="nrcolumn totalnr" *ngIf="data.nrColumn" style="position: relative; text-align: center;">
+                        <tr *ngIf="filterRow>0" class="filters-row"> <!-- Filter row -->
+                            <td class="nr-column total-nr" *ngIf="data.nrColumn" style="position: relative; text-align: center;">
                                 <span title="Number of matching rows"
                                     *ngIf="hiddenRowCount">{{visibleRowCount}}</span>
-                                 <div (click)="addFilterRow()" title="Add new filter row" style="font-size: 0.7em; position: absolute; bottom: 2px; cursor: pointer">+</div>
+                                 <div (click)="addFilterRow()" title="Add new filter row" style="font-size: 0.7em; position: absolute; bottom: -2px; cursor: pointer">+</div>
                             </td>
-                            <td *ngIf="data.cbColumn"><input type="checkbox" [(ngModel)]="cbFilter"
+                            <td class="cb-column" *ngIf="data.cbColumn"><input type="checkbox" [(ngModel)]="cbFilter"
                                                              (ngModelChange)="handleChangeFilter()"
                                                              title="Check to show only checked rows"></td>
 
-                            <td [hidden]="!showColumn(coli)"
+                            <td [hidden]="!showColumn(coli)" class="filter"
                                 *ngFor="let c of cellDataMatrix[0]; let coli = index" [attr.span]="c.span">
                                 <div class="filterdiv">
                                     <input type="text" class="filter-input"
@@ -704,8 +706,8 @@ export enum ClearSort {
                                 </div>
                             </td>
                         </tr> 
-                        <tr *ngFor="let frow of otherFilterRows; let i = index; let last= last">
-                            <td class="nrcolumn totalnr" *ngIf="data.nrColumn" style="position: relative; text-align: center;">
+                        <tr class="filters-row" *ngFor="let frow of otherFilterRows; let i = index; let last= last">
+                            <td class="nr-column total-nr" *ngIf="data.nrColumn" style="position: relative; text-align: center;">
                                 <!-- Jos on viimeinen rivi, näytä klikattava miinus -->
                                 <div 
                                   *ngIf="last"
@@ -715,9 +717,9 @@ export enum ClearSort {
                                   -
                                 </div>
                             </td>                            
-                            <td *ngIf="data.cbColumn"></td>
+                            <td  class="cb-column" *ngIf="data.cbColumn"></td>
 
-                            <td [hidden]="!showColumn(coli)"
+                            <td  class="filter" [hidden]="!showColumn(coli)"
                                 *ngFor="let c of cellDataMatrix[0]; let coli = index" [attr.span]="c.span">
                                 <div class="filterdiv">
                                     <input type="text" class="filter-input"
@@ -734,8 +736,8 @@ export enum ClearSort {
                             [class]="classForRow(rowi)"
                             [hidden]="!showRow(rowi)"
                         >
-                            <td class="nrcolumn" *ngIf="data.nrColumn">{{i + nrColStart}}</td>
-                            <td class="cbColumn" *ngIf="data.cbColumn">
+                            <td class="nr-column" *ngIf="data.nrColumn">{{i + nrColStart}}</td>
+                            <td class="cb-column" *ngIf="data.cbColumn">
                                 <input type="checkbox" [(ngModel)]="cbs[rowi]"
                                        (ngModelChange)="handleChangeCheckbox(rowi)">
                             </td>
@@ -3978,7 +3980,10 @@ export class TimTableComponent
     }
 
     classForCell(rowi: number, coli: number) {
-        let cls = this.cellDataMatrix[rowi][coli].class;
+        if (rowi == undefined || coli == undefined) {
+            return "";
+        }
+        let cls = this.cellDataMatrix[rowi][coli]?.class;
         if (!cls) {
             cls = "";
         }
@@ -5379,7 +5384,10 @@ export class TimTableComponent
         if (ae.tagName !== "INPUT") {
             return false;
         }
-        if (!ae.classList.contains("filter-input")) {
+        if (
+            !ae.classList.contains("filter-input") &&
+            !ae.parentElement?.classList.contains("filter")
+        ) {
             return false;
         }
         // Varmista että input kuuluu tähän komponenttiin
@@ -5659,7 +5667,7 @@ export class TimTableComponent
         );
     }
 
-    async handleClickClearFilters() {
+    async clearFilters() {
         this.filters = [];
         for (let i = 0; i < this.filterRow; i++) {
             this.filters.push([]);
@@ -5669,6 +5677,14 @@ export class TimTableComponent
         await this.updateFilter();
         this.clearSortOrder();
         this.c();
+    }
+
+    async handleClickClearFilters() {
+        if (this.dataViewComponent) {
+            this.dataViewComponent.clearFilters();
+            return;
+        }
+        await this.clearFilters();
     }
 
     /**
@@ -5874,7 +5890,7 @@ export class TimTableComponent
     }
 
     getColumnWidth(columnIndex: number): [number, boolean] {
-        if (!this.dataView) {
+        if (!this.dataView || columnIndex == undefined || columnIndex < 0) {
             return [0, false];
         }
         if (!this.dataView.columnWidths) {
@@ -5901,13 +5917,13 @@ export class TimTableComponent
 
     getCellContents(rowIndex: number, columnIndex: number): string {
         return (
-            this.cellDataMatrix[rowIndex][columnIndex].cell ?? "null"
+            this.cellDataMatrix[rowIndex][columnIndex]?.cell ?? ""
         ).toString();
     }
 
     getRowContents(rowIndex: number): string[] {
         return this.cellDataMatrix[rowIndex].map((c) =>
-            (c.cell ?? "null").toString()
+            (c.cell ?? "").toString()
         );
     }
 

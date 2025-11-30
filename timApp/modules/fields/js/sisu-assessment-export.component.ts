@@ -265,7 +265,7 @@ class AssessmentTableModel implements DataModelProvider {
 
     handleClickCell(_rowIndex: number, _columnIndex: number): void {}
 
-    handleClickClearFilters(): void {}
+    clearFilters(): void {}
 
     handleClickHeader(_columnIndex: number): void {}
 

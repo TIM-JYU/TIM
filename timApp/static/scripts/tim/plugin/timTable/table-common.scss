@@ -1,6 +1,6 @@
 :host ::ng-deep {
   td.nrcolumn {
-    font-size: smaller;
+    font-size: 11px;
     text-align: right;
   }
 
@@ -9,4 +9,36 @@
     outline: 2.5px dotted #33cccc;
     outline-offset: -1.25px;
   }
+
+  .filter input {
+    padding: 0;
+    margin: 0;
+    border: none;
+    width: 100%;
+  }
+
+  .filters-row .cb-column input{
+    margin-top: 2px;
+  }
+
+  td.filter {
+    padding: 0;
+    margin: 0;
+  }
+
+  .filters-row td.cb-column, .filters-row td.nr-column{
+    padding-top: 0;
+    padding-bottom: 0;
+    margin-bottom: 0;
+    margin-top: 0;
+    font-size: 11px;
+  }
+
+  tr.filters-row {
+    height: 20px !important;
+    max-height: 20px !important;
+    line-height: 20px !important;
+    font-size: 12px;
+  }
+
 }
