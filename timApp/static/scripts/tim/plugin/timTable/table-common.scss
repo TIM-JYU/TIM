@@ -41,4 +41,21 @@
     font-size: 12px;
   }
 
+ /* ensure the cell can show a border above the input */
+  tr.filters-row td.filter {
+    position: relative;
+  }
+
+ /* draw a subtle, non-overlapping focus ring on the input itself */
+  tr.filters-row td.filter input:focus,
+  tr.filters-row td.filter [contenteditable]:focus {
+    box-shadow: 0 0 0 2px rgba(51,204,204,0.25);
+    outline: none;
+    z-index: 1;
+  }
+
+tr.filters-row.is-last td {
+  border-bottom-width: 2px;
+}
+
 }

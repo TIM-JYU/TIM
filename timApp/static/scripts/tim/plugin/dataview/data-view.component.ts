@@ -851,6 +851,8 @@ export class DataViewComponent implements AfterViewInit, OnInit {
             ...DEFAULT_VIRTUAL_SCROLL_SETTINGS,
             ...this.virtualScrolling,
         };
+        this.vScroll.viewOverflow.horizontal ??= 1;
+        this.vScroll.viewOverflow.vertical ??= 1;
         if (this.modelProvider.isPreview()) {
             this.vScroll.enabled = false;
             this.dataViewWidth = "fit-content";

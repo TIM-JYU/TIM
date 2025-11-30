@@ -66,13 +66,19 @@ table {
   }
 }
 
-.data, .ids, .fixed-col-data {
+.fixed-col-header, .filter-rows, .header, .summary {
   table {
-    border-width: 0;
-    border-bottom-width: 1px;
+    /* border-width: 0; */
+    border-bottom-width: 2px !important;
   }
 }
 
+.data, .ids, .fixed-col-data {
+  table {
+    /* border-width: 0; */
+    border-bottom-width: 1px !important;
+  }
+}
 
 
 
@@ -230,6 +236,7 @@ table {
 
 :host ::ng-deep .filters-row td {
    border-right-width: 0 !important;
+   border-bottom-width: 0 !important;
  }
 
 
@@ -241,7 +248,7 @@ table {
     border-right-width: 1px;
 }
 
-:host ::ng-deep table.timTableHeader td, :host ::ng-deep table.timTableHeader th {
+:host ::ng-deep table.timTableHeader, :host ::ng-deep .data table {
     border-right-width: 1px !important;
 }
 
