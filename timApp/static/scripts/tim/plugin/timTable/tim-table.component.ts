@@ -30,7 +30,6 @@
 //
 // TODO: click somewhere lost filters (could not reproduce?)
 // TODO: small editor does not follow cursor in DataView if once moved more than 64 rows
-// TODO: who only 65 rows has borders in dataview?
 
 // Changes and fixes done 23.11.2025/vesal
 // done: toolbar must be reconfigured when table changes
@@ -3639,8 +3638,8 @@ export class TimTableComponent
                     h
                 );
             }
-            this.updateSmallEditorPosition(); // TODO: vesa added here, because sometimes it did not update the pos
         }
+        this.updateSmallEditorPosition(); // TODO: vesa added here, because sometimes it did not update the pos
     }
 
     /**
