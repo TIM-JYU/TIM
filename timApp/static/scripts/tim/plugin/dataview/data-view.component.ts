@@ -2174,13 +2174,19 @@ export class DataViewComponent implements AfterViewInit, OnInit {
             return idealHeaderWidth;
         }
         const [cache, colAxis] = this.getDataCacheForColumn(columnIndex);
-        const firstCellWidth = cache
-            .getCell(
-                this.rowAxis.visibleItems[this.viewport.vertical.startOrdinal],
-                colAxis.indexToOrdinal[columnIndex]
-            )
-            .getBoundingClientRect().width;
-        return Math.max(idealHeaderWidth, firstCellWidth);
+        try {
+            const firstCellWidth = cache
+                .getCell(
+                    this.rowAxis.visibleItems[
+                        this.viewport.vertical.startOrdinal
+                    ],
+                    colAxis.indexToOrdinal[columnIndex]
+                )
+                .getBoundingClientRect().width;
+            return Math.max(idealHeaderWidth, firstCellWidth);
+        } catch {
+            return idealHeaderWidth;
+        }
     }
 
     private getHeaderRowHeight(rowIndex: number): number {
