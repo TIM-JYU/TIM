@@ -142,18 +142,22 @@ table {
 // Keep all ng-deep stuff under .data-view class to prevent leaking into other components
 ::ng-deep .data-view {
 
+  table {
+    border-collapse: separate;
+    border-spacing: 0;
+  }
+
   &.virtual {
     // When in virtual scrolling mode, you cannot combine `border-collapse: separate` and `transform: translate`
     // More info: https://stackoverflow.com/a/33778236
     // So for vscroll mode, handle borders manually
     .ids, .data, .fixed-col-data {
       table {
-        /* border-collapse: separate; */
+        border-collapse: separate;
+        border-spacing: 0;
 
         td {
-          border-right-width: 0;
-          /* border-bottom-width: 0; */
-          border-left-width: 1px;
+          border-bottom-width: 0;
         }
       }
     }
