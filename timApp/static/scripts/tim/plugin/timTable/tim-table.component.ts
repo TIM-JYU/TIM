@@ -685,7 +685,7 @@ export enum ClearSort {
                         </tr>
                         </thead>
                         <tbody>
-                        <tr *ngIf="filterRow>0" class="filters-row"> <!-- Filter row -->
+                        <tr *ngIf="filterRow>0" class="filters-row" [class.is-last]="filterRow === 1"> <!-- Filter row -->
                             <td class="nr-column total-nr" *ngIf="data.nrColumn" style="position: relative; text-align: center;">
                                 <span title="Number of matching rows"
                                     *ngIf="hiddenRowCount">{{visibleRowCount}}</span>
@@ -706,7 +706,7 @@ export enum ClearSort {
                                 </div>
                             </td>
                         </tr> 
-                        <tr class="filters-row" *ngFor="let frow of otherFilterRows; let i = index; let last= last">
+                        <tr class="filters-row" *ngFor="let frow of otherFilterRows; let i = index; let last= last" [class.is-last]="last">
                             <td class="nr-column total-nr" *ngIf="data.nrColumn" style="position: relative; text-align: center;">
                                 <!-- Jos on viimeinen rivi, näytä klikattava miinus -->
                                 <div 
