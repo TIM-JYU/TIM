@@ -263,7 +263,7 @@ class AssessmentTableModel implements DataModelProvider {
         this.getDataView()?.updateAllSelected();
     }
 
-    handleClickCell(_rowIndex: number, _columnIndex: number): void {}
+    async handleClickCell(_rowIndex: number, _columnIndex: number) {}
 
     clearFilters(): void {}
 

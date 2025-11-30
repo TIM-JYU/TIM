@@ -97,7 +97,7 @@ export interface DataModelProvider {
 
     classForCell(rowIndex: number, columnIndex: number): string;
 
-    handleClickCell(rowIndex: number, columnIndex: number): void;
+    handleClickCell(rowIndex: number, columnIndex: number): Promise<void>;
 
     getCellContents(rowIndex: number, columnIndex: number): string;
 
@@ -722,9 +722,10 @@ export class DataViewComponent implements AfterViewInit, OnInit {
             return;
         }
         const editor = container.nativeElement.querySelector(".timTableEditor");
-        const editInput = container.nativeElement.querySelector(
-            ".timTableEditor>textarea"
-        );
+        const editInput =
+            container.nativeElement.querySelector<HTMLTextAreaElement>(
+                ".timTableEditor>textarea"
+            );
         const inlineEditorButtons = container.nativeElement.querySelector(
             ".timTableEditor>span"
         );
@@ -768,6 +769,10 @@ export class DataViewComponent implements AfterViewInit, OnInit {
                 0,
                 h
             );
+        }
+        if (editInput) {
+            editInput.focus();
+            editInput.select();
         }
     }
 
@@ -1930,8 +1935,9 @@ export class DataViewComponent implements AfterViewInit, OnInit {
         cell.hidden =
             !this.vScroll.enabled &&
             !this.modelProvider.showColumn(columnIndex);
-        cell.onclick = () =>
-            this.modelProvider.handleClickCell(rowIndex, columnIndex);
+        cell.onclick = async () => {
+            await this.modelProvider.handleClickCell(rowIndex, columnIndex);
+        };
         if (updateStyle) {
             this.updateCellStyle(cell, rowIndex, columnIndex);
         }
