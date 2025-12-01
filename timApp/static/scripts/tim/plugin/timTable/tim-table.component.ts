@@ -144,7 +144,17 @@ import {
 import {createParContext} from "tim/document/structure/create";
 import {CommonModule} from "@angular/common";
 import {prepareMenubarItems} from "tim/plugin/timTable/tim-table-editor-toolbar-dialog.component";
-import {TableFormHeaders} from "tim/plugin/tableForm/table-form.component";
+
+// NOTE: if change these, also change other places
+// where is string "User's name" (table-form-components.ts, setDataMatrix)
+// These are used when filtering by column names.
+const TableFormHeaders: string[] = [
+    "User's name",
+    "Username",
+    "E-mail",
+    "Added",
+    "Removed",
+];
 
 // Uncomment next if need to data watch some attributes for data changes
 // import {installDataWatcher} from "tim/util/dataWatcher";
