@@ -144,6 +144,7 @@ import {
 import {createParContext} from "tim/document/structure/create";
 import {CommonModule} from "@angular/common";
 import {prepareMenubarItems} from "tim/plugin/timTable/tim-table-editor-toolbar-dialog.component";
+import {TableFormHeaders} from "tim/plugin/tableForm/table-form.component";
 
 // Uncomment next if need to data watch some attributes for data changes
 // import {installDataWatcher} from "tim/util/dataWatcher";
@@ -1052,7 +1053,10 @@ export class TimTableComponent
         if (this.data.lockedColumns) {
             this.lockedColumns = this.data.lockedColumns.map((c) => {
                 const up = c.toUpperCase();
-                const col = TimTableComponent.getColumnFromString(up);
+                const col = TimTableComponent.getColumnFromString(
+                    up,
+                    this.maxColumns()
+                );
                 if (col > maxLockedCol) {
                     maxLockedCol = col;
                 }
@@ -1435,12 +1439,20 @@ export class TimTableComponent
         await this.saveAndCloseSmallEditor();
     }
 
+    private maxColumns(): number {
+        if (this.cellDataMatrix.length < 1) {
+            return 0;
+        }
+        return this.cellDataMatrix[0].length;
+    }
+
     private async applyFilters(filterData?: Filters): Promise<void> {
         if (!filterData) {
             return;
         }
 
         let changeDetected = false;
+        const maxColumns = this.maxColumns();
 
         function getColIndex(s: string, headers?: string[]): number {
             let colIndex = Number(s);
@@ -1454,7 +1466,11 @@ export class TimTableComponent
             if (colIndex >= 0) {
                 return colIndex;
             }
-            colIndex = TimTableComponent.getColumnFromString(s.toUpperCase());
+            colIndex = TableFormHeaders.indexOf(s);
+            if (colIndex >= 0) {
+                return colIndex;
+            }
+            colIndex = TimTableComponent.getColumnFromString(s, maxColumns);
             return colIndex;
         }
 
@@ -1497,7 +1513,10 @@ export class TimTableComponent
                 }
                 let colIndex = getColIndex(s, this.data.headers);
                 if (colIndex < 0) {
-                    colIndex = TimTableComponent.getColumnFromString(s);
+                    colIndex = TimTableComponent.getColumnFromString(
+                        s,
+                        maxColumns
+                    );
                 }
                 if (colIndex >= 0) {
                     this.doSort(colIndex, dir);
@@ -2855,9 +2874,10 @@ export class TimTableComponent
      * ex. C -> 2
      * ex. AA -> 26
      * @param {string} colValue Column value, ex. 'A'
+     * @param max stop oterate if comes bigger than this and return -1
      * @returns {number} Column index
      */
-    static getColumnFromString(colValue: string): number {
+    static getColumnFromString(colValue: string, max: number = 100000): number {
         const charCodeOfA = "A".charCodeAt(0);
         const asciiCharCount = 26;
         colValue = colValue.toUpperCase();
@@ -2867,6 +2887,9 @@ export class TimTableComponent
             columnIndex +=
                 (colValue.charCodeAt(charIndex) - charCodeOfA + 1) *
                 Math.pow(asciiCharCount, reversedCharacterPlaceInString);
+            if (columnIndex > max) {
+                return -1;
+            }
             reversedCharacterPlaceInString++;
         }
         return columnIndex - 1;
