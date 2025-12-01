@@ -72,18 +72,19 @@ export function computeHiddenRowsFromFilters<T>(
             hiddenIndices.add(i);
             continue;
         }
-        for (const [icol, fr] of filterObjs.entries()) {
+        let anyFilter = false;
+        for (const fr of filterObjs) {
             if (!fr || fr.length === 0) {
-                if (icol === 0) {
-                    continue dataRow;
-                }
                 continue;
             }
+            anyFilter = true;
             if (isMatch(fr, data[i], contentGetter)) {
                 continue dataRow;
             }
         }
-        hiddenIndices.add(i);
+        if (anyFilter) {
+            hiddenIndices.add(i);
+        }
     }
     return hiddenIndices;
 }
