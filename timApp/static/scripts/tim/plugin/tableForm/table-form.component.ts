@@ -59,16 +59,6 @@ import {
 import {CommonModule} from "@angular/common";
 import type {IAddmemberResponse} from "tim/ui/add-member.component";
 
-// NOTE: if change these, also change other places where strin "User's name"
-// These are used when filtering by column names.
-export const TableFormHeaders: string[] = [
-    "User's name",
-    "Username",
-    "E-mail",
-    "Added",
-    "Removed",
-];
-
 const RunScriptModel = t.intersection([
     t.type({
         script: nullable(t.string),
