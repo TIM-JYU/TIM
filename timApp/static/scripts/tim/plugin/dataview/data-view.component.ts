@@ -1176,8 +1176,8 @@ export class DataViewComponent implements AfterViewInit, OnInit {
                 headerCell.hidden = false;
                 headerCell.style.width = px(width);
                 headerCell.style.maxWidth = px(width);
-                if (filterRows >= 1) {
-                    const filterCell = filters.getCell(0, column);
+                for (let irow = 0; irow < filterRows; irow++) {
+                    const filterCell = filters.getCell(irow, column);
                     filterCell.hidden = false;
                     filterCell.style.width = px(width);
                 }
