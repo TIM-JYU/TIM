@@ -140,6 +140,7 @@ import {
     isToolbarEnabled,
     isToolbarOpen,
     showTableEditorToolbar,
+    timTableToolbarInstance,
 } from "tim/plugin/timTable/toolbarUtils";
 import {createParContext} from "tim/document/structure/create";
 import {CommonModule} from "@angular/common";
@@ -158,6 +159,7 @@ const TableFormHeaders: string[] = [
 
 // Uncomment next if need to data watch some attributes for data changes
 // import {installDataWatcher} from "tim/util/dataWatcher";
+// import {LogAllMethods} from "tim/util/dataWatcher";
 
 const timDateRegex = /^\d{4}-\d{2}-\d{2}[ T]?\d{2}:\d{2}(:\d{2})?$/;
 
@@ -221,26 +223,27 @@ export interface IRectLimits {
 
 export interface HideValues {
     edit?: boolean;
-    insertMenu?: boolean;
-    editMenu?: boolean;
-    removeMenu?: boolean;
-    pasteMenu?: boolean;
-    filterMenu?: boolean;
-    addFilterRow?: boolean;
+    needFirstClick?: boolean;
+    select?: boolean;
     toolbar?: boolean;
     editorButtons?: boolean;
     editorPosition?: boolean;
-    select?: boolean;
     addRow?: boolean;
     delRow?: boolean;
     addCol?: boolean;
     delCol?: boolean;
+    sort?: boolean;
+    // For toolbar menu and button entries
+    editMenu?: boolean;
+    insertMenu?: boolean;
+    removeMenu?: boolean;
     addRowMenu?: boolean;
     delRowMenu?: boolean;
     addColMenu?: boolean;
     delColMenu?: boolean;
-    needFirstClick?: boolean;
-    sort?: boolean;
+    pasteMenu?: boolean;
+    filterMenu?: boolean;
+    addFilterRow?: boolean;
     colorPicker?: boolean;
     alignLeft?: boolean;
     alignCenter?: boolean;
@@ -281,6 +284,8 @@ export interface IToolbarTemplate {
     toColName?: string;
     filters?: Filters;
     menu?: string;
+    run?: boolean;
+    open?: boolean;
 }
 
 export interface IMenuBarUserEntry {
@@ -602,6 +607,9 @@ export enum ClearSort {
     No,
 }
 
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore
+// @LogAllMethods
 /**
  * TimTable Angular component.
  *
@@ -1246,10 +1254,11 @@ export class TimTableComponent
         await this.viewctrl.documentUpdate;
         this.viewctrl.addParMenuEntry(this, this.getPar()!);
 
-        await this.applyFilters(this.data.filters);
-
-        // const fds = this.getFilterDataAsString();
-        // console.log(fds);
+        // Could not find a proper way to detect that initial rendering and DOM updates are done.
+        // So we just wait a bit before calling afterScreenSettledOnce the first time.
+        window.setTimeout(() => {
+            void this.afterScreenSettledOnce();
+        }, 500);
     }
 
     ngAfterViewInit() {
@@ -1265,6 +1274,32 @@ export class TimTableComponent
             this.c();
         }
     }
+
+    async afterScreenSettledOnce() {
+        await this.applyFilters(this.data.filters);
+        await this.checkRunTemplates(this.data.toolbarTemplates);
+    }
+
+    checkRunTemplates = async (toolbarTemplates?: IToolbarTemplate[]) => {
+        if (!toolbarTemplates) {
+            return;
+        }
+        let toolbar = null;
+        for (const tt of toolbarTemplates) {
+            if (tt.open) {
+                if (!toolbar) {
+                    await this.openToolbar();
+                    toolbar = timTableToolbarInstance;
+                }
+            }
+            if (tt.run && tt.filters) {
+                await this.applyFilters(tt.filters);
+                // there is no other usefull comd in templates
+                // so do it directly here
+                // toolbar?.applyTemplate(tt);
+            }
+        }
+    };
 
     otherFilterRows: {index: number}[] = [];
 
@@ -1312,8 +1347,7 @@ export class TimTableComponent
             tableDiv.classList.add("disableSelect");
         }
     }
-
-    private doCopy(e: ClipboardEvent | null = null) {
+    public doCopy(e: ClipboardEvent | null = null) {
         if (!this.isCellsSelected()) {
             return;
         }
@@ -1405,7 +1439,10 @@ export class TimTableComponent
         }
     }
 
-    private async filterCallback(cmd: string, value?: string): Promise<void> {
+    private filterCallback = async (
+        cmd: string,
+        value?: string
+    ): Promise<void> => {
         if (cmd === "copy") {
             const fdStr = this.getFilterDataAsString();
             copyToClipboard(fdStr);
@@ -1429,7 +1466,7 @@ export class TimTableComponent
             return;
         }
         if (cmd === "addrow") {
-            this.addFilterRow();
+            await this.addFilterRow();
             return;
         }
         if (cmd === "removerow") {
@@ -1440,7 +1477,7 @@ export class TimTableComponent
             this.addFilterTemplateToToolbar();
             return;
         }
-    }
+    };
 
     protected async filterInputFocused() {
         if (isToolbarOpen() && !isOpenForThisTable(this)) {
@@ -1456,7 +1493,7 @@ export class TimTableComponent
         return this.cellDataMatrix[0].length;
     }
 
-    private async applyFilters(filterData?: Filters): Promise<void> {
+    private applyFilters = async (filterData?: Filters): Promise<void> => {
         if (!filterData) {
             return;
         }
@@ -1510,7 +1547,7 @@ export class TimTableComponent
             changeDetected = true;
         }
 
-        if (filterData.sort) {
+        if (filterData.sort && !this.isPreview()) {
             for (let s of filterData.sort) {
                 s = String(s).trim();
                 let dir = 1;
@@ -1537,7 +1574,7 @@ export class TimTableComponent
         if (changeDetected) {
             this.c();
         }
-    }
+    };
 
     async applyFilterDataFromString(filterDataString: string): Promise<void> {
         if (!filterDataString || filterDataString.trim().length === 0) {
@@ -1684,11 +1721,11 @@ export class TimTableComponent
         hideToolbar(this);
     }
 
-    private async openToolbar() {
+    private async openToolbar(force: boolean = false) {
         // return;
         this.addEventListeners();
         if (
-            (this.isInEditMode() || this.data.forceToolbar) &&
+            (this.isInEditMode() || this.data.forceToolbar || force) &&
             isToolbarEnabled() &&
             !this.hide.toolbar
         ) {
