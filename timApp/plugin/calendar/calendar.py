@@ -1093,7 +1093,12 @@ def book_event(event_id: int, booker_msg: str) -> Response:
 
     event.enrollments.append(enrollment)
     db.session.commit()
-    send_email_to_creator(event_id, CalendarEmailEvent.Booked, user)
+    extra_message = f"""Booker info: 
+  - Name: {user.real_name}
+  - Email: {user.email}
+  - Message: {booker_msg or 'No message'}"""
+
+    send_email_to_creator(event_id, CalendarEmailEvent.Booked, user, extra_message)
     return ok_response()
 
 
