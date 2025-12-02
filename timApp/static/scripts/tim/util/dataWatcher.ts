@@ -401,3 +401,137 @@ export function installDataWatcher(
 
     console.info(`[${label}] watcher installed for \`${propPath}\``);
 }
+
+/**
+ * Class decorator that logs entry, exit, and errors of all methods in the class.
+ * Useful for debugging and tracing method calls.
+ * To use, simply add `@LogAllMethods` above your class definition
+ * before @Component or other decorators.
+ *
+ * @param target - The class constructor to decorate.
+ * @returns void
+ */
+// eslint-disable-next-line @typescript-eslint/ban-types
+export function LogAllMethods(target: Function): void {
+    const className = target.name;
+
+    const wrapFn = (
+        kind: "method" | "getter" | "setter",
+        propName: string,
+        orig: (...args: unknown[]) => unknown
+    ) => {
+        const label = `${className}.${propName} (${kind})`;
+        return function (this: unknown, ...args: unknown[]) {
+            // eslint-disable-next-line no-console
+            console.log(`[LOG] Enter ${label}`, {args});
+            try {
+                const result = orig.apply(this as never, args);
+                if (
+                    result &&
+                    typeof (result as {then?: unknown}).then === "function"
+                ) {
+                    return (result as Promise<unknown>)
+                        .then((res) => {
+                            // eslint-disable-next-line no-console
+                            console.log(`[LOG] Exit  ${label} (async)`, {
+                                result: res,
+                            });
+                            return res;
+                        })
+                        .catch((err) => {
+                            // eslint-disable-next-line no-console
+                            console.error(
+                                `[LOG] Error in ${label} (async)`,
+                                err
+                            );
+                            throw err;
+                        });
+                }
+                // eslint-disable-next-line no-console
+                console.log(`[LOG] Exit  ${label}`, {result});
+                return result;
+            } catch (err) {
+                // eslint-disable-next-line no-console
+                console.error(`[LOG] Error in ${label}`, err);
+                throw err;
+            }
+        };
+    };
+
+    // 1\) Kääri prototyypin metodit + getterit/setterit (nykyinen logiikka)
+    let proto: object | null = target.prototype;
+
+    while (proto && proto !== Object.prototype) {
+        for (const key of Object.getOwnPropertyNames(proto)) {
+            if (key === "constructor") {
+                continue;
+            }
+
+            const desc = Object.getOwnPropertyDescriptor(proto, key);
+            if (!desc) {
+                continue;
+            }
+
+            const newDesc: PropertyDescriptor = {...desc};
+
+            if (typeof desc.value === "function") {
+                newDesc.value = wrapFn("method", key, desc.value);
+            }
+            if (typeof desc.get === "function") {
+                newDesc.get = wrapFn("getter", key, desc.get);
+            }
+            if (typeof desc.set === "function") {
+                newDesc.set = wrapFn("setter", key, desc.set);
+            }
+
+            if (
+                newDesc.value !== desc.value ||
+                newDesc.get !== desc.get ||
+                newDesc.set !== desc.set
+            ) {
+                Object.defineProperty(proto, key, newDesc);
+            }
+        }
+
+        proto = Object.getPrototypeOf(proto);
+    }
+
+    // 2\) Kääri myös instanssin omat funktiokentät (esim. doCopy = () => {})
+    const OriginalCtor = target as new (...args: unknown[]) => unknown;
+
+    const wrapInstanceMethods = (instance: unknown): void => {
+        if (!instance || typeof instance !== "object") {
+            return;
+        }
+        for (const key of Object.getOwnPropertyNames(instance)) {
+            if (key === "constructor") {
+                continue;
+            }
+            const desc = Object.getOwnPropertyDescriptor(instance, key);
+            if (!desc || typeof desc.value !== "function") {
+                continue;
+            }
+            const origFn = desc.value as (...a: unknown[]) => unknown;
+            const wrapped = wrapFn("method", key, origFn);
+            Object.defineProperty(instance, key, {
+                ...desc,
+                value: wrapped,
+            });
+        }
+    };
+
+    const NewCtor: new (...args: unknown[]) => unknown = function (
+        this: unknown,
+        ...args: unknown[]
+    ) {
+        const instance = new OriginalCtor(...args);
+        wrapInstanceMethods(instance);
+        return instance;
+    } as unknown as new (...args: unknown[]) => unknown;
+
+    NewCtor.prototype = OriginalCtor.prototype;
+    Object.setPrototypeOf(NewCtor, OriginalCtor);
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return NewCtor as any;
+}

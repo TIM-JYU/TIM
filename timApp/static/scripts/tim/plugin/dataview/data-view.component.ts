@@ -73,6 +73,8 @@ import {
     runMultiFrame,
     viewportsEqual,
 } from "tim/plugin/dataview/util";
+// uncomment to enable method logging and also before @Component
+// import {LogAllMethods} from "tim/util/dataWatcher";
 
 /**
  * General interface for an object that provides the data model for DataViewComponent.
@@ -166,6 +168,7 @@ const DEFAULT_VIRTUAL_SCROLL_SETTINGS: VirtualScrollingOptions = {
 const VIRTUAL_SCROLL_TABLE_BORDER_SPACING = 0;
 const SLOW_SIZE_MEASURE_THRESHOLD = 0;
 
+// @LogAllMethods
 /**
  * A DOM-based data view component that supports virtual scrolling.
  * The component handles DOM generation and updating based on the DataModelProvider.
@@ -1183,6 +1186,9 @@ export class DataViewComponent implements AfterViewInit, OnInit {
                 }
             }
         };
+        if (!this.viewport) {
+            return;
+        }
         const {horizontal} = this.viewport;
 
         update(
@@ -1208,6 +1214,9 @@ export class DataViewComponent implements AfterViewInit, OnInit {
     // region Virtual scrolling
 
     private updateSummaryCellSizes(): void {
+        if (this.modelProvider.isPreview()) {
+            return;
+        }
         let width = "auto";
         if (this.rowAxis.visibleItems.length != 0) {
             width = !this.modelProvider.isPreview()
@@ -2091,7 +2100,7 @@ export class DataViewComponent implements AfterViewInit, OnInit {
     }
 
     private getCellValue(rowIndex: number, columnIndex: number): string {
-        if (!this.vScroll.enabled) {
+        if (!this.vScroll.enabled || !this.cellValueCache) {
             return this.modelProvider.getCellContents(rowIndex, columnIndex);
         }
         const row = this.cellValueCache[rowIndex];
