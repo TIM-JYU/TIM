@@ -178,18 +178,17 @@ class AssessmentTableModel implements DataModelProvider {
     private hiddenRows = new Set<number>();
     private hiddenCols = new Set<number>();
     readonly checkedRows = new Set<number>();
-    private readonly colFilters: string[];
+    private readonly colFilters: string[][];
     private selectedFilter = false;
 
     constructor(
         public assessments: IAssessmentExt[],
         private getDataView: () => DataViewComponent | undefined
     ) {
-        this.colFilters = Array(colGetters.length);
-        this.colFilters.fill("");
+        this.colFilters = [Array(colGetters.length).fill("")];
     }
 
-    classForCell(rowIndex: number, columnIndex: number): string {
+    classForCell(_rowIndex: number, _columnIndex: number): string {
         return "";
     }
 
@@ -222,7 +221,7 @@ class AssessmentTableModel implements DataModelProvider {
         }
     }
 
-    getColumnWidth(columnIndex: number): [number, boolean] {
+    getColumnWidth(_columnIndex: number): [number, boolean] {
         return [0, true];
     }
 
@@ -236,23 +235,23 @@ class AssessmentTableModel implements DataModelProvider {
         );
     }
 
-    getRowHeight(rowIndex: number): number | undefined {
+    getRowHeight(_rowIndex: number): number | undefined {
         return undefined;
     }
 
-    getSortSymbolInfo(columnIndex: number): {
+    getSortSymbolInfo(_columnIndex: number): {
         symbol: string;
         style: Record<string, string>;
     } {
         return {style: {}, symbol: ""};
     }
 
-    handleChangeCheckbox(rowIndex: number): void {
+    handleChangeCheckbox(_rowIndex: number): void {
         this.getDataView()?.updateVisible();
         this.getDataView()?.updateAllSelected();
     }
 
-    handleChangeFilter(): void {
+    handleChangeFilter() {
         this.hiddenRows = computeHiddenRowsFromFilters(
             this.assessments,
             (i) => this.isRowChecked(i),
@@ -264,11 +263,11 @@ class AssessmentTableModel implements DataModelProvider {
         this.getDataView()?.updateAllSelected();
     }
 
-    handleClickCell(rowIndex: number, columnIndex: number): void {}
+    async handleClickCell(_rowIndex: number, _columnIndex: number) {}
 
-    handleClickClearFilters(): void {}
+    clearFilters(): void {}
 
-    handleClickHeader(columnIndex: number): void {}
+    handleClickHeader(_columnIndex: number): void {}
 
     isPreview(): boolean {
         return false;
@@ -302,13 +301,25 @@ class AssessmentTableModel implements DataModelProvider {
         return this.assessments[rowIndex].gradeId != null;
     }
 
-    setRowFilter(columnIndex: number, value: string): void {
-        this.colFilters[columnIndex] = value;
+    setRowFilter(
+        filterRowIndex: number,
+        columnIndex: number,
+        value: string
+    ): void {
+        this.colFilters[filterRowIndex][columnIndex] = value;
     }
 
-    getRowFilter(columnIndex: number): string {
-        return this.colFilters[columnIndex] ?? "";
+    getRowFilter(filterRowIndex: number, columnIndex: number): string {
+        return this.colFilters[filterRowIndex][columnIndex] ?? "";
     }
+
+    getFilterRowCount(): number {
+        return this.colFilters.length;
+    }
+
+    async addFilterRow() {}
+
+    async deleteFilterRow() {}
 
     setSelectAll(state: boolean): void {
         for (let i = 0; i < this.assessments.length; ++i) {
@@ -332,18 +343,18 @@ class AssessmentTableModel implements DataModelProvider {
     }
 
     stylingForCell(
-        rowIndex: number,
-        columnIndex: number
+        _rowIndex: number,
+        _columnIndex: number
     ): Record<string, string> {
         return {};
     }
 
-    stylingForRow(rowIndex: number): Record<string, string> {
+    stylingForRow(_rowIndex: number): Record<string, string> {
         return {};
     }
 
     getSelectedRows() {
-        return this.assessments.filter((a, i) => this.isRowChecked(i));
+        return this.assessments.filter((_a, i) => this.isRowChecked(i));
     }
 
     setShowColumn(col: number, show: boolean) {
@@ -392,8 +403,9 @@ class AssessmentTableModel implements DataModelProvider {
             </p>
             <p>Taulukosta voi valita lähetettäväksi vain niitä arviointeja, joissa on arvosana.</p>
             <p *ngIf="testOnly"><i>Tämä plugin on vain demo. Arvosanojen lähettäminen ei oikeasti tee mitään.</i></p>
+            <!--suppress TypeScriptValidateTypes -->
             <tim-data-view [modelProvider]="model"
-                           [selectedIndices]="model.checkedRows"
+                           [selectedIndices]="model.checkedRows //noinspection UnresolvedReference"
                            [headerStyle]="{backgroundColor: 'rgb(240, 240, 240)', fontWeight: 'bold', whiteSpace: 'nowrap'}"
                            [tableStyle]="{fontSize: 'smaller'}"
                            [virtualScrolling]="{enabled: false}"
@@ -402,8 +414,10 @@ class AssessmentTableModel implements DataModelProvider {
                            [cbFilter]="initialSelectedFilter">
             </tim-data-view>
             <p>{{ numSelectedAssessments() }} arviointia valittu.</p>
+            <!--suppress TypeScriptUnresolvedReference -->
             <p class="red" *ngIf="notSendableButChanged && notSendableButChanged.length > 0">
-                Taulukossa on {{notSendableButChanged.length}} kpl arviointeja, joiden arvosana tai opintopistemäärä on
+                Taulukossa on {{ notSendableButChanged.length }} kpl arviointeja, joiden arvosana tai
+                opintopistemäärä on
                 muuttunut
                 (tai joita ei ole TIMistä vielä lähetetty Sisuun) mutta jotka on jo vahvistettu Sisussa.
                 Näitä ei voi päivittää Sisun kautta, mutta voit ottaa
@@ -430,7 +444,9 @@ class AssessmentTableModel implements DataModelProvider {
                     <span *ngIf="errAssessments != null && errAssessments > 0">{{ errAssessments }} virheellistä arviointia torjuttiin.</span>
                 </p>
                 <p>
-                    Käy tarkistamassa ja vahvistamassa arvioinnit kurssin <a href="https://sisu.jyu.fi/teacher/role/teacher/teaching/course-unit-realisations/view/{{destCourse}}/ng-evaluation/confirmation">Tarkista ja vahvista</a> -näkymästä.
+                    Käy tarkistamassa ja vahvistamassa arvioinnit kurssin <a
+                        href="https://sisu.jyu.fi/teacher/role/teacher/teaching/course-unit-realisations/view/{{destCourse}}/ng-evaluation/confirmation">Tarkista
+                    ja vahvista</a> -näkymästä.
                 </p>
             </ng-container>
         </div>
@@ -617,6 +633,8 @@ export class SisuAssessmentExportComponent {
         copyToClipboard(s);
         void showMessageDialog("CSV copied to clipboard.");
     }
+
+    protected readonly unknownToStr = unknownToStr;
 }
 
 @NgModule({

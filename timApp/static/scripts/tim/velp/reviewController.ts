@@ -1168,7 +1168,7 @@ export class ReviewController {
         }
         const taskId = first.getAttribute("task-id");
         if (!taskId) {
-            console.warn("tim-plugin-loader did not have task-id?");
+            // console.warn("tim-plugin-loader did not have task-id?");
             return;
         }
         const ctrl = this.vctrl.getAnswerBrowser(taskId);

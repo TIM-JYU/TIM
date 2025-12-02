@@ -266,7 +266,7 @@ export class TimMessageSendComponent {
                 };
                 this.showOptions = true;
             }
-            console.log(this.timMessageOptions);
+            // console.log(this.timMessageOptions);
         }
 
         if (this.sendGlobal) {
