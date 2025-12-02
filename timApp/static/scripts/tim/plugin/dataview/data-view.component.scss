@@ -66,6 +66,7 @@ table {
   }
 }
 
+
 .fixed-col-header, .filter-rows, .header, .summary {
   table {
     /* border-width: 0; */
@@ -94,21 +95,9 @@ table {
       display: block;
     }
 
-    td:last-child {
-      /* border-right-width: 0; */
-    }
-
-    tbody tr td {
-      /* border-bottom: none; */
-      /* border-top: none; */
-    }
   }
 }
 
-:host ::ng-deep .data-view .virtual td {
-  border-left-width: 1px !important;
-  border-right-width: 0 !important;
-}
 
 table {
   display: block;
@@ -161,10 +150,6 @@ table {
       table {
         border-collapse: separate;
         border-spacing: 0;
-
-        td {
-          border-bottom-width: 0;
-        }
       }
     }
   }
@@ -190,16 +175,6 @@ table {
     text-align: center;
     vertical-align: middle;
   }
-
-  .ids table td:last-child {
-    border-right-width: 0;
-  }
-
-  /*
-  .data table td:last-child {
-    border-right-width: 1px;
-  }
-*/
 
 
   .header, .fixed-col-header {
@@ -234,14 +209,15 @@ table {
 }
 
 
-:host ::ng-deep .filters-row td {
-   border-right-width: 0 !important;
+:host ::ng-deep .data-view table td {
+   border-right-width: 1px !important;
+   border-left-width: 0 !important;
    border-bottom-width: 0 !important;
  }
 
 
-:host ::ng-deep .summary td {
-   border-right-width: 0 !important;
+:host ::ng-deep .summary table, :host ::ng-deep .ids table {
+   border-left-width: 1px !important;
 }
 
 .data table.virtual.forcedEditable.timTableTable {
@@ -251,6 +227,16 @@ table {
 :host ::ng-deep table.timTableHeader, :host ::ng-deep .data table {
     border-right-width: 1px !important;
 }
+
+.data table.virtual.timTableTable {
+  border-right-width: 0 !important;
+
+}
+
+:host ::ng-deep .header table.timTableHeader {
+  border-right-width: 1px !important;
+}
+
 
 /* Does not work as intended???
 .header table {
