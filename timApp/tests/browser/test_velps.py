@@ -138,7 +138,8 @@ saveButton: Tallenna
         vg.velps[new_velp.id] = new_velp
         db.session.commit()
         self.goto_document(d)
-        self.wait_until_present("jsframe-runner iframe")
+        # wait_until_present seems to produce spurious timeouts on CI test runs
+        _ = self.find_element_avoid_staleness("jsframe-runner iframe")
         par = self.find_element_avoid_staleness(".par.csPlugin")
         parid = par.get_attribute("id")
         t = par.get_attribute("t")
