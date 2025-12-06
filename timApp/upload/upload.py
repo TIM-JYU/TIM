@@ -747,7 +747,7 @@ class GetDocumentUploadsArgs:
 @upload.get("/docUploads/<path:doc_path>")
 @use_model(GetDocumentUploadsArgs)
 def get_document_uploads(args: GetDocumentUploadsArgs, doc_path: str) -> Response:
-    doc = DocEntry.find_by_path(doc_path, fallback_to_id=True, try_translation=False)
+    doc = DocEntry.find_by_path(doc_path, fallback_to_id=True, try_translation=True)
     if not doc:
         raise NotExist("Document not found")
     verify_manage_access(doc)
