@@ -4,6 +4,7 @@ See: https://tim.jyu.fi/view/tim/TIMin%20kehitys/Plugin%20development
 Serving from local port 5000
 """
 import json
+import re
 
 from geometry import is_inside
 
@@ -227,7 +228,7 @@ class ImagexServer(TimServer):
                 if tries < max_tries:
                     for selectkey in target["points"].keys():
                         for drag in drags:
-                            if drag["id"] == selectkey:
+                            if re.fullmatch(selectkey, drag["id"]):
                                 # Check if needed values exist for target. If they dont, read them from defaults
                                 # or first target. # TODO: NOT FROM FIRST!!!
                                 # Check if image is inside target, award points.
