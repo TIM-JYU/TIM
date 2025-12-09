@@ -296,7 +296,7 @@
             </div>
     <ng-container *ngIf="taskInfo">
                 <span class="triesLeft"
-                      *ngIf="taskInfo.answerLimit && triesTextVisible()">{{ getTriesText() }} {{ getTriesLeft() }}</span>
+                      *ngIf="taskInfo.answerLimit && triesTextVisible()">{{ getTriesText() }} {{ getTriesLeft() }}. </span>
 
             <span class="answeringTime" *ngIf="taskInfo.starttime || taskInfo.deadline">
         <ng-container i18n>Answering time:</ng-container>

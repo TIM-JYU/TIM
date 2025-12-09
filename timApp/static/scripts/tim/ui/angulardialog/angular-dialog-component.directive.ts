@@ -194,6 +194,9 @@ export abstract class AngularDialogComponent<Params, Result>
     }
 
     close(r: Result) {
+        if (this.closed) {
+            return;
+        }
         this.closed = true;
         this.closeWithResult.emit(r);
         this.resultDefer.resolve(r);

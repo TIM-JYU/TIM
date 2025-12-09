@@ -591,6 +591,7 @@ def pluginify(
     for plugin_name, plugin_block_map in plugins.items():
         for _, plugin in plugin_block_map.items():
             plugin.values.pop("postprogram", None)
+            plugin.values.pop("postlibraries", None)
             plugin.values.pop("preprogram", None)
             plugin.values.pop("postProgram", None)  # Used by some plugins
             plugin.values.pop("modelAnswer", None)

@@ -55,6 +55,7 @@
   ],
   "include": [
     "static/scripts/tim/**/*.d.ts",
-    "modules/cs/**/*.d.ts"
+    "modules/cs/**/*.d.ts",
+	"static/scripts/**/*.ts"
   ]
 }
