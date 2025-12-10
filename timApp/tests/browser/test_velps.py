@@ -139,8 +139,8 @@ saveButton: Tallenna
         db.session.commit()
         self.goto_document(d)
         # wait_until_present seems to produce spurious timeouts on CI test runs
-        self.wait_until_present("jsframe-runner iframe")
-        # _ = self.find_element_avoid_staleness("jsframe-runner iframe")
+        # self.wait_until_present("jsframe-runner iframe")
+        _ = self.find_element_avoid_staleness("jsframe-runner iframe")
         par = self.find_element_avoid_staleness(".par.csPlugin")
         parid = par.get_attribute("id")
         t = par.get_attribute("t")
