@@ -126,8 +126,7 @@ interface IRunResult {
                     <button *ngIf="isExternalFetch"
                             [disabled]="isRunning"
                             class="timButton btn-sm"
-                            (click)="fetchExternalFiles()"
-                            [innerHTML]="externalFetchText()"></button>
+                            (click)="fetchExternalFiles()" i18n>Fetch</button>
                     <a href="#" *ngIf="undoButton && isUnSaved()" [title]="undoTitle"
                             (click)="tryResetChanges($event)"> &nbsp;{{undoButton}}</a>
                     &nbsp;&nbsp;
