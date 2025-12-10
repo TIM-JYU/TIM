@@ -980,3 +980,25 @@ def is_in_answer_review(doc: DocInfo, user: User | None) -> bool:
         .one_or_none()
     )
     return active_review_tag is not None
+
+
+def verify_anon_plugin_edit_permission(plugins: list[DocParagraph]) -> None:
+    plugins = set(map(lambda par_: par_.get_attrs().get("plugin").lower(), plugins))
+    if len(plugins) > 0:
+        allow_anon_edit = not current_app.config["DISABLE_ANON_PLUGIN_EDIT"]
+        if get_current_user_object().id <= 0:
+            if not allow_anon_edit:
+                raise AccessDenied("You have to be logged in to perform this action.")
+            else:
+                allowed_plugins = set(
+                    map(
+                        lambda pl: pl.lower(),
+                        current_app.config["PERMITTED_PLUGINS_FOR_ANON_EDIT"],
+                    )
+                )
+                diff = plugins - allowed_plugins
+                if len(diff) > 0:
+                    # TODO: Can we allow editing of permitted plugins when the change set included non-permitted plugins?
+                    raise AccessDenied(
+                        "You have to be logged in to perform this action."
+                    )
