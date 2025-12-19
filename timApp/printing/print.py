@@ -429,18 +429,12 @@ def get_printed_document(
     mime = get_mimetype_for_format(original_print_type)
 
     if not line:
-        if (
-            original_print_type == PrintFormat.HTML
-            or original_print_type == PrintFormat.SVG
-        ):
+        if original_print_type == PrintFormat.HTML:
             with open(cached, "r", encoding="utf-8") as f:
                 result = f.read()
             # TODO: This sanitizes the HTML, including PDF iframes.
             #       Those should be added back by rendering plugins as HTML.
-            if original_print_type == PrintFormat.HTML:
-                result = sanitize_html(result, allow_styles=True)
-            else:
-                result = sanitize_svg(result)
+            result = sanitize_html(result, allow_styles=True)
             response = make_response(
                 render_template("html_print.jinja2", content=result, title=doc.path)
             )
