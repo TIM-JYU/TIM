@@ -335,6 +335,16 @@ def sanitize_css(css_string: str, allow_imports: bool = False) -> str:
     return css_string
 
 
+def sanitize_svg(svg_string: str) -> str:
+    """
+    Sanitizes the given SVG string.
+    :param svg_string: SVG string to sanitize.
+    :return: Sanitized SVG
+    """
+    # TODO: Add svg sanitize if needed
+    return svg_string
+
+
 # Taken from LXML
 looks_like_full_html = re.compile(r"^\s*<(?:html|!doctype)", re.I).match
 
