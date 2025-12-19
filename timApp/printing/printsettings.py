@@ -10,3 +10,4 @@ class PrintFormat(Enum):
     PLAIN = "plain"
     RST = "rst"
     ICS = "ics"
+    SVG = "svg"
