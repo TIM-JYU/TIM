@@ -59,9 +59,13 @@ export class StylePreviewComponent {
 
         this.docId = doc.id;
 
-        this.userStyle = document.querySelector(
-            'link[rel="stylesheet"][data-style-origin="user-prefs-style"]'
-        )!;
+        this.userStyle =
+            document.querySelector(
+                'link[rel="stylesheet"][data-style-origin="user-prefs-style"]'
+            ) ??
+            document.querySelector(
+                'link[rel="stylesheet"][data-style-origin="document-style"]'
+            )!;
         this.originalStyle = this.userStyle.getAttribute("href")!;
         this.currentStyle = this.originalStyle;
     }
