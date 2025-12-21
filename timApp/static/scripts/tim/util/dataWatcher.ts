@@ -422,7 +422,6 @@ export function LogAllMethods(target: Function): void {
     ) => {
         const label = `${className}.${propName} (${kind})`;
         return function (this: unknown, ...args: unknown[]) {
-            // eslint-disable-next-line no-console
             console.log(`[LOG] Enter ${label}`, {args});
             try {
                 const result = orig.apply(this as never, args);
@@ -432,14 +431,12 @@ export function LogAllMethods(target: Function): void {
                 ) {
                     return (result as Promise<unknown>)
                         .then((res) => {
-                            // eslint-disable-next-line no-console
                             console.log(`[LOG] Exit  ${label} (async)`, {
                                 result: res,
                             });
                             return res;
                         })
                         .catch((err) => {
-                            // eslint-disable-next-line no-console
                             console.error(
                                 `[LOG] Error in ${label} (async)`,
                                 err
@@ -447,11 +444,9 @@ export function LogAllMethods(target: Function): void {
                             throw err;
                         });
                 }
-                // eslint-disable-next-line no-console
                 console.log(`[LOG] Exit  ${label}`, {result});
                 return result;
             } catch (err) {
-                // eslint-disable-next-line no-console
                 console.error(`[LOG] Error in ${label}`, err);
                 throw err;
             }
