@@ -11,6 +11,10 @@
   }
 
   .filter input {
+    width: 100%;
+  }
+
+  .filter.tiny input, .tiny .filter input {
     padding: 0;
     margin: 0;
     border: none;
@@ -21,7 +25,7 @@
     margin-top: 2px;
   }
 
-  td.filter {
+  td.filter.tiny, .tiny td.filter {
     padding: 0;
     margin: 0;
   }
@@ -35,11 +39,17 @@
   }
 
   tr.filters-row {
+    height: 35px !important;
+    max-height: 35px !important;
+    line-height: 35px !important;
+    font-size: 12px;
+    background-color: white;
+  }
+
+  .tiny tr.filters-row, tr.filters-row.tiny {
     height: 20px !important;
     max-height: 20px !important;
     line-height: 20px !important;
-    font-size: 12px;
-    background-color: white;
   }
 
  /* ensure the cell can show a border above the input */

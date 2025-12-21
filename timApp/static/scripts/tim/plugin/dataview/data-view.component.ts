@@ -145,6 +145,8 @@ export interface DataModelProvider {
     handleClickHeader(columnIndex: number): void;
 
     isPreview(): boolean;
+
+    isTinyFilters(): boolean;
 }
 
 /**
@@ -235,7 +237,7 @@ const SLOW_SIZE_MEASURE_THRESHOLD = 0;
                         </td>
                     </tr>
                     </thead>
-                    <tbody class ="filter-rows">
+                    <tbody class="filter-rows" [class.tiny]="modelProvider.isTinyFilters()">
                     <tr class="filters-row" [hidden]="filterRowCount===0">
                         <td class="nr-column total-nr" style="position: relative;">
                             <ng-container *ngIf="totalRows != visibleRows">{{visibleRows}}</ng-container>
@@ -1010,23 +1012,28 @@ export class DataViewComponent implements AfterViewInit, OnInit {
             });
             cell.appendChild(inp);
             cell.className = "filter";
+
             const f = this.columnFilters[this.colAxis.visibleItems[colOrdinal]];
             if (f) {
                 inp.value = f;
             }
         };
+        let cls = "filters-row";
+        if (this.modelProvider.isTinyFilters()) {
+            cls += " tiny";
+        }
         this.filterTableCache = new TableDOMCache(
             this.filterBody.nativeElement,
             "td",
             makeFilter,
-            "filters-row"
+            cls
         );
         if (this.fixedColFilterBody) {
             this.fixedColFilterTableCache = new TableDOMCache(
                 this.fixedColFilterBody.nativeElement,
                 "td",
                 makeFilter,
-                "filters-row"
+                cls
             );
         }
     }
@@ -1079,6 +1086,9 @@ export class DataViewComponent implements AfterViewInit, OnInit {
         this.updateColumnHeaderCellSizes();
         if (!this.modelProvider.isPreview()) {
             this.updateRowHeaderCellSizes();
+        }
+        if (this.modelProvider.isPreview()) {
+            return;
         }
         this.updateSummaryCellSizes();
     }
@@ -1346,7 +1356,9 @@ export class DataViewComponent implements AfterViewInit, OnInit {
     }
 
     private *renderViewport(updateHeader: boolean = false): Generator {
-        const {vertical, horizontal} = this.viewport;
+        // Do not get "global" values, because they may change during yields
+        // const {vertical, horizontal} = this.viewport;
+        // console.log(vertical, horizontal);
         this.dataTableCache.setSize(
             this.viewport.vertical.count,
             this.viewport.horizontal.count
@@ -1375,6 +1387,7 @@ export class DataViewComponent implements AfterViewInit, OnInit {
             }
             const tr = dataCache.getRow(rowNumber);
             tr.hidden = false;
+            const vertical = this.viewport.vertical;
             const rowIndex =
                 this.rowAxis.visibleItems[vertical.startOrdinal + rowNumber];
             this.updateRow(tr, rowIndex);
@@ -1406,6 +1419,7 @@ export class DataViewComponent implements AfterViewInit, OnInit {
                 rowOrdinal < endRowOrdinal;
                 rowOrdinal++
             ) {
+                const {vertical, horizontal} = this.viewport;
                 const rowNumber = rowOrdinal - vertical.startOrdinal;
                 const rowIndex = this.rowAxis.visibleItems[rowOrdinal];
                 updateCache(
@@ -1443,23 +1457,7 @@ export class DataViewComponent implements AfterViewInit, OnInit {
         // * The top part
         // * The bottom part
         // The order of top/bottom depends on the scrolling direction to reduce flickering
-        let renderOrder = [
-            () =>
-                render(
-                    vertical.startOrdinal,
-                    vertical.visibleStartOrdinal,
-                    updateDataCellStylesOnRender
-                ),
-            () =>
-                render(
-                    vertical.visibleStartOrdinal + vertical.visibleCount,
-                    vertical.startOrdinal + vertical.count,
-                    updateDataCellStylesOnRender
-                ),
-        ];
-        if (this.scrollDiff.vertical > 0) {
-            renderOrder = renderOrder.reverse();
-        }
+        let {vertical, horizontal} = this.viewport;
         // Save update times by updating column headers only when scrolling horizontally
         if (
             updateHeader ||
@@ -1490,6 +1488,25 @@ export class DataViewComponent implements AfterViewInit, OnInit {
             updateDataCellStylesOnRender
         );
         yield;
+        vertical = this.viewport.vertical;
+        horizontal = this.viewport.horizontal;
+        let renderOrder = [
+            () =>
+                render(
+                    vertical.startOrdinal,
+                    vertical.visibleStartOrdinal,
+                    updateDataCellStylesOnRender
+                ),
+            () =>
+                render(
+                    vertical.visibleStartOrdinal + vertical.visibleCount,
+                    vertical.startOrdinal + vertical.count,
+                    updateDataCellStylesOnRender
+                ),
+        ];
+        if (this.scrollDiff.vertical > 0) {
+            renderOrder = renderOrder.reverse();
+        }
         for (const r of renderOrder) {
             r();
             yield;

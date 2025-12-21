@@ -166,6 +166,7 @@ class TableFormMarkupModel(GenericMarkupModel):
     saveStyles: bool | Missing = True
     separator: str | Missing | None = missing
     showToolbar: bool | Missing | None = missing
+    tinyFilters: bool | Missing | None = missing
     singleLine: bool | Missing | None = missing
     sisugroups: str | Missing = missing
     sortBy: str | Missing | None = missing
@@ -408,6 +409,7 @@ singleLine: true  # show every line as a single line
 emailUsersButtonText: "Lähetä sähköpostia valituille" # if one wants to send email 
 separator: ";"    # Define your value separator here, ";" as default
 anonNames: false  # Whether to show anonymised names, true or false
+tinyFilters: false # show filter inputs without borders
 reportButton: "Raportti"
 userListButtonText: "Käyttäjälista"
 showToolbar: true # toolbar for editing the table

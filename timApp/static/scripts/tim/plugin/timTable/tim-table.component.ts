@@ -126,6 +126,7 @@ import {
     StringOrNumber,
     timeout,
     to,
+    to2,
 } from "tim/util/utils";
 import {TaskId} from "tim/plugin/taskid";
 import {PluginMeta} from "tim/plugin/util";
@@ -145,6 +146,8 @@ import {
 import {createParContext} from "tim/document/structure/create";
 import {CommonModule} from "@angular/common";
 import {prepareMenubarItems} from "tim/plugin/timTable/tim-table-editor-toolbar-dialog.component";
+import {showInputDialog} from "tim/ui/showInputDialog";
+import type {InputDialogResult} from "tim/ui/input-dialog.component";
 
 // NOTE: if change these, also change other places
 // where is string "User's name" (table-form-components.ts, setDataMatrix)
@@ -340,6 +343,7 @@ export interface TimTable extends IGenericPluginMarkup {
     minWidth?: string;
     singleLine?: boolean;
     forceToolbar?: boolean;
+    tinyFilters?: boolean;
     filterRow?: boolean | number;
     filters?: Filters;
     cbColumn?: boolean;
@@ -349,6 +353,7 @@ export interface TimTable extends IGenericPluginMarkup {
     maxRows?: string;
     maxCols?: string;
     button?: string;
+    resetText?: string;
     autosave?: boolean;
     disableUnchanged?: boolean;
     // TODO: need self-explanatory name for this attribute
@@ -702,8 +707,8 @@ export enum ClearSort {
                             </td>
                         </tr>
                         </thead>
-                        <tbody>
-                        <tr *ngIf="filterRow>0" class="filters-row" [class.is-last]="filterRow === 1"> <!-- Filter row -->
+                        <tbody class="filter-rows" [class.tiny]="isTinyFilters()">
+                        <tr *ngIf="filterRow>0" class="filters-row" [class.tiny]="isTinyFilters()" [class.is-last]="filterRow === 1"> <!-- Filter row -->
                             <td class="nr-column total-nr" *ngIf="data.nrColumn" style="position: relative; text-align: center;">
                                 <span title="Number of matching rows"
                                     *ngIf="hiddenRowCount">{{visibleRowCount}}</span>
@@ -724,7 +729,7 @@ export enum ClearSort {
                                 </div>
                             </td>
                         </tr> 
-                        <tr class="filters-row" *ngFor="let frow of otherFilterRows; let i = index; let last= last" [class.is-last]="last">
+                        <tr class="filters-row" [class.tiny]="isTinyFilters()" *ngFor="let frow of otherFilterRows; let i = index; let last= last" [class.is-last]="last">
                             <td class="nr-column total-nr" *ngIf="data.nrColumn" style="position: relative; text-align: center;">
                                 <!-- Jos on viimeinen rivi, näytä klikattava miinus -->
                                 <div 
@@ -818,12 +823,14 @@ export enum ClearSort {
             </div>
             <div class="csRunMenuArea" *ngIf="task && !data.hideSaveButton && !isLocked()">
                 <p class="csRunMenu">
-                    <button class="timButton" [disabled]="disableUnchanged && !edited" *ngIf="(task && hasButton) || saveFailed"
+                    <button class="timButton" [disabled]="disableUnchanged && !editedInternal" *ngIf="(task && hasButton) || saveFailed"
                             (click)="handleClickSave()">{{button}}</button>
                     &nbsp;
                     <a href="" *ngIf="undoButton && isUnSaved()" [title]="undoTitle"
                        (click)="tryResetChanges($event)">{{undoButton}}</a>
                     <span [hidden]="!result">{{result}}</span>
+                    <a href="#" *ngIf="canReset"
+                       (click)="initCode(true); $event.preventDefault()">{{ resetText }} </a>
                 </p>
             </div>
             <p class="plgfooter" *ngIf="data.footer" [innerHtml]="data.footer | purify"></p>
@@ -908,7 +915,7 @@ export class TimTableComponent
     maxCols = maxContentOrFitContent();
     permTable: number[] = [];
     private permTableToScreen: number[] = []; // inverse perm table to get screencoordinate for row
-    edited = false;
+    editedInternal = false;
     @ViewChild("editInput") private editInput?: ElementRef<HTMLTextAreaElement>;
     @ViewChild("inlineEditor") private editorDiv!: ElementRef<HTMLDivElement>;
     @ViewChild("inlineEditorButtons")
@@ -929,6 +936,8 @@ export class TimTableComponent
     allowPasteTable: boolean = true;
     pasteTableChars: Record<string, string[]> = {cr: ["\n"], tab: ["\t", "|"]};
     button: string = "Tallenna";
+    resetText: string = "";
+    canReset: boolean = false;
     hasButton: boolean = true;
     private noNeedFirstClick = false;
     hide: HideValues = {editorPosition: true};
@@ -1082,6 +1091,8 @@ export class TimTableComponent
             });
         }
 
+        this.resetText = this.data.resetText ?? "";
+
         this.lowerRightLocked = {row: maxLockedRow, col: maxLockedCol};
 
         this.dataView = this.data.dataView;
@@ -1130,6 +1141,9 @@ export class TimTableComponent
             hs["white-space"] = "nowrap";
         }
         this.userdata = this.data.userdata;
+        if (this.userdata?.cells) {
+            this.canReset = true;
+        }
         this.reInitialize();
 
         this.filterRow = 0;
@@ -1229,7 +1243,10 @@ export class TimTableComponent
             this.onClick(e);
         });
 
-        this.prevCellDataMatrix = clone(this.cellDataMatrix);
+        // If done here, there is no way to return original state after this
+        // because userdata is already set. So do it in first time
+        // of reInitialize.
+        // this.prevCellDataMatrix = clone(this.cellDataMatrix);
         this.prevUserdata = clone(this.userdata);
         this.prevData = clone(this.data);
 
@@ -1254,11 +1271,74 @@ export class TimTableComponent
         await this.viewctrl.documentUpdate;
         this.viewctrl.addParMenuEntry(this, this.getPar()!);
 
+        if (this.data.dataView) {
+            // Virtual scrolling is handled by filter change detection
+            // handleChangeFilter
+            return;
+        }
+
+        await this.afterScreenSettledOnce();
+
         // Could not find a proper way to detect that initial rendering and DOM updates are done.
         // So we just wait a bit before calling afterScreenSettledOnce the first time.
-        window.setTimeout(() => {
+        // window.setTimeout(async () => {
+        //    await this.afterScreenSettledOnce();
+        // }, 1);
+    }
+
+    public get edited(): boolean {
+        return this.editedInternal;
+    }
+    public set edited(v: boolean) {
+        this.editedInternal = v;
+        if (v) {
+            if (this.userdata?.cells) {
+                this.canReset = true;
+            }
+        }
+    }
+
+    async initCode(_fromUser: boolean = false) {
+        const ans = await to2<InputDialogResult>(
+            showInputDialog(
+                {
+                    text: $localize`Reset table state to`,
+                    title: $localize`Reset table`,
+                    asyncContent: false,
+                    inputType: "radio",
+                    selectedIndex: 0,
+                    options: [$localize`original`, $localize`saved`],
+                },
+                {resetPos: true}
+            )
+        );
+        if (ans.ok && ans.result.selectedIndex >= 0) {
+            if (ans.result.selectedIndex === 0) {
+                this.prevUserdata = {
+                    cells: {},
+                    type: "Relative",
+                };
+            }
+            this.activeCell = undefined;
+            this.startCell = undefined;
+            this.selectedCells = {
+                cells: [],
+                srows: [],
+                scol1: 0,
+                scol2: 0,
+                srow1: 0,
+                srow2: 0,
+            };
+            this.edited = false;
+            this.canReset = false;
+            this.resetChanges();
+            this.reInitialize();
             void this.afterScreenSettledOnce();
-        }, 500);
+        }
+    }
+
+    isTinyFilters(): boolean {
+        return this.data.tinyFilters === true;
     }
 
     ngAfterViewInit() {
@@ -1275,9 +1355,30 @@ export class TimTableComponent
         }
     }
 
+    // Do not sort while doing initialization
+    private initializing = true;
+    // Instead, cache sort requests and run them after initialization
+    private sortCache: {col: number; dir: number}[] = [];
+
+    public isInitializing() {
+        return this.initializing;
+    }
     async afterScreenSettledOnce() {
+        // This function has problems with dataview mode.
+        // So, if dataview mode is on, we do not run this function
+        // on ngOnInit.  Instead, we wait for first call to
+        // handleChangeFilter, which is called from dataview
+        // when data is loaded and rendered.
         await this.applyFilters(this.data.filters);
         await this.checkRunTemplates(this.data.toolbarTemplates);
+
+        this.initializing = false;
+
+        for (const sc of this.sortCache) {
+            this.doSort(sc.col, sc.dir);
+        }
+        this.sortCache = [];
+        this.c();
     }
 
     checkRunTemplates = async (toolbarTemplates?: IToolbarTemplate[]) => {
@@ -1571,7 +1672,7 @@ export class TimTableComponent
                 }
             }
         }
-        if (changeDetected) {
+        if (changeDetected && !this.isInitializing()) {
             this.c();
         }
     };
@@ -1909,6 +2010,9 @@ export class TimTableComponent
     }
 
     async handleChangeFilter() {
+        if (this.isInitializing()) {
+            await this.afterScreenSettledOnce();
+        }
         await this.updateFilter();
         this.c();
     }
@@ -2016,6 +2120,12 @@ export class TimTableComponent
 
     doSort(col: number, dir: number) {
         if (col < 0) {
+            return;
+        }
+        if (this.initializing) {
+            // Remove any existing cached sort for the same column, then add the new one
+            this.sortCache = this.sortCache.filter((sc) => sc.col !== col);
+            this.sortCache.push({col: col, dir: dir});
             return;
         }
         this.sortDir[col] = dir;
@@ -4674,6 +4784,10 @@ export class TimTableComponent
      */
     public reInitialize(clearSort: ClearSort = ClearSort.Yes) {
         this.initializeCellDataMatrix(clearSort);
+        if (!this.prevCellDataMatrix) {
+            // First time initialization
+            this.prevCellDataMatrix = clone(this.cellDataMatrix);
+        }
         this.processDataBlockAndSpanInfo();
         this.initialRowCount = this.totalRows;
         this.initialColCount = this.totalCols;

@@ -188,6 +188,10 @@ class AssessmentTableModel implements DataModelProvider {
         this.colFilters = [Array(colGetters.length).fill("")];
     }
 
+    isTinyFilters(): boolean {
+        return false;
+    }
+
     classForCell(_rowIndex: number, _columnIndex: number): string {
         return "";
     }

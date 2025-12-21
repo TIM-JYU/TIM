@@ -23,3 +23,10 @@ textarea {
 tim-loading {
     margin-right: 1em;
 }
+
+.input-dialog .option {
+    display: block;
+    margin-left: 1em; /* adjust spacing as needed */
+    margin-bottom: 0.3em; /* adjust spacing as needed */
+    font-weight: unset !important;
+}
