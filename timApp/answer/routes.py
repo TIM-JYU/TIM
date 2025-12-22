@@ -6,7 +6,7 @@ from collections import defaultdict
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Union, Any, Callable, TypedDict, Tuple, Sequence
+from typing import Union, Any, Callable, TypedDict, Tuple
 
 import filelock
 from flask import Response
@@ -44,7 +44,6 @@ from timApp.auth.accesshelper import (
     verify_ip_ok,
     TaskAccessVerification,
     verify_answer_access,
-    has_view_access,
     is_in_answer_review,
 )
 from timApp.auth.accesshelper import (
@@ -83,11 +82,6 @@ from timApp.document.viewcontext import (
 from timApp.item.block import Block, BlockType
 from timApp.item.manage import (
     log_task_block,
-)
-from timApp.item.tag import (
-    Tag,
-    ANSWER_REVIEW_GROUP_TAG_PREFIX,
-    TAG_ACTIVE,
 )
 from timApp.item.taskblock import insert_task_block, TaskBlock
 from timApp.markdown.markdownconverter import md_to_html
@@ -769,6 +763,14 @@ def get_postanswer_plugin_etc(
     return vr, answerinfo, users, allow_save, ask_new, force_answer
 
 
+def check_program_error_message(rights, msg):
+    if not msg or not isinstance(msg, str):
+        return ""
+    if rights.get("editable", False):
+        return msg
+    return msg.split("<pre")[0]  # Remove code part if not editable
+
+
 def post_answer_impl(
     task_id_ext: str,
     answerdata: InputAnswer,
@@ -999,8 +1001,9 @@ def post_answer_impl(
             )
             answer_call_data, preoutput = jsrunner_run(params)
         except JsRunnerError as e:
+            emsg = check_program_error_message(rights, e.args[0])
             return AnswerRouteResult(
-                result={"web": {"error": "Error in JavaScript: " + e.args[0]}},
+                result={"web": {"error": "Error in JavaScript: " + emsg}},
                 plugin=plugin,
                 extra={},
             )
@@ -1221,8 +1224,9 @@ def post_answer_impl(
                         result["refresh"] = True
                     postprogram_result(data, output, postoutput)
                 except JsRunnerError as e:
+                    emsg = check_program_error_message(rights, e.args[0])
                     return AnswerRouteResult(
-                        result={"web": {"error": "Error in JavaScript: " + e.args[0]}},
+                        result={"web": {"error": "Error in JavaScript: " + emsg}},
                         plugin=plugin,
                         extra={},
                     )

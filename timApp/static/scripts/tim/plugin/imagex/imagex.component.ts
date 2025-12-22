@@ -1,6 +1,7 @@
 import deepmerge from "deepmerge";
 import type * as t from "io-ts";
 import type {ApplicationRef, DoBootstrap, OnInit} from "@angular/core";
+import {ViewChild} from "@angular/core";
 import {
     ChangeDetectorRef,
     Component,
@@ -1256,7 +1257,7 @@ interface IAnswerResponse {
     // changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <div class="csRunDiv no-popup-menu" [class.cs-has-header]="header">
-            <tim-markup-error *ngIf="markupError" [data]="markupError"></tim-markup-error>
+            <tim-markup-error *ngIf="markupError" [data]="markupError!"></tim-markup-error>
             <div class="pluginError" *ngIf="imageLoadError" [textContent]="imageLoadError"></div>
             <h4 *ngIf="header" [innerHtml]="header"></h4>
             <p *ngIf="stem" class="stem" [innerHtml]="stem"></p>
@@ -1331,6 +1332,9 @@ interface IAnswerResponse {
             <img *ngIf="replyImage" class="grconsole" [src]="replyImage" alt=""/>
             <p class="plgfooter" *ngIf="footer" [innerHtml]="footer"></p>
         </div>
+        <div *ngIf="error" class="weberror" #webDiv>
+            <pre class="csRunError">{{error}}</pre>
+        </div>
     `,
     styleUrls: ["./imagex.component.scss"],
 })
@@ -1343,6 +1347,7 @@ export class ImageXComponent
     implements OnInit, ITimComponent, IVelpableComponent
 {
     public imageLoadError?: string | null;
+    @ViewChild("webDiv") webDiv?: ElementRef<HTMLDivElement>;
 
     get emotion() {
         return this.markup.emotion;
