@@ -1733,10 +1733,6 @@ export class CsController extends CsBase implements ITimComponent {
         this.cdr.detectChanges();
     }
 
-    get english() {
-        return this.markup.lang === "en";
-    }
-
     get isInput() {
         return (
             this.origLanguageType.includes("input") ||
@@ -1760,37 +1756,6 @@ export class CsController extends CsBase implements ITimComponent {
         }
         return prg;
     }
-
-    get hideText() {
-        return this.english ? "Hide " : "Piilota ";
-    }
-
-    get showText() {
-        return this.english ? "Show " : "Näytä ";
-    }
-
-    get taunoOhjeText() {
-        return this.english
-            ? 'Copy the code you made by Tauno by pressing the link "copy from Tauno". Then press Run button. Note that the running code may have different code than in Tauno!'
-            : 'Kopioi Taunolla tekemäsi koodi "kopioi Taunosta"-linkkiä painamalla. Sitten paina Aja-painiketta. Huomaa, että ajossa voi olla eri taulukko kuin Taunossa!';
-    }
-
-    get copyFromTaunoText() {
-        return this.english ? "copy from Tauno" : "kopioi Taunosta";
-    }
-
-    get copyFromSimCirText() {
-        return this.english ? "copy from SimCir" : "kopioi SimCiristä";
-    }
-
-    public get copyToSimCirText() {
-        return this.english ? "copy to SimCir" : "kopioi SimCiriin";
-    }
-
-    get languageText() {
-        return this.english ? "language: " : "kieli: ";
-    }
-
     get forcedupload() {
         return this.type === "upload" && !this.markup.button;
     }
@@ -1815,18 +1780,14 @@ export class CsController extends CsBase implements ITimComponent {
         const tiny = this.origLanguageType.includes("tiny");
         return valueDefu(
             this.markup.placeholder,
-            tiny
-                ? ""
-                : this.english
-                ? "Write your code here"
-                : "Kirjoita koodi tähän:"
+            tiny ? "" : $localize`Write your code here`
         );
     }
 
     get inputplaceholder() {
         return valueOr(
             this.markup.inputplaceholder,
-            this.english ? "Write your input here" : "Kirjoita syöte tähän"
+            $localize`Write your input here`
         );
     }
 
@@ -1839,25 +1800,15 @@ export class CsController extends CsBase implements ITimComponent {
         return valueOr(
             this.markup.argsplaceholder,
             this.isText
-                ? this.english
-                    ? "Write file name here"
-                    : "Kirjoita tiedoston nimi tähän"
-                : this.english
-                ? "Write your program args here"
-                : "Kirjoita ohjelman argumentit tähän"
+                ? $localize`Write file name here`
+                : $localize`Write your program arguments here`
         );
     }
 
     get argsstem() {
         return valueOr(
             this.markup.argsstem,
-            this.isText
-                ? this.english
-                    ? "File name:"
-                    : "Tiedoston nimi:"
-                : this.english
-                ? "Args:"
-                : "Args"
+            this.isText ? $localize`File name:` : $localize`Arguments:`
         );
     }
 
@@ -2067,7 +2018,7 @@ ${fhtml}
         ) {
             return this.toggleEditor.split("|");
         } else {
-            return this.english ? ["Edit", "Hide"] : ["Muokkaa", "Piilota"];
+            return [$localize`Edit`, $localize`Hide`];
         }
     }
 
@@ -2116,20 +2067,16 @@ ${fhtml}
             this.markup.justSave ||
             this.isVars
         ) {
-            return this.english ? "Save" : "Tallenna";
+            return $localize`Save`;
         }
         if (this.markup.justCompile) {
-            return this.english ? "Compile" : "Käännä";
+            return $localize`Compile`;
         }
-        return this.english ? "Run" : "Aja";
+        return $localize`Run`;
     }
 
     get isExternalFetch(): boolean {
         return !(!this.isRun || !this.hasExternalSources);
-    }
-
-    externalFetchText() {
-        return this.english ? "Fetch" : "Nouda";
     }
 
     async fetchExternalFiles() {
@@ -2199,10 +2146,7 @@ ${fhtml}
     }
 
     get uploadstem(): string {
-        return valueOr(
-            this.markup.uploadstem,
-            this.english ? "Upload image/file" : "Lataa kuva/tiedosto"
-        );
+        return valueOr(this.markup.uploadstem, $localize`Upload image or file`);
     }
 
     get file() {
@@ -2210,24 +2154,15 @@ ${fhtml}
     }
 
     get showCodeOn() {
-        return valueDefu(
-            this.markup.showCodeOn,
-            this.english ? "Show all code" : "Näytä koko koodi"
-        );
+        return valueDefu(this.markup.showCodeOn, $localize`Show complete code`);
     }
 
     get showCodeOff() {
-        return valueOr(
-            this.markup.showCodeOff,
-            this.english ? "Hide extra code" : "Piilota muu koodi"
-        );
+        return valueOr(this.markup.showCodeOff, $localize`Hide extra code`);
     }
 
     get resetText() {
-        return valueDefu(
-            this.markup.resetText,
-            this.english ? "Reset" : "Alusta"
-        );
+        return valueDefu(this.markup.resetText, $localize`Reset`);
     }
 
     /**
@@ -2370,11 +2305,8 @@ ${fhtml}
         this.viewCode = this.markup.viewCode;
 
         const editorText = [
-            valueDefu(
-                this.markup.normal,
-                this.english ? "Normal" : "Tavallinen"
-            ),
-            valueDefu(this.markup.highlight, "Highlight"),
+            valueDefu(this.markup.normal, $localize`Normal`),
+            valueDefu(this.markup.highlight, $localize`Highlight`),
             this.parsons?.menuText ?? "Parsons",
             this.markup.jsparsons,
         ];
@@ -4307,7 +4239,7 @@ ${fhtml}
             <h4 class="csHeader" *ngIf="header" [innerHTML]="header | purify"></h4>
             <div class="csAllSelector" *ngIf="isAll">
                 <div>
-                    {{ languageText }}
+                    <ng-container i18n>language</ng-container>
                     <select [(ngModel)]="selectedLanguage" required (ngModelChange)="languageChange()">
                         <option *ngFor="let o of progLanguages" [value]="o">{{ o }}</option>
                     </select>
@@ -4316,7 +4248,7 @@ ${fhtml}
             <p *ngIf="stem" class="stem" [innerHTML]="stem | purify"
                (keydown)="elementSelectAll($event)" tabindex="0"></p>
             <div class="csTaunoContent" *ngIf="isTauno">
-                <p *ngIf="taunoOn" class="pluginHide"><a (click)="hideTauno()">{{ hideText }} Tauno</a></p>
+                <p *ngIf="taunoOn" class="pluginHide"><a (click)="hideTauno()" i18n>hide Tauno</a></p>
                 <iframe *ngIf="iframesettings"
                         [id]="iframesettings.id"
                         class="showTauno"
@@ -4325,20 +4257,19 @@ ${fhtml}
                         [width]="iframesettings.width"
                         [height]="iframesettings.height"
                         sandbox="allow-scripts"></iframe>
-                <p *ngIf="!taunoOn" class="pluginShow"><a (click)="showTauno()">{{ showText }} Tauno</a></p>
+                <p *ngIf="!taunoOn" class="pluginShow"><a (click)="showTauno()" i18n>show Tauno</a></p>
                 <p *ngIf="taunoOn" class="pluginHide">
-                    <a (click)="copyTauno()">{{ copyFromTaunoText }}</a> |
-                    <a (click)="hideTauno()">{{ hideText }} Tauno</a></p>
-                <p *ngIf="taunoOn" class="taunoOhje">
-                    {{ taunoOhjeText }}</p>
+                    <a (click)="copyTauno()" i18n>copy from Tauno</a> |
+                    <a (click)="hideTauno()" i18n>hide Tauno</a></p>
+                <p *ngIf="taunoOn" class="taunoOhje" i18n>Copy the code you made by Tauno by pressing the link "copy from Tauno". Then press Run button. Note that the running code may have different code than in Tauno!</p>
             </div>
             <div class="csSimcirContent" *ngIf="isSimcir">
-                <p *ngIf="simcirOn" class="pluginHide"><a (click)="hideSimcir()">{{ hideText }} SimCir</a></p>
+                <p *ngIf="simcirOn" class="pluginHide"><a (click)="hideSimcir()" i18n>hide SimCir</a></p>
                 <div class="simcirContainer"><p></p></div>
-                <p *ngIf="!simcirOn" class="pluginShow"><a (click)="showSimcir()">{{ showText }} SimCir</a></p>
+                <p *ngIf="!simcirOn" class="pluginShow"><a (click)="showSimcir()" i18n>show SimCir</a></p>
                 <p *ngIf="simcirOn && !noeditor" class="pluginHide">
-                    <a (click)="copyFromSimcir()">copy from SimCir</a>
-                    | <a (click)="copyToSimcir()">copy to SimCir</a> | <a (click)="hideSimcir()">hide SimCir</a>
+                    <a (click)="copyFromSimcir()" i18n>copy from SimCir</a>
+                    | <a (click)="copyToSimcir()" i18n>copy to SimCir</a> | <a (click)="hideSimcir()" i18n>hide SimCir</a>
                 </p>
             </div>
             <div class="csUploadContent" *ngIf="upload && !this.formulaEditor">
@@ -4456,7 +4387,7 @@ ${fhtml}
                             [disabled]="isRunning"
                             class="timButton btn-sm"
                             (click)="fetchExternalFiles()"
-                            [innerHTML]="externalFetchText()"></button>
+                            i18n>Fetch</button>
                     <a href="#" *ngIf="undoButton && isUnSaved()" [title]="undoTitle"
                        (click)="tryResetChanges($event)"> &nbsp;{{ undoButton }}</a>
                     &nbsp;&nbsp;
@@ -4468,7 +4399,8 @@ ${fhtml}
                             [disabled]="isRunning"
                             (click)="runTest()"
                             class="timButton btn-sm"
-                            [innerHTML]="testText"></button>
+                            [innerHTML]="testText">
+                    </button>
                     &nbsp;&nbsp;
                     <button *ngIf="isUnitTest"
                             class="timButton btn-sm"
