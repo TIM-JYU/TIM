@@ -515,7 +515,7 @@ def placeholder_filter(name: str):
     """
 
     def _placeholder(*_args, **_kwargs):
-        return get_error_html(f"The `{name}` filter requires `nocache=true` attribute")
+        return get_error_html(f"The `{name}` filter requires `nocache=true` attribute.")
 
     return _placeholder
 
