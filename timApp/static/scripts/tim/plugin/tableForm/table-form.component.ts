@@ -36,6 +36,7 @@ import type {
     DataEntity,
     TimTable,
 } from "tim/plugin/timTable/tim-table.component";
+import {defaultDataView} from "tim/plugin/timTable/tim-table.component";
 import {
     ClearSort,
     colnumToLetters,
@@ -685,6 +686,15 @@ export class TableFormComponent
         this.data.maxCols = this.markup.maxCols;
         this.data.toolbarTemplates = this.markup.toolbarTemplates;
         this.data.dataView = this.markup.dataView;
+        if (this.data.dataView === null) {
+            this.data.dataView = defaultDataView();
+        }
+        if (this.data.dataView) {
+            if (this.data.singleLine === undefined) {
+                this.data.singleLine = true;
+            }
+        }
+
         this.data.isPreview = this.isPreview();
         this.data.locked = this.markup.locked;
         // this.cdr.detectChanges();

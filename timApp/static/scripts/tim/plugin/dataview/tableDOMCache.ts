@@ -99,6 +99,9 @@ export class TableDOMCache {
                     if (this.createCellContent) {
                         this.createCellContent(cell, rowNumber, columnNumber);
                     }
+                    if (cell.hasAttribute("do-not-add")) {
+                        break;
+                    }
                     row.rowElement.appendChild(cell);
                 }
                 this.tbody.appendChild(row.rowElement);
@@ -118,6 +121,9 @@ export class TableDOMCache {
             // Columns need to be added => make use of colcache here
             for (let rowNumber = 0; rowNumber < rows; rowNumber++) {
                 const row = this.rows[rowNumber];
+                if (row.cells.length === 0) {
+                    continue;
+                }
                 for (
                     let columnNumber = 0;
                     columnNumber < columns;
@@ -134,6 +140,9 @@ export class TableDOMCache {
                                 rowNumber,
                                 columnNumber
                             );
+                        }
+                        if (cell.hasAttribute("do-not-add")) {
+                            break;
                         }
                         row.rowElement.appendChild(cell);
                     }

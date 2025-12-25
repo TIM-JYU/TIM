@@ -192,6 +192,13 @@ class AssessmentTableModel implements DataModelProvider {
         return false;
     }
 
+    isCbColumn(def: boolean): boolean {
+        return true;
+    }
+
+    isNrColumn(def: boolean): boolean {
+        return true;
+    }
     classForCell(_rowIndex: number, _columnIndex: number): string {
         return "";
     }

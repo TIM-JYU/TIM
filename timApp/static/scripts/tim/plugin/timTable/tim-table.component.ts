@@ -48,6 +48,8 @@
 // done: filters to favorites
 // done: Toolbar shall not steal focus when created first time (could not reproduce?)
 // done: headers and locked cells/columns are avoided when add/remove rows/columns
+// done: dataview with defaults
+// done: no nrColumn and cbColumn in DataView mode if they are false
 
 import * as t from "io-ts";
 import type {
@@ -383,16 +385,33 @@ export const DataViewVirtualScrollingSettingsType = t.type({
     horizontalOverflow: withDefault(t.number, 999), // TODO: Reduce when horizontal scrolling works better
 });
 
-export const DataViewSettingsType = t.type({
-    virtual: nullable(DataViewVirtualScrollingSettingsType),
-    rowHeight: withDefault(t.number, 30),
-    columnWidths: withDefault(t.record(t.string, t.number), {}),
-    // We use custom table width for DataView because its behaviour differs from TimTable
-    // For example, max-content works for both Chrome and Firefox to do fullwidth
-    tableWidth: withDefault(t.string, "max-content"),
-    fixedColumns: withDefault(t.number, 0),
-    reportSlowLoad: withDefault(t.boolean, true),
-});
+export const DataViewSettingsType = t.intersection([
+    t.type({
+        rowHeight: withDefault(t.number, 30),
+        columnWidths: withDefault(t.record(t.string, t.number), {}),
+        tableWidth: withDefault(t.string, "max-content"),
+        fixedColumns: withDefault(t.number, 0),
+        reportSlowLoad: withDefault(t.boolean, true),
+    }),
+    t.partial({
+        virtual: nullable(DataViewVirtualScrollingSettingsType),
+    }),
+]);
+
+export function defaultDataView(): DataViewSettings {
+    return {
+        rowHeight: 30,
+        columnWidths: {},
+        tableWidth: "max-content",
+        fixedColumns: 0,
+        reportSlowLoad: true,
+        virtual: {
+            enabled: true,
+            verticalOverflow: 1,
+            horizontalOverflow: 999,
+        },
+    };
+}
 
 export interface DataViewSettings
     extends t.TypeOf<typeof DataViewSettingsType> {
@@ -1039,6 +1058,21 @@ export class TimTableComponent
         if (this.json) {
             this.data = JSON.parse(this.json);
         }
+        this.dataView = this.data.dataView;
+
+        if (this.dataView === null) {
+            this.dataView = defaultDataView();
+        }
+        if (this.dataView) {
+            if (this.data.singleLine === undefined) {
+                this.data.singleLine = true;
+            }
+        }
+        if (this.data.table.countCol !== this.data?.headers?.length) {
+            if (this.data.headers) {
+                this.data.table.countCol = this.data.headers.length;
+            }
+        }
 
         if (this.data.hide) {
             this.hide = {...this.hide, ...this.data.hide};
@@ -1094,8 +1128,6 @@ export class TimTableComponent
         this.resetText = this.data.resetText ?? "";
 
         this.lowerRightLocked = {row: maxLockedRow, col: maxLockedCol};
-
-        this.dataView = this.data.dataView;
 
         if (typeof this.data.nrColumn === "number") {
             // for backward compatibility
@@ -1339,6 +1371,20 @@ export class TimTableComponent
 
     isTinyFilters(): boolean {
         return this.data.tinyFilters === true;
+    }
+
+    isNrColumn(def: boolean): boolean {
+        if (this.data.nrColumn === undefined) {
+            return def;
+        }
+        return this.data.nrColumn === true;
+    }
+
+    isCbColumn(def: boolean): boolean {
+        if (this.data.cbColumn === undefined) {
+            return def;
+        }
+        return this.data.cbColumn;
     }
 
     ngAfterViewInit() {
@@ -2043,6 +2089,9 @@ export class TimTableComponent
     }
 
     sortByColumn(ai: number, bi: number, col: number, dir: number): number {
+        if (col >= this.cellDataMatrix[0].length) {
+            return 0;
+        }
         // TODO: numeric sort also
         const a = this.cellDataMatrix[ai];
         const b = this.cellDataMatrix[bi];
@@ -4180,6 +4229,12 @@ export class TimTableComponent
      * @param {number} coli Table column index
      */
     stylingForCell(rowi: number, coli: number) {
+        if (
+            coli >= this.cellDataMatrix[0].length ||
+            rowi >= this.cellDataMatrix.length
+        ) {
+            return {};
+        }
         const sc = this.cellDataMatrix[rowi][coli].styleCache;
         if (sc !== undefined) {
             return sc;
