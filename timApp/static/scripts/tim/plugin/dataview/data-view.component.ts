@@ -51,7 +51,7 @@ import {
     Renderer2,
     ViewChild,
 } from "@angular/core";
-import * as DOMPurify from "dompurify";
+import DOMPurify from "dompurify";
 import {showCopyWidthsDialog} from "tim/plugin/dataview/copy-table-width-dialog.component";
 import {GridAxisManager} from "tim/plugin/dataview/gridAxisManager";
 import {TableDOMCache} from "tim/plugin/dataview/tableDOMCache";
@@ -1251,22 +1251,12 @@ export class DataViewComponent implements AfterViewInit, OnInit {
 
     private updateSummaryCellSizes(): void {
         let width = "auto";
-        if (this.isPreview) {
-            const nrCelEl = this.allVisibleCell?.nativeElement;
-            if (!nrCelEl) {
-                return;
-            }
-            // TODO: Maybe this could be used in every case?
-            width = px(nrCelEl.offsetWidth);
-        } else if (this.rowAxis.visibleItems.length != 0) {
-            width = px(
-                Math.ceil(
-                    this.idTableCache
-                        ?.getCell(this.rowAxis.visibleItems[0], 0)
-                        ?.getBoundingClientRect().width
-                )
-            );
+        const nrCelEl = this.allVisibleCell?.nativeElement;
+        if (!nrCelEl) {
+            return;
         }
+        // TODO: Maybe this could be used in every case?
+        width = px(nrCelEl.offsetWidth);
         if (width) {
             this.summaryTable.nativeElement
                 .querySelectorAll(".nr-column")
@@ -1276,25 +1266,23 @@ export class DataViewComponent implements AfterViewInit, OnInit {
                     }
                 });
         }
-        const filterRows = this.getFilterRowCount();
-        if (filterRows > 0) {
-            const summaryTotalHeaderHeight =
-                // this.headerIdTableCache?.getRow(0).offsetHeight;
-                this.headerIdTableCache
-                    ?.getRow(0)
-                    .getBoundingClientRect().height;
-            const filterHeaderHeight =
-                // this.filterTableCache?.getRow(0).offsetHeight;
-                this.filterTableCache?.getRow(0).getBoundingClientRect().height;
-            if (summaryTotalHeaderHeight && filterHeaderHeight) {
-                const [summaryHeader, filterHeader] =
-                    this.summaryTable.nativeElement.getElementsByTagName("tr");
-                summaryHeader.style.height = px(summaryTotalHeaderHeight);
-                if (filterHeader) {
-                    filterHeader.style.height = px(filterHeaderHeight);
-                }
+
+        if (this.getFilterRowCount() === 0) {
+            return;
+        }
+        const summaryTotalHeaderHeight =
+            // this.headerIdTableCache?.getRow(0).offsetHeight;
+            this.headerIdTableCache?.getRow(0).getBoundingClientRect().height;
+        const filterHeaderHeight =
+            // this.filterTableCache?.getRow(0).offsetHeight;
+            this.filterTableCache?.getRow(0).getBoundingClientRect().height;
+        if (summaryTotalHeaderHeight && filterHeaderHeight) {
+            const [summaryHeader, filterHeader] =
+                this.summaryTable.nativeElement.getElementsByTagName("tr");
+            summaryHeader.style.height = px(summaryTotalHeaderHeight);
+            if (filterHeader) {
+                filterHeader.style.height = px(filterHeaderHeight);
             }
-        } else {
         }
     }
 
