@@ -529,6 +529,7 @@ export class DataViewComponent implements AfterViewInit, OnInit {
                 updateHeader: true,
             });
         } else {
+            this.updateColumnHeaders(true);
             // For normal mode: simply hide rows that are no more visible/show hidden rows
             for (const [rowIndex, row] of this.dataTableCache.rows.entries()) {
                 const shouldHide = !this.modelProvider.showRow(rowIndex);
@@ -2133,10 +2134,14 @@ export class DataViewComponent implements AfterViewInit, OnInit {
         const itemColOrdinal = colAxis.indexToOrdinal[col];
         const vpRowOrdinal = this.viewport.vertical.startOrdinal;
         const vpColOrdinal = this.viewport.horizontal.startOrdinal;
-        return cache.getCell(
-            itemRowOrdinal - vpRowOrdinal,
-            itemColOrdinal - vpColOrdinal
-        );
+        if (this.rowAxis.isVirtual) {
+            return cache.getCell(
+                itemRowOrdinal - vpRowOrdinal,
+                itemColOrdinal - vpColOrdinal
+            );
+        }
+        // TODO: how should this be done in non-virtual mode? This seems to work?.
+        return cache.getCell(row, itemColOrdinal);
     }
 
     private getCellValue(rowIndex: number, columnIndex: number): string {

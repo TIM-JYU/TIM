@@ -1,5 +1,5 @@
 :host ::ng-deep {
-  td.nrcolumn {
+  td.nr-column {
     font-size: 11px;
     text-align: right;
   }
@@ -38,6 +38,11 @@
     font-size: 11px;
   }
 
+  .filters-row td.cb-column {
+    align-items: center;
+    vertical-align: middle;
+  }
+
   tr.filters-row {
     height: 35px !important;
     max-height: 35px !important;
@@ -70,3 +75,4 @@ tr.filters-row.is-last td {
 }
 
 }
+

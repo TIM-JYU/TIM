@@ -581,8 +581,20 @@ enum Direction {
     Right = 8,
 }
 
-const UP_OR_DOWN = [Direction.Up, Direction.Down];
-const LEFT_OR_RIGHT = [Direction.Left, Direction.Right];
+const ALL_DIRECTIONS = [
+    [0, 0], // 0
+    [0, -1], // 1
+    [0, 1], // 2
+    [0, 0], // 3
+    [-1, 0], // 4
+    [0, 0], // 5
+    [0, 0], // 6
+    [0, 0], // 7
+    [1, 0], // 8
+];
+
+// const UP_OR_DOWN = [Direction.Up, Direction.Down];
+// const LEFT_OR_RIGHT = [Direction.Left, Direction.Right];
 
 export function isPrimitiveCell(cell: CellEntity): cell is CellType {
     // return cell == null || (cell as ICell).cell === undefined;
@@ -3615,9 +3627,21 @@ export class TimTableComponent
         if (!this.activeCell) {
             return ChangeDetectionHint.DoNotTrigger;
         }
-        let x = this.activeCell.col;
-        let y = this.activeCell.row;
+        let tx = this.activeCell.col;
+        let ty = this.activeCell.row;
+        let [hx, hy] = this.getHtmlTableCellCoordinates(tx, ty);
 
+        const d = ALL_DIRECTIONS[direction];
+        hx = this.getNextHtmlTableCol(hx, d[0]);
+        hy = this.getNextHtmlTableRow(hy, d[1]);
+
+        [tx, ty] = this.getTableCellCoordinates(hx, hy);
+
+        const nextCell = {row: ty, col: tx};
+
+        /*
+        // TODO: this was rather complex way to find next cell,
+        //       but hopefully it's unnecessary now
         if (this.lastDirection && needLastDir) {
             if (UP_OR_DOWN.includes(this.lastDirection.direction)) {
                 if (UP_OR_DOWN.includes(direction)) {
@@ -3696,6 +3720,8 @@ export class TimTableComponent
             nextCell = this.getNextCell(nextCell.col, nextCell.row, direction);
         }
 
+
+         */
         if (!nextCell) {
             return ChangeDetectionHint.DoNotTrigger;
         }
@@ -6221,6 +6247,45 @@ export class TimTableComponent
 
     isRowSelectable(_rowIndex: number): boolean {
         return true;
+    }
+
+    private getHtmlTableCellCoordinates(tx: number, ty: number) {
+        const hx = tx;
+        const hy = this.permTableToScreen[ty];
+        return [hx, hy];
+    }
+
+    private getTableCellCoordinates(hx: number, hy: number) {
+        const ty = this.permTable[hy];
+        return [hx, ty];
+    }
+
+    private getNextHtmlTableCol(hx: number, dx: number): number {
+        if (dx === 0) {
+            return hx;
+        }
+        let nx = hx + dx;
+        while (0 <= nx && nx < this.cellDataMatrix[0].length) {
+            if (this.showColumn(nx)) {
+                return nx;
+            }
+            nx += dx;
+        }
+        return hx;
+    }
+    private getNextHtmlTableRow(hy: number, dy: number): number {
+        if (dy === 0) {
+            return hy;
+        }
+        let ny = hy + dy;
+        while (0 <= ny && ny < this.permTable.length) {
+            const ty = this.permTable[ny];
+            if (!this.currentHiddenRows.has(ty)) {
+                return ny;
+            }
+            ny += dy;
+        }
+        return hy;
     }
 }
 
