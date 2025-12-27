@@ -79,6 +79,11 @@ import {
 /**
  * General interface for an object that provides the data model for DataViewComponent.
  */
+export interface ICoord {
+    x: number;
+    y: number;
+}
+
 export interface DataModelProvider {
     isRowSelectable(rowIndex: number): boolean;
 
@@ -151,6 +156,8 @@ export interface DataModelProvider {
     isNrColumn(def: boolean): boolean;
 
     isCbColumn(def: boolean): boolean;
+
+    isLastVisible(tx: number, ty: number, d: ICoord): boolean;
 }
 
 /**
@@ -529,7 +536,7 @@ export class DataViewComponent implements AfterViewInit, OnInit {
                 updateHeader: true,
             });
         } else {
-            this.updateColumnHeaders(true);
+            this.updateColumnHeaders(true); // to update filter inputs
             // For normal mode: simply hide rows that are no more visible/show hidden rows
             for (const [rowIndex, row] of this.dataTableCache.rows.entries()) {
                 const shouldHide = !this.modelProvider.showRow(rowIndex);
@@ -709,6 +716,10 @@ export class DataViewComponent implements AfterViewInit, OnInit {
         });
     }
 
+    clearEditorPosition() {
+        this.prevEditorDOMPosition = {horizontal: -1, vertical: -1};
+    }
+
     /**
      * Updates position of the editor to specified cell
      * @param row Currently selected row
@@ -772,7 +783,11 @@ export class DataViewComponent implements AfterViewInit, OnInit {
         }
         if (inlineEditorButtons) {
             const e = inlineEditorButtons as HTMLElement;
-            const dir = row == 0 ? 1 : -1;
+            const isLast = this.modelProvider.isLastVisible(col, row, {
+                x: 0,
+                y: -1,
+            });
+            const dir = isLast ? 1 : -1;
             applyBasicStyle(e, {
                 position: "absolute",
                 top: px(

@@ -15,7 +15,10 @@ import {showMessageDialog} from "tim/ui/showMessageDialog";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {HttpClient, HttpClientModule} from "@angular/common/http";
 import {DataViewModule} from "tim/plugin/dataview/data-view.module";
-import type {DataModelProvider} from "tim/plugin/dataview/data-view.component";
+import type {
+    DataModelProvider,
+    ICoord,
+} from "tim/plugin/dataview/data-view.component";
 import {DataViewComponent} from "tim/plugin/dataview/data-view.component";
 import {BsDatepickerModule, BsLocaleService} from "ngx-bootstrap/datepicker";
 import {defineLocale} from "ngx-bootstrap/chronos";
@@ -199,6 +202,11 @@ class AssessmentTableModel implements DataModelProvider {
     isNrColumn(def: boolean): boolean {
         return true;
     }
+
+    public isLastVisible(tx: number, ty: number, d: ICoord): boolean {
+        return false;
+    }
+
     classForCell(_rowIndex: number, _columnIndex: number): string {
         return "";
     }

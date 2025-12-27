@@ -83,6 +83,7 @@ import {PurifyModule} from "tim/util/purify.module";
 import {DataViewModule} from "tim/plugin/dataview/data-view.module";
 import type {
     DataModelProvider,
+    ICoord,
     VirtualScrollingOptions,
 } from "tim/plugin/dataview/data-view.component";
 import {DataViewComponent} from "tim/plugin/dataview/data-view.component";
@@ -581,16 +582,16 @@ enum Direction {
     Right = 8,
 }
 
-const ALL_DIRECTIONS = [
-    [0, 0], // 0
-    [0, -1], // 1
-    [0, 1], // 2
-    [0, 0], // 3
-    [-1, 0], // 4
-    [0, 0], // 5
-    [0, 0], // 6
-    [0, 0], // 7
-    [1, 0], // 8
+const ALL_DIRECTIONS: {x: number; y: number}[] = [
+    {x: 0, y: 0}, // 0
+    {x: 0, y: -1}, // 1
+    {x: 0, y: 1}, // 2
+    {x: 0, y: 0}, // 3
+    {x: -1, y: 0}, // 4
+    {x: 0, y: 0}, // 5
+    {x: 0, y: 0}, // 6
+    {x: 0, y: 0}, // 7
+    {x: 1, y: 0}, // 8
 ];
 
 // const UP_OR_DOWN = [Direction.Up, Direction.Down];
@@ -3537,7 +3538,7 @@ export class TimTableComponent
         } else if (isKeyCode(ev, KEY_ESC)) {
             ev.preventDefault();
             if (this.currentCell) {
-                this.currentCell = undefined;
+                this.closeSmallEditor();
                 return ChangeDetectionHint.NeedToTrigger;
             }
         } else if (handleToolbarKey(ev, this.data.toolbarTemplates)) {
@@ -3545,7 +3546,7 @@ export class TimTableComponent
             return ChangeDetectionHint.NeedToTrigger;
         } else if (
             !this.currentCell &&
-            (ev.ctrlKey || ev.altKey) &&
+            // (ev.ctrlKey || ev.altKey) &&
             isArrowKey(ev)
         ) {
             if (await this.handleArrowMovement(ev)) {
@@ -3616,28 +3617,28 @@ export class TimTableComponent
      * Switches the edit mode to another cell relative to either the current
      * or last edited cell.
      * @param direction The direction that the cell edit mode should move to.
-     * @param needLastDir Whether to read x/y from previous direction
+     * @param _needLastDir Whether to read x/y from previous direction
      * @param forceOne Prevent selection even Shift is down
      */
     private async doCellMovement(
         direction: Direction,
-        needLastDir?: boolean,
+        _needLastDir?: boolean,
         forceOne: boolean = false
     ): Promise<ChangeDetectionHint> {
         if (!this.activeCell) {
             return ChangeDetectionHint.DoNotTrigger;
         }
-        let tx = this.activeCell.col;
-        let ty = this.activeCell.row;
-        let [hx, hy] = this.getHtmlTableCellCoordinates(tx, ty);
+        const stopReadOnly = this.isSomeCellBeingEdited();
+        const tc: ICoord = {x: this.activeCell.col, y: this.activeCell.row};
+        const hc: ICoord = this.getHtmlTableCellCoordinates(tc.x, tc.y);
 
-        const d = ALL_DIRECTIONS[direction];
-        hx = this.getNextHtmlTableCol(hx, d[0]);
-        hy = this.getNextHtmlTableRow(hy, d[1]);
+        const dir = ALL_DIRECTIONS[direction];
+        hc.x = this.getNextHtmlTableCol(hc.x, tc.y, dir.x, stopReadOnly);
+        hc.y = this.getNextHtmlTableRow(tc.x, hc.y, dir.y, stopReadOnly);
 
-        [tx, ty] = this.getTableCellCoordinates(hx, hy);
+        const ntc: ICoord = this.getTableCellCoordinates(hc.x, hc.y);
 
-        const nextCell = {row: ty, col: tx};
+        const nextCell = {row: ntc.y, col: ntc.x};
 
         /*
         // TODO: this was rather complex way to find next cell,
@@ -3722,7 +3723,7 @@ export class TimTableComponent
 
 
          */
-        if (!nextCell) {
+        if (!nextCell || (tc.x === ntc.x && tc.y === ntc.y)) {
             return ChangeDetectionHint.DoNotTrigger;
         }
 
@@ -3735,13 +3736,15 @@ export class TimTableComponent
         return ChangeDetectionHint.NeedToTrigger;
     }
 
-    /**
+    /*
+     * TODO: Hope this is no longer needed!
      * Gets the next cell in a given direction from a cell.
      * Takes rowspan and colspan into account.
      * @param x The original X coordinate (column index) of the source cell.
      * @param y The original Y coordinate (original row index) of the source cell.
      * @param direction The direction.
      */
+    /*
     private getNextCell(
         x: number,
         y: number,
@@ -3806,6 +3809,7 @@ export class TimTableComponent
 
         return {row: nextRow, col: nextColumn};
     }
+    */
 
     private constrainRowIndex(rowIndex: number) {
         if (rowIndex >= this.cellDataMatrix.length) {
@@ -4934,6 +4938,9 @@ export class TimTableComponent
         //     this.editInput.nativeElement.style.display = "none";
         // }
         this.getPar()?.removeClass("live-update-pause");
+        if (this.dataViewComponent) {
+            this.dataViewComponent.clearEditorPosition();
+        }
         this.c();
     }
 
@@ -4955,10 +4962,7 @@ export class TimTableComponent
             // TODO: when task can add only at the end
             return this.cellDataMatrix.length === row;
         }
-        if (row <= this.lowerRightLocked.row) {
-            return false;
-        }
-        return true;
+        return row > this.lowerRightLocked.row;
     }
 
     public checkCanRemoveRow(): boolean {
@@ -4973,10 +4977,7 @@ export class TimTableComponent
                 this.cellDataMatrix.length === row + 1
             );
         }
-        if (row <= this.lowerRightLocked.row) {
-            return false;
-        }
-        return true;
+        return row > this.lowerRightLocked.row;
     }
 
     public checkCanAddColumn(offset: number): boolean {
@@ -6249,43 +6250,97 @@ export class TimTableComponent
         return true;
     }
 
-    private getHtmlTableCellCoordinates(tx: number, ty: number) {
+    /**
+     * Converts table coordinates to HTML table coordinates.
+     * @param tx column index in table coordinates
+     * @param ty row index in table coordinates
+     * @returns {x, y} index in HTML table coordinates
+     */
+    public getHtmlTableCellCoordinates(tx: number, ty: number): ICoord {
         const hx = tx;
         const hy = this.permTableToScreen[ty];
-        return [hx, hy];
+        return {x: hx, y: hy};
     }
 
-    private getTableCellCoordinates(hx: number, hy: number) {
+    /**
+     * Converts HTML table coordinates to table coordinates.
+     * @param hx column index in HTML table coordinates
+     * @param hy row index in HTML table coordinates
+     * @returns {x, y} index in table coordinates
+     */
+    public getTableCellCoordinates(hx: number, hy: number): ICoord {
         const ty = this.permTable[hy];
-        return [hx, ty];
+        return {x: hx, y: ty};
     }
 
-    private getNextHtmlTableCol(hx: number, dx: number): number {
+    /**
+     * Gets the next visible column index in HTML table coordinates.
+     * @param hx current column index in HTML table coordinates
+     * @param ty current row index in table coordinates
+     * @param dx direction to move (1 for right, -1 for left, 0 for no movement)
+     * @param stopReadOnly whether to stop at read-only cells
+     * @returns next column index in HTML table coordinates
+     * @private
+     */
+    private getNextHtmlTableCol(
+        hx: number,
+        ty: number,
+        dx: number,
+        stopReadOnly: boolean = false
+    ): number {
         if (dx === 0) {
             return hx;
         }
-        let nx = hx + dx;
-        while (0 <= nx && nx < this.cellDataMatrix[0].length) {
-            if (this.showColumn(nx)) {
-                return nx;
+        let nhx = hx + dx;
+        while (0 <= nhx && nhx < this.cellDataMatrix[0].length) {
+            if (stopReadOnly && this.isLockedCell(ty, nhx)) {
+                return hx;
             }
-            nx += dx;
+            if (this.showColumn(nhx)) {
+                return nhx;
+            }
+            nhx += dx;
         }
         return hx;
     }
-    private getNextHtmlTableRow(hy: number, dy: number): number {
+
+    /**
+     * Gets the next visible row index in HTML table coordinates.
+     * @param tx current column index in table coordinates
+     * @param hy current row index in HTML table coordinates
+     * @param dy direction to move (1 for down, -1 for up, 0 for no movement)
+     * @param stopReadOnly whether to stop at read-only cells
+     * @returns next row index in HTML table coordinates
+     * @private
+     */
+    private getNextHtmlTableRow(
+        tx: number,
+        hy: number,
+        dy: number,
+        stopReadOnly: boolean = false
+    ): number {
         if (dy === 0) {
             return hy;
         }
-        let ny = hy + dy;
-        while (0 <= ny && ny < this.permTable.length) {
-            const ty = this.permTable[ny];
-            if (!this.currentHiddenRows.has(ty)) {
-                return ny;
+        let nhy = hy + dy;
+        while (0 <= nhy && nhy < this.permTable.length) {
+            const ty = this.permTable[nhy];
+            if (stopReadOnly && this.isLockedCell(ty, tx)) {
+                return hy;
             }
-            ny += dy;
+            if (!this.currentHiddenRows.has(ty)) {
+                return nhy;
+            }
+            nhy += dy;
         }
         return hy;
+    }
+
+    public isLastVisible(tx: number, ty: number, d: ICoord): boolean {
+        const {x, y} = this.getHtmlTableCellCoordinates(tx, ty);
+        const nx = this.getNextHtmlTableCol(x, y, d.x);
+        const ny = this.getNextHtmlTableRow(x, y, d.y);
+        return nx === x && ny === y;
     }
 }
 
