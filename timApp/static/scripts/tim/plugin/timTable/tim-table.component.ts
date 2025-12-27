@@ -582,7 +582,7 @@ enum Direction {
     Right = 8,
 }
 
-const ALL_DIRECTIONS: {x: number; y: number}[] = [
+const ALL_DIRECTIONS: ICoord[] = [
     {x: 0, y: 0}, // 0
     {x: 0, y: -1}, // 1
     {x: 0, y: 1}, // 2
@@ -3549,8 +3549,8 @@ export class TimTableComponent
             // (ev.ctrlKey || ev.altKey) &&
             isArrowKey(ev)
         ) {
+            ev.preventDefault();
             if (await this.handleArrowMovement(ev)) {
-                ev.preventDefault();
                 return ChangeDetectionHint.NeedToTrigger;
             }
         }
@@ -3629,16 +3629,19 @@ export class TimTableComponent
             return ChangeDetectionHint.DoNotTrigger;
         }
         const stopReadOnly = this.isSomeCellBeingEdited();
-        const tc: ICoord = {x: this.activeCell.col, y: this.activeCell.row};
-        const hc: ICoord = this.getHtmlTableCellCoordinates(tc.x, tc.y);
+        // Active cell coordinates are in model space
+        const mc: ICoord = {x: this.activeCell.col, y: this.activeCell.row};
+        // To count movement properly, convert to view coordinates
+        const vc: ICoord = this.getViewTableCellCoordinates(mc.x, mc.y);
 
         const dir = ALL_DIRECTIONS[direction];
-        hc.x = this.getNextHtmlTableCol(hc.x, tc.y, dir.x, stopReadOnly);
-        hc.y = this.getNextHtmlTableRow(tc.x, hc.y, dir.y, stopReadOnly);
+        vc.x = this.getNextViewTableCol(vc.x, mc.y, dir.x, stopReadOnly);
+        vc.y = this.getNextViewTableRow(mc.x, vc.y, dir.y, stopReadOnly);
 
-        const ntc: ICoord = this.getTableCellCoordinates(hc.x, hc.y);
+        // Next cell needs to be in model coordinates
+        const nmc: ICoord = this.getModelTableCellCoordinates(vc.x, vc.y);
 
-        const nextCell = {row: ntc.y, col: ntc.x};
+        const nextCell = {row: nmc.y, col: nmc.x};
 
         /*
         // TODO: this was rather complex way to find next cell,
@@ -3723,7 +3726,7 @@ export class TimTableComponent
 
 
          */
-        if (!nextCell || (tc.x === ntc.x && tc.y === ntc.y)) {
+        if (!nextCell || (mc.x === nmc.x && mc.y === nmc.y)) {
             return ChangeDetectionHint.DoNotTrigger;
         }
 
@@ -6251,96 +6254,98 @@ export class TimTableComponent
     }
 
     /**
-     * Converts table coordinates to HTML table coordinates.
+     * Converts table coordinates to View order coordinates.
+     * These are not the same than HTML table coordinates
+     * if there is filtering or hidden rows.
      * @param tx column index in table coordinates
      * @param ty row index in table coordinates
      * @returns {x, y} index in HTML table coordinates
      */
-    public getHtmlTableCellCoordinates(tx: number, ty: number): ICoord {
-        const hx = tx;
-        const hy = this.permTableToScreen[ty];
-        return {x: hx, y: hy};
+    public getViewTableCellCoordinates(tx: number, ty: number): ICoord {
+        const vx = tx;
+        const vy = this.permTableToScreen[ty];
+        return {x: vx, y: vy};
     }
 
     /**
-     * Converts HTML table coordinates to table coordinates.
-     * @param hx column index in HTML table coordinates
-     * @param hy row index in HTML table coordinates
+     * Converts View order coordinates to table coordinates.
+     * @param vx column index in HTML table coordinates
+     * @param vy row index in HTML table coordinates
      * @returns {x, y} index in table coordinates
      */
-    public getTableCellCoordinates(hx: number, hy: number): ICoord {
-        const ty = this.permTable[hy];
-        return {x: hx, y: ty};
+    public getModelTableCellCoordinates(vx: number, vy: number): ICoord {
+        const ty = this.permTable[vy];
+        return {x: vx, y: ty};
     }
 
     /**
-     * Gets the next visible column index in HTML table coordinates.
-     * @param hx current column index in HTML table coordinates
+     * Gets the next visible column index in view table coordinates.
+     * @param vx current column index in view table coordinates
      * @param ty current row index in table coordinates
      * @param dx direction to move (1 for right, -1 for left, 0 for no movement)
      * @param stopReadOnly whether to stop at read-only cells
-     * @returns next column index in HTML table coordinates
+     * @returns next column index in view table coordinates
      * @private
      */
-    private getNextHtmlTableCol(
-        hx: number,
+    private getNextViewTableCol(
+        vx: number,
         ty: number,
         dx: number,
         stopReadOnly: boolean = false
     ): number {
         if (dx === 0) {
-            return hx;
+            return vx;
         }
-        let nhx = hx + dx;
-        while (0 <= nhx && nhx < this.cellDataMatrix[0].length) {
-            if (stopReadOnly && this.isLockedCell(ty, nhx)) {
-                return hx;
+        let nvx = vx + dx;
+        while (0 <= nvx && nvx < this.cellDataMatrix[0].length) {
+            if (stopReadOnly && this.isLockedCell(ty, nvx)) {
+                return vx;
             }
-            if (this.showColumn(nhx)) {
-                return nhx;
+            if (this.showColumn(nvx)) {
+                return nvx;
             }
-            nhx += dx;
+            nvx += dx;
         }
-        return hx;
+        return vx;
     }
 
     /**
-     * Gets the next visible row index in HTML table coordinates.
+     * Gets the next visible row index in view table coordinates.
      * @param tx current column index in table coordinates
-     * @param hy current row index in HTML table coordinates
+     * @param vy current row index in view table coordinates
      * @param dy direction to move (1 for down, -1 for up, 0 for no movement)
      * @param stopReadOnly whether to stop at read-only cells
-     * @returns next row index in HTML table coordinates
+     * @returns next row index in view table coordinates
      * @private
      */
-    private getNextHtmlTableRow(
+    private getNextViewTableRow(
         tx: number,
-        hy: number,
+        vy: number,
         dy: number,
         stopReadOnly: boolean = false
     ): number {
         if (dy === 0) {
-            return hy;
+            return vy;
         }
-        let nhy = hy + dy;
-        while (0 <= nhy && nhy < this.permTable.length) {
-            const ty = this.permTable[nhy];
+        let nvy = vy + dy;
+        while (0 <= nvy && nvy < this.permTable.length) {
+            const ty = this.permTable[nvy];
             if (stopReadOnly && this.isLockedCell(ty, tx)) {
-                return hy;
+                return vy;
             }
             if (!this.currentHiddenRows.has(ty)) {
-                return nhy;
+                return nvy;
             }
-            nhy += dy;
+            nvy += dy;
         }
-        return hy;
+        return vy;
     }
 
     public isLastVisible(tx: number, ty: number, d: ICoord): boolean {
-        const {x, y} = this.getHtmlTableCellCoordinates(tx, ty);
-        const nx = this.getNextHtmlTableCol(x, y, d.x);
-        const ny = this.getNextHtmlTableRow(x, y, d.y);
-        return nx === x && ny === y;
+        const v = this.getViewTableCellCoordinates(tx, ty);
+        const nvx = this.getNextViewTableCol(v.x, v.y, d.x);
+        const nvy = this.getNextViewTableRow(v.x, v.y, d.y);
+        return nvx === v.x && nvy === v.y;
     }
 }
 
