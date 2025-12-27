@@ -3426,7 +3426,7 @@ export class TimTableComponent
         // TODO: Check properly if table has focus when preventing default tab behavior
 
         // Prevents unwanted scrolling in Firefox.
-        if (ev.ctrlKey && isArrowKey(ev)) {
+        if (/* ev.ctrlKey && */ isArrowKey(ev)) {
             ev.preventDefault();
         }
 
