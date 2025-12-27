@@ -15,16 +15,14 @@ import {showMessageDialog} from "tim/ui/showMessageDialog";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {HttpClient, HttpClientModule} from "@angular/common/http";
 import {DataViewModule} from "tim/plugin/dataview/data-view.module";
-import type {
-    DataModelProvider,
-    ICoord,
-} from "tim/plugin/dataview/data-view.component";
+import type {DataModelProvider} from "tim/plugin/dataview/data-view.component";
 import {DataViewComponent} from "tim/plugin/dataview/data-view.component";
 import {BsDatepickerModule, BsLocaleService} from "ngx-bootstrap/datepicker";
 import {defineLocale} from "ngx-bootstrap/chronos";
 import {fiLocale} from "ngx-bootstrap/locale";
 import {computeHiddenRowsFromFilters} from "tim/plugin/timTable/filtering";
 import {CommonModule} from "@angular/common";
+import type {CellIndex} from "tim/plugin/dataview/util";
 
 export const GroupType = t.union([t.string, t.array(t.string)]);
 
@@ -203,7 +201,7 @@ class AssessmentTableModel implements DataModelProvider {
         return true;
     }
 
-    public isLastVisible(tx: number, ty: number, d: ICoord): boolean {
+    public isLastVisible(tx: number, ty: number, d: CellIndex): boolean {
         return false;
     }
 

@@ -74,5 +74,28 @@ tr.filters-row.is-last td {
   border-bottom-width: 2px;
 }
 
+/* Hide focus frames from tables */
+.timTableRunDiv:focus,
+.tableForm :focus {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+.timTableTable:focus,
+.timTableContentDiv [tabindex="-1"]:focus,
+.timTableRunDiv [tabindex="-1"]:focus,
+.tableForm [tabindex="-1"]:focus,
+.timTableRunDiv [inert] :focus,
+.tableForm [inert] :focus {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+/* Remove Firefox inner focus border for form controls */
+.timTableRunDiv *::-moz-focus-inner,
+.tableForm *::-moz-focus-inner {
+  border: 0;
+}
+
 }
 

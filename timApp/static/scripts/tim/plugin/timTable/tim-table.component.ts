@@ -83,7 +83,6 @@ import {PurifyModule} from "tim/util/purify.module";
 import {DataViewModule} from "tim/plugin/dataview/data-view.module";
 import type {
     DataModelProvider,
-    ICoord,
     VirtualScrollingOptions,
 } from "tim/plugin/dataview/data-view.component";
 import {DataViewComponent} from "tim/plugin/dataview/data-view.component";
@@ -117,6 +116,7 @@ import {
     KEY_UP,
 } from "tim/util/keycodes";
 import {$http} from "tim/util/ngimport";
+import type {CellIndex} from "tim/plugin/dataview/util";
 import {
     clone,
     copyToClipboard,
@@ -451,13 +451,8 @@ export interface DataEntity {
     cells: ICellDataEntity;
 }
 
-export interface ICellIndex {
-    x: number;
-    y: number;
-}
-
 export interface ISelectedCells {
-    cells: ICellIndex[]; // List of original cell indices inside selected area
+    cells: CellIndex[]; // List of original cell indices inside selected area
     srows: boolean[]; // table for screen indices selected
     scol1: number; // screen index for first selected column
     scol2: number; // screen index for last selected column
@@ -582,7 +577,7 @@ enum Direction {
     Right = 8,
 }
 
-const ALL_DIRECTIONS: ICoord[] = [
+const ALL_DIRECTIONS: CellIndex[] = [
     {x: 0, y: 0}, // 0
     {x: 0, y: -1}, // 1
     {x: 0, y: 1}, // 2
@@ -669,7 +664,7 @@ export enum ClearSort {
         >
             <h4 *ngIf="data.header" [innerHtml]="data.header | purify"></h4>
             <p *ngIf="data.stem" class="stem" [innerHtml]="data.stem | purify"></p>
-            <div class="timTableContentDiv no-highlight"
+            <div tabindex="-1" class="timTableContentDiv no-highlight"
                  [ngClass]="{disableSelect: disableSelect}">
                 <div class="buttonsCol">
                     <button class="timButton" title="Remove column"
@@ -1537,6 +1532,7 @@ export class TimTableComponent
         const undoEntry = this.undoStack.pop()!;
         await this.setCellStyleAttribute(undoEntry, ClearSort.No);
         this.edited = true;
+        this.dataViewComponent?.refresh();
         this.c();
     };
 
@@ -1552,13 +1548,14 @@ export class TimTableComponent
         }
     }
 
-    private doPaste(e: ClipboardEvent | null = null) {
+    private async doPaste(e: ClipboardEvent | null = null) {
         if (!this.isCellsSelected() || !this.isInEditMode()) {
             return;
         }
         if (this.currentCell) {
             return; // do not paste if inline editor is open
         }
+        let cells: ICellCoord[] = [];
         if (e) {
             if (!this.allowPasteTable) {
                 return;
@@ -1568,14 +1565,17 @@ export class TimTableComponent
             if (clipboardData) {
                 const str = clipboardData.getData("text/plain");
                 if (str) {
-                    void this.fillSelectionByString(str, ClearSort.No);
+                    cells = await this.fillSelectionByString(str, ClearSort.No);
+                    this.dataViewComponent?.updateCellsContents(cells);
+                    // this.dataViewComponent?.refresh();
                 }
             }
             return;
         }
         getClipboardText().then(async (str) => {
             if (str) {
-                await this.fillSelectionByString(str, ClearSort.No);
+                cells = await this.fillSelectionByString(str, ClearSort.No);
+                this.dataViewComponent?.updateCellsContents(cells);
             }
         });
     }
@@ -2523,7 +2523,7 @@ export class TimTableComponent
 
     selectAllCells = () => {
         this.disableStartCell();
-        const ret: ICellIndex[] = [];
+        const ret: CellIndex[] = [];
         const srows: boolean[] = [];
         let ymin = 1000000;
         let xmin = 1000000;
@@ -2602,7 +2602,7 @@ export class TimTableComponent
     }
 
     getSelectedCells(row: number, col: number): ISelectedCells {
-        const ret: ICellIndex[] = [];
+        const ret: CellIndex[] = [];
         const srows: boolean[] = [];
 
         const scol = col;
@@ -3347,17 +3347,17 @@ export class TimTableComponent
     async fillSelectionByString(
         val: string,
         clearSort: ClearSort = ClearSort.Yes
-    ) {
+    ): Promise<ICellCoord[]> {
         const array2d = await this.make2DArrayFromCSV(val);
 
         if (
             array2d.length < 1 ||
             (array2d.length === 1 && array2d[0]?.length < 1)
         ) {
-            return; // nothing to do
+            return []; // nothing to do
         }
         const templ = this.make2DArrayToTemplate(array2d);
-        await this.handleToolbarSetCell(templ, clearSort);
+        return await this.handleToolbarSetCell(templ, clearSort);
     }
 
     async smallEditorLostFocus(_ev: unknown) {
@@ -3552,8 +3552,8 @@ export class TimTableComponent
             // (ev.ctrlKey || ev.altKey) &&
             isArrowKey(ev)
         ) {
-            ev.preventDefault();
             if (await this.handleArrowMovement(ev)) {
+                ev.preventDefault();
                 return ChangeDetectionHint.NeedToTrigger;
             }
         }
@@ -3633,16 +3633,16 @@ export class TimTableComponent
         }
         const stopReadOnly = this.isSomeCellBeingEdited();
         // Active cell coordinates are in model space
-        const mc: ICoord = {x: this.activeCell.col, y: this.activeCell.row};
+        const mc: CellIndex = {x: this.activeCell.col, y: this.activeCell.row};
         // To count movement properly, convert to view coordinates
-        const vc: ICoord = this.getViewTableCellCoordinates(mc.x, mc.y);
+        const vc: CellIndex = this.getViewTableCellCoordinates(mc.x, mc.y);
 
         const dir = ALL_DIRECTIONS[direction];
         vc.x = this.getNextViewTableCol(vc.x, mc.y, dir.x, stopReadOnly);
         vc.y = this.getNextViewTableRow(mc.x, vc.y, dir.y, stopReadOnly);
 
         // Next cell needs to be in model coordinates
-        const nmc: ICoord = this.getModelTableCellCoordinates(vc.x, vc.y);
+        const nmc: CellIndex = this.getModelTableCellCoordinates(vc.x, vc.y);
 
         const nextCell = {row: nmc.y, col: nmc.x};
 
@@ -5060,7 +5060,7 @@ export class TimTableComponent
         }
     }
 
-    findRectLimits(cells: ICellIndex[]): IRectLimits {
+    findRectLimits(cells: CellIndex[]): IRectLimits {
         const r: IRectLimits = {
             minx: 1e100,
             maxx: -1,
@@ -5087,7 +5087,7 @@ export class TimTableComponent
     getRectValue(
         rect: Record<string, IToolbarTemplate>,
         rectLimits: IRectLimits,
-        c: ICellIndex
+        c: CellIndex
     ): IToolbarTemplate {
         if (
             rectLimits.minx == rectLimits.maxx &&
@@ -5156,7 +5156,7 @@ export class TimTableComponent
      * @param cells The list of cell coordinates
      * @returns {boolean} True if the cell is in the list, otherwise false
      */
-    checkInCells(c: ICellIndex | undefined, cells: ICellIndex[]): boolean {
+    checkInCells(c: CellIndex | undefined, cells: CellIndex[]): boolean {
         if (!c) {
             return true;
         }
@@ -5183,7 +5183,7 @@ export class TimTableComponent
         cell: ICellCoord | undefined,
         value: IToolbarTemplate,
         cellsToSave: CellAttrToSave[],
-        cells: ICellIndex[]
+        cells: CellIndex[]
     ) {
         // now close your eyes!  This is not for children
         const selfthis = this;
@@ -5319,7 +5319,7 @@ export class TimTableComponent
                         | string
                         | string[]
                         | undefined,
-                    c: ICellIndex,
+                    c: CellIndex,
                     toggle: boolean,
                     areaClearOrSet: number
                 ): number {
@@ -5557,8 +5557,9 @@ export class TimTableComponent
     async handleToolbarSetCell(
         value: IToolbarTemplate,
         clearSort: ClearSort = ClearSort.Yes
-    ) {
+    ): Promise<ICellCoord[]> {
         const cellsToSave: CellAttrToSave[] = [];
+        // const cells: CellIndex[] = [];
         this.undoEntry = [];
         let startCell = this.activeCell;
         // If just one cell is selected, use that as start cell
@@ -5607,6 +5608,11 @@ export class TimTableComponent
         }
         this.undoStackPush(this.undoEntry);
         this.c();
+        return cellsToSave.map((cs) => {
+            {
+                return {row: cs.row, col: cs.col};
+            }
+        });
     }
 
     getTemplContent(rowId: number, colId: number) {
@@ -6264,7 +6270,7 @@ export class TimTableComponent
      * @param ty row index in table coordinates
      * @returns {x, y} index in HTML table coordinates
      */
-    public getViewTableCellCoordinates(tx: number, ty: number): ICoord {
+    public getViewTableCellCoordinates(tx: number, ty: number): CellIndex {
         const vx = tx;
         const vy = this.permTableToScreen[ty];
         return {x: vx, y: vy};
@@ -6276,7 +6282,7 @@ export class TimTableComponent
      * @param vy row index in HTML table coordinates
      * @returns {x, y} index in table coordinates
      */
-    public getModelTableCellCoordinates(vx: number, vy: number): ICoord {
+    public getModelTableCellCoordinates(vx: number, vy: number): CellIndex {
         const ty = this.permTable[vy];
         return {x: vx, y: ty};
     }
@@ -6344,7 +6350,7 @@ export class TimTableComponent
         return vy;
     }
 
-    public isLastVisible(tx: number, ty: number, d: ICoord): boolean {
+    public isLastVisible(tx: number, ty: number, d: CellIndex): boolean {
         const v = this.getViewTableCellCoordinates(tx, ty);
         const nvx = this.getNextViewTableCol(v.x, v.y, d.x);
         const nvy = this.getNextViewTableRow(v.x, v.y, d.y);

@@ -79,9 +79,10 @@ import {
 /**
  * General interface for an object that provides the data model for DataViewComponent.
  */
-export interface ICoord {
-    x: number;
-    y: number;
+
+export interface ICellCoord {
+    row: number;
+    col: number;
 }
 
 export interface DataModelProvider {
@@ -157,7 +158,7 @@ export interface DataModelProvider {
 
     isCbColumn(def: boolean): boolean;
 
-    isLastVisible(tx: number, ty: number, d: ICoord): boolean;
+    isLastVisible(tx: number, ty: number, d: CellIndex): boolean;
 }
 
 /**
@@ -207,7 +208,7 @@ const SLOW_SIZE_MEASURE_THRESHOLD = 0;
             </div>
             <tim-loading *ngIf="recomputingSize"></tim-loading>
         </tim-alert>
-        <div class="data-view" [class.virtual]="isVirtual" [style.width]="tableMaxWidth" #dataViewContainer>
+        <div tabindex="-1" class="data-view" [class.virtual]="isVirtual" [style.width]="tableMaxWidth" #dataViewContainer>
             <div class="header" #headerContainer>
                 <table class="timTableHeader" [ngStyle]="tableStyle" #headerTable>
                     <thead #headerIdBody></thead>
@@ -288,10 +289,10 @@ const SLOW_SIZE_MEASURE_THRESHOLD = 0;
                     <tbody #idBody></tbody>
                 </table>
             </div>
-            <div class="data" [style.maxHeight]="tableMaxHeight" #mainDataContainer>
-                <table [ngClass]="tableClass" [ngStyle]="tableStyle" [class.virtual]="virtualScrolling.enabled"
+            <div tabindex="-1" class="data" [style.maxHeight]="tableMaxHeight" #mainDataContainer>
+                <table tabindex="-1"  [ngClass]="tableClass" [ngStyle]="tableStyle" [class.virtual]="virtualScrolling.enabled"
                        #mainDataTable>
-                    <tbody class="content" #mainDataBody [class.nowrap]="noWrap"></tbody>
+                    <tbody tabindex="-1" class="content" #mainDataBody [class.nowrap]="noWrap"></tbody>
                 </table>
                 <ng-container *ngIf="editorInData">
                     <ng-container *ngTemplateOutlet="editor"></ng-container>
@@ -518,6 +519,7 @@ export class DataViewComponent implements AfterViewInit, OnInit {
         this.cellValueCache = {};
         this.updateVisible();
         this.updateAllSelected();
+        this.c();
     }
 
     /**
