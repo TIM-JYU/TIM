@@ -8897,8 +8897,8 @@
         </context-group>
       </trans-unit>
       <trans-unit id="187187500641108332" datatype="html">
-        <source><x id="INTERPOLATION" equiv-text="Folder() ?? 'Enter the location or leave empty'}}"/></source>
-        <target state="new"><x id="INTERPOLATION" equiv-text="Folder() ?? 'Enter the location or leave empty'}}"/></target>
+        <source><x id="INTERPOLATION" equiv-text="Folder() ?? &apos;Enter the location or leave empty&apos;}}"/></source>
+        <target state="new"><x id="INTERPOLATION" equiv-text="Folder() ?? &apos;Enter the location or leave empty&apos;}}"/></target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/user-group-dialog.component.ts</context>
           <context context-type="linenumber">61,62</context>
@@ -11201,6 +11201,30 @@ Syötä useiden käyttäjien osoitteet allekkain tai pilkulla erotettuina.</targ
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/groupJoin/group-join.component.ts</context>
           <context context-type="linenumber">62,63</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="18610244592166500" datatype="html">
+        <source>Reset table state to</source>
+        <target state="translated">Alusta taulukko tilaan joka oli</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/timTable/tim-table.component.ts</context>
+          <context context-type="linenumber">1305,1304</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="2323081413317144899" datatype="html">
+        <source>Reset table</source>
+        <target state="new">Reset table</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/timTable/tim-table.component.ts</context>
+          <context context-type="linenumber">1306,1304</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="5520520072410375513" datatype="html">
+        <source>original</source>
+        <target state="translated">alunperin</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/timTable/tim-table.component.ts</context>
+          <context context-type="linenumber">1310</context>
         </context-group>
       </trans-unit>
     </body>

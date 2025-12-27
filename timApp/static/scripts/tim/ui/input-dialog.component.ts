@@ -13,34 +13,49 @@ import {InputDialogKind} from "tim/ui/input-dialog.kind";
 import type {Result} from "tim/util/utils";
 import {CommonModule} from "@angular/common";
 
+export interface InputDialogResult {
+    ok: boolean;
+    value: string;
+    selected: boolean[];
+    selectedIndex: number;
+}
+
 export type InputDialogParams<T> = {
     title: string;
     text: string;
     okText?: string;
     cancelText?: string;
     asyncContent?: boolean;
+    defaultValue?: string;
+    options?: string[];
+    selected?: boolean[];
+    selectedIndex?: number;
+    validator?: (s: string) => Promise<Result<T, string>>;
 } & (
-    | {isInput: InputDialogKind.NoValidator; okValue: T}
+    | {isInput?: InputDialogKind.NoValidator; okValue: T}
     | {
-          isInput: InputDialogKind.ValidatorOnly;
+          isInput?: InputDialogKind.ValidatorOnly;
           validator: () => Promise<Result<T, string>>;
       }
     | {
-          isInput: InputDialogKind.InputAndValidator;
-          defaultValue: string;
-          validator: (s: string) => Promise<Result<T, string>>;
+          isInput?: InputDialogKind.InputAndValidator;
       }
 ) &
     (
         | {
               inputType?: "select";
-              options: string[];
           }
         | {
               inputType?: "textarea";
           }
         | {
               inputType?: "text";
+          }
+        | {
+              inputType?: "radio";
+          }
+        | {
+              inputType?: "checkbox";
           }
     );
 
@@ -49,7 +64,7 @@ export type InputDialogParams<T> = {
     template: `
         <div class="modal-bg">
         </div>
-        <tim-dialog-frame [minimizable]="false" [mightBeAsync]=asyncContent [showCloseIcon]="!loading">
+        <tim-dialog-frame class="input-dialog" [minimizable]="false" [mightBeAsync]=asyncContent [showCloseIcon]="!loading">
             <ng-container header>
                 {{getTitle()}}
             </ng-container>
@@ -71,6 +86,46 @@ export type InputDialogParams<T> = {
                        *ngIf="isInput && (data.inputType === 'text' || data.inputType === undefined)"
                        [(ngModel)]="value"
                           (ngModelChange)="clearError()" />
+                <div [ngSwitch]="data.inputType">
+                  <!-- select -->
+                  <select *ngSwitchCase="'select'" 
+                    (keydown.enter)="ok()"
+                    class="option"
+                    focusMe
+                    [disabled]="loading"
+                    [(ngModel)]="value"
+                    (ngModelChange)="clearError()">
+                     <option *ngFor="let option of selectOptions" [value]="option">{{ option }}</option>
+                  </select>
+            
+                  <!-- radio -->
+                  <div *ngSwitchCase="'radio'">
+                    <label class="option" *ngFor="let option of selectOptions">
+                      <input
+                        type="radio"
+                        name="inputRadio"
+                        focusMe
+                        [value]="option"
+                        [(ngModel)]="value"
+                      />
+                      {{ option }}<br>
+                    </label>
+                  </div>
+            
+                  <!-- checkbox (multi-select) -->
+                  <div *ngSwitchCase="'checkbox'">
+                    <label class="option"  *ngFor="let option of selectOptions">
+                      <input
+                        type="checkbox"
+                        focusMe
+                        [checked]="selectedCheckboxes.includes(option)"
+                        (change)="onCheckboxChange(option, $event)"
+                      />
+                      {{ option }}<br>
+                    </label>
+                  </div>
+                </div>
+                <!---
                 <select (keydown.enter)="ok()"
                         class="form-control"
                         focusMe
@@ -79,7 +134,7 @@ export type InputDialogParams<T> = {
                         [(ngModel)]="value"
                         (ngModelChange)="clearError()">
                     <option *ngFor="let option of selectOptions" [value]="option">{{option}}</option>
-                </select>
+                </select> -->
                 <tim-alert *ngIf="error" severity="danger">
                     {{ error }}
                 </tim-alert>
@@ -105,6 +160,10 @@ export class InputDialogComponent<T> extends AngularDialogComponent<
     isInput = false;
     asyncContent = true;
     loading = false;
+    inputValue: string = "";
+    selectedCheckboxes: string[] = [];
+    options: string[] = [];
+
     @ViewChild("textEl") textEl!: ElementRef<HTMLElement>;
 
     @HostListener("keydown.enter", ["$event"])
@@ -122,21 +181,51 @@ export class InputDialogComponent<T> extends AngularDialogComponent<
     }
 
     get selectOptions() {
-        if (this.data.inputType !== "select") {
-            return [];
-        }
-        return this.data.options;
+        return this.options;
     }
 
     ngOnInit() {
+        if (Array.isArray(this.data.options)) {
+            this.options = this.data.options;
+        }
         this.isInput = this.data.isInput == InputDialogKind.InputAndValidator;
-        if (this.data.isInput !== InputDialogKind.InputAndValidator) {
-            this.value = "-";
+        if (this.data.inputType !== undefined) {
+            this.isInput = true;
+        }
+        if (this.isInput) {
+            this.value = this.data.defaultValue ?? "";
         } else {
-            this.value = this.data.defaultValue;
+            this.value = "-";
         }
         if (this.data.asyncContent == false) {
             this.asyncContent = false;
+        }
+        // Narrow the union: ensure we have options and selected arrays before using them
+        const d = this.data;
+        if (Array.isArray(d.selected)) {
+            let firstOption: string | undefined;
+
+            // Look values from selected
+            for (
+                let i = 0;
+                i < d.selected.length && i < this.options.length;
+                i++
+            ) {
+                if (d.selected[i]) {
+                    const option = this.options[i];
+                    firstOption ??= option;
+                    this.selectedCheckboxes.push(option);
+                }
+            }
+
+            this.value = firstOption ?? this.value;
+        }
+        if (this.data.selectedIndex !== undefined) {
+            const idx = this.data.selectedIndex;
+            if (idx >= 0 && idx < this.options.length) {
+                this.value = this.options[idx];
+                this.selectedCheckboxes = [this.value];
+            }
         }
     }
 
@@ -148,22 +237,62 @@ export class InputDialogComponent<T> extends AngularDialogComponent<
         }
     }
 
+    onCheckboxChange(option: string, event: Event) {
+        const isChecked = (event.target as HTMLInputElement).checked;
+        if (isChecked) {
+            this.selectedCheckboxes.push(option);
+        } else {
+            this.selectedCheckboxes = this.selectedCheckboxes.filter(
+                (item) => item !== option
+            );
+        }
+    }
+
     async ok() {
         if (!this.value || this.loading) {
             return;
         }
-        if (this.data.isInput !== InputDialogKind.NoValidator) {
-            this.loading = true;
-            const result = await this.data.validator(this.value);
-            this.loading = false;
-            if (!result.ok) {
-                this.error = result.result;
-                return;
-            }
-            this.close(result.result);
-        } else {
+        if (this.data.isInput === InputDialogKind.NoValidator) {
             this.close(this.data.okValue);
         }
+
+        if (this.data.validator == undefined) {
+            // This is mostly for select/radio/checkbox inputs
+            // where no validation is needed
+            let selectedIndex = this.options.indexOf(this.value);
+            const selected: boolean[] = new Array(this.options.length).fill(
+                false
+            );
+            if (this.data.inputType === "checkbox") {
+                selectedIndex = -1;
+                for (let i = this.options.length - 1; i >= 0; i--) {
+                    const option = this.options[i];
+                    if (this.selectedCheckboxes.includes(option)) {
+                        selected[i] = true;
+                        selectedIndex = i;
+                        this.value = option;
+                    }
+                }
+            } else if (selectedIndex >= 0) {
+                selected[selectedIndex] = true;
+            }
+            this.close({
+                ok: true,
+                result: this.value,
+                selectedIndex: selectedIndex,
+                selected: selected,
+            } as unknown as T);
+            return;
+        }
+
+        this.loading = true;
+        const result = await this.data.validator(this.value);
+        this.loading = false;
+        if (!result.ok) {
+            this.error = result.result;
+            return;
+        }
+        this.close(result.result);
     }
 
     clearError() {

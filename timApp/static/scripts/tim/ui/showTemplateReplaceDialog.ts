@@ -16,6 +16,7 @@ export const TemplateParam = t.intersection([
         useDefault: t.boolean,
         flags: t.string,
         select: t.array(t.string),
+        radio: t.array(t.string),
     }),
 ]);
 
@@ -32,6 +33,12 @@ export async function showTemplateReplaceDialog(
         extraOptions = {
             inputType: "select",
             options: param.select,
+        };
+    }
+    if (param.radio) {
+        extraOptions = {
+            inputType: "radio",
+            options: param.radio,
         };
     }
 

@@ -7,6 +7,8 @@ import type {
     HideValues,
     IToolbarTemplate,
     TimTableComponent,
+    IMenuBarUserEntries,
+    IMenuBarUserEntriesMap,
 } from "tim/plugin/timTable/tim-table.component";
 import {setToolbarInstance} from "tim/plugin/timTable/toolbarUtils";
 import {AngularDialogComponent} from "tim/ui/angulardialog/angular-dialog-component.directive";
@@ -15,7 +17,7 @@ import {CommonModule} from "@angular/common";
 export interface ITimTableToolbarCallbacks {
     setCell: (value: IToolbarTemplate) => void;
     getCell: () => string;
-    addToTemplates: () => void;
+    addToTemplates: (mousedown: boolean) => void;
     addColumn: (offset: number) => void;
     addRow: (offset: number) => void;
     removeColumn: () => void;
@@ -26,11 +28,36 @@ export interface ITimTableToolbarCallbacks {
     getColumnName: () => string;
     setToColumnByIndex: (col: number) => number;
     setToColumnByName: (name: string) => number;
+    fillTableCSV: (s: string) => void;
+    filterCallback: (cmd: string, value?: string) => void;
+    editCallback: (cmd: string) => void;
 }
 
 export interface ITimTableEditorToolbarParams {
     callbacks: ITimTableToolbarCallbacks;
     activeTable: TimTableComponent;
+}
+
+export function prepareMenubarItems(
+    templates: IToolbarTemplate[]
+): [IMenuBarUserEntries, IMenuBarUserEntriesMap] {
+    const MENU_SET = new Set(["Edit", "Insert", "Filter"]);
+    const entries: IMenuBarUserEntriesMap = {};
+    const readyEntries: IMenuBarUserEntriesMap = {};
+    for (const t of templates) {
+        if (!t.menu) {
+            continue;
+        }
+        let e = entries;
+        if (MENU_SET.has(t.menu)) {
+            e = readyEntries;
+        }
+        if (!e[t.menu]) {
+            e[t.menu] = {menuName: t.menu, entries: []};
+        }
+        e[t.menu].entries.push(t);
+    }
+    return [Object.values(entries), readyEntries];
 }
 
 const DEFAULT_CELL_BGCOLOR = "#FFFF00";
@@ -40,28 +67,78 @@ const DEFAULT_CELL_BGCOLOR = "#FFFF00";
     template: `
         <tim-dialog-frame class="overflow-visible">
             <ng-container header>
-                {{getTitle()}}
+                {{ getTitle() }}
             </ng-container>
             <ng-container body>
+                
+                <!-- Reusable template for toolbar items -->
+                <ng-template #toolbarItems let-items>
+                    <ng-container *ngFor="let r of items">
+                        <li role="menuitem"
+                            *ngIf="!r.hide"
+                            [ngClass]="getCellClassForToolbarMenuItem(r)"
+                            [ngStyle]="getCellStyleForToolbar(r)"
+                            (click)="applyTemplate(r)"
+                            [title]="getTitleForToolbar(r)">
+                            <a>{{ getCellForToolbar(r) }}</a>
+                        </li>
+                    </ng-container>
+                </ng-template>
+                
+                
                 <div class="row">
                     <div class="col-xs-12" style="top: -0.8em;">
-                        <div class="btn-group" role="menuitem" dropdown *ngIf="canRemoveCells">
-                            <button class="timButton btn-xs dropdown-toggle" dropdownToggle>Edit <span class="caret"></span></button>
+                        <div class="btn-group" role="menuitem" dropdown *ngIf="showEditMenu">
+                            <button class="timButton btn-xs dropdown-toggle" dropdownToggle>Edit <span
+                                    class="caret"></span></button>
                             <ul class="dropdown-menu" *dropdownMenu>
-                                <li role="menuitem" (click)="removeRow()"><a>Remove row</a></li>
-                                <li role="menuitem" (click)="removeColumn()"><a>Remove column</a></li>
+                                <li role="menuitem" (click)="edit('selectAll')"><a>Select all</a></li>
+                                <li role="menuitem" (click)="edit('copy')"><a>Copy selection</a></li>
+                                <li role="menuitem" (click)="edit('paste')" *ngIf="canPaste"><a>Paste</a></li>
+                                <li role="menuitem" (click)="edit('undo')"><a>Undo</a></li>
+                                <li role="menuitem" (click)="removeRow()" *ngIf="showDelRowMenu"><a>Remove row</a></li>
+                                <li role="menuitem" (click)="removeColumn()" *ngIf="showDelColMenu"><a>Remove column</a></li>
+                                <ng-container *ngTemplateOutlet="toolbarItems; context: {$implicit: getReadyMenuEntries('Edit')}"></ng-container>
                             </ul>
                         </div>
                         &ngsp;
                         <div class="btn-group" role="menuitem" dropdown *ngIf="canInsertCells">
-                            <button class="timButton btn-xs dropdown-toggle" dropdownToggle>Insert <span class="caret"></span></button>
+                            <button class="timButton btn-xs dropdown-toggle" dropdownToggle>Insert <span
+                                    class="caret"></span></button>
                             <ul class="dropdown-menu" *dropdownMenu>
-                                <li role="menuitem" (click)="addRow(0)"><a>Row above</a></li>
-                                <li role="menuitem" (click)="addRow(1)"><a>Row below</a></li>
-                                <li role="menuitem" (click)="addColumn(0)"><a>Column to the left</a></li>
-                                <li role="menuitem" (click)="addColumn(1)"><a>Column to the right</a></li>
+                                <li role="menuitem" (click)="addRow(0)" *ngIf="showAddRowMenuAbove"><a>Row above</a></li>
+                                <li role="menuitem" (click)="addRow(1)" *ngIf="showAddRowMenuBelow"><a>Row below</a></li>
+                                <li role="menuitem" (click)="addColumn(0)" *ngIf="showAddColMenuLeft"><a>Column to the left</a></li>
+                                <li role="menuitem" (click)="addColumn(1)" *ngIf="showAddColMenuRight"><a>Column to the right</a></li>
+                                <ng-container *ngTemplateOutlet="toolbarItems; context: {$implicit: getReadyMenuEntries('Insert')}"></ng-container>
                             </ul>
                         </div>
+                        &ngsp;
+                        <div class="btn-group" role="menuitem" dropdown *ngIf="showFilterMenu">
+                            <button class="timButton btn-xs dropdown-toggle" dropdownToggle>Filter <span
+                                    class="caret"></span></button>
+                            <ul class="dropdown-menu" *dropdownMenu>
+                                <li role="menuitem" (click)="filter('copy')"><a>Copy filters</a></li>
+                                <li role="menuitem" (click)="filter('paste')"><a>Paste filters</a></li>
+                                <li role="menuitem" (click)="filter('clear')"><a>Clear filters</a></li>
+                                <li role="menuitem" (click)="filter('addrow')" *ngIf="canAddFilterRow"><a>Add filter row</a></li>
+                                <li role="menuitem" (click)="filter('removerow')"><a>Remove last filter row</a></li>
+                                <li role="menuitem" (click)="filter('addtemplate')"><a>Add filters to toolbar</a></li>
+                                <ng-container *ngTemplateOutlet="toolbarItems; context: {$implicit: getReadyMenuEntries('Filter')}"></ng-container>
+                            </ul>
+                        </div>
+                        
+                        <!-- User menus -->
+                        <ng-container *ngFor="let m of this.activeTable?.menubarUserItems">
+                            &ngsp;
+                            <div class="btn-group" role="menuitem" dropdown *ngIf="showFilterMenu">
+                                <button class="timButton btn-xs dropdown-toggle" dropdownToggle>{{ m.menuName }} <span
+                                        class="caret"></span></button>
+                                <ul class="dropdown-menu" *dropdownMenu>
+                                     <ng-container *ngTemplateOutlet="toolbarItems; context: {$implicit: m.entries}"></ng-container>
+                                </ul>
+                            </div>
+                        </ng-container>
                     </div>
                 </div>
                 <div class="row timTableToolbarRow">
@@ -108,12 +185,12 @@ const DEFAULT_CELL_BGCOLOR = "#FFFF00";
                         &ngsp;
                         <ng-container *ngFor="let r of activeTable?.data?.toolbarTemplates">
                             <button class="btn-xs"
-                                    *ngIf="!r.hide"
+                                    *ngIf="!r.hide && !r.menu"
                                     [ngClass]="getCellClassForToolbar(r)"
                                     [ngStyle]="getCellStyleForToolbar(r)"
                                     (click)="applyTemplate(r)"
                                     [title]="getTitleForToolbar(r)">
-                                {{getCellForToolbar(r)}}
+                                {{ getCellForToolbar(r) }}
                                 <i [ngClass]="getIClassForToolbar(r)"></i>
                             </button>
                             &ngsp;
@@ -121,7 +198,8 @@ const DEFAULT_CELL_BGCOLOR = "#FFFF00";
                         <button class="timButton btn-xs"
                                 *ngIf="!hide?.addToTemplates"
                                 title="Add current cell(s) to templates"
-                                (click)="addToTemplates()">
+                                (click)="addToTemplates(false)"
+                                (pointerdown)="addToTemplates(true)">
                             <i class="glyphicon glyphicon-star-empty"></i>
                         </button>
                         &ngsp;
@@ -150,18 +228,23 @@ export class TimTableEditorToolbarDialogComponent extends AngularDialogComponent
     void
 > {
     protected dialogName = "TableEditorToolbar";
-    canInsertCells = false;
-    canRemoveCells = false;
+    protected canInsertCells = false;
+    protected canRemoveCells = false;
+    protected showEditMenu: boolean = false;
+    protected showFilterMenu: boolean = false;
+    protected canPaste: boolean = false;
+    protected canAddFilterRow: boolean = false;
+    protected showAddRowMenuAbove: boolean = false;
+    protected showAddRowMenuBelow: boolean = false;
+    protected showDelRowMenu: boolean = false;
+    protected showAddColMenuLeft: boolean = false;
+    protected showAddColMenuRight: boolean = false;
+    protected showDelColMenu: boolean = false;
 
     ngOnInit() {
         setToolbarInstance(this);
-        this.callbacks = this.data.callbacks;
-        this.activeTable = this.data.activeTable;
-        this.hide = this.activeTable.data.hide;
-
+        this.show(this.data.callbacks, this.data.activeTable);
         // TODO: Right now deleting specific rows/columns is not supported for tasks
-        this.canInsertCells = !this.activeTable.task && !this.hide?.insertMenu;
-        this.canRemoveCells = !this.activeTable.task && !this.hide?.editMenu;
     }
 
     public callbacks!: ITimTableToolbarCallbacks; // ngOnInit
@@ -170,6 +253,10 @@ export class TimTableEditorToolbarDialogComponent extends AngularDialogComponent
 
     private previousBackgroundColor = DEFAULT_CELL_BGCOLOR;
     cellBackgroundColor = DEFAULT_CELL_BGCOLOR;
+
+    getReadyMenuEntries(menu: string): IToolbarTemplate[] {
+        return this.activeTable?.menubarReadyItems?.[menu]?.entries ?? [];
+    }
 
     public getTitle() {
         return "Edit table";
@@ -200,6 +287,47 @@ export class TimTableEditorToolbarDialogComponent extends AngularDialogComponent
         return e as HTMLInputElement;
     }
 
+    private checkMenusVisibility() {
+        const editable = this.activeTable?.isEditable() ?? false;
+
+        this.showEditMenu = !this.hide?.editMenu;
+        this.showFilterMenu = !this.hide?.filterMenu;
+        this.canPaste = !this.hide?.pasteMenu && editable;
+        this.canInsertCells = !this.hide?.insertMenu && editable;
+        this.canRemoveCells = !this.hide?.removeMenu && editable;
+        this.canAddFilterRow = !this.hide?.addFilterRow;
+        this.showAddRowMenuAbove =
+            (!this.hide?.addRowMenu &&
+                this.canInsertCells &&
+                this.activeTable?.checkCanAddRow(0)) ||
+            false;
+        this.showAddRowMenuBelow =
+            (!this.hide?.addRowMenu &&
+                this.canInsertCells &&
+                this.activeTable?.checkCanAddRow(1)) ||
+            false;
+        this.showDelRowMenu =
+            (!this.hide?.delRowMenu &&
+                this.canRemoveCells &&
+                this.activeTable?.checkCanRemoveRow()) ||
+            false;
+        this.showAddColMenuLeft =
+            (!this.hide?.addColMenu &&
+                this.canInsertCells &&
+                this.activeTable?.checkCanAddColumn(0)) ||
+            false;
+        this.showAddColMenuRight =
+            (!this.hide?.addColMenu &&
+                this.canInsertCells &&
+                this.activeTable?.checkCanAddColumn(1)) ||
+            false;
+        this.showDelColMenu =
+            (!this.hide?.delColMenu &&
+                this.canRemoveCells &&
+                this.activeTable?.checkCanRemoveColumn()) ||
+            false;
+    }
+
     /**
      * Shows the toolbar.
      * @param callbacks Callbacks for communicating with the table.
@@ -210,8 +338,9 @@ export class TimTableEditorToolbarDialogComponent extends AngularDialogComponent
         activeTable: TimTableComponent
     ) {
         this.activeTable = activeTable;
-        this.hide = this.activeTable.data.hide;
+        this.hide = this.activeTable.hide;
         this.callbacks = callbacks;
+        this.checkMenusVisibility();
     }
 
     /**
@@ -221,38 +350,9 @@ export class TimTableEditorToolbarDialogComponent extends AngularDialogComponent
         this.callbacks.setCell({style: {textAlign: value}});
     }
 
-    async changeCellToTableArea() {
+    changeCellToTableArea() {
         const val = this.callbacks.getCell().trimEnd();
-        if (val === "") {
-            return;
-        }
-        const papa = await import("papaparse");
-        const result = papa.default.parse(val);
-        /*
-        let lnsep;
-        let colsep;
-        let sep = val.indexOf("\n");
-        if (sep >= 0) lnsep = "\n";
-        sep = val.indexOf("\t");
-        if (sep >= 0) colsep = "\t";
-        else {
-            sep = val.indexOf("|");
-            if (sep >= 0) colsep = "|";
-        }
-        if (!lnsep && !colsep) return;
-        let rows = [val];
-        if (lnsep) rows = val.split(lnsep);
-        */
-        const area = [];
-        for (const row of result.data) {
-            const acols = [];
-            for (const col of row as Array<string>) {
-                acols.push({cell: col});
-            }
-            area.push(acols);
-        }
-        const templ = {area: area};
-        this.callbacks.setCell(templ);
+        this.callbacks.fillTableCSV(val);
     }
 
     /**
@@ -285,8 +385,8 @@ export class TimTableEditorToolbarDialogComponent extends AngularDialogComponent
     /**
      * Add current cell to templates
      */
-    addToTemplates() {
-        this.callbacks.addToTemplates();
+    addToTemplates(mousedown: boolean = false) {
+        this.callbacks.addToTemplates(mousedown);
     }
 
     /**
@@ -314,7 +414,7 @@ export class TimTableEditorToolbarDialogComponent extends AngularDialogComponent
         if (v.length <= 5) {
             return v;
         }
-        return v.substr(0, Math.min(v.length, 5)) + "..";
+        return v.substring(0, Math.min(v.length, 5)) + "..";
     }
 
     /**
@@ -331,7 +431,25 @@ export class TimTableEditorToolbarDialogComponent extends AngularDialogComponent
         if (!v) {
             return null;
         } // &#8195  em space &emsp;
+        if (value.shortcut) {
+            v += ` (${value.shortcut})`;
+        }
         return v;
+    }
+
+    /**
+     * Gets the cell class for toolbar
+     */
+    getCellClassForToolbarMenuItem(value: IToolbarTemplate): string {
+        let cls = "toolbarMenuItem";
+        if (value.buttonClass) {
+            cls = " " + value.buttonClass;
+        } else if (value.style?.class) {
+            cls += " " + value.style.class;
+        } else if (value.toggleStyle?.class) {
+            cls += " " + value.toggleStyle.class;
+        }
+        return cls;
     }
 
     /**
@@ -386,7 +504,7 @@ export class TimTableEditorToolbarDialogComponent extends AngularDialogComponent
     }
 
     // noinspection JSUnusedLocalSymbols
-    private getStyle() {
+    protected getStyle() {
         return {"background-color": "#" + this.previousBackgroundColor};
     }
 
@@ -410,6 +528,14 @@ export class TimTableEditorToolbarDialogComponent extends AngularDialogComponent
 
     removeRow() {
         this.callbacks.removeRow();
+    }
+
+    edit(cmd: string) {
+        this.callbacks.editCallback(cmd);
+    }
+
+    filter(cmd: string) {
+        this.callbacks.filterCallback(cmd);
     }
 
     private borderRect() {
@@ -470,6 +596,13 @@ export class TimTableEditorToolbarDialogComponent extends AngularDialogComponent
                 return;
             }
         }
+        if (templ.filters) {
+            this.callbacks.filterCallback(
+                "filters",
+                JSON.stringify(templ.filters)
+            );
+            return;
+        }
         if (templ.commands) {
             for (const cmd of templ.commands) {
                 const c = cmd.split(" ");
@@ -495,11 +628,15 @@ export class TimTableEditorToolbarDialogComponent extends AngularDialogComponent
                 }
             }
         }
+
         this.setCell(templ);
         if (templ.closeEdit) {
             this.callbacks.closeEditor(true);
         }
     }
+
+    protected readonly menubar = menubar;
+    protected readonly Object = Object;
 }
 
 @NgModule({

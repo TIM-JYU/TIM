@@ -5,7 +5,7 @@ import {PluginMarkupErrors} from "tim/plugin/util";
     selector: "tim-markup-error",
     template: `
         <div class="pluginError">
-            Plugin has invalid values for these markup fields:
+            sePlugin has invalid values for these markup fields:
             <ul>
                 <li *ngFor="let e of data">
                     {{ e.name }}: expected {{ e.type }}

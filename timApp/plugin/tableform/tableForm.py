@@ -2,7 +2,9 @@
 TIM example plugin: a tableFormndrome checker.
 """
 import datetime
-import io, json, re
+import io
+import json
+import re
 from dataclasses import dataclass, asdict, field
 from typing import Any, TypedDict, Sequence, Tuple
 from zipfile import ZipFile, ZIP_DEFLATED
@@ -107,6 +109,16 @@ class RunScriptModel:
     interval: int | None = None
 
 
+FilterValue = dict[str | int, str | int]
+
+
+@dataclass
+class Filters:
+    clear: bool | Missing = missing
+    sort: list[int | str] | None | Missing = missing
+    values: list[FilterValue] | None | Missing = missing
+
+
 @dataclass
 class TableFormMarkupModel(GenericMarkupModel):
     anonNames: bool | Missing = missing
@@ -118,7 +130,10 @@ class TableFormMarkupModel(GenericMarkupModel):
     emails: bool | Missing = missing
     addedDates: bool | Missing = missing
     emailUsersButtonText: str | Missing | None = missing
-    filterRow: bool | Missing | None = missing
+    filterRow: int | bool | Missing | None = missing
+    filters: Filters | None | Missing = missing
+    allowPasteTable: bool | Missing = False
+    pasteTableChars: dict[str, list[str]] | Missing = missing
     fixedColor: str | Missing | None = missing
     fontSize: str | Missing | None = missing
     forceUpdateButtonText: str | Missing | None = missing
@@ -151,6 +166,7 @@ class TableFormMarkupModel(GenericMarkupModel):
     saveStyles: bool | Missing = True
     separator: str | Missing | None = missing
     showToolbar: bool | Missing | None = missing
+    tinyFilters: bool | Missing | None = missing
     singleLine: bool | Missing | None = missing
     sisugroups: str | Missing = missing
     sortBy: str | Missing | None = missing
@@ -393,6 +409,7 @@ singleLine: true  # show every line as a single line
 emailUsersButtonText: "Lähetä sähköpostia valituille" # if one wants to send email 
 separator: ";"    # Define your value separator here, ";" as default
 anonNames: false  # Whether to show anonymised names, true or false
+tinyFilters: false # show filter inputs without borders
 reportButton: "Raportti"
 userListButtonText: "Käyttäjälista"
 showToolbar: true # toolbar for editing the table
