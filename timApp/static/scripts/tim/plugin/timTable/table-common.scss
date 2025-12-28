@@ -189,6 +189,9 @@ td.nr-column.matching-nr span {
     background: pink !important;
 }
 
+.data-view .header-row, .data-view .timTableHeader tr {
+    height: 28px;
+}
 
 } /* end of :host ::ng-deep */
 

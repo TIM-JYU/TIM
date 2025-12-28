@@ -235,7 +235,7 @@ const SLOW_SIZE_MEASURE_THRESHOLD = 0;
             <div class="summary">
                 <table [ngStyle]="tableStyle" #summaryTable>
                     <thead>
-                    <tr>
+                    <tr class="header-row">
                         <td  *ngIf="this.nrColumn"
                             class="nr-column total-nr"
                             title="Click to show all"
