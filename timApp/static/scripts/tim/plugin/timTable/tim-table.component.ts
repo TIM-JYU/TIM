@@ -399,7 +399,7 @@ export const DataViewSettingsType = t.intersection([
     }),
 ]);
 
-const defaultDataViewRowHeight = 32;
+const defaultDataViewRowHeight = 30;
 
 export function defaultDataView(): DataViewSettings {
     return {
@@ -3264,6 +3264,11 @@ export class TimTableComponent
                 ev.preventDefault();
                 return;
             }
+            const input = this.getEditInputElement();
+            if (!input) {
+                return;
+            }
+            input.select();
         }
         // For Enter alone nothing extra needed here (handled in keydown).
 

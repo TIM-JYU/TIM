@@ -98,8 +98,8 @@ tr.filters-row.is-last td {
 }
 
 /* fixed row height */
-.timTableRunDiv th,
-.timTableRunDiv td {
+.timTableRunDiv .data-view  th,
+.timTableRunDiv .data-view  td {
   /*
   height: 30px;
   min-height: 30px;
@@ -109,7 +109,7 @@ tr.filters-row.is-last td {
   overflow: hidden; /* prevent cell itself from expanding */
   vertical-align: middle;
   white-space: nowrap;
-  text-overflow: ellipsis;
+  text-overflow: clip;
 }
 
 td.nr-column.total-nr {
@@ -189,9 +189,26 @@ td.nr-column.matching-nr span {
     background: pink !important;
 }
 
-.data-view .header-row, .data-view .timTableHeader tr {
+.data-view .header-row,
+.data-view .timTableHeader tr,
+.data-view .fixed-col-header thead tr {
     height: 28px;
 }
+
+/*
+.timTableHeader td.headers {
+  vertical-align: middle !important;
+  white-space: nowrap;
+}
+*/
+
+
+.timTableRunDiv td.headers{
+  background-color: var(--table-header-bg);
+  font-weight: bold;
+  color: var(--table-header-color);
+}
+
 
 } /* end of :host ::ng-deep */
 

@@ -2028,15 +2028,16 @@ export class DataViewComponent implements AfterViewInit, OnInit {
         const idealWidth = this.idealColWidths[columnIndex];
         if (colWidth) {
             cell.style.minWidth = px(colWidth);
-            if (this.colAxis.isVirtual) {
-                cell.style.width = px(colWidth);
-                cell.style.maxWidth = px(colWidth);
-            } else if (idealWidth) {
-                cell.style.minWidth = px(idealWidth);
-                cell.style.maxWidth = px(idealWidth);
-                cell.style.width = px(idealWidth);
-            }
+            // if (this.colAxis.isVirtual) {
+            // TODO: why not update max and width here in non-virtual, does ot work if not done
+            cell.style.width = px(colWidth);
+            cell.style.maxWidth = px(colWidth);
+        } else if (idealWidth) {
+            cell.style.minWidth = px(idealWidth);
+            cell.style.maxWidth = px(idealWidth);
+            cell.style.width = px(idealWidth);
         }
+        // }
     }
 
     private onRowCheckedHandler(checkBox: HTMLInputElement, rowIndex: number) {

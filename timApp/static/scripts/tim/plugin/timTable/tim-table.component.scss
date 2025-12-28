@@ -128,12 +128,13 @@ td.cbColumn.charRow {
   width: 25px;
 }
 
+/*
 ::ng-deep .timTableTable .headers, ::ng-deep .timTableHeader .headers {
   background-color: var(--table-header-bg);
   font-weight: bold;
   color: var(--table-header-color);
 }
-
+*/
 ::ng-deep .timTableTable .fixedColor {
   background-color: var(--table-header-bg);
 }
