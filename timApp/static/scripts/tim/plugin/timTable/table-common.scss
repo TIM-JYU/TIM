@@ -97,5 +97,99 @@ tr.filters-row.is-last td {
   border: 0;
 }
 
+/* fixed row height */
+.timTableRunDiv th,
+.timTableRunDiv td {
+  /*
+  height: 30px;
+  min-height: 30px;
+  max-height: 30px;
+   */
+  box-sizing: border-box;
+  overflow: hidden; /* prevent cell itself from expanding */
+  vertical-align: middle;
+  white-space: nowrap;
+  text-overflow: ellipsis;
 }
+
+td.nr-column.total-nr {
+    cursor: pointer;
+}
+
+td.nr-column.matching-nr {
+  vertical-align: top;
+  text-align: left;
+  align-items: center;
+  position: relative;
+}
+
+td.nr-column .add-new-row {
+    position: absolute;
+    bottom: -2px;
+    font-size: 0.7em;
+    cursor: pointer;
+}
+
+td.nr-column .delete-row {
+    position: absolute;
+    bottom: -2px;
+    font-size: 0.8em;
+    cursor: pointer;
+}
+
+td.nr-column.matching-nr span {
+    top: -3px;
+    position: absolute;
+}
+
+
+.data-view th,
+.data-view td {
+  padding-top: 0;
+  padding-bottom: 0; /* reduce padding so it doesn't blow the height */
+}
+
+
+.timTableRunDiv th > .cell-inner,
+.timTableRunDiv td > .cell-inner {
+  display: block;
+  height: 100%;
+  max-height: 100%;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+.forcedEditable .lockedCell, .forcedEditable td .lockedCell, .forcedEditable th .lockedCell {
+    /* background-color: var(--table-locked-cell-bg); */ /* where is variables defined? */
+    background-color: rgb(252 252 252);
+}
+
+.editable .lockedCell, .editable td .lockedCell, .editable th .lockedCell {
+    /* background-color: var(--table-locked-cell-bg); */ /* where is variables defined? */
+    background-color: rgb(252 252 252);
+}
+
+/* css */
+@keyframes lockedCellFlash {
+  0%   { background-color: blue !important; }
+  10%  { background-color: pink !important; }
+  90%  { background-color: pink !important; }
+  100% { background-color: cyan !important; }
+}
+
+/*
+.flash-locked .lockedCell {
+  animation: lockedCellFlash 10s ease-in-out !important;
+  -webkit-animation: lockedCellFlash 10s ease-in-out !important;
+  animation-fill-mode: both !important;
+}
+*/
+
+.flash-locked .lockedCell {
+    background: pink !important;
+}
+
+
+} /* end of :host ::ng-deep */
+
 

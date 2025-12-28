@@ -253,9 +253,9 @@ const SLOW_SIZE_MEASURE_THRESHOLD = 0;
                     <tbody class="filter-rows" [class.tiny]="tinyFilters">
                     <tr class="filters-row" [hidden]="filterRowCount===0">
                         <td *ngIf="this.nrColumn"
-                            class="nr-column total-nr" style="position: relative;">
-                            <ng-container *ngIf="totalRows != visibleRows">{{visibleRows}}</ng-container>
-                            <div (click)="addFilterRow()" title="Add new filter row" style="font-size: 0.7em; position: absolute; bottom: -2px; cursor: pointer">+</div>
+                            class="nr-column matching-nr">
+                            <span *ngIf="totalRows != visibleRows" title="Number of matching rows">{{visibleRows}}</span>
+                            <div class="add-new-row" (click)="addFilterRow()" title="Add new filter row" >+</div>
                         </td>
                         <td class="cb-column" *ngIf="this.cbColumn">
                             <input type="checkbox"
@@ -266,13 +266,11 @@ const SLOW_SIZE_MEASURE_THRESHOLD = 0;
                     </tr>
                     <tr class="filters-row" *ngFor="let frow of filterRowPlaceholders; let i = index; let last= last">
                         <td *ngIf="this.nrColumn" 
-                            class="nr-column" style="position: relative; text-align: center;">
+                            class="nr-column" style="position: relative;">
                             <!-- if last row show - -->
                             <div 
-                              *ngIf="last"
-                              (click)="deleteFilterRow()"
-                              title="Delete filter row"
-                              style="position: absolute; bottom: 2px; font-size: 0.8em;  cursor: pointer;">
+                              class ="delete-row" *ngIf="last" (click)="deleteFilterRow()"
+                              title="Delete filter row">
                               -
                             </div>
                             &nbsp;
@@ -2189,6 +2187,9 @@ export class DataViewComponent implements AfterViewInit, OnInit {
         // quick lookup. To update the value, we invalidate by emptying it. The next time table is refreshed,
         // the new value will be polled from data model via getCellContents
         if (!this.vScroll.enabled) {
+            return;
+        }
+        if (!this.cellValueCache?.[rowIndex]) {
             return;
         }
         this.cellValueCache[rowIndex][columnIndex] = "";

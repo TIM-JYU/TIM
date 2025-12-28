@@ -399,9 +399,11 @@ export const DataViewSettingsType = t.intersection([
     }),
 ]);
 
+const defaultDataViewRowHeight = 32;
+
 export function defaultDataView(): DataViewSettings {
     return {
-        rowHeight: 30,
+        rowHeight: defaultDataViewRowHeight,
         columnWidths: {},
         tableWidth: "max-content",
         fixedColumns: 0,
@@ -736,10 +738,10 @@ export enum ClearSort {
                         </thead>
                         <tbody class="filter-rows" [class.tiny]="isTinyFilters()">
                         <tr *ngIf="filterRow>0" class="filters-row" [class.tiny]="isTinyFilters()" [class.is-last]="filterRow === 1"> <!-- Filter row -->
-                            <td class="nr-column total-nr" *ngIf="data.nrColumn" style="position: relative; text-align: center;">
+                            <td class="nr-column matching-nr" *ngIf="data.nrColumn">
                                 <span title="Number of matching rows"
                                     *ngIf="hiddenRowCount">{{visibleRowCount}}</span>
-                                 <div (click)="addFilterRow()" title="Add new filter row" style="font-size: 0.7em; position: absolute; bottom: -2px; cursor: pointer">+</div>
+                                 <div  class="add-new-row" (click)="addFilterRow()" title="Add new filter row" >+</div>
                             </td>
                             <td class="cb-column" *ngIf="data.cbColumn"><input type="checkbox" [(ngModel)]="cbFilter"
                                                              (ngModelChange)="handleChangeFilter()"
@@ -757,13 +759,10 @@ export enum ClearSort {
                             </td>
                         </tr> 
                         <tr class="filters-row" [class.tiny]="isTinyFilters()" *ngFor="let frow of otherFilterRows; let i = index; let last= last" [class.is-last]="last">
-                            <td class="nr-column total-nr" *ngIf="data.nrColumn" style="position: relative; text-align: center;">
+                            <td class="nr-column" *ngIf="data.nrColumn" style="position: relative;">
                                 <!-- Jos on viimeinen rivi, näytä klikattava miinus -->
-                                <div 
-                                  *ngIf="last"
-                                  (click)="deleteFilterRow()"
-                                  title="Delete filter row"
-                                  style="position: absolute; bottom: 2px; font-size: 0.8em;  cursor: pointer;">
+                                <div class="delete-row" *ngIf="last" (click)="deleteFilterRow()"
+                                  title="Delete filter row">
                                   -
                                 </div>
                             </td>                            
@@ -1105,19 +1104,22 @@ export class TimTableComponent
 
         let maxLockedRow = -1;
         let maxLockedCol = -1;
+        this.lockedCells = [];
         if (this.data.lockedCells) {
-            // convert all to upper case for easier comparison later
-            this.lockedCells = this.data.lockedCells.map((c) => {
+            for (const c of this.data.lockedCells) {
                 const up = c.toUpperCase();
                 const coord = TimTableComponent.getAddress1(up);
+                if (!coord) {
+                    continue;
+                } // skip invalid
                 if (coord.row > maxLockedRow) {
                     maxLockedRow = coord.row;
                 }
                 if (coord.col > maxLockedCol) {
                     maxLockedCol = coord.col;
                 }
-                return up;
-            });
+                this.lockedCells.push(up);
+            }
         }
         if (this.data.lockedColumns) {
             this.lockedColumns = this.data.lockedColumns.map((c) => {
@@ -1312,6 +1314,14 @@ export class TimTableComponent
         this.viewctrl.addParMenuEntry(this, this.getPar()!);
 
         if (this.data.dataView) {
+            // Column operations are not supported in data view mode
+            // because it would need also changes to headers
+            if (this.data.hide?.addCol === undefined) {
+                this.hide.addCol = true;
+            }
+            if (this.data.hide?.delCol === undefined) {
+                this.hide.delCol = true;
+            }
             // Virtual scrolling is handled by filter change detection
             // handleChangeFilter
             return;
@@ -1502,6 +1512,7 @@ export class TimTableComponent
             tableDiv.classList.add("disableSelect");
         }
     }
+
     public doCopy(e: ClipboardEvent | null = null) {
         if (!this.isCellsSelected()) {
             return;
@@ -1548,6 +1559,16 @@ export class TimTableComponent
         }
     }
 
+    private flashAllLockedCells(duration = 1000) {
+        const root = this.timTableRunDiv.nativeElement;
+        root.classList.remove("flash-locked"); // ensure clean state
+        void root.offsetWidth; // force reflow so animation restarts
+        root.classList.add("flash-locked");
+        setTimeout(() => root.classList.remove("flash-locked"), duration);
+    }
+
+    private lockedUnderPaste = 0;
+
     private async doPaste(e: ClipboardEvent | null = null) {
         if (!this.isCellsSelected() || !this.isInEditMode()) {
             return;
@@ -1570,14 +1591,17 @@ export class TimTableComponent
                     // this.dataViewComponent?.refresh();
                 }
             }
-            return;
+        } else {
+            getClipboardText().then(async (str) => {
+                if (str) {
+                    cells = await this.fillSelectionByString(str, ClearSort.No);
+                    this.dataViewComponent?.updateCellsContents(cells);
+                }
+            });
         }
-        getClipboardText().then(async (str) => {
-            if (str) {
-                cells = await this.fillSelectionByString(str, ClearSort.No);
-                this.dataViewComponent?.updateCellsContents(cells);
-            }
-        });
+        if (this.lockedUnderPaste > 0) {
+            this.flashAllLockedCells();
+        }
     }
 
     private editCallback(cmd: string) {
@@ -2689,6 +2713,7 @@ export class TimTableComponent
             // const cells = this.getSelectedCells(row, col);
             for (const c of selectedCells.cells) {
                 if (this.isLockedCell(c.y, c.x)) {
+                    this.lockedUnderPaste++;
                     continue;
                 }
                 undoEntry.push({
@@ -2718,6 +2743,7 @@ export class TimTableComponent
 
         for (const c of selectedCells.cells) {
             if (this.isLockedCell(c.y, c.x)) {
+                this.lockedUnderPaste++;
                 continue;
             }
             undoEntry.push({
@@ -3133,10 +3159,11 @@ export class TimTableComponent
      * @param {string} ref Full cell reference, ex. 'A1'
      * @returns {{col: number, row: number}} Coordinates as index numbers
      */
-    static getAddress1(ref: string): ICellCoord {
+    static getAddress1(ref: string): ICellCoord | null {
         const m = ref.toUpperCase().match(/^([A-Z]+)(\d+)$/);
         if (!m) {
-            throw new Error(`Bad cell reference: ${ref}`);
+            // throw new Error(`Bad cell reference: ${ref}`);
+            return null;
         }
         return TimTableComponent.getAddress(m[1], m[2]);
     }
@@ -4636,9 +4663,9 @@ export class TimTableComponent
             rowId = this.cellDataMatrix.length;
         }
 
-        if (this.currentCell && rowId <= this.currentCell?.row) {
-            this.closeSmallEditor();
-        }
+        // if (this.currentCell && rowId <= this.currentCell?.row) {
+        await this.saveAndCloseSmallEditor();
+        // }
 
         if (this.task) {
             this.edited = true;
@@ -4687,9 +4714,9 @@ export class TimTableComponent
 
         const activeRow = this.activeCell?.row ?? -1;
 
-        if (this.currentCell && rowId <= this.currentCell?.row) {
-            this.closeSmallEditor();
-        }
+        // if (this.currentCell && rowId <= this.currentCell?.row) {
+        await this.saveAndCloseSmallEditor();
+        // }
 
         const datablockOnly = this.isInDataInputMode() || this.task;
 
@@ -5208,6 +5235,7 @@ export class TimTableComponent
                     // this.saveToCell(cell, svalue, selectedCells).then();  // TODO: think if this can be done with same query
                     for (const c of cells) {
                         if (this.isLockedCell(c.y, c.x)) {
+                            this.lockedUnderPaste++;
                             continue;
                         }
                         if (value.onlyEmpty) {
@@ -5468,6 +5496,7 @@ export class TimTableComponent
                     }
                     for (const c of cells) {
                         if (this.isLockedCell(c.y, c.x)) {
+                            this.lockedUnderPaste++;
                             continue;
                         }
                         if (value.onlyEmpty) {
@@ -6162,8 +6191,20 @@ export class TimTableComponent
         };
     }
 
+    private cacheRowHeight = -1;
     getRowHeight(_rowIndex: number): number | undefined {
-        return this.dataView?.rowHeight;
+        if (this.cacheRowHeight >= 0) {
+            return this.cacheRowHeight;
+        }
+        let n = parseInt(
+            "" + this.dataView?.rowHeight ?? defaultDataViewRowHeight,
+            10
+        );
+        if (Number.isNaN(n)) {
+            n = defaultDataViewRowHeight;
+        }
+        this.cacheRowHeight = n;
+        return n;
     }
 
     getColumnWidth(columnIndex: number): [number, boolean] {
