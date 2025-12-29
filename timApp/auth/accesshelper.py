@@ -983,7 +983,14 @@ def is_in_answer_review(doc: DocInfo, user: User | None) -> bool:
 
 
 def verify_anon_plugin_edit_permission(plugins: list[DocParagraph]) -> None:
-    plugins = set(map(lambda par_: par_.get_attrs().get("plugin").lower(), plugins))
+    plugins = set(
+        map(
+            lambda par_: par_.get_attrs().get("plugin").lower()
+            if par_.get_attrs().get("plugin")
+            else par_.get_attrs().get("defaultplugin").lower(),
+            plugins,
+        )
+    )
     if len(plugins) > 0:
         allow_anon_edit = not current_app.config["DISABLE_ANON_PLUGIN_EDIT"]
         if get_current_user_object().id <= 0:
