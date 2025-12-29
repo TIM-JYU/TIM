@@ -3250,6 +3250,14 @@ export class TimTableComponent
         }
     }
 
+    async saveAndSelect() {
+        await this.saveCurrentCell();
+        const input = this.getEditInputElement();
+        if (input) {
+            input.select();
+        }
+    }
+
     /**
      * Deals with key events
      * @param {KeyboardEvent} ev Pressed key event
@@ -3264,13 +3272,12 @@ export class TimTableComponent
                 ev.preventDefault();
                 return;
             }
-            const input = this.getEditInputElement();
-            if (!input) {
-                return;
-            }
-            input.select();
+            await this.saveAndSelect();
         }
         // For Enter alone nothing extra needed here (handled in keydown).
+        if (isKeyCode(ev, KEY_TAB) || ev.key === "Tab") {
+            await this.saveAndSelect();
+        }
 
         if ((ev.ctrlKey || ev.metaKey) && isArrowKey(ev)) {
             ch = await this.handleArrowMovement(ev);
