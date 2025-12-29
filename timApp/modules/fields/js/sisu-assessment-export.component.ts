@@ -253,7 +253,7 @@ class AssessmentTableModel implements DataModelProvider {
     }
 
     getRowHeight(_rowIndex: number): number | undefined {
-        return undefined;
+        return 35;
     }
 
     getSortSymbolInfo(_columnIndex: number): {
