@@ -158,6 +158,7 @@ class DocSettings:
     max_points_key = "max_points"
     nomacros_key = "nomacros"
     texplain_key = "texplain"
+    allow_texplain_macros_key = "allow_texplain_macros"
     textplain_key = "textplain"
     live_updates_key = "live_updates"
     plugin_md_key = "plugin_md"
@@ -509,6 +510,10 @@ class DocSettings:
     def is_texplain(self):
         texplain = self.__dict.get(self.texplain_key, False)
         return texplain
+
+    def allow_texplain_macros(self):
+        texplain_macros_allowed = self.__dict.get(self.allow_texplain_macros_key, False)
+        return texplain_macros_allowed
 
     def is_textplain(self):
         textplain = self.__dict.get(self.textplain_key, False)

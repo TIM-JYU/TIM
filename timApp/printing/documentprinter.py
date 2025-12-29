@@ -173,6 +173,7 @@ class DocumentPrinter:
         self.textplain = False
         self.texfiles = None
         self.urlroot = urlroot
+        self.allow_texplain_macros = None
 
     def get_template_id(self) -> int | None:
         if self._template_to_use:
@@ -247,6 +248,7 @@ class DocumentPrinter:
         )
         pars_to_print = []
         self.texplain = settings.is_texplain()
+        self.allow_texplain_macros = settings.allow_texplain_macros()
         self.textplain = (
             urlparams.textplain
             if urlparams.textplain is not None
@@ -382,7 +384,9 @@ class DocumentPrinter:
         ) in zip(pars_to_print, par_infos):
             md = p.prepare(view_ctx, use_md=True).output
             if not p.is_plugin() and not p.is_question():
-                if not p.get_nomacros() and not self.texplain and not self.textplain:
+                if (self.texplain and self.allow_texplain_macros) or (
+                    not p.get_nomacros() and not self.texplain and not self.textplain
+                ):
                     env = pdoc_macro_env
                     counters = env.counters
                     if counters:
