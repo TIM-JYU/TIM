@@ -285,8 +285,14 @@ class DragTask {
 
         if (this.activeDragObject) {
             const dobj = this.activeDragObject;
-            const xlimits: [number, number] = dobj.obj.xlimits ?? [0, 1e100];
-            const ylimits: [number, number] = dobj.obj.ylimits ?? [0, 1e100];
+            const xlimits: [number, number] = dobj.obj.xlimits ?? [
+                0, // - dobj.obj.mainShape.size.width / 1.5,
+                canvas.width - dobj.obj.mainShape.size.width / 1.5,
+            ];
+            const ylimits: [number, number] = dobj.obj.ylimits ?? [
+                0, // - dobj.obj.mainShape.size.height / 1.5,
+                canvas.height - dobj.obj.mainShape.size.height / 1.5,
+            ];
             if (dobj.obj.lock !== "x") {
                 dobj.obj.x = toRange(
                     xlimits,
@@ -404,6 +410,7 @@ class DragTask {
                 event.preventDefault();
             }
             this.mousePosition = posToRelative(this.frontCanvas, p);
+            // console.log("move", this.mousePosition);
             if (!this.imgx.emotion) {
                 this.drawDragTask();
                 this.drawing.redrawAll();
