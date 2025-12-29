@@ -195,6 +195,63 @@ class Belongs:
         return b
 
 
+@dataclass
+class UserData:
+    user_ctx: UserContext
+
+    def __post_init__(self):
+        self.cache = {}
+
+    def user_data(self, datatype: str, logged_user=True):
+        data = self.cache.get(datatype, None)
+        if data is not None:
+            return data
+        data = ""
+        if logged_user:
+            user = self.user_ctx.logged_user
+        else:
+            user = self.user_ctx.user
+        if datatype in [
+            "email",
+            "name",
+            "real_name",
+            "given_name",
+            "last_name",
+            "pretty_full_name",
+        ]:  # extend as needed
+            data = getattr(user, datatype, "")
+        self.cache[datatype] = data
+        return data
+
+
+@dataclass
+class HasRights:
+    user_ctx: UserContext
+    doc: Document | None = None
+
+    def __post_init__(self):
+        self.cache = {}
+
+    def has_rights(self, accesstype: str, logged_user=True):
+        b = self.cache.get(accesstype, None)
+        if b is not None:
+            return b
+        from timApp.auth.accesstype import AccessType
+
+        acid = AccessType.from_str(accesstype)
+        from timApp.user.user import access_sets
+
+        acset = access_sets[acid]
+        if logged_user:
+            user = self.user_ctx.logged_user
+        else:
+            user = self.user_ctx.user
+        ba = user.has_some_access(self.doc.docinfo, acset)
+        b = ba is not None
+        self.cache[accesstype] = b
+        return b
+
+
 def week_to_date(week_nr, daynr=1, year=None, frmt=None):
     """
     date object for week
@@ -447,8 +504,20 @@ def expand_macros_info(text: str, macro_info: "MacroInfo", ignore_errors: bool =
     )
 
 
-def belongs_placeholder(_s):
-    return get_error_html("The belongs filter requires nocache=true attribute.")
+# def belongs_placeholder(_s):
+#    return get_error_html("The belongs filter requires nocache=true attribute.")
+
+
+def placeholder_filter(name: str):
+    """
+    Return a filter function that shows an instruction message for *name*
+    until the real implementation is registered in create_environment.
+    """
+
+    def _placeholder(*_args, **_kwargs):
+        return get_error_html(f"The `{name}` filter requires `nocache=true` attribute.")
+
+    return _placeholder
 
 
 def fmt(x, f: str):
@@ -652,13 +721,15 @@ tim_filters = {
     "str2date": str_to_date,
     "preinc": preinc,
     "postinc": postinc,
-    "belongs": belongs_placeholder,
+    "belongs": placeholder_filter("belongs"),
     "fmt": fmt,
     "docid": get_document_id,
     "docpath": get_document_path,
     "urlquote": url_quote,
     "endvalue": end_value,
     "shuffle": shuffle,
+    "hasrights": placeholder_filter("hasrights"),
+    "userdata": placeholder_filter("userdata"),
 }
 
 
@@ -691,6 +762,8 @@ def create_environment(
 
     if user_ctx:
         env.filters["belongs"] = Belongs(user_ctx).belongs_to_group
+        env.filters["hasrights"] = HasRights(user_ctx, doc).has_rights
+        env.filters["userdata"] = UserData(user_ctx).user_data
     return env
 
 
@@ -735,7 +808,7 @@ def md_to_html(
 
 
 def par_list_to_html_list(
-    pars: list[DocParagraph],
+    pars: list["DocParagraph"],
     settings: DocSettings,
     view_ctx: ViewContext,
     auto_macros: Iterable[dict] | None = None,
