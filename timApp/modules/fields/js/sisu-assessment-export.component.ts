@@ -253,7 +253,7 @@ class AssessmentTableModel implements DataModelProvider {
     }
 
     getRowHeight(_rowIndex: number): number | undefined {
-        return 35;
+        return 32;
     }
 
     getSortSymbolInfo(_columnIndex: number): {
@@ -412,7 +412,7 @@ class AssessmentTableModel implements DataModelProvider {
             </button>
             <tim-loading *ngIf="loading && !model"></tim-loading>
         </div>
-        <div *ngIf="model">
+        <div *ngIf="model" class="sisu-table">
             <p>
     <span class="red">
         Sisussa vahvistettua arvosanaa ei voi enää muuttaa (ei edes hylättyjä).

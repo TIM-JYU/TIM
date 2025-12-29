@@ -5,6 +5,9 @@ PROFILE = False
 DEBUG_SQL = False
 MINIMUM_SCHEDULED_FUNCTION_INTERVAL = 5
 
+SISU_ASSESSMENTS_URL = "http://tim:5000/sisu/assessments/"
+SISU_CERT_PATH = None
+
 OAUTH2_CLIENTS = [
     {
         "client_id": "oauth2_tide",
