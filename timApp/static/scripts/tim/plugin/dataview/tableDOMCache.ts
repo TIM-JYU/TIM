@@ -22,7 +22,8 @@ export class TableDOMCache {
             cell: HTMLTableCellElement,
             rowIndex: number,
             columnIndex: number
-        ) => void
+        ) => void,
+        private rowClassName?: string
     ) {}
 
     /**
@@ -83,6 +84,9 @@ export class TableDOMCache {
                     rowElement: el("tr"),
                     cells: [],
                 };
+                if (this.rowClassName) {
+                    row.rowElement.className = this.rowClassName;
+                }
                 // Don't update col count to correct one yet, handle just rows first
                 for (
                     let columnNumber = 0;
@@ -94,6 +98,9 @@ export class TableDOMCache {
                     ));
                     if (this.createCellContent) {
                         this.createCellContent(cell, rowNumber, columnNumber);
+                    }
+                    if (cell.hasAttribute("do-not-add")) {
+                        break;
                     }
                     row.rowElement.appendChild(cell);
                 }
@@ -114,6 +121,9 @@ export class TableDOMCache {
             // Columns need to be added => make use of colcache here
             for (let rowNumber = 0; rowNumber < rows; rowNumber++) {
                 const row = this.rows[rowNumber];
+                if (row.cells.length === 0) {
+                    continue;
+                }
                 for (
                     let columnNumber = 0;
                     columnNumber < columns;
@@ -130,6 +140,9 @@ export class TableDOMCache {
                                 rowNumber,
                                 columnNumber
                             );
+                        }
+                        if (cell.hasAttribute("do-not-add")) {
+                            break;
                         }
                         row.rowElement.appendChild(cell);
                     }

@@ -41,7 +41,7 @@ table {
 }
 
 .data-view:not(.virtual) .fixed-col-header table {
-  border-right-width: 1px;
+  border-right-width: 0;
 }
 
 .ids {
@@ -61,16 +61,27 @@ table {
     overflow-y: hidden;
 
     table {
-      border-right-width: 1px;
+      border-right-width: 0;
     }
+  }
+}
+
+
+.fixed-col-header, .filter-rows, .header, .summary {
+  table {
+    /* border-width: 0; */
+    border-bottom-width: 2px !important;
   }
 }
 
 .data, .ids, .fixed-col-data {
   table {
-    border-width: 0;
+    /* border-width: 0; */
+    border-bottom-width: 1px !important;
   }
 }
+
+
 
 .summary {
   grid-area: summary;
@@ -84,16 +95,9 @@ table {
       display: block;
     }
 
-    td:last-child {
-      border-right-width: 0;
-    }
-
-    tbody tr td {
-      border-bottom: none;
-      border-top: none;
-    }
   }
 }
+
 
 table {
   display: block;
@@ -133,6 +137,11 @@ table {
 // Keep all ng-deep stuff under .data-view class to prevent leaking into other components
 ::ng-deep .data-view {
 
+  table {
+    border-collapse: separate;
+    border-spacing: 0;
+  }
+
   &.virtual {
     // When in virtual scrolling mode, you cannot combine `border-collapse: separate` and `transform: translate`
     // More info: https://stackoverflow.com/a/33778236
@@ -140,11 +149,7 @@ table {
     .ids, .data, .fixed-col-data {
       table {
         border-collapse: separate;
-
-        td {
-          border-right-width: 0;
-          border-bottom-width: 0;
-        }
+        border-spacing: 0;
       }
     }
   }
@@ -153,7 +158,7 @@ table {
   td {
     background-clip: padding-box;
 
-    & .nrcolumn {
+    & .nr-column {
       font-size: smaller;
       text-align: right;
     }
@@ -164,28 +169,23 @@ table {
     display: inline-block;
   }
 
-  table .cbColumn {
+  table .cb-column {
     padding-top: 0;
     padding-bottom: 0;
     text-align: center;
     vertical-align: middle;
   }
 
-  .ids table td:last-child {
-    border-right-width: 0;
-  }
 
   .header, .fixed-col-header {
     input {
       // Set as important to prevent existing markup from setting the size
+      /*
       width: 90% !important;
       margin-right: 5%;
       margin-left: 5%;
-    }
 
-    tbody td {
-      border-bottom-width: 0;
-      border-top-width: 0;
+       */
     }
 
     thead td {
@@ -207,3 +207,46 @@ table {
     }
   }
 }
+
+
+:host ::ng-deep .data-view table td {
+   border-right-width: 1px !important;
+   border-left-width: 0 !important;
+   border-bottom-width: 0 !important;
+ }
+
+
+:host ::ng-deep .summary table, :host ::ng-deep .ids table {
+   border-left-width: 1px !important;
+}
+
+.data table.virtual.forcedEditable.timTableTable {
+    border-right-width: 1px;
+}
+
+:host ::ng-deep table.timTableHeader, :host ::ng-deep .data table {
+    border-right-width: 1px !important;
+}
+
+.data table.virtual.timTableTable {
+  border-right-width: 0 !important;
+
+}
+
+:host ::ng-deep .header table.timTableHeader {
+  border-right-width: 1px !important;
+}
+
+
+/* Does not work as intended???
+.header table {
+    border-right-width: 1px !important;
+}
+
+:host ::ng-deep .data-view .header > table {
+  border-right-style: solid !important;
+  border-right-color: #ccc !important;
+
+  border-right-width: 1px !important;
+}
+*/

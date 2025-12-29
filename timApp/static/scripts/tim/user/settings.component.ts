@@ -23,6 +23,7 @@ import {createDowngradedModule, doDowngrade} from "tim/downgrade";
 import {platformBrowserDynamic} from "@angular/platform-browser-dynamic";
 import {BrowserModule} from "@angular/platform-browser";
 import {FormsModule} from "@angular/forms";
+import {CommonModule} from "@angular/common";
 import {TooltipModule} from "ngx-bootstrap/tooltip";
 import {TabsetComponent, TabsModule} from "ngx-bootstrap/tabs";
 import type {DndDropEvent} from "ngx-drag-drop";
@@ -976,7 +977,7 @@ export class SettingsComponent implements DoCheck, AfterViewInit {
         const tab = this.styleTable;
         if (tab) {
             tab.reInitialize();
-            tab.filterRow = true;
+            tab.filterRow = 1;
             tab.c();
         }
     }
@@ -1502,6 +1503,7 @@ export class SettingsComponent implements DoCheck, AfterViewInit {
     declarations: [SettingsComponent, SettingsButtonPanelComponent],
     exports: [SettingsComponent],
     imports: [
+        CommonModule,
         TimTableModule,
         BrowserModule,
         TimUtilityModule,

@@ -46,7 +46,6 @@ export class ComparatorFilter {
             const op = result[1] as keyof typeof filterComparatorOperators; // We know that it'll be one of the operators.
             this.funcs.push(filterComparatorOperators[op]);
             const vs = result[2];
-            // FIXME: https://github.com/TIM-JYU/TIM/issues/3538
             // if (result[3]) {
             //     this.negate = true;
             // }

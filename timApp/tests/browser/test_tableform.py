@@ -31,6 +31,7 @@ autosave: true
         ActionChains(self.drv).send_keys(Keys.ENTER).perform()
         ActionChains(self.drv).send_keys("2").perform()
         self.find_element("#tableForm .buttonAcceptEdit").click()
+        td.click()
         ActionChains(self.drv).send_keys("3").perform()
         ActionChains(self.drv).send_keys(Keys.ESCAPE).perform()
         td.click()

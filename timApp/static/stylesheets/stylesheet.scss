@@ -1520,10 +1520,12 @@ tim-user-list {
 
 .disableSelect {
     user-select: none; /* supported by Chrome and Opera */
-   -webkit-user-select: none; /* Safari */
-   -khtml-user-select: none; /* Konqueror HTML */
-   -moz-user-select: none; /* Firefox */
-   -ms-user-select: none; /* Internet Explorer/Edge */
+    -webkit-user-select: none;   /* Chrome, Safari, newer iOS */
+    -khtml-user-select: none;    /* Konqueror HTML */
+    -moz-user-select: none;      /* Firefox */
+    -ms-user-select: none;       /* Internet Explorer/Edge */
+    -webkit-touch-callout: none; /* iOS: disable context menu on long press */
+    -webkit-user-drag: none;     /* prevent image dragging in WebKit */
 }
 
 // Simulates a "normal space"
@@ -1643,3 +1645,8 @@ tim-rights-editor {
         --directory-list-badge-bg-color: #{$item-badge-color};
     }
 }
+
+.sisu-table td {
+    vertical-align: middle !important;
+}
+

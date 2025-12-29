@@ -128,12 +128,36 @@ td.cbColumn.charRow {
   width: 25px;
 }
 
+/*
 ::ng-deep .timTableTable .headers, ::ng-deep .timTableHeader .headers {
   background-color: var(--table-header-bg);
   font-weight: bold;
   color: var(--table-header-color);
 }
-
+*/
 ::ng-deep .timTableTable .fixedColor {
   background-color: var(--table-header-bg);
 }
+
+
+/*
+.timTableContentDiv.disableSelect td.cellSelectable,
+.timTableContentDiv.disableSelect th.cellSelectable,
+.timTableContentDiv.disableSelect td .cellSelectable,
+.timTableContentDiv.disableSelect th .cellSelectable {
+ */
+.activeCell, td .headers, th .headers {
+    user-select: text;
+    -webkit-user-select: text;
+}
+
+.editInput {
+  padding: 0.4rem 0.5rem;
+  overflow: auto;
+  white-space: pre; /* preserve newlines */
+  word-wrap: normal; /* prevent wrapping */
+  word-break: normal; /* prevent wrapping */
+  caret-color: auto;
+  overflow: hidden;
+}
+

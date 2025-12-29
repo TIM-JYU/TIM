@@ -1,6 +1,6 @@
 :host ::ng-deep {
-  td.nrcolumn {
-    font-size: smaller;
+  td.nr-column {
+    font-size: 11px;
     text-align: right;
   }
 
@@ -9,4 +9,209 @@
     outline: 2.5px dotted #33cccc;
     outline-offset: -1.25px;
   }
+
+  .filter input {
+    width: 100%;
+  }
+
+  .filter.tiny input, .tiny .filter input {
+    padding: 0;
+    margin: 0;
+    border: none;
+    width: 100%;
+  }
+
+  .filters-row .cb-column input{
+    margin-top: 2px;
+  }
+
+  td.filter.tiny, .tiny td.filter {
+    padding: 0;
+    margin: 0;
+  }
+
+  .filters-row td.cb-column, .filters-row td.nr-column{
+    padding-top: 0;
+    padding-bottom: 0;
+    margin-bottom: 0;
+    margin-top: 0;
+    font-size: 11px;
+  }
+
+  .filters-row td.cb-column {
+    align-items: center;
+    vertical-align: middle;
+  }
+
+  tr.filters-row {
+    height: 35px !important;
+    max-height: 35px !important;
+    line-height: 35px !important;
+    font-size: 12px;
+    background-color: white;
+  }
+
+  .tiny tr.filters-row, tr.filters-row.tiny {
+    height: 20px !important;
+    max-height: 20px !important;
+    line-height: 20px !important;
+  }
+
+ /* ensure the cell can show a border above the input */
+  tr.filters-row td.filter {
+    position: relative;
+  }
+
+ /* draw a subtle, non-overlapping focus ring on the input itself */
+  tr.filters-row td.filter input:focus,
+  tr.filters-row td.filter [contenteditable]:focus {
+    box-shadow: 0 0 0 2px rgba(51,204,204,0.25);
+    outline: none;
+    z-index: 1;
+  }
+
+tr.filters-row.is-last td {
+  border-bottom-width: 2px;
 }
+
+/* Hide focus frames from tables */
+.timTableRunDiv:focus,
+.tableForm :focus {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+.timTableTable:focus,
+.timTableContentDiv [tabindex="-1"]:focus,
+.timTableRunDiv [tabindex="-1"]:focus,
+.tableForm [tabindex="-1"]:focus,
+.timTableRunDiv [inert] :focus,
+.tableForm [inert] :focus {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+/* Remove Firefox inner focus border for form controls */
+.timTableRunDiv *::-moz-focus-inner,
+.tableForm *::-moz-focus-inner {
+  border: 0;
+}
+
+/* fixed row height */
+.sisu-table .data-view  th,
+.sisu-table .data-view  td,
+.timTableRunDiv .data-view  th,
+.timTableRunDiv .data-view  td {
+  /*
+  height: 30px;
+  min-height: 30px;
+  max-height: 30px;
+   */
+  box-sizing: border-box;
+  overflow: hidden; /* prevent cell itself from expanding */
+  vertical-align: middle;
+  white-space: nowrap;
+  text-overflow: clip;
+}
+
+td.nr-column.total-nr {
+    cursor: pointer;
+}
+
+td.nr-column.matching-nr {
+  vertical-align: top;
+  text-align: left;
+  align-items: center;
+  position: relative;
+}
+
+td.nr-column .add-new-row {
+    position: absolute;
+    bottom: -2px;
+    font-size: 0.7em;
+    cursor: pointer;
+}
+
+td.nr-column .delete-row {
+    position: absolute;
+    bottom: -2px;
+    font-size: 0.8em;
+    cursor: pointer;
+}
+
+td.nr-column.matching-nr span {
+    top: -3px;
+    position: absolute;
+}
+
+
+.data-view th,
+.data-view td {
+  padding-top: 0;
+  padding-bottom: 0; /* reduce padding so it doesn't blow the height */
+}
+
+
+.timTableRunDiv th > .cell-inner,
+.timTableRunDiv td > .cell-inner {
+  display: block;
+  height: 100%;
+  max-height: 100%;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+.forcedEditable .lockedCell, .forcedEditable td .lockedCell, .forcedEditable th .lockedCell {
+    /* background-color: var(--table-locked-cell-bg); */ /* where is variables defined? */
+    background-color: rgb(252 252 252);
+}
+
+.editable .lockedCell, .editable td .lockedCell, .editable th .lockedCell {
+    /* background-color: var(--table-locked-cell-bg); */ /* where is variables defined? */
+    background-color: rgb(252 252 252);
+}
+
+/* css */
+@keyframes lockedCellFlash {
+  0%   { background-color: blue !important; }
+  10%  { background-color: pink !important; }
+  90%  { background-color: pink !important; }
+  100% { background-color: cyan !important; }
+}
+
+/*
+.flash-locked .lockedCell {
+  animation: lockedCellFlash 10s ease-in-out !important;
+  -webkit-animation: lockedCellFlash 10s ease-in-out !important;
+  animation-fill-mode: both !important;
+}
+*/
+
+.flash-locked .lockedCell {
+    background: pink !important;
+}
+
+.data-view .header-row,
+.data-view .timTableHeader tr,
+.data-view .fixed-col-header thead tr {
+    height: 28px;
+}
+
+/*
+.timTableHeader td.headers {
+  vertical-align: middle !important;
+  white-space: nowrap;
+}
+*/
+
+
+.timTableRunDiv td.headers{
+  background-color: var(--table-header-bg);
+  font-weight: bold;
+  color: var(--table-header-color);
+}
+
+
+} /* end of :host ::ng-deep */
+
+

@@ -140,7 +140,7 @@ export class GridAxisManager {
                 size: 0,
             };
         }
-        vpStartPosition = clamp(vpStartPosition, 0, this.totalSize);
+        vpStartPosition = clamp(vpStartPosition || 0, 0, this.totalSize);
         visibleStartPosition = clamp(visibleStartPosition, 0, this.totalSize);
         vpSize = Math.min(vpSize, this.totalSize - vpStartPosition);
         visibleSize = Math.min(
