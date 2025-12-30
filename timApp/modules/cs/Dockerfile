@@ -137,9 +137,9 @@ bash -c "${APT_CLEANUP}"
 RUN bash -c "${APT_INSTALL} openssh-client git libnunit-framework2.6.3-cil && ${APT_CLEANUP}"
 
 # JDK
-ENV JDK_VERSION=23.0.1
+ENV JDK_VERSION=25.0.1
 # Grab this path from download links of https://jdk.java.net/
-ENV OPENJDK_DL_PATH=c28985cbf10d4e648e4004050f8781aa/11
+ENV OPENJDK_DL_PATH=2fbf10d8c78e40bd87641c434705079d/8
 RUN wget -q https://download.java.net/java/GA/jdk${JDK_VERSION}/${OPENJDK_DL_PATH}/GPL/openjdk-${JDK_VERSION}_linux-x64_bin.tar.gz && \
  tar -xf openjdk-${JDK_VERSION}_linux-x64_bin.tar.gz && \
  rm openjdk-${JDK_VERSION}_linux-x64_bin.tar.gz
@@ -151,7 +151,7 @@ RUN java -version
 # run echo 3c99bef9df635abd860662e8594b78af >/etc/machine-id
 
 # JavaFX for OpenJDK
-ENV OPENJFX_VERSION=23.0.1
+ENV OPENJFX_VERSION=25.0.1
 RUN wget -q https://download2.gluonhq.com/openjfx/${OPENJFX_VERSION}/openjfx-${OPENJFX_VERSION}_linux-x64_bin-sdk.zip && \
     unzip openjfx-${OPENJFX_VERSION}_linux-x64_bin-sdk.zip && \
     rm openjfx-${OPENJFX_VERSION}_linux-x64_bin-sdk.zip
@@ -169,7 +169,7 @@ ENV \
     # Do not generate certificate
     DOTNET_GENERATE_ASPNET_CERTIFICATE=false \
     # Version channel from which to install dotnet
-    DOTNET_VERSION_CHANNEL=9.0 \
+    DOTNET_VERSION_CHANNEL=10.0 \
     # Enable correct mode for dotnet watch (only mode supported in a container)
     DOTNET_USE_POLLING_FILE_WATCHER=true \
     # Skip extraction of XML docs - generally not useful within an image/container - helps performance
