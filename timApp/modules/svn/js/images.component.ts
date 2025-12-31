@@ -40,11 +40,13 @@ const ShowFileMarkup = t.intersection([
         random: withDefault(t.boolean, false),
         autostart: withDefault(t.boolean, true),
         dots: withDefault(t.boolean, true),
+        arrows: withDefault(t.boolean, true),
         counter: withDefault(t.boolean, true),
         change: withDefault(t.boolean, true),
         noFlicker: withDefault(t.boolean, false),
         nearFiles: withDefault(t.number, 1),
         hover: withDefault(t.boolean, true),
+        hoverNext: withDefault(t.boolean, false),
         files: withDefault(
             t.array(
                 t.union([
@@ -60,6 +62,9 @@ const ShowFileMarkup = t.intersection([
         ),
     }),
 ]);
+
+type ImageFile = {name: string; caption: string; alt: string};
+type FileEntry = ImageFile | string;
 
 const ShowFileAll = t.type({
     info: Info,
@@ -84,12 +89,12 @@ const ShowFileAll = t.type({
              (keydown.control.arrowLeft)="jumpTo(1, $event)"
              (keydown.control.arrowRight)="jumpTo(-1, $event)"
         >
-            <tim-markup-error *ngIf="markupError" [data]="markupError"></tim-markup-error>
+            <tim-markup-error *ngIf="markupError" [data]="markupError!"></tim-markup-error>
             <p *ngIf="header" [innerHtml]="header | purify"></p>
             <p *ngIf="stem" class="stem" [innerHtml]="stem | purify"></p>
 
 
-            <div class="images-container"
+            <div #images class="images-container"
                         [style.width.px]="width"
                         [style.height.px]="height"
             >
@@ -100,8 +105,8 @@ const ShowFileAll = t.type({
                         <div class="text"><span [innerHTML]="file.caption | purify"></span></div>
                     </div>
                 </ng-container>
-                <a *ngIf="markup.change" class="prev" (click)="jump(-1)">&#10094;</a>
-                <a *ngIf="markup.change" class="next" (click)="jump(1)">&#10095;</a>
+                <a *ngIf="markup.change && markup.arrows" class="prev" (click)="jump(-1)">&#10094;</a>
+                <a *ngIf="markup.change && markup.arrows" class="next" (click)="jump(1)">&#10095;</a>
             </div>
             <br>
 
@@ -151,7 +156,8 @@ export class ImagesComponent extends AngularPluginBase<
     }
 
     span?: string | null;
-    @ViewChild("images") images?: ElementRef<HTMLImageElement>;
+    @ViewChild("images", {static: true}) images?: ElementRef<HTMLDivElement>;
+
     width?: number;
     height?: number;
 
@@ -164,12 +170,15 @@ export class ImagesComponent extends AngularPluginBase<
     nearFiles: number = 1;
     requiresTaskId = false;
 
+    private hoverStart?: EventListener;
+    private hoverEnd?: EventListener;
+
     ngOnInit() {
         super.ngOnInit();
         this.width = this.markup.width;
         this.height = this.markup.height;
         this.noFlicker = this.markup.noFlicker || this.markup.autoplay != 0;
-        for (const file of this.markup.files) {
+        for (const file of this.markup.files as FileEntry[]) {
             if (typeof file === "string") {
                 this.files.push({name: file, caption: "", alt: ""});
             } else {
@@ -192,6 +201,33 @@ export class ImagesComponent extends AngularPluginBase<
         if (this.markup.autostart) {
             this.speed(0);
         }
+
+        const el = this.images?.nativeElement as HTMLDivElement | null;
+        if (!el || !this.markup.hoverNext) {
+            return;
+        }
+
+        // set up hover listeners for changing images on hover
+        this.hoverStart = (e: Event) => {
+            // prevent scroll on touchstart if needed
+            if (e.type === "touchstart") {
+                e.preventDefault();
+            }
+            this.onHover(true);
+        };
+        this.hoverEnd = () => this.onHover(false);
+
+        el.addEventListener("mouseenter", this.hoverStart);
+        el.addEventListener("mouseleave", this.hoverEnd);
+        el.addEventListener("touchstart", this.hoverStart, {
+            passive: false,
+        } as AddEventListenerOptions);
+        el.addEventListener("touchend", this.hoverEnd);
+        el.addEventListener("touchcancel", this.hoverEnd);
+    }
+
+    onHover(_active: boolean) {
+        this.plusFile();
     }
 
     isNear(n: number) {
@@ -305,7 +341,7 @@ export class ImagesComponent extends AngularPluginBase<
     ],
 })
 export class ImagesModule implements DoBootstrap {
-    ngDoBootstrap(appRef: ApplicationRef) {}
+    ngDoBootstrap(_appRef: ApplicationRef) {}
 }
 
 registerPlugin("tim-images", ImagesModule, ImagesComponent);
