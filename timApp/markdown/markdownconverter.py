@@ -203,7 +203,8 @@ class UserData:
         self.cache = {}
 
     def user_data(self, datatype: str, logged_user=True):
-        data = self.cache.get(datatype, None)
+        key = datatype + str(logged_user)
+        data = self.cache.get(key, None)
         if data is not None:
             return data
         data = ""
@@ -220,7 +221,7 @@ class UserData:
             "pretty_full_name",
         ]:  # extend as needed
             data = getattr(user, datatype, "")
-        self.cache[datatype] = data
+        self.cache[key] = data
         return data
 
 
@@ -233,7 +234,8 @@ class HasRights:
         self.cache = {}
 
     def has_rights(self, accesstype: str, logged_user=True):
-        b = self.cache.get(accesstype, None)
+        key = accesstype + str(logged_user)
+        b = self.cache.get(key, None)
         if b is not None:
             return b
         from timApp.auth.accesstype import AccessType
@@ -248,7 +250,7 @@ class HasRights:
             user = self.user_ctx.user
         ba = user.has_some_access(self.doc.docinfo, acset)
         b = ba is not None
-        self.cache[accesstype] = b
+        self.cache[key] = b
         return b
 
 
