@@ -276,7 +276,8 @@ def get_printed_document(
     line = request.args.get("line")
 
     if file_type.lower() not in (f.value for f in PrintFormat):
-        raise RouteException("The supplied query parameter 'file_type' was invalid.")
+        file_type = "plain"
+        # raise RouteException("The supplied query parameter 'file_type' was invalid.")
 
     print_type = PrintFormat(file_type)
     template_doc = None
@@ -410,7 +411,7 @@ def get_printed_document(
                 result = f.read()
             # TODO: This sanitizes the HTML, including PDF iframes.
             #       Those should be added back by rendering plugins as HTML.
-            result = sanitize_html(result, allow_styles=True)
+            # result = sanitize_html(result, allow_styles=True)
             response = make_response(
                 render_template("html_print.jinja2", content=result, title=doc.path)
             )
@@ -422,7 +423,8 @@ def get_printed_document(
             response.headers["Content-Type"] = mime
         else:
             response = make_response(send_file(path_or_file=cached, mimetype=mime))
-        add_csp_if_not_script_safe(response, mime, "sandbox allow-scripts")
+        # add_csp_if_not_script_safe(response, mime, "sandbox allow-scripts")
+        add_csp_if_not_script_safe(response, mime, "sandbox")
     else:  # show LaTeX with line numbers
         styles = "p.red { color: red; }\n"
         styles += (
