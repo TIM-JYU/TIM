@@ -434,7 +434,7 @@ def get_printed_document(
                 result = f.read()
             # TODO: This sanitizes the HTML, including PDF iframes.
             #       Those should be added back by rendering plugins as HTML.
-            result = sanitize_html(result, allow_styles=True)
+            # result = sanitize_html(result, allow_styles=True)
             response = make_response(
                 render_template("html_print.jinja2", content=result, title=doc.path)
             )
