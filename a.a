@@ -1,0 +1,98 @@
+diff --git a/timApp/printing/documentprinter.py b/timApp/printing/documentprinter.py
+index 9aff62fda..178a4e975 100644
+--- a/timApp/printing/documentprinter.py
++++ b/timApp/printing/documentprinter.py
+@@ -680,11 +680,17 @@ class DocumentPrinter:
+                         )
+ 
+             # TODO: add also variables from texpandocvariables document setting, but this may lead to security hole?
++
++            # TODO: if textplain use easier conversion?
++            to_format = str(target_format.value)
++            if target_format == PrintFormat.SVG:
++                to_format = "plain"
++
+             try:
+                 tim_convert_text(
+                     source=src,
+                     from_format=from_format,
+-                    to=str(target_format.value),
++                    to=to_format,
+                     outputfile=path.absolute().as_posix(),  # output_file.name,
+                     extra_args=[
+                         "--template=" + template_file.name,
+diff --git a/timApp/printing/print.py b/timApp/printing/print.py
+index 8acd0e80e..c4a836d34 100644
+--- a/timApp/printing/print.py
++++ b/timApp/printing/print.py
+@@ -52,7 +52,7 @@ from timApp.util.flask.responsehelper import (
+     ok_response,
+ )
+ from timApp.util.flask.typedblueprint import TypedBlueprint
+-from tim_common.html_sanitize import sanitize_html
++from tim_common.html_sanitize import sanitize_html, sanitize_svg
+ 
+ TEXPRINTTEMPLATE_KEY = "texprinttemplate"
+ DEFAULT_PRINT_TEMPLATE_NAME = "templates/printing/runko"
+@@ -265,6 +265,9 @@ def get_printed_document(
+             def_file_type = "plain"
+     elif doc_settings.is_textplain():
+         def_file_type = "plain"
++    suffix = Path(doc_path).suffix
++    if suffix:
++        def_file_type = suffix[1:].lower()
+ 
+     file_type = file_type or def_file_type
+     # if doc_path != doc.name and doc_path.rfind('.') >= 0:  # name have been changed because . in name
+@@ -411,6 +414,12 @@ def get_printed_document(
+             response = make_response(
+                 render_template("html_print.jinja2", content=result, title=doc.path)
+             )
++        elif original_print_type == PrintFormat.SVG:
++            with open(cached, "r", encoding="utf-8") as f:
++                result = f.read()
++            result = sanitize_svg(result)
++            response = make_response(result)
++            response.headers["Content-Type"] = mime
+         else:
+             response = make_response(send_file(path_or_file=cached, mimetype=mime))
+         add_csp_if_not_script_safe(response, mime, "sandbox allow-scripts")
+@@ -609,6 +618,8 @@ def get_mimetype_for_format(file_type: PrintFormat) -> str:
+         return "text/html"
+     elif file_type == PrintFormat.ICS:
+         return "text/calendar"
++    elif file_type == PrintFormat.SVG:
++        return "image/svg+xml"
+     else:
+         return "text/plain"
+ 
+diff --git a/timApp/printing/printsettings.py b/timApp/printing/printsettings.py
+index d98f01344..ea6ef6cbf 100644
+--- a/timApp/printing/printsettings.py
++++ b/timApp/printing/printsettings.py
+@@ -10,3 +10,4 @@ class PrintFormat(Enum):
+     PLAIN = "plain"
+     RST = "rst"
+     ICS = "ics"
++    SVG = "svg"
+diff --git a/tim_common/html_sanitize.py b/tim_common/html_sanitize.py
+index fd5c00d6b..1ec82b40c 100644
+--- a/tim_common/html_sanitize.py
++++ b/tim_common/html_sanitize.py
+@@ -335,6 +335,16 @@ def sanitize_css(css_string: str, allow_imports: bool = False) -> str:
+     return css_string
+ 
+ 
++def sanitize_svg(svg_string: str) -> str:
++    """
++    Sanitizes the given SVG string.
++    :param svg_string: SVG string to sanitize.
++    :return: Sanitized SVG
++    """
++    # TODO: Add svg sanitize if needed
++    return svg_string
++
++
+ # Taken from LXML
+ looks_like_full_html = re.compile(r"^\s*<(?:html|!doctype)", re.I).match
+ 
