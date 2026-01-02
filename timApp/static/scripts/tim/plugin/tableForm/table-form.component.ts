@@ -36,6 +36,7 @@ import type {
     DataEntity,
     TimTable,
 } from "tim/plugin/timTable/tim-table.component";
+import {ColumnsArray} from "tim/plugin/timTable/tim-table.component";
 import {defaultDataView} from "tim/plugin/timTable/tim-table.component";
 import {
     ClearSort,
@@ -167,6 +168,8 @@ const TableFormMarkup = t.intersection([
         open: withDefault(t.boolean, true),
         reportFilter: withDefault(t.string, ""),
         downloadAsExcelFile: withDefault(t.string, ""),
+        emailCols: withDefault(nullable(ColumnsArray), null),
+        useFirstEmail: withDefault(t.boolean, false),
     }),
 ]);
 
@@ -273,6 +276,10 @@ const sortLang = "fi";
                         *ngIf="emailUsersButtonText && cbCount">
                     {{ emailUsersButtonText }}
                 </button>
+                <div class="email-indices" *ngIf="emailColIndices.length > 1 && emailUsersButtonText && cbCount && recipientList">
+                    <span>Email cols: {{emailColIndices}}. &nbsp;</span>
+                    <label class="use-first-email">Use only first email <input type="checkbox" [(ngModel)]="useFirstEmail" (change)="emailUsers()"></label>&nbsp;
+                </div>
                 <ng-container *ngIf="runScripts">
                     <button class="timButton"
                             *ngFor="let s of runScripts"
@@ -374,6 +381,7 @@ export class TableFormComponent
     private usernames = false;
     // private emails = false;  // TODO: not used?
     showTable = false;
+    protected emailColIndices: number[] = [emailColIndex];
     private tableFetched = false;
     private rowKeys!: string[];
     private userLocations: Record<string, string> = {};
@@ -381,6 +389,7 @@ export class TableFormComponent
     private changedCells: string[] = []; // Use same type as data.userdata?
     private clearStylesCells = new Set<string>();
     private isAddingUsers = false;
+    protected useFirstEmail: boolean = this.markup.useFirstEmail;
     actionInfo?: string;
 
     runScripts?: RunScriptType[];
@@ -394,7 +403,7 @@ export class TableFormComponent
     cbCount: number = 0;
     @ViewChild(TimTableComponent)
     timTable?: TimTableComponent;
-    recipientList = "";
+    recipientList: string = "";
     loading = false;
     saveFailed = false;
     taskIdFull?: string;
@@ -448,6 +457,7 @@ export class TableFormComponent
     }
 
     get xrunScripts() {
+        // TODO: should we remove this?
         return this.markup.runScripts;
     }
 
@@ -580,6 +590,7 @@ export class TableFormComponent
         super.ngOnInit();
 
         this.taskIdFull = this.getTaskId()?.docTask().toString();
+        this.useFirstEmail = this.markup.useFirstEmail;
 
         if (this.markup.runScripts) {
             this.runScripts = this.parseRunScripts(
@@ -673,6 +684,13 @@ export class TableFormComponent
         if (this.markup.open) {
             this.tableFetched = true;
             this.showTable = this.markup.open;
+        }
+
+        if (this.markup.emailCols) {
+            this.emailColIndices = TimTableComponent.getColIndicesFromArray(
+                this.markup.emailCols,
+                this.data.headers
+            );
         }
 
         this.data.cbColumn = this.markup.cbColumn;
@@ -1178,21 +1196,37 @@ export class TableFormComponent
     /**
      * Make list of users colIndex.  Separate items by separators
      * @param users array of users
-     * @param colIndex what index to use for list
+     * @param colIndices list what indices to use for list
      * @param preseparator what comes before evyry item
      * @param midseparator what comes between items
+     * @param useFirst whether to use only first item from each row
      */
     static makeUserList(
         users: string[][],
-        colIndex: number,
+        colIndices: number[],
         preseparator: string,
-        midseparator: string
+        midseparator: string,
+        useFirst: boolean = false
     ): string {
         let result = "";
         let sep = "";
         for (const r of users) {
-            result += sep + preseparator + r[colIndex];
-            sep = midseparator;
+            for (const colIndex of colIndices) {
+                const val = r[colIndex];
+                if (
+                    colIndex < 0 ||
+                    colIndex >= r.length ||
+                    val == null ||
+                    val === ""
+                ) {
+                    continue;
+                }
+                result += sep + preseparator + r[colIndex];
+                sep = midseparator;
+                if (useFirst) {
+                    break;
+                }
+            }
         }
         return result;
     }
@@ -1240,7 +1274,7 @@ export class TableFormComponent
                 validator: async () => {
                     const ulist = TableFormComponent.makeUserList(
                         selUsers,
-                        1,
+                        [1],
                         "",
                         ","
                     );
@@ -1305,7 +1339,7 @@ export class TableFormComponent
         }
         this.userlist = TableFormComponent.makeUserList(
             ulist,
-            colindex,
+            [colindex],
             preseparator,
             midseparator
         );
@@ -1327,9 +1361,10 @@ export class TableFormComponent
         const selUsers = timTable.getCheckedRows(0, true);
         this.recipientList = TableFormComponent.makeUserList(
             selUsers,
-            emailColIndex,
+            this.emailColIndices,
             "",
-            "\n"
+            "\n",
+            this.useFirstEmail
         );
     }
 
