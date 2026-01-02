@@ -399,6 +399,10 @@ export const DataViewSettingsType = t.intersection([
     }),
 ]);
 
+export const ColumnValue = t.union([t.number, t.string]);
+export const ColumnsArray = t.array(ColumnValue);
+export type ColumnsArrayType = t.TypeOf<typeof ColumnsArray>;
+
 const defaultDataViewRowHeight = 30;
 
 export function defaultDataView(): DataViewSettings {
@@ -1685,26 +1689,6 @@ export class TimTableComponent
         let changeDetected = false;
         const maxColumns = this.maxColumns();
 
-        function getColIndex(s: string, headers?: string[]): number {
-            let colIndex = Number(s);
-            if (!isNaN(colIndex)) {
-                return colIndex;
-            }
-            if (!headers) {
-                return -1;
-            }
-            colIndex = headers.indexOf(s);
-            if (colIndex >= 0) {
-                return colIndex;
-            }
-            colIndex = TableFormHeaders.indexOf(s);
-            if (colIndex >= 0) {
-                return colIndex;
-            }
-            colIndex = TimTableComponent.getColumnFromString(s, maxColumns);
-            return colIndex;
-        }
-
         if (filterData.clear) {
             await this.handleClickClearFilters();
         }
@@ -1714,7 +1698,11 @@ export class TimTableComponent
                 // eslint-disable-next-line guard-for-in
                 for (const key in f) {
                     let colIndex = Number(key);
-                    colIndex = getColIndex(key, this.data.headers);
+                    colIndex = TimTableComponent.getColIndex(
+                        key,
+                        this.data.headers,
+                        maxColumns
+                    );
                     if (
                         colIndex >= 0 &&
                         key &&
@@ -1742,13 +1730,11 @@ export class TimTableComponent
                     dir = -1;
                     s = s.substring(1).trim();
                 }
-                let colIndex = getColIndex(s, this.data.headers);
-                if (colIndex < 0) {
-                    colIndex = TimTableComponent.getColumnFromString(
-                        s,
-                        maxColumns
-                    );
-                }
+                const colIndex = TimTableComponent.getColIndex(
+                    s,
+                    this.data.headers,
+                    maxColumns
+                );
                 if (colIndex >= 0) {
                     this.doSort(colIndex, dir);
                     changeDetected = true;
@@ -3119,7 +3105,7 @@ export class TimTableComponent
      * ex. C -> 2
      * ex. AA -> 26
      * @param {string} colValue Column value, ex. 'A'
-     * @param max stop oterate if comes bigger than this and return -1
+     * @param max stop iterate if comes bigger than this and return -1
      * @returns {number} Column index
      */
     static getColumnFromString(colValue: string, max: number = 100000): number {
@@ -3138,6 +3124,66 @@ export class TimTableComponent
             reversedCharacterPlaceInString++;
         }
         return columnIndex - 1;
+    }
+
+    /**
+     * Converts column string or header to index
+     * ex. A -> 0
+     * ex. C -> 2
+     * ex. AA -> 26
+     * ex. "Name" -> index of column with header "Name"
+     * ex. "5" -> 5
+     * @param {string} col Column value, ex. 'A' or header name or index as string
+     * @param {string[] | undefined} headers Headers array
+     * @param maxColumns stop iterate if comes bigger than this and return -1
+     * @returns {number} Column index
+     */
+    static getColIndex(
+        col: string | number,
+        headers: string[] | undefined,
+        maxColumns: number = 10000
+    ): number {
+        let colIndex = Number(col);
+        if (!isNaN(colIndex)) {
+            return colIndex;
+        }
+        const scol = col.toString().trim();
+        if (headers) {
+            colIndex = headers.indexOf(scol);
+            if (colIndex >= 0) {
+                return colIndex;
+            }
+            colIndex = TableFormHeaders.indexOf(scol);
+            if (colIndex >= 0) {
+                return colIndex;
+            }
+        }
+        colIndex = TimTableComponent.getColumnFromString(scol, maxColumns);
+        return colIndex;
+    }
+
+    /**
+     * Converts array of column strings or headers to array of indices
+     * ex. [A, C, AA, 5] -> [0, 2, 26, 5]
+     * ex. ["Name", "Age"] -> [index of column with header "Name", index of column with header "Age"]
+     * @param {ColumnsArrayType} colArray Column values, ex. ['A', 'C', 'AA'] or header names or indices as strings
+     * @param {string[] | undefined} headers Headers array
+     * @param maxColumns stop iterate if comes bigger than this and return -1
+     * @returns {number[]} Column indices
+     */
+    static getColIndicesFromArray(
+        colArray: ColumnsArrayType,
+        headers: string[] | undefined,
+        maxColumns: number = 10000
+    ): number[] {
+        const colIndices: number[] = [];
+        for (const col of colArray) {
+            const idx = TimTableComponent.getColIndex(col, headers, maxColumns);
+            if (idx >= 0) {
+                colIndices.push(idx);
+            }
+        }
+        return colIndices;
     }
 
     /**

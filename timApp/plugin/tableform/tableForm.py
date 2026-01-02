@@ -179,6 +179,8 @@ class TableFormMarkupModel(GenericMarkupModel):
     addUsersButton: str | Missing | None = missing
     notifyOnAdd: bool | Missing = False
     createMissingUsers: bool | Missing = False
+    emailCols: list[str | int] | Missing | None = missing
+    useFirstEmail: bool | Missing | None = missing
 
 
 TableFormMarkupSchema = class_schema(TableFormMarkupModel)
