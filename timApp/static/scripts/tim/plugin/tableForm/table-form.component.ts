@@ -1196,7 +1196,7 @@ export class TableFormComponent
     /**
      * Make list of users colIndex.  Separate items by separators
      * @param users array of users
-     * @param colIndices list what indesies to use for list
+     * @param colIndices list what indices to use for list
      * @param preseparator what comes before evyry item
      * @param midseparator what comes between items
      * @param useFirst whether to use only first item from each row
