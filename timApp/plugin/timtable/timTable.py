@@ -881,10 +881,16 @@ def set_value_to_table(plug, row_id, col_id, value):
     :param value: value to be set
     :return: nothing
     """
+    rows = None
     try:
         rows = plug.values[TABLE][ROWS]
     except KeyError:
         # raise RouteException()
+        pass
+
+    if rows is None:
+        if plug.values.get(TABLE) is None:
+            plug.values[TABLE] = {}
         rows = []
         plug.values[TABLE][ROWS] = rows
 

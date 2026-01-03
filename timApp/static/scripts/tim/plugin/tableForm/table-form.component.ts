@@ -125,6 +125,7 @@ const TableFormMarkup = t.intersection([
             t.string
         ) /* TODO! Username and task, or task and username -- what about points? */,
         table: nullable(t.boolean),
+        tableOptions: nullable(t.record(t.string, t.unknown)),
         removeUsersButtonText: nullable(t.string),
         userListButtonText: nullable(t.string),
         emailUsersButtonText: nullable(t.string),
@@ -588,6 +589,9 @@ export class TableFormComponent
 
     ngOnInit() {
         super.ngOnInit();
+        if (this.markup.tableOptions) {
+            this.data.table = {...this.data.table, ...this.markup.tableOptions};
+        }
 
         this.taskIdFull = this.getTaskId()?.docTask().toString();
         this.useFirstEmail = this.markup.useFirstEmail;

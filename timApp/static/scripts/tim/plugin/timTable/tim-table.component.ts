@@ -567,6 +567,7 @@ const columnStyles: Set<string> = new Set<string>([
 ]);
 
 const columnCellStyles: Set<string> = new Set<string>([
+    "backgroundColor",
     "fontSize",
     "verticalAlign",
     "textAlign",
@@ -1078,6 +1079,9 @@ export class TimTableComponent
             if (this.data.singleLine === undefined) {
                 this.data.singleLine = true;
             }
+        }
+        if (!this.data.table) {
+            this.data.table = {countRow: 1, countCol: 1};
         }
         if (this.data.table.countCol !== this.data?.headers?.length) {
             if (this.data.headers) {
@@ -2907,10 +2911,10 @@ export class TimTableComponent
             this.data.table.rows = [];
         }
 
-        let ncols = this.data.table.countCol ?? 0;
+        let ncols = this.data.table.countCol ?? 1;
         const nrows = Math.max(
             this.data.table.rows.length,
-            this.data.table.countRow ?? 0
+            this.data.table.countRow ?? 1
         );
 
         for (const row of this.data.table.rows) {
