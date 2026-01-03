@@ -171,6 +171,7 @@ class TableFormMarkupModel(GenericMarkupModel):
     sisugroups: str | Missing = missing
     sortBy: str | Missing | None = missing
     table: bool | Missing = missing
+    tableOptions: dict[Any, Any] | Missing | None = missing
     toolbarTemplates: list[dict[Any, Any]] | Missing = missing
     userListButtonText: str | Missing | None = missing
     usernames: bool | Missing = missing
