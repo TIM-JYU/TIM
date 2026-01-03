@@ -36,6 +36,7 @@ import type {
     DataEntity,
     TimTable,
 } from "tim/plugin/timTable/tim-table.component";
+import {columnCellStyles} from "tim/plugin/timTable/tim-table.component";
 import {ColumnsArray} from "tim/plugin/timTable/tim-table.component";
 import {defaultDataView} from "tim/plugin/timTable/tim-table.component";
 import {
@@ -589,6 +590,10 @@ export class TableFormComponent
 
     ngOnInit() {
         super.ngOnInit();
+
+        // To allow column background color styling
+        columnCellStyles.add("backgroundColor");
+
         if (this.markup.tableOptions) {
             this.data.table = {...this.data.table, ...this.markup.tableOptions};
         }

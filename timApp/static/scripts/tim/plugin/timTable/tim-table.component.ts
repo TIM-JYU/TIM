@@ -566,8 +566,8 @@ const columnStyles: Set<string> = new Set<string>([
     "borderRight",
 ]);
 
-const columnCellStyles: Set<string> = new Set<string>([
-    "backgroundColor",
+export const columnCellStyles: Set<string> = new Set<string>([
+    // "backgroundColor",
     "fontSize",
     "verticalAlign",
     "textAlign",
