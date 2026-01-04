@@ -30,7 +30,10 @@ import {AngularPluginBase} from "tim/plugin/angular-plugin-base.directive";
 import {registerPlugin} from "tim/plugin/pluginRegistry";
 import {CommonModule} from "@angular/common";
 import type {TFieldContent} from "./textfield-plugin.component";
-import {FieldDataWithStyles} from "./textfield-plugin.component";
+import {
+    FieldDataWithStyles,
+    jumpToNextField,
+} from "./textfield-plugin.component";
 
 const REDOUBLE = /[^0-9,.e\-+]+/g;
 
@@ -78,7 +81,7 @@ const NumericfieldAll = t.intersection([
     selector: "tim-numericfield-runner",
     template: `
 <div class="numericfieldNoSaveDiv inline-form">
-    <tim-markup-error *ngIf="markupError" [data]="markupError"></tim-markup-error>
+    <tim-markup-error *ngIf="markupError" [data]="markupError!"></tim-markup-error>
     <h4 *ngIf="header" [innerHtml]="header | purify"></h4>
     <p class="stem" *ngIf="stem" [innerHtml]="stem | purify"></p>
     <div class="form-inline">
@@ -176,8 +179,7 @@ export class NumericfieldPluginComponent
         if (s.startsWith("e")) {
             s = "1" + s;
         }
-        const d = parseFloat(s);
-        return d;
+        return parseFloat(s);
     }
 
     /**
@@ -463,17 +465,10 @@ export class NumericfieldPluginComponent
         const inputfields = document.querySelectorAll(
             "tim-numericfield-runner input, tim-textfield-runner input"
         );
-        for (let i = 0; i < inputfields.length; ++i) {
-            const selectedfield = inputfields[i] as HTMLInputElement;
-            if (
-                selectedfield === document.activeElement &&
-                inputfields[i + 1]
-            ) {
-                const nextfield = inputfields[i + 1] as HTMLInputElement;
-                this.preventedAutosave = true;
-                return nextfield.focus();
-            }
-        }
+        return jumpToNextField(
+            inputfields,
+            () => (this.preventedAutosave = true)
+        );
     }
 
     /**
@@ -562,7 +557,7 @@ export class NumericfieldPluginComponent
                     if (this.vctrl.docSettings.form_mode) {
                         const duplicates = this.vctrl.getTimComponentArray(tid);
                         if (duplicates && duplicates.length > 1) {
-                            this.vctrl.updateFields([tid]);
+                            await this.vctrl.updateFields([tid]);
                             // for (const dup of duplicates) {
                             //     dup.setAnswer({"c": this.numericvalue, "styles": this.styles})
                             // }
@@ -610,7 +605,7 @@ export class NumericfieldPluginComponent
     ],
 })
 export class NumericfieldModule implements DoBootstrap {
-    ngDoBootstrap(appRef: ApplicationRef) {}
+    ngDoBootstrap(_appRef: ApplicationRef) {}
 }
 
 registerPlugin(

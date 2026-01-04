@@ -14,7 +14,12 @@ import {
     withDefault,
 } from "tim/plugin/attributes";
 import {getFormBehavior, parseStyles} from "tim/plugin/util";
-import {defaultErrorMessage, timeout, valueOr} from "tim/util/utils";
+import {
+    defaultErrorMessage,
+    isInPersonalView,
+    timeout,
+    valueOr,
+} from "tim/util/utils";
 import {DomSanitizer} from "@angular/platform-browser";
 import {HttpClient, HttpClientModule} from "@angular/common/http";
 import {FormsModule} from "@angular/forms";
@@ -25,6 +30,27 @@ import {PurifyModule} from "tim/util/purify.module";
 import {registerPlugin} from "tim/plugin/pluginRegistry";
 import {CommonModule} from "@angular/common";
 import {ParCompiler} from "tim/editor/parCompiler";
+
+/**
+ * Focuses the next input field in the given NodeListOf<Element>.
+ * @param inputfields A NodeListOf<Element> containing input fields.
+ * @param jumpOK An optional callback function to be called before focusing the next field.
+ */
+export function jumpToNextField(
+    inputfields: NodeListOf<Element>,
+    jumpOK?: () => void
+) {
+    for (let i = 0; i < inputfields.length; ++i) {
+        const selectedfield = inputfields[i] as HTMLInputElement;
+        if (selectedfield === document.activeElement && inputfields[i + 1]) {
+            const nextfield = inputfields[i + 1] as HTMLInputElement;
+            if (jumpOK) {
+                jumpOK();
+            }
+            return nextfield.focus();
+        }
+    }
+}
 
 const TextfieldMarkup = t.intersection([
     t.partial({
@@ -37,6 +63,7 @@ const TextfieldMarkup = t.intersection([
         readOnlyStyle: nullable(t.string),
         showname: nullable(t.number),
         autosave: t.boolean,
+        autosaveInit: t.boolean,
         nosave: t.boolean,
         ignorestyles: t.boolean,
         clearstyles: t.boolean,
@@ -78,7 +105,7 @@ export type TFieldContent = t.TypeOf<typeof FieldContent>;
     selector: "tim-textfield-runner",
     template: `
 <div class="textfieldNoSaveDiv inline-form">
-    <tim-markup-error *ngIf="markupError" [data]="markupError"></tim-markup-error>
+    <tim-markup-error *ngIf="markupError" [data]="markupError!"></tim-markup-error>
     <h4 *ngIf="header" [innerHtml]="header | purify"></h4>
     <p class="stem" [class.textarea-stem]="isTextArea()" *ngIf="stem" [innerHTML]="stem | purify"></p>
     <form #f class="form-inline">
@@ -165,7 +192,7 @@ export class TextfieldPluginComponent
 {
     @ViewChild("plainTextSpan") plainTextSpan?: ElementRef<HTMLSpanElement>;
     private changes = false;
-    private result?: string;
+    result?: string;
     isRunning = false;
     userword = "";
     userWordBlobUrlStore?: {word: string; blobUrl: string};
@@ -234,7 +261,7 @@ export class TextfieldPluginComponent
 
     tryAutoGrow() {
         if (this.markup.autogrow) {
-            this.autoGrow();
+            void this.autoGrow();
         }
     }
 
@@ -250,7 +277,7 @@ export class TextfieldPluginComponent
         return super.buttonText() ?? $localize`Save`;
     }
 
-    ngOnInit() {
+    async ngOnInit() {
         super.ngOnInit();
 
         this.userword = this.formatReadonlyStyle(
@@ -270,7 +297,17 @@ export class TextfieldPluginComponent
             this.styles = parseStyles(this.attrsall.state.styles);
         }
         if (this.markup.textarea && this.markup.autogrow) {
-            this.autoGrow();
+            await this.autoGrow();
+        }
+
+        // If not already answered and autosaveInit
+        // save the initial value except in teacher/answers view
+        if (
+            this.markup.autosaveInit &&
+            !this.attrsall.state &&
+            isInPersonalView()
+        ) {
+            await this.saveText(true);
         }
     }
 
@@ -281,13 +318,13 @@ export class TextfieldPluginComponent
     }
 
     saveAndRefocus() {
-        this.saveText();
+        void this.saveText(); // if await here, tests fail to change focus
         this.changeFocus();
     }
 
     saveAndPreventDefault(e: Event) {
         e.preventDefault();
-        this.saveText();
+        void this.saveText();
     }
 
     /**
@@ -362,7 +399,7 @@ export class TextfieldPluginComponent
                 this.isPlainText() &&
                 this.plainTextSpan
             ) {
-                this.updateMdToHtml();
+                void this.updateMdToHtml();
             }
             return {ok: ok, message: message};
         });
@@ -394,7 +431,7 @@ export class TextfieldPluginComponent
             this.errormessage = $localize`Text rendering timed out, please try again`;
         }
         if (this.plainTextSpan) {
-            ParCompiler.processAllMathDelayed(
+            await ParCompiler.processAllMathDelayed(
                 $(this.plainTextSpan.nativeElement)
             );
         }
@@ -467,8 +504,9 @@ export class TextfieldPluginComponent
      * Redirects save request to actual save method.
      * Used as e.g. timButton (click) event.
      */
-    async saveText() {
-        if (this.isUnSaved()) {
+    async saveText(force: boolean = false) {
+        if (this.isUnSaved() || force) {
+            this.changes = true;
             return this.doSaveText(false);
         } else {
             // return {saved: false, message:undefined};
@@ -496,17 +534,10 @@ export class TextfieldPluginComponent
         const inputfields = document.querySelectorAll(
             "tim-textfield-runner input, tim-numericfield-runner input"
         );
-        for (let i = 0; i < inputfields.length; ++i) {
-            const selectedfield = inputfields[i] as HTMLInputElement;
-            if (
-                selectedfield === document.activeElement &&
-                inputfields[i + 1]
-            ) {
-                const nextfield = inputfields[i + 1] as HTMLInputElement;
-                this.preventedAutosave = true;
-                return nextfield.focus();
-            }
-        }
+        return jumpToNextField(
+            inputfields,
+            () => (this.preventedAutosave = true)
+        );
     }
 
     /**
@@ -535,10 +566,7 @@ export class TextfieldPluginComponent
     }
 
     isTextArea() {
-        if (this.markup.textarea) {
-            return true;
-        }
-        return false;
+        return !!this.markup.textarea;
     }
 
     /**
@@ -583,7 +611,7 @@ export class TextfieldPluginComponent
 
     /**
      * Actual save method, called by different save alternatives implemented above.
-     * @param nosave: true/false parameter boolean checker for the need to save
+     * @param nosave true/false parameter boolean checker for the need to save
      */
     async doSaveText(nosave: boolean) {
         if (!this.isUnSaved()) {
@@ -644,7 +672,7 @@ export class TextfieldPluginComponent
                     if (this.vctrl.docSettings.form_mode) {
                         const duplicates = this.vctrl.getTimComponentArray(tid);
                         if (duplicates && duplicates.length > 1) {
-                            this.vctrl.updateFields([tid]);
+                            await this.vctrl.updateFields([tid]);
                             // for (const dup of duplicates) {
                             //     dup.setAnswer({"c": this.userword, "styles": this.styles})
                             // }
@@ -705,7 +733,7 @@ export class TextfieldPluginComponent
     ],
 })
 export class TextfieldModule implements DoBootstrap {
-    ngDoBootstrap(appRef: ApplicationRef) {}
+    ngDoBootstrap(_appRef: ApplicationRef) {}
 }
 
 registerPlugin("textfield-runner", TextfieldModule, TextfieldPluginComponent);
