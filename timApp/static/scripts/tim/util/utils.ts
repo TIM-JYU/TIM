@@ -1185,3 +1185,12 @@ export function insertTextInTextarea(
     ta.dispatchEvent(new Event("input", {bubbles: true}));
     return newPos;
 }
+
+/** Check if the current view is a personal view (not teacher or answers view)
+ * where answers are saved per current user.
+ * @returns {boolean} true if in personal view
+ */
+export function isInPersonalView(): boolean {
+    const viewName = getViewName();
+    return viewName !== "teacher" && viewName !== "answers";
+}

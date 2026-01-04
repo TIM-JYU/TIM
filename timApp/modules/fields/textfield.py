@@ -23,6 +23,7 @@ from tim_common.utils import Missing
 @dataclass
 class TextfieldMarkupModel(GenericMarkupModel):
     autosave: bool | Missing = missing
+    autosaveInit: bool | Missing = missing
     autogrow: bool | Missing = missing
     autoUpdateTables: bool | Missing = True
     clearstyles: bool | Missing = missing
