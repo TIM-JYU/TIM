@@ -317,8 +317,8 @@ export class TextfieldPluginComponent
         }
     }
 
-    async saveAndRefocus() {
-        await this.saveText();
+    saveAndRefocus() {
+        void this.saveText(); // if await here, tests fail to change focus
         this.changeFocus();
     }
 

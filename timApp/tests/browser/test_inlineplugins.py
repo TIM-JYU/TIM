@@ -44,7 +44,7 @@ class InlinePluginTest(BrowserTest):
             inputfield = self.find_element_avoid_staleness(
                 f"tim-plugin-loader[task-id='{d.id}.t{i}'] input"
             )
-            self.assertEqual(inputfield.get_attribute("value"), str(i))
+            self.assertEqual(str(i), inputfield.get_attribute("value"))
 
     def test_no_lazy_inline(self):
         self.login_test1()
