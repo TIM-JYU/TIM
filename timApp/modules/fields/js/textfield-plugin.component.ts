@@ -300,7 +300,7 @@ export class TextfieldPluginComponent
             await this.autoGrow();
         }
 
-        // If not allready answered and autosaveInit
+        // If not already answered and autosaveInit
         // save the initial value except in teacher/answers view
         if (
             this.markup.autosaveInit &&
