@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import shutil
 from dataclasses import dataclass
 from datetime import datetime
@@ -50,6 +51,118 @@ def par_list_to_text(sect: list[DocParagraph], export_hashes=False):
     return DocumentWriter(
         [par.dict() for par in sect], export_hashes=export_hashes
     ).get_text()
+
+
+def split_tail_number(s: str) -> tuple[str, int]:
+    """
+    Returns (text_part, numeric_tail) where numeric_tail is an int if the string ends
+    with digits, otherwise None.
+    """
+    m = re.search(r"(\d+)$", s)
+    if m:
+        text = s[: m.start()]
+        num = int(m.group(1))
+        return text, num
+    return s, 1
+
+
+def get_next_available_name(name: str, names_to_avoid: list[str]) -> str:
+    """
+    Returns next available name by appending/incrementing
+    a trailing number.  If name is not in names_to_avoid,
+    the original name is returned.
+    :param name: current name
+    :param names_to_avoid: names that cannot be used
+    :return: next available name
+    """
+    need_new_name = False
+    # First try with original name
+    for old_name in names_to_avoid:
+        if old_name == name:
+            need_new_name = True
+            break
+
+    # If there was no previous par with the same task id keep it
+    if not need_new_name:
+        return name
+
+    # Otherwise, determine a new one
+    # Split the name into text and trailing number
+    body, number = split_tail_number(name)
+    new_name = body + str(number)
+
+    j = 0
+    while j < len(names_to_avoid):
+        if names_to_avoid[j] == new_name:
+            number += 1
+            new_name = body + str(number)
+            j = 0  # restart checking
+        else:
+            j += 1
+    return new_name
+
+
+def area_renamed(
+    new_pars: list[DocParagraph | dict], _p: DocParagraph, old_name, new_name: str
+) -> None:
+    """
+    If area start is renamed, also rename area end accordingly.
+    :param _p: starting paragraph
+    :param old_name: old area name
+    :param new_name: new area name
+    :return: None
+    """
+    for apar in new_pars:
+        if isinstance(apar, dict):
+            apar_attrs = apar.get("attrs", {})
+        else:
+            apar_attrs = apar.attrs
+        if apar_attrs.get("area_end") == old_name:
+            apar_attrs["area_end"] = new_name
+
+
+def check_and_rename_attribute(
+    attr_name: str, new_pars: list[DocParagraph | dict], doc: Document, on_rename=None
+):
+    """
+    Rename plugins selected attribute if duplicate found in document.
+    :param attr_name:  attribute name to check and rename
+    :param new_pars:  new blocks to check and rename
+    :param doc: document where the blocks are being compared to
+    :param on_rename: optional callback function called when a rename occurs
+           with the new name as parameter
+    :return: modified blocks with renamed task ids
+    """
+    names_to_check = None  # lazy load for names_to_check
+
+    for p in new_pars:
+        # go through all new pars if they need to be renamed
+        if isinstance(p, dict):
+            p_attrs = p.get("attrs", {})
+            p_id = p.get("id")
+        else:
+            p_attrs = p.attrs
+            p_id = p.get_id()
+        p_name = p_attrs.get(attr_name)
+        if not p_name:
+            continue
+        if names_to_check is None:  # now names_to_check is needed, load them once
+            pars = doc.get_paragraphs()
+            names_to_check = []
+            for paragraph in pars:
+                name = paragraph.get_attr(attr_name)
+                did = paragraph.get_id()
+                if name and did != p_id:
+                    names_to_check.append(name)
+        if p_name == "PLUGINNAMEHERE":  # does not matter for area
+            p_name = "Plugin1"
+        new_name = get_next_available_name(p_name, names_to_check)
+        if new_name != p_name:
+            p_attrs[attr_name] = new_name
+            if on_rename:
+                on_rename(new_pars, p, p_name, new_name)
+        names_to_check.append(new_name)
+    return new_pars
 
 
 class Document:
@@ -854,6 +967,7 @@ class Document:
         vr = dp.validate_structure()
         vr.raise_if_has_critical_issues()
         new_pars = dp.get_blocks()
+        check_and_rename_attribute("area", new_pars, self, area_renamed)
         new_par_id_set = {par["id"] for par in new_pars}
         all_pars = [par for par in self]
         all_par_ids = [par.get_id() for par in all_pars]

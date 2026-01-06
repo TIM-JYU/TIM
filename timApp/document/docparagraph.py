@@ -960,6 +960,18 @@ class DocParagraph:
             self.get_attr("taskId") is not None and self.get_attr("plugin") is not None
         )
 
+    def get_area_name(self) -> str | None:
+        """Returns the area name if this paragraph is an area reference.
+        :return: The area name or None if this paragraph is not an area reference.
+        """
+        return self.get_attr("area")
+
+    def get_area_end_name(self) -> str | None:
+        """Returns the area name if this paragraph is an area reference.
+        :return: The area name or None if this paragraph is not an area reference.
+        """
+        return self.get_attr("area_end")
+
     def get_attrs(self) -> dict:
         return self.attrs
 
