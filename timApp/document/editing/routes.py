@@ -246,9 +246,11 @@ def rename_task_ids():
     old_pars = doc.get_paragraphs()
 
     # Get paragraphs with taskIds
-    for paragraph in old_pars:
-        if not paragraph.is_task():
-            old_pars.remove(paragraph)
+    old_pars = [p for p in old_pars if p.is_task()]
+    # TODO: next would be wrong
+    # for paragraph in old_pars:
+    #    if not paragraph.is_task():
+    #        old_pars.remove(paragraph)
     i = 0
     while len(duplicates) > i:
         duplicate = duplicates[i]
@@ -382,7 +384,7 @@ def modify_paragraph_common(doc_id: int, md: str, par_id: str, par_next_id: str 
         edit_result = DocumentEditResult()
         pars = []
         pars_to_add = editor_pars[1:]
-        abort_if_duplicate_ids(doc, pars_to_add)
+        abort_if_duplicate_ids(doc, pars_to_add, rename_task_ids=True)
 
         p = editor_pars[0]
         # The ID of the first paragraph needs to match the ID of the paragraph to modify
@@ -459,9 +461,24 @@ def mark_translation_as_checked(p: DocParagraph) -> None:
     p.set_attr("mt", None)
 
 
-def abort_if_duplicate_ids(doc: Document, pars_to_add: list[DocParagraph]):
+def abort_if_duplicate_ids(
+    doc: Document, pars_to_add: list[DocParagraph], rename_task_ids: bool = False
+):
+    """
+    Aborts the request if any of the paragraphs
+    to be added have IDs that conflict with existing
+    paragraph IDs in the document.
+    if rename_task_ids is True,
+    ask automatically to rename conflicting task IDs.
+    :param doc: The document to which paragraphs are being added.
+    :param pars_to_add: The paragraphs to be added.
+    :param rename_task_ids: If True, automatically renames conflicting task IDs instead of aborting.
+    :raises RouteException: If there are conflicting paragraph IDs.
+    """
     conflicting_ids = {p.get_id() for p in pars_to_add} & set(doc.get_par_ids())
-    if conflicting_ids:
+    if not conflicting_ids:
+        return
+    if not rename_task_ids:
         raise RouteException(get_duplicate_id_msg(conflicting_ids))
 
 
@@ -769,6 +786,34 @@ def get_next_available_task_id(attrs, old_pars, duplicates, par_id):
         return task_id
 
 
+def check_and_rename_duplicates(blocks: list[DocParagraph], doc: Document):
+    """
+    Automatically rename plugins with duplicate task ids
+    :param blocks:  new blocks to check and rename
+    :param doc: document where the blocks are being comapred to
+    :return: modified blocks with renamed task ids
+    """
+    old_pars = None  # lazy load for old_pars
+
+    for p in blocks:  # go through all new pars if they need to be renamed
+        if not p.is_task():
+            continue
+        if old_pars is None:  # now old_pars is needed, load them once
+            pars = doc.get_paragraphs()
+            old_pars = []
+            for paragraph in pars:
+                if paragraph.is_task():
+                    old_pars.append(paragraph)
+        task_id = p.get_attr("taskId")
+        if task_id == "PLUGINNAMEHERE":
+            task_id = "Plugin1"
+            p.set_attr("taskId", task_id)
+        task_id = get_next_available_task_id(p.get_attrs(), old_pars, [], p.get_id())
+        p.set_attr("taskId", task_id)
+        old_pars.append(p)
+    return blocks
+
+
 # Automatically rename plugins with name pluginnamehere
 def check_and_rename_pluginnamehere(blocks: list[DocParagraph], doc: Document):
     # Get the paragraphs from the document with taskids
@@ -924,7 +969,7 @@ def add_paragraph_common(md: str, doc_id: int, par_next_id: str | None):
     except ValidationException as e:
         raise RouteException(str(e))
 
-    abort_if_duplicate_ids(doc, editor_pars)
+    abort_if_duplicate_ids(doc, editor_pars, rename_task_ids=True)
 
     editor_pars = check_and_rename_pluginnamehere(editor_pars, doc)
 

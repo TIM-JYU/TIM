@@ -8,6 +8,10 @@ from timApp.document.docparagraph import DocParagraph, is_real_id
 from timApp.document.document import Document
 from timApp.document.documentparser import DocumentParser
 from timApp.document.documentwriter import DocumentWriter
+from timApp.document.editing.routes import (
+    check_and_rename_pluginnamehere,
+    check_and_rename_duplicates,
+)
 from timApp.document.randutils import random_id
 from timApp.timdb.dbaccess import get_files_path
 from timApp.timdb.exceptions import TimDbException
@@ -179,16 +183,24 @@ class Clipboard:
             par_before = par_id
             if is_real_id(par_before):
                 doc.raise_if_not_exist(par_before)
-            for par in reversed(pars):
-                # We need to reverse the sequence because we're inserting before, not after
+
+            new_pars = []
+            for par in pars:
                 new_par_id = (
                     par["id"] if not doc.has_paragraph(par["id"]) else random_id()
                 )
-                new_par = doc.insert_paragraph(
-                    par["md"],
+                new_par = DocParagraph.create(
+                    doc, new_par_id, par["md"], attrs=par.get("attrs")
+                )
+                new_pars.append(new_par)
+
+            check_and_rename_duplicates(new_pars, doc)
+
+            for new_par in reversed(new_pars):
+                # We need to reverse the sequence because we're inserting before, not after
+                new_par = doc.insert_paragraph_obj(
+                    new_par,
                     insert_before_id=par_before,
-                    par_id=new_par_id,
-                    attrs=par.get("attrs"),
                 )
                 doc_pars.append(new_par)
                 par_before = new_par.get_id()
