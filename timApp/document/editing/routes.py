@@ -34,7 +34,7 @@ from timApp.auth.sessioninfo import (
     user_context_with_logged_in,
 )
 from timApp.bookmark.bookmarks import LAST_EDITED_GROUP
-from timApp.document.docentry import DocEntry
+from timApp.document.docentry import DocEntry, create_document_and_block
 from timApp.document.docinfo import DocInfo
 from timApp.document.docparagraph import DocParagraph
 from timApp.document.docsettings import DocSettings
@@ -51,10 +51,12 @@ from timApp.document.prepared_par import PreparedPar
 from timApp.document.translation.synchronize_translations import (
     synchronize_translations,
 )
+from timApp.document.translation.translation import Translation
 from timApp.document.version import Version
 from timApp.document.viewcontext import ViewRoute, ViewContext, default_view_ctx
 from timApp.document.yamlblock import YamlBlock
 from timApp.item.block import BlockType
+from timApp.item.copy_rights import copy_rights
 from timApp.item.validation import validate_uploaded_document_content
 from timApp.markdown.markdownconverter import md_to_html
 from timApp.notification.notification import NotificationType
@@ -110,17 +112,9 @@ def update_document(doc_id):
         template = DocEntry.find_by_path(request.get_json()["template_name"])
         if not template:
             raise NotExist("Template not found")
-        verify_view_access(template)
-        content = template.document.export_markdown()
-        if content == "":
-            raise RouteException("The selected template is empty.")
-        existing_pars = docentry.document_as_current_user.get_paragraphs()
-        if existing_pars:
-            raise RouteException(
-                "Cannot load a template because the document is not empty."
-            )
-        original = ""
-        strict_validation = True
+        original_doc = template.src_doc
+        assert isinstance(original_doc, DocEntry)
+        return import_template(docentry, template)
     else:
         request_json = request.get_json()
         if "fulltext" not in request_json:
@@ -167,6 +161,62 @@ def update_document(doc_id):
     except (TimDbException, ValidationException) as e:
         raise RouteException(str(e))
     pars = doc.get_paragraphs()
+    return manage_response(docentry, pars, ver_before)
+
+
+def import_template(docentry: DocEntry, template: DocInfo):
+    docentry_doc = docentry.document_as_current_user
+    ver_before = docentry_doc.get_version()
+    docentry_translations = {tl.lang_id: tl for tl in docentry.translations}
+
+    if len(docentry_translations) > 1:
+        raise RouteException(
+            "Cannot load a template into a document that has translations."
+        )
+
+    existing_pars = docentry.document_as_current_user.get_paragraphs()
+    if existing_pars:
+        raise RouteException(
+            "Cannot load a template because the document is not empty."
+        )
+
+    for template_doc in template.translations:
+        verify_view_access(template_doc)
+
+    for template_doc in template.translations:
+        template_content = template_doc.document.export_markdown(with_tl=True)
+
+        if template_doc.is_original_translation:
+            target_doc = docentry
+            target_doc.lang_id = template_doc.lang_id
+        else:
+            tl_doc = create_document_and_block(
+                get_current_user_object().get_personal_group()
+            )
+            target_doc = Translation(
+                doc_id=tl_doc.doc_id,
+                src_docid=docentry.id,
+                lang_id=template_doc.lang_id,
+            )
+            db.session.add(target_doc)
+            target_doc.title = docentry.title
+            copy_rights(docentry, target_doc, None, copy_expired=False)
+
+        try:
+            doc = target_doc.document_as_current_user
+            doc.preload_option = PreloadOption.all
+
+            _, _, edit_result = doc.update(template_content, "", True)
+            if not edit_result.empty:
+                docentry.update_last_modified()
+
+        except ValidationWarning as e:
+            return json_response({"error": str(e), "is_warning": True}, status_code=400)
+        except (TimDbException, ValidationException) as e:
+            raise RouteException(str(e))
+
+    db.session.commit()
+    pars = docentry_doc.get_paragraphs()
     return manage_response(docentry, pars, ver_before)
 
 
