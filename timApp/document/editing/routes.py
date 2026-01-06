@@ -1,7 +1,6 @@
 """Routes for editing a document."""
-import re
 import os
-import secrets
+import re
 import tempfile
 import zipfile
 from dataclasses import field
@@ -9,6 +8,7 @@ from dataclasses import field
 from flask import Blueprint, render_template
 from flask import current_app
 from flask import request
+from pypandoc import convert_file
 from sqlalchemy import select
 
 from timApp.admin.associate_old_uploads import upload_regexes
@@ -23,7 +23,6 @@ from timApp.auth.accesshelper import (
     verify_seeanswers_access,
     has_edit_access,
     verify_route_access,
-    AccessDenied,
     verify_logged_in,
 )
 from timApp.auth.get_user_rights_for_item import get_user_rights_for_item
@@ -38,7 +37,12 @@ from timApp.document.docentry import DocEntry, create_document_and_block
 from timApp.document.docinfo import DocInfo
 from timApp.document.docparagraph import DocParagraph
 from timApp.document.docsettings import DocSettings
-from timApp.document.document import Document, get_duplicate_id_msg
+from timApp.document.document import (
+    Document,
+    get_duplicate_id_msg,
+    check_and_rename_attribute,
+    area_renamed,
+)
 from timApp.document.editing.documenteditresult import DocumentEditResult
 from timApp.document.editing.editrequest import get_pars_from_editor_text, EditRequest
 from timApp.document.editing.globalparid import GlobalParId
@@ -48,6 +52,7 @@ from timApp.document.hide_names import is_hide_names
 from timApp.document.post_process import post_process_pars, should_hide_readmarks
 from timApp.document.preloadoption import PreloadOption
 from timApp.document.prepared_par import PreparedPar
+from timApp.document.randutils import random_id
 from timApp.document.translation.synchronize_translations import (
     synchronize_translations,
 )
@@ -69,6 +74,12 @@ from timApp.readmark.readings import mark_read
 # from timApp.timdb.dbaccess import get_timdb
 from timApp.timdb.exceptions import TimDbException
 from timApp.timdb.sqa import db, run_sql
+from timApp.upload.upload import save_file_and_grant_access
+from timApp.upload.uploadedfile import (
+    is_script_safe_mimetype,
+    ALLOWED_DOC_IMPORT_EXT_MIMETYPES,
+    UploadedFile,
+)
 from timApp.util.flask.requesthelper import (
     verify_json_params,
     use_model,
@@ -77,17 +88,8 @@ from timApp.util.flask.requesthelper import (
 )
 from timApp.util.flask.responsehelper import json_response, ok_response, Response
 from timApp.util.utils import get_error_html
-from tim_common.marshmallow_dataclass import dataclass
-
-from timApp.upload.upload import ALLOWED_PANDOC_EXTENSIONS, save_file_and_grant_access
-from timApp.upload.uploadedfile import (
-    is_script_safe_mimetype,
-    ALLOWED_DOC_IMPORT_EXT_MIMETYPES,
-    UploadedFile,
-)
-from pypandoc import convert_file
 from timApp.util.utils import temp_folder_path
-
+from tim_common.marshmallow_dataclass import dataclass
 
 edit_page = Blueprint("edit_page", __name__, url_prefix="")  # TODO: Better URL prefix.
 
@@ -364,6 +366,7 @@ def modify_paragraph_common(doc_id: int, md: str, par_id: str, par_next_id: str 
         raise RouteException(str(e))
 
     editor_pars = check_and_rename_pluginnamehere(editor_pars, doc)
+    check_and_rename_attribute("area", editor_pars, doc, area_renamed)
 
     if editing_area:
         try:
@@ -384,7 +387,7 @@ def modify_paragraph_common(doc_id: int, md: str, par_id: str, par_next_id: str 
         edit_result = DocumentEditResult()
         pars = []
         pars_to_add = editor_pars[1:]
-        abort_if_duplicate_ids(doc, pars_to_add, rename_task_ids=True)
+        abort_if_duplicate_ids(doc, pars_to_add, auto_rename_ids=True)
 
         p = editor_pars[0]
         # The ID of the first paragraph needs to match the ID of the paragraph to modify
@@ -462,7 +465,7 @@ def mark_translation_as_checked(p: DocParagraph) -> None:
 
 
 def abort_if_duplicate_ids(
-    doc: Document, pars_to_add: list[DocParagraph], rename_task_ids: bool = False
+    doc: Document, pars_to_add: list[DocParagraph], auto_rename_ids: bool = False
 ):
     """
     Aborts the request if any of the paragraphs
@@ -470,16 +473,23 @@ def abort_if_duplicate_ids(
     paragraph IDs in the document.
     if rename_task_ids is True,
     ask automatically to rename conflicting task IDs.
+    Also renames area IDs if needed.
     :param doc: The document to which paragraphs are being added.
     :param pars_to_add: The paragraphs to be added.
-    :param rename_task_ids: If True, automatically renames conflicting task IDs instead of aborting.
+    :param auto_rename_ids: If True, automatically renames conflicting task IDs instead of aborting.
     :raises RouteException: If there are conflicting paragraph IDs.
     """
     conflicting_ids = {p.get_id() for p in pars_to_add} & set(doc.get_par_ids())
     if not conflicting_ids:
         return
-    if not rename_task_ids:
+    if not auto_rename_ids:
         raise RouteException(get_duplicate_id_msg(conflicting_ids))
+
+    for p in pars_to_add:
+        if p.get_id() in conflicting_ids:
+            p.set_id(random_id())
+
+    check_and_rename_attribute("area", pars_to_add, doc, area_renamed)
 
 
 @edit_page.post("/preview/<int:doc_id>")
@@ -786,34 +796,6 @@ def get_next_available_task_id(attrs, old_pars, duplicates, par_id):
         return task_id
 
 
-def check_and_rename_duplicates(blocks: list[DocParagraph], doc: Document):
-    """
-    Automatically rename plugins with duplicate task ids
-    :param blocks:  new blocks to check and rename
-    :param doc: document where the blocks are being comapred to
-    :return: modified blocks with renamed task ids
-    """
-    old_pars = None  # lazy load for old_pars
-
-    for p in blocks:  # go through all new pars if they need to be renamed
-        if not p.is_task():
-            continue
-        if old_pars is None:  # now old_pars is needed, load them once
-            pars = doc.get_paragraphs()
-            old_pars = []
-            for paragraph in pars:
-                if paragraph.is_task():
-                    old_pars.append(paragraph)
-        task_id = p.get_attr("taskId")
-        if task_id == "PLUGINNAMEHERE":
-            task_id = "Plugin1"
-            p.set_attr("taskId", task_id)
-        task_id = get_next_available_task_id(p.get_attrs(), old_pars, [], p.get_id())
-        p.set_attr("taskId", task_id)
-        old_pars.append(p)
-    return blocks
-
-
 # Automatically rename plugins with name pluginnamehere
 def check_and_rename_pluginnamehere(blocks: list[DocParagraph], doc: Document):
     # Get the paragraphs from the document with taskids
@@ -969,7 +951,7 @@ def add_paragraph_common(md: str, doc_id: int, par_next_id: str | None):
     except ValidationException as e:
         raise RouteException(str(e))
 
-    abort_if_duplicate_ids(doc, editor_pars, rename_task_ids=True)
+    abort_if_duplicate_ids(doc, editor_pars, auto_rename_ids=True)
 
     editor_pars = check_and_rename_pluginnamehere(editor_pars, doc)
 
