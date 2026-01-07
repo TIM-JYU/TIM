@@ -63,11 +63,9 @@ def add_to_comma_map_str(m: dict, key, curr_id, sep: str = ", "):
     :type sep: optional separator, default ", "
     """
     if curr_id is None:
-        return
+        curr_id = "None"
 
     curr = str(curr_id).strip()
-    if curr == "":
-        return
 
     val = m.get(key)
     if val is None or (isinstance(val, str) and val.strip() == ""):
@@ -82,9 +80,14 @@ class ErrorSet:
         self._set = set()
         self._map = {}
 
-    def add(self, err_id: str, par_id=None):
-        if par_id is None:
+    _MISSING = "__MISSING__"
+
+    def add(self, err_id: str, par_id=_MISSING):
+        if par_id == self._MISSING:
             self._set.add(err_id)
+            val = self._map.get(err_id)
+            if val is None:
+                self._map[err_id] = "-"
         else:
             add_to_comma_map_str(self._map, err_id, par_id)
 

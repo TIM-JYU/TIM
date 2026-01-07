@@ -248,7 +248,7 @@ def rename_task_ids():
     old_pars = doc.get_paragraphs()
 
     # Get paragraphs with taskIds
-    old_pars = [p for p in old_pars if p.is_task()]
+    old_pars = [p for p in old_pars if p.get_attr("taskId")]
     # TODO: next would be wrong
     # for paragraph in old_pars:
     #    if not paragraph.is_task():
@@ -833,13 +833,15 @@ def check_duplicates(pars, doc):
     duplicates = []
     all_pars = None  # cache all_pars
     for par in pars:
-        if par.is_task():
+        task_id = par.get_attr("taskId")
+        if task_id:
             if all_pars is None:  # now we need the pars
                 doc.clear_mem_cache()
                 docpars = doc.get_paragraphs()
                 all_pars = []
                 for paragraph in docpars:
-                    if paragraph.is_task():
+                    d_task_id = paragraph.get_attr("taskId")
+                    if d_task_id:
                         all_pars.append(paragraph)
 
             duplicate = []
