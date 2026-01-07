@@ -1,5 +1,4 @@
 import re
-from typing import Optional
 
 from timApp.document.attributeparser import AttributeParser
 from timApp.document.documentparseroptions import DocumentParserOptions
@@ -50,6 +49,54 @@ class DocReader:
         return self.current_line < len(self.lines)
 
 
+# python
+def add_to_comma_map_str(m: dict, key, curr_id, sep: str = ", "):
+    """
+    Ensure m[key] is a comma-separated string.
+    - If missing/None/"" -> set to curr_id
+    - Accepts existing str or list values
+    - Avoids duplicate entries
+    - Always stores a str
+    :type m: dict map with str values
+    :type key: key in the map
+    :type curr_id: value to add
+    :type sep: optional separator, default ", "
+    """
+    if curr_id is None:
+        return
+
+    curr = str(curr_id).strip()
+    if curr == "":
+        return
+
+    val = m.get(key)
+    if val is None or (isinstance(val, str) and val.strip() == ""):
+        m[key] = curr
+        return
+
+    m[key] = f"{val}{sep}{curr}"
+
+
+class ErrorSet:
+    def __init__(self):
+        self._set = set()
+        self._map = {}
+
+    def add(self, err_id: str, par_id=None):
+        if par_id is None:
+            self._set.add(err_id)
+        else:
+            add_to_comma_map_str(self._map, err_id, par_id)
+
+    @property
+    def set(self):
+        return self._set
+
+    @property
+    def map(self):
+        return self._map
+
+
 class DocumentParser:
     """Splits documents into paragraphs.
 
@@ -89,10 +136,10 @@ class DocumentParser:
     def validate_structure(self) -> ValidationResult:
         self._parse_document()
         found_ids = set()
-        found_tasks = set()
-        found_areas = set()
+        found_tasks = ErrorSet()
+        found_areas = ErrorSet()
         classed_areas = []
-        found_area_ends = set()
+        found_area_ends = ErrorSet()
         result = ValidationResult()
         for r in self._blocks:
             if r["type"] == "code":
@@ -116,19 +163,24 @@ class DocumentParser:
             attrs = r.get("attrs", {})
             task_id = attrs.get("taskId")
             if task_id:
-                if task_id in found_tasks:
-                    result.add_issue(DuplicateTaskId(curr_id, task_id))
+                found_tasks.add(task_id, curr_id)
+                if task_id in found_tasks.set:
+                    result.add_issue(DuplicateTaskId(found_tasks.map[task_id], task_id))
                 found_tasks.add(task_id)
             area = attrs.get("area")
             if area:
-                if area in found_areas:
-                    result.add_issue(MultipleAreasWithSameName(curr_id, area))
+                found_areas.add(area, curr_id)
+                if area in found_areas.set:
+                    result.add_issue(
+                        MultipleAreasWithSameName(found_areas.map[area], area)
+                    )
                 has_classes = len(attrs.get("classes", [])) > 0
                 if has_classes:
                     classed_areas.append(area)
                 found_areas.add(area)
             area_end = attrs.get("area_end")
             if area_end:
+                found_area_ends.add(area_end, curr_id)
                 if area_end == area:
                     result.add_issue(ZeroLengthArea(curr_id, area))
                 if area_end in classed_areas:
@@ -137,15 +189,17 @@ class DocumentParser:
                             OverlappingClassedArea(curr_id, classed_areas[-1], area_end)
                         )
                     classed_areas.pop()
-                if area_end not in found_areas:
-                    result.add_issue(AreaEndWithoutStart(curr_id, area))
-                if area_end in found_area_ends:
-                    result.add_issue(DuplicateAreaEnd(curr_id, area))
+                if area_end not in found_areas.set:
+                    result.add_issue(AreaEndWithoutStart(curr_id, area_end))
+                if area_end in found_area_ends.set:
+                    result.add_issue(
+                        DuplicateAreaEnd(found_area_ends.map[area_end], area_end)
+                    )
                 found_area_ends.add(area_end)
-        unended_areas = found_areas - found_area_ends
+        unended_areas = found_areas.set - found_area_ends.set
         for a in unended_areas:
             result.add_issue(
-                AreaWithoutEnd(None, a)
+                AreaWithoutEnd(found_areas.map[a], a)
             )  # TODO get the par id of the start
         return result
 
