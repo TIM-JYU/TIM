@@ -5,7 +5,7 @@ from typing import Optional, Any
 
 from timApp.auth.accesshelper import can_see_par_source
 from timApp.document.docparagraph import DocParagraph, is_real_id
-from timApp.document.document import Document
+from timApp.document.document import Document, area_renamed
 from timApp.document.documentparser import DocumentParser
 from timApp.document.documentwriter import DocumentWriter
 from timApp.document.editing.routes import (
