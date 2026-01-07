@@ -4,6 +4,7 @@ import json
 import os
 import re
 import shutil
+from collections import Counter
 from dataclasses import dataclass
 from datetime import datetime
 from difflib import SequenceMatcher
@@ -160,6 +161,7 @@ def check_and_rename_attribute(
     """
     names_to_check = None  # lazy load for names_to_check
     names_to_check_map = {}
+    name_counts = {}
 
     for p in new_pars:
         # go through all new pars if they need to be renamed
@@ -181,6 +183,7 @@ def check_and_rename_attribute(
                 did = paragraph.get_id()
                 names_to_check.append(name)
                 names_to_check_map[did] = name
+            name_counts = Counter(n for n in names_to_check if n is not None)
 
         new_name = p_name
         if p_name == "" or p_name == "PLUGINNAMEHERE":
@@ -201,6 +204,8 @@ def check_and_rename_attribute(
         else:
             # check if the name is already used in doc or renamed new_pars
             allow = names_to_check_map.get(p_id)
+            if name_counts.get(allow, 0) > 1:
+                allow = None  # if original name is duplicate, do not allow it
             if new_name != allow:  # if not original for this par in doc
                 new_name = get_next_available_name(new_name, names_to_check)
         if new_name != p_name:
