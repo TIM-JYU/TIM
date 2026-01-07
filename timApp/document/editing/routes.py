@@ -480,14 +480,13 @@ def abort_if_duplicate_ids(
     :raises RouteException: If there are conflicting paragraph IDs.
     """
     conflicting_ids = {p.get_id() for p in pars_to_add} & set(doc.get_par_ids())
-    if not conflicting_ids:
-        return
-    if not auto_rename_ids:
+    if conflicting_ids and not auto_rename_ids:
         raise RouteException(get_duplicate_id_msg(conflicting_ids))
 
-    for p in pars_to_add:
-        if p.get_id() in conflicting_ids:
-            p.set_id(random_id())
+    if conflicting_ids:
+        for p in pars_to_add:
+            if p.get_id() in conflicting_ids:
+                p.set_id(random_id())
 
     check_and_rename_attribute("area", pars_to_add, doc, area_renamed)
 
