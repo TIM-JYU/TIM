@@ -132,7 +132,8 @@ class EditTest(TimRouteTest):
                 "original": orig_text,
             },
             expect_status=400,
-            expect_content=f"Multiple areas with same name noticed for area 'a' in paragraph {par_ids[2]}\nDuplicate area end noticed in paragraph {par_ids[3]}",
+            expect_content=f"Errors: <ol><li>Multiple areas with same name noticed for area &#x27;a&#x27; in paragraph {par_ids[0]}, {par_ids[2]}.</li>"
+            + f"<li>Duplicate area end noticed for area &#x27;a&#x27; in paragraph {par_ids[1]}, {par_ids[3]}.</li></ol>",
         )
         self.json_post(
             f"/update/{d.id}",
@@ -235,20 +236,26 @@ class EditTest(TimRouteTest):
         par1 = pars[0]
         par2 = pars[1]
         md1 = par1.get_exported_markdown(export_ids=True)
-        self.new_par(
+        result = self.new_par(
             d.document,
             md1,
-            expect_status=400,
-            expect_content={"error": f"Duplicate paragraph id(s): {par1.get_id()}"},
+            expect_status=200,
+            # expect_content={"error": f"Duplicate paragraph id(s): {par1.get_id()}"},
+        )
+        self.assertTrue(
+            par1.get_id() != result["new_par_ids"][0], "Duplicate not changed."
         )
         self.post_par(d.document, md1, par_id=par1.get_id())
         md2 = par2.get_exported_markdown(export_ids=True)
-        self.post_par(
+        result = self.post_par(
             d.document,
             md1 + md2,
             par_id=par1.get_id(),
-            expect_status=400,
-            expect_content={"error": f"Duplicate paragraph id(s): {par2.get_id()}"},
+            expect_status=200,
+            # expect_content={"error": f"Duplicate paragraph id(s): {par2.get_id()}"},
+        )
+        self.assertTrue(
+            par2.get_id() != result["new_par_ids"][0], "Duplicate not changed."
         )
         self.get(d.url)
 

@@ -75,6 +75,7 @@ def get_next_available_name(name: str, names_to_avoid: list[str]) -> str:
     :param names_to_avoid: names that cannot be used
     :return: next available name
     """
+
     need_new_name = False
     # First try with original name
     for old_name in names_to_avoid:
@@ -103,22 +104,46 @@ def get_next_available_name(name: str, names_to_avoid: list[str]) -> str:
 
 
 def area_renamed(
-    new_pars: list[DocParagraph | dict], _p: DocParagraph, old_name, new_name: str
+    new_pars: list[DocParagraph | dict],
+    p: DocParagraph | dict,
+    _old_name: str,
+    new_name: str,
 ) -> None:
     """
     If area start is renamed, also rename area end accordingly.
-    :param _p: starting paragraph
-    :param old_name: old area name
+    Despite the oldname, this function finds the end on
+    same level as the start paragraph.
+
+    :param new_pars: list of new paragraphs
+    :param p: starting paragraph
+    :param _old_name: old area name
     :param new_name: new area name
     :return: None
     """
-    for apar in new_pars:
+    try:
+        p_index = new_pars.index(p)
+    except ValueError:
+        return
+
+    area_level = 1
+    # Try to find the corresponding area_end starting from p
+    for i in range(p_index + 1, len(new_pars)):
+        apar = new_pars[i]
         if isinstance(apar, dict):
             apar_attrs = apar.get("attrs", {})
         else:
             apar_attrs = apar.attrs
-        if apar_attrs.get("area_end") == old_name:
-            apar_attrs["area_end"] = new_name
+
+        if apar_attrs.get("area_end") is not None:
+            if area_level == 1:
+                apar_attrs["area_end"] = new_name
+                return
+            area_level -= 1
+            if area_level < 0:  # end cannot be before start
+                return
+
+        elif apar_attrs.get("area") is not None:
+            area_level += 1
 
 
 def check_and_rename_attribute(
@@ -134,6 +159,7 @@ def check_and_rename_attribute(
     :return: modified blocks with renamed task ids
     """
     names_to_check = None  # lazy load for names_to_check
+    names_to_check_map = {}
 
     for p in new_pars:
         # go through all new pars if they need to be renamed
@@ -144,24 +170,46 @@ def check_and_rename_attribute(
             p_attrs = p.attrs
             p_id = p.get_id()
         p_name = p_attrs.get(attr_name)
-        if not p_name:
+        if p_name is None:
             continue
+
         if names_to_check is None:  # now names_to_check is needed, load them once
-            pars = doc.get_paragraphs()
+            doc_pars = doc.get_paragraphs()
             names_to_check = []
-            for paragraph in pars:
+            for paragraph in doc_pars:
                 name = paragraph.get_attr(attr_name)
                 did = paragraph.get_id()
-                if name and did != p_id:
-                    names_to_check.append(name)
-        if p_name == "PLUGINNAMEHERE":  # does not matter for area
-            p_name = "Plugin1"
-        new_name = get_next_available_name(p_name, names_to_check)
+                names_to_check.append(name)
+                names_to_check_map[did] = name
+
+        new_name = p_name
+        if p_name == "" or p_name == "PLUGINNAMEHERE":
+            # generate a new name that is not used in new_pars or in doc
+            new_name = "a"
+            if p_name == "PLUGINNAMEHERE":  # does not matter for area
+                new_name = "Plugin1"
+            new_names = list(names_to_check or [])
+            for pn in new_pars:  # collect names from new_pars also
+                if isinstance(pn, dict):
+                    pn_attrs = pn.get("attrs", {})
+                else:
+                    pn_attrs = pn.attrs
+                nn = pn_attrs.get(attr_name)
+                if nn:
+                    new_names.append(nn)
+            new_name = get_next_available_name(new_name, new_names)
+        else:
+            # check if the name is already used in doc or renamed new_pars
+            allow = names_to_check_map.get(p_id)
+            if new_name != allow:  # if not original for this par in doc
+                new_name = get_next_available_name(new_name, names_to_check)
         if new_name != p_name:
             p_attrs[attr_name] = new_name
-            if on_rename:
-                on_rename(new_pars, p, p_name, new_name)
+        if on_rename:  # for areas do the check even if name not changed
+            on_rename(new_pars, p, p_name, new_name)
         names_to_check.append(new_name)
+    # TODO: for area ends check that they are renamed also
+    # TODO: if they have no starting par in new_pars
     return new_pars
 
 
@@ -184,7 +232,9 @@ class Document:
         self.par_ids: list[str] | None = None
         # List of corresponding hashes
         self.par_hashes: list[str] | None = None
-        # Whether par_cache is incomplete - this is the case when insert_temporary_pars is called with PreloadOption.none
+        # Whether par_cache is incomplete -
+        # this is the case when insert_temporary_pars
+        # is called with PreloadOption.none
         self.is_incomplete_cache: bool = False
         # Whether the document exists on disk.
         self.__exists: bool | None = None
