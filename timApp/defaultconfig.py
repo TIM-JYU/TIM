@@ -505,14 +505,14 @@ MACHINE_TRANSLATORS = [
         DeeplTranslationService,
         {
             "service_url": "https://api-free.deepl.com/v2",
-            "ignore_tag": "😂",
+            "ignore_tag": "_ignore",
         },
     ),
     (
         DeeplProTranslationService,
         {
             "service_url": "https://api.deepl.com/v2",
-            "ignore_tag": "😂",
+            "ignore_tag": "_ignore",
         },
     ),
     # TODO Remove this from list in production and during automatic tests.
