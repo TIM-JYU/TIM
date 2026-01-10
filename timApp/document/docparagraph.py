@@ -819,7 +819,7 @@ class DocParagraph:
             return cached
 
         prev_par: DocParagraph = self.doc.get_previous_par(self)
-        if prev_par is None:
+        if prev_par is None or prev_par == self:  # prevent recursion
             prev_par_auto_values = {"h": auto_number_start}
             heading_cache[self.get_id()] = []
         else:

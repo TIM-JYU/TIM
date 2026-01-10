@@ -114,8 +114,8 @@ class DocumentParser:
 
         :type doc_text: str
         """
-        self._doc_text = doc_text
-        self._blocks = None
+        self._doc_text: str = doc_text
+        self._blocks: [dict] = []
         self._break_on_empty_line = False
         self._last_setting: DocumentParserOptions | None = None
         self.options: DocumentParserOptions = (
@@ -138,14 +138,18 @@ class DocumentParser:
 
     def validate_structure(self) -> ValidationResult:
         self._parse_document()
+        return self.do_validate_structure(self._blocks)
+
+    @staticmethod
+    def do_validate_structure(blocks: [dict]) -> ValidationResult:
         found_ids = set()
         found_tasks = ErrorSet()
         found_areas = ErrorSet()
         classed_areas = []
         found_area_ends = ErrorSet()
         result = ValidationResult()
-        for r in self._blocks:
-            if r["type"] == "code":
+        for r in blocks:
+            if r.get("type") == "code":
                 md = r["md"]
                 try:
                     last_line = md[md.rindex("\n") + 1 :]

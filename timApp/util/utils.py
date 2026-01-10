@@ -534,3 +534,34 @@ def normalize_newlines(text: str) -> str:
     :return: Modified source text.
     """
     return re.sub(NORM_NEWLINES_COMPILED, " ", text)
+
+
+TIM_IDENTS = "a-zA-Z0-9_-"
+
+TIM_IDENTS_RE = re.compile(rf"^[{TIM_IDENTS}]*$")
+NOT_TIM_IDENTS_RE = re.compile(rf"[^{TIM_IDENTS}]")
+
+
+def is_valid_tim_indetifier(s: str) -> bool:
+    """
+    Check whether the given string is a valid TIM identifier.
+
+    :param s: The string to check.
+    :return: True if the string is a valid TIM identifier, False otherwise.
+    """
+    return bool(TIM_IDENTS_RE.match(s))
+
+
+def strip_not_allowed(s: str, allow_reg: str | None = None) -> str:
+    """
+    Strips characters that are not allowed in TIM identifiers.
+
+    :param s: The string to strip.
+    :param allow_reg: Optional regex pattern to specify allowed characters.
+    :return: The stripped string.
+    """
+    if s is None or s.strip() == "":
+        return ""
+    if allow_reg is not None:
+        return re.sub(rf"[^{allow_reg}]", "", s)
+    return NOT_TIM_IDENTS_RE.sub("", s)
