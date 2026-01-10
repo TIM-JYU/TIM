@@ -37,7 +37,12 @@ from timApp.timdb.exceptions import (
     PreambleException,
     InvalidReferenceException,
 )
-from timApp.util.utils import get_error_html, trim_markdown, cache_folder_path
+from timApp.util.utils import (
+    get_error_html,
+    trim_markdown,
+    cache_folder_path,
+    strip_not_allowed,
+)
 from tim_common.html_sanitize import presanitize_html_body
 
 if TYPE_CHECKING:
@@ -67,20 +72,23 @@ def split_tail_number(s: str) -> tuple[str, int]:
     return s, 1
 
 
-def get_next_available_name(name: str, names_to_avoid: list[str]) -> str:
+def get_next_available_name(
+    name: str, names_to_avoid: list[str], allow: str = ""
+) -> str:
     """
     Returns next available name by appending/incrementing
     a trailing number.  If name is not in names_to_avoid,
     the original name is returned.
     :param name: current name
     :param names_to_avoid: names that cannot be used
+    :param allow: name that is allowed even if in names_to_avoid
     :return: next available name
     """
 
     need_new_name = False
     # First try with original name
     for old_name in names_to_avoid:
-        if old_name == name:
+        if old_name == name and old_name != allow:
             need_new_name = True
             break
 
@@ -95,7 +103,8 @@ def get_next_available_name(name: str, names_to_avoid: list[str]) -> str:
 
     j = 0
     while j < len(names_to_avoid):
-        if names_to_avoid[j] == new_name:
+        old_name = names_to_avoid[j]
+        if old_name == new_name and old_name != allow:
             number += 1
             new_name = body + str(number)
             j = 0  # restart checking
@@ -147,6 +156,20 @@ def area_renamed(
             area_level += 1
 
 
+def check_and_rename_new_name(attr_name: str, new_name: str, doc: Document) -> str:
+    """
+    Check if the new_name is already used in document for the given attribute.
+    If so, generate a new name by appending/incrementing a trailing number.
+    :param attr_name: attribute name to check
+    :param new_name: proposed new name
+    :param doc: document where the name is being compared to
+    :return: modified new name
+    """
+    d = {"attrs": {attr_name: new_name}, "id": ""}
+    renamed_pars = check_and_rename_attribute(attr_name, [d], doc)
+    return renamed_pars[0]["attrs"][attr_name]
+
+
 def check_and_rename_attribute(
     attr_name: str, new_pars: list[DocParagraph | dict], doc: Document, on_rename=None
 ):
@@ -180,13 +203,14 @@ def check_and_rename_attribute(
             names_to_check = []
             for paragraph in doc_pars:
                 name = paragraph.get_attr(attr_name)
-                did = paragraph.get_id()
-                names_to_check.append(name)
-                names_to_check_map[did] = name
+                if name:
+                    did = paragraph.get_id()
+                    names_to_check.append(name)
+                    names_to_check_map[did] = name
             name_counts = Counter(n for n in names_to_check if n is not None)
 
-        new_name = p_name
-        if p_name == "" or p_name == "PLUGINNAMEHERE":
+        new_name = strip_not_allowed(p_name)
+        if new_name == "" or new_name == "PLUGINNAMEHERE":
             # generate a new name that is not used in new_pars or in doc
             new_name = "a"
             if p_name == "PLUGINNAMEHERE":  # does not matter for area
@@ -207,7 +231,7 @@ def check_and_rename_attribute(
             if name_counts.get(allow, 0) > 1:
                 allow = None  # if original name is duplicate, do not allow it
             if new_name != allow:  # if not original for this par in doc
-                new_name = get_next_available_name(new_name, names_to_check)
+                new_name = get_next_available_name(new_name, names_to_check, allow)
         if new_name != p_name:
             p_attrs[attr_name] = new_name
         if on_rename:  # for areas do the check even if name not changed
@@ -483,8 +507,17 @@ class Document:
         export_ids: bool = True,
         export_settings: bool = True,
         with_tl: bool = False,
+        do_validation: bool = False,
     ) -> str:
         pars = [par for par in self if not par.is_setting() or export_settings]
+        if do_validation:
+            dicts = [par.dict() for par in pars]
+            vr = DocumentParser.do_validate_structure(dicts)
+            metadata_info = getattr(
+                getattr(self.docinfo, "metadata", None), "info", None
+            )
+            if metadata_info:
+                metadata_info["errors"] = str(vr)
         if with_tl:
             return "\n".join(
                 [par.get_exported_markdown(export_ids=export_ids) for par in pars]
@@ -527,7 +560,7 @@ class Document:
         return all_pars[start_index : end_index + 1]
 
     def text_to_paragraphs(
-        self, text: str, break_on_elements: bool
+        self, text: str, break_on_elements: bool, do_validation: bool = False
     ) -> tuple[list[DocParagraph], ValidationResult]:
         options = DocumentParserOptions()
         options.break_on_code_block = break_on_elements
@@ -536,7 +569,9 @@ class Document:
         dp = DocumentParser(text, options)
         dp.add_missing_attributes()
         vr = dp.validate_structure()
-        vr.raise_if_has_critical_issues()
+        if do_validation:
+            # vr.raise_if_has_critical_issues()
+            vr.raise_if_has_any_issues()
         blocks = [
             DocParagraph.create(
                 doc=self,
@@ -1066,8 +1101,11 @@ class Document:
         # If the original document has validation errors, it probably means the document export routine has a bug.
         dp_orig = DocumentParser(original)
         dp_orig.add_missing_attributes()
+        """
         vr = dp_orig.validate_structure()
         try:
+            # TODO: think is there is sense stopping the save
+            # TODO: perhaps log the error instead of raising
             vr.raise_if_has_critical_issues()
         except ValidationException as e:
             raise ValidationException(
@@ -1075,6 +1113,7 @@ class Document:
                 "This is probably a TIM bug; please report it. "
                 f"Additional information: {e}"
             )
+        """
         blocks = dp_orig.get_blocks()
         new_ids = {p["id"] for p in new_pars} - {p["id"] for p in blocks}
         conflicting_ids = new_ids & set(self.get_par_ids())

@@ -75,6 +75,7 @@ export class PermCtrl implements IController {
     private oldFolderName?: string;
     private oldName?: string;
     private fulltext?: string;
+    private errors?: string;
     private changelogLoading: boolean = false;
     private newAlias: {location: string};
     private copyParams: {copy: number};
@@ -121,6 +122,7 @@ export class PermCtrl implements IController {
             this.oldName = this.newName;
             this.oldFolderName = this.newFolderName;
         } else {
+            this.errors = this.item.errors;
             this.updateFullText(this.item.fulltext);
             if (this.item.rights.manage) {
                 await this.getAliases();
@@ -594,6 +596,7 @@ export class PermCtrl implements IController {
         if (this.saving || !this.hasTextChanged()) {
             return;
         }
+        this.errors = undefined;
         this.saving = true;
         const r = await to<
             IHttpResponse<IManageResponse>,

@@ -42,6 +42,7 @@ from timApp.document.document import (
     get_duplicate_id_msg,
     check_and_rename_attribute,
     area_renamed,
+    check_and_rename_new_name,
 )
 from timApp.document.editing.documenteditresult import DocumentEditResult
 from timApp.document.editing.editrequest import get_pars_from_editor_text, EditRequest
@@ -87,7 +88,7 @@ from timApp.util.flask.requesthelper import (
     NotExist,
 )
 from timApp.util.flask.responsehelper import json_response, ok_response, Response
-from timApp.util.utils import get_error_html
+from timApp.util.utils import get_error_html, strip_not_allowed
 from timApp.util.utils import temp_folder_path
 from tim_common.marshmallow_dataclass import dataclass
 
@@ -366,6 +367,7 @@ def modify_paragraph_common(doc_id: int, md: str, par_id: str, par_next_id: str 
         raise RouteException(str(e))
 
     editor_pars = check_and_rename_pluginnamehere(editor_pars, doc)
+    check_and_rename_attribute("taskId", editor_pars, doc)
     check_and_rename_attribute("area", editor_pars, doc, area_renamed)
 
     if editing_area:
@@ -387,7 +389,9 @@ def modify_paragraph_common(doc_id: int, md: str, par_id: str, par_next_id: str 
         edit_result = DocumentEditResult()
         pars = []
         pars_to_add = editor_pars[1:]
-        abort_if_duplicate_ids(doc, pars_to_add, auto_rename_ids=True)
+        abort_if_duplicate_ids(
+            doc, pars_to_add, auto_rename_ids=True, no_other_checks=True
+        )
 
         p = editor_pars[0]
         # The ID of the first paragraph needs to match the ID of the paragraph to modify
@@ -465,7 +469,10 @@ def mark_translation_as_checked(p: DocParagraph) -> None:
 
 
 def abort_if_duplicate_ids(
-    doc: Document, pars_to_add: list[DocParagraph], auto_rename_ids: bool = False
+    doc: Document,
+    pars_to_add: list[DocParagraph],
+    auto_rename_ids: bool = False,
+    no_other_checks: bool = False,
 ):
     """
     Aborts the request if any of the paragraphs
@@ -477,6 +484,7 @@ def abort_if_duplicate_ids(
     :param doc: The document to which paragraphs are being added.
     :param pars_to_add: The paragraphs to be added.
     :param auto_rename_ids: If True, automatically renames conflicting task IDs instead of aborting.
+    :param no_other_checks: If True, skips other checks except for duplicate IDs.
     :raises RouteException: If there are conflicting paragraph IDs.
     """
     conflicting_ids = {p.get_id() for p in pars_to_add} & set(doc.get_par_ids())
@@ -487,7 +495,9 @@ def abort_if_duplicate_ids(
         for p in pars_to_add:
             if p.get_id() in conflicting_ids:
                 p.set_id(random_id())
-
+    if no_other_checks:
+        return
+    check_and_rename_attribute("taskId", pars_to_add, doc)
     check_and_rename_attribute("area", pars_to_add, doc, area_renamed)
 
 
@@ -511,7 +521,7 @@ def preview_paragraphs(doc_id):
         doc = docinfo.document
         edit_request = EditRequest.from_request(doc, preview=True)
         try:
-            blocks = edit_request.get_pars()
+            blocks = edit_request.get_pars(do_validation=True)
         except ValidationException as e:
             blocks = [DocParagraph.create(doc=doc, md="", html=get_error_html(e))]
             proofread = False
@@ -1068,10 +1078,13 @@ def name_area(doc_id, area_name):
 
     docentry = get_doc_or_abort(doc_id)
     verify_edit_access(docentry)
+    area_name = strip_not_allowed(area_name)
     if not area_name or " " in area_name or "´" in area_name:
         raise RouteException("Invalid area name")
 
     doc = docentry.document_as_current_user
+    area_name = check_and_rename_new_name("area", area_name, doc)
+
     area_attrs = {"area": area_name}
     area_title = ""
     after_title = ""

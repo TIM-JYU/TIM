@@ -431,18 +431,27 @@ class DocInfo(Item):
         db.session.add(d)
 
     def to_json(self, **kwargs):
-        return {
-            **super().to_json(**kwargs),
-            "isFolder": False,
-            **(
+        serialize_content = getattr(self, "serialize_content", False)
+        metadata_info = getattr(getattr(self, "metadata", None), "info", None) or {}
+        if not isinstance(metadata_info, dict):
+            metadata_info = {}
+        add_errors = metadata_info.get("route") == "manage" and serialize_content
+
+        result = {**super().to_json(**kwargs), "isFolder": False}
+
+        if serialize_content:
+            result.update(
                 {
                     "versions": self.get_changelog_with_names(),
-                    "fulltext": self.document.export_markdown(),
+                    "fulltext": self.document.export_markdown(do_validation=add_errors),
                 }
-                if getattr(self, "serialize_content", False)
-                else {}
-            ),
-        }
+            )
+
+            errors = metadata_info.get("errors", None)
+            if add_errors and errors:
+                result["errors"] = errors
+
+        return result
 
 
 def get_original_text_pars_from_docs(
