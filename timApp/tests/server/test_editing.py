@@ -50,18 +50,26 @@ class EditTest(TimRouteTest):
             expect_content="Area not found. It may have been deleted.",
         )
 
+    def test_drop_illegal_chars(self):
+        self.login_test1()
+        d = self.create_doc()
+        self.new_par(d.document, "``` {#@@!!test^9?a&&& plugin=showVideo}\n```")
+        d.document.clear_mem_cache()
+        pars = d.document.get_paragraphs()
+        self.assertEqual("test9a", pars[0].attrs.get("taskId"))
+
     def test_duplicate_task_ids(self):
         self.login_test1()
         d = self.create_doc()
         r = self.new_par(d.document, "``` {#test plugin=showVideo}\n```")
-        self.assertEqual(r["duplicates"], [])
+        self.assertEqual([], r["duplicates"])
         r = self.new_par(d.document, "``` {#test plugin=showVideo}\n```")
         pars = d.document.get_paragraphs()
-        self.assertEqual(r["duplicates"], [])
-        self.assertEqual(pars[1].attrs.get("taskId"), "test1")
+        self.assertEqual([], r["duplicates"])
+        self.assertEqual("test1", pars[1].attrs.get("taskId"))
         self.new_par(d.document, "#- {#test}\ntest")
         pars = d.document.get_paragraphs()
-        self.assertEqual(pars[2].attrs.get("taskId"), "test2")
+        self.assertEqual("test2", pars[2].attrs.get("taskId"))
 
     def test_edit_block_with_taskid(self):
         self.login_test1()

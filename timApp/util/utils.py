@@ -546,7 +546,7 @@ FROM (
 WHERE ch <> '';
 =>  ,-._0123456789aAåäbBcCdDeEfFgGhHiIjJkKlLmMnNoOöpPqQrRsStTuUvVwWxXyYzZ
 """
-TIM_IDENTS = "a-zA-Z0-9_-.,/åäöÅÄÖ"
+TIM_IDENTS = "a-zA-Z0-9_.,/åäöÅÄÖ-"
 
 TIM_IDENTS_RE = re.compile(rf"^[{TIM_IDENTS}]*$")
 NOT_TIM_IDENTS_RE = re.compile(rf"[^{TIM_IDENTS}]")
