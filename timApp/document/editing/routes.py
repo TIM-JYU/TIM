@@ -389,10 +389,10 @@ def modify_paragraph_common(doc_id: int, md: str, par_id: str, par_next_id: str 
             raise NotExist(str(e))
         edit_result = DocumentEditResult()
         pars = []
-        pars_to_add = editor_pars[1:]
         abort_if_duplicate_ids(
-            doc, pars_to_add, auto_rename_ids=True, no_other_checks=False
+            doc, editor_pars, auto_rename_ids=True, no_other_checks=False
         )
+        pars_to_add = editor_pars[1:]
 
         p = editor_pars[0]
         # The ID of the first paragraph needs to match the ID of the paragraph to modify
