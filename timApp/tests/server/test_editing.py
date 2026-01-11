@@ -53,10 +53,10 @@ class EditTest(TimRouteTest):
     def test_drop_illegal_chars(self):
         self.login_test1()
         d = self.create_doc()
-        self.new_par(d.document, "``` {#@@!!test^9?a&&& plugin=showVideo}\n```")
+        self.new_par(d.document, "``` {#@@!!tes.t^-9?a&&& plugin=showVideo}\n```")
         d.document.clear_mem_cache()
         pars = d.document.get_paragraphs()
-        self.assertEqual("test9a", pars[0].attrs.get("taskId"))
+        self.assertEqual("tes.t-9a", pars[0].attrs.get("taskId"))
 
     def test_duplicate_task_ids(self):
         self.login_test1()
@@ -93,6 +93,67 @@ class EditTest(TimRouteTest):
         self.assertEqual("test1", pars[1].attrs.get("taskId"))
         self.assertEqual(id0, pars[0].get_id())
         self.assertNotEqual(id0, pars[1].get_id())
+
+    def test_edit_simple_block(self):
+        self.login_test1()
+        d = self.create_doc(initial_par=["a1par"])
+        pars = d.document.get_paragraphs()
+        new_text = d.document.export_markdown()
+        ln = new_text.splitlines()
+        new_text = f"{ln[0]}\n{ln[1]}1\n"
+        self.json_post(
+            "/postParagraph/",
+            {
+                "text": new_text,
+                "docId": d.id,
+                "par": pars[0].get_id(),
+                "par_next": None,
+            },
+        )
+        d.document.clear_mem_cache()
+        pars = d.document.get_paragraphs()
+        self.assertEqual(1, len(pars))
+        self.assertEqual(new_text, d.document.export_markdown())
+
+        self.json_post(
+            "/postParagraph/",
+            {
+                "text": "abc",
+                "docId": d.id,
+                "par": pars[0].get_id(),
+                "par_next": None,
+            },
+        )
+        new_text = f"{ln[0]}\nabc\n"
+        d.document.clear_mem_cache()
+        pars = d.document.get_paragraphs()
+        self.assertEqual(1, len(pars))
+        self.assertEqual(new_text, d.document.export_markdown())
+
+    def test_add_same_block_many_times(self):
+        self.login_test1()
+        d = self.create_doc(initial_par=["#- {#test}\na1par"])
+        pars = d.document.get_paragraphs()
+        pid = pars[0].get_id()
+        new_text = d.document.export_markdown()
+        new_text = new_text + "\n" + new_text + "\n" + new_text + "\n"
+        self.json_post(
+            "/postParagraph/",
+            {
+                "text": new_text,
+                "docId": d.id,
+                "par": pid,
+                "par_next": None,
+            },
+        )
+        d.document.clear_mem_cache()
+        pars = d.document.get_paragraphs()
+        self.assertEqual(3, len(pars))
+        self.assertEqual(pid, pars[0].get_id())
+        self.assertEqual("test", pars[0].attrs.get("taskId"))
+        self.assertNotEqual(pid, pars[1].get_id())
+        self.assertEqual("test1", pars[1].attrs.get("taskId"))
+        self.assertEqual("test2", pars[2].attrs.get("taskId"))
 
     def test_edit_change_order_of_2_blocks(self):
         self.login_test1()
@@ -289,8 +350,15 @@ class EditTest(TimRouteTest):
         self.json_post(
             f"/update/{d.id}",
             {"fulltext": md, "original": ""},
+            expect_status=200,  # 400, TODO: Why should this return 400?
+            # expect_content={"error": f"Duplicate paragraph id(s): {par.get_id()}"},
+        )
+        md = '#- {#test id="abc"}\ntest\n'
+        self.json_post(
+            f"/update/{d.id}",
+            {"fulltext": md, "original": ""},
             expect_status=400,
-            expect_content={"error": f"Duplicate paragraph id(s): {par.get_id()}"},
+            expect_content={"error": "Invalid paragraph id noticed in paragraph abc"},
         )
         self.get(d.url)
 

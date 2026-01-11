@@ -9,10 +9,8 @@ from flask import Blueprint, render_template
 from flask import current_app
 from flask import request
 from pypandoc import convert_file
-from sqlalchemy import select
 
 from timApp.admin.associate_old_uploads import upload_regexes
-from timApp.answer.answer import Answer
 from timApp.auth.accesshelper import (
     verify_edit_access,
     verify_view_access,
@@ -37,13 +35,6 @@ from timApp.document.docentry import DocEntry, create_document_and_block
 from timApp.document.docinfo import DocInfo
 from timApp.document.docparagraph import DocParagraph
 from timApp.document.docsettings import DocSettings
-from timApp.document.document import (
-    Document,
-    get_duplicate_id_msg,
-    check_and_rename_attribute,
-    area_renamed,
-    check_and_rename_new_name,
-)
 from timApp.document.editing.documenteditresult import DocumentEditResult
 from timApp.document.editing.editrequest import get_pars_from_editor_text, EditRequest
 from timApp.document.editing.globalparid import GlobalParId
@@ -53,7 +44,14 @@ from timApp.document.hide_names import is_hide_names
 from timApp.document.post_process import post_process_pars, should_hide_readmarks
 from timApp.document.preloadoption import PreloadOption
 from timApp.document.prepared_par import PreparedPar
-from timApp.document.randutils import random_id
+from timApp.document.renameids import (
+    check_and_rename_pluginnamehere,
+    check_duplicates,
+    check_and_rename_attribute,
+    area_renamed,
+    abort_if_duplicate_ids,
+    check_and_rename_new_name,
+)
 from timApp.document.translation.synchronize_translations import (
     synchronize_translations,
 )
@@ -74,7 +72,7 @@ from timApp.readmark.readings import mark_read
 
 # from timApp.timdb.dbaccess import get_timdb
 from timApp.timdb.exceptions import TimDbException
-from timApp.timdb.sqa import db, run_sql
+from timApp.timdb.sqa import db
 from timApp.upload.upload import save_file_and_grant_access
 from timApp.upload.uploadedfile import (
     is_script_safe_mimetype,
@@ -366,20 +364,20 @@ def modify_paragraph_common(doc_id: int, md: str, par_id: str, par_next_id: str 
     except ValidationException as e:
         raise RouteException(str(e))
 
-    if len(editor_pars) > 0:
+    if len(editor_pars) > 0 and not editing_area:
         editor_pars[0].set_id(par_id)
 
     # editor_pars = check_and_rename_pluginnamehere(editor_pars, doc)
-    check_and_rename_attribute("taskId", editor_pars, doc)
-    check_and_rename_attribute("area", editor_pars, doc, area_renamed)
 
     if editing_area:
         try:
+            check_and_rename_attribute("taskId", editor_pars, doc)
+            check_and_rename_attribute("area", editor_pars, doc, area_renamed)
             curr_section = doc.get_section(area_start, area_end)
             for p in curr_section:
                 verify_par_edit_access(p)
             new_start, new_end, edit_result = doc.update_section(
-                md, area_start, area_end
+                editor_pars, area_start, area_end, do_validation=False
             )
             pars = doc.get_section(new_start, new_end)
         except (ValidationException, TimDbException) as e:
@@ -393,7 +391,7 @@ def modify_paragraph_common(doc_id: int, md: str, par_id: str, par_next_id: str 
         pars = []
         pars_to_add = editor_pars[1:]
         abort_if_duplicate_ids(
-            doc, pars_to_add, auto_rename_ids=True, no_other_checks=True
+            doc, pars_to_add, auto_rename_ids=True, no_other_checks=False
         )
 
         p = editor_pars[0]
@@ -469,39 +467,6 @@ def mark_translation_as_checked(p: DocParagraph) -> None:
     :return: None.
     """
     p.set_attr("mt", None)
-
-
-def abort_if_duplicate_ids(
-    doc: Document,
-    pars_to_add: list[DocParagraph],
-    auto_rename_ids: bool = False,
-    no_other_checks: bool = False,
-):
-    """
-    Aborts the request if any of the paragraphs
-    to be added have IDs that conflict with existing
-    paragraph IDs in the document.
-    if rename_task_ids is True,
-    ask automatically to rename conflicting task IDs.
-    Also renames area IDs if needed.
-    :param doc: The document to which paragraphs are being added.
-    :param pars_to_add: The paragraphs to be added.
-    :param auto_rename_ids: If True, automatically renames conflicting task IDs instead of aborting.
-    :param no_other_checks: If True, skips other checks except for duplicate IDs.
-    :raises RouteException: If there are conflicting paragraph IDs.
-    """
-    conflicting_ids = {p.get_id() for p in pars_to_add} & set(doc.get_par_ids())
-    if conflicting_ids and not auto_rename_ids:
-        raise RouteException(get_duplicate_id_msg(conflicting_ids))
-
-    if conflicting_ids:
-        for p in pars_to_add:
-            if p.get_id() in conflicting_ids:
-                p.set_id(random_id())
-    if no_other_checks:
-        return
-    check_and_rename_attribute("taskId", pars_to_add, doc)
-    check_and_rename_attribute("area", pars_to_add, doc, area_renamed)
 
 
 @edit_page.post("/preview/<int:doc_id>")
@@ -806,85 +771,6 @@ def get_next_available_task_id(attrs, old_pars, duplicates, par_id):
             else:
                 j += 1
         return task_id
-
-
-# Automatically rename plugins with name pluginnamehere
-def check_and_rename_pluginnamehere(blocks: list[DocParagraph], doc: Document):
-    # Get the paragraphs from the document with taskids
-    old_pars = None  # lazy load for old_pars
-    i = 1
-    j = 0
-    # For all blocks check if taskId is pluginnamehere, if it is find next available name.
-    for p in blocks:  # go through all new pars if they need to be renamed
-        if p.is_task():
-            task_id = p.get_attr("taskId")
-            if task_id == "PLUGINNAMEHERE":
-                if old_pars is None:  # now old_pars is needed, load them once
-                    pars = doc.get_paragraphs()
-                    old_pars = []
-                    for paragraph in pars:
-                        if not paragraph.is_task():
-                            old_pars.append(paragraph)
-
-                task_id = "Plugin" + str(i)
-                while j < len(old_pars):
-                    if task_id == old_pars[j].get_attr("taskId"):
-                        i += 1
-                        task_id = "Plugin" + str(i)
-                        j = 0
-                    else:
-                        j += 1
-                p.set_attr("taskId", task_id)
-                old_pars.append(p)
-                j = 0
-    return blocks
-
-
-# Check new paragraphs with plugins for duplicate task ids
-def check_duplicates(pars, doc):
-    duplicates = []
-    all_pars = None  # cache all_pars
-    for par in pars:
-        task_id = par.get_attr("taskId")
-        if task_id:
-            if all_pars is None:  # now we need the pars
-                doc.clear_mem_cache()
-                docpars = doc.get_paragraphs()
-                all_pars = []
-                for paragraph in docpars:
-                    d_task_id = paragraph.get_attr("taskId")
-                    if d_task_id:
-                        all_pars.append(paragraph)
-
-            duplicate = []
-            task_id = par.get_attr("taskId")
-            par_id = par.get_id()
-            count_of_same_task_ids = 0
-            j = 0
-            while j < len(all_pars):
-                if (
-                    all_pars[j].get_id() != par_id
-                    and all_pars[j].get_attr("taskId") == task_id
-                ):  # count not self
-                    count_of_same_task_ids += 1
-                    if count_of_same_task_ids > 0:
-                        duplicate.append(task_id)
-                        duplicate.append(par.get_id())
-                        task_id_to_check = str(doc.doc_id) + "." + task_id
-                        if (
-                            run_sql(
-                                select(Answer)
-                                .filter_by(task_id=task_id_to_check)
-                                .limit(1)
-                            )
-                            .scalars()
-                            .first()
-                        ):
-                            duplicate.append("hasAnswers")
-                        duplicates.append(duplicate)
-                        break
-                j += 1
-    return duplicates
 
 
 def mark_pars_as_read_if_chosen(pars, doc):

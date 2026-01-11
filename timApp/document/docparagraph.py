@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import os
 import shelve
+import sys
 import time
 from collections import defaultdict
 from copy import copy
@@ -227,6 +228,20 @@ class DocParagraph:
         par._cache_props()
         par._compute_hash()
         return par
+
+    @classmethod
+    def from_dicts(cls, doc: Document, par_dicts: list[dict]) -> list[DocParagraph]:
+        """Creates a list of DocParagraphs from a list of dictionaries.
+
+        :param par_dicts: The list of dictionaries.
+        :param doc: The Document object to which these paragraphs are connected.
+        :return: The created list of DocParagraphs.
+        """
+        pars = []
+        for par_dict in par_dicts:
+            par = DocParagraph.from_dict(doc, par_dict)
+            pars.append(par)
+        return pars
 
     def no_macros(self):
         nm = self.attrs.get("nomacros", None)
@@ -732,7 +747,12 @@ class DocParagraph:
             try:
                 auto_number_start = settings.auto_number_start()
                 auto_macros = par.get_auto_macro_values(
-                    macros, env, auto_macro_cache, heading_cache, auto_number_start
+                    macros,
+                    env,
+                    auto_macro_cache,
+                    heading_cache,
+                    auto_number_start,
+                    set(),
                 )
             except RecursionError:
                 raise TimDbException(
@@ -798,17 +818,19 @@ class DocParagraph:
         auto_macro_cache,
         heading_cache,
         auto_number_start,
+        checked_pars: set[str],
     ):
         """Returns the auto macros values for the current paragraph. Auto macros include things like current
         heading/table/figure numbers.
 
+        :param macros: Macros to apply for the paragraph.
+        :param env: Environment for macros.
+        :param auto_macro_cache: The cache object from which to retrieve and store the auto macro data.
         :param heading_cache: A cache object to store headings into. The key is paragraph id and value is a list of headings
          in that paragraph.
-        :param macros: Macros to apply for the paragraph.
-        :param auto_macro_cache: The cache object from which to retrieve and store the auto macro data.
         :param auto_number_start: Object of heading start numbers.
+        :param checked_pars: to follow recursion and avoid infinite loops
         :return: Auto macro values as a dict.
-        :param env: Environment for macros.
         :return: A dict(str, dict(int,int)) containing the auto macro information.
 
         """
@@ -818,16 +840,37 @@ class DocParagraph:
         if cached is not None:
             return cached
 
+        can_recurse = True
+
         prev_par: DocParagraph = self.doc.get_previous_par(self)
-        if prev_par is None or prev_par == self:  # prevent recursion
+        if prev_par is not None:  # chek for too deep rerusion
+            if prev_par == self:
+                can_recurse = False
+                checked_pars.add(self.get_id())
+            elif prev_par.get_id() in checked_pars:
+                can_recurse = False
+            if not can_recurse:
+                sys.stderr.write(
+                    f"WARNING: Preventing infinite recursion in {self.get_doc_id()} "
+                    f"get_auto_macro_values for par {checked_pars}\n"
+                )
+
+        if prev_par is None or not can_recurse:  # prevent recursion
             prev_par_auto_values = {"h": auto_number_start}
             heading_cache[self.get_id()] = []
         else:
+            checked_pars.add(prev_par.get_id())
             prev_par_auto_values = prev_par.get_auto_macro_values(
-                macros, env, auto_macro_cache, heading_cache, auto_number_start
+                macros,
+                env,
+                auto_macro_cache,
+                heading_cache,
+                auto_number_start,
+                checked_pars,
             )
 
-        # If the paragraph is a translation but it has not been translated (empty markdown), we use the md from the original.
+        # If the paragraph is a translation but it has not been translated
+        # (empty markdown), we use the md from the original.
         deref = None
         if prev_par is not None and prev_par.is_translation():
             try:

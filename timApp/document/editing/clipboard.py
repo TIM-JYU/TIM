@@ -5,12 +5,9 @@ from typing import Optional, Any
 
 from timApp.auth.accesshelper import can_see_par_source
 from timApp.document.docparagraph import DocParagraph, is_real_id
-from timApp.document.document import Document, area_renamed
+from timApp.document.document import Document
 from timApp.document.documentparser import DocumentParser
 from timApp.document.documentwriter import DocumentWriter
-from timApp.document.editing.routes import (
-    check_and_rename_attribute,
-)
 from timApp.document.randutils import random_id
 from timApp.timdb.dbaccess import get_files_path
 from timApp.timdb.exceptions import TimDbException
@@ -192,6 +189,11 @@ class Clipboard:
                     doc, new_par_id, par["md"], attrs=par.get("attrs")
                 )
                 new_pars.append(new_par)
+
+            from timApp.document.renameids import (
+                check_and_rename_attribute,
+                area_renamed,
+            )
 
             check_and_rename_attribute("taskId", new_pars, doc)
 
