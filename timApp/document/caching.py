@@ -25,7 +25,8 @@ allowed_cache_routes = {
 DEFAULT_EXPIRE_SECS = 3600 * 24 * 7
 
 
-DocInfoOrDocument = Union[DocInfo, Document]
+# DocInfoOrDocument = Union[DocInfo, Document]
+DocInfoOrDocument = Union["DocInfo", "Document"]
 
 
 @dataclass

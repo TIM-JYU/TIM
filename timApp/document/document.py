@@ -2,9 +2,7 @@ from __future__ import annotations
 
 import json
 import os
-import re
 import shutil
-from collections import Counter
 from dataclasses import dataclass
 from datetime import datetime
 from difflib import SequenceMatcher
@@ -26,7 +24,7 @@ from timApp.document.documentparser import DocumentParser
 from timApp.document.documentparseroptions import DocumentParserOptions
 from timApp.document.documentwriter import DocumentWriter
 from timApp.document.editing.documenteditresult import DocumentEditResult
-from timApp.document.exceptions import DocExistsError, ValidationException
+from timApp.document.exceptions import DocExistsError
 from timApp.document.preloadoption import PreloadOption
 from timApp.document.validationresult import ValidationResult
 from timApp.document.version import Version
@@ -41,16 +39,11 @@ from timApp.util.utils import (
     get_error_html,
     trim_markdown,
     cache_folder_path,
-    strip_not_allowed,
 )
 from tim_common.html_sanitize import presanitize_html_body
 
 if TYPE_CHECKING:
     from timApp.document.docinfo import DocInfo
-
-
-def get_duplicate_id_msg(conflicting_ids):
-    return f'Duplicate paragraph id(s): {", ".join(conflicting_ids)}'
 
 
 def par_list_to_text(sect: list[DocParagraph], export_hashes=False):
@@ -59,189 +52,7 @@ def par_list_to_text(sect: list[DocParagraph], export_hashes=False):
     ).get_text()
 
 
-def split_tail_number(s: str) -> tuple[str, int]:
-    """
-    Returns (text_part, numeric_tail) where numeric_tail is an int if the string ends
-    with digits, otherwise None.
-    """
-    m = re.search(r"(\d+)$", s)
-    if m:
-        text = s[: m.start()]
-        num = int(m.group(1))
-        return text, num
-    return s, 1
-
-
-def get_next_available_name(
-    name: str, names_to_avoid: list[str], allow: str = ""
-) -> str:
-    """
-    Returns next available name by appending/incrementing
-    a trailing number.  If name is not in names_to_avoid,
-    the original name is returned.
-    :param name: current name
-    :param names_to_avoid: names that cannot be used
-    :param allow: name that is allowed even if in names_to_avoid
-    :return: next available name
-    """
-
-    need_new_name = False
-    # First try with original name
-    for old_name in names_to_avoid:
-        if old_name == name and old_name != allow:
-            need_new_name = True
-            break
-
-    # If there was no previous par with the same task id keep it
-    if not need_new_name:
-        return name
-
-    # Otherwise, determine a new one
-    # Split the name into text and trailing number
-    body, number = split_tail_number(name)
-    new_name = body + str(number)
-
-    j = 0
-    while j < len(names_to_avoid):
-        old_name = names_to_avoid[j]
-        if old_name == new_name and old_name != allow:
-            number += 1
-            new_name = body + str(number)
-            j = 0  # restart checking
-        else:
-            j += 1
-    return new_name
-
-
-def area_renamed(
-    new_pars: list[DocParagraph | dict],
-    p: DocParagraph | dict,
-    _old_name: str,
-    new_name: str,
-) -> None:
-    """
-    If area start is renamed, also rename area end accordingly.
-    Despite the oldname, this function finds the end on
-    same level as the start paragraph.
-
-    :param new_pars: list of new paragraphs
-    :param p: starting paragraph
-    :param _old_name: old area name
-    :param new_name: new area name
-    :return: None
-    """
-    try:
-        p_index = new_pars.index(p)
-    except ValueError:
-        return
-
-    area_level = 1
-    # Try to find the corresponding area_end starting from p
-    for i in range(p_index + 1, len(new_pars)):
-        apar = new_pars[i]
-        if isinstance(apar, dict):
-            apar_attrs = apar.get("attrs", {})
-        else:
-            apar_attrs = apar.attrs
-
-        if apar_attrs.get("area_end") is not None:
-            if area_level == 1:
-                apar_attrs["area_end"] = new_name
-                return
-            area_level -= 1
-            if area_level < 0:  # end cannot be before start
-                return
-
-        elif apar_attrs.get("area") is not None:
-            area_level += 1
-
-
-def check_and_rename_new_name(attr_name: str, new_name: str, doc: Document) -> str:
-    """
-    Check if the new_name is already used in document for the given attribute.
-    If so, generate a new name by appending/incrementing a trailing number.
-    :param attr_name: attribute name to check
-    :param new_name: proposed new name
-    :param doc: document where the name is being compared to
-    :return: modified new name
-    """
-    d = {"attrs": {attr_name: new_name}, "id": ""}
-    renamed_pars = check_and_rename_attribute(attr_name, [d], doc)
-    return renamed_pars[0]["attrs"][attr_name]
-
-
-def check_and_rename_attribute(
-    attr_name: str, new_pars: list[DocParagraph | dict], doc: Document, on_rename=None
-):
-    """
-    Rename plugins selected attribute if duplicate found in document.
-    :param attr_name:  attribute name to check and rename
-    :param new_pars:  new blocks to check and rename
-    :param doc: document where the blocks are being compared to
-    :param on_rename: optional callback function called when a rename occurs
-           with the new name as parameter
-    :return: modified blocks with renamed task ids
-    """
-    names_to_check = None  # lazy load for names_to_check
-    names_to_check_map = {}
-    name_counts = {}
-
-    for p in new_pars:
-        # go through all new pars if they need to be renamed
-        if isinstance(p, dict):
-            p_attrs = p.get("attrs", {})
-            p_id = p.get("id")
-        else:
-            p_attrs = p.attrs
-            p_id = p.get_id()
-        p_name = p_attrs.get(attr_name)
-        if p_name is None:
-            continue
-
-        if names_to_check is None:  # now names_to_check is needed, load them once
-            doc_pars = doc.get_paragraphs()
-            names_to_check = []
-            for paragraph in doc_pars:
-                name = paragraph.get_attr(attr_name)
-                if name:
-                    did = paragraph.get_id()
-                    names_to_check.append(name)
-                    names_to_check_map[did] = name
-            name_counts = Counter(n for n in names_to_check if n is not None)
-
-        new_name = strip_not_allowed(p_name)
-        if new_name == "" or new_name == "PLUGINNAMEHERE":
-            # generate a new name that is not used in new_pars or in doc
-            new_name = "a"
-            if p_name == "PLUGINNAMEHERE":  # does not matter for area
-                new_name = "Plugin1"
-            new_names = list(names_to_check or [])
-            for pn in new_pars:  # collect names from new_pars also
-                if isinstance(pn, dict):
-                    pn_attrs = pn.get("attrs", {})
-                else:
-                    pn_attrs = pn.attrs
-                nn = pn_attrs.get(attr_name)
-                if nn:
-                    new_names.append(nn)
-            new_name = get_next_available_name(new_name, new_names)
-        else:
-            # check if the name is already used in doc or renamed new_pars
-            allow = names_to_check_map.get(p_id)
-            if name_counts.get(allow, 0) > 1:
-                allow = None  # if original name is duplicate, do not allow it
-            if new_name != allow:  # if not original for this par in doc
-                new_name = get_next_available_name(new_name, names_to_check, allow)
-        if new_name != p_name:
-            p_attrs[attr_name] = new_name
-        if on_rename:  # for areas do the check even if name not changed
-            on_rename(new_pars, p, p_name, new_name)
-        names_to_check.append(new_name)
-    # TODO: for area ends check that they are renamed also
-    # TODO: if they have no starting par in new_pars
-    return new_pars
-
-
+# noinspection DuplicatedCode
 class Document:
     def __init__(
         self,
@@ -588,6 +399,7 @@ class Document:
     def remove(cls, doc_id: int, ignore_exists=False):
         """Removes the whole document.
 
+        :param ignore_exists: do not raise error if document does not exist.
         :param doc_id: Document id to remove.
         :return:
 
@@ -1044,33 +856,44 @@ class Document:
                         yield {"type": "change", "id": old.get_id(), "content": [new]}
 
     def update_section(
-        self, text: str, par_id_first: str, par_id_last: str
+        self,
+        new_pars: list[DocParagraph],
+        par_id_first: str,
+        par_id_last: str,
+        do_validation: bool = True,
     ) -> tuple[str, str, DocumentEditResult]:
         """Updates a section of the document.
 
-        :param text: The text of the section.
+        :param new_pars: pars to replace the section with.
         :param par_id_first: The id of the paragraph that denotes the start of the section.
         :param par_id_last: The id of the paragraph that denotes the end of the section.
-
+        :param do_validation: throws ValidationException if True and validation issues are found.
+        :return: A tuple of (new_text, old_text, edit_result).
         """
-        dp = DocumentParser(text)
-        dp.add_missing_attributes()
-        vr = dp.validate_structure()
-        vr.raise_if_has_critical_issues()
-        new_pars = dp.get_blocks()
-        check_and_rename_attribute("area", new_pars, self, area_renamed)
-        new_par_id_set = {par["id"] for par in new_pars}
+
+        from timApp.document.renameids import abort_if_duplicate_ids
+
+        # check_and_rename_attribute("area", new_pars, self, area_renamed)
+        new_par_id_set = {par.get_id() for par in new_pars}
         all_pars = [par for par in self]
         all_par_ids = [par.get_id() for par in all_pars]
-        start_index, end_index = all_par_ids.index(par_id_first), all_par_ids.index(
-            par_id_last
-        )
+        start_index = all_par_ids.index(par_id_first)
+        end_index = all_par_ids.index(par_id_last)
         old_pars = all_pars[start_index : end_index + 1]
         other_par_ids = all_par_ids[:]
         del other_par_ids[start_index : end_index + 1]
+        abort_if_duplicate_ids(
+            self,
+            new_pars,
+            auto_rename_ids=True,
+            no_other_checks=True,
+            existing_ids=set(other_par_ids),
+        )
+        """ 
         intersection = new_par_id_set & set(other_par_ids)
         if intersection:
             raise TimDbException("Duplicate id(s): " + str(intersection))
+        """
         return self._perform_update(
             new_pars,
             old_pars,
@@ -1078,6 +901,79 @@ class Document:
             if end_index + 1 < len(all_par_ids)
             else None,
         )
+
+    def _perform_update(
+        self,
+        new_pars: list[DocParagraph],
+        old_pars: list[DocParagraph],
+        last_par_id=None,
+    ) -> tuple[str, str, DocumentEditResult] | tuple[None, None, DocumentEditResult]:
+        old_ids = [par.get_id() for par in old_pars]
+        new_ids = [par.get_id() for par in new_pars]
+        s = SequenceMatcher(None, old_ids, new_ids)
+        opcodes = s.get_opcodes()
+        result = DocumentEditResult()
+        # Do delete operations first to avoid duplicate ids
+        for tag, i1, i2, j1, j2 in [
+            opcode for opcode in opcodes if opcode[0] in ["delete", "replace"]
+        ]:
+            for par, par_id in zip(old_pars[i1:i2], old_ids[i1:i2]):
+                self.delete_paragraph(par_id)
+                result.deleted.append(par)
+        for tag, i1, i2, j1, j2 in opcodes:
+            if tag == "replace":
+                for par in new_pars[j1:j2]:
+                    before_i = self.find_insert_index(i2, old_ids)
+                    inserted = self.insert_paragraph(
+                        par.get_markdown(),
+                        attrs=par.get_attrs(),
+                        par_id=par.get_id(),
+                        insert_before_id=old_ids[before_i]
+                        if before_i < len(old_ids)
+                        else last_par_id,
+                    )
+                    result.added.append(inserted)
+            elif tag == "insert":
+                for par in new_pars[j1:j2]:
+                    before_i = self.find_insert_index(i2, old_ids)
+                    inserted = self.insert_paragraph(
+                        par.get_markdown(),
+                        attrs=par.get_attrs(),
+                        par_id=par.get_id(),
+                        insert_before_id=old_ids[before_i]
+                        if before_i < len(old_ids)
+                        else last_par_id,
+                    )
+                    result.added.append(inserted)
+            elif tag == "equal":
+                for idx, (new_par, old_par) in enumerate(
+                    zip(new_pars[j1:j2], old_pars[i1:i2])
+                ):
+                    if (
+                        new_par.get_hash() != old_par.get_hash()
+                        or new_par.get_attrs() != old_par.get_attrs()
+                    ):
+                        if self.has_paragraph(old_par.get_id()):
+                            self.modify_paragraph(
+                                old_par.get_id(),
+                                new_par.get_markdown(),
+                                new_attrs=new_par.get_attrs(),
+                            )
+                            result.changed.append(old_par)
+                        else:
+                            before_i = self.find_insert_index(j1 + idx, new_ids)
+                            inserted = self.insert_paragraph(
+                                new_par.get_markdown(),
+                                attrs=new_par.get_attrs(),
+                                par_id=new_par.get_id(),
+                                insert_before_id=old_ids[before_i]
+                                if before_i < len(old_ids)
+                                else last_par_id,
+                            )
+                            result.added.append(inserted)
+        if not new_ids:
+            return None, None, result
+        return new_ids[0], new_ids[-1], result
 
     def update(
         self, text: str, original: str, strict_validation=True, regenerate_ids=False
@@ -1102,6 +998,15 @@ class Document:
         # If the original document has validation errors, it probably means the document export routine has a bug.
         dp_orig = DocumentParser(original)
         dp_orig.add_missing_attributes()
+
+        new_pars = DocParagraph.from_dicts(self, new_pars)
+
+        from timApp.document.renameids import abort_if_duplicate_ids
+
+        empty_doc = Document(-1)  # Empty document for id checking
+        abort_if_duplicate_ids(
+            empty_doc, new_pars, auto_rename_ids=True, no_other_checks=False
+        )
         """
         vr = dp_orig.validate_structure()
         try:
@@ -1116,82 +1021,14 @@ class Document:
             )
         """
         blocks = dp_orig.get_blocks()
+        """
         new_ids = {p["id"] for p in new_pars} - {p["id"] for p in blocks}
         conflicting_ids = new_ids & set(self.get_par_ids())
         if conflicting_ids:
             raise ValidationException(get_duplicate_id_msg(conflicting_ids))
-        old_pars = [DocParagraph.from_dict(doc=self, d=d) for d in blocks]
+        """
+        old_pars = DocParagraph.from_dicts(self, blocks)
         return self._perform_update(new_pars, old_pars)
-
-    def _perform_update(
-        self, new_pars: list[dict], old_pars: list[DocParagraph], last_par_id=None
-    ) -> tuple[str, str, DocumentEditResult] | tuple[None, None, DocumentEditResult]:
-        old_ids = [par.get_id() for par in old_pars]
-        new_ids = [par["id"] for par in new_pars]
-        s = SequenceMatcher(None, old_ids, new_ids)
-        opcodes = s.get_opcodes()
-        result = DocumentEditResult()
-        # Do delete operations first to avoid duplicate ids
-        for tag, i1, i2, j1, j2 in [
-            opcode for opcode in opcodes if opcode[0] in ["delete", "replace"]
-        ]:
-            for par, par_id in zip(old_pars[i1:i2], old_ids[i1:i2]):
-                self.delete_paragraph(par_id)
-                result.deleted.append(par)
-        for tag, i1, i2, j1, j2 in opcodes:
-            if tag == "replace":
-                for par in new_pars[j1:j2]:
-                    before_i = self.find_insert_index(i2, old_ids)
-                    inserted = self.insert_paragraph(
-                        par["md"],
-                        attrs=par.get("attrs"),
-                        par_id=par["id"],
-                        insert_before_id=old_ids[before_i]
-                        if before_i < len(old_ids)
-                        else last_par_id,
-                    )
-                    result.added.append(inserted)
-            elif tag == "insert":
-                for par in new_pars[j1:j2]:
-                    before_i = self.find_insert_index(i2, old_ids)
-                    inserted = self.insert_paragraph(
-                        par["md"],
-                        attrs=par.get("attrs"),
-                        par_id=par["id"],
-                        insert_before_id=old_ids[before_i]
-                        if before_i < len(old_ids)
-                        else last_par_id,
-                    )
-                    result.added.append(inserted)
-            elif tag == "equal":
-                for idx, (new_par, old_par) in enumerate(
-                    zip(new_pars[j1:j2], old_pars[i1:i2])
-                ):
-                    if (
-                        new_par["t"] != old_par.get_hash()
-                        or new_par.get("attrs", {}) != old_par.get_attrs()
-                    ):
-                        if self.has_paragraph(old_par.get_id()):
-                            self.modify_paragraph(
-                                old_par.get_id(),
-                                new_par["md"],
-                                new_attrs=new_par.get("attrs"),
-                            )
-                            result.changed.append(old_par)
-                        else:
-                            before_i = self.find_insert_index(j1 + idx, new_ids)
-                            inserted = self.insert_paragraph(
-                                new_par["md"],
-                                attrs=new_par.get("attrs"),
-                                par_id=new_par["id"],
-                                insert_before_id=old_ids[before_i]
-                                if before_i < len(old_ids)
-                                else last_par_id,
-                            )
-                            result.added.append(inserted)
-        if not new_ids:
-            return None, None, result
-        return new_ids[0], new_ids[-1], result
 
     def find_insert_index(self, i2, old_ids):
         before_i = i2
