@@ -8,7 +8,10 @@ from timApp.plugin.plugin import Plugin
 from timApp.tests.server.timroutetest import TimRouteTest
 from timApp.timdb.sqa import db
 
+# TODO: change order in asserts so that expected is first to get better error messages
 
+
+# noinspection DuplicatedCode
 class EditTest(TimRouteTest):
     def test_nonexistent_edit(self):
         self.login_test1()
@@ -54,7 +57,59 @@ class EditTest(TimRouteTest):
         self.assertEqual(r["duplicates"], [])
         r = self.new_par(d.document, "``` {#test plugin=showVideo}\n```")
         pars = d.document.get_paragraphs()
-        self.assertEqual(r["duplicates"], [["test", pars[1].get_id()]])
+        self.assertEqual(r["duplicates"], [])
+        self.assertEqual(pars[1].attrs.get("taskId"), "test1")
+        self.new_par(d.document, "#- {#test}\ntest")
+        pars = d.document.get_paragraphs()
+        self.assertEqual(pars[2].attrs.get("taskId"), "test2")
+
+    def test_edit_block_with_taskid(self):
+        self.login_test1()
+        d = self.create_doc()
+        self.new_par(d.document, "#- {#test}\ntest")
+        pars = d.document.get_paragraphs()
+        id0 = pars[0].get_id()
+        new_text = "#- {#test}\ntest\n#- {#test}\ntest1"
+        self.json_post(
+            "/postParagraph/",
+            {
+                "text": new_text,
+                "docId": d.id,
+                "par": id0,
+            },
+        )
+        d.document.clear_mem_cache()
+        pars = d.document.get_paragraphs()
+        self.assertEqual(2, len(pars))
+        self.assertEqual("test", pars[0].attrs.get("taskId"))
+        self.assertEqual("test1", pars[1].attrs.get("taskId"))
+        self.assertEqual(id0, pars[0].get_id())
+        self.assertNotEqual(id0, pars[1].get_id())
+
+    def test_edit_change_order_of_2_blocks(self):
+        self.login_test1()
+        d = self.create_doc(initial_par=["a1par", "a2par"])
+        pars = d.document.get_paragraphs()
+        new_text = d.document.export_markdown()
+        ln = new_text.splitlines()
+        new_text = f"{ln[3]}\n{ln[4]}\n{ln[2]}\n{ln[0]}\n{ln[1]}\n"
+        self.json_post(
+            "/postParagraph/",
+            {
+                "text": new_text,
+                "docId": d.id,
+                "par": pars[0].get_id(),
+                "par_next": None,
+                "area_start": pars[0].get_id(),
+                "area_end": pars[-1].get_id(),
+            },
+        )
+        d.document.clear_mem_cache()
+        pars = d.document.get_paragraphs()
+        self.assertEqual(new_text, d.document.export_markdown())
+        self.delete_area(d, pars[0].get_id(), pars[-1].get_id())
+        d.document.clear_mem_cache()
+        self.assertEqual([], d.document.get_paragraphs())
 
     def test_area_editing(self):
         self.login_test1()
@@ -78,10 +133,10 @@ class EditTest(TimRouteTest):
             },
         )
         d.document.clear_mem_cache()
-        self.assertEqual(d.document.export_markdown(), new_text)
+        self.assertEqual(new_text, d.document.export_markdown())
         self.delete_area(d, pars[0].get_id(), pars[-1].get_id())
         d.document.clear_mem_cache()
-        self.assertEqual(d.document.get_paragraphs(), [])
+        self.assertEqual([], d.document.get_paragraphs())
 
     def test_get_updates_pars_translation(self):
         self.login_test1()
@@ -132,8 +187,10 @@ class EditTest(TimRouteTest):
                 "original": orig_text,
             },
             expect_status=400,
-            expect_content=f"Errors: <ol><li>Multiple areas with same name noticed for area &#x27;a&#x27; in paragraph {par_ids[0]}, {par_ids[2]}.</li>"
-            + f"<li>Duplicate area end noticed for area &#x27;a&#x27; in paragraph {par_ids[1]}, {par_ids[3]}.</li></ol>",
+            expect_content=f"Errors: <ol><li>Multiple areas with same name noticed "
+            + f"for area &#x27;a&#x27; in paragraph {par_ids[0]}, {par_ids[2]}.</li>"
+            + f"<li>Duplicate area end noticed for area &#x27;a&#x27; "
+            + f"in paragraph {par_ids[1]}, {par_ids[3]}.</li></ol>",
         )
         self.json_post(
             f"/update/{d.id}",
@@ -411,7 +468,7 @@ macros:
     def test_no_unnecessary_update_with_preamble(self):
         self.login_test1()
         d = self.create_doc(initial_par="test")
-        p = self.create_preamble_for(d, initial_par="pr")
+        self.create_preamble_for(d, initial_par="pr")
         self.get(d.url)
         pid = d.document.get_paragraphs()[0].get_id()
         self.post_par(d.document, """hi""", par_id=pid)
@@ -547,12 +604,14 @@ type: drawio
         # untranslated task gets all its plugin attributes from the original
         self.assertEqual(
             pars[0].get_exported_markdown().replace("\n", ""),
-            f'``` {{r="tr" rp="{orig_pars[0].id}"}}data: <svg>translated contents 1</svg>height: 120task: falsetype: drawio```',
+            f'``` {{r="tr" rp="{orig_pars[0].id}"}}data: <svg>translated contents 1</svg>'
+            f"height: 120task: falsetype: drawio```",
         )
         # translated task gets updated height attribute from the translation
         self.assertEqual(
             pars[1].get_exported_markdown().replace("\n", ""),
-            f'``` {{r="tr" rp="{orig_pars[1].id}" rt="MHgxZGQ0NGU4"}}data: <svg>translated contents 2</svg>height: 130task: falsetype: drawio```',
+            f'``` {{r="tr" rp="{orig_pars[1].id}" rt="MHgxZGQ0NGU4"}}'
+            "data: <svg>translated contents 2</svg>height: 130task: falsetype: drawio```",
         )
 
 
