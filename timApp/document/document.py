@@ -568,8 +568,9 @@ class Document:
         options.break_on_normal = break_on_elements
         dp = DocumentParser(text, options)
         dp.add_missing_attributes()
-        vr = dp.validate_structure()
+        vr = ValidationResult()
         if do_validation:
+            vr = dp.validate_structure()
             # vr.raise_if_has_critical_issues()
             vr.raise_if_has_any_issues()
         blocks = [

@@ -366,7 +366,10 @@ def modify_paragraph_common(doc_id: int, md: str, par_id: str, par_next_id: str 
     except ValidationException as e:
         raise RouteException(str(e))
 
-    editor_pars = check_and_rename_pluginnamehere(editor_pars, doc)
+    if len(editor_pars) > 0:
+        editor_pars[0].set_id(par_id)
+
+    # editor_pars = check_and_rename_pluginnamehere(editor_pars, doc)
     check_and_rename_attribute("taskId", editor_pars, doc)
     check_and_rename_attribute("area", editor_pars, doc, area_renamed)
 

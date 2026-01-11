@@ -536,7 +536,17 @@ def normalize_newlines(text: str) -> str:
     return re.sub(NORM_NEWLINES_COMPILED, " ", text)
 
 
-TIM_IDENTS = "a-zA-Z0-9_-"
+""" SQL to find used characters in task IDs:
+SELECT string_agg(DISTINCT ch, '' ORDER BY ch) AS chars_used
+FROM (
+  SELECT substr(task_id, g, 1) AS ch
+  FROM answer
+  CROSS JOIN LATERAL generate_series(1, char_length(task_id)) AS g
+) t
+WHERE ch <> '';
+=>  ,-._0123456789aAåäbBcCdDeEfFgGhHiIjJkKlLmMnNoOöpPqQrRsStTuUvVwWxXyYzZ
+"""
+TIM_IDENTS = "a-zA-Z0-9_-.,/åäöÅÄÖ"
 
 TIM_IDENTS_RE = re.compile(rf"^[{TIM_IDENTS}]*$")
 NOT_TIM_IDENTS_RE = re.compile(rf"[^{TIM_IDENTS}]")
