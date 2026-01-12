@@ -13,8 +13,8 @@ from zipfile import ZipFile, ZIP_DEFLATED
 from flask import render_template_string, Response, send_file
 from flask_babel import gettext
 from marshmallow.utils import missing
-from openpyxl import Workbook
-from openpyxl.writer.excel import ExcelWriter
+from openpyxl import Workbook  # type: ignore[import-untyped]
+from openpyxl.writer.excel import ExcelWriter  # type: ignore[import-untyped]
 from sqlalchemy import select
 from sqlalchemy.orm import selectinload
 from webargs.flaskparser import use_args

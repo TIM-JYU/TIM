@@ -12,7 +12,7 @@ from time import time
 from typing import Iterable, Generator, Optional
 from typing import TYPE_CHECKING
 
-from filelock import FileLock
+from filelock import FileLock, BaseFileLock
 from flask import has_request_context, request
 from lxml import etree, html
 
@@ -273,7 +273,7 @@ class Document:
             if p.is_task():
                 yield p
 
-    def get_lock(self) -> FileLock:
+    def get_lock(self) -> BaseFileLock:
         return FileLock(f"/tmp/doc_{self.doc_id}_lock")
 
     def get_own_settings(self) -> YamlBlock:
@@ -874,7 +874,7 @@ class Document:
         from timApp.document.renameids import abort_if_duplicate_ids
 
         # check_and_rename_attribute("area", new_pars, self, area_renamed)
-        new_par_id_set = {par.get_id() for par in new_pars}
+        # new_par_id_set = {par.get_id() for par in new_pars}
         all_pars = [par for par in self]
         all_par_ids = [par.get_id() for par in all_pars]
         start_index = all_par_ids.index(par_id_first)
@@ -1136,11 +1136,13 @@ class Document:
                             pass
         return refs
 
-    def __load_reflist(self, reflist_name: Path) -> set[int]:
+    @staticmethod
+    def __load_reflist(reflist_name: Path) -> set[int]:
         with reflist_name.open("r") as reffile:
             return set(json.loads(reffile.read()))
 
-    def __save_reflist(self, reflist_name: Path, reflist: set[int]):
+    @staticmethod
+    def __save_reflist(reflist_name: Path, reflist: set[int]):
         f: Path = reflist_name.parent
         f.mkdir(exist_ok=True, parents=True)
 
@@ -1323,7 +1325,7 @@ class Document:
             self.is_incomplete_cache = True
         self.__update_par_map()
 
-    def clear_mem_cache(self):
+    def clear_mem_cache(self) -> None:
         self.par_cache = None
         self.par_map = None
         self.version = None
