@@ -1,5 +1,20 @@
+# python
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
+"""Module for renaming paragraph ids and checking duplicate plugin attributes.
+
+This module deals with both DocParagraph objects and dict representations
+of paragraphs (used when parsing JSON). Comments explain why we coerce
+`attrs` with `or {}` and how lazy-loading of existing document names works.
+
+TODO: In manage check names are leagal?
+TODO: case in edit where new par added before existing with same name?
+
+"""
+
 from __future__ import annotations
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Callable, TypeAlias, Sequence, Any, Optional, TypeVar
 import re
 from collections import Counter
 
@@ -13,6 +28,19 @@ from timApp.answer.answer import Answer
 if TYPE_CHECKING:
     from timApp.document.docparagraph import DocParagraph
     from timApp.document.document import Document
+
+DocParOrDict: TypeAlias = "DocParagraph | dict[str, Any]"
+DocParOrDictT = TypeVar("DocParOrDictT", "DocParagraph", dict[str, Any])
+
+RenameCallback: TypeAlias = Callable[
+    [
+        Sequence[DocParOrDict],
+        DocParOrDict,
+        str,
+        str,
+    ],
+    None,
+]
 
 
 def get_duplicate_id_msg(conflicting_ids: set[str]) -> str:
@@ -74,8 +102,8 @@ def get_next_available_name(
 
 
 def area_renamed(
-    new_pars: list[DocParagraph | dict],
-    p: DocParagraph | dict,
+    new_pars: Sequence[DocParagraph | dict[str, Any]],
+    p: DocParagraph | dict[str, Any],
     _old_name: str,
     new_name: str,
 ) -> None:
@@ -131,8 +159,11 @@ def check_and_rename_new_name(attr_name: str, new_name: str, doc: Document) -> s
 
 
 def check_and_rename_attribute(
-    attr_name: str, new_pars: list[DocParagraph | dict], doc: Document, on_rename=None
-) -> list[DocParagraph | dict]:
+    attr_name: str,
+    new_pars: Sequence[DocParOrDictT],
+    doc: Document,
+    on_rename: Optional[RenameCallback] = None,
+) -> Sequence[DocParOrDictT]:
     """
     Rename plugins selected attribute if duplicate found in document.
     :param attr_name:  attribute name to check and rename
@@ -149,11 +180,12 @@ def check_and_rename_attribute(
     for p in new_pars:
         # go through all new pars if they need to be renamed
         p_id: str
+        p_attrs: dict[str, str]
         if isinstance(p, dict):
-            p_attrs = p.get("attrs", {})
-            p_id = p.get("id")
+            p_attrs = p.get("attrs") or {}
+            p_id = str(p.get("id"))
         else:
-            p_attrs = p.attrs
+            p_attrs = p.attrs or {}
             p_id = p.get_id()
         p_name = p_attrs.get(attr_name)
         if p_name is None:
@@ -178,10 +210,11 @@ def check_and_rename_attribute(
                 new_name = "Plugin1"
             new_names = list(names_to_check or [])
             for pn in new_pars:  # collect names from new_pars also
+                pn_attrs: dict[str, str]
                 if isinstance(pn, dict):
-                    pn_attrs = pn.get("attrs", {})
+                    pn_attrs = pn.get("attrs") or {}
                 else:
-                    pn_attrs = pn.attrs
+                    pn_attrs = pn.attrs or {}
                 nn = pn_attrs.get(attr_name)
                 if nn:
                     new_names.append(nn)
@@ -297,7 +330,7 @@ def check_and_rename_pluginnamehere(
 
 
 # Check new paragraphs with plugins for duplicate task ids
-def check_duplicates(pars, doc) -> list[list[str]]:
+def check_duplicates(pars: list[DocParagraph], doc: Document) -> list[list[str]]:
     duplicates = []
     all_pars = None  # cache all_pars
     for par in pars:
@@ -313,7 +346,7 @@ def check_duplicates(pars, doc) -> list[list[str]]:
                         all_pars.append(paragraph)
 
             duplicate = []
-            task_id = par.get_attr("taskId")
+            # task_id = par.get_attr("taskId")  # already got above
             par_id = par.get_id()
             count_of_same_task_ids = 0
             j = 0
@@ -326,7 +359,7 @@ def check_duplicates(pars, doc) -> list[list[str]]:
                     if count_of_same_task_ids > 0:
                         duplicate.append(task_id)
                         duplicate.append(par.get_id())
-                        task_id_to_check = str(doc.doc_id) + "." + task_id
+                        task_id_to_check = str(doc.doc_id) + "." + str(task_id)
                         if (
                             run_sql(
                                 select(Answer)
