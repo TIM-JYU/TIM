@@ -1226,7 +1226,7 @@ class Document:
         pars = [par for par in self]
         return pars[-1] if pars else None
 
-    def get_par_ids(self, no_preamble=False):
+    def get_par_ids(self, no_preamble=False) -> list[str]:
         self.ensure_par_ids_loaded()
         if self.preamble_included and no_preamble:
             return self.par_ids[len(self.preamble_pars) :]

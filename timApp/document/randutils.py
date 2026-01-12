@@ -35,7 +35,7 @@ def idchecksum(randid):
     return alphanum[0] if check_digit == 0 else alphanum[n_alphanum - check_digit]
 
 
-def random_id():
+def random_id() -> str:
     randid = "".join(random.choice(alphanum) for _ in range(11))
     return randid + idchecksum(randid)
 

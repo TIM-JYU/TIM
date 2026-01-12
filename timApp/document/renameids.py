@@ -15,7 +15,7 @@ if TYPE_CHECKING:
     from timApp.document.document import Document
 
 
-def get_duplicate_id_msg(conflicting_ids):
+def get_duplicate_id_msg(conflicting_ids: set[str]) -> str:
     return f'Duplicate paragraph id(s): {", ".join(conflicting_ids)}'
 
 
@@ -132,7 +132,7 @@ def check_and_rename_new_name(attr_name: str, new_name: str, doc: Document) -> s
 
 def check_and_rename_attribute(
     attr_name: str, new_pars: list[DocParagraph | dict], doc: Document, on_rename=None
-):
+) -> list[DocParagraph | dict]:
     """
     Rename plugins selected attribute if duplicate found in document.
     :param attr_name:  attribute name to check and rename
@@ -142,12 +142,13 @@ def check_and_rename_attribute(
            with the new name as parameter
     :return: modified blocks with renamed task ids
     """
-    names_to_check = None  # lazy load for names_to_check
-    names_to_check_map = {}
-    name_counts = {}
+    names_to_check: list[str] | None = None  # lazy load for names_to_check
+    names_to_check_map: dict[str, str] = {}
+    name_counts: dict[str, int] = {}
 
     for p in new_pars:
         # go through all new pars if they need to be renamed
+        p_id: str
         if isinstance(p, dict):
             p_attrs = p.get("attrs", {})
             p_id = p.get("id")
@@ -187,11 +188,13 @@ def check_and_rename_attribute(
             new_name = get_next_available_name(new_name, new_names)
         else:
             # check if the name is already used in doc or renamed new_pars
-            allow = names_to_check_map.get(p_id)
+            allow: str = names_to_check_map.get(p_id, "")
             if name_counts.get(allow, 0) > 1:
-                allow = None  # if original name is duplicate, do not allow it
+                allow = ""  # if original name is duplicate, do not allow it
             if new_name != allow:  # if not original for this par in doc
-                new_name = get_next_available_name(new_name, names_to_check, allow)
+                new_name = get_next_available_name(
+                    new_name, names_to_check or [], allow
+                )
         if new_name != p_name:
             p_attrs[attr_name] = new_name
         if on_rename:  # for areas do the check even if name not changed
@@ -208,7 +211,8 @@ def abort_if_duplicate_ids(
     auto_rename_ids: bool = False,
     no_other_checks: bool = False,
     existing_ids: set[str] | None = None,
-):
+    allow_id: str = "",
+) -> None:
     """
     Aborts the request if any of the paragraphs
     to be added have IDs that conflict with existing
@@ -222,11 +226,12 @@ def abort_if_duplicate_ids(
     :param no_other_checks: If True, skips other checks except for duplicate IDs.
     :param existing_ids: Optional set of existing paragraph IDs to check against.
                          If None, the IDs are fetched from the document.
+    :param allow_id: for example first editing par id that is allowed even if duplicate
     :raises RouteException: If there are conflicting paragraph IDs and auto_rename_ids is False.
     """
     ids_set: set[str] = set()
-    internal_duplicates = set()
-    dupls: dict[str, [DocParagraph]] = {}
+    internal_duplicates: set[str] = set()
+    dupls: dict[str, list[DocParagraph]] = {}
     for p in pars_to_add:
         pid = p.get_id()
         if pid in ids_set:
@@ -236,7 +241,7 @@ def abort_if_duplicate_ids(
 
     if existing_ids is None:
         existing_ids = set(doc.get_par_ids())
-    conflicting_ids = ids_set & existing_ids
+    conflicting_ids = ids_set & existing_ids - {allow_id}
 
     if (conflicting_ids or internal_duplicates) and not auto_rename_ids:
         raise RouteException(
@@ -258,9 +263,11 @@ def abort_if_duplicate_ids(
     check_and_rename_attribute("area", pars_to_add, doc, area_renamed)
 
 
-def check_and_rename_pluginnamehere(blocks: list[DocParagraph], doc: Document):
+def check_and_rename_pluginnamehere(
+    blocks: list[DocParagraph], doc: Document
+) -> list[DocParagraph]:
     # Automatically rename plugins with name pluginnamehere
-    old_pars = None  # lazy load for old_pars
+    old_pars: list[DocParagraph] | None = None  # lazy load for old_pars
     i = 1
     j = 0
     # For all blocks check if taskId is pluginnamehere, if it is find next available name.
@@ -290,7 +297,7 @@ def check_and_rename_pluginnamehere(blocks: list[DocParagraph], doc: Document):
 
 
 # Check new paragraphs with plugins for duplicate task ids
-def check_duplicates(pars, doc):
+def check_duplicates(pars, doc) -> list[list[str]]:
     duplicates = []
     all_pars = None  # cache all_pars
     for par in pars:

@@ -843,7 +843,7 @@ class DocParagraph:
         can_recurse = True
 
         prev_par: DocParagraph = self.doc.get_previous_par(self)
-        if prev_par is not None:  # chek for too deep rerusion
+        if prev_par is not None:  # check for too deep recursion
             if prev_par == self:
                 can_recurse = False
                 checked_pars.add(self.get_id())
@@ -997,7 +997,7 @@ class DocParagraph:
         self._cache_props()
         self._compute_hash()
 
-    def is_task(self):
+    def is_task(self) -> bool:
         """Returns whether the paragraph is a task."""
         return (
             self.get_attr("taskId") is not None and self.get_attr("plugin") is not None
