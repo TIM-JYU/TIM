@@ -8,7 +8,7 @@ This module deals with both DocParagraph objects and dict representations
 of paragraphs (used when parsing JSON). Comments explain why we coerce
 `attrs` with `or {}` and how lazy-loading of existing document names works.
 
-TODO: In manage check names are leagal?
+TODO: In manage check names are legal?
 TODO: case in edit where new par added before existing with same name?
 
 """
