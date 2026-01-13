@@ -364,9 +364,6 @@ def modify_paragraph_common(doc_id: int, md: str, par_id: str, par_next_id: str 
     except ValidationException as e:
         raise RouteException(str(e))
 
-    if len(editor_pars) > 0 and not editing_area:
-        editor_pars[0].set_id(par_id)
-
     # editor_pars = check_and_rename_pluginnamehere(editor_pars, doc)
 
     if editing_area:
@@ -383,6 +380,10 @@ def modify_paragraph_common(doc_id: int, md: str, par_id: str, par_next_id: str 
         except (ValidationException, TimDbException) as e:
             raise RouteException(str(e))
     else:
+        # TODO: if par_id found in some other editing_area do not add
+        if len(editor_pars) > 0:
+            editor_pars[0].set_id(par_id)
+
         try:
             original_par = doc.get_paragraph(par_id)
         except TimDbException as e:
