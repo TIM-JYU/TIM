@@ -152,7 +152,7 @@ class EditTest(TimRouteTest):
         d.document.clear_mem_cache()
         pars = d.document.get_paragraphs()
         self.assertEqual(2, len(pars))
-        # TODO: next should be oposite?
+        # TODO: next should be opposite?
         self.assertEqual(p1ar_id, pars[0].get_id())
         self.assertNotEqual(p1ar_id, pars[1].get_id())
         self.assertEqual("test1", pars[0].get_attrs().get("taskId"))
