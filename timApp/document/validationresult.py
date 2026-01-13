@@ -6,8 +6,18 @@ from timApp.document.exceptions import ValidationException
 OptionalParId = Optional[str]
 
 
-class ValidationIssue:
+class ValidationIssueBase:
     def __init__(self, par_id: OptionalParId):
+        self.par_id = par_id
+
+    @property
+    def issue_name(self):
+        return "Issue"
+
+
+class ValidationIssue(ValidationIssueBase):
+    def __init__(self, par_id: OptionalParId):
+        super().__init__(par_id)
         self.par_id = par_id
 
     def __str__(self):
@@ -106,6 +116,18 @@ class DuplicateParagraphId(ValidationIssue):
     @property
     def issue_name(self):
         return "Duplicate paragraph id"
+
+
+class IllegalId(ValidationIssueBase):
+    def __init__(self, par_id: str):
+        super().__init__(par_id)
+
+    def __str__(self):
+        return f"{self.issue_name} {self.par_id}"
+
+    @property
+    def issue_name(self):
+        return "Illegal chars in"
 
 
 class ValidationResult:

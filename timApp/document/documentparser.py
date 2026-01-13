@@ -15,8 +15,9 @@ from timApp.document.validationresult import (
     AreaEndWithoutStart,
     DuplicateAreaEnd,
     AreaWithoutEnd,
+    IllegalId,
 )
-from timApp.util.utils import count_chars_from_beginning
+from timApp.util.utils import count_chars_from_beginning, is_valid_tim_indetifier
 
 
 class DocReader:
@@ -170,12 +171,16 @@ class DocumentParser:
             attrs = r.get("attrs", {})
             task_id = attrs.get("taskId")
             if task_id:
+                if not is_valid_tim_indetifier(task_id):
+                    result.add_issue(IllegalId(f"taskId '{task_id}'"))
                 found_tasks.add(task_id, curr_id)
                 if task_id in found_tasks.set:
                     result.add_issue(DuplicateTaskId(found_tasks.map[task_id], task_id))
                 found_tasks.add(task_id)
             area = attrs.get("area")
             if area:
+                if not is_valid_tim_indetifier(area):
+                    result.add_issue(IllegalId(f"area name '{area}'"))
                 found_areas.add(area, curr_id)
                 if area in found_areas.set:
                     result.add_issue(
