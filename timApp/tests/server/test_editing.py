@@ -281,6 +281,52 @@ class EditTest(TimRouteTest):
         d.document.clear_mem_cache()
         self.assertEqual([], d.document.get_paragraphs())
 
+    def test_edit_change_order_of_2_blocks_add_new_before_in_and_end(self):
+        self.login_test1()
+        d = self.create_doc(initial_par=["#- {#test1}\na1par", "#- {#test2}\na2par"])
+        pars = d.document.get_paragraphs()
+        par1_id = pars[0].get_id()
+        par2_id = pars[1].get_id()
+        new_text = d.document.export_markdown()
+        ln = new_text.splitlines()
+        new_text = (
+            "#- {#test1}\na0par\n"
+            f"{ln[3]}\n{ln[4]}\n"
+            f"{ln[2]}\n"
+            "#- {#test1}\na3par\n"
+            f"{ln[0]}\n{ln[1]}\n"
+            "#- {#test2}\na4par\n"
+        )
+        self.json_post(
+            "/postParagraph/",
+            {
+                "text": new_text,
+                "docId": d.id,
+                "par": pars[0].get_id(),
+                "par_next": None,
+                "area_start": pars[0].get_id(),
+                "area_end": pars[-1].get_id(),
+            },
+        )
+        d.document.clear_mem_cache()
+        pars = d.document.get_paragraphs()
+        # print(d.document.export_markdown())
+        self.assertNotEqual(par1_id, pars[0].get_id())
+        self.assertEqual(par2_id, pars[1].get_id())
+        self.assertNotEqual(par1_id, pars[2].get_id())
+        self.assertEqual(par1_id, pars[3].get_id())
+        self.assertNotEqual(par1_id, pars[4].get_id())
+        self.assertEqual("test3", pars[0].get_attrs().get("taskId"))
+        self.assertEqual("test2", pars[1].get_attrs().get("taskId"))
+        self.assertEqual("test4", pars[2].get_attrs().get("taskId"))
+        self.assertEqual("test1", pars[3].get_attrs().get("taskId"))
+        self.assertEqual("test5", pars[4].get_attrs().get("taskId"))
+        self.assertEqual("a0par", pars[0].get_markdown())
+        self.assertEqual("a2par", pars[1].get_markdown())
+        self.assertEqual("a3par", pars[2].get_markdown())
+        self.assertEqual("a1par", pars[3].get_markdown())
+        self.assertEqual("a4par", pars[4].get_markdown())
+
     def test_illegal_chars_in_task_id(self):
         self.login_test1()
         d = self.create_doc(initial_par=["test1"])
