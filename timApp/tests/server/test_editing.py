@@ -251,12 +251,16 @@ class EditTest(TimRouteTest):
         pars = d.document.get_paragraphs()
         self.assertEqual(3, len(pars))
         self.assertEqual(pid, pars[0].get_id())
-        self.assertEqual("test", pars[0].attrs.get("taskId"))
         self.assertNotEqual(pid, pars[1].get_id())
+        self.assertNotEqual(pid, pars[2].get_id())
+        self.assertEqual("test", pars[0].attrs.get("taskId"))
         self.assertEqual("test1", pars[1].attrs.get("taskId"))
         self.assertEqual("test2", pars[2].attrs.get("taskId"))
 
     def test_edit_change_order_of_2_blocks(self):
+        """
+        Edit selection of 2 bocks that changes the order of blocks.
+        """
         self.login_test1()
         d = self.create_doc(initial_par=["a1par", "a2par"])
         pars = d.document.get_paragraphs()
@@ -280,6 +284,48 @@ class EditTest(TimRouteTest):
         self.delete_area(d, pars[0].get_id(), pars[-1].get_id())
         d.document.clear_mem_cache()
         self.assertEqual([], d.document.get_paragraphs())
+
+    def test_edit_one_block_selection(self):
+        """
+        Edit on block selection that adds
+        new blocks before and after the selection.
+        Renames taskIds correctly and keeps blockID.
+        """
+        self.login_test1()
+        d = self.create_doc(initial_par=["#- {#test1}\na1par", "\n#- {#test2}\na3par"])
+        pars = d.document.get_paragraphs()
+        par1_id = pars[0].get_id()
+        par4_id = pars[1].get_id()
+        new_text = d.document.export_markdown()
+        ln = new_text.splitlines()
+        new_text = "#- {#test1}\na0par\n" f"{ln[0]}\n{ln[1]}\n" "#- {#test1}\na2par\n"
+        self.json_post(
+            "/postParagraph/",
+            {
+                "text": new_text,
+                "docId": d.id,
+                "par": par1_id,
+                "par_next": None,
+                "area_start": par1_id,
+                "area_end": par1_id,
+            },
+        )
+        d.document.clear_mem_cache()
+        pars = d.document.get_paragraphs()
+        # print(d.document.export_markdown())
+        self.assertEqual(4, len(pars))
+        self.assertNotEqual(par1_id, pars[0].get_id())
+        self.assertEqual(par1_id, pars[1].get_id())
+        self.assertNotEqual(par1_id, pars[2].get_id())
+        self.assertEqual(par4_id, pars[3].get_id())
+        self.assertEqual("test3", pars[0].get_attrs().get("taskId"))
+        self.assertEqual("test1", pars[1].get_attrs().get("taskId"))
+        self.assertEqual("test4", pars[2].get_attrs().get("taskId"))
+        self.assertEqual("test2", pars[3].get_attrs().get("taskId"))
+        self.assertEqual("a0par", pars[0].get_markdown())
+        self.assertEqual("a1par", pars[1].get_markdown())
+        self.assertEqual("a2par", pars[2].get_markdown())
+        self.assertEqual("a3par", pars[3].get_markdown())
 
     def test_edit_change_order_of_2_blocks_add_new_before_in_and_end(self):
         self.login_test1()
