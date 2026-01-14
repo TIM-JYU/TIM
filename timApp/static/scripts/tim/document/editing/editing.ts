@@ -282,7 +282,10 @@ export class EditingHandler {
         const ctx = params.type === EditType.Edit ? params.pars : undefined;
         const parNextId = getNextId(params);
 
-        if (params.type === EditType.Edit && params.pars.hasMultiple()) {
+        if (
+            params.type === EditType.Edit &&
+            (params.pars.hasMultiple() || params.pars.forceIds)
+        ) {
             areaStart = params.pars.start.originalPar.id;
             areaEnd = params.pars.end.originalPar.id;
             url = "/postParagraph/";
@@ -331,7 +334,7 @@ export class EditingHandler {
             cursorPos = initialText.indexOf(CURSOR);
             initialText = initialText.replace(CURSOR, "");
         } else if (options.showDelete && ctx) {
-            const r = await this.getBlock(ctx);
+            const r = await this.getBlock(ctx, ctx.forceIds);
             if (r.ok) {
                 initialText = r.result.data.text;
             } else {
@@ -448,17 +451,18 @@ This will delete the whole ${
         this.viewctrl.editing = false;
     }
 
-    private async getBlock(sel: ParSelection) {
+    private async getBlock(sel: ParSelection, forceIds: boolean = false) {
         return await to(
             $http.get<{text: string}>(
                 `/getBlock/${this.viewctrl.docId}/${sel.start.originalPar.id}`,
                 {
-                    params: sel.hasMultiple()
-                        ? {
-                              area_start: sel.start.originalPar.id,
-                              area_end: sel.end.originalPar.id,
-                          }
-                        : undefined,
+                    params:
+                        sel.hasMultiple() || forceIds
+                            ? {
+                                  area_start: sel.start.originalPar.id,
+                                  area_end: sel.end.originalPar.id,
+                              }
+                            : undefined,
                 }
             )
         );
@@ -561,6 +565,7 @@ auto_number_headings: 0${CURSOR}
     }
 
     editSelection(e: MouseEvent, sel: UnbrokenSelection) {
+        sel.forceIds = true;
         this.toggleParEditor({type: EditType.Edit, pars: sel}, {});
     }
 
