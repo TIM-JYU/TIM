@@ -31,6 +31,7 @@ from timApp.markdown.markdownconverter import (
     AutoCounters,
 )
 from timApp.timdb.exceptions import TimDbException, InvalidReferenceException
+from timApp.util.logger import log_error
 from timApp.util.rndutils import get_rands_as_dict, SeedType
 from timApp.util.utils import (
     count_chars_from_beginning,
@@ -850,8 +851,8 @@ class DocParagraph:
             elif prev_par.get_id() in checked_pars:
                 can_recurse = False
             if not can_recurse:
-                sys.stderr.write(
-                    f"WARNING: Preventing infinite recursion in {self.get_doc_id()} "
+                log_error(
+                    f"Preventing infinite recursion in {self.get_doc_id()} "
                     f"get_auto_macro_values for par {checked_pars}\n"
                 )
 
