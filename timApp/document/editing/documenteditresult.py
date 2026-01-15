@@ -9,10 +9,12 @@ class DocumentEditResult:
         added: list[DocParagraph] | None = None,
         deleted: list[DocParagraph] | None = None,
         changed: list[DocParagraph] | None = None,
+        changes: Optional[list[str]] = None,
     ):
         self.added: list[DocParagraph] = added or []
         self.deleted: list[DocParagraph] = deleted or []
         self.changed: list[DocParagraph] = changed or []
+        self.changes: Optional[list[str]] = changes or None
 
     @property
     def empty(self):

@@ -5,7 +5,7 @@ import tempfile
 import zipfile
 from dataclasses import field
 
-from flask import Blueprint, render_template
+from flask import Blueprint, render_template, Response
 from flask import current_app
 from flask import request
 from pypandoc import convert_file
@@ -368,8 +368,10 @@ def modify_paragraph_common(doc_id: int, md: str, par_id: str, par_next_id: str 
 
     if editing_area:
         try:
-            check_and_rename_attribute("taskId", editor_pars, doc)
-            check_and_rename_attribute("area", editor_pars, doc, area_renamed)
+            # changes = check_and_rename_attribute("taskId", editor_pars, doc)[1]
+            # changes += check_and_rename_attribute(
+            #    "area", editor_pars, doc, area_renamed
+            # )[1]
             curr_section = doc.get_section(area_start, area_end)
             for p in curr_section:
                 verify_par_edit_access(p)
@@ -390,19 +392,21 @@ def modify_paragraph_common(doc_id: int, md: str, par_id: str, par_next_id: str 
             raise NotExist(str(e))
         edit_result = DocumentEditResult()
         pars = []
-        abort_if_duplicate_ids(
+        changes = abort_if_duplicate_ids(
             doc,
             editor_pars,
             auto_rename_ids=True,
             no_other_checks=False,
             allow_id=par_id,
         )
+        edit_result.changes = changes
         pars_to_add = editor_pars[1:]
 
         p = editor_pars[0]
         # The ID of the first paragraph needs to match the ID of the paragraph to modify
         # This is needed for any edit logic that requires the ID of the paragraph (e.g. heading numbering)
         p.set_id(par_id)
+
         tr_opt = edit_request.mark_translated
         if tr_opt is None:
             pass
@@ -666,7 +670,7 @@ def par_response(
             p.output = r.new_html
 
     final_texts = post_process_result.texts
-    r = json_response(
+    r: Response = json_response(
         {
             "texts": render_template(
                 "partials/paragraphs.jinja2",
@@ -703,6 +707,7 @@ def par_response(
             if original_par
             else None,
             "new_par_ids": edit_result.new_par_ids if edit_result else None,
+            "changes": edit_result.changes if edit_result else None,
         }
     )
     db.session.commit()
@@ -977,7 +982,7 @@ def name_area(doc_id, area_name):
         raise RouteException("Invalid area name")
 
     doc = docentry.document_as_current_user
-    area_name = check_and_rename_new_name("area", area_name, doc)
+    area_name, changes = check_and_rename_new_name("area", area_name, doc)
 
     area_attrs = {"area": area_name}
     area_title = ""
