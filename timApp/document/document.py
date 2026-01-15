@@ -35,6 +35,7 @@ from timApp.timdb.exceptions import (
     PreambleException,
     InvalidReferenceException,
 )
+from timApp.util.logger import log_error
 from timApp.util.utils import (
     get_error_html,
     trim_markdown,
@@ -328,7 +329,10 @@ class Document:
                 getattr(self.docinfo, "metadata", None), "info", None
             )
             if metadata_info:
-                metadata_info["errors"] = str(vr)
+                err = str(vr)
+                if err:
+                    metadata_info["errors"] = err
+                    log_error(err)
         if with_tl:
             return "\n".join(
                 [par.get_exported_markdown(export_ids=export_ids) for par in pars]
