@@ -332,7 +332,7 @@ class Document:
                 err = str(vr)
                 if err:
                     metadata_info["errors"] = err
-                    log_error(err)
+                    log_error(str(self.doc_id) + ": " + err)
         if with_tl:
             return "\n".join(
                 [par.get_exported_markdown(export_ids=export_ids) for par in pars]
