@@ -436,6 +436,14 @@ This will delete the whole ${
                     } else {
                         this.addSavedParToDom(saveData, params);
                     }
+                    if (saveData.changes && saveData.changes.length > 0) {
+                        let chs = "<ul>";
+                        for (const ch of saveData.changes) {
+                            chs += `<li>${ch}</li>`;
+                        }
+                        chs += "</ul>";
+                        await showMessageDialog(chs);
+                    }
                 }
                 return {};
             },

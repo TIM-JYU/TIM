@@ -882,11 +882,11 @@ class Document:
         old_pars = all_pars[start_index : end_index + 1]
         other_par_ids = all_par_ids[:]
         del other_par_ids[start_index : end_index + 1]
-        abort_if_duplicate_ids(
+        changes = abort_if_duplicate_ids(
             self,
             new_pars,
             auto_rename_ids=True,
-            no_other_checks=True,
+            no_other_checks=False,
             existing_ids=set(other_par_ids),
         )
         """ 
@@ -894,13 +894,16 @@ class Document:
         if intersection:
             raise TimDbException("Duplicate id(s): " + str(intersection))
         """
-        return self._perform_update(
+        id1, id2, result = self._perform_update(
             new_pars,
             old_pars,
             last_par_id=all_par_ids[end_index + 1]
             if end_index + 1 < len(all_par_ids)
             else None,
         )
+        if changes:
+            result.changes = changes
+        return id1, id2, result
 
     def _perform_update(
         self,

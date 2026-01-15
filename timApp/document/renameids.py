@@ -1,6 +1,6 @@
-# python
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+# python
 
 """Module for renaming paragraph ids and checking duplicate plugin attributes.
 
@@ -39,7 +39,7 @@ RenameCallback: TypeAlias = Callable[
         str,
         str,
     ],
-    None,
+    list[str],
 ]
 
 
@@ -106,7 +106,7 @@ def area_renamed(
     p: DocParagraph | dict[str, Any],
     _old_name: str,
     new_name: str,
-) -> None:
+) -> list[str]:
     """
     If area start is renamed, also rename area end accordingly.
     Despite the oldname, this function finds the end on
@@ -121,7 +121,9 @@ def area_renamed(
     try:
         p_index = new_pars.index(p)
     except ValueError:
-        return
+        return []
+
+    changes: list[str] = []
 
     area_level = 1
     # Try to find the corresponding area_end starting from p
@@ -133,29 +135,41 @@ def area_renamed(
             apar_attrs = apar.attrs
 
         if apar_attrs.get("area_end") is not None:
+            old_name = apar_attrs["area_end"]
+            p_id = apar.get("id") if isinstance(apar, dict) else apar.get_id()
             if area_level == 1:
-                apar_attrs["area_end"] = new_name
-                return
+                if new_name != old_name:
+                    apar_attrs["area_end"] = new_name
+                    changes.append(
+                        f"Renamed area_end '{old_name}' to '{new_name}' in '{p_id}'"
+                    )
+                return changes
             area_level -= 1
             if area_level < 0:  # end cannot be before start
-                return
+                changes.append(
+                    f"Warning: area end '{old_name}' found before matching area start. in '{p_id}'"
+                )
+                return changes
 
         elif apar_attrs.get("area") is not None:
             area_level += 1
+    return changes
 
 
-def check_and_rename_new_name(attr_name: str, new_name: str, doc: Document) -> str:
+def check_and_rename_new_name(
+    attr_name: str, new_name: str, doc: Document
+) -> tuple[str, list[str]]:
     """
     Check if the new_name is already used in document for the given attribute.
     If so, generate a new name by appending/incrementing a trailing number.
     :param attr_name: attribute name to check
     :param new_name: proposed new name
     :param doc: document where the name is being compared to
-    :return: modified new name
+    :return: modified new name, changes
     """
     d = {"attrs": {attr_name: new_name}, "id": ""}
-    renamed_pars = check_and_rename_attribute(attr_name, [d], doc)
-    return renamed_pars[0]["attrs"][attr_name]
+    renamed_pars, changes = check_and_rename_attribute(attr_name, [d], doc)
+    return renamed_pars[0]["attrs"][attr_name], changes
 
 
 def check_and_rename_attribute(
@@ -163,7 +177,7 @@ def check_and_rename_attribute(
     new_pars: Sequence[DocParOrDictT],
     doc: Document,
     on_rename: Optional[RenameCallback] = None,
-) -> Sequence[DocParOrDictT]:
+) -> tuple[Sequence[DocParOrDictT], list[str]]:
     """
     Rename plugins selected attribute if duplicate found in document.
     :param attr_name:  attribute name to check and rename
@@ -176,6 +190,7 @@ def check_and_rename_attribute(
     names_to_check: list[str] | None = None  # lazy load for names_to_check
     names_to_check_map: dict[str, str] = {}
     name_counts: dict[str, int] = {}
+    changes: list[str] = []
 
     for p in new_pars:
         # go through all new pars if they need to be renamed
@@ -230,12 +245,15 @@ def check_and_rename_attribute(
                 )
         if new_name != p_name:
             p_attrs[attr_name] = new_name
+            changes.append(
+                f"Renamed {attr_name} '{p_name}' to '{new_name}' in '{p_id}'"
+            )
         if on_rename:  # for areas do the check even if name not changed
-            on_rename(new_pars, p, p_name, new_name)
+            changes += on_rename(new_pars, p, p_name, new_name)
         names_to_check.append(new_name)
     # TODO: for area ends check that they are renamed also
     # TODO: if they have no starting par in new_pars
-    return new_pars
+    return new_pars, changes
 
 
 def abort_if_duplicate_ids(
@@ -245,7 +263,7 @@ def abort_if_duplicate_ids(
     no_other_checks: bool = False,
     existing_ids: set[str] | None = None,
     allow_id: str = "",
-) -> None:
+) -> list[str]:
     """
     Aborts the request if any of the paragraphs
     to be added have IDs that conflict with existing
@@ -261,10 +279,12 @@ def abort_if_duplicate_ids(
                          If None, the IDs are fetched from the document.
     :param allow_id: for example first editing par id that is allowed even if duplicate
     :raises RouteException: If there are conflicting paragraph IDs and auto_rename_ids is False.
+    :return: List of changes made (e.g., renamings).
     """
     ids_set: set[str] = set()
     internal_duplicates: set[str] = set()
     dupls: dict[str, list[DocParagraph]] = {}
+    changes: list[str] = []
     for p in pars_to_add:
         pid = p.get_id()
         if pid in ids_set:
@@ -284,16 +304,23 @@ def abort_if_duplicate_ids(
     if conflicting_ids:  # conflicting with existing IDs in the document
         for p in pars_to_add:
             if p.get_id() in conflicting_ids:
-                p.set_id(random_id())
+                old_id = p.get_id()
+                new_id = random_id()
+                changes.append(f"Renamed paragraph id '{old_id}' to '{new_id}'")
+                p.set_id(new_id)
     for pid in internal_duplicates:  # internal duplicates
         cpars = dupls[pid]
         for p in cpars:
-            p.set_id(random_id())
+            old_id = p.get_id()
+            new_id = random_id()
+            changes.append(f"Renamed paragraph id '{old_id}' to '{new_id}'")
+            p.set_id(new_id)
 
     if no_other_checks:
-        return
-    check_and_rename_attribute("taskId", pars_to_add, doc)
-    check_and_rename_attribute("area", pars_to_add, doc, area_renamed)
+        return changes
+    changes += check_and_rename_attribute("taskId", pars_to_add, doc)[1]
+    changes += check_and_rename_attribute("area", pars_to_add, doc, area_renamed)[1]
+    return changes
 
 
 def check_and_rename_pluginnamehere(
