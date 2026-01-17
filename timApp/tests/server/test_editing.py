@@ -383,7 +383,7 @@ class EditTest(TimRouteTest):
                 "original": "",
             },
             expect_status=400,
-            expect_content="Illegal chars in taskId 'test1@!'",
+            expect_content="Illegal chars in taskId &amp;#x27;test1@!&amp;#x27;",
         )
         self.json_post(
             f"/update/{d.id}",
@@ -392,9 +392,9 @@ class EditTest(TimRouteTest):
                 "original": "",
             },
             expect_status=400,
-            expect_content="Errors: <ol>"
-            "<li>Illegal chars in taskId &#x27;test1@!&#x27;</li>"
-            "<li>Illegal chars in taskId &#x27;%test2@%&#x27;</li>"
+            expect_content="<ol>"
+            "<li>Illegal chars in taskId &amp;#x27;test1@!&amp;#x27;</li>"
+            "<li>Illegal chars in taskId &amp;#x27;%test2@%&amp;#x27;</li>"
             "</ol>",
         )
 
@@ -408,7 +408,7 @@ class EditTest(TimRouteTest):
                 "original": "",
             },
             expect_status=400,
-            expect_content="Illegal chars in area name 'test1@!'",
+            expect_content="Illegal chars in area name &amp;#x27;test1@!&amp;#x27;",
         )
 
     def test_area_editing(self):
@@ -487,9 +487,9 @@ class EditTest(TimRouteTest):
                 "original": orig_text,
             },
             expect_status=400,
-            expect_content=f"Errors: <ol><li>Multiple areas with same name noticed "
-            + f"for area &#x27;a&#x27; in paragraph {par_ids[0]}, {par_ids[2]}.</li>"
-            + f"<li>Duplicate area end noticed for area &#x27;a&#x27; "
+            expect_content=f"<ol><li>Multiple areas with same name noticed "
+            + f"for area &amp;#x27;a&amp;#x27; in paragraph {par_ids[0]}, {par_ids[2]}.</li>"
+            + f"<li>Duplicate area end noticed for area &amp;#x27;a&amp;#x27; "
             + f"in paragraph {par_ids[1]}, {par_ids[3]}.</li></ol>",
         )
         self.json_post(

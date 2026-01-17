@@ -14,11 +14,13 @@ TODO: if par_id found in some other editing_area do not add
 """
 
 from __future__ import annotations
+
+from html import escape
 from typing import TYPE_CHECKING, Callable, TypeAlias, Sequence, Any, Optional, TypeVar
 import re
 from collections import Counter
 
-from timApp.document.randutils import random_id
+from timApp.document.randutils import random_id, is_valid_id
 from timApp.timdb.sqa import run_sql
 from timApp.util.flask.requesthelper import RouteException
 from timApp.util.utils import strip_not_allowed
@@ -246,7 +248,7 @@ def check_and_rename_attribute(
         if new_name != p_name:
             p_attrs[attr_name] = new_name
             changes.append(
-                f"Renamed {attr_name} '{p_name}' to '{new_name}' in '{p_id}'"
+                f"Renamed {escape(attr_name)} '{escape(p_name)}' to '{escape(new_name)}' in '{p_id}'"
             )
         if on_rename:  # for areas do the check even if name not changed
             changes += on_rename(new_pars, p, p_name, new_name)
@@ -287,6 +289,13 @@ def abort_if_duplicate_ids(
     changes: list[str] = []
     for p in pars_to_add:
         pid = p.get_id()
+        if not is_valid_id(pid):
+            old_id = pid
+            pid = random_id()
+            changes.append(
+                f"Renamed invalid paragraph id '{escape(old_id)}' to '{pid}'"
+            )
+            p.set_id(pid)
         if pid in ids_set:
             internal_duplicates.add(pid)
             dupls.setdefault(pid, []).append(p)

@@ -13,7 +13,7 @@ export interface IParResponse {
     duplicates?: Duplicate[];
     original_par?: {md: string; attrs: unknown};
     new_par_ids?: string[];
-    changes?: string[];
+    warnings?: string;
 }
 
 export interface IManageResponse {

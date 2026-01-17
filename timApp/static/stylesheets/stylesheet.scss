@@ -1651,6 +1651,15 @@ tim-rights-editor {
 }
 
 .doc-error {
-    background: #FDD;
+    background: #{$warning-bg-color};
     padding: 1em;
+}
+
+.preview-warnings {
+    background: #{$warning-bg-color};
+    padding-left: 0.5em;
+}
+
+.preview-warnings ul {
+    margin-bottom: 0;
 }

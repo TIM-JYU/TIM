@@ -3,11 +3,11 @@ from __future__ import annotations
 import re
 from heapq import heappush, heappop
 from itertools import accumulate
-from typing import Iterable, Generator, TYPE_CHECKING, Optional, Collection
+from typing import Iterable, Generator, TYPE_CHECKING, Optional
 
 import sqlalchemy
 from sqlalchemy import select, Result, String
-from sqlalchemy.dialects.postgresql import array, ARRAY
+from sqlalchemy.dialects.postgresql import ARRAY
 from sqlalchemy.orm import selectinload
 
 from timApp.document.docparagraph import DocParagraph
@@ -18,6 +18,7 @@ from timApp.document.specialnames import (
     DEFAULT_PREAMBLE_DOC,
 )
 from timApp.document.usercontext import UserContext
+from timApp.document.validationresult import DoValidation
 from timApp.document.viewcontext import default_view_ctx
 from timApp.item.item import Item
 from timApp.markdown.markdownconverter import expand_macros_info
@@ -440,10 +441,13 @@ class DocInfo(Item):
         result = {**super().to_json(**kwargs), "isFolder": False}
 
         if serialize_content:
+            do_validation = DoValidation.CHECK if add_errors else DoValidation.NONE
             result.update(
                 {
                     "versions": self.get_changelog_with_names(),
-                    "fulltext": self.document.export_markdown(do_validation=add_errors),
+                    "fulltext": self.document.export_markdown(
+                        do_validation=do_validation
+                    ),
                 }
             )
 

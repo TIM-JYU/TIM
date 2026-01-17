@@ -49,7 +49,15 @@ import type {ViewCtrl} from "tim/document/viewctrl";
 import {registerDialogComponentForModule} from "tim/ui/dialog";
 import type {IMeetingMemoSettings} from "tim/util/globals";
 import {documentglobals, genericglobals} from "tim/util/globals";
-import {$compile, $http, $injector, $timeout, $upload} from "tim/util/ngimport";
+import {
+    $compile,
+    $http,
+    $injector,
+    $sce,
+    $timeout,
+    $upload,
+} from "tim/util/ngimport";
+import DOMPurify from "dompurify";
 import {AceParEditor} from "tim/editor/AceParEditor";
 import type {SelectionRange} from "tim/editor/BaseParEditor";
 import {EditorType} from "tim/editor/BaseParEditor";
@@ -292,6 +300,7 @@ export class PareditorController extends DialogController<
     private currentSymbol: FormulaEvent = {
         text: "",
     };
+    public warnings: string = "";
     docImportHelp: DocumentImportHelp;
 
     constructor(protected element: JQLite, protected scope: IScope) {
@@ -1552,6 +1561,14 @@ ${backTicks}
             text,
             spellCheckInEffect
         );
+        if (data.warnings && data.warnings.length > 0) {
+            const clean = DOMPurify.sanitize(data.warnings);
+            this.warnings = $sce.trustAsHtml(
+                "There are errors! Save may fix them.<br>" + clean
+            );
+        } else {
+            this.warnings = "";
+        }
         if (spellCheckInEffect) {
             $injector.loadNewModules([
                 (await import("../document/editing/spell-error.component"))
