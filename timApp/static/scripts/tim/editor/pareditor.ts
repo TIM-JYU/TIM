@@ -728,6 +728,24 @@ ${backTicks}
                                 func: () => this.editor!.pageBreakClicked(),
                                 name: "Page break",
                             },
+                            {
+                                title: "Creates a start of area block",
+                                func: () =>
+                                    this.editor!.surroundClicked(
+                                        '\n#- {area="',
+                                        '"}\n'
+                                    ),
+                                name: "Area start",
+                            },
+                            {
+                                title: "Creates a end of area block",
+                                func: () =>
+                                    this.editor!.surroundClicked(
+                                        '\n#- {area_end="',
+                                        '"}\n'
+                                    ),
+                                name: "Area end",
+                            },
                         ],
                     },
                     {
