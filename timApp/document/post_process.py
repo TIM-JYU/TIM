@@ -11,7 +11,7 @@ from timApp.document.areainfo import AreaStart, AreaEnd
 from timApp.document.docentry import DocEntry
 from timApp.document.docparagraph import DocParagraph
 from timApp.document.docsettings import DocSettings
-from timApp.document.document import Document, dereference_pars
+from timApp.document.document import Document, dereference_pars, MISSING_AREA_END_PAR_ID
 from timApp.document.editing.globalparid import GlobalParId
 from timApp.document.hide_names import force_hide_names
 from timApp.document.macroinfo import get_user_specific_macros
@@ -402,7 +402,7 @@ def process_areas(
                         vis, macros, settings, env=env, ignore_errors=True
                     )
                 vis = get_boolean(vis, True)
-                if not vis:  #  TODO: if in preview, put this always True
+                if not vis:  # TODO: if in preview, put this always True
                     access = False  # TODO: this should be added as some kind of small par that is visible in edit-mode
             if access:
                 new_pars.append(html_par)
@@ -413,6 +413,7 @@ def process_areas(
             f"{len(current_areas)} areas are missing area_end: {current_areas}",
             view_ctx,
         )
+        """
         for _ in current_areas:
             new_pars.append(
                 PreparedPar(
@@ -424,6 +425,26 @@ def process_areas(
                     html_class="",
                 )
             )
+        """
+        for i in range(len(current_areas) - 1, -1, -1):
+            area = current_areas[i]
+            area_end = PreparedPar(
+                data=ParBasicData(
+                    attrs={"area_end": area.name},
+                    doc_id=-1,
+                    hash="",
+                    id=MISSING_AREA_END_PAR_ID,
+                    md="",
+                ),
+                output="",
+                from_preamble=None,
+                target=None,
+                areainfo=AreaEnd(name=area.name),
+                html_class="par",
+            )
+            area_end.areainfo = AreaEnd(name=area.name)
+            new_pars.append(area_end)
+
     return new_pars
 
 

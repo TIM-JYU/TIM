@@ -58,6 +58,9 @@ def par_list_to_text(sect: list[DocParagraph], export_hashes=False):
     ).get_text()
 
 
+MISSING_AREA_END_PAR_ID = "MISSING_END"
+
+
 # noinspection DuplicatedCode
 class Document:
     def __init__(
@@ -369,6 +372,9 @@ class Document:
             start_index = all_par_ids.index(par_id_start)
         except ValueError:
             return self._raise_not_found(par_id_start)
+        if par_id_end == MISSING_AREA_END_PAR_ID:
+            # par_id_end = par_id_start  # TODO: would it be better the last par?
+            par_id_end = all_par_ids[-1]
         try:
             end_index = all_par_ids.index(par_id_end)
         except ValueError:
@@ -898,6 +904,8 @@ class Document:
         all_pars = [par for par in self]
         all_par_ids = [par.get_id() for par in all_pars]
         start_index = all_par_ids.index(par_id_first)
+        if par_id_last == MISSING_AREA_END_PAR_ID:
+            par_id_last = all_par_ids[-1]
         end_index = all_par_ids.index(par_id_last)
         old_pars = all_pars[start_index : end_index + 1]
         other_par_ids = all_par_ids[:]

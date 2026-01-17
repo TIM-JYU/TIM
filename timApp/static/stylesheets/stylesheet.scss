@@ -738,6 +738,11 @@ a.timButton {
         color: gray;
     }
 
+    [data-area]:has(> div#MISSING_END:last-child)::after {
+      content: "End area: " attr(data-area) " — missing end";
+      color: red;
+    }
+
     .areaContent {
         border: 1px solid $basic-color;
         border-radius: 5px;
