@@ -8,6 +8,64 @@ from timApp.timdb.sqa import db
 
 
 class PreviewTest(TimRouteTest):
+    def test_normal_preview(self):
+        self.login_test1()
+        d = self.create_doc(initial_par="a1par")
+        pars = d.document.get_paragraphs()
+        r = self.json_post(
+            f"/preview/{d.id}",
+            {
+                "text": "a2par",
+                "docId": d.id,
+                "par": pars[0].get_id(),
+                "proofread": False,
+                "tags": {},
+            },
+        )
+        self.assertIn("<p>a2par</p>", r["texts"])
+        self.assertEqual("", r["warnings"])
+
+    def test_illegal_task_id_preview(self):
+        self.login_test1()
+        d = self.create_doc(initial_par="a1par")
+        pars = d.document.get_paragraphs()
+        r = self.json_post(
+            f"/preview/{d.id}",
+            {
+                "text": "#- {#test1+}\na2par",
+                "docId": d.id,
+                "par": pars[0].get_id(),
+                "proofread": False,
+                "tags": {},
+            },
+        )
+        self.assertIn("<p>a2par</p>", r["texts"])
+        self.assertEqual(
+            "Illegal chars in taskId &amp;#x27;test1+&amp;#x27;", r["warnings"]
+        )
+
+    def test_illegal_par_id_and_dublicate_task_id_preview(self):
+        self.login_test1()
+        d = self.create_doc(initial_par="a1par")
+        pars = d.document.get_paragraphs()
+        r = self.json_post(
+            f"/preview/{d.id}",
+            {
+                "text": '#- {#test1 id="aaa"}\na2par\n#- {#test1}\na3par',
+                "docId": d.id,
+                "par": pars[0].get_id(),
+                "proofread": False,
+                "tags": {},
+            },
+        )
+        self.assertIn("<p>a2par</p>", r["texts"])
+        self.assertIn("<p>a3par</p>", r["texts"])
+        self.assertRegex(
+            r["warnings"],
+            "<ol><li>Invalid paragraph id noticed in paragraph aaa</li>"
+            "<li>Duplicate task id &#x27;test1&#x27; noticed in paragraph aaa, .*</li></ol>",
+        )
+
     def test_preview_permission(self):
         self.login_test1()
         d = self.create_doc(initial_par="Secret")
@@ -57,13 +115,23 @@ class PreviewTest(TimRouteTest):
         self.assert_content(e, ["test\ntest2"])
 
     def test_attributes_at_end_of_code_block(self):
+        """Gives warning for attributes at end of code block"""
         self.login_test1()
-        d = self.create_doc()
-        e = self.post_preview(d, text="```\n``` {}", json_key="texts", as_tree=True)
-        self.assertTrue(
-            get_content(e)[0].startswith(
-                "Attributes at end of code block noticed in paragraph "
-            )
+        d = self.create_doc(initial_par="a1par")
+        pars = d.document.get_paragraphs()
+        r = self.json_post(
+            f"/preview/{d.id}",
+            {
+                "text": "```\n``` {}",
+                "docId": d.id,
+                "par": pars[0].get_id(),
+                "proofread": False,
+                "tags": {},
+            },
+        )
+        self.assertIn("<p><code></code> {}</p>", r["texts"])
+        self.assertIn(
+            "Attributes at end of code block noticed in paragraph", r["warnings"]
         )
 
     def test_preamble_preview_first(self):

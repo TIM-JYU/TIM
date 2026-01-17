@@ -5,7 +5,7 @@ import tempfile
 import zipfile
 from dataclasses import field
 
-from flask import Blueprint, render_template, Response
+from flask import Blueprint, render_template
 from flask import current_app
 from flask import request
 from pypandoc import convert_file
@@ -47,8 +47,6 @@ from timApp.document.prepared_par import PreparedPar
 from timApp.document.renameids import (
     check_and_rename_pluginnamehere,
     check_duplicates,
-    check_and_rename_attribute,
-    area_renamed,
     abort_if_duplicate_ids,
     check_and_rename_new_name,
 )
@@ -56,6 +54,7 @@ from timApp.document.translation.synchronize_translations import (
     synchronize_translations,
 )
 from timApp.document.translation.translation import Translation
+from timApp.document.validationresult import DoValidation, list_to_html
 from timApp.document.version import Version
 from timApp.document.viewcontext import ViewRoute, ViewContext, default_view_ctx
 from timApp.document.yamlblock import YamlBlock
@@ -360,7 +359,9 @@ def modify_paragraph_common(doc_id: int, md: str, par_id: str, par_next_id: str 
     area_end = edit_request.area_end
     editing_area = edit_request.editing_area
     try:
-        editor_pars = edit_request.get_pars(skip_access_check=True)
+        editor_pars = edit_request.get_pars(
+            skip_access_check=True, do_validation=DoValidation.RAISE_END_OF_BLOCK
+        )
     except ValidationException as e:
         raise RouteException(str(e))
 
@@ -368,15 +369,11 @@ def modify_paragraph_common(doc_id: int, md: str, par_id: str, par_next_id: str 
 
     if editing_area:
         try:
-            # changes = check_and_rename_attribute("taskId", editor_pars, doc)[1]
-            # changes += check_and_rename_attribute(
-            #    "area", editor_pars, doc, area_renamed
-            # )[1]
             curr_section = doc.get_section(area_start, area_end)
             for p in curr_section:
                 verify_par_edit_access(p)
             new_start, new_end, edit_result = doc.update_section(
-                editor_pars, area_start, area_end, do_validation=False
+                editor_pars, area_start, area_end, do_validation=DoValidation.NONE
             )
             pars = doc.get_section(new_start, new_end)
         except (ValidationException, TimDbException) as e:
@@ -399,7 +396,7 @@ def modify_paragraph_common(doc_id: int, md: str, par_id: str, par_next_id: str 
             no_other_checks=False,
             allow_id=par_id,
         )
-        edit_result.changes = changes
+        edit_result.warnings = list_to_html(changes)
         pars_to_add = editor_pars[1:]
 
         p = editor_pars[0]
@@ -498,16 +495,20 @@ def preview_paragraphs(doc_id):
         doc = docinfo.document
         edit_request = EditRequest.from_request(doc, preview=True)
         try:
-            blocks = edit_request.get_pars(do_validation=True)
+            blocks = edit_request.get_pars(do_validation=DoValidation.CHECK)
         except ValidationException as e:
             blocks = [DocParagraph.create(doc=doc, md="", html=get_error_html(e))]
             proofread = False
             edit_request = None
+        edit_result = DocumentEditResult(just_preview=True)
+        if doc.vr:
+            edit_result.warnings = doc.vr.get_as_html()
         return par_response(
             blocks,
             docinfo,
             proofread,
             edit_request=edit_request,
+            edit_result=edit_result,
             extra_doc_settings=extra_doc_settings,
         )
     else:
@@ -572,7 +573,7 @@ def par_response(
     if extra_doc_settings:
         settings = DocSettings(doc, settings.get_dict().merge_with(extra_doc_settings))
 
-    if edit_result:
+    if edit_result and not edit_result.just_preview:
         preview = False
     else:
         preview = bool(edit_request and edit_request.preview)
@@ -605,7 +606,7 @@ def par_response(
 
             # If the document was changed, there is no HTML cache for the new version, so we "cheat" by lying the
             # document version so that the preload_htmls call is still fast.
-            if edit_result:
+            if edit_result and not edit_result.just_preview:
                 for p in pars:
                     assert p.doc is doc
                 doc.version = edit_request.old_doc_version
@@ -707,7 +708,7 @@ def par_response(
             if original_par
             else None,
             "new_par_ids": edit_result.new_par_ids if edit_result else None,
-            "changes": edit_result.changes if edit_result else None,
+            "warnings": edit_result.warnings if edit_result else None,
         }
     )
     db.session.commit()
@@ -857,7 +858,9 @@ def add_paragraph_common(md: str, doc_id: int, par_next_id: str | None):
     edit_result = DocumentEditResult()
     edit_request = EditRequest.from_request(doc, md)
     try:
-        editor_pars = edit_request.get_pars()
+        editor_pars = edit_request.get_pars(
+            do_validation=DoValidation.RAISE_END_OF_BLOCK
+        )
     except ValidationException as e:
         raise RouteException(str(e))
 

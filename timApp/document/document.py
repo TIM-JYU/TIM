@@ -24,9 +24,14 @@ from timApp.document.documentparser import DocumentParser
 from timApp.document.documentparseroptions import DocumentParserOptions
 from timApp.document.documentwriter import DocumentWriter
 from timApp.document.editing.documenteditresult import DocumentEditResult
-from timApp.document.exceptions import DocExistsError
+from timApp.document.exceptions import DocExistsError, ValidationException
 from timApp.document.preloadoption import PreloadOption
-from timApp.document.validationresult import ValidationResult
+from timApp.document.validationresult import (
+    ValidationResult,
+    DoValidation,
+    list_to_html,
+    clean,
+)
 from timApp.document.version import Version
 from timApp.document.viewcontext import ViewContext, default_view_ctx
 from timApp.document.yamlblock import YamlBlock
@@ -97,6 +102,8 @@ class Document:
         self.par_map = None
         # List of preamble pars if they have been inserted
         self.preamble_pars = None
+
+        self.vr: ValidationResult | None = None
 
     @property
     def id(self):
@@ -319,10 +326,10 @@ class Document:
         export_ids: bool = True,
         export_settings: bool = True,
         with_tl: bool = False,
-        do_validation: bool = False,
+        do_validation: DoValidation = DoValidation.NONE,
     ) -> str:
         pars = [par for par in self if not par.is_setting() or export_settings]
-        if do_validation:
+        if do_validation != DoValidation.NONE:
             dicts = [par.dict() for par in pars]
             vr = DocumentParser.do_validate_structure(dicts)
             metadata_info = getattr(
@@ -375,7 +382,10 @@ class Document:
         return all_pars[start_index : end_index + 1]
 
     def text_to_paragraphs(
-        self, text: str, break_on_elements: bool, do_validation: bool = False
+        self,
+        text: str,
+        break_on_elements: bool,
+        do_validation: DoValidation = DoValidation.NONE,
     ) -> tuple[list[DocParagraph], ValidationResult]:
         options = DocumentParserOptions()
         options.break_on_code_block = break_on_elements
@@ -384,10 +394,20 @@ class Document:
         dp = DocumentParser(text, options)
         dp.add_missing_attributes()
         vr = ValidationResult()
-        if do_validation:
-            vr = dp.validate_structure()
-            # vr.raise_if_has_critical_issues()
-            vr.raise_if_has_any_issues()
+        if do_validation != DoValidation.NONE:
+            if do_validation == DoValidation.RAISE_END_OF_BLOCK:
+                pars = dp.get_blocks()
+                for par in pars:
+                    if par.get("error"):
+                        raise ValidationException(
+                            f"Attributes at end of code block noticed in paragraph {clean(par.get('id'))}."
+                        )
+            else:
+                vr = dp.validate_structure()
+                # vr.raise_if_has_critical_issues()
+                self.vr = vr
+                if do_validation == DoValidation.EXCEPTION:
+                    vr.raise_if_has_any_issues()
         blocks = [
             DocParagraph.create(
                 doc=self,
@@ -864,14 +884,14 @@ class Document:
         new_pars: list[DocParagraph],
         par_id_first: str,
         par_id_last: str,
-        do_validation: bool = True,
+        do_validation: DoValidation = DoValidation.EXCEPTION,
     ) -> tuple[str, str, DocumentEditResult]:
         """Updates a section of the document.
 
         :param new_pars: pars to replace the section with.
         :param par_id_first: The id of the paragraph that denotes the start of the section.
         :param par_id_last: The id of the paragraph that denotes the end of the section.
-        :param do_validation: throws ValidationException if True and validation issues are found.
+        :param do_validation: throws ValidationException if EXCEPTION and validation issues are found.
         :return: A tuple of (new_text, old_text, edit_result).
         """
 
@@ -898,7 +918,7 @@ class Document:
         if intersection:
             raise TimDbException("Duplicate id(s): " + str(intersection))
         """
-        id1, id2, result = self._perform_update(
+        id1, id2, edit_result = self._perform_update(
             new_pars,
             old_pars,
             last_par_id=all_par_ids[end_index + 1]
@@ -906,8 +926,8 @@ class Document:
             else None,
         )
         if changes:
-            result.changes = changes
-        return id1, id2, result
+            edit_result.warnings = list_to_html(changes)
+        return id1, id2, edit_result
 
     def _perform_update(
         self,

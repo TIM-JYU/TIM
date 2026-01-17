@@ -1,11 +1,11 @@
 from dataclasses import dataclass, field
-from typing import Optional
 
 from timApp.auth.accesshelper import has_view_access
 from timApp.document.docentry import DocEntry
 from timApp.document.docparagraph import DocParagraph
 from timApp.document.document import Document
 from timApp.document.exceptions import ValidationException
+from timApp.document.validationresult import DoValidation
 from timApp.document.version import Version
 from timApp.document.viewcontext import ViewRoute, viewroute_from_str
 from timApp.util.flask.requesthelper import verify_json_params
@@ -70,7 +70,9 @@ class EditRequest:
         return context_par
 
     def get_pars(
-        self, skip_access_check: bool = False, do_validation: bool = False
+        self,
+        skip_access_check: bool = False,
+        do_validation: DoValidation = DoValidation.NONE,
     ) -> list[DocParagraph]:
         if self.editor_pars is None:
             self.editor_pars = get_pars_from_editor_text(
@@ -129,7 +131,7 @@ def get_pars_from_editor_text(
     text: str,
     break_on_elements: bool = False,
     skip_access_check: bool = False,
-    do_validation: bool = False,
+    do_validation: DoValidation = DoValidation.NONE,
 ) -> list[DocParagraph]:
     blocks, _ = doc.text_to_paragraphs(
         text, break_on_elements, do_validation=do_validation

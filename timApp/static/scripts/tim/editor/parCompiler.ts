@@ -12,6 +12,7 @@ export interface IPluginInfoResponse {
     texts: string;
     css: string[];
     trdiff?: {old: string; new: string};
+    warnings?: string;
 }
 
 export async function compileWithViewctrl(

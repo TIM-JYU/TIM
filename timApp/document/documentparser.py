@@ -101,6 +101,9 @@ class ErrorSet:
         return self._map
 
 
+ATOM_PATTERN: re.Pattern[str] = re.compile(r'\batom\s*=\s*["\']')
+
+
 class DocumentParser:
     """Splits documents into paragraphs.
 
@@ -123,7 +126,7 @@ class DocumentParser:
             options if options is not None else DocumentParserOptions()
         )
 
-    def get_blocks(self):
+    def get_blocks(self) -> [dict]:
         self._parse_document()
         return self._blocks
 
@@ -142,6 +145,16 @@ class DocumentParser:
         return self.do_validate_structure(self._blocks)
 
     @staticmethod
+    def validate_end_of_code_block(md) -> bool:
+        last_line = md[md.rindex("\n") + 1 :]
+        num_ticks = count_chars_from_beginning(md, "`")
+        if last_line.startswith("`" * num_ticks):
+            attrs, start_index = AttributeParser(last_line).get_attributes()
+            if start_index is not None:
+                return False
+        return True
+
+    @staticmethod
     def do_validate_structure(blocks: [dict]) -> ValidationResult:
         found_ids = set()
         found_tasks = ErrorSet()
@@ -150,15 +163,14 @@ class DocumentParser:
         found_area_ends = ErrorSet()
         result = ValidationResult()
         for r in blocks:
-            if r.get("type") == "code":
+            rtype = r.get("type")
+            if rtype is None:
+                rtype = DocumentParser.check_if_code(r["md"])
+            if rtype == "code":
                 md = r["md"]
                 try:
-                    last_line = md[md.rindex("\n") + 1 :]
-                    num_ticks = count_chars_from_beginning(md, "`")
-                    if last_line.startswith("`" * num_ticks):
-                        attrs, start_index = AttributeParser(last_line).get_attributes()
-                        if start_index is not None:
-                            result.add_issue(AttributesAtEndOfCodeBlock(r.get("id")))
+                    if not DocumentParser.validate_end_of_code_block(md):
+                        result.add_issue(AttributesAtEndOfCodeBlock(r.get("id")))
                 except ValueError:
                     pass
             curr_id = r.get("id")
@@ -265,31 +277,58 @@ class DocumentParser:
                         if not result.get("attrs"):
                             result["attrs"] = {}
                         self._blocks.append(result)
+                    if result["type"] == "code":
+                        if not self.validate_end_of_code_block(result["md"]):
+                            result["error"] = "Attributes at end of code block"
                     break
 
-    def is_beginning_of_code_block(self, doc):
+    @staticmethod
+    def is_line_beginning_of_code_block(line: str):
+        """
+        is string a begining of code line
+        :type line: str
+        """
+        if line.startswith("```"):
+            code_start_char = "`"
+        elif line.startswith("~~~"):
+            code_start_char = "~"
+        else:
+            return False, None
+        match = re.match("^" + code_start_char + "+", line).group(0)
+        return True, match
+
+    @staticmethod
+    def is_beginning_of_code_block(doc):
         """
 
         :type doc: DocReader
         """
-        if doc.peek_line().startswith("```"):
-            code_start_char = "`"
-        elif doc.peek_line().startswith("~~~"):
-            code_start_char = "~"
-        else:
-            return False, None
-        match = re.match("^" + code_start_char + "+", doc.peek_line()).group(0)
-        return True, match
+        return DocumentParser.is_line_beginning_of_code_block(doc.peek_line())
 
-    def is_beginning_of_header_block(self, doc):
+    @staticmethod
+    def is_beginning_of_header_block(doc):
         return doc.peek_line().startswith("#")
 
-    def is_empty_line(self, doc):
+    @staticmethod
+    def is_empty_line(doc):
         """
 
         :type doc: DocReader
         """
         return doc.peek_line().isspace() or doc.peek_line() == ""
+
+    @staticmethod
+    def check_if_code(md) -> str:
+        first_line_end = md.find("\n")
+        if first_line_end == -1:
+            first_line_end = len(md)
+        first_line = md[:first_line_end]
+        is_code, _ = DocumentParser.is_line_beginning_of_code_block(first_line)
+        if not is_code:
+            return ""
+        if ATOM_PATTERN.search(first_line):
+            return "atom"
+        return "code"
 
     def try_parse_code_block(self, doc):
         """
@@ -392,7 +431,8 @@ class DocumentParser:
             block_lines.append(doc.get_line_and_advance())
         return {"md": "\n".join(block_lines), "type": "autonormal"}
 
-    def extract_attrs(self, result, tokens):
+    @staticmethod
+    def extract_attrs(result, tokens):
         for builtin in ("id", "t"):
             if builtin in tokens:
                 result[builtin] = tokens.pop(builtin)
