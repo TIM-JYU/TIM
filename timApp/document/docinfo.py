@@ -450,10 +450,10 @@ class DocInfo(Item):
                     ),
                 }
             )
-
-            errors = metadata_info.get("errors", None)
-            if add_errors and errors:
-                result["errors"] = errors
+            if (self.document.vr is not None) and add_errors:
+                errors = self.document.vr.get_as_html()
+                if errors and errors != "":
+                    result["errors"] = errors
 
         return result
 
