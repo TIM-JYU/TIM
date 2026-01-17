@@ -285,7 +285,7 @@ class DocumentParser:
     @staticmethod
     def is_line_beginning_of_code_block(line: str):
         """
-        is string a begining of code line
+        is string a beginning of code line
         :type line: str
         """
         if line.startswith("```"):

@@ -1,9 +1,8 @@
 import base64
-from typing import Optional
-
-import mmh3
 import random
 import string
+
+import mmh3
 
 alphanum = string.digits + string.ascii_lowercase + string.ascii_uppercase
 n_alphanum = len(alphanum)
@@ -26,7 +25,7 @@ def __id_checksum(idstr):
     return acc % n_alphanum
 
 
-def is_valid_id(randid):
+def is_valid_id(randid) -> bool:
     return __id_checksum(randid) == 0
 
 
@@ -63,5 +62,5 @@ def random_paragraph():
 
 def random_jsonpar(par_id):
     content = random_paragraph()
-    chash = hashfunc(content, [])
+    chash = hashfunc(content, {})
     return [{"id": par_id, "t": chash, "md": content, "html": content}]

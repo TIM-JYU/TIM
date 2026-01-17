@@ -44,7 +44,7 @@ class PreviewTest(TimRouteTest):
             "Illegal chars in taskId &amp;#x27;test1+&amp;#x27;", r["warnings"]
         )
 
-    def test_illegal_par_id_and_dublicate_task_id_preview(self):
+    def test_illegal_par_id_and_duplicate_task_id_preview(self):
         self.login_test1()
         d = self.create_doc(initial_par="a1par")
         pars = d.document.get_paragraphs()
