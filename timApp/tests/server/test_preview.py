@@ -40,9 +40,7 @@ class PreviewTest(TimRouteTest):
             },
         )
         self.assertIn("<p>a2par</p>", r["texts"])
-        self.assertEqual(
-            "Illegal chars in taskId &amp;#x27;test1+&amp;#x27;", r["warnings"]
-        )
+        self.assertEqual("Illegal chars in taskId &#x27;test1+&#x27;", r["warnings"])
 
     def test_illegal_par_id_and_duplicate_task_id_preview(self):
         self.login_test1()
@@ -63,7 +61,7 @@ class PreviewTest(TimRouteTest):
         self.assertRegex(
             r["warnings"],
             "<ol><li>Invalid paragraph id noticed in paragraph aaa</li>"
-            "<li>Duplicate task id &#x27;test1&#x27; noticed in paragraph aaa, .*</li></ol>",
+            "<li>Duplicate task id 'test1' noticed in paragraph aaa, .*</li></ol>",
         )
 
     def test_preview_permission(self):

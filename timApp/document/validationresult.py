@@ -3,7 +3,6 @@ from enum import IntEnum
 from typing import Optional
 
 from timApp.document.exceptions import ValidationException
-from timApp.util.utils import strip_not_allowed
 
 OptionalParId = Optional[str]
 
@@ -52,7 +51,7 @@ class AreaIssue(ValidationIssue):
     def __str__(self):
         area_message = f"for area '{clean(self.area_name)}'" if self.area_name else ""
         if self.par_id is not None:
-            return f"{self.issue_name} noticed {clean(area_message)} in paragraph {clean(self.par_id)}."
+            return f"{self.issue_name} noticed {area_message} in paragraph {clean(self.par_id)}."
         else:
             return f"{self.issue_name} noticed {area_message}."
 
@@ -162,12 +161,7 @@ class ValidationResult:
         return any(isinstance(i, j) for j in issues for i in self.issues)
 
     def __str__(self):
-        if not self.issues:
-            return ""
-        if len(self.issues) == 1:
-            return html.escape(str(self.issues[0]))
-        items = "".join(f"<li>{html.escape(str(i))}</li>" for i in self.issues)
-        return f"<ol>{items}</ol>"
+        return self.get_as_html()
 
     @property
     def has_critical_issues(self):
@@ -188,4 +182,9 @@ class ValidationResult:
         return issues
 
     def get_as_html(self) -> str:
-        return str(self)
+        if not self.issues:
+            return ""
+        if len(self.issues) == 1:
+            return str(self.issues[0])
+        items = "".join(f"<li>{str(i)}</li>" for i in self.issues)
+        return f"<ol>{items}</ol>"

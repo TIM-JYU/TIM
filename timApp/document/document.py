@@ -332,14 +332,10 @@ class Document:
         if do_validation != DoValidation.NONE:
             dicts = [par.dict() for par in pars]
             vr = DocumentParser.do_validate_structure(dicts)
-            metadata_info = getattr(
-                getattr(self.docinfo, "metadata", None), "info", None
-            )
-            if metadata_info:
-                err = str(vr)
-                if err:
-                    metadata_info["errors"] = err
-                    log_error(str(self.doc_id) + ": " + err)
+            err = vr.get_as_html()
+            if err:
+                self.vr = vr
+                log_error(str(self.doc_id) + ": " + err)
         if with_tl:
             return "\n".join(
                 [par.get_exported_markdown(export_ids=export_ids) for par in pars]
