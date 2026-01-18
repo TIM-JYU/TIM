@@ -531,10 +531,7 @@ def get_document_id(doc_path: Any) -> int:
 
     if not isinstance(doc_path, str):
         return 0
-    doc = DocEntry.find_by_path(
-        doc_path, docentry_load_opts=[load_only(DocEntry.id), lazyload(DocEntry._block)]
-    )
-    return doc.id if doc else 0
+    return DocEntry.get_id_from_path(doc_path)
 
 
 def get_document_path(doc_id: Any) -> str:

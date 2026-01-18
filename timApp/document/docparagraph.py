@@ -3,7 +3,6 @@ from __future__ import annotations
 import json
 import os
 import shelve
-import sys
 import time
 from collections import defaultdict
 from copy import copy
@@ -47,7 +46,7 @@ if TYPE_CHECKING:
     from timApp.document.document import Document
     from timApp.document.docinfo import DocInfo
 
-SKIPPED_ATTRS = {"r", "rd", "rp", "ra", "rt", "mt", "settings"}
+SKIPPED_ATTRS = {"r", "rd", "rp", "ra", "rt", "rtask", "mt", "settings"}
 
 BLINDED_SETTINGS_TEXT = """```
 # Setting paragraphs cannot be shown via references
@@ -418,6 +417,10 @@ class DocParagraph:
         self.__is_ref = self.is_par_reference() or self.is_area_reference()
         self.__is_setting = "settings" in self.attrs
         self.__setting_type = self.attrs.get("settings", None)
+
+    def is_settings(self) -> bool:
+        """Determines whether this paragraph is a settings paragraph."""
+        return self.__is_setting
 
     def get_doc_id(self) -> int:
         """Returns the Document id to which this paragraph is attached."""
@@ -1095,6 +1098,8 @@ class DocParagraph:
 
     def is_par_reference(self) -> bool:
         """Returns whether this paragraph is a reference to a single paragraph."""
+        if self.get_attr("rtask") is not None:
+            return True
         return self.get_attr("rp") is not None
 
     def is_area_reference(self) -> bool:
@@ -1165,12 +1170,7 @@ class DocParagraph:
 
         attrs = self.attrs
         if "rd" in attrs:
-            try:
-                ref_docid = int(attrs["rd"])
-            except ValueError:
-                raise InvalidReferenceException(
-                    f'Invalid reference document id: "{attrs["rd"]}"'
-                )
+            ref_docid = attrs["rd"]
         else:
             ref_doc = (
                 self.doc.get_source_document()
@@ -1194,7 +1194,13 @@ class DocParagraph:
 
         if self.is_par_reference():
             try:
-                par = ref_doc.get_paragraph(attrs["rp"])
+                task_id = attrs.get("rtask", None)
+                if task_id is not None:
+                    par = ref_doc.get_paragraph_by_task_id(task_id)
+                    if par is None:
+                        return []
+                else:
+                    par = ref_doc.get_paragraph(attrs["rp"])
                 par.prev_deref = self
             except TimDbException:
                 raise InvalidReferenceException(

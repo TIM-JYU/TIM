@@ -3,7 +3,14 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any, List
 
 from sqlalchemy import select, ForeignKey, Index
-from sqlalchemy.orm import foreign, mapped_column, Mapped, relationship
+from sqlalchemy.orm import (
+    foreign,
+    mapped_column,
+    Mapped,
+    relationship,
+    load_only,
+    lazyload,
+)
 
 from timApp.document.docinfo import DocInfo
 from timApp.document.document import Document
@@ -111,6 +118,47 @@ class DocEntry(db.Model, DocInfo):
         if d:
             return d
         return db.session.get(Translation, doc_id)
+
+    @staticmethod
+    def normalize_doc_path(path: str) -> str:
+        """Normalize document-style paths: resolve '.' and '..', remove leading/trailing slashes.
+        Prevents escaping above the root (leading '..' are ignored)."""
+        if not path:
+            return ""
+        p = path.strip()
+        # remove surrounding slashes so result has no leading/trailing slash
+        p = p.strip("/")
+        if p == "":
+            return ""
+        parts: list[str] = []
+        for seg in p.split("/"):
+            if seg == "" or seg == ".":
+                continue
+            if seg == "..":
+                if parts:
+                    parts.pop()
+                # if parts empty, ignore leading '..' to avoid escaping above root
+            else:
+                parts.append(seg)
+        return "/".join(parts)
+
+    @staticmethod
+    def find_id_by_path(name: str, path: str = "") -> int:
+        """Finds a document id by path.
+        :param name: The path of the document.
+        :param path: If not faoud, add this path prefix to the name and try again.
+        :returns: The document id or 0 if not found.
+        """
+        doc_entry = DocEntry.find_by_path(
+            name, docentry_load_opts=[load_only(DocEntry.id), lazyload(DocEntry._block)]
+        )
+        if not doc_entry and path:
+            full_path = DocEntry.normalize_doc_path(f"{path}/{name}")
+            doc_entry = DocEntry.find_by_path(
+                full_path,
+                docentry_load_opts=[load_only(DocEntry.id), lazyload(DocEntry._block)],
+            )
+        return doc_entry.id if doc_entry else 0
 
     @staticmethod
     def find_by_path(
