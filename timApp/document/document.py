@@ -59,6 +59,16 @@ def par_list_to_text(sect: list[DocParagraph], export_hashes=False):
 
 
 MISSING_AREA_END_PAR_ID = "MISSING_END"
+"""
+Name for pseudo-paragraph that indicates the end of an area that goes to the end of the document.
+If you change this, also change the same constant in timApp/static/stylesheets/stylesheet.scss
+"""
+
+AREA_NAME_FOR_WHOLE_DOCUMENT = "ALL"
+"""
+Name for pseudo-area that indicates the whole document.
+This can still be used as an area name in addition to its special meaning.
+"""
 
 
 # noinspection DuplicatedCode
@@ -98,7 +108,7 @@ class Document:
         # Whether preamble has been loaded
         self.preamble_included = False
         # Cache for documents that are referenced by this document
-        self.ref_doc_cache: dict[int, Document] = {}
+        self.ref_doc_cache: dict[str, Document] = {}
         # Cache for single paragraphs
         self.single_par_cache: dict[str, DocParagraph] = {}
         # Used for accessing previous/next paragraphs quickly based on id
@@ -1112,21 +1122,43 @@ class Document:
             result.deleted.append(par)
         return result
 
+    def get_paragraph_by_task_id(self, task_id: str) -> DocParagraph or None:
+        # TODO: optimize with par_ids and par_hashes
+        with self.__iter__() as i:
+            for par in i:
+                if par.get_attr("taskId") == task_id:
+                    return par
+        return None
+
     def get_named_section(self, section_name: str) -> list[DocParagraph]:
         if self.preload_option == PreloadOption.all:
             self.ensure_pars_loaded()
+        get_all = section_name == AREA_NAME_FOR_WHOLE_DOCUMENT
         start_found = False
         end_found = False
         pars = []
+        all_start = -1
         with self.__iter__() as i:
             for par in i:
-                if par.get_attr("area") == section_name:
+                area = par.get_attr("area")
+                if area == section_name or get_all:
+                    if area == AREA_NAME_FOR_WHOLE_DOCUMENT and get_all:
+                        # If document has name ALL, start here
+                        pars = []
+                        all_start = 0
                     start_found = True
-                if start_found:
+                if start_found and not (par.is_settings() and get_all):
                     pars.append(par)
                 if par.get_attr("area_end") == section_name:
                     end_found = True
                     break
+
+        if (all_start >= 0) and get_all:
+            # If document has name ALL, do not include ALL par itself
+            return pars[all_start + 1 :]
+
+        if get_all:
+            end_found = True
         if not start_found or not end_found:
             raise InvalidReferenceException("Area not found: " + section_name)
         return pars
@@ -1252,7 +1284,7 @@ class Document:
                 )
             else:
                 self.source_doc = docinfo.src_doc.document
-                self.ref_doc_cache[self.source_doc.doc_id] = self.source_doc
+                self.ref_doc_cache[str(self.source_doc.doc_id)] = self.source_doc
         return self.source_doc
 
     def get_last_par(self):
@@ -1369,15 +1401,28 @@ class Document:
 
     def get_ref_doc(
         self,
-        ref_docid: int,
+        ref_docid_str: str,
         preload_option: PreloadOption | None = None,
         resolve_preamble_refs: bool = False,
     ):
-        cached = self.ref_doc_cache.get(ref_docid)
+        cached = self.ref_doc_cache.get(ref_docid_str)
         preload_option = (
             preload_option if preload_option is not None else self.preload_option
         )
         if not cached:
+            try:
+                ref_docid = int(ref_docid_str)
+            except ValueError:
+                from timApp.document.docentry import DocEntry
+
+                ref_docid = DocEntry.find_id_by_path(
+                    ref_docid_str, self.docinfo.location
+                )
+                if ref_docid == 0:
+                    raise InvalidReferenceException(
+                        f'Invalid reference document: "{ref_docid_str}"'
+                    )
+
             cached = Document(ref_docid, preload_option=preload_option)
             if not cached.exists():
                 raise InvalidReferenceException(
@@ -1391,7 +1436,7 @@ class Document:
             #  reference the plugin with the overridden macros).
             if resolve_preamble_refs:
                 cached.insert_preamble_pars()
-            self.ref_doc_cache[ref_docid] = cached
+            self.ref_doc_cache[ref_docid_str] = cached
         return cached
 
     def validate(self) -> ValidationResult:
