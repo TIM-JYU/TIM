@@ -21,6 +21,7 @@ interface ICountOptions {
     lines?: ICountLimit;
     words?: ICountLimit;
     chars?: ICountLimit;
+    charsNotToCount?: string;
 }
 
 @Component({
@@ -47,12 +48,23 @@ export class CountBoardComponent {
     nameWords: string = "";
     nameLines: string = "";
     space: string = "<br>";
+    charsNotToCountTestReg: RegExp | null = null;
 
     count(str: string) {
         if (!this.options_) {
             return;
         }
         this.chars = str.length;
+        if (this.charsNotToCountTestReg) {
+            const testRe = this.charsNotToCountTestReg;
+            let removed = 0;
+            for (const ch of str) {
+                if (testRe.test(ch)) {
+                    removed++;
+                }
+            }
+            this.chars -= removed;
+        }
         this.lines = countLines(str);
         this.words = countWords(str);
         this.countError = "";
@@ -147,5 +159,17 @@ export class CountBoardComponent {
         this.nameChars = this.getName(this.options_.chars, $localize`Chars`);
         this.nameWords = this.getName(this.options_.words, $localize`Words`);
         this.nameLines = this.getName(this.options_.lines, $localize`Lines`);
+        if (options?.charsNotToCount) {
+            const p = options.charsNotToCount;
+            try {
+                this.charsNotToCountTestReg = new RegExp(p, "u");
+            } catch {
+                try {
+                    this.charsNotToCountTestReg = new RegExp(p, "");
+                } catch {
+                    this.charsNotToCountTestReg = null;
+                }
+            }
+        }
     }
 }
