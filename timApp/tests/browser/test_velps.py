@@ -144,8 +144,9 @@ saveButton: Tallenna
         vg.velps[new_velp.id] = new_velp
         db.session.commit()
         self.goto_document(d)
-        # wait_until_present/find_element seems to produce spurious timeouts on CI test runs
-        self.wait_until_present("jsframe-runner iframe")
+        # wait_until_present/find_element seems to produce spurious timeouts on CI test runs,
+        # and locally as well on occasion. A more specific CSS selector seem to resolve this, locally at least.
+        self.wait_until_present("jsframe-runner div.jsframe div iframe")
         par = self.find_element_avoid_staleness(".par.csPlugin")
         parid = par.get_attribute("id")
         t = par.get_attribute("t")
