@@ -687,7 +687,7 @@ class DocParagraph:
                     return p
                 try:
                     return p.get_referenced_pars()[0]
-                except InvalidReferenceException as e:
+                except (InvalidReferenceException, IndexError) as e:
                     p.was_invalid = True
                     p._set_html(get_error_html(e))
                     return p
@@ -881,7 +881,7 @@ class DocParagraph:
         if prev_par is not None and prev_par.is_translation():
             try:
                 deref = prev_par.get_referenced_pars()[0]
-            except InvalidReferenceException:
+            except (InvalidReferenceException, IndexError):
                 # In case of an invalid reference, just skip this one.
                 deref = None
         if (
