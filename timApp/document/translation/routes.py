@@ -213,23 +213,24 @@ def create_translation_route(
     # TODO Move doc_title -parameter to the URL as well
     title = request.get_json().get("doc_title", None)
 
-    doc = get_doc_or_abort(tr_doc_id)
+    doc_entry = get_doc_or_abort(tr_doc_id)
 
     # The user making the translation should be able to fully read the
     # contents of the document the translation is started from, which
     # copy-access allows.
-    verify_copy_access(doc)
+    verify_copy_access(doc_entry)
     if not is_valid_language_id(language):
         raise NotExist("Invalid language identifier")
-    if doc.has_translation(language):
+    if doc_entry.has_translation(language):
         raise ItemAlreadyExistsException("Translation for this language already exists")
     # Manage access to the _actual_ source document is needed because creating
     # a new translation adds information to the source document (i.e. inserts
     # the new translation into the list of translations).
-    verify_manage_access(doc.src_doc)
+    verify_manage_access(doc_entry.src_doc)
 
-    src_doc = doc.src_doc.document
+    src_doc = doc_entry.src_doc.document
     cite_doc = create_document_and_block(get_current_user_object().get_personal_group())
+    # cite_doc.docinfo = doc_entry
 
     tr = Translation(doc_id=cite_doc.doc_id, src_docid=src_doc.doc_id, lang_id=language)
     db.session.add(tr)
@@ -244,15 +245,15 @@ def create_translation_route(
         translator=translator if translator != "Manual" else None,
     )
 
-    if isinstance(doc, DocEntry):
-        de = doc
-    elif isinstance(doc, Translation):
-        de = doc.docentry
+    if isinstance(doc_entry, DocEntry):
+        de = doc_entry
+    elif isinstance(doc_entry, Translation):
+        de = doc_entry.docentry
     else:
         raise Exception("doc has unexpected type")
     de.trs.append(tr)
     # Inherit parent document's rights
-    copy_rights(doc, tr, None, copy_expired=False)
+    copy_rights(doc_entry, tr, None, copy_expired=False)
     db.session.commit()
 
     # Run automatic translation if requested
@@ -269,7 +270,7 @@ def create_translation_route(
         if tr_doc_id != src_doc.doc_id:
             translate_full_document(
                 tr,
-                doc.document,
+                doc_entry.document,
                 language,
                 translator,
                 max_workers=mw,
@@ -286,7 +287,7 @@ def create_translation_route(
             )
 
     # Copy source document search relevance value to translation
-    set_relevance(tr.id, get_document_relevance(doc))
+    set_relevance(tr.id, get_document_relevance(doc_entry))
 
     return json_response(tr)
 

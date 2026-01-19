@@ -413,8 +413,10 @@ class DocParagraph:
 
     def _cache_props(self):
         """Caches some boolean properties about this paragraph in internal attributes."""
-
         self.__is_ref = self.is_par_reference() or self.is_area_reference()
+        if self.attrs.get("rd"):
+            if not self.__is_ref:
+                self.__is_ref = True
         self.__is_setting = "settings" in self.attrs
         self.__setting_type = self.attrs.get("settings", None)
 
@@ -1142,6 +1144,7 @@ class DocParagraph:
         referrer: Optional["DocParagraph"] = None,
         blind_settings: bool = True,
         resolve_preamble_refs: bool = False,
+        path: str = "",
     ) -> list[DocParagraph]:
         """Returns the paragraphs that are referenced by this paragraph.
 
@@ -1152,6 +1155,7 @@ class DocParagraph:
         :param referrer: The paragraph that is referencing this paragraph.
         :param blind_settings: Whether to hide the settings of referenced paragraph.
         :param resolve_preamble_refs: Whether to resolve preambles in reference documents.
+        :param path: The path of the document containing this paragraph
         :return: The list of resolved paragraphs.
 
         """
@@ -1180,13 +1184,15 @@ class DocParagraph:
 
         if ref_doc is None:
             if ref_docid is None:
-                raise InvalidReferenceException(
-                    "Source document for reference not specified."
-                )
+                ref_docid = par_doc_id[0]
+                # raise InvalidReferenceException(
+                #    "Source document for reference not specified."
+                # )
             ref_doc = self.doc.get_ref_doc(
                 ref_docid,
                 preload_option=PreloadOption.none,
                 resolve_preamble_refs=resolve_preamble_refs,
+                path=path,
             )
 
         if not ref_doc.exists():
@@ -1209,16 +1215,20 @@ class DocParagraph:
 
             if par.is_reference():
                 ref_pars = par.get_referenced_pars_impl(
-                    visited_pars=visited_pars, referrer=self
+                    visited_pars=visited_pars,
+                    referrer=self,
+                    path=path,
                 )
             else:
                 ref_pars = [par]
-        elif self.is_area_reference():
+        # elif self.is_area_reference():
+        else:
+            area_name = attrs.get("ra", "ALL")
             if self.is_translation():
                 raise InvalidReferenceException(
                     "A translated paragraph cannot be an area reference."
                 )
-            section_pars = ref_doc.get_named_section(attrs["ra"])
+            section_pars = ref_doc.get_named_section(area_name)
             ref_pars = []
             for p in section_pars:
                 p.prev_deref = self
@@ -1230,8 +1240,8 @@ class DocParagraph:
                     )
                 else:
                     ref_pars.append(p)
-        else:
-            assert False
+        # else:
+        #    assert False
 
         if referrer and blind_settings:
             # Prevent setting pars from leaking via references

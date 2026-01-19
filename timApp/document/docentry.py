@@ -21,7 +21,7 @@ from timApp.item.block import insert_block
 from timApp.timdb.exceptions import ItemAlreadyExistsException
 from timApp.timdb.sqa import db, run_sql
 from timApp.user.usergroup import UserGroup, get_admin_group_id
-from timApp.util.utils import split_location
+from timApp.util.utils import split_location, is_int
 
 if TYPE_CHECKING:
     from timApp.user.user import User
@@ -118,6 +118,25 @@ class DocEntry(db.Model, DocInfo):
         if d:
             return d
         return db.session.get(Translation, doc_id)
+
+    @staticmethod
+    def find_by_rd(
+        rd: str, docentry_load_opts: Any = None, path: str = ""
+    ) -> DocInfo | None:
+        """Finds a DocInfo by rd.
+        :param rd: The rd value from attrs
+        :param path: Optional path prefix to use when looking up the document.
+        :param docentry_load_opts: Load options for DocEntry.
+        :returns: The DocInfo object or None if not found.
+        """
+        if is_int(rd):
+            doc_id = int(rd)
+        else:
+            doc_id = DocEntry.find_id_by_path(rd, path)
+        if doc_id == 0:
+            return None
+
+        return DocEntry.find_by_id(doc_id, docentry_load_opts=docentry_load_opts)
 
     @staticmethod
     def normalize_doc_path(path: str) -> str:

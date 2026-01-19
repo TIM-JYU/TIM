@@ -49,6 +49,10 @@ def get_exception_code(
     return result
 
 
+def is_int(s: str) -> bool:
+    return bool(s) and all("0" <= ch <= "9" for ch in s)
+
+
 def datestr_to_relative(d: str | datetime) -> str:
     if isinstance(d, str):
         d = datetime.strptime(d, "%Y-%m-%d %H:%M:%S")
