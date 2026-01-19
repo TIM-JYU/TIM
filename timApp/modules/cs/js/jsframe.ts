@@ -45,6 +45,7 @@ import {
 import {registerPlugin} from "tim/plugin/pluginRegistry";
 import type {AnswerBrowserComponent} from "tim/answer/answer-browser.component";
 import {CommonModule} from "@angular/common";
+import {$localize} from "@angular/localize/init";
 import {communicationJS} from "./iframeutils";
 
 const JsframeMarkup = t.intersection([
@@ -274,10 +275,6 @@ export class JsframeComponent
         super(el, http, domSanitizer);
     }
 
-    get english() {
-        return this.markup.lang === "en";
-    }
-
     get beforeOpen() {
         return this.markup.beforeOpen;
     }
@@ -310,20 +307,8 @@ export class JsframeComponent
         };
     }
 
-    buttonText() {
-        const txt = super.buttonText();
-        if (txt) {
-            return txt;
-        }
-        return this.english ? "Save" : "Tallenna";
-    }
-
     showButton() {
-        const txt = this.markup.showButton;
-        if (txt) {
-            return txt;
-        }
-        return this.english ? "Show task" : "Näytä tehtävä";
+        return this.markup.showButton ?? $localize`Show task`;
     }
 
     public viewctrl!: ViewCtrl;
@@ -366,7 +351,7 @@ export class JsframeComponent
     ngOnInit() {
         super.ngOnInit();
         this.viewctrl = vctrlInstance!;
-        this.button = this.buttonText();
+        this.button = super.buttonText() ?? $localize`Save`;
         const aa = this.attrsall;
         this.userName = aa.user_id;
 
@@ -821,6 +806,8 @@ export class JsframeComponent
             this.addListener();
         }
     }
+
+    protected readonly $localize = $localize;
 }
 
 @NgModule({

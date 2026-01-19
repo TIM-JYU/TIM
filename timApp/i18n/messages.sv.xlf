@@ -10549,16 +10549,16 @@ Separate multiple addresses with commas or write each address on a new line.</ta
         </context-group>
       </trans-unit>
       <trans-unit id="3606771354880883563" datatype="html">
-        <source> You can only show answers for the main exam (<x id="INTERPOLATION" equiv-text="{{ examByDocId.get(group.examDocId!)?.name }}"/>) and not for the practice exam. Change the exam in section &apos;3. Manage exams&apos; to enable showing answers. </source>
-        <target state="new"> You can only show answers for the main exam (<x id="INTERPOLATION" equiv-text="{{ examByDocId.get(group.examDocId!)?.name }}"/>) and not for the practice exam. Change the exam in section &apos;3. Manage exams&apos; to enable showing answers. </target>
+        <source> You can only show answers for the main exam (<x id="INTERPOLATION" equiv-text="{{ examByDocId.get(group.examDocId!)?.name }}"/>) and not for the practice exam. Change the exam in section '3. Manage exams' to enable showing answers. </source>
+        <target state="new"> You can only show answers for the main exam (<x id="INTERPOLATION" equiv-text="{{ examByDocId.get(group.examDocId!)?.name }}"/>) and not for the practice exam. Change the exam in section '3. Manage exams' to enable showing answers. </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
           <context context-type="linenumber">698,699</context>
         </context-group>
       </trans-unit>
       <trans-unit id="4454548802259509672" datatype="html">
-        <source> Select an exam in section &apos;3. Manage exams&apos; to enable showing answers. </source>
-        <target state="new"> Select an exam in section &apos;3. Manage exams&apos; to enable showing answers. </target>
+        <source> Select an exam in section '3. Manage exams' to enable showing answers. </source>
+        <target state="new"> Select an exam in section '3. Manage exams' to enable showing answers. </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
           <context context-type="linenumber">702</context>
@@ -11106,6 +11106,206 @@ Separate multiple addresses with commas or write each address on a new line.</ta
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/groupJoin/group-join.component.ts</context>
           <context context-type="linenumber">62,63</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="1540071714254168972" datatype="html">
+        <source>Copy the code you made by Tauno by pressing the link "copy from Tauno". Then press Run button. Note that the running code may have different code than in Tauno!</source>
+        <target state="translated">Kopiera koden du gjorde i Tauno genom att trycka på länken ”kopiera från Tauno”. Tryck sedan på knappen Kör. Observera att den körda koden kan skilja sig från koden i Tauno!</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">modules/cs/js/csPlugin.ts</context>
+          <context context-type="linenumber">1775</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="969766256764189402" datatype="html">
+        <source>copy from Tauno</source>
+        <target state="translated">kopiera från Tauno</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">modules/cs/js/csPlugin.ts</context>
+          <context context-type="linenumber">1784</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="4305816642652798518" datatype="html">
+        <source>copy from SimCir</source>
+        <target state="translated">kopiera från SimCir</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">modules/cs/js/csPlugin.ts</context>
+          <context context-type="linenumber">1789</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="9201276850548192972" datatype="html">
+        <source>copy to SimCir</source>
+        <target state="translated">kopiera till SimCir</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">modules/cs/js/csPlugin.ts</context>
+          <context context-type="linenumber">1794</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="2347724151568473592" datatype="html">
+        <source>language</source>
+        <target state="translated">språk</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">modules/cs/js/csPlugin.ts</context>
+          <context context-type="linenumber">1799</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="6791923436941679216" datatype="html">
+        <source>Write your code here</source>
+        <target state="translated">Skriv din kod här</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">modules/cs/js/csPlugin.ts</context>
+          <context context-type="linenumber">1827,1825</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="9154250044984838800" datatype="html">
+        <source>Write your input here</source>
+        <target state="translated">Skriv din indata här</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">modules/cs/js/csPlugin.ts</context>
+          <context context-type="linenumber">1836,1834</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="8331380368195182710" datatype="html">
+        <source>Write file name here</source>
+        <target state="translated">Skriv filnamn här</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">modules/cs/js/csPlugin.ts</context>
+          <context context-type="linenumber">1850,1849</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="3423372852784001404" datatype="html">
+        <source>Write your program arguments here</source>
+        <target state="translated">Skriv dina programargument här</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">modules/cs/js/csPlugin.ts</context>
+          <context context-type="linenumber">1851,1847</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="2685881634494000090" datatype="html">
+        <source>File name:</source>
+        <target state="translated">Filnamn:</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">modules/cs/js/csPlugin.ts</context>
+          <context context-type="linenumber">1866</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="3415721351439288775" datatype="html">
+        <source>Arguments:</source>
+        <target state="translated">Argument:</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">modules/cs/js/csPlugin.ts</context>
+          <context context-type="linenumber">1866,1864</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="7123864797949635533" datatype="html">
+        <source>Compile</source>
+        <target state="translated">Kompilera</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">modules/cs/js/csPlugin.ts</context>
+          <context context-type="linenumber">2138</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="3759965007855499397" datatype="html">
+        <source>Run</source>
+        <target state="translated">Kör</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">modules/cs/js/csPlugin.ts</context>
+          <context context-type="linenumber">2141</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="1828289069499836477" datatype="html">
+        <source>Fetch</source>
+        <target state="translated">Hämta</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">modules/cs/js/csPlugin.ts</context>
+          <context context-type="linenumber">2150</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="4986622155679869086" datatype="html">
+        <source>Upload image or file</source>
+        <target state="translated">Ladda upp bild eller fil</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">modules/cs/js/csPlugin.ts</context>
+          <context context-type="linenumber">2223,2221</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="4016642344805810835" datatype="html">
+        <source>Show complete code</source>
+        <target state="translated">Visa fullständig kod</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">modules/cs/js/csPlugin.ts</context>
+          <context context-type="linenumber">2235,2233</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="5196898934555731575" datatype="html">
+        <source>Hide extra code</source>
+        <target state="translated">Dölj extra kod</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">modules/cs/js/csPlugin.ts</context>
+          <context context-type="linenumber">2243,2241</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="3080483882937310852" datatype="html">
+        <source>Normal</source>
+        <target state="translated">Normal</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">modules/cs/js/csPlugin.ts</context>
+          <context context-type="linenumber">2398,2396</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="3388355350799687511" datatype="html">
+        <source>hide Tauno</source>
+        <target state="translated">dölj Tauno</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">modules/cs/js/csPlugin.ts</context>
+          <context context-type="linenumber">4343,4344</context>
+        </context-group>
+        <context-group purpose="location">
+          <context context-type="sourcefile">modules/cs/js/csPlugin.ts</context>
+          <context context-type="linenumber">4355,4356</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="3576138961113522408" datatype="html">
+        <source>show Tauno</source>
+        <target state="translated">visa Tauno</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">modules/cs/js/csPlugin.ts</context>
+          <context context-type="linenumber">4352,4353</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="5599513168032987944" datatype="html">
+        <source>Highlight</source>
+        <target state="translated">Kodmarkering</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">modules/cs/js/csPlugin.ts</context>
+          <context context-type="linenumber">2321</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="7770718775929472608" datatype="html">
+        <source>hide SimCir</source>
+        <target state="translated">dölj SimCir</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">modules/cs/js/csPlugin.ts</context>
+          <context context-type="linenumber">4279,4280</context>
+        </context-group>
+        <context-group purpose="location">
+          <context context-type="sourcefile">modules/cs/js/csPlugin.ts</context>
+          <context context-type="linenumber">4284,4285</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="3558959665898525698" datatype="html">
+        <source>show SimCir</source>
+        <target state="translated">visa SimCir</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">modules/cs/js/csPlugin.ts</context>
+          <context context-type="linenumber">4281,4282</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="935187492052582731" datatype="html">
+        <source>Submit</source>
+        <target state="translated">Skicka</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">modules/cs/js/gitreg.ts</context>
+          <context context-type="linenumber">27,28</context>
         </context-group>
       </trans-unit>
       <trans-unit id="18610244592166500" datatype="html">
