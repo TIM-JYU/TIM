@@ -108,10 +108,10 @@ class VelpTest(BrowserTest):
         # ActionChains(self.drv).move_to_element_with_offset(par, 5, 5).click_and_hold().move_by_offset(70, 0).release().perform()
 
     def test_velp_user_filtering(self):
-        if running_in_ci():
-            self.skipTest(
-                "Fails in CI but not locally (flaky test or problem with GitHub CI)"
-            )
+        # if running_in_ci():
+        #     self.skipTest(
+        #         "Fails in CI but not locally (flaky test or problem with GitHub CI)"
+        #     )
 
         self.login_browser_quick_test1()
         self.login_test1()
