@@ -1404,6 +1404,7 @@ class Document:
         ref_docid_str: str,
         preload_option: PreloadOption | None = None,
         resolve_preamble_refs: bool = False,
+        path: str | None = None,
     ):
         cached = self.ref_doc_cache.get(ref_docid_str)
         preload_option = (
@@ -1416,7 +1417,8 @@ class Document:
                 from timApp.document.docentry import DocEntry
 
                 ref_docid = DocEntry.find_id_by_path(
-                    ref_docid_str, self.docinfo.location
+                    ref_docid_str,
+                    self.docinfo.location if self.docinfo else path,
                 )
                 if ref_docid == 0:
                     raise InvalidReferenceException(

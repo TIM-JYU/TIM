@@ -334,6 +334,7 @@ class BrowserTest(LiveServerTestCase, TimRouteTestBase):
 
     def use_left_menu(self):
         # TODO: remove once tests have been updated to use the new edit menu format
+        self.drv.implicitly_wait(0.5)
         self.post("/settings/save/parmenupos/0")
         self.drv.implicitly_wait(0.5)
         self.drv.refresh()
