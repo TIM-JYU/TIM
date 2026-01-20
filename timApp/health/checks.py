@@ -234,17 +234,6 @@ def check_dumbo_service() -> CheckStatus:
     
     Returns ERROR if service is unreachable or fails to convert.
     """
-def check_dumbo_service() -> CheckStatus:
-    """
-    Check Dumbo markdown converter service health.
-    
-    Performs a simple markdown conversion test to verify:
-    - Service is reachable
-    - Service responds correctly
-    - Service can process markdown
-    
-    Returns ERROR if service is unreachable or fails to convert.
-    """
     try:
         start_time = time.time()
         
@@ -289,21 +278,14 @@ def check_gunicorn() -> CheckStatus:
       treshold `QUEUE_DEPTH_WARN_THRESHOLD` may need adjustment.
     """
 
-    
-    QUEUE_DEPTH_WARN_THRESHOLD = 2  # Synchronous worker assumption – can only serve one request at a time.
     MAX_RAM_USAGE_RATIO = 0.80  # Warn if workers use 80%+ of total system RAM
     
     if not HAS_PSUTIL:
         logger.debug("psutil not available, skipping gunicorn health check")
         return CheckStatus.SKIPPED
 
-    # Check if running on flask environment
-    if os.environ.get('WERKZEUG_RUN_MAIN'):
-        logger.debug("Running in Flask development server, skipping gunicorn health check")
-        return CheckStatus.SKIPPED
-
-    if not HAS_GUNICORN:
-        logger.debug("gunicorn module not available, skipping gunicorn health check")
+    if not HAS_GUNICORN or not os.environ.get("SERVER_SOFTWARE", "").startswith("gunicorn/"):
+        logger.debug("Not running under Gunicorn, skipping gunicorn health check")
         return CheckStatus.SKIPPED
 
     try:
@@ -330,22 +312,12 @@ def check_gunicorn() -> CheckStatus:
         mem = psutil.virtual_memory()
 
         if mem.total > 0 and (worker_rss / mem.total) >= MAX_RAM_USAGE_RATIO:
-            return CheckStatus.DEGRADED
-
-        worker_count = len(worker_processes)
-        
-        # Estimate request queue depth by checking connections on gunicorn port
-        # Check connections specifically on the master or workers
-        total_connections = 0
-        for p in worker_processes:
-            try:
-                # 'inet' filters for TCP/UDP
-                total_connections += len(p.connections(kind='inet'))
-            except (psutil.AccessDenied, psutil.NoSuchProcess):
-                continue
-
-        load_factor = total_connections / len(worker_processes)
-        if load_factor > QUEUE_DEPTH_WARN_THRESHOLD:
+            logger.warning(
+                "Gunicorn workers using high memory: %d/%d bytes (%.1f%%)",
+                worker_rss,
+                mem.total,
+                (worker_rss / mem.total) * 100,
+            )
             return CheckStatus.DEGRADED
 
         return CheckStatus.OK
@@ -353,6 +325,8 @@ def check_gunicorn() -> CheckStatus:
     except Exception as e:
         logger.error("Gunicorn health check failed: %s", e)
         return CheckStatus.ERROR
+    
+    return CheckStatus.OK
 
 
 def _get_writable_paths() -> Set[str]:
@@ -415,7 +389,10 @@ def check_disk_space() -> CheckStatus:
             total, used, free = shutil.disk_usage(path)
             free_ratio = free / total if total > 0 else 0
 
-            if free_ratio < DISK_SPACE_THRESHOLD:
+            if total and used >= total:
+                logger.error("No disk space available on %s", path)
+                return CheckStatus.ERROR
+            elif free_ratio < DISK_SPACE_THRESHOLD:
                 logger.warning(
                     "Low disk space on %s: %.1f%% free",
                     path,
@@ -425,6 +402,8 @@ def check_disk_space() -> CheckStatus:
         except Exception as e:
             logger.error("Disk space check failed for %s: %s", path, e)
             return CheckStatus.ERROR
+
+    return CheckStatus.OK
 
 
 def check_page(route):
