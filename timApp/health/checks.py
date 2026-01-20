@@ -434,6 +434,11 @@ def check_frontpage() -> CheckStatus:
     """
     Check if the frontpage is accessible.
     """
+    if not Path("static/scripts/build").exists():
+        # If TIM is built, check the frontpage
+        logger.debug("Scripts not built, skipping frontpage check")
+        return CheckStatus.skipped
+
     if check_page("/"):
         return CheckStatus.ok
     return CheckStatus.error
