@@ -421,6 +421,11 @@ def check_disk_space() -> CheckStatus:
 
 
 def check_page(route):
+    """
+    Check if a given page route is accessible and returns expected content.
+
+    Expects HTTP 200 and presence of "TIM" in the response.
+    """
     try:
         with current_app.test_client() as client:
             response = client.get(route)
