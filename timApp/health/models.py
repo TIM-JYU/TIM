@@ -6,13 +6,14 @@ class CheckStatus(str, Enum):
     """
     Enumeration of possible health check statuses.
     """
-    OK = "ok"
-    ERROR = "error"
-    DEGRADED = "degraded"
-    SKIPPED = "skipped"
+    # Bad practice: Use lowercase property names, see issue #3934
+    ok = "ok"
+    error = "error"
+    degraded = "degraded"
+    skipped = "skipped"
 
     def __bool__(self) -> bool:
-        return bool(self in [CheckStatus.OK, CheckStatus.SKIPPED])
+        return bool(self in [CheckStatus.ok, CheckStatus.skipped])
 
 
 @dataclass

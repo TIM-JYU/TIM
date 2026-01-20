@@ -51,7 +51,7 @@ def check_pgsql() -> CheckStatus:
         result = db.session.execute(text("SELECT 1")).scalar()
         if result != 1:
             logger.warning("PostgreSQL SELECT 1 returned unexpected result: %s", result)
-            return CheckStatus.ERROR
+            return CheckStatus.error
 
         # Check connection pool status
         pool = db.engine.pool
@@ -62,7 +62,7 @@ def check_pgsql() -> CheckStatus:
         elapsed = time.time() - start_time
         if elapsed > SLOW_QUERY_THRESHOLD.total_seconds():
             logger.warning("PostgreSQL health check took %.2fs (slow)", elapsed)
-            return CheckStatus.DEGRADED
+            return CheckStatus.degraded
 
         # Check if connection pool is nearly exhausted (90% usage)
         if pool_size > 0 and checked_out >= pool_size * 0.9:
@@ -71,13 +71,13 @@ def check_pgsql() -> CheckStatus:
                 checked_out,
                 pool_size,
             )
-            return CheckStatus.DEGRADED
+            return CheckStatus.degraded
         
-        return CheckStatus.OK
+        return CheckStatus.ok
         
     except Exception as e:
         logger.error("PostgreSQL health check failed: %s", e)
-        return CheckStatus.ERROR
+        return CheckStatus.error
 
 def check_redis() -> CheckStatus:
     """
@@ -100,13 +100,13 @@ def check_redis() -> CheckStatus:
         ping_result = rclient.ping()
         if not ping_result:
             logger.warning("Redis PING returned False")
-            return CheckStatus.ERROR
+            return CheckStatus.error
         
         # Check response time
         elapsed = time.time() - start_time
         if elapsed > SLOW_QUERY_THRESHOLD.total_seconds():
             logger.warning("Redis health check took %.2fs (slow)", elapsed)
-            return CheckStatus.DEGRADED
+            return CheckStatus.degraded
         
         # Check memory usage
         try:
@@ -122,7 +122,7 @@ def check_redis() -> CheckStatus:
                     maxmemory,
                     (used_memory / maxmemory) * 100,
                 )
-                return CheckStatus.DEGRADED
+                return CheckStatus.degraded
             
             logger.debug(
                 "Redis memory stats - used_memory: %d bytes, maxmemory: %d bytes",
@@ -148,7 +148,7 @@ def check_redis() -> CheckStatus:
                         "Redis replica master link down for %d seconds",
                         master_link_down_since_seconds,
                     )
-                    return CheckStatus.DEGRADED
+                    return CheckStatus.degraded
                 
                 # Check replication lag
                 master_repl_offset = replication.get("master_repl_offset", 0)
@@ -160,7 +160,7 @@ def check_redis() -> CheckStatus:
                         "Redis replica noticeably behind: %d bytes lag",
                         replication_lag,
                     )
-                    return CheckStatus.DEGRADED
+                    return CheckStatus.degraded
 
             else:
                 logger.debug("Redis replication - role: %s", role)
@@ -168,14 +168,14 @@ def check_redis() -> CheckStatus:
             # Replication info not critical, log but don't fail
             logger.debug("Could not retrieve Redis replication info: %s", e)
 
-        return CheckStatus.OK
+        return CheckStatus.ok
         
     except RedisError as e:
         logger.error("Redis health check failed: %s", e, exc_info=True)
-        return CheckStatus.ERROR
+        return CheckStatus.error
     except Exception as e:
         logger.error("Redis health check failed with unexpected error: %s", e, exc_info=True)
-        return CheckStatus.ERROR
+        return CheckStatus.error
 
 
 def check_celery() -> CheckStatus:
@@ -205,22 +205,22 @@ def check_celery() -> CheckStatus:
 
         if not active_workers:
             logger.warning("No Celery workers are active")
-            return CheckStatus.ERROR
+            return CheckStatus.error
         
         # Check if workers respond to ping
         ping_responses = inspector.ping()
         if not ping_responses:
             logger.warning("Celery workers did not respond to ping")
-            return CheckStatus.ERROR
+            return CheckStatus.error
 
         worker_count = len(ping_responses)
         logger.debug("Celery workers active: %d", worker_count)
         
-        return CheckStatus.OK
+        return CheckStatus.ok
         
     except Exception as e:
         logger.error("Celery health check failed: %s", e)
-        return CheckStatus.ERROR
+        return CheckStatus.error
 
 
 def check_dumbo_service() -> CheckStatus:
@@ -244,23 +244,23 @@ def check_dumbo_service() -> CheckStatus:
         # Verify response contains expected HTML
         if not isinstance(result, list) or len(result) == 0:
             logger.warning("Dumbo service returned unexpected response format")
-            return CheckStatus.ERROR
+            return CheckStatus.error
         
         # Check if the conversion worked (should contain heading tag)
         if "<h1" not in result[0]:
             logger.warning("Dumbo service conversion produced unexpected output")
-            return CheckStatus.ERROR
+            return CheckStatus.error
         
         logger.debug("Dumbo service responded in %.2fs", elapsed)
-        return CheckStatus.OK
+        return CheckStatus.ok
         
     except DumboHTMLException as e:
         logger.error("Dumbo service returned error status")
-        return CheckStatus.ERROR
+        return CheckStatus.error
     except Exception as e:
         # This catches ConnectionError from call_dumbo
         logger.error("Dumbo service health check failed: %s", e)
-        return CheckStatus.ERROR
+        return CheckStatus.error
 
 
 def check_gunicorn() -> CheckStatus:
@@ -282,11 +282,11 @@ def check_gunicorn() -> CheckStatus:
     
     if not HAS_PSUTIL:
         logger.debug("psutil not available, skipping gunicorn health check")
-        return CheckStatus.SKIPPED
+        return CheckStatus.skipped
 
     if not HAS_GUNICORN or not os.environ.get("SERVER_SOFTWARE", "").startswith("gunicorn/"):
         logger.debug("Not running under Gunicorn, skipping gunicorn health check")
-        return CheckStatus.SKIPPED
+        return CheckStatus.skipped
 
     try:
         # Since this check runs on a gunicorn worker, we can directly get:
@@ -298,14 +298,14 @@ def check_gunicorn() -> CheckStatus:
         
         if not master_proc:
             logger.debug("Could not find parent process (gunicorn master)")
-            return CheckStatus.SKIPPED
+            return CheckStatus.skipped
         
         # Get all worker processes (children of the master)
         worker_processes: List[psutil.Process] = master_proc.children()
 
         if not worker_processes:
             logger.warning("Gunicorn master found (%s), but no active workers.", master_proc.pid if master_proc else "N/A")
-            return CheckStatus.ERROR
+            return CheckStatus.error
 
         # Check RAM usage of workers
         worker_rss = sum(p.memory_info().rss for p in worker_processes if p.is_running())
@@ -318,15 +318,15 @@ def check_gunicorn() -> CheckStatus:
                 mem.total,
                 (worker_rss / mem.total) * 100,
             )
-            return CheckStatus.DEGRADED
+            return CheckStatus.degraded
 
-        return CheckStatus.OK
+        return CheckStatus.ok
 
     except Exception as e:
         logger.error("Gunicorn health check failed: %s", e)
-        return CheckStatus.ERROR
+        return CheckStatus.error
     
-    return CheckStatus.OK
+    return CheckStatus.ok
 
 
 def _get_writable_paths() -> Set[str]:
@@ -358,7 +358,7 @@ def check_writable() -> CheckStatus:
             # Check if path exists and is a directory
             if not os.path.isdir(writable_path):
                 logger.error("Expected writable directory is not a directory: %r", writable_path)
-                return CheckStatus.ERROR
+                return CheckStatus.error
 
             # Attempt to create and delete a temporary file in the writable directory
             # File will be deleted automatically
@@ -368,9 +368,9 @@ def check_writable() -> CheckStatus:
             continue  # Success for this path, check next
         except Exception as e:
             logger.error("Writable directory health check failed: %s", e)
-            return CheckStatus.ERROR
+            return CheckStatus.error
 
-    return CheckStatus.OK
+    return CheckStatus.ok
 
 
 def check_disk_space() -> CheckStatus:
@@ -391,19 +391,19 @@ def check_disk_space() -> CheckStatus:
 
             if total and used >= total:
                 logger.error("No disk space available on %s", path)
-                return CheckStatus.ERROR
+                return CheckStatus.error
             elif free_ratio < DISK_SPACE_THRESHOLD:
                 logger.warning(
                     "Low disk space on %s: %.1f%% free",
                     path,
                     free_ratio * 100,
                 )
-                return CheckStatus.DEGRADED
+                return CheckStatus.degraded
         except Exception as e:
             logger.error("Disk space check failed for %s: %s", path, e)
-            return CheckStatus.ERROR
+            return CheckStatus.error
 
-    return CheckStatus.OK
+    return CheckStatus.ok
 
 
 def check_page(route):
@@ -421,6 +421,6 @@ def check_frontpage() -> CheckStatus:
     Check if the frontpage is accessible.
     """
     if check_page("/"):
-        return CheckStatus.OK
-    return CheckStatus.ERROR
+        return CheckStatus.ok
+    return CheckStatus.error
 
