@@ -29,7 +29,6 @@ from tim_common.marshmallow_dataclass import dataclass
 health_blueprint = Blueprint("health", __name__, url_prefix="/health")
 
 logger = tim_logger.getChild("health")
-logger.setLevel(10)
 
 # Timeout for individual health checks in seconds
 HEALTH_CHECK_TIMEOUT = 5.0
