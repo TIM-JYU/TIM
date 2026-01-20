@@ -24,7 +24,7 @@ import {CsController} from "./csPlugin";
                                 [disabled]="isRunning"
                                 class="timButton btn-sm"
                                 title="(Ctrl-S)"
-                                [innerHTML]="buttonText()"></button>
+                                i18n>Submit</button>
                     </td></tr>
                 </table>
             </form>
@@ -120,9 +120,5 @@ export class GitRegComponent extends CsController {
             this.error = r.result.error.error;
         }
         this.isRunning = false;
-    }
-
-    buttonText() {
-        return this.english ? "Submit" : "Lähetä";
     }
 }
