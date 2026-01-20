@@ -1,3 +1,4 @@
+from pathlib import Path
 from typing import List, Set
 from timApp.util.logger import tim_logger
 from datetime import timedelta
@@ -16,6 +17,9 @@ import socket
 
 from celery import Celery
 from tim_common.dumboclient import call_dumbo, DumboHTMLException
+
+# Disable redis replication check until it has been properly tested
+ENABLE_REDIS_REPLICATION_CHECK = False
 
 try:
     import psutil
@@ -93,6 +97,44 @@ def check_redis() -> CheckStatus:
     HIGH_MEMORY_THRESHOLD = 0.9  # 90% of max memory
     REPLICATION_LAG_THRESHOLD = 1024 * 1024 * 10  # 10MB replication lag in bytes
 
+    def _replication_check(rclient=rclient) -> CheckStatus | None:
+        try:
+            replication = rclient.info("replication")
+            role = replication.get("role", "unknown")
+
+            # Only check replication metrics if this is a replica
+            if role == "slave":
+                master_link_down_since_seconds = replication.get("master_link_down_since_seconds", -1)
+
+                # -1 means the link is up (or field doesn't exist)
+                if master_link_down_since_seconds > 0:
+                    logger.warning(
+                        "Redis replica master link down for %d seconds",
+                        master_link_down_since_seconds,
+                    )
+                    return CheckStatus.degraded
+
+                # Check replication lag
+                master_repl_offset = replication.get("master_repl_offset", 0)
+                slave_repl_offset = replication.get("slave_repl_offset", 0)
+                replication_lag = master_repl_offset - slave_repl_offset
+
+                if replication_lag > REPLICATION_LAG_THRESHOLD:
+                    logger.warning(
+                        "Redis replica noticeably behind: %d bytes lag",
+                        replication_lag,
+                    )
+                    return CheckStatus.degraded
+
+            else:
+                logger.debug("Redis replication - role: %s", role)
+
+            return None
+        except (KeyError, RedisError) as e:
+            # Replication info not critical, log but don't fail
+            logger.debug("Could not retrieve Redis replication info: %s", e)
+            return None
+
     try:
         start_time = time.time()
         
@@ -107,7 +149,7 @@ def check_redis() -> CheckStatus:
         if elapsed > SLOW_QUERY_THRESHOLD.total_seconds():
             logger.warning("Redis health check took %.2fs (slow)", elapsed)
             return CheckStatus.degraded
-        
+
         # Check memory usage
         try:
             info = rclient.info("memory")
@@ -133,40 +175,12 @@ def check_redis() -> CheckStatus:
             # Memory info not critical, log but don't fail
             logger.debug("Could not retrieve Redis memory info: %s", e)
 
-        # Check replication status
-        try:
-            replication = rclient.info("replication")
-            role = replication.get("role", "unknown")
-            
-            # Only check replication metrics if this is a replica
-            if role == "slave":
-                master_link_down_since_seconds = replication.get("master_link_down_since_seconds", -1)
-
-                # -1 means the link is up (or field doesn't exist)
-                if master_link_down_since_seconds > 0:
-                    logger.warning(
-                        "Redis replica master link down for %d seconds",
-                        master_link_down_since_seconds,
-                    )
-                    return CheckStatus.degraded
-                
-                # Check replication lag
-                master_repl_offset = replication.get("master_repl_offset", 0)
-                slave_repl_offset = replication.get("slave_repl_offset", 0)
-                replication_lag = master_repl_offset - slave_repl_offset
-                
-                if replication_lag > REPLICATION_LAG_THRESHOLD:
-                    logger.warning(
-                        "Redis replica noticeably behind: %d bytes lag",
-                        replication_lag,
-                    )
-                    return CheckStatus.degraded
-
-            else:
-                logger.debug("Redis replication - role: %s", role)
-        except (KeyError, RedisError) as e:
-            # Replication info not critical, log but don't fail
-            logger.debug("Could not retrieve Redis replication info: %s", e)
+        if ENABLE_REDIS_REPLICATION_CHECK:
+            rep_result = _replication_check(rclient)
+            if rep_result is CheckStatus.degraded:
+                return CheckStatus.degraded
+        else:
+            logger.debug("Redis replication check disabled")
 
         return CheckStatus.ok
         
