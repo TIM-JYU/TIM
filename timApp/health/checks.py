@@ -20,6 +20,9 @@ from tim_common.dumboclient import call_dumbo, DumboHTMLException
 # Disable redis replication check until it has been properly tested
 ENABLE_REDIS_REPLICATION_CHECK = False
 
+# Expected string in page to verify it's loaded correctly
+PAGE_EXPECTED_STRING = b"TIM"
+
 try:
     import psutil
     HAS_PSUTIL = True
@@ -423,7 +426,7 @@ def check_page(route):
         with current_app.test_client() as client:
             response = client.get(route)
             # Check for 200 OK and that "TIM" exists in the decoded HTML
-            return response.status_code == 200 and b"TIM" in response.data
+            return response.status_code == 200 and PAGE_EXPECTED_STRING in response.data
     except Exception:
         return False
 
