@@ -13,7 +13,6 @@ from timApp.util.logger import tim_logger
 
 import os
 import tempfile
-import socket
 
 from celery import Celery
 from tim_common.dumboclient import call_dumbo, DumboHTMLException
