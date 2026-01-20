@@ -45,7 +45,6 @@ import {
 import {registerPlugin} from "tim/plugin/pluginRegistry";
 import type {AnswerBrowserComponent} from "tim/answer/answer-browser.component";
 import {CommonModule} from "@angular/common";
-import {$localize} from "@angular/localize/init";
 import {communicationJS} from "./iframeutils";
 
 const JsframeMarkup = t.intersection([
@@ -806,8 +805,6 @@ export class JsframeComponent
             this.addListener();
         }
     }
-
-    protected readonly $localize = $localize;
 }
 
 @NgModule({
