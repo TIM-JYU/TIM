@@ -283,13 +283,7 @@ def check_gunicorn() -> CheckStatus:
     
     Performs checks:
     - At least one gunicorn worker process is running
-    - Request queue depth is within acceptable limits
     - Workers are not using excessive memory
-
-    Note:
-    - Expectation is that Gunicorn is runnning as synchronous workers
-      (not async/eventlet/gevent). If async workers are used, this check
-      treshold `QUEUE_DEPTH_WARN_THRESHOLD` may need adjustment.
     """
 
     MAX_RAM_USAGE_RATIO = 0.80  # Warn if workers use 80%+ of total system RAM
