@@ -242,6 +242,7 @@ autosave: true
         self.wait_until_present_and_vis("#cstiny input")
         element = self.find_element("#cstiny input")
         element.click()
+        sleep(1)
         ActionChains(self.drv).send_keys(Keys.END).send_keys(Keys.LEFT).key_down(
             Keys.SHIFT
         ).send_keys(Keys.LEFT).send_keys(Keys.LEFT).key_up(Keys.SHIFT).perform()
