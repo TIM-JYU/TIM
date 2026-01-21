@@ -15,7 +15,7 @@ from timApp.util.logger import tim_logger
 import os
 import tempfile
 
-from celery import Celery
+from celery import Celery  # type: ignore[import]
 from tim_common.dumboclient import call_dumbo, DumboHTMLException
 
 # Disable redis replication check until it has been properly tested
