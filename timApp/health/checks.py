@@ -18,7 +18,7 @@ import tempfile
 from celery import Celery  # type: ignore[import]
 from tim_common.dumboclient import call_dumbo, DumboHTMLException
 
-# Disable redis replication check until it has been properly tested
+# Disable redis replication check until it has been  properly tested
 ENABLE_REDIS_REPLICATION_CHECK = False
 
 # Expected string in page to verify it's loaded correctly
