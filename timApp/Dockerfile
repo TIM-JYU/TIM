@@ -211,6 +211,13 @@ RUN DRIVER_ARCH=$(if [ "$(dpkg --print-architecture)" = "amd64" ]; then echo "li
 
 WORKDIR /service
 
+HEALTHCHECK \
+  --interval=60s \
+  --timeout=10s \
+  --start-period=60s \
+  --retries=3 \
+  CMD curl -f http://localhost:5000/health || exit 1
+
 CMD python3 launch.py
 
 EXPOSE 5000
