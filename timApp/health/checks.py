@@ -1,11 +1,12 @@
+from importlib.util import find_spec
 from pathlib import Path
-from typing import List, Set
-from timApp.util.logger import tim_logger
+from typing import Any, Dict, List, Set, cast
 from datetime import timedelta
 import time
 from flask import current_app
+import redis
 from redis.exceptions import RedisError
-from sqlalchemy import text
+from sqlalchemy import QueuePool, text
 from timApp.document.caching import rclient
 from timApp.health.models import CheckStatus
 from timApp.timdb.sqa import db
@@ -23,24 +24,29 @@ ENABLE_REDIS_REPLICATION_CHECK = False
 # Expected string in page to verify it's loaded correctly
 PAGE_EXPECTED_STRING = b"TIM"
 
+psutil: Any = None
 try:
-    import psutil
+    import psutil  # type: ignore[import,no-redef]
+
     HAS_PSUTIL = True
 except ImportError:
     HAS_PSUTIL = False
 
 try:
-    import gunicorn.workers
-    HAS_GUNICORN = True
+    if find_spec("gunicorn.workers") is not None:
+        HAS_GUNICORN = True
+    else:
+        HAS_GUNICORN = False
 except ImportError:
     HAS_GUNICORN = False
 
 logger = tim_logger.getChild("health")
 
+
 def check_pgsql() -> CheckStatus:
     """
     Check PostgreSQL database connectivity and health.
-    
+
     Performs multiple checks:
     - Basic connectivity (SELECT 1)
     - Connection pool status
@@ -52,7 +58,7 @@ def check_pgsql() -> CheckStatus:
 
     try:
         start_time = time.time()
-        
+
         # Basic connectivity check
         result = db.session.execute(text("SELECT 1")).scalar()
         if result != 1:
@@ -61,6 +67,10 @@ def check_pgsql() -> CheckStatus:
 
         # Check connection pool status
         pool = db.engine.pool
+
+        # MyPy: Ensure correct type for pool
+        pool = cast(QueuePool, pool)
+
         pool_size = pool.size()
         checked_out = pool.checkedout()
 
@@ -78,12 +88,13 @@ def check_pgsql() -> CheckStatus:
                 pool_size,
             )
             return CheckStatus.degraded
-        
+
         return CheckStatus.ok
-        
+
     except Exception as e:
         logger.error("PostgreSQL health check failed: %s", e)
         return CheckStatus.error
+
 
 def check_redis() -> CheckStatus:
     """
@@ -99,14 +110,17 @@ def check_redis() -> CheckStatus:
     HIGH_MEMORY_THRESHOLD = 0.9  # 90% of max memory
     REPLICATION_LAG_THRESHOLD = 1024 * 1024 * 10  # 10MB replication lag in bytes
 
-    def _replication_check(rclient=rclient) -> CheckStatus | None:
+    def _replication_check(rclient: redis.Redis = rclient) -> CheckStatus:
         try:
-            replication = rclient.info("replication")
+            # Notice: the default redis-py type hints are incomplete/wrong – we're using synchronous client
+            replication: Dict[str, Any] = rclient.info("replication")  # type: ignore[assignment]
             role = replication.get("role", "unknown")
 
             # Only check replication metrics if this is a replica
             if role == "slave":
-                master_link_down_since_seconds = replication.get("master_link_down_since_seconds", -1)
+                master_link_down_since_seconds = replication.get(
+                    "master_link_down_since_seconds", -1
+                )
 
                 # -1 means the link is up (or field doesn't exist)
                 if master_link_down_since_seconds > 0:
@@ -131,21 +145,21 @@ def check_redis() -> CheckStatus:
             else:
                 logger.debug("Redis replication - role: %s", role)
 
-            return None
+            return CheckStatus.ok
         except (KeyError, RedisError) as e:
             # Replication info not critical, log but don't fail
             logger.debug("Could not retrieve Redis replication info: %s", e)
-            return None
+            return CheckStatus.skipped
 
     try:
         start_time = time.time()
-        
+
         # Basic connectivity check
         ping_result = rclient.ping()
         if not ping_result:
             logger.warning("Redis PING returned False")
             return CheckStatus.error
-        
+
         # Check response time
         elapsed = time.time() - start_time
         if elapsed > SLOW_QUERY_THRESHOLD.total_seconds():
@@ -154,10 +168,10 @@ def check_redis() -> CheckStatus:
 
         # Check memory usage
         try:
-            info = rclient.info("memory")
+            info: Dict[str, Any] = rclient.info("memory")  # type: ignore[assignment]
             used_memory = info.get("used_memory", 0)
             maxmemory = info.get("maxmemory", 0)
-            
+
             # Only check memory if maxmemory is set (0 means unlimited)
             if maxmemory > 0 and used_memory >= maxmemory * HIGH_MEMORY_THRESHOLD:
                 logger.warning(
@@ -167,7 +181,7 @@ def check_redis() -> CheckStatus:
                     (used_memory / maxmemory) * 100,
                 )
                 return CheckStatus.degraded
-            
+
             logger.debug(
                 "Redis memory stats - used_memory: %d bytes, maxmemory: %d bytes",
                 used_memory,
@@ -185,35 +199,34 @@ def check_redis() -> CheckStatus:
             logger.debug("Redis replication check disabled")
 
         return CheckStatus.ok
-        
+
     except RedisError as e:
         logger.error("Redis health check failed: %s", e, exc_info=True)
         return CheckStatus.error
     except Exception as e:
-        logger.error("Redis health check failed with unexpected error: %s", e, exc_info=True)
+        logger.error(
+            "Redis health check failed with unexpected error: %s", e, exc_info=True
+        )
         return CheckStatus.error
 
 
 def check_celery() -> CheckStatus:
     """
     Check Celery worker status.
-    
+
     Performs checks:
     - At least one worker is active
     - Workers are responsive (via ping)
-    
+
     Returns ERROR if no workers are available or they don't respond.
     """
     CELERY_PING_TIMEOUT = timedelta(seconds=2)
-    
+
     try:
         # Create a minimal Celery instance for inspection only
         broker_url = current_app.config.get("CELERY_BROKER_URL", "redis://redis:6379")
         backend = current_app.config.get("CELERY_RESULT_BACKEND", "rpc://")
-        cel = Celery(
-            backend=backend,
-            broker=broker_url
-        )
+        cel = Celery(backend=backend, broker=broker_url)
 
         # Get active workers by pinging them
         inspector = cel.control.inspect(timeout=CELERY_PING_TIMEOUT.total_seconds())
@@ -222,7 +235,7 @@ def check_celery() -> CheckStatus:
         if not active_workers:
             logger.warning("No Celery workers are active")
             return CheckStatus.error
-        
+
         # Check if workers respond to ping
         ping_responses = inspector.ping()
         if not ping_responses:
@@ -231,9 +244,9 @@ def check_celery() -> CheckStatus:
 
         worker_count = len(ping_responses)
         logger.debug("Celery workers active: %d", worker_count)
-        
+
         return CheckStatus.ok
-        
+
     except Exception as e:
         logger.error("Celery health check failed: %s", e)
         return CheckStatus.error
@@ -242,35 +255,35 @@ def check_celery() -> CheckStatus:
 def check_dumbo_service() -> CheckStatus:
     """
     Check Dumbo markdown converter service health.
-    
+
     Performs a simple markdown conversion test to verify:
     - Service is reachable
     - Service responds correctly
     - Service can process markdown
-    
+
     Returns ERROR if service is unreachable or fails to convert.
     """
     try:
         start_time = time.time()
-        
+
         # Use call_dumbo to test the service with a simple markdown conversion
         result = call_dumbo(["# Test"])
         elapsed = time.time() - start_time
-        
+
         # Verify response contains expected HTML
         if not isinstance(result, list) or len(result) == 0:
             logger.warning("Dumbo service returned unexpected response format")
             return CheckStatus.error
-        
+
         # Check if the conversion worked (should contain heading tag)
         if "<h1" not in result[0]:
             logger.warning("Dumbo service conversion produced unexpected output")
             return CheckStatus.error
-        
+
         logger.debug("Dumbo service responded in %.2fs", elapsed)
         return CheckStatus.ok
-        
-    except DumboHTMLException as e:
+
+    except DumboHTMLException:
         logger.error("Dumbo service returned error status")
         return CheckStatus.error
     except Exception as e:
@@ -282,19 +295,21 @@ def check_dumbo_service() -> CheckStatus:
 def check_gunicorn() -> CheckStatus:
     """
     Check Gunicorn worker health and request queue depth.
-    
+
     Performs checks:
     - At least one gunicorn worker process is running
     - Workers are not using excessive memory
     """
 
     MAX_RAM_USAGE_RATIO = 0.80  # Warn if workers use 80%+ of total system RAM
-    
+
     if not HAS_PSUTIL:
         logger.debug("psutil not available, skipping gunicorn health check")
         return CheckStatus.skipped
 
-    if not HAS_GUNICORN or not os.environ.get("SERVER_SOFTWARE", "").startswith("gunicorn/"):
+    if not HAS_GUNICORN or not os.environ.get("SERVER_SOFTWARE", "").startswith(
+        "gunicorn/"
+    ):
         logger.debug("Not running under Gunicorn, skipping gunicorn health check")
         return CheckStatus.skipped
 
@@ -303,22 +318,32 @@ def check_gunicorn() -> CheckStatus:
         # - Current process (this worker)
         # - Parent process (the gunicorn master)
         # - All children of the master (all workers including this one)
+        if psutil is None:
+            # Should not happen due to HAS_PSUTIL check above, but mypy needs this
+            return CheckStatus.skipped
+
         current_proc = psutil.Process()
         master_proc = current_proc.parent()
-        
+
         if not master_proc:
             logger.debug("Could not find parent process (gunicorn master)")
             return CheckStatus.skipped
-        
+
         # Get all worker processes (children of the master)
-        worker_processes: List[psutil.Process] = master_proc.children()
+        worker_processes: List[psutil.Process] = master_proc.children()  # type: ignore[attr-defined]
 
         if not worker_processes:
-            logger.warning("Gunicorn master found (%s), but no active workers.", master_proc.pid if master_proc else "N/A")
+            logger.warning(
+                "Gunicorn master found (%s), but no active workers.",
+                master_proc.pid if master_proc else "N/A",
+            )
             return CheckStatus.error
 
         # Check RAM usage of workers
-        worker_rss = sum(p.memory_info().rss for p in worker_processes if p.is_running())
+        worker_rss = sum(
+            p.memory_info().rss for p in worker_processes if p.is_running()
+        )
+
         mem = psutil.virtual_memory()
 
         if mem.total > 0 and (worker_rss / mem.total) >= MAX_RAM_USAGE_RATIO:
@@ -335,7 +360,7 @@ def check_gunicorn() -> CheckStatus:
     except Exception as e:
         logger.error("Gunicorn health check failed: %s", e)
         return CheckStatus.error
-    
+
     return CheckStatus.ok
 
 
@@ -346,12 +371,14 @@ def _get_writable_paths() -> Set[str]:
     from timApp.util.utils import cache_folder_path
     from timApp.util.utils import temp_folder_path
 
-    paths = set([
-        current_app.config.get("FILES_PATH", None),  
-        current_app.config.get("LOG_DIR", None),
-        cache_folder_path,
-        temp_folder_path,
-    ])
+    paths = set(
+        [
+            current_app.config.get("FILES_PATH", None),
+            current_app.config.get("LOG_DIR", None),
+            cache_folder_path,
+            temp_folder_path,
+        ]
+    )
     return {str(p) for p in paths if p is not None}
 
 
@@ -367,7 +394,9 @@ def check_writable() -> CheckStatus:
         try:
             # Check if path exists and is a directory
             if not os.path.isdir(writable_path):
-                logger.error("Expected writable directory is not a directory: %r", writable_path)
+                logger.error(
+                    "Expected writable directory is not a directory: %r", writable_path
+                )
                 return CheckStatus.error
 
             # Attempt to create and delete a temporary file in the writable directory
@@ -416,7 +445,7 @@ def check_disk_space() -> CheckStatus:
     return CheckStatus.ok
 
 
-def check_page(route):
+def check_page(route: str) -> bool:
     """
     Check if a given page route is accessible and returns expected content.
 
@@ -443,4 +472,3 @@ def check_frontpage() -> CheckStatus:
     if check_page("/"):
         return CheckStatus.ok
     return CheckStatus.error
-

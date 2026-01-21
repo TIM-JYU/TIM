@@ -3,14 +3,10 @@ TIM Health check
 =================
 Provides an endpoint for checking the health of various TIM components.
 """
-from datetime import timedelta
-import time
 from concurrent.futures import ThreadPoolExecutor, as_completed, TimeoutError
-from enum import Enum
 from http import HTTPStatus
-from typing import Callable, Literal, Protocol
+from typing import Callable
 from flask import Flask, Blueprint, current_app
-from sqlalchemy import text, inspect
 from timApp.health.checks import (
     check_pgsql,
     check_redis,
@@ -22,9 +18,7 @@ from timApp.health.checks import (
     check_writable,
 )
 from timApp.health.models import CheckStatus, HealthStatus
-from timApp.timdb.sqa import db
 from timApp.util.logger import tim_logger
-from tim_common.marshmallow_dataclass import dataclass
 
 health_blueprint = Blueprint("health", __name__, url_prefix="/health")
 
@@ -33,10 +27,11 @@ logger = tim_logger.getChild("health")
 # Timeout for individual health checks in seconds
 HEALTH_CHECK_TIMEOUT = 5.0
 
+
 def run_check_safe(check_fn: Callable[[], CheckStatus], app: Flask) -> CheckStatus:
     """
     Safely executes a health check function, catching any exceptions.
-    
+
     :param check_fn: The check function to execute
     :param app: The Flask application instance
     :return: CheckStatus.ERROR if an exception occurs, otherwise the check result
@@ -51,10 +46,13 @@ def run_check_safe(check_fn: Callable[[], CheckStatus], app: Flask) -> CheckStat
         return CheckStatus.error
 
 
-def run_health_checks(checks_registry: dict[str, Callable[[], CheckStatus]], timeout: float = HEALTH_CHECK_TIMEOUT) -> dict[str, CheckStatus]:
+def run_health_checks(
+    checks_registry: dict[str, Callable[[], CheckStatus]],
+    timeout: float = HEALTH_CHECK_TIMEOUT,
+) -> dict[str, CheckStatus]:
     """
     Runs all health checks concurrently using a thread pool.
-    
+
     :param checks_registry: Dictionary mapping check names to check functions
     :param timeout: Timeout in seconds for each individual check before marking it as ERROR
     :return: Dictionary mapping check names to their results
@@ -70,21 +68,25 @@ def run_health_checks(checks_registry: dict[str, Callable[[], CheckStatus]], tim
             executor.submit(run_check_safe, check_fn, app_for_thread): check_name
             for check_name, check_fn in checks_registry.items()
         }
-        
+
         # Collect results as they complete
-        for future in as_completed(future_to_check, timeout=timeout * len(checks_registry)):
+        for future in as_completed(
+            future_to_check, timeout=timeout * len(checks_registry)
+        ):
             check_name = future_to_check[future]
             try:
                 checks[check_name] = future.result(timeout=timeout)
             except TimeoutError:
-                logger.warning("Health check %s timed out after %ss", check_name, timeout)
+                logger.warning(
+                    "Health check %s timed out after %ss", check_name, timeout
+                )
                 checks[check_name] = CheckStatus.error
 
     return checks
 
 
 @health_blueprint.route("", methods=["GET"])
-def health_check():
+def health_check() -> tuple[dict, HTTPStatus]:
     """
     Health check endpoint
 
@@ -133,6 +135,12 @@ def health_check():
     else:
         response_code = HTTPStatus.SERVICE_UNAVAILABLE
 
-    status = HealthStatus(status=overall_status, checks=checks)
+    status = HealthStatus(status=overall_status, checks=checks)  # type: ignore[call-arg]
 
-    return HealthStatus.Schema().dump(status), response_code
+    # black will reformat this incorrectly
+    # fmt: off
+    return (
+        HealthStatus.Schema().dump(status),   # type: ignore[call-arg]
+        response_code  
+    )
+    # fmt: on

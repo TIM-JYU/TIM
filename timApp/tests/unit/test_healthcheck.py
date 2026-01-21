@@ -60,9 +60,9 @@ class TestHealthModels(unittest.TestCase):
             "redis": CheckStatus.degraded,
         }
         status = HealthStatus(status=CheckStatus.degraded, checks=checks)
-        
+
         data = HealthStatus.Schema().dump(status)
-        
+
         self.assertEqual(data["status"], "degraded")
         self.assertEqual(data["checks"]["pgsql"], "ok")
         self.assertEqual(data["checks"]["redis"], "degraded")
@@ -70,7 +70,7 @@ class TestHealthModels(unittest.TestCase):
 
 class TestRunCheckSafe(unittest.TestCase):
     """Tests for run_check_safe function
-    
+
     Note: Mock objects must have __name__ attribute set via Mock(__name__='...')
     because run_check_safe accesses check_fn.__name__ for logging.
     """
@@ -78,65 +78,72 @@ class TestRunCheckSafe(unittest.TestCase):
     def setUp(self):
         """Set up test Flask app"""
         self.app = Flask(__name__)
-        self.app.config['TESTING'] = True
+        self.app.config["TESTING"] = True
 
     def test_successful_check_execution(self):
         """Test that run_check_safe executes a successful check and returns the result"""
-        mock_check = Mock(return_value=CheckStatus.ok, __name__='test_check')
-        
+        mock_check = Mock(return_value=CheckStatus.ok, __name__="test_check")
+
         with self.app.app_context():
             result = run_check_safe(mock_check, self.app)
-        
+
         self.assertEqual(result, CheckStatus.ok)
         mock_check.assert_called_once()
 
     def test_check_returning_degraded(self):
         """Test that run_check_safe correctly returns degraded status"""
-        mock_check = Mock(return_value=CheckStatus.degraded, __name__='test_check_degraded')
-        
+        mock_check = Mock(
+            return_value=CheckStatus.degraded, __name__="test_check_degraded"
+        )
+
         with self.app.app_context():
             result = run_check_safe(mock_check, self.app)
-        
+
         self.assertEqual(result, CheckStatus.degraded)
         mock_check.assert_called_once()
 
     def test_check_returning_error(self):
         """Test that run_check_safe correctly returns error status"""
-        mock_check = Mock(return_value=CheckStatus.error, __name__='test_check_error')
-        
+        mock_check = Mock(return_value=CheckStatus.error, __name__="test_check_error")
+
         with self.app.app_context():
             result = run_check_safe(mock_check, self.app)
-        
+
         self.assertEqual(result, CheckStatus.error)
         mock_check.assert_called_once()
 
     def test_exception_handling(self):
         """Test that run_check_safe catches exceptions and returns error status"""
-        mock_check = Mock(side_effect=Exception("Test exception"), __name__='test_check_exception')
-        
+        mock_check = Mock(
+            side_effect=Exception("Test exception"), __name__="test_check_exception"
+        )
+
         with self.app.app_context():
             result = run_check_safe(mock_check, self.app)
-        
+
         self.assertEqual(result, CheckStatus.error)
         mock_check.assert_called_once()
 
     def test_runtime_error_handling(self):
         """Test that run_check_safe handles RuntimeError correctly"""
-        mock_check = Mock(side_effect=RuntimeError("Runtime error"), __name__='test_check_runtime_error')
-        
+        mock_check = Mock(
+            side_effect=RuntimeError("Runtime error"),
+            __name__="test_check_runtime_error",
+        )
+
         with self.app.app_context():
             result = run_check_safe(mock_check, self.app)
-        
+
         self.assertEqual(result, CheckStatus.error)
         mock_check.assert_called_once()
 
     def test_app_context_is_used(self):
         """Test that run_check_safe uses the Flask app context"""
-        mock_check = Mock(return_value=CheckStatus.ok, __name__='test_check_context')
-        
+        mock_check = Mock(return_value=CheckStatus.ok, __name__="test_check_context")
+
         # Don't create an app context initially - run_check_safe should create it
         result = run_check_safe(mock_check, self.app)
-        
+
         self.assertEqual(result, CheckStatus.ok)
         mock_check.assert_called_once()
 
@@ -147,19 +154,19 @@ class TestRunHealthChecks(unittest.TestCase):
     def setUp(self):
         """Set up test Flask app"""
         self.app = Flask(__name__)
-        self.app.config['TESTING'] = True
+        self.app.config["TESTING"] = True
 
     def test_all_checks_successful(self):
         """Test running multiple checks that all succeed"""
         checks_registry = {
-            "check1": Mock(return_value=CheckStatus.ok, __name__='check1'),
-            "check2": Mock(return_value=CheckStatus.ok, __name__='check2'),
-            "check3": Mock(return_value=CheckStatus.ok, __name__='check3'),
+            "check1": Mock(return_value=CheckStatus.ok, __name__="check1"),
+            "check2": Mock(return_value=CheckStatus.ok, __name__="check2"),
+            "check3": Mock(return_value=CheckStatus.ok, __name__="check3"),
         }
-        
+
         with self.app.app_context():
             results = run_health_checks(checks_registry, timeout=1.0)
-        
+
         self.assertEqual(len(results), 3)
         self.assertEqual(results["check1"], CheckStatus.ok)
         self.assertEqual(results["check2"], CheckStatus.ok)
@@ -168,14 +175,16 @@ class TestRunHealthChecks(unittest.TestCase):
     def test_mixed_check_results(self):
         """Test running checks with mixed results"""
         checks_registry = {
-            "check_ok": Mock(return_value=CheckStatus.ok, __name__='check_ok'),
-            "check_degraded": Mock(return_value=CheckStatus.degraded, __name__='check_degraded'),
-            "check_error": Mock(return_value=CheckStatus.error, __name__='check_error'),
+            "check_ok": Mock(return_value=CheckStatus.ok, __name__="check_ok"),
+            "check_degraded": Mock(
+                return_value=CheckStatus.degraded, __name__="check_degraded"
+            ),
+            "check_error": Mock(return_value=CheckStatus.error, __name__="check_error"),
         }
-        
+
         with self.app.app_context():
             results = run_health_checks(checks_registry, timeout=1.0)
-        
+
         self.assertEqual(len(results), 3)
         self.assertEqual(results["check_ok"], CheckStatus.ok)
         self.assertEqual(results["check_degraded"], CheckStatus.degraded)
@@ -184,51 +193,56 @@ class TestRunHealthChecks(unittest.TestCase):
     def test_check_with_exception(self):
         """Test that exceptions in checks are caught and marked as error"""
         checks_registry = {
-            "check_ok": Mock(return_value=CheckStatus.ok, __name__='check_ok'),
-            "check_exception": Mock(side_effect=Exception("Test exception"), __name__='check_exception'),
+            "check_ok": Mock(return_value=CheckStatus.ok, __name__="check_ok"),
+            "check_exception": Mock(
+                side_effect=Exception("Test exception"), __name__="check_exception"
+            ),
         }
-        
+
         with self.app.app_context():
             results = run_health_checks(checks_registry, timeout=1.0)
-        
+
         self.assertEqual(len(results), 2)
         self.assertEqual(results["check_ok"], CheckStatus.ok)
         self.assertEqual(results["check_exception"], CheckStatus.error)
 
-    @patch('timApp.health.routes.ThreadPoolExecutor')
+    @patch("timApp.health.routes.ThreadPoolExecutor")
     def test_concurrent_execution(self, mock_executor_class):
         """Test that checks are executed concurrently"""
         mock_executor = MagicMock()
         mock_executor_class.return_value.__enter__.return_value = mock_executor
-        
+
         checks_registry = {
-            "check1": Mock(return_value=CheckStatus.ok, __name__='check1'),
-            "check2": Mock(return_value=CheckStatus.ok, __name__='check2'),
+            "check1": Mock(return_value=CheckStatus.ok, __name__="check1"),
+            "check2": Mock(return_value=CheckStatus.ok, __name__="check2"),
         }
-        
+
         # Mock the future objects
         mock_future1 = MagicMock()
         mock_future1.result.return_value = CheckStatus.ok
         mock_future2 = MagicMock()
         mock_future2.result.return_value = CheckStatus.ok
-        
+
         # Mock submit to return futures
         mock_executor.submit.side_effect = [mock_future1, mock_future2]
-        
+
         with self.app.app_context():
-            with patch('timApp.health.routes.as_completed', return_value=[mock_future1, mock_future2]):
+            with patch(
+                "timApp.health.routes.as_completed",
+                return_value=[mock_future1, mock_future2],
+            ):
                 results = run_health_checks(checks_registry, timeout=1.0)
-        
+
         # Verify ThreadPoolExecutor was created with correct number of workers
         mock_executor_class.assert_called_once_with(max_workers=2)
-        
+
         # Verify submit was called for each check
         self.assertEqual(mock_executor.submit.call_count, 2)
 
     def test_empty_checks_registry(self):
         """Test running with no checks - should handle gracefully"""
         checks_registry = {}
-        
+
         # Note: This test currently expects ValueError due to max_workers=0
         # This is a limitation of ThreadPoolExecutor
         with self.app.app_context():
@@ -238,156 +252,159 @@ class TestRunHealthChecks(unittest.TestCase):
     def test_single_check(self):
         """Test running with a single check"""
         checks_registry = {
-            "solo_check": Mock(return_value=CheckStatus.ok, __name__='solo_check'),
+            "solo_check": Mock(return_value=CheckStatus.ok, __name__="solo_check"),
         }
-        
+
         with self.app.app_context():
             results = run_health_checks(checks_registry, timeout=1.0)
-        
+
         self.assertEqual(len(results), 1)
         self.assertEqual(results["solo_check"], CheckStatus.ok)
 
     def test_custom_timeout(self):
         """Test that custom timeout is respected"""
         checks_registry = {
-            "check1": Mock(return_value=CheckStatus.ok, __name__='check1'),
+            "check1": Mock(return_value=CheckStatus.ok, __name__="check1"),
         }
-        
+
         custom_timeout = 10.0
-        
+
         with self.app.app_context():
             results = run_health_checks(checks_registry, timeout=custom_timeout)
-        
+
         self.assertEqual(results["check1"], CheckStatus.ok)
 
 
 class TestCheckPgsql(unittest.TestCase):
     """Unit tests for PostgreSQL health check"""
-    
-    @patch('timApp.health.checks.db')
+
+    @patch("timApp.health.checks.db")
     def test_success(self, mock_db):
         """Test PostgreSQL check with mocked database"""
         mock_db.session.execute.return_value.scalar.return_value = 1
         mock_db.engine.pool.size.return_value = TEST_POOL_SIZE
         mock_db.engine.pool.checkedout.return_value = TEST_POOL_LOW_USAGE
-        
+
         result = check_pgsql()
         self.assertEqual(result, CheckStatus.ok)
-    
-    @patch('timApp.health.checks.time')
-    @patch('timApp.health.checks.db')
+
+    @patch("timApp.health.checks.time")
+    @patch("timApp.health.checks.db")
     def test_degraded_slow_query(self, mock_db, mock_time):
         """Test PostgreSQL check returns degraded when query is slow"""
         mock_db.session.execute.return_value.scalar.return_value = 1
         mock_db.engine.pool.size.return_value = TEST_POOL_SIZE
         mock_db.engine.pool.checkedout.return_value = TEST_POOL_LOW_USAGE
-        
+
         # Mock time module to simulate slow query (> 1 second)
         mock_time.time.side_effect = [0, 2.0]  # 2 second elapsed time
         result = check_pgsql()
-        
+
         self.assertEqual(result, CheckStatus.degraded)
-    
-    @patch('timApp.health.checks.db')
+
+    @patch("timApp.health.checks.db")
     def test_degraded_pool_exhausted(self, mock_db):
         """Test PostgreSQL check returns degraded when connection pool nearly exhausted"""
         mock_db.session.execute.return_value.scalar.return_value = 1
         mock_db.engine.pool.size.return_value = TEST_POOL_SIZE
         mock_db.engine.pool.checkedout.return_value = TEST_POOL_HIGH_USAGE  # 90% used
-        
+
         result = check_pgsql()
         self.assertEqual(result, CheckStatus.degraded)
-    
-    @patch('timApp.health.checks.db')
+
+    @patch("timApp.health.checks.db")
     def test_error_wrong_result(self, mock_db):
         """Test PostgreSQL check returns error when SELECT 1 returns wrong value"""
         mock_db.session.execute.return_value.scalar.return_value = 0  # Wrong value
-        
+
         result = check_pgsql()
         self.assertEqual(result, CheckStatus.error)
-    
-    @patch('timApp.health.checks.db')
+
+    @patch("timApp.health.checks.db")
     def test_error_exception(self, mock_db):
         """Test PostgreSQL check returns error when exception occurs"""
         mock_db.session.execute.side_effect = Exception("Database error")
-        
+
         result = check_pgsql()
         self.assertEqual(result, CheckStatus.error)
 
 
 class TestCheckRedis(unittest.TestCase):
     """Unit tests for Redis health check"""
-    
-    @patch('timApp.health.checks.rclient')
+
+    @patch("timApp.health.checks.rclient")
     def test_success(self, mock_rclient):
         """Test Redis check with mocked client"""
         mock_rclient.ping.return_value = True
         mock_rclient.info.return_value = {
-            'used_memory': TEST_MEMORY_USED,
-            'maxmemory': TEST_MEMORY_MAX
+            "used_memory": TEST_MEMORY_USED,
+            "maxmemory": TEST_MEMORY_MAX,
         }
-        
+
         result = check_redis()
         self.assertEqual(result, CheckStatus.ok)
-    
-    @patch('timApp.health.checks.time')
-    @patch('timApp.health.checks.rclient')
+
+    @patch("timApp.health.checks.time")
+    @patch("timApp.health.checks.rclient")
     def test_degraded_slow_response(self, mock_rclient, mock_time):
         """Test Redis check returns degraded when response is slow"""
         mock_rclient.ping.return_value = True
         mock_rclient.info.return_value = {
-            'used_memory': TEST_MEMORY_USED,
-            'maxmemory': TEST_MEMORY_MAX
+            "used_memory": TEST_MEMORY_USED,
+            "maxmemory": TEST_MEMORY_MAX,
         }
-        
+
         # Mock time module to simulate slow response (> 1 second)
         mock_time.time.side_effect = [0, 2.0]  # 2 second elapsed time
         result = check_redis()
-        
+
         self.assertEqual(result, CheckStatus.degraded)
-    
-    @patch('timApp.health.checks.rclient')
+
+    @patch("timApp.health.checks.rclient")
     def test_degraded_high_memory(self, mock_rclient):
         """Test Redis check returns degraded when memory usage is high"""
         mock_rclient.ping.return_value = True
         mock_rclient.info.return_value = {
-            'used_memory': TEST_MEMORY_HIGH,  # 95% of max
-            'maxmemory': TEST_MEMORY_MAX
+            "used_memory": TEST_MEMORY_HIGH,  # 95% of max
+            "maxmemory": TEST_MEMORY_MAX,
         }
-        
+
         result = check_redis()
         self.assertEqual(result, CheckStatus.degraded)
-    
-    @patch('timApp.health.checks.rclient')
+
+    @patch("timApp.health.checks.rclient")
     def test_error_ping_false(self, mock_rclient):
         """Test Redis check returns error when ping returns False"""
         mock_rclient.ping.return_value = False
-        
+
         result = check_redis()
         self.assertEqual(result, CheckStatus.error)
-    
-    @patch('timApp.health.checks.rclient')
+
+    @patch("timApp.health.checks.rclient")
     def test_error_exception(self, mock_rclient):
         """Test Redis check returns error when exception occurs"""
         from redis.exceptions import RedisError
+
         mock_rclient.ping.side_effect = RedisError("Connection failed")
-        
+
         result = check_redis()
         self.assertEqual(result, CheckStatus.error)
 
 
 class TestCheckCelery(unittest.TestCase):
     """Unit tests for Celery health check"""
-    
+
     def setUp(self):
         """Set up test Flask app with Celery config"""
         self.app = Flask(__name__)
-        self.app.config['CELERY_BROKER_URL'] = 'redis://redis:6379'
-        self.app.config['CELERY_RESULT_BACKEND'] = 'rpc://'
-    
-    def _setup_celery_mock(self, mock_celery_class, active_workers=None, ping_response=None):
+        self.app.config["CELERY_BROKER_URL"] = "redis://redis:6379"
+        self.app.config["CELERY_RESULT_BACKEND"] = "rpc://"
+
+    def _setup_celery_mock(
+        self, mock_celery_class, active_workers=None, ping_response=None
+    ):
         """Helper to set up Celery mock inspector
-        
+
         Args:
             mock_celery_class: The mocked Celery class
             active_workers: Dict of active workers or None for no workers
@@ -400,326 +417,337 @@ class TestCheckCelery(unittest.TestCase):
         mock_inspector.active.return_value = active_workers
         mock_inspector.ping.return_value = ping_response
         return mock_celery, mock_inspector
-    
-    @patch('timApp.health.checks.Celery')
+
+    @patch("timApp.health.checks.Celery")
     def test_success(self, mock_celery_class):
         """Test Celery check with active workers"""
         self._setup_celery_mock(
             mock_celery_class,
-            active_workers={'worker1': []},
-            ping_response={'worker1': {'ok': 'pong'}}
+            active_workers={"worker1": []},
+            ping_response={"worker1": {"ok": "pong"}},
         )
-        
+
         with self.app.app_context():
             result = check_celery()
-        
+
         self.assertEqual(result, CheckStatus.ok)
-    
-    @patch('timApp.health.checks.Celery')
+
+    @patch("timApp.health.checks.Celery")
     def test_error_no_workers(self, mock_celery_class):
         """Test Celery check returns error when no workers are active"""
         self._setup_celery_mock(mock_celery_class, active_workers=None)
-        
+
         with self.app.app_context():
             result = check_celery()
-        
+
         self.assertEqual(result, CheckStatus.error)
-    
-    @patch('timApp.health.checks.Celery')
+
+    @patch("timApp.health.checks.Celery")
     def test_error_no_ping(self, mock_celery_class):
         """Test Celery check returns error when workers don't respond to ping"""
         self._setup_celery_mock(
-            mock_celery_class,
-            active_workers={'worker1': []},
-            ping_response=None
+            mock_celery_class, active_workers={"worker1": []}, ping_response=None
         )
-        
+
         with self.app.app_context():
             result = check_celery()
-        
+
         self.assertEqual(result, CheckStatus.error)
-    
-    @patch('timApp.health.checks.Celery')
+
+    @patch("timApp.health.checks.Celery")
     def test_error_exception(self, mock_celery_class):
         """Test Celery check returns error when exception occurs"""
         mock_celery_class.side_effect = Exception("Celery error")
-        
+
         with self.app.app_context():
             result = check_celery()
-        
+
         self.assertEqual(result, CheckStatus.error)
 
 
 class TestCheckDumbo(unittest.TestCase):
     """Unit tests for Dumbo service health check"""
-    
-    @patch('timApp.health.checks.call_dumbo')
+
+    @patch("timApp.health.checks.call_dumbo")
     def test_success(self, mock_dumbo):
         """Test Dumbo service check"""
-        mock_dumbo.return_value = ['<h1>Test</h1>']
-        
+        mock_dumbo.return_value = ["<h1>Test</h1>"]
+
         result = check_dumbo_service()
         self.assertEqual(result, CheckStatus.ok)
-    
-    @patch('timApp.health.checks.call_dumbo')
+
+    @patch("timApp.health.checks.call_dumbo")
     def test_error_empty_response(self, mock_dumbo):
         """Test Dumbo service check returns error when response is empty"""
         mock_dumbo.return_value = []
-        
+
         result = check_dumbo_service()
         self.assertEqual(result, CheckStatus.error)
-    
-    @patch('timApp.health.checks.call_dumbo')
+
+    @patch("timApp.health.checks.call_dumbo")
     def test_error_invalid_response(self, mock_dumbo):
         """Test Dumbo service check returns error when response is invalid"""
-        mock_dumbo.return_value = ['<p>Wrong output</p>']  # No h1 tag
-        
+        mock_dumbo.return_value = ["<p>Wrong output</p>"]  # No h1 tag
+
         result = check_dumbo_service()
         self.assertEqual(result, CheckStatus.error)
-    
-    @patch('timApp.health.checks.call_dumbo')
+
+    @patch("timApp.health.checks.call_dumbo")
     def test_error_exception(self, mock_dumbo):
         """Test Dumbo service check returns error when exception occurs"""
         from tim_common.dumboclient import DumboHTMLException
+
         mock_dumbo.side_effect = DumboHTMLException("Service error")
-        
+
         result = check_dumbo_service()
         self.assertEqual(result, CheckStatus.error)
-    
-    @patch('timApp.health.checks.call_dumbo')
+
+    @patch("timApp.health.checks.call_dumbo")
     def test_error_connection_error(self, mock_dumbo):
         """Test Dumbo service check returns error on connection error"""
         mock_dumbo.side_effect = ConnectionError("Cannot connect to dumbo")
-        
+
         result = check_dumbo_service()
         self.assertEqual(result, CheckStatus.error)
 
 
 class TestCheckWritable(unittest.TestCase):
     """Unit tests for writable directory health check"""
-    
-    @patch('timApp.health.checks._get_writable_paths')
-    @patch('timApp.health.checks.os.path.isdir')
-    @patch('timApp.health.checks.tempfile.NamedTemporaryFile')
+
+    @patch("timApp.health.checks._get_writable_paths")
+    @patch("timApp.health.checks.os.path.isdir")
+    @patch("timApp.health.checks.tempfile.NamedTemporaryFile")
     def test_success(self, mock_tempfile, mock_isdir, mock_get_paths):
         """Test writable directory check succeeds"""
-        mock_get_paths.return_value = {'/tmp/test'}
+        mock_get_paths.return_value = {"/tmp/test"}
         mock_isdir.return_value = True
         mock_file = MagicMock()
         mock_tempfile.return_value.__enter__.return_value = mock_file
-        
+
         result = check_writable()
         self.assertEqual(result, CheckStatus.ok)
-    
-    @patch('timApp.health.checks._get_writable_paths')
-    @patch('timApp.health.checks.os.path.isdir')
+
+    @patch("timApp.health.checks._get_writable_paths")
+    @patch("timApp.health.checks.os.path.isdir")
     def test_error_not_directory(self, mock_isdir, mock_get_paths):
         """Test writable check returns error when path is not a directory"""
-        mock_get_paths.return_value = {'/tmp/test'}
+        mock_get_paths.return_value = {"/tmp/test"}
         mock_isdir.return_value = False
-        
+
         result = check_writable()
         self.assertEqual(result, CheckStatus.error)
-    
-    @patch('timApp.health.checks._get_writable_paths')
-    @patch('timApp.health.checks.os.path.isdir')
-    @patch('timApp.health.checks.tempfile.NamedTemporaryFile')
+
+    @patch("timApp.health.checks._get_writable_paths")
+    @patch("timApp.health.checks.os.path.isdir")
+    @patch("timApp.health.checks.tempfile.NamedTemporaryFile")
     def test_error_permission_denied(self, mock_tempfile, mock_isdir, mock_get_paths):
         """Test writable check returns error when permission denied"""
-        mock_get_paths.return_value = {'/tmp/test'}
+        mock_get_paths.return_value = {"/tmp/test"}
         mock_isdir.return_value = True
         mock_tempfile.side_effect = PermissionError("Permission denied")
-        
+
         result = check_writable()
         self.assertEqual(result, CheckStatus.error)
 
 
 class TestCheckDiskSpace(unittest.TestCase):
     """Unit tests for disk space health check"""
-    
-    @patch('shutil.disk_usage')
-    @patch('timApp.health.checks._get_writable_paths')
+
+    @patch("shutil.disk_usage")
+    @patch("timApp.health.checks._get_writable_paths")
     def test_success(self, mock_get_paths, mock_disk_usage):
         """Test disk space check succeeds with sufficient space"""
-        mock_get_paths.return_value = {'/tmp/test'}
-        mock_disk_usage.return_value = (TEST_DISK_TOTAL, TEST_DISK_USED_HALF, TEST_DISK_FREE_HALF)  # 50% free
-        
+        mock_get_paths.return_value = {"/tmp/test"}
+        mock_disk_usage.return_value = (
+            TEST_DISK_TOTAL,
+            TEST_DISK_USED_HALF,
+            TEST_DISK_FREE_HALF,
+        )  # 50% free
+
         result = check_disk_space()
         self.assertEqual(result, CheckStatus.ok)
-    
-    @patch('shutil.disk_usage')
-    @patch('timApp.health.checks._get_writable_paths')
+
+    @patch("shutil.disk_usage")
+    @patch("timApp.health.checks._get_writable_paths")
     def test_degraded_low_space(self, mock_get_paths, mock_disk_usage):
         """Test disk space check returns degraded when space is low"""
-        mock_get_paths.return_value = {'/tmp/test'}
-        mock_disk_usage.return_value = (TEST_DISK_TOTAL, TEST_DISK_USED_HIGH, TEST_DISK_FREE_LOW)  # 10% free (below 20% threshold)
-        
+        mock_get_paths.return_value = {"/tmp/test"}
+        mock_disk_usage.return_value = (
+            TEST_DISK_TOTAL,
+            TEST_DISK_USED_HIGH,
+            TEST_DISK_FREE_LOW,
+        )  # 10% free (below 20% threshold)
+
         result = check_disk_space()
         self.assertEqual(result, CheckStatus.degraded)
-    
-    @patch('shutil.disk_usage')
-    @patch('timApp.health.checks._get_writable_paths')
+
+    @patch("shutil.disk_usage")
+    @patch("timApp.health.checks._get_writable_paths")
     def test_error_no_space(self, mock_get_paths, mock_disk_usage):
         """Test disk space check returns error when no space available"""
-        mock_get_paths.return_value = {'/tmp/test'}
-        mock_disk_usage.return_value = (TEST_DISK_TOTAL, TEST_DISK_USED_FULL, TEST_DISK_FREE_NONE)  # 0% free
-        
+        mock_get_paths.return_value = {"/tmp/test"}
+        mock_disk_usage.return_value = (
+            TEST_DISK_TOTAL,
+            TEST_DISK_USED_FULL,
+            TEST_DISK_FREE_NONE,
+        )  # 0% free
+
         result = check_disk_space()
         self.assertEqual(result, CheckStatus.error)
-    
-    @patch('shutil.disk_usage')
-    @patch('timApp.health.checks._get_writable_paths')
+
+    @patch("shutil.disk_usage")
+    @patch("timApp.health.checks._get_writable_paths")
     def test_error_exception(self, mock_get_paths, mock_disk_usage):
         """Test disk space check returns error when exception occurs"""
-        mock_get_paths.return_value = {'/tmp/test'}
+        mock_get_paths.return_value = {"/tmp/test"}
         mock_disk_usage.side_effect = OSError("Disk error")
-        
+
         result = check_disk_space()
         self.assertEqual(result, CheckStatus.error)
 
 
 class TestCheckGunicorn(unittest.TestCase):
     """Unit tests for Gunicorn health check"""
-    
-    @patch('timApp.health.checks.HAS_PSUTIL', False)
+
+    @patch("timApp.health.checks.HAS_PSUTIL", False)
     def test_skipped_no_psutil(self):
         """Test gunicorn check is skipped when psutil not available"""
         result = check_gunicorn()
         self.assertEqual(result, CheckStatus.skipped)
-    
-    @patch('timApp.health.checks.HAS_GUNICORN', False)
-    @patch('timApp.health.checks.HAS_PSUTIL', True)
+
+    @patch("timApp.health.checks.HAS_GUNICORN", False)
+    @patch("timApp.health.checks.HAS_PSUTIL", True)
     def test_skipped_no_gunicorn(self):
         """Test gunicorn check is skipped when not running under gunicorn"""
         result = check_gunicorn()
         self.assertEqual(result, CheckStatus.skipped)
-    
-    @patch('timApp.health.checks.os.environ.get')
-    @patch('timApp.health.checks.HAS_GUNICORN', True)
-    @patch('timApp.health.checks.HAS_PSUTIL', True)
+
+    @patch("timApp.health.checks.os.environ.get")
+    @patch("timApp.health.checks.HAS_GUNICORN", True)
+    @patch("timApp.health.checks.HAS_PSUTIL", True)
     def test_skipped_not_gunicorn_server(self, mock_env_get):
         """Test gunicorn check is skipped when SERVER_SOFTWARE is not gunicorn"""
         mock_env_get.return_value = "werkzeug/2.0.0"
-        
+
         result = check_gunicorn()
         self.assertEqual(result, CheckStatus.skipped)
-    
-    @patch('timApp.health.checks.psutil')
-    @patch('timApp.health.checks.os.environ.get')
-    @patch('timApp.health.checks.HAS_GUNICORN', True)
-    @patch('timApp.health.checks.HAS_PSUTIL', True)
+
+    @patch("timApp.health.checks.psutil")
+    @patch("timApp.health.checks.os.environ.get")
+    @patch("timApp.health.checks.HAS_GUNICORN", True)
+    @patch("timApp.health.checks.HAS_PSUTIL", True)
     def test_success(self, mock_env_get, mock_psutil):
         """Test gunicorn check succeeds with healthy workers"""
         mock_env_get.return_value = "gunicorn/20.1.0"
-        
+
         # Mock process hierarchy
         mock_current = MagicMock()
         mock_master = MagicMock()
         mock_current.parent.return_value = mock_master
-        
+
         # Mock worker processes with low memory usage
         mock_worker1 = MagicMock()
         mock_worker1.is_running.return_value = True
         mock_worker1.memory_info.return_value.rss = 100000000  # 100MB
-        
+
         mock_worker2 = MagicMock()
         mock_worker2.is_running.return_value = True
         mock_worker2.memory_info.return_value.rss = 100000000  # 100MB
-        
+
         mock_master.children.return_value = [mock_worker1, mock_worker2]
-        
+
         mock_psutil.Process.return_value = mock_current
         mock_psutil.virtual_memory.return_value.total = 8000000000  # 8GB total
-        
+
         result = check_gunicorn()
         self.assertEqual(result, CheckStatus.ok)
-    
-    @patch('timApp.health.checks.psutil')
-    @patch('timApp.health.checks.os.environ.get')
-    @patch('timApp.health.checks.HAS_GUNICORN', True)
-    @patch('timApp.health.checks.HAS_PSUTIL', True)
+
+    @patch("timApp.health.checks.psutil")
+    @patch("timApp.health.checks.os.environ.get")
+    @patch("timApp.health.checks.HAS_GUNICORN", True)
+    @patch("timApp.health.checks.HAS_PSUTIL", True)
     def test_degraded_high_memory(self, mock_env_get, mock_psutil):
         """Test gunicorn check returns degraded when workers use too much memory"""
         mock_env_get.return_value = "gunicorn/20.1.0"
-        
+
         # Mock process hierarchy
         mock_current = MagicMock()
         mock_master = MagicMock()
         mock_current.parent.return_value = mock_master
-        
+
         # Mock worker processes with high memory usage
         mock_worker = MagicMock()
         mock_worker.is_running.return_value = True
         mock_worker.memory_info.return_value.rss = 7000000000  # 7GB (>80% of 8GB)
-        
+
         mock_master.children.return_value = [mock_worker]
-        
+
         mock_psutil.Process.return_value = mock_current
         mock_psutil.virtual_memory.return_value.total = 8000000000  # 8GB total
-        
+
         result = check_gunicorn()
         self.assertEqual(result, CheckStatus.degraded)
-    
-    @patch('timApp.health.checks.psutil')
-    @patch('timApp.health.checks.os.environ.get')
-    @patch('timApp.health.checks.HAS_GUNICORN', True)
-    @patch('timApp.health.checks.HAS_PSUTIL', True)
+
+    @patch("timApp.health.checks.psutil")
+    @patch("timApp.health.checks.os.environ.get")
+    @patch("timApp.health.checks.HAS_GUNICORN", True)
+    @patch("timApp.health.checks.HAS_PSUTIL", True)
     def test_error_no_workers(self, mock_env_get, mock_psutil):
         """Test gunicorn check returns error when no workers found"""
         mock_env_get.return_value = "gunicorn/20.1.0"
-        
+
         # Mock process hierarchy with no workers
         mock_current = MagicMock()
         mock_master = MagicMock()
         mock_current.parent.return_value = mock_master
         mock_master.children.return_value = []  # No workers
-        
+
         mock_psutil.Process.return_value = mock_current
-        
+
         result = check_gunicorn()
         self.assertEqual(result, CheckStatus.error)
-    
-    @patch('timApp.health.checks.psutil')
-    @patch('timApp.health.checks.os.environ.get')
-    @patch('timApp.health.checks.HAS_GUNICORN', True)
-    @patch('timApp.health.checks.HAS_PSUTIL', True)
+
+    @patch("timApp.health.checks.psutil")
+    @patch("timApp.health.checks.os.environ.get")
+    @patch("timApp.health.checks.HAS_GUNICORN", True)
+    @patch("timApp.health.checks.HAS_PSUTIL", True)
     def test_error_exception(self, mock_env_get, mock_psutil):
         """Test gunicorn check returns error when exception occurs"""
         mock_env_get.return_value = "gunicorn/20.1.0"
         mock_psutil.Process.side_effect = Exception("Process error")
-        
+
         result = check_gunicorn()
         self.assertEqual(result, CheckStatus.error)
 
 
 class TestCheckFrontpage(unittest.TestCase):
     """Unit tests for frontpage health check"""
-    
-    @patch('timApp.health.checks.Path')
-    @patch('timApp.health.checks.check_page')
+
+    @patch("timApp.health.checks.Path")
+    @patch("timApp.health.checks.check_page")
     def test_success(self, mock_check_page, mock_path):
         """Test frontpage check succeeds"""
         mock_path.return_value.exists.return_value = True
         mock_check_page.return_value = True
-        
+
         result = check_frontpage()
         self.assertEqual(result, CheckStatus.ok)
-    
-    @patch('timApp.health.checks.Path')
-    @patch('timApp.health.checks.check_page')
+
+    @patch("timApp.health.checks.Path")
+    @patch("timApp.health.checks.check_page")
     def test_error_page_not_accessible(self, mock_check_page, mock_path):
         """Test frontpage check returns error when page is not accessible"""
         mock_path.return_value.exists.return_value = True
         mock_check_page.return_value = False
-        
+
         result = check_frontpage()
         self.assertEqual(result, CheckStatus.error)
-    
-    @patch('timApp.health.checks.Path')
+
+    @patch("timApp.health.checks.Path")
     def test_skipped_not_built(self, mock_path):
         """Test frontpage check is skipped when scripts not built"""
         mock_path.return_value.exists.return_value = False
-        
+
         result = check_frontpage()
         self.assertEqual(result, CheckStatus.skipped)
 
