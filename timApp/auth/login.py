@@ -266,9 +266,6 @@ def do_email_signup_or_password_reset(
     if not is_valid_email(email_or_username):
         u = User.get_by_name(email_or_username)
         if not u:
-            log_warning(
-                f'Invalid email/username in registration: "{email_or_username}"'
-            )
             # Don't return immediately; otherwise it is too easy to analyze timing of the route to deduce success.
             fail = True
             email = "nobody@example.com"
@@ -305,6 +302,9 @@ def do_email_signup_or_password_reset(
 
     if fail:
         # We return ok because we don't want to leak any information about the existence of accounts etc.
+        log_warning(
+            f'Invalid email/username in registration: "{email_or_username}"'
+        )
         return ok_response()
 
     db.session.commit()
