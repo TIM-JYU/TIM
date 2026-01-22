@@ -44,6 +44,9 @@ def send_email_impl(
     mail_from: str = app.config["MAIL_FROM"],
     reply_to: str = app.config["NOREPLY_EMAIL"],
 ) -> None:
+    # FIXME: Temp for VK26
+    mail_from = app.config["MAIL_FROM"]
+
     with flask_app.app_context():
         mime_msg = MIMEText(msg + flask_app.config["MAIL_SIGNATURE"])
         mime_msg["Subject"] = subject
@@ -54,8 +57,11 @@ def send_email_impl(
         if reply_to:
             mime_msg.add_header("Reply-To", reply_to)
 
-        s = smtplib.SMTP(flask_app.config["MAIL_HOST"])
+        s = smtplib.SMTP_SSL(
+            flask_app.config["MAIL_HOST"], flask_app.config["MAIL_PORT"]
+        )
         try:
+            s.login(mail_from, app.config["MAIL_PASSWORD"])
             s.sendmail(mail_from, [rcpt], mime_msg.as_string())
         except (
             smtplib.SMTPSenderRefused,
@@ -63,6 +69,8 @@ def send_email_impl(
             smtplib.SMTPHeloError,
             smtplib.SMTPDataError,
             smtplib.SMTPNotSupportedError,
+            smtplib.SMTPAuthenticationError,
+            smtplib.SMTPException,
         ) as e:
             log_error(str(e))
         else:
@@ -112,8 +120,17 @@ def multi_send_email_impl(
     reply_all: bool = False,
     with_signature: bool = False,
 ) -> None:
+    # FIXME: Temp for VK26
+    mail_from = app.config["MAIL_FROM"]
+
     with flask_app.app_context():
-        s = smtplib.SMTP(flask_app.config["MAIL_HOST"]) if not is_localhost() else None
+        s = (
+            smtplib.SMTP_SSL(
+                flask_app.config["MAIL_HOST"], flask_app.config["MAIL_PORT"]
+            )
+            if not is_localhost()
+            else None
+        )
         rcpts = rcpt.split(";")
         mail_targets: list[str | list[str]] = list(rcpts) if not reply_all else [rcpts]
         bccmail = bcc
@@ -124,6 +141,8 @@ def multi_send_email_impl(
                 bccmail = ""
                 extra = "\n\n" + "\n".join(rcpts)
         try:
+            if not s:
+                s.login(mail_from, app.config["MAIL_PASSWORD"])
             for rcp in mail_targets:
                 try:
                     # TODO: Mailmerge here possible templates.
