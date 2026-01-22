@@ -88,6 +88,7 @@ HELP_EMAIL = "tim@jyu.fi"
 
 # Default sender address for email.
 MAIL_FROM = "tim@jyu.fi"
+MAIL_PASSWORD = None
 
 CONTENT_REPORT_EMAIL = "tim@jyu.fi"
 
@@ -140,6 +141,7 @@ When disabled, the actions must be run manually with /userSelect/applyPendingAct
 """
 
 MAIL_HOST = "smtpauth2.jyu.fi"
+MAIL_PORT = 0
 MAIL_SIGNATURE = "\n\n-- \nThis message was automatically sent by TIM"
 WTF_CSRF_METHODS = ["POST", "PUT", "PATCH", "DELETE"]
 WTF_CSRF_HEADERS = ["X-XSRF-TOKEN"]
