@@ -305,6 +305,7 @@ def get_info_for(u: User) -> Response:
 
 @settings_page.get("/info")
 def get_info_current() -> Response:
+    verify_admin()
     return get_info_for(get_current_user_object())
 
 
@@ -329,6 +330,7 @@ def update_consent(consent: Consent = field(metadata={"by_value": True})) -> Res
 
 @settings_page.post("/account/delete")
 def delete_account() -> Response:
+    verify_admin()
     verify_logged_in()
     u = get_current_user_object()
     if not u.is_email_user:
