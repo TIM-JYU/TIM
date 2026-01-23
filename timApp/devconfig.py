@@ -6,7 +6,7 @@ DEBUG_SQL = False
 MINIMUM_SCHEDULED_FUNCTION_INTERVAL = 5
 
 SISU_ASSESSMENTS_URL = "http://tim:5000/sisu/assessments/"
-SISU_CERT_PATH = None
+SISU_CERT_PATH: str | None = None
 
 OAUTH2_CLIENTS = [
     {
