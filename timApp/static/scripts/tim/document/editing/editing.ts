@@ -822,15 +822,15 @@ auto_number_headings: 0${CURSOR}
                 },
                 {
                     func: (e) =>
-                        this.viewctrl.clipboardHandler.cutSelection(e, minSel),
-                    desc: "Cut selection",
-                    show: parEditable,
-                },
-                {
-                    func: (e) =>
                         this.viewctrl.clipboardHandler.copySelection(e, minSel),
                     desc: "Copy selection",
                     show: true,
+                },
+                {
+                    func: (e) =>
+                        this.viewctrl.clipboardHandler.cutSelection(e, minSel),
+                    desc: "Cut selection",
+                    show: parEditable,
                 },
                 {
                     func: () => this.viewctrl.areaHandler.cancelSelection(),
@@ -904,31 +904,21 @@ auto_number_headings: 0${CURSOR}
                 fns.push(
                     {
                         func: (e) =>
+                            this.viewctrl.clipboardHandler.copyPar(e, par),
+                        desc: "Copy",
+                        show: documentglobals().editMode !== "area",
+                    },
+                    {
+                        func: (e) =>
                             this.viewctrl.clipboardHandler.cutPar(e, par),
                         desc: "Cut",
                         show:
                             documentglobals().editMode === "par" && parEditable,
-                    },
-                    {
-                        func: (e) =>
-                            this.viewctrl.clipboardHandler.copyPar(e, par),
-                        desc: "Copy",
-                        show: documentglobals().editMode !== "area",
                     }
                 );
             } else if (areaWithSel) {
                 const temp = areaWithSel;
                 fns.push(
-                    {
-                        func: (e) => {
-                            this.viewctrl.clipboardHandler.cutSelection(
-                                e,
-                                temp.sel.sel
-                            );
-                        },
-                        desc: `Cut area '${areaWithSel.area.areaname}'`,
-                        show: parEditable,
-                    },
                     {
                         func: (e) => {
                             this.viewctrl.clipboardHandler.copySelection(
@@ -937,6 +927,16 @@ auto_number_headings: 0${CURSOR}
                             );
                         },
                         desc: `Copy area '${areaWithSel.area.areaname}'`,
+                        show: parEditable,
+                    },
+                    {
+                        func: (e) => {
+                            this.viewctrl.clipboardHandler.cutSelection(
+                                e,
+                                temp.sel.sel
+                            );
+                        },
+                        desc: `Cut area '${areaWithSel.area.areaname}'`,
                         show: parEditable,
                     }
                 );
