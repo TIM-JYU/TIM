@@ -445,6 +445,22 @@ class Tan extends FuncRROperation {
     doCalc(a) { return Math.tan(this.calculator.toAngle(a)); }
 },
 
+class ASin extends FuncRROperation {
+    reg() { return /asin/; }
+    doCalc(a) { return this.calculator.fromAngle(Math.asin(a)); }
+},
+
+class ACos extends FuncRROperation {
+    reg() { return /acos/; }
+    doCalc(a) { return this.calculator.fromAngle(Math.acos(a)); }
+},
+
+
+class ATan extends FuncRROperation {
+    reg() { return /atan/; }
+    doCalc(a) { return this.calculator.fromAngle(Math.atan(a)); }
+},
+
 class Sqrt extends FuncRROperation {
     reg() { return /sqrt/; }
     doCalc(a) { return Math.sqrt(a); }
@@ -626,6 +642,11 @@ class Calculator {
     toAngle(a) {
         if (!this.deg) return a;
         return a*Math.PI/180;
+    }
+
+    fromAngle(a) {
+        if (!this.deg) return a;
+        return a/(Math.PI/180);
     }
 
     calcOne(s) {
