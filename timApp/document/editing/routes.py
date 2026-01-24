@@ -25,6 +25,7 @@ from timApp.auth.accesshelper import (
     verify_route_access,
     AccessDenied,
     verify_logged_in,
+    verify_anon_plugin_edit_permission,
 )
 from timApp.auth.get_user_rights_for_item import get_user_rights_for_item
 from timApp.auth.sessioninfo import (
@@ -135,6 +136,11 @@ def update_document(doc_id):
         editor_pars = get_pars_from_editor_text(
             doc, content, break_on_elements=True, skip_access_check=True
         )
+        # Anonymous users should not be able to edit or create new plugins
+        plugins = list(
+            filter(lambda par: par.is_plugin() or par.has_plugins(), editor_pars)
+        )
+        verify_anon_plugin_edit_permission(plugins)
 
         # TODO: Access check should be more fine-grained. Should only check pars that were actually edited.
         for p in doc.get_paragraphs():
@@ -358,6 +364,11 @@ def modify_paragraph_common(doc_id: int, md: str, par_id: str, par_next_id: str 
     editing_area = edit_request.editing_area
     try:
         editor_pars = edit_request.get_pars(skip_access_check=True)
+        # Anonymous users should not be able to edit plugins
+        plugins = list(
+            filter(lambda e_par: e_par.is_plugin() or e_par.has_plugins(), editor_pars)
+        )
+        verify_anon_plugin_edit_permission(plugins)
     except ValidationException as e:
         raise RouteException(str(e))
 
@@ -921,6 +932,11 @@ def add_paragraph_common(md: str, doc_id: int, par_next_id: str | None):
     edit_request = EditRequest.from_request(doc, md)
     try:
         editor_pars = edit_request.get_pars()
+        # Anonymous users should not be able to add new plugins
+        plugins = list(
+            filter(lambda e_par: e_par.is_plugin() or e_par.has_plugins(), editor_pars)
+        )
+        verify_anon_plugin_edit_permission(plugins)
     except ValidationException as e:
         raise RouteException(str(e))
 

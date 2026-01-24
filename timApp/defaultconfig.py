@@ -667,3 +667,17 @@ ADMIN_ACCESS_WARNING = None
 A warning message shown to admins when they use the platform.
 This can be used to remind admins to use the platform responsibly.
 """
+
+DISABLE_ANON_PLUGIN_EDIT = True
+"""
+Prevents anonymous users from editing or creating new plugins, even if otherwise permitted by document rights.
+If anonymous plugin editing needs to be allowed for certain plugins, this setting should be set to False, and
+the permitted plugin types listed in `PERMITTED_PLUGINS_FOR_ANON_EDIT` below.
+"""
+
+PERMITTED_PLUGINS_FOR_ANON_EDIT = []
+"""
+List of plugin types (lowercase, eg. "qst", "csplugin") that anonymous users area allowed to add or edit in a document, 
+provided that the document has at least edit rights for anonymous users.
+This setting DOES NOT override the `DISABLE_ANON_PLUGIN_EDIT` above.
+"""
