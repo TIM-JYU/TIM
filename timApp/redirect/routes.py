@@ -81,7 +81,8 @@ def redirect_by_alias_file(alias: str) -> Response:
     new_query = urlencode(merged_qs, doseq=True)
     # noinspection PyProtectedMember
     # new_url = urlunparse(res_parsed._replace(query=new_query))
-    new_url = urlunsplit((
+    new_url = urlunsplit(
+        (
             res_parts.scheme,
             res_parts.netloc,
             res_parts.path,
