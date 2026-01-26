@@ -35,6 +35,11 @@ class TIMRedirectException(RouteException):
     code: int = 400
 
 
+@redirect_route.get("/r/<alias>/<path:_>")
+def redirect_excess_slash(alias: str, _: str) -> Response:
+    return redirect_by_alias_file(alias)
+
+
 @redirect_route.get("/r/<alias>")
 def redirect_by_alias_file(alias: str) -> Response:
     alias = alias.lower().strip()
