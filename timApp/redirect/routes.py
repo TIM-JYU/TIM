@@ -1,6 +1,8 @@
-from dataclasses import dataclass
-from flask import Response, redirect, current_app
 import re
+from dataclasses import dataclass
+from urllib.parse import urlparse, parse_qsl, urlencode, urlsplit, urlunsplit
+
+from flask import Response, redirect, current_app, request
 
 from timApp.auth.accesshelper import verify_view_access
 from timApp.auth.sessioninfo import user_context_with_logged_in_or_anon
@@ -35,7 +37,9 @@ class TIMRedirectException(RouteException):
 
 @redirect_route.get("/r/<alias>")
 def redirect_by_alias_file(alias: str) -> Response:
-    alias = alias.lower()
+    alias = alias.lower().strip()
+    match = re.match(r"^[a-zåäö0-9_.-]*", alias)
+    alias = match.group(0) if match else ""
     hostname = current_app.config["TIM_HOST"]
     doc_entry = DocEntry.find_by_path(f"redirect/{alias}")
     if not doc_entry:
@@ -69,4 +73,20 @@ def redirect_by_alias_file(alias: str) -> Response:
 
     # Possible regression with typing in Flask, or Mypy
     # see: https://github.com/pallets/flask/issues/4612 and https://github.com/pallets/flask/issues/4600
-    return redirect(res)  # type: ignore
+    res_parts = urlsplit(res)
+    res_parsed = urlparse(res)
+    res_qs = dict(parse_qsl(res_parsed.query, keep_blank_values=True))
+    alias_qs = dict(request.args.lists())
+    merged_qs = {**res_qs, **alias_qs}
+    new_query = urlencode(merged_qs, doseq=True)
+    # noinspection PyProtectedMember
+    # new_url = urlunparse(res_parsed._replace(query=new_query))
+    new_url = urlunsplit((
+            res_parts.scheme,
+            res_parts.netloc,
+            res_parts.path,
+            new_query,
+            res_parts.fragment,
+        )
+    )
+    return redirect(new_url)  # type: ignore
