@@ -12,7 +12,7 @@ import type {ITemplateButton} from "../../csPlugin";
  * Large list of symbols that can be added to formulaeditor
  */
 export const LATEX_BUTTONS: ITemplateButton[] = [
-    {text: "$", data: "$$", expl: "$ $", type: "t"},
+    {text: "$", data: "$⁞$", expl: "$ $", type: "t"},
     {text: "$$", data: "$$⁞$$", expl: "$$ $$", type: "t"},
     {
         text: "°",
