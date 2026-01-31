@@ -33,7 +33,7 @@ import {
     selector: "js-runner",
     template: `
 <div *ngIf="isVisible()" style="display: inline-block" class="jsrunner">
-    <tim-markup-error *ngIf="markupError" [data]="markupError"></tim-markup-error>
+    <tim-markup-error *ngIf="markupError" [data]="markupError!"></tim-markup-error>
     <h4 *ngIf="header" [innerHtml]="header"></h4>
     <p *ngIf="stem" [innerHtml]="stem"></p>
     <div class="form form-inline" *ngIf="showIncludeUsersOption()">
@@ -49,8 +49,8 @@ import {
     </button>&nbsp;
     <tim-loading *ngIf="isRunning"></tim-loading>
     <p class="error" *ngIf="error">Error occurred, script results may not be saved.</p>
-    <pre *ngIf="error">{{error.msg}}</pre>
-    <pre *ngIf="error">{{error.stackTrace}}</pre>
+    <pre *ngIf="error">{{error?.msg}}</pre>
+    <pre *ngIf="error">{{error?.stackTrace}}</pre>
     <jsrunner-error *ngFor="let err of scriptErrors" [e]="err"></jsrunner-error>
     <div *ngIf="md" class="md" [innerHTML]="md | purify"></div>    
     <div *ngIf="html" class="html" [innerHTML]="html | purify"></div>    
@@ -268,6 +268,9 @@ export class JsRunnerPluginComponent
                         location.reload();
                     }
                 }
+                if (tempd.outdata.jumplink) {
+                    window.location.href = tempd.outdata.jumplink;
+                }
             }
         } else {
             this.error = {
@@ -381,7 +384,7 @@ export class JsRunnerErrorComponent {
     ],
 })
 export class JsRunnerModule implements DoBootstrap {
-    ngDoBootstrap(appRef: ApplicationRef) {}
+    ngDoBootstrap(_appRef: ApplicationRef) {}
 }
 
 registerPlugin("js-runner", JsRunnerModule, JsRunnerPluginComponent);
