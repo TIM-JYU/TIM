@@ -33,7 +33,7 @@ import {
     selector: "js-runner",
     template: `
 <div *ngIf="isVisible()" style="display: inline-block" class="jsrunner">
-    <tim-markup-error *ngIf="markupError" [data]="markupError"></tim-markup-error>
+    <tim-markup-error *ngIf="markupError" [data]="markupError!"></tim-markup-error>
     <h4 *ngIf="header" [innerHtml]="header"></h4>
     <p *ngIf="stem" [innerHtml]="stem"></p>
     <div class="form form-inline" *ngIf="showIncludeUsersOption()">
@@ -384,7 +384,7 @@ export class JsRunnerErrorComponent {
     ],
 })
 export class JsRunnerModule implements DoBootstrap {
-    ngDoBootstrap(appRef: ApplicationRef) {}
+    ngDoBootstrap(_appRef: ApplicationRef) {}
 }
 
 registerPlugin("js-runner", JsRunnerModule, JsRunnerPluginComponent);
