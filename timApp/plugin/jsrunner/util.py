@@ -9,6 +9,7 @@ from sqlalchemy import func, select, Row
 
 from timApp.answer.answer import Answer
 from timApp.answer.answers import get_global_answers
+from timApp.answer.backup import send_answer_backup_if_enabled
 from timApp.auth.accesshelper import (
     verify_user_create_right,
     get_doc_or_abort,
@@ -566,6 +567,7 @@ def save_fields(
                 valid=valid,
                 saver=curr_user,
             )
+            send_answer_backup_if_enabled(ans)
             db.session.add(ans)
             saveresult.fields_changed += 1
             # If this was a global task, add it to all users in the answer map so we won't save it multiple times.
