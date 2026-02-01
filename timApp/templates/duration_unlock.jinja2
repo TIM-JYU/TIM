@@ -27,6 +27,7 @@
             Please refresh this page after that time.
         {% elif access.expired %}
             Your access to this item has expired {{ access.accessible_to | timreldatetime }}.
+            Goto <a href="/iseai/landing-page">Main page</a>.
         {% elif access.future %}
             <tim-access-countdown bind-wait-time="{{ access.time_until_access_start }}"></tim-access-countdown>
         {% else %}
