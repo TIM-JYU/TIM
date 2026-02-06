@@ -1,4 +1,5 @@
 """Routes related to email signup and login."""
+
 import hashlib
 import re
 import secrets
@@ -304,10 +305,8 @@ def do_email_signup_or_password_reset(
         fail = True
 
     if fail:
+        log_warning(f'Invalid email/username in registration: "{email_or_username}"')
         # We return ok because we don't want to leak any information about the existence of accounts etc.
-        log_warning(
-            f'Invalid email/username in registration: "{email_or_username}"'
-        )
         return ok_response()
 
     db.session.commit()
