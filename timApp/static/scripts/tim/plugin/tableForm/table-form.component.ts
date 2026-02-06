@@ -133,6 +133,7 @@ const TableFormMarkup = t.intersection([
         forceUpdateButtonText: nullable(t.string),
         fields: t.array(t.string),
         showToolbar: t.boolean,
+        forceToolbar: t.boolean,
         tinyFilters: t.boolean,
         hide: t.partial({
             removeMenu: t.boolean,
@@ -637,6 +638,9 @@ export class TableFormComponent
         }
         if (this.markup.showToolbar !== undefined) {
             this.data.hide.toolbar = !this.markup.showToolbar;
+        }
+        if (this.markup.forceToolbar !== undefined) {
+            this.data.forceToolbar = this.markup.forceToolbar;
         }
 
         if (this.markup.tinyFilters) {

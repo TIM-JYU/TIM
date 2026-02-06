@@ -168,6 +168,7 @@ class TableFormMarkupModel(GenericMarkupModel):
     showToolbar: bool | Missing | None = missing
     tinyFilters: bool | Missing | None = missing
     singleLine: bool | Missing | None = missing
+    forceToolbar: bool | Missing | None = missing
     sisugroups: str | Missing = missing
     sortBy: str | Missing | None = missing
     table: bool | Missing = missing

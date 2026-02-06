@@ -664,6 +664,8 @@ export enum ClearSort {
         <div #timTableRunDiv [ngClass]="{csRunDiv: taskBorders, 'no-overflow': dataView}"
              [class.cs-has-header]="data.header"
              class="timTableRunDiv no-popup-menu"
+             (mouseenter)="handleMouseEnter()"
+             (touchstart)="handleMouseEnter()"
              [ngStyle]="dataView ? {} : {
                 'max-height': maxRows,
                 'width': maxCols
@@ -6458,6 +6460,12 @@ export class TimTableComponent
         const nvx = this.getNextViewTableCol(v.x, v.y, d.x);
         const nvy = this.getNextViewTableRow(v.x, v.y, d.y);
         return nvx === v.x && nvy === v.y;
+    }
+
+    handleMouseEnter() {
+        if (this.data.forceToolbar && !isOpenForThisTable(this)) {
+            void this.openToolbar(true);
+        }
     }
 }
 
