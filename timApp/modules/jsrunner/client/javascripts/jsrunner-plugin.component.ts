@@ -49,8 +49,8 @@ import {
     </button>&nbsp;
     <tim-loading *ngIf="isRunning"></tim-loading>
     <p class="error" *ngIf="error">Error occurred, script results may not be saved.</p>
-    <pre *ngIf="error">{{error?.msg}}</pre>
-    <pre *ngIf="error">{{error?.stackTrace}}</pre>
+    <pre *ngIf="error?.msg">{{error?.msg}}</pre>
+    <pre *ngIf="error?.stackTrace">{{error?.stackTrace}}</pre>
     <jsrunner-error *ngFor="let err of scriptErrors" [e]="err"></jsrunner-error>
     <div *ngIf="md" class="md" [innerHTML]="md | purify"></div>    
     <div *ngIf="html" class="html" [innerHTML]="html | purify"></div>    
