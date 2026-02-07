@@ -1024,7 +1024,12 @@ def render_doc_view(
         )
 
     if index is None:
-        index = get_index_from_html_list(t.output for t in post_process_result.texts)
+        index = get_index_from_html_list(
+            t.output
+            for t in post_process_result.texts
+            # All noindex starting elements are ignored in the index
+            if " noindex" not in " " + t.html_class
+        )
         doc_hash = get_doc_version_hash(doc_info)
         save_index(index, index_cache_folder / f"{doc_hash}.json")
 
