@@ -1,4 +1,5 @@
 """Routes for document view."""
+
 import dataclasses
 import html
 import logging
@@ -564,7 +565,7 @@ def view(item_path: str, route: ViewRoute, render_doc: bool = True) -> FlaskView
             defaultload(DocEntry._block)
             .defaultload(Block.accesses)
             .joinedload(BlockAccess.usergroup),
-            joinedload(DocEntry.trs)
+            joinedload(DocEntry.trs),
             # TODO: These selectinloads are for some reason very inefficient at least for certain documents.
             #  See https://github.com/TIM-JYU/TIM/issues/2201. Needs more investigation.
             # .selectinload(Translation.docentry),
@@ -850,7 +851,8 @@ def render_doc_view(
                     if not verify_group_view_access(
                         ug, require=False, user=current_user
                     ):
-                        flash(f"You don't have access to group '{ug.name}'.")
+                        if not ug.is_personal_group:
+                            flash(f"You don't have access to group '{ug.name}'.")
                         ugs_without_access.append(ug)
             # We allow empty `groups` option to hide all answers by default.
             # In that case, users can use the `groups` URL parameter to show answers.
