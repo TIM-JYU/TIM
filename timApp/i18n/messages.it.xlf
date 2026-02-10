@@ -2849,6 +2849,13 @@
           <context context-type="linenumber">15,17</context>
         </context-group>
       </trans-unit>
+      <trans-unit id="906293260225293784" datatype="html">
+        <source>{VAR_SELECT, select, true {folder } false {document }}</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/item/access-countdown.component.ts</context>
+          <context context-type="linenumber">16</context>
+        </context-group>
+      </trans-unit>
       <trans-unit id="7734085109097277635" datatype="html">
         <source>See answers</source>
         <target state="translated">Vedere le risposte</target>
@@ -5205,6 +5212,13 @@
           <context context-type="linenumber">398,399</context>
         </context-group>
       </trans-unit>
+      <trans-unit id="6831339066754446743" datatype="html">
+        <source> Generate new login codes </source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
+          <context context-type="linenumber">401</context>
+        </context-group>
+      </trans-unit>
       <trans-unit id="235606749866925302" datatype="html">
         <source> Print login codes (Main exam) </source>
         <target state="translated">Stampare i codici di accesso (esame principale)</target>
@@ -5267,6 +5281,13 @@
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
           <context context-type="linenumber">460</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="8985586082248904379" datatype="html">
+        <source> You are showing exam answers to the students.<x id="LINE_BREAK" ctype="lb" equiv-text="&lt;br&gt;"/> To start a new exam, stop answer reviewing in section &apos;4. Show answers to students&apos;. </source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
+          <context context-type="linenumber">466,467</context>
         </context-group>
       </trans-unit>
       <trans-unit id="2666020517194537371" datatype="html">
@@ -5361,6 +5382,13 @@
           <context context-type="linenumber">667,668</context>
         </context-group>
       </trans-unit>
+      <trans-unit id="3438605880625234523" datatype="html">
+        <source>Ask students to log in to the exam page:</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
+          <context context-type="linenumber">525</context>
+        </context-group>
+      </trans-unit>
       <trans-unit id="6839138864615473489" datatype="html">
         <source>Not selected</source>
         <target state="translated">Non selezionato</target>
@@ -5407,6 +5435,13 @@
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
           <context context-type="linenumber">579</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="8023863054421277417" datatype="html">
+        <source> The exam has started! Students can now access the exam. Audio and video materials can be accessed via the &quot;View exam document&quot; link. </source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
+          <context context-type="linenumber">582</context>
         </context-group>
       </trans-unit>
       <trans-unit id="5539097211548480304" datatype="html">
@@ -5529,6 +5564,27 @@
           <context context-type="linenumber">685</context>
         </context-group>
       </trans-unit>
+      <trans-unit id="6383743377048106825" datatype="html">
+        <source> You can show answers only when they don&apos;t have an active exam running.<x id="LINE_BREAK" ctype="lb" equiv-text="&lt;br&gt;"/> Stop the exam and disable login codes in section &apos;3. Manage exams&apos; to enable showing answers. </source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
+          <context context-type="linenumber">694,695</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="3606771354880883563" datatype="html">
+        <source> You can only show answers for the main exam (<x id="INTERPOLATION" equiv-text="{{ examByDocId.get(group.examDocId!)?.name }}"/>) and not for the practice exam. Change the exam in section &apos;3. Manage exams&apos; to enable showing answers. </source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
+          <context context-type="linenumber">698,699</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="4454548802259509672" datatype="html">
+        <source> Select an exam in section &apos;3. Manage exams&apos; to enable showing answers. </source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
+          <context context-type="linenumber">702</context>
+        </context-group>
+      </trans-unit>
       <trans-unit id="657151549921052159" datatype="html">
         <source>Begin showing answers to students</source>
         <target state="translated">Iniziare a mostrare le risposte agli studenti</target>
@@ -5543,6 +5599,13 @@
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
           <context context-type="linenumber">711,712</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="5354903987559868415" datatype="html">
+        <source>Note: You can only show the answers for the main exam (<x id="INTERPOLATION" equiv-text="{{ examByDocId.get(group.examDocId!)?.name }}"/>) and not for the practice exam.</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
+          <context context-type="linenumber">716,717</context>
         </context-group>
       </trans-unit>
       <trans-unit id="1609834812747709494" datatype="html">
@@ -5577,6 +5640,13 @@
           <context context-type="linenumber">731,732</context>
         </context-group>
       </trans-unit>
+      <trans-unit id="6667488878974100003" datatype="html">
+        <source>Press the <x id="START_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;i&gt;"/>&apos;Begin showing answers to students&apos;<x id="CLOSE_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;/i&gt;"/> button to allow students to review their answers for 1 hour.</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
+          <context context-type="linenumber">732,733</context>
+        </context-group>
+      </trans-unit>
       <trans-unit id="3773241316574942521" datatype="html">
         <source>Ask students to log in to the exam page using their login codes: <x id="START_LINK" ctype="x-a" equiv-text="&lt;a                                         [href]=&quot;getExamUrl(examByDocId.get(group.examDocId!))&quot;>"/><x id="START_TAG_CODE" ctype="x-code" equiv-text="{{ getExa"/><x id="INTERPOLATION" equiv-text="yDocId.get(group.examDocId!)) }}"/><x id="CLOSE_TAG_CODE" ctype="x-code" equiv-text="&lt;/a>"/><x id="CLOSE_LINK" ctype="x-a"/></source>
         <target state="new">Chiedere agli studenti di accedere alla pagina dell'esame usando i loro codici di accesso:</target>
@@ -5591,6 +5661,20 @@
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
           <context context-type="linenumber">734,735</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="1229716178210207066" datatype="html">
+        <source>Students can now review their answers. Students cannot submit new answers but can see their answers and model answers (if they are included).</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
+          <context context-type="linenumber">735,736</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="4189671442877791653" datatype="html">
+        <source>To end the view right, press the <x id="START_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;i&gt;"/>&apos;End showing answers to students button&apos;<x id="CLOSE_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;/i&gt;"/>. The right is automatically disabled in 1 hour.</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
+          <context context-type="linenumber">736,737</context>
         </context-group>
       </trans-unit>
       <trans-unit id="1867936196876545067" datatype="html">
