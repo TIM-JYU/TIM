@@ -11443,6 +11443,30 @@ Separate multiple addresses with commas or write each address on a new line.</so
           <context context-type="linenumber">323,324</context>
         </context-group>
       </trans-unit>
+      <trans-unit id="2430415615241833222" datatype="html">
+        <source>{VAR_SELECT, select, true {folder} false {document}}</source>
+        <target state="new">{VAR_SELECT, select, true {folder} false {document}}</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/item/access-countdown.component.ts</context>
+          <context context-type="linenumber">10</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="8367583638953157691" datatype="html">
+        <source> You can access the <x id="ICU" equiv-text="{ item.isFolder, select, true { folder } false { document } }" xid="906293260225293784"/> now. <x id="START_TAG_TIM_GOTO_LINK" ctype="x-tim_goto_link" equiv-text="&lt;tim-goto-link href=&quot;&quot; [maxWait]=&quot;waitOffset&quot; [autoOpen]=&quot;true&quot;&gt;"/>Refresh the page<x id="CLOSE_TAG_TIM_GOTO_LINK" ctype="x-tim_goto_link" equiv-text="&lt;/tim-goto-link&gt;"/></source>
+        <target state="new"> You can access the <x id="ICU" equiv-text="{ item.isFolder, select, true { folder } false { document } }" xid="906293260225293784"/> now. <x id="START_TAG_TIM_GOTO_LINK" ctype="x-tim_goto_link" equiv-text="&lt;tim-goto-link href=&quot;&quot; [maxWait]=&quot;waitOffset&quot; [autoOpen]=&quot;true&quot;&gt;"/>Refresh the page<x id="CLOSE_TAG_TIM_GOTO_LINK" ctype="x-tim_goto_link" equiv-text="&lt;/tim-goto-link&gt;"/></target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/item/access-countdown.component.ts</context>
+          <context context-type="linenumber">15,17</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="906293260225293784" datatype="html">
+        <source>{VAR_SELECT, select, true {folder } false {document }}</source>
+        <target state="new">{VAR_SELECT, select, true {folder } false {document }}</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/item/access-countdown.component.ts</context>
+          <context context-type="linenumber">16</context>
+        </context-group>
+      </trans-unit>
     </body>
   </file>
 </xliff>
