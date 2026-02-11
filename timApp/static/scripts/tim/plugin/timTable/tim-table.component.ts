@@ -151,6 +151,7 @@ import {CommonModule} from "@angular/common";
 import {prepareMenubarItems} from "tim/plugin/timTable/tim-table-editor-toolbar-dialog.component";
 import {showInputDialog} from "tim/ui/showInputDialog";
 import type {InputDialogResult} from "tim/ui/input-dialog.component";
+import {timDateRegex} from "tim/util/comparatorfilter";
 
 // NOTE: if change these, also change other places
 // where is string "User's name" (table-form-components.ts, setDataMatrix)
@@ -166,9 +167,6 @@ const TableFormHeaders: string[] = [
 // Uncomment next if need to data watch some attributes for data changes
 // import {installDataWatcher} from "tim/util/dataWatcher";
 // import {LogAllMethods} from "tim/util/dataWatcher";
-
-const timDateRegex =
-    /^(?:\d{4}-\d{2}-\d{2}(?:[ T]\d{2}:\d{2}(?::\d{2})?)?|\d{2}:\d{2}(?::\d{2})?)$/;
 
 function replaceAll(s: string, s1: string, s2: string): string {
     const re = new RegExp(s1, "g");

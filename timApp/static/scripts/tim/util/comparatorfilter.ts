@@ -1,3 +1,6 @@
+export const timDateRegex =
+    /^(?:\d{4}-\d{2}-\d{2}(?:[ T]\d{2}:\d{2}(?::\d{2})?)?|\d{2}:\d{2}(?::\d{2})?)$/;
+
 /**
  * NumFilter class for filtering numbers.
  *
@@ -13,7 +16,8 @@
  */
 // FIXME: https://github.com/TIM-JYU/TIM/issues/3538
 // const numFilterEx: RegExp = /([<=>!]=?) *(-?[\w.,]*) *(!?) */g;
-const numFilterEx: RegExp = /([<=>!]=?) *(-?[\w.,\s]*)/g;
+// const numFilterEx: RegExp = /([<=>!]=?) *(-?[\w.,\s]*)/g;
+const numFilterEx: RegExp = /([<=>!]=?)\s*([-\w.,:\s]+?)(?=[<=>!]|$)/g;
 type NumStr = number | string;
 type FilterComparator = (a: NumStr, b: NumStr) => boolean;
 const filterComparatorOperators = {
@@ -32,6 +36,7 @@ export class ComparatorFilter {
     values: NumStr[] = [];
     funcs: FilterComparator[] = [];
     negate: boolean = false;
+    datetime: boolean = false;
     // m: RegExpExecArray |
     // null = [];
     constructor(fltr: string) {
@@ -49,6 +54,11 @@ export class ComparatorFilter {
             // if (result[3]) {
             //     this.negate = true;
             // }
+            if (timDateRegex.test(vs)) {
+                this.values.push(vs);
+                this.datetime = true;
+                continue;
+            }
             let v: NumStr;
             try {
                 v = parseFloat(vs);
@@ -78,18 +88,29 @@ export class ComparatorFilter {
     }
 
     public test(s: string): boolean {
+        let forceString = false;
         let n: NumStr = "";
-        try {
-            n = parseFloat(s);
-            if (isNaN(n)) {
+        if (this.datetime || timDateRegex.test(s)) {
+            n = s; // handle datetimes as strings, since they are not directly comparable as numbers
+            forceString = true;
+        } else {
+            try {
+                n = parseFloat(s);
+                if (isNaN(n)) {
+                    n = s.toLowerCase();
+                }
+            } catch {
                 n = s.toLowerCase();
+                forceString = true;
             }
-        } catch {
-            n = s.toLowerCase();
         }
         let res = true;
         for (let i = 0; i < this.values.length; i++) {
-            if (!this.funcs[i](n, this.values[i])) {
+            let v = this.values[i];
+            if (forceString) {
+                v = v.toString();
+            }
+            if (!this.funcs[i](n, v)) {
                 res = false;
                 break;
             }
