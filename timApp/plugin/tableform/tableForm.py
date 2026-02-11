@@ -408,6 +408,7 @@ addedDates: false # Show the date the user was added
 #buttonText: Tallenna    # Name your save button here
 cbColumn: true    # show checkboxes
 nrColumn: true    # show numbers
+sequentialNr: true # show numbers sequentially even if some rows are hidden
 # maxRows: 40em   # Hiw long is the table
 # maxCols: fit-content # width of the table
 # maxWidth: 30em  # max for column

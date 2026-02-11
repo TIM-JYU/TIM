@@ -1691,13 +1691,13 @@ export class TimTableComponent
     protected rowNumbers: number[] = [];
 
     public isSequentialNr(): boolean {
-        return this.data.sequentialNr ?? false;
+        return this.data.sequentialNr ?? true;
     }
 
     updateVisibleRows() {
         this.visibleRowIndices = [];
         this.rowNumbers = [];
-        const isSequential = this.data.sequentialNr ?? false;
+        const isSequential = this.isSequentialNr();
 
         let runningNr = this.nrColStart;
 
