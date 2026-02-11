@@ -151,6 +151,7 @@ import {CommonModule} from "@angular/common";
 import {prepareMenubarItems} from "tim/plugin/timTable/tim-table-editor-toolbar-dialog.component";
 import {showInputDialog} from "tim/ui/showInputDialog";
 import type {InputDialogResult} from "tim/ui/input-dialog.component";
+import {timDateRegex} from "tim/util/comparatorfilter";
 
 // NOTE: if change these, also change other places
 // where is string "User's name" (table-form-components.ts, setDataMatrix)
@@ -166,8 +167,6 @@ const TableFormHeaders: string[] = [
 // Uncomment next if need to data watch some attributes for data changes
 // import {installDataWatcher} from "tim/util/dataWatcher";
 // import {LogAllMethods} from "tim/util/dataWatcher";
-
-const timDateRegex = /^\d{4}-\d{2}-\d{2}[ T]?\d{2}:\d{2}(:\d{2})?$/;
 
 function replaceAll(s: string, s1: string, s2: string): string {
     const re = new RegExp(s1, "g");
@@ -351,6 +350,7 @@ export interface TimTable extends IGenericPluginMarkup {
     filters?: Filters;
     cbColumn?: boolean;
     nrColumn?: boolean | number;
+    sequentialNr?: boolean;
     charRow?: boolean | number;
     saveUserDataHeader?: boolean;
     maxRows?: string;
@@ -787,12 +787,11 @@ export enum ClearSort {
                             </td>
                         </tr>
                         <!-- Now the matrix -->
-                        <tr *ngFor="let rowi of permTable; let i = index"
+                        <tr *ngFor="let rowi of visibleRowIndices; let i = index"
                             [style]="stylingForRow(rowi)"
                             [class]="classForRow(rowi)"
-                            [hidden]="!showRow(rowi)"
                         >
-                            <td class="nr-column" *ngIf="data.nrColumn">{{i + nrColStart}}</td>
+                            <td class="nr-column" *ngIf="data.nrColumn">{{rowNumbers[i]}}</td>
                             <td class="cb-column" *ngIf="data.cbColumn">
                                 <input type="checkbox" [(ngModel)]="cbs[rowi]"
                                        (ngModelChange)="handleChangeCheckbox(rowi)">
@@ -1291,6 +1290,7 @@ export class TimTableComponent
             }
         }
         this.currentHiddenRows = new Set(this.data.hiddenRows);
+        this.updateVisibleRows();
         onClick("body", (_$this, e) => {
             this.onClick(e);
         });
@@ -1687,6 +1687,37 @@ export class TimTableComponent
         return this.cellDataMatrix[0].length;
     }
 
+    protected visibleRowIndices: number[] = [];
+    protected rowNumbers: number[] = [];
+
+    public isSequentialNr(): boolean {
+        return this.data.sequentialNr ?? true;
+    }
+
+    updateVisibleRows() {
+        this.visibleRowIndices = [];
+        this.rowNumbers = [];
+        const isSequential = this.isSequentialNr();
+
+        let runningNr = this.nrColStart;
+
+        // eslint-disable-next-line @typescript-eslint/prefer-for-of
+        for (let i = 0; i < this.permTable.length; i++) {
+            const rowIndex = this.permTable[i];
+
+            if (!this.showRow(rowIndex)) {
+                continue;
+            }
+
+            this.visibleRowIndices.push(rowIndex);
+
+            if (isSequential) {
+                this.rowNumbers.push(runningNr++);
+            } else {
+                this.rowNumbers.push(rowIndex + this.nrColStart);
+            }
+        }
+    }
     private applyFilters = async (filterData?: Filters): Promise<void> => {
         if (!filterData) {
             return;
@@ -1748,6 +1779,7 @@ export class TimTableComponent
             }
         }
         if (changeDetected && !this.isInitializing()) {
+            this.updateVisibleRows();
             this.c();
         }
     };
@@ -2115,6 +2147,7 @@ export class TimTableComponent
         ]);
         this.countCBs(-1);
         this.dataViewComponent?.updateVisible();
+        this.updateVisibleRows();
     }
 
     sortByColumn(ai: number, bi: number, col: number, dir: number): number {
@@ -2162,6 +2195,7 @@ export class TimTableComponent
         this.sortRing = this.emptyRing.slice();
         this.sortDirRing = this.emptyRing.slice();
         this.dataViewComponent?.updateRowSortOrder(this.permTable);
+        this.updateVisibleRows();
     }
 
     private lastSortCol = this.emptyRing.slice();
@@ -2243,6 +2277,7 @@ export class TimTableComponent
         for (let i = 0; i < this.permTable.length; i++) {
             this.permTableToScreen[this.permTable[i]] = i;
         }
+        this.updateVisibleRows();
         this.disableStartCell();
         this.dataViewComponent?.updateRowSortOrder(this.permTable);
 

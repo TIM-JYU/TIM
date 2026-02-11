@@ -821,6 +821,7 @@ def render_doc_view(
         if show_valid_only
         else AnswerCountRule.ValidThenInvalid
     )
+    url_groups = usergroups
     if teacher_or_see_answers:
         user_list = None
         ugs = None
@@ -851,7 +852,7 @@ def render_doc_view(
                     if not verify_group_view_access(
                         ug, require=False, user=current_user
                     ):
-                        if not ug.is_personal_group:
+                        if not (url_groups and ug.is_personal_group):
                             flash(f"You don't have access to group '{ug.name}'.")
                         ugs_without_access.append(ug)
             # We allow empty `groups` option to hide all answers by default.

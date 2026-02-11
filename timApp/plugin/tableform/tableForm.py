@@ -1,6 +1,7 @@
 """
 TIM example plugin: a tableFormndrome checker.
 """
+
 import datetime
 import io
 import json
@@ -152,6 +153,7 @@ class TableFormMarkupModel(GenericMarkupModel):
     maxWidth: str | Missing = missing
     minWidth: str | Missing | None = missing
     nrColumn: bool | Missing | None = missing
+    sequentialNr: bool | Missing | None = missing
     charRow: bool | Missing | None = missing
     open: bool | Missing = True
     openButtonText: str | Missing | None = missing
@@ -244,9 +246,11 @@ def get_sisugroups(user: User, sisu_id: str | None) -> "TableFormObj":
         rows={
             get_ext_id(g).external_id: {
                 "TIM-nimi": g.name,
-                "URL": f'<a href="{g.admin_doc.docentries[0].url_relative}">URL</a>'
-                if g.admin_doc
-                else None,
+                "URL": (
+                    f'<a href="{g.admin_doc.docentries[0].url_relative}">URL</a>'
+                    if g.admin_doc
+                    else None
+                ),
                 "Jäseniä": len(g.current_memberships),
                 "Kurssisivu": get_course_page(g),
             }
@@ -254,9 +258,9 @@ def get_sisugroups(user: User, sisu_id: str | None) -> "TableFormObj":
         },
         users={
             get_ext_id(g).external_id: TableFormUserInfo(
-                real_name=get_sisu_group_desc_for_table(g)
-                if sisu_id
-                else get_display_name(g),
+                real_name=(
+                    get_sisu_group_desc_for_table(g) if sisu_id else get_display_name(g)
+                ),
                 # The rows are not supposed to match any real user when handling sisu groups,
                 # so we try to use an id value that does not match anyone.
                 id=-100000,
@@ -382,8 +386,7 @@ def answer(args: TableFormAnswerModel) -> PluginAnswerResp:
 
 
 def reqs() -> PluginReqs:
-    templates = [
-        """
+    templates = ["""
 ``` {#tableForm_table plugin="tableForm"}    
 # showInView: true # Add attribute  to show the plugin in normal view
 groups: 
@@ -405,6 +408,7 @@ addedDates: false # Show the date the user was added
 #buttonText: Tallenna    # Name your save button here
 cbColumn: true    # show checkboxes
 nrColumn: true    # show numbers
+sequentialNr: true # show numbers sequentially even if some rows are hidden
 # maxRows: 40em   # Hiw long is the table
 # maxCols: fit-content # width of the table
 # maxWidth: 30em  # max for column
@@ -425,8 +429,7 @@ showToolbar: true # toolbar for editing the table
 #  virtual:
 #    enabled: true  # toggles virtual mode on or off; default true
 #  fixedColumns: 1 # how many not scrolling columns in left
-```"""
-    ]
+```"""]
     editor_tabs: list[EditorTab] = [
         {
             "text": "Fields",
@@ -672,9 +675,7 @@ def parse_row(rd: list[str | float | None], regex_filter: re.Pattern) -> None:
             decimal_sep = (
                 "dot"
                 if ((-1 < dot < comma) or (comma == -1 < dot))
-                else "comma"
-                if ((-1 < comma < dot) or (dot == -1 < comma))
-                else None
+                else "comma" if ((-1 < comma < dot) or (dot == -1 < comma)) else None
             )
             match decimal_sep:
                 case "dot":
