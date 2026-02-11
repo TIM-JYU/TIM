@@ -44,4 +44,5 @@ KNOWN_LANGUAGES = [
     "fi",
     "sv",
     "en-US",
+    "es",
 ]
