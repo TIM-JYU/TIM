@@ -45,4 +45,5 @@ KNOWN_LANGUAGES = [
     "sv",
     "en-US",
     "es",
+    "it",
 ]
