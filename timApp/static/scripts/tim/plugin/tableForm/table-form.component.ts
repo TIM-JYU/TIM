@@ -117,6 +117,7 @@ const TableFormMarkup = t.intersection([
 
         cbColumn: t.boolean,
         nrColumn: t.boolean,
+        sequentialNr: t.boolean,
         charRow: t.boolean,
         groups: t.array(t.string),
         report: nullable(t.boolean),
@@ -708,6 +709,7 @@ export class TableFormComponent
 
         this.data.cbColumn = this.markup.cbColumn;
         this.data.nrColumn = this.markup.nrColumn;
+        this.data.sequentialNr = this.markup.sequentialNr;
         this.data.charRow = this.markup.charRow;
         this.data.filterRow = this.markup.filterRow;
         this.data.filters = this.markup.filters;

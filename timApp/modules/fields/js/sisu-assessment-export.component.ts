@@ -201,6 +201,10 @@ class AssessmentTableModel implements DataModelProvider {
         return true;
     }
 
+    isSequentialNr(): boolean {
+        return false;
+    }
+
     public isLastVisible(tx: number, ty: number, d: CellIndex): boolean {
         return false;
     }
