@@ -121,6 +121,7 @@ const ExamT = t.type({
     docId: t.number,
     url: t.union([t.string, t.null]),
     disabled: t.union([t.string, t.null]),
+    startingTime: t.union([t.string, t.null]),
 });
 
 const ExamWithPracticeT = t.intersection([
@@ -443,7 +444,7 @@ export class ToggleComponent {
                                 <label for="current-exam-doc-{{group.id}}" i18n>Select exam</label>
                                 <select id="current-exam-doc-{{group.id}}" name="current-exam-doc-{{group.id}}" class="form-control"
                                         [ngModel]="group.currentExamDoc"
-                                        (ngModelChange)="confirmSelectExam(group, $event)">
+                                        (ngModelChange)="confirmSelectExam(group, $event); checkSelectedExamForStartingTime($event)">
                                     <option *ngIf="examByDocId.get(group.examDocId ?? -1) ?? markup['practiceExam']"
                                             [ngValue]="examByDocId.get(group.examDocId ?? -1)?.practice?.docId ?? markup['practiceExam']?.docId ?? -1">
                                         {{ examByDocId.get(group.examDocId ?? -1)?.practice?.name ?? markup['practiceExam']?.name ?? "" }}
@@ -475,7 +476,13 @@ export class ToggleComponent {
                                     {{examByDocId.get(group.currentExamDoc)?.disabled}}
                                 </tim-alert>
                             </div>
-                            <fieldset [disabled]="!group.currentExamDoc || group.allowAccess || !!examByDocId.get(group.currentExamDoc)?.disabled">
+                            <fieldset [disabled]="!group.currentExamDoc || group.allowAccess || !!examByDocId.get(group.currentExamDoc)?.disabled || !examTimeReached" >
+                                <div *ngIf="group.currentExamDoc && examByDocId.get(group.currentExamDoc)?.startingTime">
+                                    <h5 i18n>Exam Reservation Details</h5>
+                                    <p i18n>
+                                        You have a reservation for this exam. The exam will begin at {{examByDocId.get(group.currentExamDoc)?.startingTime | date: 'dd.MM.yyyy' }}. Starting the exam is not available before the scheduled date and time, so please wait until the scheduled time before beginning. If you experience any issues or require special arrangements, please contact exam support at email.
+                                    </p>
+                                </div>
                                 <h5 i18n>Hold an exam</h5>
 
                                 <p i18n>
@@ -768,6 +775,7 @@ export class ExamGroupManagerComponent
     members: Record<string, GroupMember[]> = {};
     error?: string;
     examByDocId = new Map<number, ExamWithPractice>();
+    examTimeReached = true;
 
     allowRestrictedAccess: boolean = false;
 
@@ -842,6 +850,34 @@ export class ExamGroupManagerComponent
         }
 
         await this.getGroups();
+        this.checkCurrentGroupForExamStartingDate();
+    }
+
+    checkCurrentGroupForExamStartingDate() {
+        const curGroup = this.visibleGroups.find((g) => g.selected);
+        if (curGroup && curGroup.currentExamDoc) {
+            const exam = this.examByDocId.get(curGroup.currentExamDoc);
+            if (exam) {
+                this.checkIfExamHasStartingTime(exam);
+            }
+        }
+    }
+
+    checkSelectedExamForStartingTime(event: number) {
+        const selectedExam = this.examByDocId.get(event);
+        if (selectedExam) {
+            this.checkIfExamHasStartingTime(selectedExam);
+        }
+    }
+
+    checkIfExamHasStartingTime(exam: ExamWithPractice) {
+        if (exam.startingTime) {
+            this.checkStartingTime(exam.startingTime).then(
+                (result) => (this.examTimeReached = result)
+            );
+        } else {
+            this.examTimeReached = true;
+        }
     }
 
     /**
@@ -1266,6 +1302,7 @@ export class ExamGroupManagerComponent
 
     async onGroupTabSelected(groupTab: TabDirective) {
         this.selectedGroupTab = groupTab.id;
+        await this.checkCurrentGroupForExamStartingDate();
         const curGroup = this.visibleGroups.find(
             (g) => g.name === this.selectedGroupTab
         );
@@ -1669,6 +1706,30 @@ export class ExamGroupManagerComponent
             dateStyle: "long",
             timeStyle: "short",
         });
+    }
+
+    // checkStartingTime(examTime: string): boolean {
+    //     const currentTime = new Date().toISOString();
+    //     const startingTime = new Date(examTime).toISOString();
+    //     return currentTime <= startingTime;
+    // }
+    async checkStartingTime(examTime: string) {
+        this.loading = true;
+        const res = await toPromise(
+            this.http.get<{result: boolean}>(
+                `/examGroupManager/checkStartingTime/${examTime}`
+            )
+        );
+        this.loading = false;
+        if (!res.ok) {
+            // await showMessageDialog(
+            //     $localize`Could not check exam start date. Details: ${res.result.error.error}`
+            // ); Not visible to users this time
+            // default to true, so exam can be held even if parsing fails
+            return true;
+        }
+        console.log("Tuloksena saatiin ", res.result.result);
+        return res.result.result;
     }
 }
 
