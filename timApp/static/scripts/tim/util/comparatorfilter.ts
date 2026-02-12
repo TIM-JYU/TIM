@@ -1,5 +1,6 @@
 export const timDateRegex =
     /^(?:\d{4}-\d{2}-\d{2}(?:[ T]\d{2}:\d{2}(?::\d{2})?)?|\d{2}:\d{2}(?::\d{2})?)$/;
+export const timNumberRegex = /^-?\d+([.,:]\d+)?([eE]-?\d+)?$/;
 
 /**
  * NumFilter class for filtering numbers.
@@ -11,106 +12,112 @@ export const timDateRegex =
  * =2     => find all numbers equal to 2
  * >2<4   => find all numbers in range ]2,4[
  * >=2<=4 => find all numbers in range [2,4]
- * >2<4!  => find all numbers not in range ]2,4[
+ * !>2<4  => find all numbers not in range ]2,4[
  * See: https://regex101.com/r/yfHbaH/3
  */
-// FIXME: https://github.com/TIM-JYU/TIM/issues/3538
 // const numFilterEx: RegExp = /([<=>!]=?) *(-?[\w.,]*) *(!?) */g;
-// const numFilterEx: RegExp = /([<=>!]=?) *(-?[\w.,\s]*)/g;
-const numFilterEx: RegExp = /([<=>!]=?)\s*([-\w.,:\s]+?)(?=[<=>!]|$)/g;
+
 type NumStr = number | string;
+
+export function getCompareValue(vs: string): [NumStr, boolean] {
+    try {
+        if (timNumberRegex.test(vs)) {
+            const v = parseFloat(vs.replace(",", ".").replace(":", "."));
+            if (isNaN(v)) {
+                return [vs.toLowerCase(), true];
+            }
+            return [v, false];
+        }
+    } catch (e) {}
+    return [vs.toLowerCase(), true];
+}
+
 type FilterComparator = (a: NumStr, b: NumStr) => boolean;
 const filterComparatorOperators = {
     "<": (a: NumStr, b: NumStr) => a < b,
     "<=": (a: NumStr, b: NumStr) => a <= b,
     "=": (a: NumStr, b: NumStr) => a === b,
     "==": (a: NumStr, b: NumStr) => a === b,
-    "!==": (a: NumStr, b: NumStr) => a !== b,
-    "!=": (a: NumStr, b: NumStr) => a !== b,
-    "!": (a: NumStr, b: NumStr) => a !== b,
+    // "!==": (a: NumStr, b: NumStr) => a !== b,
+    // "!=": (a: NumStr, b: NumStr) => a !== b,
+    // "!": (a: NumStr, b: NumStr) => a !== b,
     ">": (a: NumStr, b: NumStr) => a > b,
     ">=": (a: NumStr, b: NumStr) => a >= b,
 };
 
+function buildOperatorRegex(operators: Record<string, unknown>): RegExp {
+    const escapedOps = Object.keys(operators)
+        .sort((a, b) => b.length - a.length)
+        .map((op) => op.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"));
+    const opPattern = escapedOps.join("|");
+
+    // Prefix ! optional, operator valinnainen (puuttuva = regex), value valinnainen
+    return new RegExp(`(${opPattern})?([^<>=]*)(?=(?:${opPattern})|$)`, "g");
+}
+
+const numFilterEx = buildOperatorRegex(filterComparatorOperators);
+
 export class ComparatorFilter {
     values: NumStr[] = [];
+    strings: string[] = [];
     funcs: FilterComparator[] = [];
     negate: boolean = false;
-    datetime: boolean = false;
     // m: RegExpExecArray |
     // null = [];
     constructor(fltr: string) {
         // this.m = numFilterEx.exec(fltr);
         // if ( !this.m ) { return; }
-        // if ( fltr.indexOf("!") >= 0 ) { fltr = fltr.replace("!", ""); this.negate = true; }
-        for (
-            let result = numFilterEx.exec(fltr);
-            result !== null;
-            result = numFilterEx.exec(fltr)
-        ) {
-            const op = result[1] as keyof typeof filterComparatorOperators; // We know that it'll be one of the operators.
-            this.funcs.push(filterComparatorOperators[op]);
+        if (fltr.startsWith("!")) {
+            fltr = fltr.replace("!", "");
+            this.negate = true;
+        }
+        numFilterEx.lastIndex = 0;
+        let result = numFilterEx.exec(fltr);
+        while (result !== null) {
+            // this.negate = this.negate || !!result[1]; // If "!" is present before the operator, set negate to true.
+            let op = result[1] as keyof typeof filterComparatorOperators; // We know that it'll be one of the operators.
             const vs = result[2];
-            // if (result[3]) {
-            //     this.negate = true;
-            // }
-            if (timDateRegex.test(vs)) {
-                this.values.push(vs);
-                this.datetime = true;
-                continue;
+            if (!op && vs === "") {
+                op = "=";
             }
-            let v: NumStr;
-            try {
-                v = parseFloat(vs);
-                if (isNaN(v)) {
-                    v = vs.toLowerCase();
-                }
-            } catch (e) {
-                v = vs.toLowerCase();
+            if (op) {
+                this.funcs.push(filterComparatorOperators[op]);
+            } else {
+                // If no operator is specified, default to regexp.
+                const re = new RegExp(vs, "i");
+                this.funcs.push((a: NumStr, _: NumStr) => {
+                    return re.test("" + a);
+                });
             }
-            this.values.push(v);
+            this.values.push(getCompareValue(vs)[0]);
+            this.strings.push(vs.toLowerCase());
+            if (fltr === "" || result[0] === "") {
+                break;
+            }
+            result = numFilterEx.exec(fltr);
+            if (result == null || result[0] === "") {
+                break;
+            }
         }
     }
 
-    public static isNumFilter(s: string): boolean {
-        if (!s) {
-            return false;
-        }
-        // return ( !!numFilterEx.exec(s) ); // eats first match?
-        return "!<=>".includes(s[0]);
-    }
-
-    public static makeNumFilter(s: string): ComparatorFilter | null {
-        if (!this.isNumFilter(s)) {
-            return null;
-        }
+    public static makeNumFilter(s: string): ComparatorFilter {
         return new ComparatorFilter(s);
     }
 
     public test(s: string): boolean {
-        let forceString = false;
-        let n: NumStr = "";
-        if (this.datetime || timDateRegex.test(s)) {
-            n = s; // handle datetimes as strings, since they are not directly comparable as numbers
-            forceString = true;
-        } else {
-            try {
-                n = parseFloat(s);
-                if (isNaN(n)) {
-                    n = s.toLowerCase();
-                }
-            } catch {
-                n = s.toLowerCase();
-                forceString = true;
-            }
-        }
+        const [n, forceString] = getCompareValue(s);
+        const lcs = s.toLowerCase();
         let res = true;
         for (let i = 0; i < this.values.length; i++) {
             let v = this.values[i];
+            let ns = n;
             if (forceString) {
-                v = v.toString();
+                v = this.strings[i];
+            } else if (typeof v === "string") {
+                ns = lcs;
             }
-            if (!this.funcs[i](n, v)) {
+            if (!this.funcs[i](ns, v)) {
                 res = false;
                 break;
             }
@@ -125,19 +132,15 @@ export function withComparatorFilters<T>(
     const matchFn = (
         searchTerm: string,
         cellValue: string | number | null | undefined,
-        row: uiGrid.IGridRowOf<T>,
-        column: uiGrid.IGridColumnOf<T>
+        _row: uiGrid.IGridRowOf<T>,
+        _column: uiGrid.IGridColumnOf<T>
     ) => {
         if (cellValue == null) {
             return searchTerm === "" || searchTerm === "=";
         }
         cellValue = cellValue.toString();
         const comp = ComparatorFilter.makeNumFilter(searchTerm);
-        if (comp) {
-            return comp.test(cellValue);
-        } else {
-            return new RegExp(searchTerm, "i").test(cellValue);
-        }
+        return comp.test(cellValue);
     };
     return params.map((param) => ({
         ...param,

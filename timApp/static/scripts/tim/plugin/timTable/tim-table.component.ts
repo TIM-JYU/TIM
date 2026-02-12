@@ -151,7 +151,9 @@ import {CommonModule} from "@angular/common";
 import {prepareMenubarItems} from "tim/plugin/timTable/tim-table-editor-toolbar-dialog.component";
 import {showInputDialog} from "tim/ui/showInputDialog";
 import type {InputDialogResult} from "tim/ui/input-dialog.component";
-import {timDateRegex} from "tim/util/comparatorfilter";
+import {getCompareValue} from "tim/util/comparatorfilter";
+// import {getCompareValue, timDateRegex} from "tim/util/comparatorfilter";
+// import {string} from "io-ts";
 
 // NOTE: if change these, also change other places
 // where is string "User's name" (table-form-components.ts, setDataMatrix)
@@ -2164,15 +2166,15 @@ export class TimTableComponent
         const va = "" + cca;
         const vb = "" + ccb;
 
-        if (timDateRegex.test(va) && timDateRegex.test(vb)) {
-            return va.localeCompare(vb, sortLang) * dir;
-        }
+        // if (timDateRegex.test(va) && timDateRegex.test(vb)) {
+        //     return va.localeCompare(vb, sortLang) * dir;
+        // }
 
         // changes:  1,20 -> 1.20,  12:03 -> 12.03 TODO: 12:31:15 not handled correctly
-        const na = parseFloat(va.replace(",", ".").replace(":", "."));
-        const nb = parseFloat(vb.replace(",", ".").replace(":", "."));
-        if (isNaN(na) || isNaN(nb)) {
-            return va.localeCompare(vb, sortLang) * dir;
+        const [na, nas] = getCompareValue(va);
+        const [nb, nbs] = getCompareValue(vb);
+        if (nas || nbs) {
+            return ("" + na).localeCompare("" + nb, sortLang) * dir;
         }
         let ret = 0;
         if (na > nb) {
