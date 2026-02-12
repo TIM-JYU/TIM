@@ -386,7 +386,8 @@ def answer(args: TableFormAnswerModel) -> PluginAnswerResp:
 
 
 def reqs() -> PluginReqs:
-    templates = ["""
+    templates = [
+        """
 ``` {#tableForm_table plugin="tableForm"}    
 # showInView: true # Add attribute  to show the plugin in normal view
 groups: 
@@ -429,7 +430,8 @@ showToolbar: true # toolbar for editing the table
 #  virtual:
 #    enabled: true  # toggles virtual mode on or off; default true
 #  fixedColumns: 1 # how many not scrolling columns in left
-```"""]
+```"""
+    ]
     editor_tabs: list[EditorTab] = [
         {
             "text": "Fields",
@@ -675,7 +677,9 @@ def parse_row(rd: list[str | float | None], regex_filter: re.Pattern) -> None:
             decimal_sep = (
                 "dot"
                 if ((-1 < dot < comma) or (comma == -1 < dot))
-                else "comma" if ((-1 < comma < dot) or (dot == -1 < comma)) else None
+                else "comma"
+                if ((-1 < comma < dot) or (dot == -1 < comma))
+                else None
             )
             match decimal_sep:
                 case "dot":
