@@ -44,9 +44,6 @@ import {showExamGroupCreateDialog} from "tim/plugin/examGroupManager/showExamGro
 import {PurifyModule} from "tim/util/purify.module";
 import {SPLIT_EVERY} from "tim/user/user-code-login.component";
 import {ButtonsModule} from "ngx-bootstrap/buttons";
-import {MOMENT} from "angular-calendar";
-import moment, {Moment} from "moment";
-import {date} from "fp-ts";
 
 export interface GroupMember extends IUser {
     id: number;
@@ -1766,8 +1763,6 @@ export class ExamGroupManagerComponent
             // If this fails, allow the exams to proceed
             return true;
         }
-        console.log(serverTime.result.time);
-        console.log(new Date(serverTime.result.time));
         return new Date(examTime) <= new Date(serverTime.result.time);
     }
 }
