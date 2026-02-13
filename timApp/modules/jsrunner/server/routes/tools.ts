@@ -434,11 +434,11 @@ class Distribution extends WithGtools {
     ) {
         super(gtools);
         this.autoadd = autoadd;
-        if (mul == 0) {
+        if (mul <= 0) {
             mul = 1;
         }
         for (let i = 0; ; i++) {
-            const val = (i + n1) * mul;
+            const val = n1 + i * mul;
             if (val > n2 + 0.000001) {
                 break;
             }
