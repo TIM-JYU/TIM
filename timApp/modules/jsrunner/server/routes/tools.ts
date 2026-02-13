@@ -423,6 +423,7 @@ class Distribution extends WithGtools {
     private readonly fieldName: string;
     public readonly autoadd: boolean = true;
 
+    // eslint-disable-next-line constructor-super
     constructor(
         gtools: GTools,
         fieldName: string,
@@ -436,28 +437,36 @@ class Distribution extends WithGtools {
         if (mul == 0) {
             mul = 1;
         }
-        for (let i = n1; i * mul <= n2 + 0.000001; i++) {
-            this.labels[i] = i * mul;
+        for (let i = 0; ; i++) {
+            const val = (i + n1) * mul;
+            if (val > n2 + 0.000001) {
+                break;
+            }
+            this.labels[i] = val;
             this.data[i] = 0;
         }
         this.fieldName = fieldName;
     }
 
-    // Add to closest category
+    // Add to interval
     add(x: number): number {
-        if (isNaN(x)) {
+        if (isNaN(x) || this.labels.length == 0) {
             return x;
         }
-        let mini = 0;
-        let mind = 1e100;
-        for (let i = 0; i < this.labels.length; i++) {
-            const d = Math.abs(this.labels[i] - x);
-            if (d <= mind) {
-                mind = d;
+        const lasti = this.labels.length - 1;
+        let mini = -1;
+        for (let i = 0; i < lasti; i++) {
+            if (this.labels[i] <= x && x < this.labels[i + 1]) {
                 mini = i;
+                break;
             }
         }
-        this.data[mini]++;
+        if (mini === -1 && x <= this.labels[lasti] + 0.000001) {
+            mini = lasti;
+        }
+        if (mini >= 0) {
+            this.data[mini]++;
+        }
         this.n++;
         return x;
     }
@@ -1022,6 +1031,7 @@ export class ToolsBase {
      * @example excelCellToCell("A1") === [0, 0]
      * @example excelCellToCell("J11") === [10, 10]
      * @example excelCellToCell("AA11") === [26, 10]
+     * @example excelCellToCell("ZZ") === [701]
      *
      * @param excelCell Excel-like cell name
      * @returns Cell position as a [col, row] tuple
@@ -1126,7 +1136,7 @@ export class GTools extends ToolsBase {
     addToDatas() {
         for (const datas of [this.dists, this.xys, this.fitters, this.stats]) {
             // noinspection JSUnusedLocalSymbols
-            Object.entries(datas).forEach(([key, da]) => {
+            Object.entries(datas).forEach(([_key, da]) => {
                 const d = da as Distribution | XY | LineFitter | Stats;
                 if (d.autoadd) {
                     d.addField();
@@ -1138,7 +1148,7 @@ export class GTools extends ToolsBase {
     clearGtools() {
         for (const datas of [this.dists, this.xys, this.fitters, this.stats]) {
             // noinspection JSUnusedLocalSymbols
-            Object.entries(datas).forEach(([key, da]) => {
+            Object.entries(datas).forEach(([_key, da]) => {
                 const d = da as Distribution | XY | LineFitter | Stats;
                 d.clearGtools();
             });
@@ -1716,7 +1726,7 @@ export class Tools extends ToolsBase {
      */
     isVelpTask(v: VelpDataT, task: string): boolean {
         const id = v.answer?.task_id;
-        return id?.substr(id.indexOf(".") + 1) === task;
+        return id?.slice(id.indexOf(".") + 1) === task;
     }
 
     /**
@@ -1801,8 +1811,7 @@ export class Tools extends ToolsBase {
             }));
         const points = velps.map((v) => v.points).filter((n) => !isNaN(n));
         // this.output += points
-        const sum = points.reduce((a, b) => a + b, 0);
-        return sum;
+        return points.reduce((a, b) => a + b, 0);
     }
 
     /**
@@ -1846,10 +1855,9 @@ export class Tools extends ToolsBase {
      * // TODO: Check if correct
      */
     getPeerReviewersForUser(usersObject: Users): string[] {
-        const reviewers = this.getPeerReviewsForUser().map(
+        return this.getPeerReviewsForUser().map(
             (reviewer) => usersObject[reviewer.reviewer.id]
         );
-        return reviewers;
     }
 
     /*
