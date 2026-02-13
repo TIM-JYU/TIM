@@ -122,6 +122,7 @@ const ExamT = t.type({
     url: t.union([t.string, t.null]),
     disabled: t.union([t.string, t.null]),
     startingTime: t.union([t.string, t.null]),
+    endingTime: t.union([t.string, t.null]),
 });
 
 const ExamWithPracticeT = t.intersection([
@@ -480,7 +481,7 @@ export class ToggleComponent {
                                 </tim-alert>
                             </div>
                             <div
-                                *ngIf="group.currentExamDoc && (!!examByDocId.get(group.currentExamDoc)?.startingTime && !examTimeReached)"
+                                *ngIf="group.currentExamDoc && (!!examByDocId.get(group.currentExamDoc)?.startingTime && !examStartingTimeReached)"
                                 class="mt">
                                 <tim-alert severity="warning">
                                     <h5 i18n>Exam Reservation Details</h5>
@@ -493,9 +494,18 @@ export class ToggleComponent {
                                     </p>
                                 </tim-alert>
                             </div>
+                            <div
+                                *ngIf="group.currentExamDoc && (!!examByDocId.get(group.currentExamDoc)?.endingTime && examEndingTimeReached)"
+                                class="mt">
+                                <tim-alert severity="warning">
+                                    <h5 i18n>Practice Exam Unavailable</h5>
+                                    <p i18n>
+                                        The practice exam is no longer available. Please use the main exam at your reserved exam time.
+                                    </p>
+                                </tim-alert>
+                            </div>
                             <fieldset
-                                [disabled]="!group.currentExamDoc || group.allowAccess || (!!examByDocId.get(group.currentExamDoc)?.startingTime && !examTimeReached)">
-
+                                [disabled]="!group.currentExamDoc || group.allowAccess || (!!examByDocId.get(group.currentExamDoc)?.startingTime && !examStartingTimeReached) || (!!examByDocId.get(group.currentExamDoc)?.endingTime && examEndingTimeReached)">
                                 <h5 i18n>Hold an exam</h5>
 
                                 <p i18n>
@@ -505,7 +515,7 @@ export class ToggleComponent {
 
                                 <div class="checklist">
                                     <div
-                                        [class.disabled]="!group.currentExamDoc || group.allowAccess || (!!examByDocId.get(group.currentExamDoc)?.startingTime && !examTimeReached)">
+                                        [class.disabled]="!group.currentExamDoc || group.allowAccess || (!!examByDocId.get(group.currentExamDoc)?.startingTime && !examStartingTimeReached) || (!!examByDocId.get(group.currentExamDoc)?.endingTime && examEndingTimeReached)">
                                         <div class="cb">
                                             <input type="checkbox" title="Mark as done" i18n-title
                                                    [checked]="group.examState > 0"
@@ -810,7 +820,8 @@ export class ExamGroupManagerComponent
     members: Record<string, GroupMember[]> = {};
     error?: string;
     examByDocId = new Map<number, ExamWithPractice>();
-    examTimeReached = true;
+    examStartingTimeReached = true;
+    examEndingTimeReached = false;
 
     allowRestrictedAccess: boolean = false;
 
@@ -894,7 +905,7 @@ export class ExamGroupManagerComponent
                 currentSelectedGroup.currentExamDoc
             );
             if (exam) {
-                await this.checkForExamTime(exam);
+                await this.checkForExamTimes(exam);
             }
         }
     }
@@ -902,17 +913,26 @@ export class ExamGroupManagerComponent
     async handleOptionSelectForExamTime(event: number) {
         const selectedExam = this.examByDocId.get(event);
         if (selectedExam) {
-            await this.checkForExamTime(selectedExam);
+            await this.checkForExamTimes(selectedExam);
         }
     }
 
-    async checkForExamTime(exam: ExamWithPractice) {
+    async checkForExamTimes(exam: ExamWithPractice) {
         if (exam.startingTime) {
-            await this.checkStartingTime(exam.startingTime).then(
-                (result) => (this.examTimeReached = result)
+            await this.checkIfBeforeServerTime(exam.startingTime).then(
+                (result) => (this.examStartingTimeReached = result)
             );
         } else {
-            this.examTimeReached = true;
+            // If startingTime is not found default to true
+            this.examStartingTimeReached = true;
+        }
+
+        if (exam.endingTime) {
+            await this.checkIfBeforeServerTime(exam.endingTime).then(
+                (result) => (this.examEndingTimeReached = result)
+            );
+        } else {
+            this.examEndingTimeReached = false;
         }
     }
 
@@ -921,7 +941,7 @@ export class ExamGroupManagerComponent
         if (curGroup?.currentExamDoc) {
             const currentExam = this.examByDocId.get(curGroup.currentExamDoc);
             if (currentExam) {
-                await this.checkForExamTime(currentExam);
+                await this.checkForExamTimes(currentExam);
             }
         }
     }
@@ -1753,7 +1773,7 @@ export class ExamGroupManagerComponent
         });
     }
 
-    async checkStartingTime(examTime: string) {
+    async checkIfBeforeServerTime(examTime: string) {
         this.loading = true;
         const serverTime = await toPromise(
             this.http.get<{time: Date}>("/time")
