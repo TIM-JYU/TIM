@@ -1089,19 +1089,6 @@ def _set_exam_state_impl(
     _update_exam_group_data_global(ug, exam_group_data)
 
 
-@exam_group_manager_plugin.get("/checkStartingTime/<exam_time>")
-def check_if_starting_time_reached(exam_time: str) -> Response:
-    if not exam_time:
-        raise RouteException(gettext("Please enter the exam time in format YYYY-MM-DD"))
-    now = get_current_time()
-    try:
-        exam = PluginDateTime(datetime.fromisoformat(exam_time))
-    except ValueError:
-        raise RouteException(gettext("Invalid exam time"))
-    result = exam <= now
-    return json_response({"result": result})
-
-
 @exam_group_manager_plugin.post("/setExamState")
 def set_exam_state(group_id: int, new_state: int) -> Response:
     ug = UserGroup.get_by_id(group_id)
