@@ -108,6 +108,7 @@ class Exam:
     url: str | None = None
     disabled: str | None = None
     startingTime: PluginDateTime | datetime | None = None
+    endingTime: PluginDateTime | datetime | None = None
 
 
 @dataclass
