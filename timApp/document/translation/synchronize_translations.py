@@ -40,8 +40,9 @@ def update_par_content(
     rd = ref_par.get_attr("rd", None)
     rp = ref_par.get_attr("rp", None)
     ra = ref_par.get_attr("ra", None)
+    rtask = ref_par.get_attr("rtask", None)
 
-    matched_doc, rp = find_lang_matching_cite_source(tr_doc, rd, rp, ra)
+    matched_doc, rp = find_lang_matching_cite_source(tr_doc, rd, rp, ra, rtask)
     rd = matched_doc.id if matched_doc else None
 
     if matched_doc and ra:
@@ -74,6 +75,15 @@ def update_par_content(
             r="tr",
             add_rd=ref_par.is_citation_par(),
         )
+        task_id = ref_par.get_attr("taskId", None)
+        if task_id:
+            tr_par.set_attr("taskId", task_id)
+        if rtask:
+            tr_par.set_attr("rtask", rtask)
+            # tr_par.set_attr("rp", None)
+        # TODO: change rd if not int
+        # if not is_int(rd):  # rd is doc name
+        #     tr_par.set_attr("rd", rd + lang)
         add_explicit_area_ids(ref_par, tr_par)
 
     if tr_par:

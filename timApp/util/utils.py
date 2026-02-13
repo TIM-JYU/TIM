@@ -49,6 +49,10 @@ def get_exception_code(
     return result
 
 
+def is_int(s: str) -> bool:
+    return bool(s) and all("0" <= ch <= "9" for ch in s)
+
+
 def datestr_to_relative(d: str | datetime) -> str:
     if isinstance(d, str):
         d = datetime.strptime(d, "%Y-%m-%d %H:%M:%S")
@@ -534,3 +538,44 @@ def normalize_newlines(text: str) -> str:
     :return: Modified source text.
     """
     return re.sub(NORM_NEWLINES_COMPILED, " ", text)
+
+
+""" SQL to find used characters in task IDs:
+SELECT string_agg(DISTINCT ch, '' ORDER BY ch) AS chars_used
+FROM (
+  SELECT substr(task_id, g, 1) AS ch
+  FROM answer
+  CROSS JOIN LATERAL generate_series(1, char_length(task_id)) AS g
+) t
+WHERE ch <> '';
+=>  ,-._0123456789aAåäbBcCdDeEfFgGhHiIjJkKlLmMnNoOöpPqQrRsStTuUvVwWxXyYzZ
+"""
+TIM_IDENTS = "a-zA-Z0-9_.,/åäöÅÄÖ-"
+
+TIM_IDENTS_RE = re.compile(rf"^[{TIM_IDENTS}]*$")
+NOT_TIM_IDENTS_RE = re.compile(rf"[^{TIM_IDENTS}]")
+
+
+def is_valid_tim_indetifier(s: str) -> bool:
+    """
+    Check whether the given string is a valid TIM identifier.
+
+    :param s: The string to check.
+    :return: True if the string is a valid TIM identifier, False otherwise.
+    """
+    return bool(TIM_IDENTS_RE.match(s))
+
+
+def strip_not_allowed(s: str, allow_reg: str | None = None) -> str:
+    """
+    Strips characters that are not allowed in TIM identifiers.
+
+    :param s: The string to strip.
+    :param allow_reg: Optional regex pattern to specify allowed characters.
+    :return: The stripped string.
+    """
+    if s is None or s.strip() == "":
+        return ""
+    if allow_reg is not None:
+        return re.sub(rf"[^{allow_reg}]", "", s)
+    return NOT_TIM_IDENTS_RE.sub("", s)

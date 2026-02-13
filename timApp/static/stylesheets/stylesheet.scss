@@ -738,6 +738,11 @@ a.timButton {
         color: gray;
     }
 
+    [data-area]:has(> div#MISSING_END:last-child)::after {
+      content: "End area: " attr(data-area) " — missing end";
+      color: red;
+    }
+
     .areaContent {
         border: 1px solid $basic-color;
         border-radius: 5px;
@@ -1650,3 +1655,16 @@ tim-rights-editor {
     vertical-align: middle !important;
 }
 
+.doc-error {
+    background: #{$warning-bg-color};
+    padding: 1em;
+}
+
+.preview-warnings {
+    background: #{$warning-bg-color};
+    padding-left: 0.5em;
+}
+
+.preview-warnings ul {
+    margin-bottom: 0;
+}

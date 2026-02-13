@@ -12,7 +12,7 @@ from time import time
 from typing import Iterable, Generator, Optional
 from typing import TYPE_CHECKING
 
-from filelock import FileLock
+from filelock import FileLock, BaseFileLock
 from flask import has_request_context, request
 from lxml import etree, html
 
@@ -26,7 +26,12 @@ from timApp.document.documentwriter import DocumentWriter
 from timApp.document.editing.documenteditresult import DocumentEditResult
 from timApp.document.exceptions import DocExistsError, ValidationException
 from timApp.document.preloadoption import PreloadOption
-from timApp.document.validationresult import ValidationResult
+from timApp.document.validationresult import (
+    ValidationResult,
+    DoValidation,
+    list_to_html,
+    clean,
+)
 from timApp.document.version import Version
 from timApp.document.viewcontext import ViewContext, default_view_ctx
 from timApp.document.yamlblock import YamlBlock
@@ -35,15 +40,16 @@ from timApp.timdb.exceptions import (
     PreambleException,
     InvalidReferenceException,
 )
-from timApp.util.utils import get_error_html, trim_markdown, cache_folder_path
+from timApp.util.logger import log_error
+from timApp.util.utils import (
+    get_error_html,
+    trim_markdown,
+    cache_folder_path,
+)
 from tim_common.html_sanitize import presanitize_html_body
 
 if TYPE_CHECKING:
     from timApp.document.docinfo import DocInfo
-
-
-def get_duplicate_id_msg(conflicting_ids):
-    return f'Duplicate paragraph id(s): {", ".join(conflicting_ids)}'
 
 
 def par_list_to_text(sect: list[DocParagraph], export_hashes=False):
@@ -52,6 +58,20 @@ def par_list_to_text(sect: list[DocParagraph], export_hashes=False):
     ).get_text()
 
 
+MISSING_AREA_END_PAR_ID = "MISSING_END"
+"""
+Name for pseudo-paragraph that indicates the end of an area that goes to the end of the document.
+If you change this, also change the same constant in timApp/static/stylesheets/stylesheet.scss
+"""
+
+AREA_NAME_FOR_WHOLE_DOCUMENT = "ALL"
+"""
+Name for pseudo-area that indicates the whole document.
+This can still be used as an area name in addition to its special meaning.
+"""
+
+
+# noinspection DuplicatedCode
 class Document:
     def __init__(
         self,
@@ -71,7 +91,9 @@ class Document:
         self.par_ids: list[str] | None = None
         # List of corresponding hashes
         self.par_hashes: list[str] | None = None
-        # Whether par_cache is incomplete - this is the case when insert_temporary_pars is called with PreloadOption.none
+        # Whether par_cache is incomplete -
+        # this is the case when insert_temporary_pars
+        # is called with PreloadOption.none
         self.is_incomplete_cache: bool = False
         # Whether the document exists on disk.
         self.__exists: bool | None = None
@@ -86,13 +108,15 @@ class Document:
         # Whether preamble has been loaded
         self.preamble_included = False
         # Cache for documents that are referenced by this document
-        self.ref_doc_cache: dict[int, Document] = {}
+        self.ref_doc_cache: dict[str, Document] = {}
         # Cache for single paragraphs
         self.single_par_cache: dict[str, DocParagraph] = {}
         # Used for accessing previous/next paragraphs quickly based on id
         self.par_map = None
         # List of preamble pars if they have been inserted
         self.preamble_pars = None
+
+        self.vr: ValidationResult | None = None
 
     @property
     def id(self):
@@ -270,7 +294,7 @@ class Document:
             if p.is_task():
                 yield p
 
-    def get_lock(self) -> FileLock:
+    def get_lock(self) -> BaseFileLock:
         return FileLock(f"/tmp/doc_{self.doc_id}_lock")
 
     def get_own_settings(self) -> YamlBlock:
@@ -315,8 +339,16 @@ class Document:
         export_ids: bool = True,
         export_settings: bool = True,
         with_tl: bool = False,
+        do_validation: DoValidation = DoValidation.NONE,
     ) -> str:
         pars = [par for par in self if not par.is_setting() or export_settings]
+        if do_validation != DoValidation.NONE:
+            dicts = [par.dict() for par in pars]
+            vr = DocumentParser.do_validate_structure(dicts)
+            err = vr.get_as_html()
+            if err:
+                self.vr = vr
+                log_error(str(self.doc_id) + ": " + err)
         if with_tl:
             return "\n".join(
                 [par.get_exported_markdown(export_ids=export_ids) for par in pars]
@@ -350,6 +382,9 @@ class Document:
             start_index = all_par_ids.index(par_id_start)
         except ValueError:
             return self._raise_not_found(par_id_start)
+        if par_id_end == MISSING_AREA_END_PAR_ID:
+            # par_id_end = par_id_start  # TODO: would it be better the last par?
+            par_id_end = all_par_ids[-1]
         try:
             end_index = all_par_ids.index(par_id_end)
         except ValueError:
@@ -359,7 +394,10 @@ class Document:
         return all_pars[start_index : end_index + 1]
 
     def text_to_paragraphs(
-        self, text: str, break_on_elements: bool
+        self,
+        text: str,
+        break_on_elements: bool,
+        do_validation: DoValidation = DoValidation.NONE,
     ) -> tuple[list[DocParagraph], ValidationResult]:
         options = DocumentParserOptions()
         options.break_on_code_block = break_on_elements
@@ -367,8 +405,21 @@ class Document:
         options.break_on_normal = break_on_elements
         dp = DocumentParser(text, options)
         dp.add_missing_attributes()
-        vr = dp.validate_structure()
-        vr.raise_if_has_critical_issues()
+        vr = ValidationResult()
+        if do_validation != DoValidation.NONE:
+            if do_validation == DoValidation.RAISE_END_OF_BLOCK:
+                pars = dp.get_blocks()
+                for par in pars:
+                    if par.get("error"):
+                        raise ValidationException(
+                            f"Attributes at end of code block noticed in paragraph {clean(par.get('id'))}."
+                        )
+            else:
+                vr = dp.validate_structure()
+                # vr.raise_if_has_critical_issues()
+                self.vr = vr
+                if do_validation == DoValidation.EXCEPTION:
+                    vr.raise_if_has_any_issues()
         blocks = [
             DocParagraph.create(
                 doc=self,
@@ -384,6 +435,7 @@ class Document:
     def remove(cls, doc_id: int, ignore_exists=False):
         """Removes the whole document.
 
+        :param ignore_exists: do not raise error if document does not exist.
         :param doc_id: Document id to remove.
         :return:
 
@@ -840,39 +892,129 @@ class Document:
                         yield {"type": "change", "id": old.get_id(), "content": [new]}
 
     def update_section(
-        self, text: str, par_id_first: str, par_id_last: str
+        self,
+        new_pars: list[DocParagraph],
+        par_id_first: str,
+        par_id_last: str,
+        do_validation: DoValidation = DoValidation.EXCEPTION,
     ) -> tuple[str, str, DocumentEditResult]:
         """Updates a section of the document.
 
-        :param text: The text of the section.
+        :param new_pars: pars to replace the section with.
         :param par_id_first: The id of the paragraph that denotes the start of the section.
         :param par_id_last: The id of the paragraph that denotes the end of the section.
-
+        :param do_validation: throws ValidationException if EXCEPTION and validation issues are found.
+        :return: A tuple of (new_text, old_text, edit_result).
         """
-        dp = DocumentParser(text)
-        dp.add_missing_attributes()
-        vr = dp.validate_structure()
-        vr.raise_if_has_critical_issues()
-        new_pars = dp.get_blocks()
-        new_par_id_set = {par["id"] for par in new_pars}
+
+        from timApp.document.renameids import abort_if_duplicate_ids
+
+        # check_and_rename_attribute("area", new_pars, self, area_renamed)
+        # new_par_id_set = {par.get_id() for par in new_pars}
         all_pars = [par for par in self]
         all_par_ids = [par.get_id() for par in all_pars]
-        start_index, end_index = all_par_ids.index(par_id_first), all_par_ids.index(
-            par_id_last
-        )
+        start_index = all_par_ids.index(par_id_first)
+        if par_id_last == MISSING_AREA_END_PAR_ID:
+            par_id_last = all_par_ids[-1]
+        end_index = all_par_ids.index(par_id_last)
         old_pars = all_pars[start_index : end_index + 1]
         other_par_ids = all_par_ids[:]
         del other_par_ids[start_index : end_index + 1]
+        changes = abort_if_duplicate_ids(
+            self,
+            new_pars,
+            auto_rename_ids=True,
+            no_other_checks=False,
+            existing_ids=set(other_par_ids),
+        )
+        """ 
         intersection = new_par_id_set & set(other_par_ids)
         if intersection:
             raise TimDbException("Duplicate id(s): " + str(intersection))
-        return self._perform_update(
+        """
+        id1, id2, edit_result = self._perform_update(
             new_pars,
             old_pars,
             last_par_id=all_par_ids[end_index + 1]
             if end_index + 1 < len(all_par_ids)
             else None,
         )
+        if changes:
+            edit_result.warnings = list_to_html(changes)
+        return id1, id2, edit_result
+
+    def _perform_update(
+        self,
+        new_pars: list[DocParagraph],
+        old_pars: list[DocParagraph],
+        last_par_id=None,
+    ) -> tuple[str, str, DocumentEditResult] | tuple[None, None, DocumentEditResult]:
+        old_ids = [par.get_id() for par in old_pars]
+        new_ids = [par.get_id() for par in new_pars]
+        s = SequenceMatcher(None, old_ids, new_ids)
+        opcodes = s.get_opcodes()
+        result = DocumentEditResult()
+        # Do delete operations first to avoid duplicate ids
+        for tag, i1, i2, j1, j2 in [
+            opcode for opcode in opcodes if opcode[0] in ["delete", "replace"]
+        ]:
+            for par, par_id in zip(old_pars[i1:i2], old_ids[i1:i2]):
+                self.delete_paragraph(par_id)
+                result.deleted.append(par)
+        for tag, i1, i2, j1, j2 in opcodes:
+            if tag == "replace":
+                for par in new_pars[j1:j2]:
+                    before_i = self.find_insert_index(i2, old_ids)
+                    inserted = self.insert_paragraph(
+                        par.get_markdown(),
+                        attrs=par.get_attrs(),
+                        par_id=par.get_id(),
+                        insert_before_id=old_ids[before_i]
+                        if before_i < len(old_ids)
+                        else last_par_id,
+                    )
+                    result.added.append(inserted)
+            elif tag == "insert":
+                for par in new_pars[j1:j2]:
+                    before_i = self.find_insert_index(i2, old_ids)
+                    inserted = self.insert_paragraph(
+                        par.get_markdown(),
+                        attrs=par.get_attrs(),
+                        par_id=par.get_id(),
+                        insert_before_id=old_ids[before_i]
+                        if before_i < len(old_ids)
+                        else last_par_id,
+                    )
+                    result.added.append(inserted)
+            elif tag == "equal":
+                for idx, (new_par, old_par) in enumerate(
+                    zip(new_pars[j1:j2], old_pars[i1:i2])
+                ):
+                    if (
+                        new_par.get_hash() != old_par.get_hash()
+                        or new_par.get_attrs() != old_par.get_attrs()
+                    ):
+                        if self.has_paragraph(old_par.get_id()):
+                            self.modify_paragraph(
+                                old_par.get_id(),
+                                new_par.get_markdown(),
+                                new_attrs=new_par.get_attrs(),
+                            )
+                            result.changed.append(old_par)
+                        else:
+                            before_i = self.find_insert_index(j1 + idx, new_ids)
+                            inserted = self.insert_paragraph(
+                                new_par.get_markdown(),
+                                attrs=new_par.get_attrs(),
+                                par_id=new_par.get_id(),
+                                insert_before_id=old_ids[before_i]
+                                if before_i < len(old_ids)
+                                else last_par_id,
+                            )
+                            result.added.append(inserted)
+        if not new_ids:
+            return None, None, result
+        return new_ids[0], new_ids[-1], result
 
     def update(
         self, text: str, original: str, strict_validation=True, regenerate_ids=False
@@ -897,8 +1039,20 @@ class Document:
         # If the original document has validation errors, it probably means the document export routine has a bug.
         dp_orig = DocumentParser(original)
         dp_orig.add_missing_attributes()
+
+        new_pars = DocParagraph.from_dicts(self, new_pars)
+
+        from timApp.document.renameids import abort_if_duplicate_ids
+
+        empty_doc = Document(-1)  # Empty document for id checking
+        abort_if_duplicate_ids(
+            empty_doc, new_pars, auto_rename_ids=True, no_other_checks=False
+        )
+        """
         vr = dp_orig.validate_structure()
         try:
+            # TODO: think is there is sense stopping the save
+            # TODO: perhaps log the error instead of raising
             vr.raise_if_has_critical_issues()
         except ValidationException as e:
             raise ValidationException(
@@ -906,83 +1060,16 @@ class Document:
                 "This is probably a TIM bug; please report it. "
                 f"Additional information: {e}"
             )
+        """
         blocks = dp_orig.get_blocks()
+        """
         new_ids = {p["id"] for p in new_pars} - {p["id"] for p in blocks}
         conflicting_ids = new_ids & set(self.get_par_ids())
         if conflicting_ids:
             raise ValidationException(get_duplicate_id_msg(conflicting_ids))
-        old_pars = [DocParagraph.from_dict(doc=self, d=d) for d in blocks]
+        """
+        old_pars = DocParagraph.from_dicts(self, blocks)
         return self._perform_update(new_pars, old_pars)
-
-    def _perform_update(
-        self, new_pars: list[dict], old_pars: list[DocParagraph], last_par_id=None
-    ) -> tuple[str, str, DocumentEditResult] | tuple[None, None, DocumentEditResult]:
-        old_ids = [par.get_id() for par in old_pars]
-        new_ids = [par["id"] for par in new_pars]
-        s = SequenceMatcher(None, old_ids, new_ids)
-        opcodes = s.get_opcodes()
-        result = DocumentEditResult()
-        # Do delete operations first to avoid duplicate ids
-        for tag, i1, i2, j1, j2 in [
-            opcode for opcode in opcodes if opcode[0] in ["delete", "replace"]
-        ]:
-            for par, par_id in zip(old_pars[i1:i2], old_ids[i1:i2]):
-                self.delete_paragraph(par_id)
-                result.deleted.append(par)
-        for tag, i1, i2, j1, j2 in opcodes:
-            if tag == "replace":
-                for par in new_pars[j1:j2]:
-                    before_i = self.find_insert_index(i2, old_ids)
-                    inserted = self.insert_paragraph(
-                        par["md"],
-                        attrs=par.get("attrs"),
-                        par_id=par["id"],
-                        insert_before_id=old_ids[before_i]
-                        if before_i < len(old_ids)
-                        else last_par_id,
-                    )
-                    result.added.append(inserted)
-            elif tag == "insert":
-                for par in new_pars[j1:j2]:
-                    before_i = self.find_insert_index(i2, old_ids)
-                    inserted = self.insert_paragraph(
-                        par["md"],
-                        attrs=par.get("attrs"),
-                        par_id=par["id"],
-                        insert_before_id=old_ids[before_i]
-                        if before_i < len(old_ids)
-                        else last_par_id,
-                    )
-                    result.added.append(inserted)
-            elif tag == "equal":
-                for idx, (new_par, old_par) in enumerate(
-                    zip(new_pars[j1:j2], old_pars[i1:i2])
-                ):
-                    if (
-                        new_par["t"] != old_par.get_hash()
-                        or new_par.get("attrs", {}) != old_par.get_attrs()
-                    ):
-                        if self.has_paragraph(old_par.get_id()):
-                            self.modify_paragraph(
-                                old_par.get_id(),
-                                new_par["md"],
-                                new_attrs=new_par.get("attrs"),
-                            )
-                            result.changed.append(old_par)
-                        else:
-                            before_i = self.find_insert_index(j1 + idx, new_ids)
-                            inserted = self.insert_paragraph(
-                                new_par["md"],
-                                attrs=new_par.get("attrs"),
-                                par_id=new_par["id"],
-                                insert_before_id=old_ids[before_i]
-                                if before_i < len(old_ids)
-                                else last_par_id,
-                            )
-                            result.added.append(inserted)
-        if not new_ids:
-            return None, None, result
-        return new_ids[0], new_ids[-1], result
 
     def find_insert_index(self, i2, old_ids):
         before_i = i2
@@ -1035,21 +1122,43 @@ class Document:
             result.deleted.append(par)
         return result
 
+    def get_paragraph_by_task_id(self, task_id: str) -> DocParagraph or None:
+        # TODO: optimize with par_ids and par_hashes
+        with self.__iter__() as i:
+            for par in i:
+                if par.get_attr("taskId") == task_id:
+                    return par
+        return None
+
     def get_named_section(self, section_name: str) -> list[DocParagraph]:
         if self.preload_option == PreloadOption.all:
             self.ensure_pars_loaded()
+        get_all = section_name == AREA_NAME_FOR_WHOLE_DOCUMENT
         start_found = False
         end_found = False
         pars = []
+        all_start = -1
         with self.__iter__() as i:
             for par in i:
-                if par.get_attr("area") == section_name:
+                area = par.get_attr("area")
+                if area == section_name or get_all:
+                    if area == AREA_NAME_FOR_WHOLE_DOCUMENT and get_all:
+                        # If document has name ALL, start here
+                        pars = []
+                        all_start = 0
                     start_found = True
-                if start_found:
+                if start_found and not (par.is_settings() and get_all):
                     pars.append(par)
                 if par.get_attr("area_end") == section_name:
                     end_found = True
                     break
+
+        if (all_start >= 0) and get_all:
+            # If document has name ALL, do not include ALL par itself
+            return pars[all_start + 1 :]
+
+        if get_all:
+            end_found = True
         if not start_found or not end_found:
             raise InvalidReferenceException("Area not found: " + section_name)
         return pars
@@ -1090,11 +1199,13 @@ class Document:
                             pass
         return refs
 
-    def __load_reflist(self, reflist_name: Path) -> set[int]:
+    @staticmethod
+    def __load_reflist(reflist_name: Path) -> set[int]:
         with reflist_name.open("r") as reffile:
             return set(json.loads(reffile.read()))
 
-    def __save_reflist(self, reflist_name: Path, reflist: set[int]):
+    @staticmethod
+    def __save_reflist(reflist_name: Path, reflist: set[int]):
         f: Path = reflist_name.parent
         f.mkdir(exist_ok=True, parents=True)
 
@@ -1173,14 +1284,14 @@ class Document:
                 )
             else:
                 self.source_doc = docinfo.src_doc.document
-                self.ref_doc_cache[self.source_doc.doc_id] = self.source_doc
+                self.ref_doc_cache[str(self.source_doc.doc_id)] = self.source_doc
         return self.source_doc
 
     def get_last_par(self):
         pars = [par for par in self]
         return pars[-1] if pars else None
 
-    def get_par_ids(self, no_preamble=False):
+    def get_par_ids(self, no_preamble=False) -> list[str]:
         self.ensure_par_ids_loaded()
         if self.preamble_included and no_preamble:
             return self.par_ids[len(self.preamble_pars) :]
@@ -1277,7 +1388,7 @@ class Document:
             self.is_incomplete_cache = True
         self.__update_par_map()
 
-    def clear_mem_cache(self):
+    def clear_mem_cache(self) -> None:
         self.par_cache = None
         self.par_map = None
         self.version = None
@@ -1290,15 +1401,30 @@ class Document:
 
     def get_ref_doc(
         self,
-        ref_docid: int,
+        ref_docid_str: str,
         preload_option: PreloadOption | None = None,
         resolve_preamble_refs: bool = False,
+        path: str | None = None,
     ):
-        cached = self.ref_doc_cache.get(ref_docid)
+        cached = self.ref_doc_cache.get(ref_docid_str)
         preload_option = (
             preload_option if preload_option is not None else self.preload_option
         )
         if not cached:
+            try:
+                ref_docid = int(ref_docid_str)
+            except ValueError:
+                from timApp.document.docentry import DocEntry
+
+                ref_docid = DocEntry.find_id_by_path(
+                    ref_docid_str,
+                    self.docinfo.location if self.docinfo else path,
+                )
+                if ref_docid == 0:
+                    raise InvalidReferenceException(
+                        f'Invalid reference document: "{ref_docid_str}"'
+                    )
+
             cached = Document(ref_docid, preload_option=preload_option)
             if not cached.exists():
                 raise InvalidReferenceException(
@@ -1312,7 +1438,7 @@ class Document:
             #  reference the plugin with the overridden macros).
             if resolve_preamble_refs:
                 cached.insert_preamble_pars()
-            self.ref_doc_cache[ref_docid] = cached
+            self.ref_doc_cache[ref_docid_str] = cached
         return cached
 
     def validate(self) -> ValidationResult:

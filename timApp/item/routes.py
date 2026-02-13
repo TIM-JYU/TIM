@@ -1,4 +1,5 @@
 """Routes for document view."""
+
 import dataclasses
 import html
 import logging
@@ -564,7 +565,7 @@ def view(item_path: str, route: ViewRoute, render_doc: bool = True) -> FlaskView
             defaultload(DocEntry._block)
             .defaultload(Block.accesses)
             .joinedload(BlockAccess.usergroup),
-            joinedload(DocEntry.trs)
+            joinedload(DocEntry.trs),
             # TODO: These selectinloads are for some reason very inefficient at least for certain documents.
             #  See https://github.com/TIM-JYU/TIM/issues/2201. Needs more investigation.
             # .selectinload(Translation.docentry),
@@ -820,6 +821,7 @@ def render_doc_view(
         if show_valid_only
         else AnswerCountRule.ValidThenInvalid
     )
+    url_groups = usergroups
     if teacher_or_see_answers:
         user_list = None
         ugs = None
@@ -850,7 +852,8 @@ def render_doc_view(
                     if not verify_group_view_access(
                         ug, require=False, user=current_user
                     ):
-                        flash(f"You don't have access to group '{ug.name}'.")
+                        if not (url_groups and ug.is_personal_group):
+                            flash(f"You don't have access to group '{ug.name}'.")
                         ugs_without_access.append(ug)
             # We allow empty `groups` option to hide all answers by default.
             # In that case, users can use the `groups` URL parameter to show answers.
@@ -1024,7 +1027,12 @@ def render_doc_view(
         )
 
     if index is None:
-        index = get_index_from_html_list(t.output for t in post_process_result.texts)
+        index = get_index_from_html_list(
+            t.output
+            for t in post_process_result.texts
+            # All noindex starting elements are ignored in the index
+            if " noindex" not in " " + t.html_class
+        )
         doc_hash = get_doc_version_hash(doc_info)
         save_index(index, index_cache_folder / f"{doc_hash}.json")
 

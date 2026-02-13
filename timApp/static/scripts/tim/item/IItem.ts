@@ -14,6 +14,7 @@ export interface IDocument extends IItem {
 
 export interface IFullDocument extends IDocument {
     fulltext: string;
+    errors?: string;
     versions: Array<IChangelogEntry>;
 }
 

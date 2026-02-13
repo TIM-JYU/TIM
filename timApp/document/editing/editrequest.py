@@ -1,11 +1,11 @@
 from dataclasses import dataclass, field
-from typing import Optional
 
 from timApp.auth.accesshelper import has_view_access
 from timApp.document.docentry import DocEntry
 from timApp.document.docparagraph import DocParagraph
 from timApp.document.document import Document
 from timApp.document.exceptions import ValidationException
+from timApp.document.validationresult import DoValidation
 from timApp.document.version import Version
 from timApp.document.viewcontext import ViewRoute, viewroute_from_str
 from timApp.util.flask.requesthelper import verify_json_params
@@ -69,13 +69,18 @@ class EditRequest:
             context_par = doc.get_last_par()
         return context_par
 
-    def get_pars(self, skip_access_check: bool = False):
+    def get_pars(
+        self,
+        skip_access_check: bool = False,
+        do_validation: DoValidation = DoValidation.NONE,
+    ) -> list[DocParagraph]:
         if self.editor_pars is None:
             self.editor_pars = get_pars_from_editor_text(
                 self.doc,
                 self.text,
                 break_on_elements=self.editing_area,
                 skip_access_check=skip_access_check,
+                do_validation=do_validation,
             )
             for c in self.forced_classes:
                 for p in self.editor_pars:
@@ -126,8 +131,11 @@ def get_pars_from_editor_text(
     text: str,
     break_on_elements: bool = False,
     skip_access_check: bool = False,
+    do_validation: DoValidation = DoValidation.NONE,
 ) -> list[DocParagraph]:
-    blocks, _ = doc.text_to_paragraphs(text, break_on_elements)
+    blocks, _ = doc.text_to_paragraphs(
+        text, break_on_elements, do_validation=do_validation
+    )
     for p in blocks:
         if p.is_reference():
             try:

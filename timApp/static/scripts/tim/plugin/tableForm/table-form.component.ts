@@ -117,6 +117,7 @@ const TableFormMarkup = t.intersection([
 
         cbColumn: t.boolean,
         nrColumn: t.boolean,
+        sequentialNr: t.boolean,
         charRow: t.boolean,
         groups: t.array(t.string),
         report: nullable(t.boolean),
@@ -133,6 +134,7 @@ const TableFormMarkup = t.intersection([
         forceUpdateButtonText: nullable(t.string),
         fields: t.array(t.string),
         showToolbar: t.boolean,
+        forceToolbar: t.boolean,
         tinyFilters: t.boolean,
         hide: t.partial({
             removeMenu: t.boolean,
@@ -638,6 +640,9 @@ export class TableFormComponent
         if (this.markup.showToolbar !== undefined) {
             this.data.hide.toolbar = !this.markup.showToolbar;
         }
+        if (this.markup.forceToolbar !== undefined) {
+            this.data.forceToolbar = this.markup.forceToolbar;
+        }
 
         if (this.markup.tinyFilters) {
             this.data.tinyFilters = this.markup.tinyFilters;
@@ -704,6 +709,7 @@ export class TableFormComponent
 
         this.data.cbColumn = this.markup.cbColumn;
         this.data.nrColumn = this.markup.nrColumn;
+        this.data.sequentialNr = this.markup.sequentialNr;
         this.data.charRow = this.markup.charRow;
         this.data.filterRow = this.markup.filterRow;
         this.data.filters = this.markup.filters;

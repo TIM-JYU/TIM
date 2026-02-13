@@ -121,6 +121,7 @@ def manage(path: str) -> Response | str:
         item.serialize_content = True
         item.changelog_length = get_option(request, "history", 100)
 
+    item.metadata.info["route"] = "manage"
     return render_template(
         "manage.jinja2",
         route="manage",

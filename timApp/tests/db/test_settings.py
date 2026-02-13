@@ -84,7 +84,7 @@ d: 4
         )
         self.assertEqual(len(list(doc.get_settings_pars())), 2)
         self.assertEqual(
-            doc.get_settings().get_dict(), {"a": 0, "b": 2, "c": 3, "d": 4, "e": 5}
+            {"a": 0, "b": 2, "c": 3, "d": 4, "e": 5}, doc.get_settings().get_dict()
         )
         self.assertEqual(doc2.get_settings().get_dict(), {})
 

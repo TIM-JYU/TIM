@@ -17,6 +17,7 @@ import {getContextualAreaInfo} from "tim/document/structure/areaContext";
 export class UnbrokenSelection extends ParSelection {
     private readonly areaStart: Area | undefined;
     private readonly areaEnd: Area | undefined;
+    public forceIds: boolean = false;
 
     private constructor(start: ParContext | Area, end: ParContext | Area) {
         super(

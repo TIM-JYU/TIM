@@ -141,7 +141,7 @@ export class EditingHandler {
         this.viewctrl.editing = false;
 
         if (this.viewctrl.item.rights.editable) {
-            onClick(".addBottom", ($this, e) => {
+            onClick(".addBottom", (_$this, _e) => {
                 this.viewctrl.closePopupIfOpen();
                 this.toggleParEditor({type: EditType.AddBottom}, {});
             });
@@ -156,7 +156,7 @@ export class EditingHandler {
                 );
             });
 
-            onClick(".replacePar", ($this, e) => {
+            onClick(".replacePar", ($this, _e) => {
                 const [par, options] = prepareOptions($this[0], "addAbove");
                 const selection = UnbrokenSelection.explicit(par);
                 this.viewctrl.closePopupIfOpen();
@@ -218,7 +218,7 @@ export class EditingHandler {
                 );
             });
 
-            onClick(".pasteBottom", ($this, e) => {
+            onClick(".pasteBottom", (_$this, e) => {
                 this.viewctrl.closePopupIfOpen();
                 this.viewctrl.clipboardHandler.pasteAbove(
                     e.originalEvent,
@@ -227,7 +227,7 @@ export class EditingHandler {
                 );
             });
 
-            onClick(".pasteRefBottom", ($this, e) => {
+            onClick(".pasteRefBottom", (_$this, e) => {
                 this.viewctrl.closePopupIfOpen();
                 this.viewctrl.clipboardHandler.pasteAbove(
                     e.originalEvent,
@@ -236,7 +236,7 @@ export class EditingHandler {
                 );
             });
         }
-        onClick(".createItem", ($this, e) => {
+        onClick(".createItem", ($this, _e) => {
             if (this.createItemVisible) {
                 return;
             }
@@ -282,7 +282,10 @@ export class EditingHandler {
         const ctx = params.type === EditType.Edit ? params.pars : undefined;
         const parNextId = getNextId(params);
 
-        if (params.type === EditType.Edit && params.pars.hasMultiple()) {
+        if (
+            params.type === EditType.Edit &&
+            (params.pars.hasMultiple() || params.pars.forceIds)
+        ) {
             areaStart = params.pars.start.originalPar.id;
             areaEnd = params.pars.end.originalPar.id;
             url = "/postParagraph/";
@@ -331,7 +334,7 @@ export class EditingHandler {
             cursorPos = initialText.indexOf(CURSOR);
             initialText = initialText.replace(CURSOR, "");
         } else if (options.showDelete && ctx) {
-            const r = await this.getBlock(ctx);
+            const r = await this.getBlock(ctx, ctx.forceIds);
             if (r.ok) {
                 initialText = r.result.data.text;
             } else {
@@ -433,6 +436,10 @@ This will delete the whole ${
                     } else {
                         this.addSavedParToDom(saveData, params);
                     }
+                    if (saveData.warnings && saveData.warnings.length > 0) {
+                        const chs = "Changes made:<br>\n" + saveData.warnings;
+                        await showMessageDialog(chs);
+                    }
                 }
                 return {};
             },
@@ -448,17 +455,18 @@ This will delete the whole ${
         this.viewctrl.editing = false;
     }
 
-    private async getBlock(sel: ParSelection) {
+    private async getBlock(sel: ParSelection, forceIds: boolean = false) {
         return await to(
             $http.get<{text: string}>(
                 `/getBlock/${this.viewctrl.docId}/${sel.start.originalPar.id}`,
                 {
-                    params: sel.hasMultiple()
-                        ? {
-                              area_start: sel.start.originalPar.id,
-                              area_end: sel.end.originalPar.id,
-                          }
-                        : undefined,
+                    params:
+                        sel.hasMultiple() || forceIds
+                            ? {
+                                  area_start: sel.start.originalPar.id,
+                                  area_end: sel.end.originalPar.id,
+                              }
+                            : undefined,
                 }
             )
         );
@@ -556,11 +564,12 @@ auto_number_headings: 0${CURSOR}
         }
     }
 
-    showEditWindow(e: MouseEvent, sel: UnbrokenSelection) {
+    showEditWindow(_e: MouseEvent, sel: UnbrokenSelection) {
         this.toggleParEditor({type: EditType.Edit, pars: sel}, {});
     }
 
-    editSelection(e: MouseEvent, sel: UnbrokenSelection) {
+    editSelection(_e: MouseEvent, sel: UnbrokenSelection) {
+        sel.forceIds = true;
         this.toggleParEditor({type: EditType.Edit, pars: sel}, {});
     }
 
@@ -574,7 +583,7 @@ auto_number_headings: 0${CURSOR}
     }
 
     async addParagraph(
-        e: MouseEvent,
+        _e: MouseEvent,
         type: EditType.AddAbove | EditType.AddBelow,
         par: ParContext,
         options: IParEditorOptions = {}
@@ -611,7 +620,7 @@ auto_number_headings: 0${CURSOR}
     }
 
     showAddParagraphAbove(
-        e: MouseEvent,
+        _e: MouseEvent,
         par: ParContext,
         options: IParEditorOptions = {}
     ) {
@@ -619,7 +628,7 @@ auto_number_headings: 0${CURSOR}
     }
 
     showAddParagraphBelow(
-        e: MouseEvent,
+        _e: MouseEvent,
         par: ParContext,
         options: IParEditorOptions = {}
     ) {
@@ -1013,7 +1022,7 @@ auto_number_headings: 0${CURSOR}
         fns.push({func: empty, desc: "Close menu", show: true});
 
         fns.push({
-            func: (e) => {
+            func: (_e) => {
                 this.viewctrl.editMenuOnLeft = !this.viewctrl.editMenuOnLeft;
                 this.saveEditMenuPos(this.viewctrl.editMenuOnLeft);
                 this.updateEditBarState();
@@ -1073,12 +1082,12 @@ auto_number_headings: 0${CURSOR}
 
     /**
      * Marks the paragraph checked.
-     * @param e the mouse event leading to this
+     * @param _e the mouse event leading to this
      * @param par info on the paragraph to be marked
      * @param sel the selection for the paragraph
      */
     async markParagraphChecked(
-        e: MouseEvent,
+        _e: MouseEvent,
         par: ParContext,
         sel: UnbrokenSelection
     ) {

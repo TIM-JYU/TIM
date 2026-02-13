@@ -1,4 +1,5 @@
 """Provides functions for converting markdown-formatted text to HTML."""
+
 from __future__ import annotations
 
 import random
@@ -531,10 +532,7 @@ def get_document_id(doc_path: Any) -> int:
 
     if not isinstance(doc_path, str):
         return 0
-    doc = DocEntry.find_by_path(
-        doc_path, docentry_load_opts=[load_only(DocEntry.id), lazyload(DocEntry._block)]
-    )
-    return doc.id if doc else 0
+    return DocEntry.find_id_by_path(doc_path)
 
 
 def get_document_path(doc_id: Any) -> str:
@@ -832,12 +830,14 @@ def par_list_to_html_list(
     macroinfo.preserve_user_macros = True
     dumbo_opts = settings.get_dumbo_options()
     texts = [
-        p.get_expanded_markdown(macroinfo)
-        if not p.has_dumbo_options()
-        else {
-            "content": p.get_expanded_markdown(macroinfo),
-            **p.get_dumbo_options(base_opts=dumbo_opts).dict(),
-        }
+        (
+            p.get_expanded_markdown(macroinfo)
+            if not p.has_dumbo_options()
+            else {
+                "content": p.get_expanded_markdown(macroinfo),
+                **p.get_dumbo_options(base_opts=dumbo_opts).dict(),
+            }
+        )
         for p in pars
     ]
 

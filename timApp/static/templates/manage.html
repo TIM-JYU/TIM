@@ -303,6 +303,7 @@
         <div class="panel-body">
             <form id="fullDocumentEditor">
                 <div id="documentEditorDiv">
+                    <div class="doc-error" ng-if="$ctrl.errors" ng-bind-html="$ctrl.errors"></div>
                     <textarea on-save="$ctrl.saveDocument()" id="doctext" class="form-control" ng-model="$ctrl.fulltext" rows="50"></textarea>
                     <button id="documentEditorSaveButton" class="timButton"
                             ng-disabled="!$ctrl.hasTextChanged() || $ctrl.saving"

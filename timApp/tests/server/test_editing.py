@@ -8,7 +8,10 @@ from timApp.plugin.plugin import Plugin
 from timApp.tests.server.timroutetest import TimRouteTest
 from timApp.timdb.sqa import db
 
+# TODO: change order in asserts so that expected is first to get better error messages
 
+
+# noinspection DuplicatedCode
 class EditTest(TimRouteTest):
     def test_nonexistent_edit(self):
         self.login_test1()
@@ -47,14 +50,366 @@ class EditTest(TimRouteTest):
             expect_content="Area not found. It may have been deleted.",
         )
 
+    def test_drop_illegal_chars(self):
+        self.login_test1()
+        d = self.create_doc()
+        self.new_par(d.document, "``` {#@@!!tes.t^-9?a&&& plugin=showVideo}\n```")
+        d.document.clear_mem_cache()
+        pars = d.document.get_paragraphs()
+        self.assertEqual("tes.t-9a", pars[0].attrs.get("taskId"))
+
     def test_duplicate_task_ids(self):
         self.login_test1()
         d = self.create_doc()
         r = self.new_par(d.document, "``` {#test plugin=showVideo}\n```")
-        self.assertEqual(r["duplicates"], [])
+        self.assertEqual([], r["duplicates"])
         r = self.new_par(d.document, "``` {#test plugin=showVideo}\n```")
         pars = d.document.get_paragraphs()
-        self.assertEqual(r["duplicates"], [["test", pars[1].get_id()]])
+        self.assertEqual([], r["duplicates"])
+        self.assertEqual("test1", pars[1].attrs.get("taskId"))
+        self.new_par(d.document, "#- {#test}\ntest")
+        pars = d.document.get_paragraphs()
+        self.assertEqual("test2", pars[2].attrs.get("taskId"))
+
+    def test_edit_block_with_taskid(self):
+        self.login_test1()
+        d = self.create_doc()
+        self.new_par(d.document, "#- {#test}\ntest")
+        pars = d.document.get_paragraphs()
+        id0 = pars[0].get_id()
+        new_text = "#- {#test}\ntest\n#- {#test}\ntest1"
+        self.json_post(
+            "/postParagraph/",
+            {
+                "text": new_text,
+                "docId": d.id,
+                "par": id0,
+            },
+        )
+        d.document.clear_mem_cache()
+        pars = d.document.get_paragraphs()
+        self.assertEqual(2, len(pars))
+        self.assertEqual("test", pars[0].attrs.get("taskId"))
+        self.assertEqual("test1", pars[1].attrs.get("taskId"))
+        self.assertEqual(id0, pars[0].get_id())
+        self.assertNotEqual(id0, pars[1].get_id())
+
+    def test_edit_simple_block(self):
+        self.login_test1()
+        d = self.create_doc(initial_par=["a1par"])
+        pars = d.document.get_paragraphs()
+        new_text = d.document.export_markdown()
+        ln = new_text.splitlines()
+        id_line = ln[0]
+        new_text = f"{id_line}\n{ln[1]}1\n"
+        self.json_post(
+            "/postParagraph/",
+            {
+                "text": new_text,
+                "docId": d.id,
+                "par": pars[0].get_id(),
+                "par_next": None,
+            },
+        )
+        d.document.clear_mem_cache()
+        pars = d.document.get_paragraphs()
+        self.assertEqual(1, len(pars))
+        self.assertEqual(new_text, d.document.export_markdown())
+
+        self.json_post(
+            "/postParagraph/",
+            {
+                "text": "abc",
+                "docId": d.id,
+                "par": pars[0].get_id(),
+                "par_next": None,
+            },
+        )
+        new_text = f"{id_line}\nabc\n"
+        d.document.clear_mem_cache()
+        pars = d.document.get_paragraphs()
+        self.assertEqual(1, len(pars))
+        self.assertEqual(new_text, d.document.export_markdown())
+
+    def test_edit_add_block_before(self):
+        self.login_test1()
+        d = self.create_doc(initial_par=["#- {#test1}\na1par"])
+        pars = d.document.get_paragraphs()
+        p1ar_id = pars[0].get_id()
+        new_text = d.document.export_markdown()
+        ln = new_text.splitlines()
+        id_line = ln[0]
+        new_text = "#- {#test1}\na0par\n" + new_text
+        self.json_post(
+            "/postParagraph/",
+            {
+                "text": new_text,
+                "docId": d.id,
+                "par": pars[0].get_id(),
+                "par_next": None,
+            },
+        )
+        d.document.clear_mem_cache()
+        pars = d.document.get_paragraphs()
+        self.assertEqual(2, len(pars))
+        # TODO: next should be opposite?
+        self.assertEqual(p1ar_id, pars[0].get_id())
+        self.assertNotEqual(p1ar_id, pars[1].get_id())
+        self.assertEqual("test1", pars[0].get_attrs().get("taskId"))
+        self.assertEqual("test2", pars[1].get_attrs().get("taskId"))
+
+    def test_edit_with_task_id(self):
+        """Editing a block with a task ID keeps the task ID
+        and creates new IDs for new blocks.
+        First:
+           #- {#test}
+           a1par
+
+        1. edit par0id (adding a2par, renaming it to test1)
+           #- {#test id="par0id"}
+           a1par
+           #- {#test}
+           a2par
+
+        2. edit par0id again  (adding a3par, renaming it to test2, remove illegal chars)
+           #- {#test}
+           a1par
+           #- {#test@!}
+           a3par
+
+        Should be:
+           #test:  apar1, id=par0id
+           #test2: apar3, id=par2id
+           #test1: apar2, id=par1id
+
+        """
+        self.login_test1()
+        d = self.create_doc(initial_par=["#- {#test}\na1par"])
+        pars = d.document.get_paragraphs()
+        new_text = d.document.export_markdown()
+        ln = new_text.splitlines()
+        id_line = ln[0]
+        par0_id = pars[0].get_id()
+        new_text = f"{id_line}\n{ln[1]}\n" + "#- {#test}\na2par"
+        self.json_post(
+            "/postParagraph/",
+            {
+                "text": new_text,
+                "docId": d.id,
+                "par": par0_id,
+                "par_next": None,
+            },
+        )
+        d.document.clear_mem_cache()
+        pars = d.document.get_paragraphs()
+        self.assertEqual(2, len(pars))
+        self.assertEqual(par0_id, pars[0].get_id())
+        self.assertNotEqual(par0_id, pars[1].get_id())
+        self.assertEqual("test", pars[0].get_attrs().get("taskId"))
+        self.assertEqual("test1", pars[1].get_attrs().get("taskId"))
+        par2_id = pars[1].get_id()
+
+        new_text = "#- {#test}\n" + f"{ln[1]}\n" + "#- {#test@!}\na3par"
+        self.json_post(
+            "/postParagraph/",
+            {
+                "text": new_text,
+                "docId": d.id,
+                "par": par0_id,
+                "par_next": par2_id,
+            },
+        )
+        d.document.clear_mem_cache()
+        pars = d.document.get_paragraphs()
+        self.assertEqual(3, len(pars))
+        self.assertEqual(par0_id, pars[0].get_id())
+        self.assertNotEqual(par0_id, pars[1].get_id())
+        self.assertNotEqual(par2_id, pars[1].get_id())
+        self.assertEqual(par2_id, pars[2].get_id())
+        self.assertEqual(par2_id, pars[2].get_id())
+        self.assertEqual("test", pars[0].get_attrs().get("taskId"))
+        self.assertEqual("test2", pars[1].get_attrs().get("taskId"))
+        self.assertEqual("test1", pars[2].get_attrs().get("taskId"))
+
+    def test_add_same_block_many_times(self):
+        self.login_test1()
+        d = self.create_doc(initial_par=["#- {#test}\na1par"])
+        pars = d.document.get_paragraphs()
+        pid = pars[0].get_id()
+        new_text = d.document.export_markdown()
+        new_text = new_text + "\n" + new_text + "\n" + new_text + "\n"
+        self.json_post(
+            "/postParagraph/",
+            {
+                "text": new_text,
+                "docId": d.id,
+                "par": pid,
+                "par_next": None,
+            },
+        )
+        d.document.clear_mem_cache()
+        pars = d.document.get_paragraphs()
+        self.assertEqual(3, len(pars))
+        self.assertEqual(pid, pars[0].get_id())
+        self.assertNotEqual(pid, pars[1].get_id())
+        self.assertNotEqual(pid, pars[2].get_id())
+        self.assertEqual("test", pars[0].attrs.get("taskId"))
+        self.assertEqual("test1", pars[1].attrs.get("taskId"))
+        self.assertEqual("test2", pars[2].attrs.get("taskId"))
+
+    def test_edit_change_order_of_2_blocks(self):
+        """
+        Edit selection of 2 bocks that changes the order of blocks.
+        """
+        self.login_test1()
+        d = self.create_doc(initial_par=["a1par", "a2par"])
+        pars = d.document.get_paragraphs()
+        new_text = d.document.export_markdown()
+        ln = new_text.splitlines()
+        new_text = f"{ln[3]}\n{ln[4]}\n{ln[2]}\n{ln[0]}\n{ln[1]}\n"
+        self.json_post(
+            "/postParagraph/",
+            {
+                "text": new_text,
+                "docId": d.id,
+                "par": pars[0].get_id(),
+                "par_next": None,
+                "area_start": pars[0].get_id(),
+                "area_end": pars[-1].get_id(),
+            },
+        )
+        d.document.clear_mem_cache()
+        pars = d.document.get_paragraphs()
+        self.assertEqual(new_text, d.document.export_markdown())
+        self.delete_area(d, pars[0].get_id(), pars[-1].get_id())
+        d.document.clear_mem_cache()
+        self.assertEqual([], d.document.get_paragraphs())
+
+    def test_edit_one_block_selection(self):
+        """
+        Edit on block selection that adds
+        new blocks before and after the selection.
+        Renames taskIds correctly and keeps blockID.
+        """
+        self.login_test1()
+        d = self.create_doc(initial_par=["#- {#test1}\na1par", "\n#- {#test2}\na3par"])
+        pars = d.document.get_paragraphs()
+        par1_id = pars[0].get_id()
+        par4_id = pars[1].get_id()
+        new_text = d.document.export_markdown()
+        ln = new_text.splitlines()
+        new_text = "#- {#test1}\na0par\n" f"{ln[0]}\n{ln[1]}\n" "#- {#test1}\na2par\n"
+        self.json_post(
+            "/postParagraph/",
+            {
+                "text": new_text,
+                "docId": d.id,
+                "par": par1_id,
+                "par_next": None,
+                "area_start": par1_id,
+                "area_end": par1_id,
+            },
+        )
+        d.document.clear_mem_cache()
+        pars = d.document.get_paragraphs()
+        # print(d.document.export_markdown())
+        self.assertEqual(4, len(pars))
+        self.assertNotEqual(par1_id, pars[0].get_id())
+        self.assertEqual(par1_id, pars[1].get_id())
+        self.assertNotEqual(par1_id, pars[2].get_id())
+        self.assertEqual(par4_id, pars[3].get_id())
+        self.assertEqual("test3", pars[0].get_attrs().get("taskId"))
+        self.assertEqual("test1", pars[1].get_attrs().get("taskId"))
+        self.assertEqual("test4", pars[2].get_attrs().get("taskId"))
+        self.assertEqual("test2", pars[3].get_attrs().get("taskId"))
+        self.assertEqual("a0par", pars[0].get_markdown())
+        self.assertEqual("a1par", pars[1].get_markdown())
+        self.assertEqual("a2par", pars[2].get_markdown())
+        self.assertEqual("a3par", pars[3].get_markdown())
+
+    def test_edit_change_order_of_2_blocks_add_new_before_in_and_end(self):
+        self.login_test1()
+        d = self.create_doc(initial_par=["#- {#test1}\na1par", "#- {#test2}\na2par"])
+        pars = d.document.get_paragraphs()
+        par1_id = pars[0].get_id()
+        par2_id = pars[1].get_id()
+        new_text = d.document.export_markdown()
+        ln = new_text.splitlines()
+        new_text = (
+            "#- {#test1}\na0par\n"
+            f"{ln[3]}\n{ln[4]}\n"
+            f"{ln[2]}\n"
+            "#- {#test1}\na3par\n"
+            f"{ln[0]}\n{ln[1]}\n"
+            "#- {#test2}\na4par\n"
+        )
+        self.json_post(
+            "/postParagraph/",
+            {
+                "text": new_text,
+                "docId": d.id,
+                "par": pars[0].get_id(),
+                "par_next": None,
+                "area_start": pars[0].get_id(),
+                "area_end": pars[-1].get_id(),
+            },
+        )
+        d.document.clear_mem_cache()
+        pars = d.document.get_paragraphs()
+        # print(d.document.export_markdown())
+        self.assertNotEqual(par1_id, pars[0].get_id())
+        self.assertEqual(par2_id, pars[1].get_id())
+        self.assertNotEqual(par1_id, pars[2].get_id())
+        self.assertEqual(par1_id, pars[3].get_id())
+        self.assertNotEqual(par1_id, pars[4].get_id())
+        self.assertEqual("test3", pars[0].get_attrs().get("taskId"))
+        self.assertEqual("test2", pars[1].get_attrs().get("taskId"))
+        self.assertEqual("test4", pars[2].get_attrs().get("taskId"))
+        self.assertEqual("test1", pars[3].get_attrs().get("taskId"))
+        self.assertEqual("test5", pars[4].get_attrs().get("taskId"))
+        self.assertEqual("a0par", pars[0].get_markdown())
+        self.assertEqual("a2par", pars[1].get_markdown())
+        self.assertEqual("a3par", pars[2].get_markdown())
+        self.assertEqual("a1par", pars[3].get_markdown())
+        self.assertEqual("a4par", pars[4].get_markdown())
+
+    def test_illegal_chars_in_task_id(self):
+        self.login_test1()
+        d = self.create_doc(initial_par=["test1"])
+        self.json_post(
+            f"/update/{d.id}",
+            {
+                "fulltext": "#- {#test1@!}\ntest1",
+                "original": "",
+            },
+            expect_status=400,
+            expect_content="Illegal chars in taskId &#x27;test1@!&#x27;",
+        )
+        self.json_post(
+            f"/update/{d.id}",
+            {
+                "fulltext": "#- {#test1@!}\ntest1\n#- {#%test2@%}\ntest2",
+                "original": "",
+            },
+            expect_status=400,
+            expect_content="<ol>"
+            "<li>Illegal chars in taskId &#x27;test1@!&#x27;</li>"
+            "<li>Illegal chars in taskId &#x27;%test2@%&#x27;</li>"
+            "</ol>",
+        )
+
+    def test_illegal_chars_in_area(self):
+        self.login_test1()
+        d = self.create_doc(initial_par=["test1"])
+        self.json_post(
+            f"/update/{d.id}",
+            {
+                "fulltext": "#- {area=test1@!}\ntest1\n#- {area_end=test1@!}",
+                "original": "",
+            },
+            expect_status=400,
+            expect_content="Illegal chars in area name &#x27;test1@!&#x27;",
+        )
 
     def test_area_editing(self):
         self.login_test1()
@@ -78,10 +433,10 @@ class EditTest(TimRouteTest):
             },
         )
         d.document.clear_mem_cache()
-        self.assertEqual(d.document.export_markdown(), new_text)
+        self.assertEqual(new_text, d.document.export_markdown())
         self.delete_area(d, pars[0].get_id(), pars[-1].get_id())
         d.document.clear_mem_cache()
-        self.assertEqual(d.document.get_paragraphs(), [])
+        self.assertEqual([], d.document.get_paragraphs())
 
     def test_get_updates_pars_translation(self):
         self.login_test1()
@@ -132,7 +487,10 @@ class EditTest(TimRouteTest):
                 "original": orig_text,
             },
             expect_status=400,
-            expect_content=f"Multiple areas with same name noticed for area 'a' in paragraph {par_ids[2]}\nDuplicate area end noticed in paragraph {par_ids[3]}",
+            expect_content=f"<ol><li>Multiple areas with same name noticed "
+            + f"for area 'a' in paragraph {par_ids[0]}, {par_ids[2]}.</li>"
+            + f"<li>Duplicate area end noticed for area 'a' "
+            + f"in paragraph {par_ids[1]}, {par_ids[3]}.</li></ol>",
         )
         self.json_post(
             f"/update/{d.id}",
@@ -218,13 +576,20 @@ class EditTest(TimRouteTest):
     def test_invalid_update(self):
         self.login_test1()
         d = self.create_doc(initial_par="test")
-        par = d.document.get_paragraphs()[0]
+        # par = d.document.get_paragraphs()[0]
         md = d.document.export_markdown()
         self.json_post(
             f"/update/{d.id}",
             {"fulltext": md, "original": ""},
+            expect_status=200,  # 400, TODO: Why should this return 400?
+            # expect_content={"error": f"Duplicate paragraph id(s): {par.get_id()}"},
+        )
+        md = '#- {#test id="abc"}\ntest\n'
+        self.json_post(
+            f"/update/{d.id}",
+            {"fulltext": md, "original": ""},
             expect_status=400,
-            expect_content={"error": f"Duplicate paragraph id(s): {par.get_id()}"},
+            expect_content={"error": "Invalid paragraph id noticed in paragraph abc"},
         )
         self.get(d.url)
 
@@ -235,20 +600,26 @@ class EditTest(TimRouteTest):
         par1 = pars[0]
         par2 = pars[1]
         md1 = par1.get_exported_markdown(export_ids=True)
-        self.new_par(
+        result = self.new_par(
             d.document,
             md1,
-            expect_status=400,
-            expect_content={"error": f"Duplicate paragraph id(s): {par1.get_id()}"},
+            expect_status=200,
+            # expect_content={"error": f"Duplicate paragraph id(s): {par1.get_id()}"},
+        )
+        self.assertTrue(
+            par1.get_id() != result["new_par_ids"][0], "Duplicate not changed."
         )
         self.post_par(d.document, md1, par_id=par1.get_id())
         md2 = par2.get_exported_markdown(export_ids=True)
-        self.post_par(
+        result = self.post_par(
             d.document,
             md1 + md2,
             par_id=par1.get_id(),
-            expect_status=400,
-            expect_content={"error": f"Duplicate paragraph id(s): {par2.get_id()}"},
+            expect_status=200,
+            # expect_content={"error": f"Duplicate paragraph id(s): {par2.get_id()}"},
+        )
+        self.assertTrue(
+            par2.get_id() != result["new_par_ids"][0], "Duplicate not changed."
         )
         self.get(d.url)
 
@@ -404,7 +775,7 @@ macros:
     def test_no_unnecessary_update_with_preamble(self):
         self.login_test1()
         d = self.create_doc(initial_par="test")
-        p = self.create_preamble_for(d, initial_par="pr")
+        self.create_preamble_for(d, initial_par="pr")
         self.get(d.url)
         pid = d.document.get_paragraphs()[0].get_id()
         self.post_par(d.document, """hi""", par_id=pid)
@@ -540,12 +911,14 @@ type: drawio
         # untranslated task gets all its plugin attributes from the original
         self.assertEqual(
             pars[0].get_exported_markdown().replace("\n", ""),
-            f'``` {{r="tr" rp="{orig_pars[0].id}"}}data: <svg>translated contents 1</svg>height: 120task: falsetype: drawio```',
+            f'``` {{r="tr" rp="{orig_pars[0].id}"}}data: <svg>translated contents 1</svg>'
+            f"height: 120task: falsetype: drawio```",
         )
         # translated task gets updated height attribute from the translation
         self.assertEqual(
             pars[1].get_exported_markdown().replace("\n", ""),
-            f'``` {{r="tr" rp="{orig_pars[1].id}" rt="MHgxZGQ0NGU4"}}data: <svg>translated contents 2</svg>height: 130task: falsetype: drawio```',
+            f'``` {{r="tr" rp="{orig_pars[1].id}" rt="MHgxZGQ0NGU4"}}'
+            "data: <svg>translated contents 2</svg>height: 130task: falsetype: drawio```",
         )
 
 
