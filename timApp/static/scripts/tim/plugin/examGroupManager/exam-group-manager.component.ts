@@ -743,10 +743,17 @@ export class ToggleComponent {
                             <tim-alert *ngIf="!group.currentExamDoc" severity="warning" i18n>
                                 Select an exam in section <i>3. Manage exams</i> to enable showing answers.
                             </tim-alert>
+                            <div *ngIf="group.currentExamDoc && (!!examByDocId.get(group.currentExamDoc)?.startingTime && !examStartingTimeReached)">
+                                <tim-alert severity="warning">
+                                    <p i18n>
+                                        Answers will be available to students only after the main exams have been released.
+                                    </p>
+                                </tim-alert>
+                            </div>
                             <ng-container *ngIf="group.currentExamDoc === group.examDocId">
                                 <tim-toggle
                                     [(value)]="group.allowAccess"
-                                    [disabled]="group.examState > 0"
+                                    [disabled]="group.examState > 0 || !examStartingTimeReached"
                                     (valueChange)="toggleAllowRestrictedAccess(group)"
                                     enabledButton="Begin showing answers to students"
                                     i18n-enabledButton
