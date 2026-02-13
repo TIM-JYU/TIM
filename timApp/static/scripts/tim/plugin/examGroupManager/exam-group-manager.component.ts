@@ -120,9 +120,10 @@ const ExamT = t.type({
     name: t.string,
     docId: t.number,
     url: t.union([t.string, t.null]),
-    disabled: t.union([t.string, t.null]),
     startingTime: t.union([t.string, t.null]),
     endingTime: t.union([t.string, t.null]),
+    showAnswersStartingTime: t.union([t.string, t.null]),
+    showAnswersEndingTime: t.union([t.string, t.null]),
 });
 
 const ExamWithPracticeT = t.intersection([
@@ -487,8 +488,7 @@ export class ToggleComponent {
                                     <h5 i18n>Exam Reservation Details</h5>
                                     <p i18n>
                                         You have a reservation for this exam. The exam will begin
-                                        at {{ examByDocId.get(group.currentExamDoc)?.startingTime | date: 'dd.MM.yyyy' }}
-                                        . Starting the exam is not available before the scheduled date and time, so
+                                        at the reserved time. Starting the exam is not available before the scheduled date and time, so
                                         please wait until the scheduled time before beginning. If you experience any
                                         issues or require special arrangements, please contact the exam support.
                                     </p>

@@ -106,9 +106,10 @@ class Exam:
     docId: int
     name: str
     url: str | None = None
-    disabled: str | None = None
     startingTime: PluginDateTime | datetime | None = None
     endingTime: PluginDateTime | datetime | None = None
+    showAnswersStartingTime: PluginDateTime | datetime | None = None
+    showAnswersEndingTime: PluginDateTime | datetime | None = None
 
 
 @dataclass
