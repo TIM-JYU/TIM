@@ -314,6 +314,9 @@ const sortLang = "fi";
                                   (change)="listUsernames()">;</label>&nbsp;
                     <label><input type="radio" name="listsep" [(ngModel)]="listSep" value="\n"
                                   (change)="listUsernames()">\\n</label>&nbsp;
+                    <label title="Use this if username can include other username">
+                           <input type="radio" name="listsep" [(ngModel)]="listSep" value="$|^"
+                                  (change)="listUsernames()">^$</label>&nbsp;
                 </p>
                 <label><input type="checkbox" [(ngModel)]="listName" (change)="listUsernames()">Name</label>&nbsp;
                 <label><input type="checkbox" [(ngModel)]="listUsername"
@@ -1315,6 +1318,7 @@ export class TableFormComponent
     }
 
     listUsernames() {
+        this.userlist = " ";
         const timTable = this.getTimTable();
         if (timTable == null) {
             return;
@@ -1358,6 +1362,12 @@ export class TableFormComponent
             preseparator,
             midseparator
         );
+        if (sep === "$|^" && this.userlist) {
+            this.userlist = "^" + this.userlist + "$";
+        }
+        if (!this.userlist) {
+            this.userlist = " ";
+        }
     }
 
     copyList() {
