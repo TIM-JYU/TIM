@@ -3695,6 +3695,9 @@ export class TimTableComponent
     private async handleArrowMovement(
         ev: KeyboardEvent
     ): Promise<ChangeDetectionHint> {
+        if (this.isFilterInputFocused()) {
+            return ChangeDetectionHint.DoNotTrigger;
+        }
         const parId = this.getOwnParId();
         if (
             // !(this.editing || this.task) ||
