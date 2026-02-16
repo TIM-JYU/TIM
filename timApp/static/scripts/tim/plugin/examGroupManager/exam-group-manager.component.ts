@@ -123,7 +123,6 @@ const ExamT = t.type({
     startingTime: t.union([t.string, t.null]),
     endingTime: t.union([t.string, t.null]),
     showAnswersStartingTime: t.union([t.string, t.null]),
-    showAnswersEndingTime: t.union([t.string, t.null]),
 });
 
 const ExamWithPracticeT = t.intersection([
@@ -743,7 +742,7 @@ export class ToggleComponent {
                             <tim-alert *ngIf="!group.currentExamDoc" severity="warning" i18n>
                                 Select an exam in section <i>3. Manage exams</i> to enable showing answers.
                             </tim-alert>
-                            <div *ngIf="group.currentExamDoc && (!!examByDocId.get(group.currentExamDoc)?.startingTime && !examStartingTimeReached)">
+                            <div *ngIf="group.currentExamDoc && (!!examByDocId.get(group.currentExamDoc)?.startingTime && !examStartingTimeReached) || !showAnswersTimeReached">
                                 <tim-alert severity="warning">
                                     <p i18n>
                                         Answers will be available to students only after the main exams have been released.
@@ -753,7 +752,7 @@ export class ToggleComponent {
                             <ng-container *ngIf="group.currentExamDoc === group.examDocId">
                                 <tim-toggle
                                     [(value)]="group.allowAccess"
-                                    [disabled]="group.examState > 0 || !examStartingTimeReached"
+                                    [disabled]="group.examState > 0 || !examStartingTimeReached || !showAnswersTimeReached"
                                     (valueChange)="toggleAllowRestrictedAccess(group)"
                                     enabledButton="Begin showing answers to students"
                                     i18n-enabledButton
@@ -829,6 +828,7 @@ export class ExamGroupManagerComponent
     examByDocId = new Map<number, ExamWithPractice>();
     examStartingTimeReached = true;
     examEndingTimeReached = false;
+    showAnswersTimeReached = true;
 
     allowRestrictedAccess: boolean = false;
 
@@ -940,6 +940,14 @@ export class ExamGroupManagerComponent
             );
         } else {
             this.examEndingTimeReached = false;
+        }
+
+        if (exam.showAnswersStartingTime) {
+            await this.checkIfBeforeServerTime(
+                exam.showAnswersStartingTime
+            ).then((result) => (this.showAnswersTimeReached = result));
+        } else {
+            this.showAnswersTimeReached = true;
         }
     }
 

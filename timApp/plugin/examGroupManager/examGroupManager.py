@@ -109,7 +109,6 @@ class Exam:
     startingTime: PluginDateTime | datetime | None = None
     endingTime: PluginDateTime | datetime | None = None
     showAnswersStartingTime: PluginDateTime | datetime | None = None
-    showAnswersEndingTime: PluginDateTime | datetime | None = None
 
 
 @dataclass
