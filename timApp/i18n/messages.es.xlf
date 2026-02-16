@@ -5537,14 +5537,6 @@
           <context context-type="linenumber">685</context>
         </context-group>
       </trans-unit>
-      <trans-unit id="4454548802259509672" datatype="html">
-        <source> Select an exam in section '3. Manage exams' to enable showing answers. </source>
-        <target state="translated">Seleccione un examen en la sección '3. Administrar exámenes' para habilitar mostrar las respuestas.</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
-          <context context-type="linenumber">702</context>
-        </context-group>
-      </trans-unit>
       <trans-unit id="657151549921052159" datatype="html">
         <source>Begin showing answers to students</source>
         <target state="translated">Comenzar a mostrar las respuestas a los estudiantes</target>
@@ -11427,28 +11419,12 @@ Separate multiple addresses with commas or write each address on a new line.</so
           <context context-type="linenumber">466</context>
         </context-group>
       </trans-unit>
-      <trans-unit id="6658020272864766254" datatype="html">
-        <source>To start a new exam, stop answer reviewing in section '4. Show answers to students'.</source>
-        <target state="translated">Para comenzar un nuevo examen, detenga la revisión de respuestas en la sección «4. Mostrar respuestas a los alumnos».</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
-          <context context-type="linenumber">467</context>
-        </context-group>
-      </trans-unit>
       <trans-unit id="6156295793414021264" datatype="html">
         <source>You can show answers only when they don't have an active exam running.</source>
         <target state="translated">Solo puede mostrar las respuestas cuando no haya ningún examen activo en curso.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
           <context context-type="linenumber">694</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="8270552017499584205" datatype="html">
-        <source>Stop the exam and disable login codes in section '3. Manage exams' to enable showing answers.</source>
-        <target state="translated">Detenga el examen y desactive los códigos de inicio de sesión en la sección «3. Gestionar exámenes» para poder mostrar las respuestas.</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
-          <context context-type="linenumber">695</context>
         </context-group>
       </trans-unit>
       <trans-unit id="6659491575322736264" datatype="html">
@@ -11467,12 +11443,36 @@ Separate multiple addresses with commas or write each address on a new line.</so
           <context context-type="linenumber">698</context>
         </context-group>
       </trans-unit>
-      <trans-unit id="8033702386907070279" datatype="html">
-        <source>Change the exam in section '3. Manage exams' to enable showing answers.</source>
-        <target state="translated">Cambie el examen en la sección «3. Gestionar exámenes» para habilitar la visualización de las respuestas.</target>
+      <trans-unit id="5172400703221094368" datatype="html">
+        <source>To start a new exam, stop answer reviewing in section <x id="START_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;i>"/>4. Show answers to students<x id="CLOSE_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;/i>"/>.</source>
+        <target state="translated">Para comenzar un nuevo examen, detenga la revisión de respuestas en la sección <x id="START_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;i>"/>4. Mostrar respuestas a los alumnos<x id="CLOSE_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;/i>"/>.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
-          <context context-type="linenumber">699</context>
+          <context context-type="linenumber">467,468</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="6737499420976539156" datatype="html">
+        <source>Stop the exam and disable login codes in section <x id="START_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;i>"/>3. Manage exams<x id="CLOSE_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;/i>"/> to enable showing answers.</source>
+        <target state="translated">Detenga el examen y desactive los códigos de inicio de sesión en la sección <x id="START_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;i>"/>3. Gestionar exámenes<x id="CLOSE_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;/i>"/> para habilitar la visualización de las respuestas.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
+          <context context-type="linenumber">695,696</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="2888797400316878545" datatype="html">
+        <source>Change the exam in section <x id="START_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;i>"/>3. Manage exams<x id="CLOSE_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;/i>"/> to enable showing answers.</source>
+        <target state="translated">Cambia el examen en la sección <x id="START_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;i>"/>3. Gestionar exámenes<x id="CLOSE_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;/i>"/> para habilitar la visualización de las respuestas.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
+          <context context-type="linenumber">699,700</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="6393914330108344860" datatype="html">
+        <source> Select an exam in section <x id="START_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;i>"/>3. Manage exams<x id="CLOSE_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;/i>"/> to enable showing answers. </source>
+        <target state="translated"> Seleccione un examen en la sección <x id="START_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;i>"/>3. Gestionar exámenes<x id="CLOSE_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;/i>"/> para habilitar la visualización de las respuestas. </target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
+          <context context-type="linenumber">702,703</context>
         </context-group>
       </trans-unit>
     </body>
