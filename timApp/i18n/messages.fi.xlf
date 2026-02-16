@@ -7468,7 +7468,7 @@
       </trans-unit>
       <trans-unit id="searchResultFrom" datatype="html">
         <source>from</source>
-        <target state="translated"> </target>
+        <target state="translated">  </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/search/search-results-dialog.component.ts</context>
           <context context-type="linenumber">54</context>
@@ -8898,7 +8898,7 @@
       </trans-unit>
       <trans-unit id="187187500641108332" datatype="html">
         <source><x id="INTERPOLATION" equiv-text="Folder() ?? 'Enter the location or leave empty'}}"/></source>
-        <target state="translated">{Folder() ?? 'Kirjoita polku tai jätä tyhjäksi'}}}</target>
+        <target state="translated">{Folder() ?? 'Syötä polku tai jätä tyhjäksi'}}}</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/user-group-dialog.component.ts</context>
           <context context-type="linenumber">61,62</context>
