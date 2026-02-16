@@ -1,5 +1,5 @@
-<?xml version="1.0" encoding="utf-8"?>
-<xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" version="1.2">
+<?xml version="1.0" encoding="UTF-8"?>
+<xliff version="1.2" xmlns="urn:oasis:names:tc:xliff:document:1.2">
   <file source-language="en-US" datatype="plaintext" original="ng2.template" target-language="it">
     <body>
       <trans-unit id="6791923436941679216" datatype="html">
@@ -216,7 +216,7 @@
       </trans-unit>
       <trans-unit id="6119751961559015295" datatype="html">
         <source>Copy image to task <x id="PH" equiv-text="this.markup.targetCanvas"/></source>
-        <target state="translated">Copiare l'immagine nell'attività</target>
+        <target state="translated">Copiare l'immagine nell'attività <x id="PH" equiv-text="this.markup.targetCanvas"/></target>
         <context-group purpose="location">
           <context context-type="sourcefile">modules/cs/js/csPlugin.ts</context>
           <context context-type="linenumber">2658</context>
@@ -232,7 +232,7 @@
       </trans-unit>
       <trans-unit id="6461040828941961464" datatype="html">
         <source>Couldn't find target <x id="PH" equiv-text="this.markup.targetCanvas"/></source>
-        <target state="translated">Impossibile trovare l'obiettivo</target>
+        <target state="translated">Impossibile trovare l'obiettivo <x id="PH" equiv-text="this.markup.targetCanvas"/></target>
         <context-group purpose="location">
           <context context-type="sourcefile">modules/cs/js/csPlugin.ts</context>
           <context context-type="linenumber">3724</context>
@@ -248,7 +248,7 @@
       </trans-unit>
       <trans-unit id="8306748342560222622" datatype="html">
         <source>Image sent to task <x id="PH" equiv-text="this.markup.targetCanvas"/></source>
-        <target state="translated">Immagine inviata all'attività</target>
+        <target state="translated">Immagine inviata all'attività <x id="PH" equiv-text="this.markup.targetCanvas"/></target>
         <context-group purpose="location">
           <context context-type="sourcefile">modules/cs/js/csPlugin.ts</context>
           <context context-type="linenumber">3780</context>
@@ -268,7 +268,7 @@
       </trans-unit>
       <trans-unit id="8450572512044824408" datatype="html">
         <source>Failed to show preview: <x id="PH" equiv-text="data.error.error"/></source>
-        <target state="translated">Impossibile mostrare l'anteprima:</target>
+        <target state="translated">Impossibile mostrare l'anteprima: <x id="PH" equiv-text="data.error.error"/></target>
         <context-group purpose="location">
           <context context-type="sourcefile">modules/cs/js/csPlugin.ts</context>
           <context context-type="linenumber">3841</context>
@@ -284,7 +284,7 @@
       </trans-unit>
       <trans-unit id="3388355350799687511" datatype="html">
         <source>hide Tauno</source>
-        <target state="translated">Nascondi Tauno</target>
+        <target state="translated">nascondi Tauno</target>
         <context-group purpose="location">
           <context context-type="sourcefile">modules/cs/js/csPlugin.ts</context>
           <context context-type="linenumber">4251,4252</context>
@@ -384,7 +384,7 @@
       </trans-unit>
       <trans-unit id="300084308343874513" datatype="html">
         <source>chars</source>
-        <target state="translated">Caratteri</target>
+        <target state="translated">caratteri</target>
         <context-group purpose="location">
           <context context-type="sourcefile">modules/cs/js/editor/countboard.ts</context>
           <context context-type="linenumber">90</context>
@@ -608,7 +608,7 @@
       </trans-unit>
       <trans-unit id="8012298978358910252" datatype="html">
         <source>Open formula editor </source>
-        <target state="translated">Aprire l'editor di formule</target>
+        <target state="translated">Aprire l'editor di formule </target>
         <context-group purpose="location">
           <context context-type="sourcefile">modules/cs/js/editor/math-editor/symbol-button-menu.component.ts</context>
           <context context-type="linenumber">84,85</context>
@@ -692,7 +692,7 @@
       </trans-unit>
       <trans-unit id="6692672754656409173" datatype="html">
         <source>Upload starting... </source>
-        <target state="translated">Caricamento in corso...</target>
+        <target state="translated">Caricamento in corso... </target>
         <context-group purpose="location">
           <context context-type="sourcefile">modules/cs/js/util/file-select.ts</context>
           <context context-type="linenumber">234</context>
@@ -700,7 +700,7 @@
       </trans-unit>
       <trans-unit id="1399538963495873664" datatype="html">
         <source>Post-processing; this may take a while; please wait...</source>
-        <target state="translated">this may take a while; please wait...";"Postelaborazione; potrebbe essere necessario un po' di tempo; attendere..."</target>
+        <target state="translated">Postelaborazione; potrebbe essere necessario un po' di tempo; attendere...</target>
         <context-group purpose="location">
           <context context-type="sourcefile">modules/cs/js/util/file-select.ts</context>
           <context context-type="linenumber">250</context>
@@ -708,7 +708,7 @@
       </trans-unit>
       <trans-unit id="3353122254290728761" datatype="html">
         <source>Uploading... <x id="PH" equiv-text="sizeString(                                             event.loaded                                         )"/> / <x id="PH_1" equiv-text="total"/> (<x id="PH_2" equiv-text="percentage"/> %)</source>
-        <target state="translated">Caricamento in corso...</target>
+        <target state="translated">Caricamento in corso... <x id="PH" equiv-text="sizeString(                                             event.loaded                                         )"/> / <x id="PH_1" equiv-text="total"/> (<x id="PH_2" equiv-text="percentage"/> %)</target>
         <context-group purpose="location">
           <context context-type="sourcefile">modules/cs/js/util/file-select.ts</context>
           <context context-type="linenumber">252</context>
@@ -812,7 +812,7 @@
       </trans-unit>
       <trans-unit id="3472580164795390907" datatype="html">
         <source><x id="PH" equiv-text="file.name"/> exceeds the maximum <x id="PH_1" equiv-text="sizeString(                             maxSize                         )"/> size limit set for the following files: <x id="PH_2" equiv-text="this.files[                             index                         ].paths.join(&quot;, &quot;)"/></source>
-        <target state="needs-translation"></target>
+        <target state="needs-l10n"><x id="PH" equiv-text="file.name"/> exceeds the maximum <x id="PH_1" equiv-text="sizeString(                             maxSize                         )"/> size limit set for the following files: <x id="PH_2" equiv-text="this.files[                             index                         ].paths.join(&quot;, &quot;)"/></target>
         <context-group purpose="location">
           <context context-type="sourcefile">modules/cs/js/util/file-select.ts</context>
           <context context-type="linenumber">613,612</context>
@@ -2003,7 +2003,7 @@
       </trans-unit>
       <trans-unit id="4577528096804984395" datatype="html">
         <source><x id="TAG_INPUT" ctype="x-input" equiv-text="&quot;checkbox&quot;                                (change)=&quot;fetchFunctions()&quot;                                [(ngModel)]=&quot;showAllUsers&quot;>"/> Show functions from all users </source>
-        <target state="needs-translation"></target>
+        <target state="needs-l10n"><x id="TAG_INPUT" ctype="x-input" equiv-text="&quot;checkbox&quot;                                (change)=&quot;fetchFunctions()&quot;                                [(ngModel)]=&quot;showAllUsers&quot;>"/> Show functions from all users </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/document/scheduling/schedule-dialog.component.ts</context>
           <context context-type="linenumber">85,88</context>
@@ -2627,7 +2627,7 @@
       </trans-unit>
       <trans-unit id="3673091046572661203" datatype="html">
         <source><x id="START_SUPERSCRIPT" ctype="x-sup" equiv-text="(F)&lt;/su"/>(F)<x id="CLOSE_SUPERSCRIPT" ctype="x-sup" equiv-text="&lt;/sup>"/> in Finnish </source>
-        <target state="needs-translation"></target>
+        <target state="needs-l10n"><x id="START_SUPERSCRIPT" ctype="x-sup" equiv-text="(F)&lt;/su"/>(F)<x id="CLOSE_SUPERSCRIPT" ctype="x-sup" equiv-text="&lt;/sup>"/> in Finnish </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/frontpage/front-page.component.ts</context>
           <context context-type="linenumber">107,109</context>
@@ -3371,7 +3371,7 @@
       </trans-unit>
       <trans-unit id="5546447057806901596" datatype="html">
         <source><x id="START_PARAGRAPH" ctype="x-p" equiv-text="&lt;p>"/> Message verification is disabled by the mailing list. All message lists options can be used, but some of them can cause messages being marked as spam. <x id="CLOSE_PARAGRAPH" ctype="x-p" equiv-text="&lt;/p>"/><x id="START_PARAGRAPH" ctype="x-p" equiv-text="&lt;p>"/><x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong>"/>This option is not recommended!<x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong>"/> Messages sent through the list will most likely be marked as spam by most mail providers. <x id="CLOSE_PARAGRAPH" ctype="x-p" equiv-text="&lt;/p>"/></source>
-        <target state="needs-translation"></target>
+        <target state="needs-l10n"><x id="START_PARAGRAPH" ctype="x-p" equiv-text="&lt;p>"/> Message verification is disabled by the mailing list. All message lists options can be used, but some of them can cause messages being marked as spam. <x id="CLOSE_PARAGRAPH" ctype="x-p" equiv-text="&lt;/p>"/><x id="START_PARAGRAPH" ctype="x-p" equiv-text="&lt;p>"/><x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong>"/>This option is not recommended!<x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong>"/> Messages sent through the list will most likely be marked as spam by most mail providers. <x id="CLOSE_PARAGRAPH" ctype="x-p" equiv-text="&lt;/p>"/></target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/messaging/manage/message-list-admin.component.ts</context>
           <context context-type="linenumber">146,155</context>
@@ -3379,7 +3379,7 @@
       </trans-unit>
       <trans-unit id="8050420007390838966" datatype="html">
         <source><x id="START_PARAGRAPH" ctype="x-p" equiv-text="&lt;p>"/> The message list forwards messages to the receiver without modifications. <x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong>"/>This verification method disables the following list options:<x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong>"/><x id="CLOSE_PARAGRAPH" ctype="x-p" equiv-text="&lt;/p>"/><x id="START_UNORDERED_LIST" ctype="x-ul" equiv-text="&lt;ul>"/><x id="START_LIST_ITEM" ctype="x-li" equiv-text="&lt;li>"/>Subject prefix<x id="CLOSE_LIST_ITEM" ctype="x-li" equiv-text="&lt;/li>"/><x id="START_LIST_ITEM" ctype="x-li" equiv-text="&lt;li>"/>Automatic message headers and footers are reset to empty<x id="CLOSE_LIST_ITEM" ctype="x-li" equiv-text="&lt;/li>"/><x id="CLOSE_UNORDERED_LIST" ctype="x-ul" equiv-text="&lt;/ul>"/><x id="START_PARAGRAPH" ctype="x-p" equiv-text="&lt;p>"/> This option relies on the verification information provided by the sender's mail provider. <x id="CLOSE_PARAGRAPH" ctype="x-p" equiv-text="&lt;/p>"/></source>
-        <target state="needs-translation"></target>
+        <target state="needs-l10n"><x id="START_PARAGRAPH" ctype="x-p" equiv-text="&lt;p>"/> The message list forwards messages to the receiver without modifications. <x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong>"/>This verification method disables the following list options:<x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong>"/><x id="CLOSE_PARAGRAPH" ctype="x-p" equiv-text="&lt;/p>"/><x id="START_UNORDERED_LIST" ctype="x-ul" equiv-text="&lt;ul>"/><x id="START_LIST_ITEM" ctype="x-li" equiv-text="&lt;li>"/>Subject prefix<x id="CLOSE_LIST_ITEM" ctype="x-li" equiv-text="&lt;/li>"/><x id="START_LIST_ITEM" ctype="x-li" equiv-text="&lt;li>"/>Automatic message headers and footers are reset to empty<x id="CLOSE_LIST_ITEM" ctype="x-li" equiv-text="&lt;/li>"/><x id="CLOSE_UNORDERED_LIST" ctype="x-ul" equiv-text="&lt;/ul>"/><x id="START_PARAGRAPH" ctype="x-p" equiv-text="&lt;p>"/> This option relies on the verification information provided by the sender's mail provider. <x id="CLOSE_PARAGRAPH" ctype="x-p" equiv-text="&lt;/p>"/></target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/messaging/manage/message-list-admin.component.ts</context>
           <context context-type="linenumber">158,171</context>
@@ -3387,7 +3387,7 @@
       </trans-unit>
       <trans-unit id="6122818737080834499" datatype="html">
         <source><x id="START_PARAGRAPH" ctype="x-p" equiv-text="&lt;p>"/> The message list verifies all messages before sending them to the receiver. All message lists options can be used and the messages will pass spam filters of most mail providers. <x id="CLOSE_PARAGRAPH" ctype="x-p" equiv-text="&lt;/p>"/><x id="START_PARAGRAPH" ctype="x-p" equiv-text="&lt;p>"/><x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong>"/>Note: this modifies the sender information!<x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong>"/> Messages sent through the list will have the list's address as the sender. However, the receiver will see the name of the sender and will be able to reply directly to them. <x id="CLOSE_PARAGRAPH" ctype="x-p" equiv-text="&lt;/p>"/></source>
-        <target state="needs-translation"></target>
+        <target state="needs-l10n"><x id="START_PARAGRAPH" ctype="x-p" equiv-text="&lt;p>"/> The message list verifies all messages before sending them to the receiver. All message lists options can be used and the messages will pass spam filters of most mail providers. <x id="CLOSE_PARAGRAPH" ctype="x-p" equiv-text="&lt;/p>"/><x id="START_PARAGRAPH" ctype="x-p" equiv-text="&lt;p>"/><x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong>"/>Note: this modifies the sender information!<x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong>"/> Messages sent through the list will have the list's address as the sender. However, the receiver will see the name of the sender and will be able to reply directly to them. <x id="CLOSE_PARAGRAPH" ctype="x-p" equiv-text="&lt;/p>"/></target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/messaging/manage/message-list-admin.component.ts</context>
           <context context-type="linenumber">174,186</context>
@@ -5277,14 +5277,6 @@
           <context context-type="linenumber">460</context>
         </context-group>
       </trans-unit>
-      <trans-unit id="8985586082248904379" datatype="html">
-        <source> You are showing exam answers to the students.<x id="LINE_BREAK" ctype="lb" equiv-text="&lt;br>"/> To start a new exam, stop answer reviewing in section '4. Show answers to students'. </source>
-        <target state="translated">Si stanno mostrando le risposte dell'esame agli studenti.</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
-          <context context-type="linenumber">466,467</context>
-        </context-group>
-      </trans-unit>
       <trans-unit id="2666020517194537371" datatype="html">
         <source>Hold an exam</source>
         <target state="translated">Svolgere un esame</target>
@@ -5559,22 +5551,6 @@
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
           <context context-type="linenumber">685</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="6383743377048106825" datatype="html">
-        <source> You can show answers only when they don't have an active exam running.<x id="LINE_BREAK" ctype="lb" equiv-text="&lt;br>"/> Stop the exam and disable login codes in section '3. Manage exams' to enable showing answers. </source>
-        <target state="translated">È possibile mostrare le risposte solo quando non è in corso un esame attivo.</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
-          <context context-type="linenumber">694,695</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="3606771354880883563" datatype="html">
-        <source> You can only show answers for the main exam (<x id="INTERPOLATION" equiv-text="{{ examByDocId.get(group.examDocId!)?.name }}"/>) and not for the practice exam. Change the exam in section '3. Manage exams' to enable showing answers. </source>
-        <target state="translated">È possibile mostrare le risposte solo per l'esame principale (</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
-          <context context-type="linenumber">698,699</context>
         </context-group>
       </trans-unit>
       <trans-unit id="4454548802259509672" datatype="html">
@@ -6097,7 +6073,7 @@ Are you sure you want to change the exam?</source>
       </trans-unit>
       <trans-unit id="269375217385324097" datatype="html">
         <source><x id="START_PARAGRAPH" ctype="x-p" equiv-text="&lt;p>"/> If your school uses Wilma, you can import students by copy-pasting the student list from Wilma. <x id="CLOSE_PARAGRAPH" ctype="x-p" equiv-text="&lt;/p>"/><x id="START_PARAGRAPH" ctype="x-p" equiv-text="&lt;p>"/> The required format for the input is as follows: <x id="CLOSE_PARAGRAPH" ctype="x-p" equiv-text="&lt;/p>"/><x id="START_TAG_PRE" ctype="x-pre" equiv-text="&lt;pre>"/>&lt; class &gt; &lt; last name &gt; &lt; first name &gt;<x id="CLOSE_TAG_PRE" ctype="x-pre" equiv-text="&lt;/pre>"/><x id="START_PARAGRAPH" ctype="x-p" equiv-text="&lt;p>"/> For example: <x id="CLOSE_PARAGRAPH" ctype="x-p" equiv-text="&lt;/p>"/><x id="START_TAG_PRE" ctype="x-pre" equiv-text="&lt;pre>"/>9b Duck Donald<x id="LINE_BREAK" ctype="lb" equiv-text="&lt;br>"/>9b Duck Daisy<x id="LINE_BREAK" ctype="lb" equiv-text="&lt;br>"/>9c Duck Scrooge<x id="CLOSE_TAG_PRE" ctype="x-pre" equiv-text="&lt;/pre>"/><x id="START_PARAGRAPH" ctype="x-p" equiv-text="&lt;p>"/> Students are separated by line-breaks so that one line of text represents one student. Each piece of information (class, last name, first name) is separated by a single space. <x id="CLOSE_PARAGRAPH" ctype="x-p" equiv-text="&lt;/p>"/><x id="START_PARAGRAPH" ctype="x-p" equiv-text="&lt;p>"/> You can obtain the student list from Wilma by selecting "Print course book" and selecting the students in the table. <x id="CLOSE_PARAGRAPH" ctype="x-p" equiv-text="&lt;/p>"/></source>
-        <target state="translated"/>
+        <target state="needs-l10n"><x id="START_PARAGRAPH" ctype="x-p" equiv-text="&lt;p>"/> If your school uses Wilma, you can import students by copy-pasting the student list from Wilma. <x id="CLOSE_PARAGRAPH" ctype="x-p" equiv-text="&lt;/p>"/><x id="START_PARAGRAPH" ctype="x-p" equiv-text="&lt;p>"/> The required format for the input is as follows: <x id="CLOSE_PARAGRAPH" ctype="x-p" equiv-text="&lt;/p>"/><x id="START_TAG_PRE" ctype="x-pre" equiv-text="&lt;pre>"/>&lt; class &gt; &lt; last name &gt; &lt; first name &gt;<x id="CLOSE_TAG_PRE" ctype="x-pre" equiv-text="&lt;/pre>"/><x id="START_PARAGRAPH" ctype="x-p" equiv-text="&lt;p>"/> For example: <x id="CLOSE_PARAGRAPH" ctype="x-p" equiv-text="&lt;/p>"/><x id="START_TAG_PRE" ctype="x-pre" equiv-text="&lt;pre>"/>9b Duck Donald<x id="LINE_BREAK" ctype="lb" equiv-text="&lt;br>"/>9b Duck Daisy<x id="LINE_BREAK" ctype="lb" equiv-text="&lt;br>"/>9c Duck Scrooge<x id="CLOSE_TAG_PRE" ctype="x-pre" equiv-text="&lt;/pre>"/><x id="START_PARAGRAPH" ctype="x-p" equiv-text="&lt;p>"/> Students are separated by line-breaks so that one line of text represents one student. Each piece of information (class, last name, first name) is separated by a single space. <x id="CLOSE_PARAGRAPH" ctype="x-p" equiv-text="&lt;/p>"/><x id="START_PARAGRAPH" ctype="x-p" equiv-text="&lt;p>"/> You can obtain the student list from Wilma by selecting "Print course book" and selecting the students in the table. <x id="CLOSE_PARAGRAPH" ctype="x-p" equiv-text="&lt;/p>"/></target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/user-import-dialog.component.ts</context>
           <context context-type="linenumber">27,45</context>
@@ -7150,7 +7126,7 @@ Separate multiple addresses with commas or write each address on a new line.</so
       </trans-unit>
       <trans-unit id="5141645080814386241" datatype="html">
         <source><x id="START_PARAGRAPH" ctype="x-p" equiv-text="&lt;p>"/> There were problems while undoing. Someone might have edited the permissions at the same time as you. <x id="CLOSE_PARAGRAPH" ctype="x-p" equiv-text="&lt;/p>"/><x id="START_PARAGRAPH" ctype="x-p" equiv-text="&lt;p>"/>You can reapply permissions or fix them manually.<x id="CLOSE_PARAGRAPH" ctype="x-p" equiv-text="&lt;/p>"/><x id="START_PARAGRAPH" ctype="x-p" equiv-text="&lt;p>"/>Detailed error messages:<x id="CLOSE_PARAGRAPH" ctype="x-p" equiv-text="&lt;/p>"/></source>
-        <target state="translated"/>
+        <target state="needs-l10n"><x id="START_PARAGRAPH" ctype="x-p" equiv-text="&lt;p>"/> There were problems while undoing. Someone might have edited the permissions at the same time as you. <x id="CLOSE_PARAGRAPH" ctype="x-p" equiv-text="&lt;/p>"/><x id="START_PARAGRAPH" ctype="x-p" equiv-text="&lt;p>"/>You can reapply permissions or fix them manually.<x id="CLOSE_PARAGRAPH" ctype="x-p" equiv-text="&lt;/p>"/><x id="START_PARAGRAPH" ctype="x-p" equiv-text="&lt;p>"/>Detailed error messages:<x id="CLOSE_PARAGRAPH" ctype="x-p" equiv-text="&lt;/p>"/></target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/userselect/user-select.component.ts</context>
           <context context-type="linenumber">293,298</context>
@@ -7158,7 +7134,7 @@ Separate multiple addresses with commas or write each address on a new line.</so
       </trans-unit>
       <trans-unit id="4128190404321529743" datatype="html">
         <source><x id="START_ITALIC_TEXT" ctype="x-i" equiv-text="yphicon glyphicon-chevron-down&quot;>"/><x id="CLOSE_ITALIC_TEXT" ctype="x-i" equiv-text="Show"/>Show details</source>
-        <target state="translated"/>
+        <target state="needs-l10n"><x id="START_ITALIC_TEXT" ctype="x-i" equiv-text="yphicon glyphicon-chevron-down&quot;>"/><x id="CLOSE_ITALIC_TEXT" ctype="x-i" equiv-text="Show"/>Show details</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/userselect/user-select.component.ts</context>
           <context context-type="linenumber">300,301</context>
@@ -7166,7 +7142,7 @@ Separate multiple addresses with commas or write each address on a new line.</so
       </trans-unit>
       <trans-unit id="7272675779595492580" datatype="html">
         <source><x id="START_TAG_SPAN" ctype="x-span" equiv-text="{{erro"/><x id="INTERPOLATION" equiv-text="&lt;/s"/><x id="CLOSE_TAG_SPAN" ctype="x-span"/><x id="START_TAG_DIV_1" ctype="x-div_1" equiv-text="&lt;div class=&quot;alert-details&quot;>"/><x id="START_PARAGRAPH" ctype="x-p" equiv-text="&lt;p>"/>Please try refreshing the page and try again.<x id="CLOSE_PARAGRAPH" ctype="x-p" equiv-text="&lt;/p>"/><x id="START_TAG_NG_CONTAINER" ctype="x-ng_container" equiv-text="&lt;ng-container *ngIf=&quot;detailedError&quot;>"/><x id="START_TAG_DIV" ctype="x-div" equiv-text="&lt;div>"/><x id="START_LINK" ctype="x-a" equiv-text="&lt;a (click)=&quot;showErrorMessage = !showErrorMessage&quot;>"/><x id="START_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;i class=&quot;glyphicon glyphicon-chevron-down&quot;>"/><x id="CLOSE_ITALIC_TEXT" ctype="x-i"/> Show details <x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a>"/><x id="CLOSE_TAG_DIV" ctype="x-div" equiv-text="&lt;/div>"/><x id="START_TAG_PRE" ctype="x-pre" equiv-text="&lt;pre *ngIf=&quot;showErrorMessage&quot;>"/><x id="INTERPOLATION_1" equiv-text="&lt;"/><x id="CLOSE_TAG_PRE" ctype="x-pre"/><x id="CLOSE_TAG_NG_CONTAINER" ctype="x-ng_container" equiv-text="&lt;/ng-container>"/><x id="CLOSE_TAG_DIV" ctype="x-div" equiv-text="&lt;/div>"/></source>
-        <target state="translated"/>
+        <target state="needs-l10n"><x id="START_TAG_SPAN" ctype="x-span" equiv-text="{{erro"/><x id="INTERPOLATION" equiv-text="&lt;/s"/><x id="CLOSE_TAG_SPAN" ctype="x-span"/><x id="START_TAG_DIV_1" ctype="x-div_1" equiv-text="&lt;div class=&quot;alert-details&quot;>"/><x id="START_PARAGRAPH" ctype="x-p" equiv-text="&lt;p>"/>Please try refreshing the page and try again.<x id="CLOSE_PARAGRAPH" ctype="x-p" equiv-text="&lt;/p>"/><x id="START_TAG_NG_CONTAINER" ctype="x-ng_container" equiv-text="&lt;ng-container *ngIf=&quot;detailedError&quot;>"/><x id="START_TAG_DIV" ctype="x-div" equiv-text="&lt;div>"/><x id="START_LINK" ctype="x-a" equiv-text="&lt;a (click)=&quot;showErrorMessage = !showErrorMessage&quot;>"/><x id="START_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;i class=&quot;glyphicon glyphicon-chevron-down&quot;>"/><x id="CLOSE_ITALIC_TEXT" ctype="x-i"/> Show details <x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a>"/><x id="CLOSE_TAG_DIV" ctype="x-div" equiv-text="&lt;/div>"/><x id="START_TAG_PRE" ctype="x-pre" equiv-text="&lt;pre *ngIf=&quot;showErrorMessage&quot;>"/><x id="INTERPOLATION_1" equiv-text="&lt;"/><x id="CLOSE_TAG_PRE" ctype="x-pre"/><x id="CLOSE_TAG_NG_CONTAINER" ctype="x-ng_container" equiv-text="&lt;/ng-container>"/><x id="CLOSE_TAG_DIV" ctype="x-div" equiv-text="&lt;/div>"/></target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/userselect/user-select.component.ts</context>
           <context context-type="linenumber">310,323</context>
@@ -7582,7 +7558,7 @@ Separate multiple addresses with commas or write each address on a new line.</so
       </trans-unit>
       <trans-unit id="6804394984309949769" datatype="html">
         <source> was found </source>
-        <target state="needs-translation"></target>
+        <target state="needs-l10n"> was found </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/search/search-results-dialog.component.ts</context>
           <context context-type="linenumber">45</context>
@@ -8266,7 +8242,7 @@ Separate multiple addresses with commas or write each address on a new line.</so
       </trans-unit>
       <trans-unit id="1304170677752702304" datatype="html">
         <source><x id="TAG_INPUT" ctype="x-input" equiv-text="&quot;checkbox&quot; [(ngModel)]=&quot;lctrl.lectureSettings.useWall&quot;                                    (ngModelChange)=&quot;lctrl.refreshWall()&quot;>"/> Show wall</source>
-        <target state="needs-translation"></target>
+        <target state="needs-l10n"><x id="TAG_INPUT" ctype="x-input" equiv-text="&quot;checkbox&quot; [(ngModel)]=&quot;lctrl.lectureSettings.useWall&quot;                                    (ngModelChange)=&quot;lctrl.refreshWall()&quot;>"/> Show wall</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/sidebarmenu/tabs/settings-tab.component.ts</context>
           <context context-type="linenumber">168,170</context>
@@ -8274,7 +8250,7 @@ Separate multiple addresses with commas or write each address on a new line.</so
       </trans-unit>
       <trans-unit id="2865158227582611884" datatype="html">
         <source><x id="TAG_INPUT" ctype="x-input" equiv-text="&quot;checkbox&quot; [(ngModel)]=&quot;lctrl.lectureSettings.useQuestions&quot;>"/> Show questions </source>
-        <target state="needs-translation"></target>
+        <target state="needs-l10n"><x id="TAG_INPUT" ctype="x-input" equiv-text="&quot;checkbox&quot; [(ngModel)]=&quot;lctrl.lectureSettings.useQuestions&quot;>"/> Show questions </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/sidebarmenu/tabs/settings-tab.component.ts</context>
           <context context-type="linenumber">173,174</context>
@@ -8282,7 +8258,7 @@ Separate multiple addresses with commas or write each address on a new line.</so
       </trans-unit>
       <trans-unit id="4058133633628035062" datatype="html">
         <source><x id="TAG_INPUT" ctype="x-input" equiv-text="&quot;checkbox&quot; [(ngModel)]=&quot;lctrl.lectureSettings.useAnswers&quot;>"/> Show answers</source>
-        <target state="needs-translation"></target>
+        <target state="needs-l10n"><x id="TAG_INPUT" ctype="x-input" equiv-text="&quot;checkbox&quot; [(ngModel)]=&quot;lctrl.lectureSettings.useAnswers&quot;>"/> Show answers</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/sidebarmenu/tabs/settings-tab.component.ts</context>
           <context context-type="linenumber">177,178</context>
@@ -9634,7 +9610,7 @@ Separate multiple addresses with commas or write each address on a new line.</so
       </trans-unit>
       <trans-unit id="4518343884091856656" datatype="html">
         <source><x id="START_LINK" ctype="x-a" equiv-text="focusMe>"/>Refresh<x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a>"/> the page to continue.</source>
-        <target state="translated"/>
+        <target state="needs-l10n"><x id="START_LINK" ctype="x-a" equiv-text="focusMe>"/>Refresh<x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a>"/> the page to continue.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/login-dialog.component.ts</context>
           <context context-type="linenumber">325,327</context>
@@ -9730,7 +9706,7 @@ Separate multiple addresses with commas or write each address on a new line.</so
       </trans-unit>
       <trans-unit id="3914978142342238712" datatype="html">
         <source><x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong>"/><x id="INTERPOLATION" equiv-text="{{data.oauthClientName}}"/><x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong>"/> will be able to</source>
-        <target state="needs-translation"></target>
+        <target state="needs-l10n"><x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong>"/><x id="INTERPOLATION" equiv-text="{{data.oauthClientName}}"/><x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong>"/> will be able to</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/oauth-authorize.component.ts</context>
           <context context-type="linenumber">43</context>
@@ -10950,7 +10926,7 @@ Separate multiple addresses with commas or write each address on a new line.</so
       </trans-unit>
       <trans-unit id="8066011139730077836" datatype="html">
         <source><x id="PH" equiv-text="this.buttonTitle"/> (access locked to "<x id="PH_1" equiv-text="accessTypeDisplayNames[this.currentLockedAccess]"/>")</source>
-        <target state="needs-translation"></target>
+        <target state="needs-l10n"><x id="PH" equiv-text="this.buttonTitle"/> (access locked to "<x id="PH_1" equiv-text="accessTypeDisplayNames[this.currentLockedAccess]"/>")</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/user-menu.component.ts</context>
           <context context-type="linenumber">139</context>
@@ -10958,7 +10934,7 @@ Separate multiple addresses with commas or write each address on a new line.</so
       </trans-unit>
       <trans-unit id="2023139374168209004" datatype="html">
         <source><x id="PH" equiv-text="this.buttonTitle"/> (group access locked)</source>
-        <target state="needs-translation"></target>
+        <target state="needs-l10n"><x id="PH" equiv-text="this.buttonTitle"/> (group access locked)</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/user-menu.component.ts</context>
           <context context-type="linenumber">151</context>
@@ -11456,6 +11432,62 @@ Separate multiple addresses with commas or write each address on a new line.</so
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/item/access-countdown.component.ts</context>
           <context context-type="linenumber">16</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="1599561053758341521" datatype="html">
+        <source>You are showing exam answers to the students.</source>
+        <target state="translated">Stai mostrando le risposte dell'esame agli studenti.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
+          <context context-type="linenumber">466</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="6658020272864766254" datatype="html">
+        <source>To start a new exam, stop answer reviewing in section '4. Show answers to students'.</source>
+        <target state="translated">Per iniziare un nuovo esame, interrompi la revisione delle risposte nella sezione “4. Mostra le risposte agli studenti”.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
+          <context context-type="linenumber">467</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="6156295793414021264" datatype="html">
+        <source>You can show answers only when they don't have an active exam running.</source>
+        <target state="translated">È possibile mostrare le risposte solo quando non è in corso alcun esame attivo.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
+          <context context-type="linenumber">694</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="8270552017499584205" datatype="html">
+        <source>Stop the exam and disable login codes in section '3. Manage exams' to enable showing answers.</source>
+        <target state="translated">Interrompere l'esame e disabilitare i codici di accesso nella sezione “3. Gestisci esami” per abilitare la visualizzazione delle risposte.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
+          <context context-type="linenumber">695</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="6659491575322736264" datatype="html">
+        <source>You can only show answers for the main exam</source>
+        <target state="translated">È possibile visualizzare solo le risposte dell'esame principale</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
+          <context context-type="linenumber">698</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="7179153993560145570" datatype="html">
+        <source>and not for the practice exam.</source>
+        <target state="translated">e non quelle dell'esame di prova.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
+          <context context-type="linenumber">698</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="8033702386907070279" datatype="html">
+        <source>Change the exam in section '3. Manage exams' to enable showing answers.</source>
+        <target state="translated">Modificare l'esame nella sezione “3. Gestisci esami” per abilitare la visualizzazione delle risposte.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
+          <context context-type="linenumber">699</context>
         </context-group>
       </trans-unit>
     </body>
