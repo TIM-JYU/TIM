@@ -1,11 +1,13 @@
 """
 Routes for printing a document
 """
+
 import json
 import os
 import shutil
 import tempfile
 from dataclasses import field
+from marshmallow import fields
 from pathlib import Path
 from urllib.parse import urlencode
 
@@ -61,6 +63,7 @@ TEMP_DIR_PATH = tempfile.gettempdir()
 DOWNLOADED_IMAGES_ROOT = os.path.join(TEMP_DIR_PATH, "tim-img-dls")
 
 print_blueprint = TypedBlueprint("print", __name__, url_prefix="/print")
+svg_blueprint = TypedBlueprint("svg", __name__, url_prefix="/svg")
 
 
 @print_blueprint.before_request
@@ -128,7 +131,7 @@ def get_template_doc(
 
 @print_blueprint.post("/<path:doc_path>")
 def print_document(
-    doc_path: str,
+    _doc_path: str,
     file_type: str = field(metadata={"data_key": "fileType"}),
     template_doc_id: int = field(metadata={"data_key": "templateDocId"}),
     plugins_user_print: bool = field(metadata={"data_key": "printPluginsUserCode"}),
@@ -136,8 +139,9 @@ def print_document(
         metadata={"data_key": "removeOldImages"}, default=False
     ),
     force: bool = False,
-    url_macros: dict[str, str]
-    | None = field(metadata={"data_key": "urlMacros"}, default=None),
+    url_macros: dict[str, str] | None = field(
+        metadata={"data_key": "urlMacros"}, default=None
+    ),
 ) -> Response:
     if not file_type:
         file_type = "pdf"
@@ -175,7 +179,8 @@ def print_document(
         urlparams=urlparams,
     )
 
-    #  print_access_url = f'{request.url}?file_type={str(print_type.value).lower()}&template_doc_id={template_doc_id}&plugins_user_code={plugins_user_print}'
+    # print_access_url = f'{request.url}?file_type={str(print_type.value).lower()}&template_doc_id={
+    # template_doc_id}&plugins_user_code={plugins_user_print}'
     print_access_url = f"{request.url}"  # create url for printed page
     sep = "?"
     if str(print_type.value).lower() != "pdf":
@@ -189,7 +194,7 @@ def print_document(
         sep = "&"
     if url_macros:
         print_access_url += f"{sep}{urlencode(url_macros)}"
-        sep = "&"
+        # sep = "&"
 
     if force:
         existing_doc = None
@@ -217,7 +222,12 @@ def print_document(
         try:
             print("Error occurred: " + str(err))
             e = err.value
-            latex_access_url = f"{request.url}?file_type=latex&template_doc_id={template_doc_id}&plugins_user_code={plugins_user_print}"
+            latex_access_url = (
+                f"{request.url}"
+                f"?file_type=latex"
+                f"&template_doc_id={template_doc_id}"
+                f"&plugins_user_code={plugins_user_print}"
+            )
             if url_macros:
                 latex_access_url += f"&{urlencode(url_macros)}"
             line = e.get("line", "")
@@ -242,7 +252,8 @@ def print_document(
         print("General error occurred: " + str(err))
         raise RouteException(str(err))  # TODO: maybe there's a better error code?
 
-    # print_access_url = f'{request.url}?file_type={str(print_type.value).lower()}&template_doc_id={template_doc_id}&plugins_user_code={plugins_user_print}'
+    # print_access_url = f'{request.url}?file_type={str(print_type.value).lower()}&template_doc_id={
+    # template_doc_id}&plugins_user_code={plugins_user_print}'
     db.session.commit()
     return json_response({"success": True, "url": print_access_url}, status_code=201)
 
@@ -360,7 +371,12 @@ def get_printed_document(
         rurl = request.url
         i = rurl.find("?")
         rurl = rurl[:i]
-        latex_access_url = f"{rurl}?file_type=latex&template_doc_id={template_doc_id}&plugins_user_code={plugins_user_code}"
+        latex_access_url = (
+            f"{rurl}?"
+            f"file_type=latex"
+            f"&template_doc_id={template_doc_id}"
+            f"&plugins_user_code={plugins_user_code}"
+        )
         pdf_access_url = f"{rurl}?file_type=pdf&template_doc_id={template_doc_id}&plugins_user_code={plugins_user_code}"
         if url_macros:
             latex_access_url += f"&{urlencode(url_macros)}"
@@ -600,7 +616,7 @@ def get_numbering(doc_path: str, recurse: bool = False) -> Response:
 
 
 @print_blueprint.get("/templates/<path:doc_path>")
-def get_templates(doc_path: str) -> Response:
+def get_templates(_doc_path: str) -> Response:
     doc = g.doc_entry
 
     template_name = get_doc_template_name(doc)
@@ -642,6 +658,7 @@ def check_print_cache(
     :param template:
     :param file_type:
     :param plugins_user_print:
+    :param urlparams:
     :return:
     """
 
@@ -694,6 +711,7 @@ def create_printed_doc(
     :param plugins_user_print: use users answers for plugins or not
     :param urlroot: url root for this route
     :param eol_type: EOL type. Same option as Pandoc (crlf, lf, native)
+    :param urlparams: parameters for printing, parsed from query parameters
     :return str: path to the created file
     """
 
@@ -747,9 +765,126 @@ def create_printed_doc(
     return p_doc.path_to_file
 
 
+NOT_FOUND_SVG = (
+    '<svg xmlns="http://www.w3.org/2000/svg" width="200" height="20">'
+    '<text x="0" y="15" font-family="sans-serif" font-size="15">NOTFOUNDFILE</text>'
+    "</svg>"
+)
+
+
 def remove_images(doc_id: int) -> None:
     # noinspection PyBroadException
     try:
         shutil.rmtree(os.path.join(DOWNLOADED_IMAGES_ROOT, str(doc_id)))
     except:
         pass
+
+
+@svg_blueprint.before_request
+def do_before_requests() -> None:
+    g.user = sessioninfo.get_current_user_object()
+
+
+@svg_blueprint.url_value_preprocessor
+def pull_doc_path_svg(endpoint: str | None, values: dict[str, str] | None) -> None:
+    if not endpoint or not values:
+        return
+    if current_app.url_map.is_endpoint_expecting(endpoint, "doc_path"):
+        doc_path = values["doc_path"]
+        if doc_path is None:
+            g.setdefault("error", "Docname is missing")
+            return
+        g.doc_path = doc_path
+        g.doc_entry = DocEntry.find_by_path(doc_path)
+        if not g.doc_entry:
+            g.setdefault("error", "Doc not found")
+            return
+        verify_view_access(g.doc_entry)
+
+
+@svg_blueprint.get("/<path:doc_path>")
+def svg_document(
+    _doc_path: str,
+    task_id: str | None = field(metadata={"data_key": "taskid"}, default=None),
+    pid: str | None = field(metadata={"data_key": "id"}, default=None),
+    ftype: str | None = field(metadata={"data_key": "fileType"}, default=None),
+    _force: bool = False,
+    _url_macros: dict[str, str] | None = field(
+        metadata={"data_key": "urlMacros"}, default=None
+    ),
+    r: list[str] | None = field(
+        metadata={"data_key": "r", "marshmallow_field": fields.List(fields.String())},
+        default=None,
+    ),
+) -> Response:
+    file_type = ftype
+    if not file_type:
+        file_type = "svg"
+
+    def get_data() -> tuple[str, str | None]:
+        nonlocal file_type
+        # nonlocal url_macros
+
+        if file_type.lower() not in [f.value for f in PrintFormat]:
+            return "", "Invalid file type"
+        err = g.pop("error", "")
+
+        if err:
+            return "", err
+        doc: DocInfo = g.doc_entry
+        # doc_settings = doc.document.get_settings()
+
+        """
+        if doc_settings.urlmacros():
+            view_ctx = view_ctx_with_urlmacros(ViewRoute.View, urlmacros=url_macros)
+        else:
+            view_ctx = default_view_ctx
+            url_macros = None
+        """
+        task = None
+        tid = "taskid"
+        if pid:
+            task = doc.document.get_paragraph(pid)
+            tid = pid
+        elif task_id:
+            task = doc.document.get_paragraph_by_task_id(task_id)
+            tid = task_id
+
+        if not task:
+            return "", f"{tid} not found"
+
+        # urlparams: DocPrintParams = PrintModelSchema.load(request.args, unknown=EXCLUDE)
+
+        attrs = task.get_attrs()
+        if attrs.get("plugin", "") != "csPlugin":
+            return "", f"{task_id} not csPlugin"
+
+        js = YamlBlock.from_markdown(task.md).values
+        if js.get("type", "") != "drawio":
+            return "", f"{task_id} is not drawio"
+
+        data = js.get("data", "")
+        if not data:
+            return "", f"No data in {task_id}"
+        if r:
+            for rep in r:
+                parts = rep.split("|", 1)
+                if len(parts) == 2:
+                    data = data.replace(parts[0], parts[1])
+        return data, None
+
+    result, error = get_data()
+    if error:
+        file_type = "svg"
+        result = NOT_FOUND_SVG.replace("NOTFOUNDFILE", error)
+
+    db.session.commit()
+
+    print_type = PrintFormat(file_type)
+    mime = get_mimetype_for_format(print_type)
+    result = sanitize_svg(result)
+    response = make_response(result)
+    response.headers["Content-Type"] = mime
+    add_csp_if_not_script_safe(response, mime, "sandbox")
+
+    return response
