@@ -8898,7 +8898,7 @@
       </trans-unit>
       <trans-unit id="187187500641108332" datatype="html">
         <source><x id="INTERPOLATION" equiv-text="Folder() ?? 'Enter the location or leave empty'}}"/></source>
-        <target state="translated">{Folder() ?? 'Syötä polku tai jätä tyhjäksi'}}}</target>
+        <target state="new"><x id="INTERPOLATION" equiv-text="Folder() ?? 'Enter the location or leave empty'}}"/></target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/user-group-dialog.component.ts</context>
           <context context-type="linenumber">61,62</context>
@@ -10361,22 +10361,6 @@ Ole hyvä ja luo ensin kirjautumiskoodit.</target>
           <context context-type="linenumber">1792</context>
         </context-group>
       </trans-unit>
-      <trans-unit id="8985586082248904379" datatype="html">
-        <source> You are showing exam answers to the students.<x id="LINE_BREAK" ctype="lb" equiv-text="&lt;br>"/> To start a new exam, stop answer reviewing in section '4. Show answers to students'. </source>
-        <target state="translated"> Vastausten näyttäminen on päällä tälle ryhmälle.<x id="LINE_BREAK" ctype="lb" equiv-text="&lt;br>"/> Pysäytä vastausten näyttäminen kohdassa <i>4. Näytä kokeen vastaukset oppilaille</i> ennen kuin voit aloittaa uuden kokeen ryhmälle. </target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
-          <context context-type="linenumber">456,457</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="6383743377048106825" datatype="html">
-        <source> You can show answers only when they don't have an active exam running.<x id="LINE_BREAK" ctype="lb" equiv-text="&lt;br>"/> Stop the exam and disable login codes in section '3. Manage exams' to enable showing answers. </source>
-        <target state="translated"> Voit näyttää vastauksia vain silloin, kun koeryhmällä ei ole menossa olevia kokeita.<x id="LINE_BREAK" ctype="lb" equiv-text="&lt;br>"/> Lopeta koe ja ota kirjautumiskoodit pois käytöstä kohdassa <i>3. Hallinnoi kokeita</i>, ennen kuin voit näyttää vastauksia. </target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
-          <context context-type="linenumber">679,680</context>
-        </context-group>
-      </trans-unit>
       <trans-unit id="657151549921052159" datatype="html">
         <source>Begin showing answers to students</source>
         <target state="translated">Aloita vastausten näyttäminen koeryhmän oppilaille</target>
@@ -10641,14 +10625,6 @@ Syötä useiden käyttäjien osoitteet allekkain tai pilkulla erotettuina.</targ
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/ui/goto-link.component.ts</context>
           <context context-type="linenumber">63</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="3606771354880883563" datatype="html">
-        <source> You can only show answers for the main exam (<x id="INTERPOLATION" equiv-text="{{ examByDocId.get(group.examDocId!)?.name }}"/>) and not for the practice exam. Change the exam in section '3. Manage exams' to enable showing answers. </source>
-        <target state="translated"> Voit näyttää vain varsinaisen kokeen (<x id="INTERPOLATION" equiv-text="{{ examByDocId.get(group.examDocId!)?.name }}"/>) vastauksia. Harjoituskokeen vastausten näyttämistä ei vielä tueta. Vaihda koe kohdassa <i>3. Hallinnoi kokeita</i> voidaksesi näyttää vastauksia. </target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
-          <context context-type="linenumber">698,699</context>
         </context-group>
       </trans-unit>
       <trans-unit id="4454548802259509672" datatype="html">
@@ -11433,6 +11409,62 @@ Syötä useiden käyttäjien osoitteet allekkain tai pilkulla erotettuina.</targ
         <context-group purpose="location">
           <context context-type="sourcefile">modules/cs/js/jsframe.ts</context>
           <context context-type="linenumber">310</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="1599561053758341521" datatype="html">
+        <source>You are showing exam answers to the students.</source>
+        <target state="translated">Vastausten näyttäminen on päällä tälle ryhmälle.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
+          <context context-type="linenumber">466</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="6658020272864766254" datatype="html">
+        <source>To start a new exam, stop answer reviewing in section '4. Show answers to students'.</source>
+        <target state="translated">Pysäytä vastausten näyttäminen kohdassa &lt;i&gt;4. Näytä kokeen vastaukset oppilaille&lt;/i&gt; ennen kuin voit aloittaa uuden kokeen ryhmälle.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
+          <context context-type="linenumber">467</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="6156295793414021264" datatype="html">
+        <source>You can show answers only when they don't have an active exam running.</source>
+        <target state="translated">Voit näyttää vastauksia vain silloin, kun koeryhmällä ei ole menossa olevia kokeita.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
+          <context context-type="linenumber">694</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="8270552017499584205" datatype="html">
+        <source>Stop the exam and disable login codes in section '3. Manage exams' to enable showing answers.</source>
+        <target state="translated">Lopeta koe ja ota kirjautumiskoodit pois käytöstä kohdassa &lt;i&gt;3. Hallinnoi kokeita&lt;/i&gt;, ennen kuin voit näyttää vastauksia.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
+          <context context-type="linenumber">695</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="6659491575322736264" datatype="html">
+        <source>You can only show answers for the main exam</source>
+        <target state="translated">Voit näyttää vain varsinaisen kokeen </target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
+          <context context-type="linenumber">698</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="7179153993560145570" datatype="html">
+        <source>and not for the practice exam.</source>
+        <target state="translated">vastauksia. Harjoituskokeen vastausten näyttämistä ei vielä tueta.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
+          <context context-type="linenumber">698</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="8033702386907070279" datatype="html">
+        <source>Change the exam in section '3. Manage exams' to enable showing answers.</source>
+        <target state="translated">Vaihda koe kohdassa &lt;i&gt;3. Hallinnoi kokeita&lt;/i&gt; voidaksesi näyttää vastauksia.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
+          <context context-type="linenumber">699</context>
         </context-group>
       </trans-unit>
     </body>

@@ -462,9 +462,9 @@ export class ToggleComponent {
                             </div>
                             
                             <div *ngIf="group.allowAccess" class="mt">
-                                <tim-alert  severity="warning" i18n>
-                                    You are showing exam answers to the students.<br>
-                                    To start a new exam, stop answer reviewing in section '4. Show answers to students'.
+                                <tim-alert  severity="warning">
+                                    <ng-container i18n>You are showing exam answers to the students.</ng-container><br>
+                                    <ng-container i18n>To start a new exam, stop answer reviewing in section '4. Show answers to students'.</ng-container>
                                 </tim-alert>
                             </div>
                             <div *ngIf="group.currentExamDoc && !!examByDocId.get(group.currentExamDoc)?.disabled" class="mt">
@@ -690,13 +690,13 @@ export class ToggleComponent {
                              [id]="group.name"
                              (selectTab)="group.selected = true; onGroupTabSelected($event)"
                              (deselect)="group.selected = false">
-                            <tim-alert *ngIf="group.examState > 0" severity="warning" i18n>
-                                You can show answers only when they don't have an active exam running.<br>
-                                Stop the exam and disable login codes in section '3. Manage exams' to enable showing answers.
+                            <tim-alert *ngIf="group.examState > 0" severity="warning">
+                                <ng-container i18n>You can show answers only when they don't have an active exam running.</ng-container><br>
+                                <ng-container i18n>Stop the exam and disable login codes in section '3. Manage exams' to enable showing answers.</ng-container>
                             </tim-alert>
-                            <tim-alert *ngIf="group.currentExamDoc && group.currentExamDoc !== group.examDocId" severity="warning" i18n>
-                                You can only show answers for the main exam ({{ examByDocId.get(group.examDocId!)?.name }}) and not for the practice exam.
-                                Change the exam in section '3. Manage exams' to enable showing answers.
+                            <tim-alert *ngIf="group.currentExamDoc && group.currentExamDoc !== group.examDocId" severity="warning">
+                                <ng-container i18n>You can only show answers for the main exam</ng-container> ({{ examByDocId.get(group.examDocId!)?.name }}) <ng-container i18n>and not for the practice exam.</ng-container>
+                                <ng-container i18n>Change the exam in section '3. Manage exams' to enable showing answers.</ng-container>
                             </tim-alert>
                             <tim-alert *ngIf="!group.currentExamDoc" severity="warning" i18n>
                                 Select an exam in section '3. Manage exams' to enable showing answers.

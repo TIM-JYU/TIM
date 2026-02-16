@@ -10267,22 +10267,6 @@ Var god och skapa inloggningskoder först.</target>
           <context context-type="linenumber">1792</context>
         </context-group>
       </trans-unit>
-      <trans-unit id="8985586082248904379" datatype="html">
-        <source> You are showing exam answers to the students.<x id="LINE_BREAK" ctype="lb" equiv-text="&lt;br>"/> To start a new exam, stop answer reviewing in section '4. Show answers to students'. </source>
-        <target state="translated"> Visning av svar är aktiverad för denna grupp. Stoppa visningen av svar under <i>4. Visa provets svar till elever</i> innan du kan påbörja ett nytt prov för gruppen.</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
-          <context context-type="linenumber">456,457</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="6383743377048106825" datatype="html">
-        <source> You can show answers only when they don't have an active exam running.<x id="LINE_BREAK" ctype="lb" equiv-text="&lt;br>"/> Stop the exam and disable login codes in section '3. Manage exams' to enable showing answers. </source>
-        <target state="translated"> Du kan endast visa svar när provgruppen inte har pågående prov. Avsluta provet och inaktivera inloggningskoderna under <i>3. Hantera prov</i> innan du kan visa svar.</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
-          <context context-type="linenumber">679,680</context>
-        </context-group>
-      </trans-unit>
       <trans-unit id="657151549921052159" datatype="html">
         <source>Begin showing answers to students</source>
         <target state="translated">Börja visa svaren för provgruppens elever</target>
@@ -10547,14 +10531,6 @@ Mata in flera användares adresser på separata rader eller åtskilda med kommat
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/ui/goto-link.component.ts</context>
           <context context-type="linenumber">63</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="3606771354880883563" datatype="html">
-        <source> You can only show answers for the main exam (<x id="INTERPOLATION" equiv-text="{{ examByDocId.get(group.examDocId!)?.name }}"/>) and not for the practice exam. Change the exam in section '3. Manage exams' to enable showing answers. </source>
-        <target state="translated"> Du kan endast visa svaren från det egentliga provet (<x id="INTERPOLATION" equiv-text="{{ examByDocId.get(group.examDocId!)?.name }}"/>). Visning av svar från övningsprovet stöds ännu inte. Byt prov under <i>3. Hantera prov</i> för att kunna visa svaren. </target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
-          <context context-type="linenumber">698,699</context>
         </context-group>
       </trans-unit>
       <trans-unit id="4454548802259509672" datatype="html">
@@ -11339,6 +11315,62 @@ Mata in flera användares adresser på separata rader eller åtskilda med kommat
         <context-group purpose="location">
           <context context-type="sourcefile">modules/cs/js/jsframe.ts</context>
           <context context-type="linenumber">310</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="1599561053758341521" datatype="html">
+        <source>You are showing exam answers to the students.</source>
+        <target state="translated">Visning av svar är aktiverad för denna grupp.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
+          <context context-type="linenumber">466</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="6658020272864766254" datatype="html">
+        <source>To start a new exam, stop answer reviewing in section '4. Show answers to students'.</source>
+        <target state="translated">Stoppa visningen av svar under &lt;i&gt;4. Visa provets svar till elever&lt;/i&gt; innan du kan påbörja ett nytt prov för gruppen.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
+          <context context-type="linenumber">467</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="6156295793414021264" datatype="html">
+        <source>You can show answers only when they don't have an active exam running.</source>
+        <target state="translated">Du kan endast visa svar när provgruppen inte har pågående prov.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
+          <context context-type="linenumber">694</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="8270552017499584205" datatype="html">
+        <source>Stop the exam and disable login codes in section '3. Manage exams' to enable showing answers.</source>
+        <target state="translated">Avsluta provet och inaktivera inloggningskoderna under &lt;i&gt;3. Hantera prov&lt;/i&gt; innan du kan visa svar.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
+          <context context-type="linenumber">695</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="6659491575322736264" datatype="html">
+        <source>You can only show answers for the main exam</source>
+        <target state="translated">Du kan endast visa svaren från det egentliga provet</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
+          <context context-type="linenumber">698</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="7179153993560145570" datatype="html">
+        <source>and not for the practice exam.</source>
+        <target state="translated">Visning av svar från övningsprovet stöds ännu inte.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
+          <context context-type="linenumber">698</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="8033702386907070279" datatype="html">
+        <source>Change the exam in section '3. Manage exams' to enable showing answers.</source>
+        <target state="translated">Byt prov under &lt;i&gt;3. Hantera prov&lt;/i&gt; för att kunna visa svaren.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
+          <context context-type="linenumber">699</context>
         </context-group>
       </trans-unit>
     </body>
