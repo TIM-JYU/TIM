@@ -867,7 +867,7 @@ def add_paragraph_common(md: str, doc_id: int, par_next_id: str | None):
     except ValidationException as e:
         raise RouteException(str(e))
 
-    abort_if_duplicate_ids(doc, editor_pars, auto_rename_ids=True)
+    changes = abort_if_duplicate_ids(doc, editor_pars, auto_rename_ids=True)
 
     editor_pars = check_and_rename_pluginnamehere(editor_pars, doc)
 
@@ -892,6 +892,7 @@ def add_paragraph_common(md: str, doc_id: int, par_next_id: str | None):
             par=pars[0],
             old_version=edit_request.old_doc_version,
         )
+    edit_result.warnings = list_to_html(changes)
     return par_response(
         pars,
         docinfo,
