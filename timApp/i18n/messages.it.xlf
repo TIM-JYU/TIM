@@ -5283,13 +5283,6 @@
           <context context-type="linenumber">460</context>
         </context-group>
       </trans-unit>
-      <trans-unit id="8985586082248904379" datatype="html">
-        <source> You are showing exam answers to the students.<x id="LINE_BREAK" ctype="lb" equiv-text="&lt;br&gt;"/> To start a new exam, stop answer reviewing in section &apos;4. Show answers to students&apos;. </source>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
-          <context context-type="linenumber">466,467</context>
-        </context-group>
-      </trans-unit>
       <trans-unit id="2666020517194537371" datatype="html">
         <source>Hold an exam</source>
         <target state="translated">Svolgere un esame</target>
@@ -5562,20 +5555,6 @@
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
           <context context-type="linenumber">685</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="6383743377048106825" datatype="html">
-        <source> You can show answers only when they don&apos;t have an active exam running.<x id="LINE_BREAK" ctype="lb" equiv-text="&lt;br&gt;"/> Stop the exam and disable login codes in section &apos;3. Manage exams&apos; to enable showing answers. </source>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
-          <context context-type="linenumber">694,695</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="3606771354880883563" datatype="html">
-        <source> You can only show answers for the main exam (<x id="INTERPOLATION" equiv-text="{{ examByDocId.get(group.examDocId!)?.name }}"/>) and not for the practice exam. Change the exam in section &apos;3. Manage exams&apos; to enable showing answers. </source>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
-          <context context-type="linenumber">698,699</context>
         </context-group>
       </trans-unit>
       <trans-unit id="4454548802259509672" datatype="html">
