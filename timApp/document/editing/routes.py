@@ -1,4 +1,5 @@
 """Routes for editing a document."""
+
 import os
 import re
 import tempfile
@@ -701,12 +702,14 @@ def par_response(
             },
             "version": new_doc_version,
             "duplicates": duplicates,
-            "original_par": {
-                "md": original_par.get_markdown(),
-                "attrs": original_par.get_attrs(),
-            }
-            if original_par
-            else None,
+            "original_par": (
+                {
+                    "md": original_par.get_markdown(),
+                    "attrs": original_par.get_attrs(),
+                }
+                if original_par
+                else None
+            ),
             "new_par_ids": edit_result.new_par_ids if edit_result else None,
             "warnings": edit_result.warnings if edit_result else None,
         }

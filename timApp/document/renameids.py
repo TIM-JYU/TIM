@@ -16,7 +16,16 @@ TODO: if par_id found in some other editing_area do not add
 from __future__ import annotations
 
 from html import escape
-from typing import TYPE_CHECKING, Callable, TypeAlias, Sequence, Any, Optional, TypeVar
+from typing import (
+    TYPE_CHECKING,
+    Callable,
+    TypeAlias,
+    Sequence,
+    Any,
+    Optional,
+    TypeVar,
+    cast,
+)
 import re
 from collections import Counter
 
@@ -198,7 +207,9 @@ def check_and_rename_attribute(
         # go through all new pars if they need to be renamed
         p_id: str
         p_attrs: dict[str, str]
+        p_is_dict = False
         if isinstance(p, dict):
+            p_is_dict = True
             p_attrs = p.get("attrs") or {}
             p_id = str(p.get("id"))
         else:
@@ -239,6 +250,26 @@ def check_and_rename_attribute(
         else:
             # check if the name is already used in doc or renamed new_pars
             allow: str = names_to_check_map.get(p_id, "")
+            if allow == "" and not p_is_dict:
+                # check if some other new par has that par id
+                for ni, np in enumerate(new_pars):
+                    if np is p:
+                        continue
+
+                    if isinstance(np, dict):
+                        np_id = str(np.get("id"))
+                        np_name = (np.get("attrs") or {}).get(attr_name)
+                    else:
+                        np_id = np.get_id()
+                        np_name = np.get_attr(attr_name)
+
+                    if np_name == new_name:
+                        allow = ""  # if some other new par has the same name, do not allow original name
+                        break
+                    from_new_par = names_to_check_map.get(np_id, "")
+                    if from_new_par:
+                        allow = from_new_par
+
             if name_counts.get(allow, 0) > 1:
                 allow = ""  # if original name is duplicate, do not allow it
             if new_name != allow:  # if not original for this par in doc
