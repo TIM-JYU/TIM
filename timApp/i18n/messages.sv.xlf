@@ -5676,7 +5676,7 @@
       </trans-unit>
       <trans-unit id="1137972907092556746" datatype="html">
         <source>Message (optional)</source>
-        <target state="translated">Meddelande (valfritt)</target>
+        <target state="translated">Meddelande (icke obligatorisk)</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/calendar/calendar-event-dialog.component.ts</context>
           <context context-type="linenumber">190</context>
@@ -7370,7 +7370,7 @@
       </trans-unit>
       <trans-unit id="searchResultFrom" datatype="html">
         <source>from</source>
-        <target state="translated"> från </target>
+        <target state="translated">från</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/search/search-results-dialog.component.ts</context>
           <context context-type="linenumber">54</context>
@@ -7714,7 +7714,7 @@
       </trans-unit>
       <trans-unit id="6393364220046549775" datatype="html">
         <source>Error rendering text, please try again</source>
-        <target state="translated">Tolkning misslyckades, var god försök igen </target>
+        <target state="translated">Tolkning misslyckades, var god försök igen</target>
         <context-group purpose="location">
           <context context-type="sourcefile">modules/fields/js/textfield-plugin.component.ts</context>
           <context context-type="linenumber">390</context>
@@ -8082,7 +8082,7 @@
       </trans-unit>
       <trans-unit id="7304210041509653538" datatype="html">
         <source>Copy circuit to clipboard</source>
-        <target state="new">Copy circuit to clipboard</target>
+        <target state="translated">Kopiera krets till urklipp</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/quantum-circuit.component.ts</context>
           <context context-type="linenumber">290</context>
@@ -8090,7 +8090,7 @@
       </trans-unit>
       <trans-unit id="770492681595827297" datatype="html">
         <source>Measure</source>
-        <target state="new">Measure</target>
+        <target state="translated">Mätning</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/quantum-stats.component.ts</context>
           <context context-type="linenumber">68</context>
@@ -8098,7 +8098,7 @@
       </trans-unit>
       <trans-unit id="8525218912995413707" datatype="html">
         <source>Hide 0% rows</source>
-        <target state="new">Hide 0% rows</target>
+        <target state="translated">Dölj 0% rader</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/quantum-stats.component.ts</context>
           <context context-type="linenumber">74</context>
@@ -8106,7 +8106,7 @@
       </trans-unit>
       <trans-unit id="4878852784108374726" datatype="html">
         <source>Output probabilities based on <x id="PH" equiv-text="this.nSamples"/> measurements</source>
-        <target state="new">Output probabilities based on <x id="PH" equiv-text="this.nSamples"/> measurements</target>
+        <target state="translated">Utgångssannolikheter baserade på <x id="PH" equiv-text="this.nSamples"/> mätningar</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/quantum-stats.component.ts</context>
           <context context-type="linenumber">151</context>
@@ -8114,7 +8114,7 @@
       </trans-unit>
       <trans-unit id="5361585538695040272" datatype="html">
         <source>Measurements</source>
-        <target state="new">Measurements</target>
+        <target state="translated">Mätningar</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/quantum-stats.component.ts</context>
           <context context-type="linenumber">46</context>
@@ -8122,7 +8122,7 @@
       </trans-unit>
       <trans-unit id="8700121026680200191" datatype="html">
         <source>Clear</source>
-        <target state="new">Clear</target>
+        <target state="translated">Rensa</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/quantum-stats.component.ts</context>
           <context context-type="linenumber">69</context>
@@ -8130,7 +8130,7 @@
       </trans-unit>
       <trans-unit id="8497528947328199741" datatype="html">
         <source>Time</source>
-        <target state="new">Time</target>
+        <target state="translated">Tid</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/quantum-circuit-board.component.ts</context>
           <context context-type="linenumber">80</context>
@@ -8146,7 +8146,7 @@
       </trans-unit>
       <trans-unit id="2282740286795786266" datatype="html">
         <source>Qubit</source>
-        <target state="new">Qubit</target>
+        <target state="translated">Qubit</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/quantum-circuit-board.component.ts</context>
           <context context-type="linenumber">81</context>
@@ -8154,7 +8154,7 @@
       </trans-unit>
       <trans-unit id="8968030053137661433" datatype="html">
         <source>Output</source>
-        <target state="new">Output</target>
+        <target state="translated">Utgång</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/quantum-circuit-board.component.ts</context>
           <context context-type="linenumber">169</context>
@@ -8162,7 +8162,7 @@
       </trans-unit>
       <trans-unit id="370189395688019936" datatype="html">
         <source>Drag gate to circuit</source>
-        <target state="new">Drag gate to circuit</target>
+        <target state="translated">Dra grind till krets</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/quantum-gate-menu.component.ts</context>
           <context context-type="linenumber">22</context>
@@ -8170,7 +8170,7 @@
       </trans-unit>
       <trans-unit id="4215858884470188361" datatype="html">
         <source>This gate can't be edited</source>
-        <target state="new">This gate can't be edited</target>
+        <target state="translated">Denna grind kan inte redigeras</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/quantum-toolbox.component.ts</context>
           <context context-type="linenumber">18</context>
@@ -8178,7 +8178,7 @@
       </trans-unit>
       <trans-unit id="3156133562193660103" datatype="html">
         <source>Matrix</source>
-        <target state="new">Matrix</target>
+        <target state="translated">Matris</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/quantum-toolbox.component.ts</context>
           <context context-type="linenumber">27</context>
@@ -8186,7 +8186,7 @@
       </trans-unit>
       <trans-unit id="2348040847528975404" datatype="html">
         <source>Controls</source>
-        <target state="new">Controls</target>
+        <target state="translated">Kontroller</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/quantum-toolbox.component.ts</context>
           <context context-type="linenumber">38</context>
@@ -8194,7 +8194,7 @@
       </trans-unit>
       <trans-unit id="3583886527803327688" datatype="html">
         <source>Answer doesn't satisfy condition:</source>
-        <target state="new">Answer doesn't satisfy condition:</target>
+        <target state="translated">Svaret uppfyller inte villkoret:</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/quantum-error.component.ts</context>
           <context context-type="linenumber">9</context>
@@ -8202,7 +8202,7 @@
       </trans-unit>
       <trans-unit id="1151624068238912535" datatype="html">
         <source>With values:</source>
-        <target state="new">With values:</target>
+        <target state="translated">Med värden:</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/quantum-error.component.ts</context>
           <context context-type="linenumber">11</context>
@@ -8210,7 +8210,7 @@
       </trans-unit>
       <trans-unit id="5819666844474822775" datatype="html">
         <source>Unable to interpret condition:</source>
-        <target state="new">Unable to interpret condition:</target>
+        <target state="translated">Det går inte att tolka villkoret:</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/quantum-error.component.ts</context>
           <context context-type="linenumber">16</context>
@@ -8218,7 +8218,7 @@
       </trans-unit>
       <trans-unit id="2468017285640072870" datatype="html">
         <source>Condition has invalid characters:</source>
-        <target state="new">Condition has invalid characters:</target>
+        <target state="translated">Villkoret har ogiltiga tecken:</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/quantum-error.component.ts</context>
           <context context-type="linenumber">21</context>
@@ -8226,7 +8226,7 @@
       </trans-unit>
       <trans-unit id="4328859015715796236" datatype="html">
         <source>Failed to parse matrix from input:</source>
-        <target state="new">Failed to parse matrix from input:</target>
+        <target state="translated">Misslyckades med att analysera matrisen från indata:</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/quantum-error.component.ts</context>
           <context context-type="linenumber">26</context>
@@ -8234,7 +8234,7 @@
       </trans-unit>
       <trans-unit id="804086259088523340" datatype="html">
         <source>Circuit gives wrong probabilities with input:</source>
-        <target state="new">Circuit gives wrong probabilities with input:</target>
+        <target state="translated">Kretsen ger fel sannolikheter med indata:</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/quantum-error.component.ts</context>
           <context context-type="linenumber">31</context>
@@ -8242,7 +8242,7 @@
       </trans-unit>
       <trans-unit id="862375343902268300" datatype="html">
         <source>copied</source>
-        <target state="new">copied</target>
+        <target state="translated">kopierad</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/quantum-circuit.component.ts</context>
           <context context-type="linenumber">527</context>
@@ -8250,7 +8250,7 @@
       </trans-unit>
       <trans-unit id="5633144232269377096" datatype="html">
         <source>hide</source>
-        <target state="new">hide</target>
+        <target state="translated">dölja</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/quantum-toolbox.component.ts</context>
           <context context-type="linenumber">22</context>
@@ -8258,7 +8258,7 @@
       </trans-unit>
       <trans-unit id="1070803942963424190" datatype="html">
         <source>Invalid custom matrix value <x id="PH" equiv-text="name"/> <x id="PH_1" equiv-text="matrixStr"/></source>
-        <target state="new">Invalid custom matrix value <x id="PH" equiv-text="name"/> <x id="PH_1" equiv-text="matrixStr"/></target>
+        <target state="translated">Ogiltigt värde för anpassad matris <x id="PH" equiv-text="name"/> <x id="PH_1" equiv-text="matrixStr"/></target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/gate.service.ts</context>
           <context context-type="linenumber">280</context>
@@ -8270,7 +8270,7 @@
       </trans-unit>
       <trans-unit id="7921559387951706176" datatype="html">
         <source>Tried to add gate to circuit that is not part of known gates: <x id="PH" equiv-text="gateData.name"/></source>
-        <target state="new">Tried to add gate to circuit that is not part of known gates: <x id="PH" equiv-text="gateData.name"/></target>
+        <target state="translated">Försökte lägga till en grind i en krets som inte ingår i kända grindar: <x id="PH" equiv-text="gateData.name"/></target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/quantum-circuit.component.ts</context>
           <context context-type="linenumber">838,837</context>
@@ -8282,7 +8282,7 @@
       </trans-unit>
       <trans-unit id="4232283552912303724" datatype="html">
         <source>invalid nQubits value <x id="PH" equiv-text="this.markup.nQubits"/></source>
-        <target state="new">invalid nQubits value <x id="PH" equiv-text="this.markup.nQubits"/></target>
+        <target state="translated">ogiltigt värde för nQubits: <x id="PH" equiv-text="this.markup.nQubits"/></target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/quantum-circuit.component.ts</context>
           <context context-type="linenumber">1088,1087</context>
@@ -8290,7 +8290,7 @@
       </trans-unit>
       <trans-unit id="7163187511874522313" datatype="html">
         <source>Got incorrect amount of qubits <x id="PH" equiv-text="this.markup.qubits.length"/>. There needs to be <x id="PH_1" equiv-text="this.markup.nQubits"/> qubits.</source>
-        <target state="new">Got incorrect amount of qubits <x id="PH" equiv-text="this.markup.qubits.length"/>. There needs to be <x id="PH_1" equiv-text="this.markup.nQubits"/> qubits.</target>
+        <target state="translated">Fick fel antal qubits <x id="PH" equiv-text="this.markup.qubits.length"/>. Det måste finnas <x id="PH_1" equiv-text="this.markup.nQubits"/> qubits.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/quantum-circuit.component.ts</context>
           <context context-type="linenumber">1098,1097</context>
@@ -8298,7 +8298,7 @@
       </trans-unit>
       <trans-unit id="5235137580040427813" datatype="html">
         <source>Got incorrect value for qubit: <x id="PH" equiv-text="q.value"/>. Value needs to be either 0 or 1.</source>
-        <target state="new">Got incorrect value for qubit: <x id="PH" equiv-text="q.value"/>. Value needs to be either 0 or 1.</target>
+        <target state="translated">Fick fel värde för qubit: <x id="PH" equiv-text="q.value"/>. Värdet måste vara antingen 0 eller 1.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/quantum-circuit.component.ts</context>
           <context context-type="linenumber">941,940</context>
@@ -8306,7 +8306,7 @@
       </trans-unit>
       <trans-unit id="8574400202974552045" datatype="html">
         <source>saved</source>
-        <target state="new">saved</target>
+        <target state="translated">sparad</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/quantum-circuit.component.ts</context>
           <context context-type="linenumber">500</context>
@@ -8314,7 +8314,7 @@
       </trans-unit>
       <trans-unit id="845184340669679902" datatype="html">
         <source>correct</source>
-        <target state="new">correct</target>
+        <target state="translated">korrekt</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/quantum-circuit.component.ts</context>
           <context context-type="linenumber">502</context>
@@ -8322,7 +8322,7 @@
       </trans-unit>
       <trans-unit id="151222451665123813" datatype="html">
         <source>Couldn't simulate circuit because there were too many qubits</source>
-        <target state="new">Couldn't simulate circuit because there were too many qubits</target>
+        <target state="translated">Det gick inte att simulera kretsen eftersom det fanns för många qubits.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/quantum-error.component.ts</context>
           <context context-type="linenumber">39</context>
@@ -8330,7 +8330,7 @@
       </trans-unit>
       <trans-unit id="3774433155539269558" datatype="html">
         <source>Circuit contains <x id="INTERPOLATION" equiv-text="{{error.qubits}}"/> qubits</source>
-        <target state="new">Circuit contains <x id="INTERPOLATION" equiv-text="{{error.qubits}}"/> qubits</target>
+        <target state="translated">Kretsen innehåller <x id="INTERPOLATION" equiv-text="{{error.qubits}}"/> qubits</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/quantum-error.component.ts</context>
           <context context-type="linenumber">40</context>
@@ -8338,7 +8338,7 @@
       </trans-unit>
       <trans-unit id="661376449876462534" datatype="html">
         <source>But max is <x id="INTERPOLATION" equiv-text="{{error.maxQubits}}"/></source>
-        <target state="new">But max is <x id="INTERPOLATION" equiv-text="{{error.maxQubits}}"/></target>
+        <target state="translated">Men maximalt antal är <x id="INTERPOLATION" equiv-text="{{error.maxQubits}}"/></target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/quantum-error.component.ts</context>
           <context context-type="linenumber">41</context>
@@ -8346,7 +8346,7 @@
       </trans-unit>
       <trans-unit id="9063698038582773958" datatype="html">
         <source>Too many qubits for browser simulator. Try changing simulate attribute to "server".</source>
-        <target state="new">Too many qubits for browser simulator. Try changing simulate attribute to "server".</target>
+        <target state="translated">För många qubits för webbläsarsimulatorn. Försök att ändra simuleringsattributet till "server".</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/quantum-simulation.ts</context>
           <context context-type="linenumber">451</context>
@@ -8354,7 +8354,7 @@
       </trans-unit>
       <trans-unit id="642381033692235501" datatype="html">
         <source>modelInput contains invalid regex pattern</source>
-        <target state="new">modelInput contains invalid regex pattern</target>
+        <target state="translated">modelInput innehåller ett ogiltigt regex-mönster</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/quantum-error.component.ts</context>
           <context context-type="linenumber">45</context>
@@ -8362,7 +8362,7 @@
       </trans-unit>
       <trans-unit id="7989584202803202902" datatype="html">
         <source>Expected</source>
-        <target state="new">Expected</target>
+        <target state="translated">Förväntad</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/quantum-error.component.ts</context>
           <context context-type="linenumber">41</context>
@@ -8370,7 +8370,7 @@
       </trans-unit>
       <trans-unit id="2628961601867476622" datatype="html">
         <source>Actual</source>
-        <target state="new">Actual</target>
+        <target state="translated">Verklig</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/quantum-error.component.ts</context>
           <context context-type="linenumber">42</context>
@@ -8378,7 +8378,7 @@
       </trans-unit>
       <trans-unit id="9205109434477920315" datatype="html">
         <source>Output probabilities were:</source>
-        <target state="new">Output probabilities were:</target>
+        <target state="translated">Sannolikheter för utfall var:</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/quantum-error.component.ts</context>
           <context context-type="linenumber">36</context>
@@ -8386,7 +8386,7 @@
       </trans-unit>
       <trans-unit id="6193475728133614712" datatype="html">
         <source>Using browser simulator because user isn't logged in: <x id="PH" equiv-text="Users.getCurrent().name"/></source>
-        <target state="new">Using browser simulator because user isn't logged in: <x id="PH" equiv-text="Users.getCurrent().name"/></target>
+        <target state="translated">Använda webbläsarsimulator eftersom användaren inte är inloggad: <x id="PH" equiv-text="Users.getCurrent().name"/></target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/quantum-circuit.component.ts</context>
           <context context-type="linenumber">1089,1088</context>
@@ -8394,7 +8394,7 @@
       </trans-unit>
       <trans-unit id="5374601724902713429" datatype="html">
         <source>Simulator timed out</source>
-        <target state="new">Simulator timed out</target>
+        <target state="translated">Simulatorn tidsinställdes</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/quantum-error.component.ts</context>
           <context context-type="linenumber">74</context>
@@ -8402,7 +8402,7 @@
       </trans-unit>
       <trans-unit id="2503761822693065589" datatype="html">
         <source>Couldn't interpret circuits</source>
-        <target state="new">Couldn't interpret circuits</target>
+        <target state="translated">Kunde inte tolka kretsar</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/quantum-error.component.ts</context>
           <context context-type="linenumber">78</context>
@@ -8410,7 +8410,7 @@
       </trans-unit>
       <trans-unit id="6585102904443570717" datatype="html">
         <source>Couldn't simulate circuit because there were too many moments</source>
-        <target state="new">Couldn't simulate circuit because there were too many moments</target>
+        <target state="translated">Kunde inte simulera kretsar eftersom det fanns för många moment</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/quantum-error.component.ts</context>
           <context context-type="linenumber">69</context>
@@ -8418,7 +8418,7 @@
       </trans-unit>
       <trans-unit id="4633281565605788402" datatype="html">
         <source>Circuit contains <x id="INTERPOLATION" equiv-text="{{error.moments}}"/> moments</source>
-        <target state="new">Circuit contains <x id="INTERPOLATION" equiv-text="{{error.moments}}"/> moments</target>
+        <target state="translated">Kretsen innehåller <x id="INTERPOLATION" equiv-text="{{error.moments}}"/> moments</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/quantum-error.component.ts</context>
           <context context-type="linenumber">70</context>
@@ -8426,7 +8426,7 @@
       </trans-unit>
       <trans-unit id="7408991640539151057" datatype="html">
         <source>Show all rows</source>
-        <target state="new">Show all rows</target>
+        <target state="translated">Visa alla rader</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/quantum-error.component.ts</context>
           <context context-type="linenumber">42</context>
@@ -8434,7 +8434,7 @@
       </trans-unit>
       <trans-unit id="1505321340021272471" datatype="html">
         <source>Simulation time can be extended up to 25 seconds using maxRunTimeout attribute.</source>
-        <target state="new">Simulation time can be extended up to 25 seconds using maxRunTimeout attribute.</target>
+        <target state="translated">Simuleringstiden kan förlängas med upp till 25 sekunder med attributet maxRunTimeout.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/quantum-error.component.ts</context>
           <context context-type="linenumber">93</context>
@@ -8442,7 +8442,7 @@
       </trans-unit>
       <trans-unit id="3834816620880979274" datatype="html">
         <source>The value of maxRunTimeout is too large</source>
-        <target state="new">The value of maxRunTimeout is too large</target>
+        <target state="translated">Värdet på maxRunTimeout är för stort</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/quantum-error.component.ts</context>
           <context context-type="linenumber">97</context>
@@ -8450,7 +8450,7 @@
       </trans-unit>
       <trans-unit id="7385899603772624470" datatype="html">
         <source>maxRunTimeout has value: <x id="INTERPOLATION" equiv-text="{{error.timeout}}"/></source>
-        <target state="new">maxRunTimeout has value: <x id="INTERPOLATION" equiv-text="{{error.timeout}}"/></target>
+        <target state="translated">maxRunTimeout har värdet:: <x id="INTERPOLATION" equiv-text="{{error.timeout}}"/></target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/quantum-error.component.ts</context>
           <context context-type="linenumber">98</context>
@@ -8458,7 +8458,7 @@
       </trans-unit>
       <trans-unit id="562104592773648088" datatype="html">
         <source>But maximum is: <x id="INTERPOLATION" equiv-text="{{error.maxTimeout}}"/></source>
-        <target state="new">But maximum is: <x id="INTERPOLATION" equiv-text="{{error.maxTimeout}}"/></target>
+        <target state="translated">Men maximalt är: <x id="INTERPOLATION" equiv-text="{{error.maxTimeout}}"/></target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/quantum-error.component.ts</context>
           <context context-type="linenumber">99</context>
@@ -8466,7 +8466,7 @@
       </trans-unit>
       <trans-unit id="8367402001813745515" datatype="html">
         <source>Bit</source>
-        <target state="new">Bit</target>
+        <target state="translated">Bit</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/quantum-circuit-board.component.ts</context>
           <context context-type="linenumber">71</context>
@@ -8482,7 +8482,7 @@
       </trans-unit>
       <trans-unit id="5246819740476460403" datatype="html">
         <source>Left</source>
-        <target state="translated">vänster</target>
+        <target state="translated">Vänster</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
           <context context-type="linenumber">363</context>
@@ -8490,7 +8490,7 @@
       </trans-unit>
       <trans-unit id="4808834755787530462" datatype="html">
         <source>Right</source>
-        <target state="translated">höger</target>
+        <target state="translated">Höger</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
           <context context-type="linenumber">367</context>
@@ -8506,7 +8506,7 @@
       </trans-unit>
       <trans-unit id="219841344342795336" datatype="html">
         <source> Right of the active paragraph, marked with a pencil icon.</source>
-        <target state="translated">Till höger om det aktiva stycket, markerat med en pennikon.</target>
+        <target state="translated"> Till höger om det aktiva stycket, markerat med en pennikon.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
           <context context-type="linenumber">375</context>
@@ -8514,7 +8514,7 @@
       </trans-unit>
       <trans-unit id="7841551725502756065" datatype="html">
         <source>Output probabilities</source>
-        <target state="new">Output probabilities</target>
+        <target state="translated">Sannolikheter för utdata</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/quantum-stats.component.ts</context>
           <context context-type="linenumber">161</context>
@@ -8522,7 +8522,7 @@
       </trans-unit>
       <trans-unit id="689292269674458518" datatype="html">
         <source>Users who have an active lock on task <x id="INTERPOLATION" equiv-text="{{data.taskId}}"/></source>
-        <target state="new">Users who have an active lock on task <x id="INTERPOLATION" equiv-text="{{data.taskId}}"/></target>
+        <target state="translated">Användare som har ett aktivt lås på uppgiften <x id="INTERPOLATION" equiv-text="{{data.taskId}}"/></target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/answer/reset-task-lock-dialog-component.ts</context>
           <context context-type="linenumber">37,38</context>
@@ -8530,7 +8530,7 @@
       </trans-unit>
       <trans-unit id="8819283978792517976" datatype="html">
         <source>Find user</source>
-        <target state="new">Find user</target>
+        <target state="translated">Hitta användare</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/answer/reset-task-lock-dialog-component.ts</context>
           <context context-type="linenumber">39,40</context>
@@ -8562,7 +8562,7 @@
       </trans-unit>
       <trans-unit id="5401264506294323560" datatype="html">
         <source>Clear task locking for task <x id="PH" equiv-text="this.data.taskId"/></source>
-        <target state="translated">Tydlig uppgiftslåsning för uppgift</target>
+        <target state="translated">Tydlig uppgiftslåsning för uppgift <x id="PH" equiv-text="this.data.taskId"/></target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/answer/reset-task-lock-dialog-component.ts</context>
           <context context-type="linenumber">110</context>
@@ -8640,7 +8640,7 @@
       </trans-unit>
       <trans-unit id="7462301153729425254" datatype="html">
         <source>Export</source>
-        <target state="new">Export</target>
+        <target state="translated">Export</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/quantum-stats.component.ts</context>
           <context context-type="linenumber">39</context>
@@ -8648,7 +8648,7 @@
       </trans-unit>
       <trans-unit id="3686315288514138686" datatype="html">
         <source>Probabilities</source>
-        <target state="new">Probabilities</target>
+        <target state="translated">Sannolikheter</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/quantum-stats.component.ts</context>
           <context context-type="linenumber">44</context>
@@ -8656,7 +8656,7 @@
       </trans-unit>
       <trans-unit id="7253891147289854757" datatype="html">
         <source>State vector</source>
-        <target state="new">State vector</target>
+        <target state="translated">Statlig vektor</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/quantum-stats.component.ts</context>
           <context context-type="linenumber">47</context>
@@ -8664,7 +8664,7 @@
       </trans-unit>
       <trans-unit id="8980375993935541237" datatype="html">
         <source>Step</source>
-        <target state="new">Step</target>
+        <target state="translated">Steg</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/quantum-circuit-board.component.ts</context>
           <context context-type="linenumber">171</context>
@@ -8672,7 +8672,7 @@
       </trans-unit>
       <trans-unit id="4278569870596030612" datatype="html">
         <source>Got incorrect amount of outputNames: <x id="PH" equiv-text="this.markup.outputNames.length"/>. There needs to be <x id="PH_1" equiv-text="this.markup.nQubits"/> names.</source>
-        <target state="new">Got incorrect amount of outputNames: <x id="PH" equiv-text="this.markup.outputNames.length"/>. There needs to be <x id="PH_1" equiv-text="this.markup.nQubits"/> names.</target>
+        <target state="translated">Fick fel antal outputNames: <x id="PH" equiv-text="this.markup.outputNames.length"/>. Det måste finnas <x id="PH_1" equiv-text="this.markup.nQubits"/> namn.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/quantum-circuit.component.ts</context>
           <context context-type="linenumber">1189,1188</context>
@@ -8744,7 +8744,7 @@
       </trans-unit>
       <trans-unit id="1372998745713768518" datatype="html">
         <source>hideGateInfo contains invalid regex: <x id="PH" equiv-text="name"/></source>
-        <target state="new">hideGateInfo contains invalid regex: <x id="PH" equiv-text="name"/></target>
+        <target state="translated">hideGateInfo innehåller ogiltig regex: {namn}</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/quantum-circuit.component.ts</context>
           <context context-type="linenumber">860,859</context>
@@ -8792,7 +8792,7 @@
       </trans-unit>
       <trans-unit id="2859819736874880280" datatype="html">
         <source>Logging in, please wait...</source>
-        <target state="new">Logging in, please wait...</target>
+        <target state="translated">Loggar in, vänta...</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/user-code-login.component.ts</context>
           <context context-type="linenumber">35</context>
@@ -8800,7 +8800,7 @@
       </trans-unit>
       <trans-unit id="2298247937024475895" datatype="html">
         <source>Login code not yet active. Make sure you use the correct code or ask the code to be activated.</source>
-        <target state="new">Login code not yet active. Make sure you use the correct code or ask the code to be activated.</target>
+        <target state="translated">Inloggningskoden är inte ännu aktiv. Kontrollera att du har rätt kod eller be att din kod aktiveras.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/user-code-login.component.ts</context>
           <context context-type="linenumber">10,8</context>
@@ -8808,7 +8808,7 @@
       </trans-unit>
       <trans-unit id="563854068285277269" datatype="html">
         <source>Login code expired. Make sure you use the correct code or ask for a new code.</source>
-        <target state="new">Login code expired. Make sure you use the correct code or ask for a new code.</target>
+        <target state="translated">Inloggningskoden har gått ut. Kontrollera att du använde rätt kod eller be om en ny kod.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/user-code-login.component.ts</context>
           <context context-type="linenumber">11</context>
@@ -8816,7 +8816,7 @@
       </trans-unit>
       <trans-unit id="5533111384851624507" datatype="html">
         <source>Invalid login code. Check that you entered it correctly.</source>
-        <target state="new">Invalid login code. Check that you entered it correctly.</target>
+        <target state="translated">Fel inloggningskod. Kontrollera att du har angett den korrekt.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/user-code-login.component.ts</context>
           <context context-type="linenumber">9,8</context>
@@ -8824,7 +8824,7 @@
       </trans-unit>
       <trans-unit id="8157087931446896313" datatype="html">
         <source>Anti-controls</source>
-        <target state="new">Anti-controls</target>
+        <target state="translated">Motkontroller</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/quantum-toolbox.component.ts</context>
           <context context-type="linenumber">43</context>
@@ -8832,7 +8832,7 @@
       </trans-unit>
       <trans-unit id="6266613639885813372" datatype="html">
         <source>Could not load task data. Check your internet connection and try again.</source>
-        <target state="new">Could not load task data. Check your internet connection and try again.</target>
+        <target state="translated">Informationen om uppgiften kunde inte laddas. Försök spara ditt svar. När sparandet har lyckats, stäng det här meddelandet.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/answer/answer-browser.component.ts</context>
           <context context-type="linenumber">1555</context>
@@ -8844,7 +8844,7 @@
       </trans-unit>
       <trans-unit id="142265385893814401" datatype="html">
         <source>There is an issue with the server. Try to save your work and reload the page.</source>
-        <target state="new">There is an issue with the server. Try to save your work and reload the page.</target>
+        <target state="translated">Anslutningsproblem till servern, försök spara ditt svar igen. När sparandet har lyckats, stäng det här meddelandet.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/answer/answer-browser.component.ts</context>
           <context context-type="linenumber">1559</context>
@@ -8888,7 +8888,7 @@
       </trans-unit>
       <trans-unit id="1805269398693443899" datatype="html">
         <source>Error: <x id="START_TAG_SPAN" ctype="x-span" equiv-text="&lt;span [innerHTML]=&quot;error | purify&quot;>"/><x id="CLOSE_TAG_SPAN" ctype="x-span" equiv-text="&lt;/span>"/></source>
-        <target state="new">Error: <x id="START_TAG_SPAN" ctype="x-span" equiv-text="&lt;span [innerHTML]=&quot;error | purify&quot;>"/><x id="CLOSE_TAG_SPAN" ctype="x-span" equiv-text="&lt;/span>"/></target>
+        <target state="translated">Fel: <x id="START_TAG_SPAN" ctype="x-span" equiv-text="&lt;span [innerHTML]=&quot;error | purify&quot;>"/><x id="CLOSE_TAG_SPAN" ctype="x-span" equiv-text="&lt;/span>"/></target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/ui/error-description.component.ts</context>
           <context context-type="linenumber">20</context>
@@ -8896,7 +8896,7 @@
       </trans-unit>
       <trans-unit id="2697626611804615439" datatype="html">
         <source>Members to add</source>
-        <target state="new">Members to add</target>
+        <target state="translated">Medlemmar som ska läggas till</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/messaging/manage/message-list-admin.component.ts</context>
           <context context-type="linenumber">264,265</context>
@@ -8904,7 +8904,7 @@
       </trans-unit>
       <trans-unit id="7599262627652492548" datatype="html">
         <source>Extra options</source>
-        <target state="new">Extra options</target>
+        <target state="translated">Avancerade inställningar</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/messaging/manage/message-list-admin.component.ts</context>
           <context context-type="linenumber">290,291</context>
@@ -8912,7 +8912,7 @@
       </trans-unit>
       <trans-unit id="6402454233341252035" datatype="html">
         <source>Remove other members from the list</source>
-        <target state="new">Remove other members from the list</target>
+        <target state="translated">Radera de andra medlemmarna från listan</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/messaging/manage/message-list-admin.component.ts</context>
           <context context-type="linenumber">297</context>
@@ -8920,7 +8920,7 @@
       </trans-unit>
       <trans-unit id="1697930479781692390" datatype="html">
         <source> This will also remove all members not present in the list above. </source>
-        <target state="new"> This will also remove all members not present in the list above. </target>
+        <target state="translated"> Detta raderar också alla medlemmar som inte finns med i listan ovan. </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/messaging/manage/message-list-admin.component.ts</context>
           <context context-type="linenumber">307</context>
@@ -8928,7 +8928,7 @@
       </trans-unit>
       <trans-unit id="5113952942833093690" datatype="html">
         <source>You do not have the right to book this event</source>
-        <target state="new">You do not have the right to book this event</target>
+        <target state="translated">Du har inte rätt att boka detta evenemang</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/calendar/calendar-event-dialog.component.ts</context>
           <context context-type="linenumber">752</context>
@@ -8976,7 +8976,7 @@
       </trans-unit>
       <trans-unit id="8875063726542017107" datatype="html">
         <source>Could not finish uploading. Please check your internet connection and try again.</source>
-        <target state="new">Could not finish uploading. Please check your internet connection and try again.</target>
+        <target state="translated">Det gick inte att avsluta uppladdningen. Kontrollera din internetanslutning och försök igen.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">modules/cs/js/util/file-select.ts</context>
           <context context-type="linenumber">296,295</context>
@@ -9008,7 +9008,7 @@
       </trans-unit>
       <trans-unit id="3217189464299162022" datatype="html">
         <source>Quick themes</source>
-        <target state="new">Quick themes</target>
+        <target state="translated">Snabba teman</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/sidebarmenu/tabs/settings-tab.component.ts</context>
           <context context-type="linenumber">59,60</context>
@@ -9016,7 +9016,7 @@
       </trans-unit>
       <trans-unit id="853806060840861954" datatype="html">
         <source>Quick select styles</source>
-        <target state="new">Quick select styles</target>
+        <target state="translated">Snabbval av stilar</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
           <context context-type="linenumber">189</context>
@@ -9024,7 +9024,7 @@
       </trans-unit>
       <trans-unit id="4161663426352478871" datatype="html">
         <source> Styles that are available in the Quick select menu (in the Settings menu on the left of the page) are listed here. You can review and remove styles that you use. </source>
-        <target state="new"> Styles that are available in the Quick select menu (in the Settings menu on the left of the page) are listed here. You can review and remove styles that you use. </target>
+        <target state="translated"> Här listas de stilar som finns tillgängliga i menyn Snabbval (i menyn Inställningar till vänster på sidan). Du kan granska och ta bort stilar som du använder. </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
           <context context-type="linenumber">192,193</context>
@@ -9032,7 +9032,7 @@
       </trans-unit>
       <trans-unit id="4570636567629984302" datatype="html">
         <source> You can also reorder styles by dragging them in the list below. </source>
-        <target state="new"> You can also reorder styles by dragging them in the list below. </target>
+        <target state="translated"> Du kan också ändra ordningen på stilarna genom att dra dem i listan nedan. </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
           <context context-type="linenumber">196</context>
@@ -9040,7 +9040,7 @@
       </trans-unit>
       <trans-unit id="8720702577528832728" datatype="html">
         <source> You have no quick styles selected. You can add styles via the <x id="START_LINK" ctype="x-a" equiv-text="&lt;a (click)=&quot;changeStyleTab(1)&quot;>"/>Available styles<x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a>"/> tab. </source>
-        <target state="new"> You have no quick styles selected. You can add styles via the <x id="START_LINK" ctype="x-a" equiv-text="&lt;a (click)=&quot;changeStyleTab(1)&quot;>"/>Available styles<x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a>"/> tab. </target>
+        <target state="translated"> Du har inte valt några snabbstilar. Du kan lägga till stilar via fliken <x id="START_LINK" ctype="x-a" equiv-text="&lt;a (click)=&quot;changeStyleTab(1)&quot;>"/>Tillgängliga stilar<x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a>"/> </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
           <context context-type="linenumber">206,207</context>
@@ -9048,7 +9048,7 @@
       </trans-unit>
       <trans-unit id="8594707912435167235" datatype="html">
         <source> Add to Quick select </source>
-        <target state="new"> Add to Quick select </target>
+        <target state="translated"> Lägg till i snabbval </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
           <context context-type="linenumber">275</context>
@@ -9064,7 +9064,7 @@
       </trans-unit>
       <trans-unit id="4546255532664748373" datatype="html">
         <source>Add Print Settings </source>
-        <target state="translated">Lägg till utskriftsinställningar</target>
+        <target state="translated">Lägg till utskriftsinställningar </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
           <context context-type="linenumber">336,337</context>
@@ -9088,7 +9088,7 @@
       </trans-unit>
       <trans-unit id="2859819736874880280" datatype="html">
         <source>Logging in, please wait...</source>
-        <target state="new">Logging in, please wait...</target>
+        <target state="translated">Loggar in, vänta...</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/user-code-login.component.ts</context>
           <context context-type="linenumber">35</context>
@@ -9096,7 +9096,7 @@
       </trans-unit>
       <trans-unit id="2298247937024475895" datatype="html">
         <source>Login code not yet active. Make sure you use the correct code or ask the code to be activated.</source>
-        <target state="new">Login code not yet active. Make sure you use the correct code or ask the code to be activated.</target>
+        <target state="translated">Inloggningskoden är inte ännu aktiv. Kontrollera att du har rätt kod eller be att din kod aktiveras.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/user-code-login.component.ts</context>
           <context context-type="linenumber">10,8</context>
@@ -9104,7 +9104,7 @@
       </trans-unit>
       <trans-unit id="563854068285277269" datatype="html">
         <source>Login code expired. Make sure you use the correct code or ask for a new code.</source>
-        <target state="new">Login code expired. Make sure you use the correct code or ask for a new code.</target>
+        <target state="translated">Inloggningskoden har gått ut. Kontrollera att du använde rätt kod eller be om en ny kod.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/user-code-login.component.ts</context>
           <context context-type="linenumber">11</context>
@@ -9112,7 +9112,7 @@
       </trans-unit>
       <trans-unit id="5533111384851624507" datatype="html">
         <source>Invalid login code. Check that you entered it correctly.</source>
-        <target state="new">Invalid login code. Check that you entered it correctly.</target>
+        <target state="translated">Fel inloggningskod. Kontrollera att du har angett den korrekt.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/user-code-login.component.ts</context>
           <context context-type="linenumber">9,8</context>
@@ -9336,7 +9336,7 @@
       </trans-unit>
       <trans-unit id="187187500641108332" datatype="html">
         <source><x id="INTERPOLATION" equiv-text="Folder() ?? 'Enter the location or leave empty'}}"/></source>
-        <target state="new"><x id="INTERPOLATION" equiv-text="Folder() ?? 'Enter the location or leave empty'}}"/></target>
+        <target state="translated">{Folder() ?? "Ange plats eller lämna tom"}}}</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/user-group-dialog.component.ts</context>
           <context context-type="linenumber">61,62</context>
@@ -9564,7 +9564,7 @@
       </trans-unit>
       <trans-unit id="1867936196876545067" datatype="html">
         <source>Could not fetch groups. Details: <x id="PH" equiv-text="groups.result.error.error"/></source>
-        <target state="new">Could not fetch groups. Details: <x id="PH" equiv-text="groups.result.error.error"/></target>
+        <target state="translated">Gruppens information kunde inte hämtas. Mer information: <x id="PH" equiv-text="groups.result.error.error"/></target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
           <context context-type="linenumber">844</context>
@@ -9572,7 +9572,7 @@
       </trans-unit>
       <trans-unit id="6321452614407911843" datatype="html">
         <source>Could not copy group members. Details: <x id="PH" equiv-text="copyRes.result.error.error"/></source>
-        <target state="new">Could not copy group members. Details: <x id="PH" equiv-text="copyRes.result.error.error"/></target>
+        <target state="translated">Gruppen kunde inte kopieras. Mer infrmation: <x id="PH" equiv-text="copyRes.result.error.error"/></target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
           <context context-type="linenumber">988,987</context>
@@ -9600,7 +9600,7 @@ Det går inte att ångra den här åtgärden!
       </trans-unit>
       <trans-unit id="7752545211198399953" datatype="html">
         <source>Could not delete group. Details <x id="PH" equiv-text="res.result.error.error"/></source>
-        <target state="new">Could not delete group. Details <x id="PH" equiv-text="res.result.error.error"/></target>
+        <target state="translated">Gruppen kunde inte tas bort. Mer information: <x id="PH" equiv-text="res.result.error.error"/></target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
           <context context-type="linenumber">1018,1017</context>
@@ -9656,7 +9656,7 @@ Det går inte att ångra den här åtgärden!
       </trans-unit>
       <trans-unit id="2564339447423195125" datatype="html">
         <source>Show all school's exam groups</source>
-        <target state="new">Show all school's exam groups</target>
+        <target state="translated">Visa skolans alla provgrupper</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
           <context context-type="linenumber">239,240</context>
@@ -9664,7 +9664,7 @@ Det går inte att ångra den här åtgärden!
       </trans-unit>
       <trans-unit id="2746761227052331667" datatype="html">
         <source>Extra time?</source>
-        <target state="new">Extra time?</target>
+        <target state="translated">Tilläggstid?</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
           <context context-type="linenumber">336,337</context>
@@ -9672,7 +9672,7 @@ Det går inte att ångra den här åtgärden!
       </trans-unit>
       <trans-unit id="4522126822651023664" datatype="html">
         <source>Delete member</source>
-        <target state="new">Delete member</target>
+        <target state="translated">Ta bort eleven</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
           <context context-type="linenumber">367,368</context>
@@ -9680,7 +9680,7 @@ Det går inte att ångra den här åtgärden!
       </trans-unit>
       <trans-unit id="235606749866925302" datatype="html">
         <source> Print login codes (Main exam) </source>
-        <target state="new"> Print login codes (Main exam) </target>
+        <target state="translated"> Skriv ut inloggningskoderna (egentligt prov) </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
           <context context-type="linenumber">401</context>
@@ -9688,7 +9688,7 @@ Det går inte att ångra den här åtgärden!
       </trans-unit>
       <trans-unit id="3948357450855446073" datatype="html">
         <source> Print login codes (Practice exam) </source>
-        <target state="new"> Print login codes (Practice exam) </target>
+        <target state="translated"> Skriv ut inloggningskoderna (övningsprov) </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
           <context context-type="linenumber">405</context>
@@ -9696,7 +9696,7 @@ Det går inte att ångra den här åtgärden!
       </trans-unit>
       <trans-unit id="1925784578966988012" datatype="html">
         <source> Begin by selecting the exam to be organized for the group. </source>
-        <target state="new"> Begin by selecting the exam to be organized for the group. </target>
+        <target state="translated"> Börja med att välja det prov du tänker hålla nu. </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
           <context context-type="linenumber">430</context>
@@ -9704,7 +9704,7 @@ Det går inte att ångra den här åtgärden!
       </trans-unit>
       <trans-unit id="1428246682960506945" datatype="html">
         <source>Select exam</source>
-        <target state="new">Select exam</target>
+        <target state="translated">Välj prov</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
           <context context-type="linenumber">433,434</context>
@@ -9712,7 +9712,7 @@ Det går inte att ångra den här åtgärden!
       </trans-unit>
       <trans-unit id="8481761772485093570" datatype="html">
         <source> Review and correct student answers </source>
-        <target state="new"> Review and correct student answers </target>
+        <target state="translated"> Titta på och korrigera elevernas svar </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
           <context context-type="linenumber">453</context>
@@ -9720,7 +9720,7 @@ Det går inte att ångra den här åtgärden!
       </trans-unit>
       <trans-unit id="2666020517194537371" datatype="html">
         <source>Hold an exam</source>
-        <target state="new">Hold an exam</target>
+        <target state="translated">Håll provet</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
           <context context-type="linenumber">458,460</context>
@@ -9728,7 +9728,7 @@ Det går inte att ångra den här åtgärden!
       </trans-unit>
       <trans-unit id="7572057044047810946" datatype="html">
         <source> Complete each step below to hold an exam. The checklist updates automatically with the current progress. </source>
-        <target state="new"> Complete each step below to hold an exam. The checklist updates automatically with the current progress. </target>
+        <target state="translated"> Utför nedanstående delsteg för att påbörja provet. Checklistan uppdateras automatiskt enligt det aktuella läget. </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
           <context context-type="linenumber">461,462</context>
@@ -9736,7 +9736,7 @@ Det går inte att ångra den här åtgärden!
       </trans-unit>
       <trans-unit id="3417427108974272278" datatype="html">
         <source>Mark as done</source>
-        <target state="new">Mark as done</target>
+        <target state="translated">Markera som gjort</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
           <context context-type="linenumber">468</context>
@@ -9772,7 +9772,7 @@ Det går inte att ångra den här åtgärden!
       </trans-unit>
       <trans-unit id="1704115492638984963" datatype="html">
         <source>Activate login codes</source>
-        <target state="new">Activate login codes</target>
+        <target state="translated">Aktivera inloggningskoderna</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
           <context context-type="linenumber">475,476</context>
@@ -9784,7 +9784,7 @@ Det går inte att ångra den här åtgärden!
       </trans-unit>
       <trans-unit id="5856526190707156104" datatype="html">
         <source> Press the toggle button to activate login codes for the exam group </source>
-        <target state="new"> Press the toggle button to activate login codes for the exam group </target>
+        <target state="translated"> Aktivera provgruppens inloggningskoder med knappen bredvid </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
           <context context-type="linenumber">478</context>
@@ -9792,7 +9792,7 @@ Det går inte att ångra den här åtgärden!
       </trans-unit>
       <trans-unit id="7763153973602892258" datatype="html">
         <source> The login codes are active! Students can now log in using the login codes. </source>
-        <target state="new"> The login codes are active! Students can now log in using the login codes. </target>
+        <target state="translated"> Inloggningskoderna är aktiva! Eleverna kan nu logga in i provsystemet. </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
           <context context-type="linenumber">481</context>
@@ -9800,7 +9800,7 @@ Det går inte att ångra den här åtgärden!
       </trans-unit>
       <trans-unit id="2857820148807201086" datatype="html">
         <source>Disable login codes</source>
-        <target state="new">Disable login codes</target>
+        <target state="translated">Inaktivera inloggningskoderna</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
           <context context-type="linenumber">491,492</context>
@@ -9812,7 +9812,7 @@ Det går inte att ångra den här åtgärden!
       </trans-unit>
       <trans-unit id="3438605880625234523" datatype="html">
         <source>Ask students to log in to the exam page:</source>
-        <target state="new">Ask students to log in to the exam page:</target>
+        <target state="translated">Be eleverna logga i provsystemet:</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
           <context context-type="linenumber">507</context>
@@ -9820,7 +9820,7 @@ Det går inte att ångra den här åtgärden!
       </trans-unit>
       <trans-unit id="6839138864615473489" datatype="html">
         <source>Not selected</source>
-        <target state="new">Not selected</target>
+        <target state="translated">Inget prov valt</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
           <context context-type="linenumber">510</context>
@@ -9832,7 +9832,7 @@ Det går inte att ångra den här åtgärden!
       </trans-unit>
       <trans-unit id="5847778941274205961" datatype="html">
         <source>Mark not done</source>
-        <target state="new">Mark not done</target>
+        <target state="translated">Markera som ogjord</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
           <context context-type="linenumber">519,520</context>
@@ -9844,7 +9844,7 @@ Det går inte att ångra den här åtgärden!
       </trans-unit>
       <trans-unit id="7947954147576231337" datatype="html">
         <source> Check that the students have logged in and are ready to begin the exam </source>
-        <target state="new"> Check that the students have logged in and are ready to begin the exam </target>
+        <target state="translated"> Kontrollera att eleverna har loggat in och är redo att börja </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
           <context context-type="linenumber">535</context>
@@ -9852,7 +9852,7 @@ Det går inte att ångra den här åtgärden!
       </trans-unit>
       <trans-unit id="2306629529416420218" datatype="html">
         <source>Begin exam</source>
-        <target state="new">Begin exam</target>
+        <target state="translated">Påbörja provet</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
           <context context-type="linenumber">559,560</context>
@@ -9860,7 +9860,7 @@ Det går inte att ångra den här åtgärden!
       </trans-unit>
       <trans-unit id="6625041605734206208" datatype="html">
         <source> Press the toggle button to start the exam </source>
-        <target state="new"> Press the toggle button to start the exam </target>
+        <target state="translated"> Påbörja provet med knappen bredvid </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
           <context context-type="linenumber">561</context>
@@ -9868,7 +9868,7 @@ Det går inte att ångra den här åtgärden!
       </trans-unit>
       <trans-unit id="5539097211548480304" datatype="html">
         <source>Start exam</source>
-        <target state="new">Start exam</target>
+        <target state="translated">Påbörja provet</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
           <context context-type="linenumber">571,572</context>
@@ -9876,7 +9876,7 @@ Det går inte att ångra den här åtgärden!
       </trans-unit>
       <trans-unit id="6053613986477259699" datatype="html">
         <source>Interrupt exam</source>
-        <target state="new">Interrupt exam</target>
+        <target state="translated">Avbryt provet</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
           <context context-type="linenumber">573,574</context>
@@ -9884,7 +9884,7 @@ Det går inte att ångra den här åtgärden!
       </trans-unit>
       <trans-unit id="6588990392613062215" datatype="html">
         <source>End the exam for all except students with additional time</source>
-        <target state="new">End the exam for all except students with additional time</target>
+        <target state="translated">Avsluta provet för de utan tilläggstid</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
           <context context-type="linenumber">589,590</context>
@@ -9892,7 +9892,7 @@ Det går inte att ångra den här åtgärden!
       </trans-unit>
       <trans-unit id="5165726947967046908" datatype="html">
         <source> Exam ended for main group! Students with additional time can continue the exam. </source>
-        <target state="new"> Exam ended for main group! Students with additional time can continue the exam. </target>
+        <target state="translated"> Provet är avslutat för de utan tilläggstid! De med tilläggstid kan fortsätta göra provet. </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
           <context context-type="linenumber">594</context>
@@ -9900,7 +9900,7 @@ Det går inte att ångra den här åtgärden!
       </trans-unit>
       <trans-unit id="1417286430246097816" datatype="html">
         <source>End exam for main group</source>
-        <target state="new">End exam for main group</target>
+        <target state="translated">Avsluta provet för de utan tilläggstid</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
           <context context-type="linenumber">602,603</context>
@@ -9908,7 +9908,7 @@ Det går inte att ångra den här åtgärden!
       </trans-unit>
       <trans-unit id="6409869804766250910" datatype="html">
         <source>Resume exam for main group</source>
-        <target state="new">Resume exam for main group</target>
+        <target state="translated">Fortsätt provet för de utan tilläggstid</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
           <context context-type="linenumber">604,605</context>
@@ -9916,7 +9916,7 @@ Det går inte att ångra den här åtgärden!
       </trans-unit>
       <trans-unit id="1330946910288373720" datatype="html">
         <source>End the exam for all students</source>
-        <target state="new">End the exam for all students</target>
+        <target state="translated">Avluta provet för alla elever</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
           <context context-type="linenumber">619,620</context>
@@ -9924,7 +9924,7 @@ Det går inte att ångra den här åtgärden!
       </trans-unit>
       <trans-unit id="4878559838788327137" datatype="html">
         <source> Exam ended for all students! Remember to disable the login codes. </source>
-        <target state="new"> Exam ended for all students! Remember to disable the login codes. </target>
+        <target state="translated"> Provet är avslutat för alla elever! Kom ihåg att inaktivera inloggningskoderna. </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
           <context context-type="linenumber">624</context>
@@ -9932,7 +9932,7 @@ Det går inte att ångra den här åtgärden!
       </trans-unit>
       <trans-unit id="1822532497533207549" datatype="html">
         <source>End exam for all students</source>
-        <target state="new">End exam for all students</target>
+        <target state="translated">Avsluta provet för alla elever</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
           <context context-type="linenumber">631,632</context>
@@ -9940,7 +9940,7 @@ Det går inte att ångra den här åtgärden!
       </trans-unit>
       <trans-unit id="3927514884221500695" datatype="html">
         <source>Resume exam for all students</source>
-        <target state="new">Resume exam for all students</target>
+        <target state="translated">Fortsätt provet för alla elever</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
           <context context-type="linenumber">633,634</context>
@@ -9948,7 +9948,7 @@ Det går inte att ångra den här åtgärden!
       </trans-unit>
       <trans-unit id="5702368508125388245" datatype="html">
         <source> Remember to disable the login codes after the exam has ended </source>
-        <target state="new"> Remember to disable the login codes after the exam has ended </target>
+        <target state="translated"> Kom ihåg att inaktivera inloggningskoderna efter provet </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
           <context context-type="linenumber">651</context>
@@ -9956,7 +9956,7 @@ Det går inte att ångra den här åtgärden!
       </trans-unit>
       <trans-unit id="2612225160178031374" datatype="html">
         <source> Disable login codes </source>
-        <target state="new"> Disable login codes </target>
+        <target state="translated"> Inaktivera inloggningskoderna </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
           <context context-type="linenumber">658</context>
@@ -9967,10 +9967,10 @@ Det går inte att ångra den här åtgärden!
 Generating new codes will overwrite the existing ones.
 
 Proceed?</source>
-        <target state="new">Some students already have login codes in exam group '<x id="PH" equiv-text="group.readableName"/>'.
-Generating new codes will overwrite the existing ones.
+        <target state="translated">Vissa elever i provgruppen '<x id="PH" equiv-text="group.readableName"/>' har redan en inloggningskod.
+Att skapa nya koder inaktiverar de tidigare koderna. 
 
-Proceed?</target>
+Vill du fortsätta?</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
           <context context-type="linenumber">985</context>
@@ -9978,7 +9978,7 @@ Proceed?</target>
       </trans-unit>
       <trans-unit id="261459206310215803" datatype="html">
         <source>Activate login codes by pressing the toggle button on the right.</source>
-        <target state="new">Activate login codes by pressing the toggle button on the right.</target>
+        <target state="translated">Aktivera inloggningskoderna med knappen bredvid.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
           <context context-type="linenumber">1187,1186</context>
@@ -9986,7 +9986,7 @@ Proceed?</target>
       </trans-unit>
       <trans-unit id="4376405961214089585" datatype="html">
         <source>Begin exam by pressing the toggle button on the right.</source>
-        <target state="new">Begin exam by pressing the toggle button on the right.</target>
+        <target state="translated">Påbörja provet med knappen bredvid.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
           <context context-type="linenumber">1199,1198</context>
@@ -9994,7 +9994,7 @@ Proceed?</target>
       </trans-unit>
       <trans-unit id="7106920937073324447" datatype="html">
         <source>End the exam by pressing the toggle button on the right.</source>
-        <target state="new">End the exam by pressing the toggle button on the right.</target>
+        <target state="translated">Avsluta provet med knappen bredvid.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
           <context context-type="linenumber">1205,1204</context>
@@ -10006,7 +10006,7 @@ Proceed?</target>
       </trans-unit>
       <trans-unit id="5684094525201516969" datatype="html">
         <source>Disable login codes by pressing the toggle button on the right.</source>
-        <target state="new">Disable login codes by pressing the toggle button on the right.</target>
+        <target state="translated">Inaktivera inloggningskoderna med knappen bredvid.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
           <context context-type="linenumber">1217,1216</context>
@@ -10018,7 +10018,7 @@ Proceed?</target>
       </trans-unit>
       <trans-unit id="4724136087546200841" datatype="html">
         <source>You first need to resume the exam by using the "Resume exam for all students" button.</source>
-        <target state="new">You first need to resume the exam by using the "Resume exam for all students" button.</target>
+        <target state="translated">Du måste först fortsätta provet genom att klicka på knappen &lt;i&gt;Fortsätt provet för alla elever&lt;/i&gt;.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
           <context context-type="linenumber">1225,1224</context>
@@ -10026,7 +10026,7 @@ Proceed?</target>
       </trans-unit>
       <trans-unit id="7423988897349876240" datatype="html">
         <source>You first need to resume the exam by using the "Resume exam for main group" button.</source>
-        <target state="new">You first need to resume the exam by using the "Resume exam for main group" button.</target>
+        <target state="translated">Du måste fortsätta provet genom att klicka på knappen &lt;i&gt;Fortsätt provet för de utan tilläggstid&lt;/i&gt;.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
           <context context-type="linenumber">1232,1231</context>
@@ -10034,7 +10034,7 @@ Proceed?</target>
       </trans-unit>
       <trans-unit id="80885656053579115" datatype="html">
         <source>You first need to interrupt the exam by using the "Interrupt exam" button.</source>
-        <target state="new">You first need to interrupt the exam by using the "Interrupt exam" button.</target>
+        <target state="translated">Du måste avbryta provet genom att klicka på knappen &lt;i&gt;Avbryt provet&lt;/i&gt;.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
           <context context-type="linenumber">1239,1238</context>
@@ -10046,7 +10046,7 @@ Proceed?</target>
       </trans-unit>
       <trans-unit id="5284153462863049949" datatype="html">
         <source>You can't resume the exam that has already ended. End the exam and restart it if needed.</source>
-        <target state="new">You can't resume the exam that has already ended. End the exam and restart it if needed.</target>
+        <target state="translated">Du kan inte fortsätta provet efter att det har avslutats. Avsluta provet helt och starta om det.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
           <context context-type="linenumber">1310,1309</context>
@@ -10058,7 +10058,7 @@ Proceed?</target>
       </trans-unit>
       <trans-unit id="4185398656374961480" datatype="html">
         <source>Interrupt exam?</source>
-        <target state="new">Interrupt exam?</target>
+        <target state="translated">Vill du avbryta provet?</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
           <context context-type="linenumber">1318,1317</context>
@@ -10067,8 +10067,9 @@ Proceed?</target>
       <trans-unit id="5367871428395336991" datatype="html">
         <source>Are you sure you want to interrupt the exam while it is running?
 If you want to end the exam, use the "End exam" buttons.</source>
-        <target state="new">Are you sure you want to interrupt the exam while it is running?
-If you want to end the exam, use the "End exam" buttons.</target>
+        <target state="translated">Vill du verkligen avbryta det pågående provet?
+Detta tar bort elevernas möjlighet att spara sina svar, men loggar inte ut dem från provsystemet.
+Om du vill avsluta provet, använd knapparna &lt;i&gt;Avsluta provet&lt;/i&gt;.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
           <context context-type="linenumber">1319,1317</context>
@@ -10076,7 +10077,7 @@ If you want to end the exam, use the "End exam" buttons.</target>
       </trans-unit>
       <trans-unit id="3111870776224528219" datatype="html">
         <source>Resume exam?</source>
-        <target state="new">Resume exam?</target>
+        <target state="translated">Vill du fortsätta provet?</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
           <context context-type="linenumber">1346,1345</context>
@@ -10088,7 +10089,7 @@ If you want to end the exam, use the "End exam" buttons.</target>
       </trans-unit>
       <trans-unit id="9133149587385579712" datatype="html">
         <source>Are you sure you want resume the exam?</source>
-        <target state="new">Are you sure you want resume the exam?</target>
+        <target state="translated">Vill du verkligen fortsätta ett avslutat prov?</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
           <context context-type="linenumber">1347,1345</context>
@@ -10100,7 +10101,7 @@ If you want to end the exam, use the "End exam" buttons.</target>
       </trans-unit>
       <trans-unit id="2105262130592136450" datatype="html">
         <source>Could not set exam state. Details: <x id="PH" equiv-text="res.result.error.error"/></source>
-        <target state="new">Could not set exam state. Details: <x id="PH" equiv-text="res.result.error.error"/></target>
+        <target state="translated">Provens status kunde inte uppdateras. Detaljer: <x id="PH" equiv-text="res.result.error.error"/></target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
           <context context-type="linenumber">1419,1418</context>
@@ -10108,7 +10109,7 @@ If you want to end the exam, use the "End exam" buttons.</target>
       </trans-unit>
       <trans-unit id="7732233340906437861" datatype="html">
         <source>Could not set the exam. Details: <x id="PH" equiv-text="res.result.error.error"/></source>
-        <target state="new">Could not set the exam. Details: <x id="PH" equiv-text="res.result.error.error"/></target>
+        <target state="translated">Provet kunde inte väljas. Detaljer: <x id="PH" equiv-text="res.result.error.error"/></target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
           <context context-type="linenumber">1466,1465</context>
@@ -10116,7 +10117,7 @@ If you want to end the exam, use the "End exam" buttons.</target>
       </trans-unit>
       <trans-unit id="2126800274179483393" datatype="html">
         <source>Change exam?</source>
-        <target state="new">Change exam?</target>
+        <target state="translated">Vill du byta prov?</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
           <context context-type="linenumber">1483,1482</context>
@@ -10127,10 +10128,10 @@ If you want to end the exam, use the "End exam" buttons.</target>
 Changing the exam will reset the exam.
 
 Are you sure you want to change the exam?</source>
-        <target state="new">The exam has already been started.
-Changing the exam will reset the exam.
+        <target state="translated">Checklistan för det nuvarande provet har redan påbörjats.
+Att byta prov avslutar det pågående provet.
 
-Are you sure you want to change the exam?</target>
+Vill du byta provet?</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
           <context context-type="linenumber">1484,1482</context>
@@ -10138,7 +10139,7 @@ Are you sure you want to change the exam?</target>
       </trans-unit>
       <trans-unit id="7171621283964913478" datatype="html">
         <source>Could not update member info. Details: <x id="PH" equiv-text="res.result.error.error"/></source>
-        <target state="new">Could not update member info. Details: <x id="PH" equiv-text="res.result.error.error"/></target>
+        <target state="translated">Användaruppgifter kunde inte uppdateras. Mer information: <x id="PH" equiv-text="res.result.error.error"/></target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
           <context context-type="linenumber">1516,1515</context>
@@ -10146,7 +10147,7 @@ Are you sure you want to change the exam?</target>
       </trans-unit>
       <trans-unit id="8337472758421691661" datatype="html">
         <source>Login code has been disabled. Make sure you use the correct code or ask for a new code.</source>
-        <target state="new">Login code has been disabled. Make sure you use the correct code or ask for a new code.</target>
+        <target state="translated">Inloggningskoden har inaktiverats. Kontrollera att du har rätt kod eller be om en ny kod.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/user-code-login.component.ts</context>
           <context context-type="linenumber">12</context>
@@ -10154,7 +10155,7 @@ Are you sure you want to change the exam?</target>
       </trans-unit>
       <trans-unit id="7419412790104674886" datatype="html">
         <source>Extra</source>
-        <target state="new">Extra</target>
+        <target state="translated">Mer information</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
           <context context-type="linenumber">324</context>
@@ -10163,8 +10164,8 @@ Are you sure you want to change the exam?</target>
       <trans-unit id="1709400740676656154" datatype="html">
         <source>Some students don't have a login code yet.
 Please generate login codes first.</source>
-        <target state="new">Some students don't have a login code yet.
-Please generate login codes first.</target>
+        <target state="translated">Vissa elever har ännu ingen inloggningskod.
+Var god och skapa inloggningskoder först.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
           <context context-type="linenumber">1005,1004</context>
@@ -10172,7 +10173,7 @@ Please generate login codes first.</target>
       </trans-unit>
       <trans-unit id="3312128942466852245" datatype="html">
         <source>required field</source>
-        <target state="new">required field</target>
+        <target state="translated">obligatoriskt fält</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/user-creation-dialog.component.ts</context>
           <context context-type="linenumber">101</context>
@@ -10180,7 +10181,7 @@ Please generate login codes first.</target>
       </trans-unit>
       <trans-unit id="6620173349627910099" datatype="html">
         <source>1. Manage exam groups</source>
-        <target state="new">1. Manage exam groups</target>
+        <target state="translated">1. Hantera provgrupper</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
           <context context-type="linenumber">234</context>
@@ -10188,7 +10189,7 @@ Please generate login codes first.</target>
       </trans-unit>
       <trans-unit id="9002076201141601849" datatype="html">
         <source>2. Manage students</source>
-        <target state="new">2. Manage students</target>
+        <target state="translated">2. Hantera elever</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
           <context context-type="linenumber">299</context>
@@ -10196,7 +10197,7 @@ Please generate login codes first.</target>
       </trans-unit>
       <trans-unit id="2044311516910871248" datatype="html">
         <source>3. Manage exams</source>
-        <target state="new">3. Manage exams</target>
+        <target state="translated">3. Hantera prov</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
           <context context-type="linenumber">411</context>
@@ -10204,7 +10205,7 @@ Please generate login codes first.</target>
       </trans-unit>
       <trans-unit id="5105615877142517411" datatype="html">
         <source>4. Show answers to students</source>
-        <target state="new">4. Show answers to students</target>
+        <target state="translated">4. Visa provets svar till elever</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
           <context context-type="linenumber">658</context>
@@ -10212,7 +10213,7 @@ Please generate login codes first.</target>
       </trans-unit>
       <trans-unit id="4927138039966262114" datatype="html">
         <source> The exam is now ended and login codes are disabled. You can now select and start another exam below. </source>
-        <target state="new"> The exam is now ended and login codes are disabled. You can now select and start another exam below. </target>
+        <target state="translated"> Provet är nu avslutat och inloggningskoderna har inaktiverats. Du kan nu välja och öppna ett nytt prov nedan. </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
           <context context-type="linenumber">421</context>
@@ -10220,7 +10221,7 @@ Please generate login codes first.</target>
       </trans-unit>
       <trans-unit id="269375217385324097" datatype="html">
         <source><x id="START_PARAGRAPH" ctype="x-p" equiv-text="&lt;p>"/> If your school uses Wilma, you can import students by copy-pasting the student list from Wilma. <x id="CLOSE_PARAGRAPH" ctype="x-p" equiv-text="&lt;/p>"/><x id="START_PARAGRAPH" ctype="x-p" equiv-text="&lt;p>"/> The required format for the input is as follows: <x id="CLOSE_PARAGRAPH" ctype="x-p" equiv-text="&lt;/p>"/><x id="START_TAG_PRE" ctype="x-pre" equiv-text="&lt;pre>"/>&lt; class &gt; &lt; last name &gt; &lt; first name &gt;<x id="CLOSE_TAG_PRE" ctype="x-pre" equiv-text="&lt;/pre>"/><x id="START_PARAGRAPH" ctype="x-p" equiv-text="&lt;p>"/> For example: <x id="CLOSE_PARAGRAPH" ctype="x-p" equiv-text="&lt;/p>"/><x id="START_TAG_PRE" ctype="x-pre" equiv-text="&lt;pre>"/>9b Duck Donald<x id="LINE_BREAK" ctype="lb" equiv-text="&lt;br>"/>9b Duck Daisy<x id="LINE_BREAK" ctype="lb" equiv-text="&lt;br>"/>9c Duck Scrooge<x id="CLOSE_TAG_PRE" ctype="x-pre" equiv-text="&lt;/pre>"/><x id="START_PARAGRAPH" ctype="x-p" equiv-text="&lt;p>"/> Students are separated by line-breaks so that one line of text represents one student. Each piece of information (class, last name, first name) is separated by a single space. <x id="CLOSE_PARAGRAPH" ctype="x-p" equiv-text="&lt;/p>"/><x id="START_PARAGRAPH" ctype="x-p" equiv-text="&lt;p>"/> You can obtain the student list from Wilma by selecting "Print course book" and selecting the students in the table. <x id="CLOSE_PARAGRAPH" ctype="x-p" equiv-text="&lt;/p>"/></source>
-        <target state="new"><x id="START_PARAGRAPH" ctype="x-p" equiv-text="&lt;p>"/> If your school uses Wilma, you can import students by copy-pasting the student list from Wilma. <x id="CLOSE_PARAGRAPH" ctype="x-p" equiv-text="&lt;/p>"/><x id="START_PARAGRAPH" ctype="x-p" equiv-text="&lt;p>"/> The required format for the input is as follows: <x id="CLOSE_PARAGRAPH" ctype="x-p" equiv-text="&lt;/p>"/><x id="START_TAG_PRE" ctype="x-pre" equiv-text="&lt;pre>"/>&lt; class &gt; &lt; last name &gt; &lt; first name &gt;<x id="CLOSE_TAG_PRE" ctype="x-pre" equiv-text="&lt;/pre>"/><x id="START_PARAGRAPH" ctype="x-p" equiv-text="&lt;p>"/> For example: <x id="CLOSE_PARAGRAPH" ctype="x-p" equiv-text="&lt;/p>"/><x id="START_TAG_PRE" ctype="x-pre" equiv-text="&lt;pre>"/>9b Duck Donald<x id="LINE_BREAK" ctype="lb" equiv-text="&lt;br>"/>9b Duck Daisy<x id="LINE_BREAK" ctype="lb" equiv-text="&lt;br>"/>9c Duck Scrooge<x id="CLOSE_TAG_PRE" ctype="x-pre" equiv-text="&lt;/pre>"/><x id="START_PARAGRAPH" ctype="x-p" equiv-text="&lt;p>"/> Students are separated by line-breaks so that one line of text represents one student. Each piece of information (class, last name, first name) is separated by a single space. <x id="CLOSE_PARAGRAPH" ctype="x-p" equiv-text="&lt;/p>"/><x id="START_PARAGRAPH" ctype="x-p" equiv-text="&lt;p>"/> You can obtain the student list from Wilma by selecting "Print course book" and selecting the students in the table. <x id="CLOSE_PARAGRAPH" ctype="x-p" equiv-text="&lt;/p>"/></target>
+        <target state="translated"><x id="START_PARAGRAPH" ctype="x-p" equiv-text="&lt;p>"/>Om din skola använder Wilma kan du importera elever genom att kopiera kursdagboken från Wilma. <x id="CLOSE_PARAGRAPH" ctype="x-p" equiv-text="&lt;/p>"/><x id="START_PARAGRAPH" ctype="x-p" equiv-text="&lt;p>"/> Listan måste följa följande format: <x id="CLOSE_PARAGRAPH" ctype="x-p" equiv-text="&lt;/p>"/><x id="START_TAG_PRE" ctype="x-pre" equiv-text="&lt;pre>"/> &lt; klass &gt; &lt; efternamn &gt; &lt; förnamn &gt;<x id="CLOSE_TAG_PRE" ctype="x-pre" equiv-text="&lt;/pre>"/><x id="START_PARAGRAPH" ctype="x-p" equiv-text="&lt;p>"/> Till exempel: <x id="CLOSE_PARAGRAPH" ctype="x-p" equiv-text="&lt;/p>"/><x id="START_TAG_PRE" ctype="x-pre" equiv-text="&lt;pre>"/>9b Ankka Aku<x id="LINE_BREAK" ctype="lb" equiv-text="&lt;br>"/>9b Ankka Iines<x id="LINE_BREAK" ctype="lb" equiv-text="&lt;br>"/>9c Ankka Roope<x id="CLOSE_TAG_PRE" ctype="x-pre" equiv-text="&lt;/pre>"/><x id="START_PARAGRAPH" ctype="x-p" equiv-text="&lt;p>"/> Varje elev ska stå på en egen rad, separerad med radbrytning. Varje fält (klass, efternamn, förnamn) ska separeras med ett blanksteg. <x id="CLOSE_PARAGRAPH" ctype="x-p" equiv-text="&lt;/p>"/><x id="START_PARAGRAPH" ctype="x-p" equiv-text="&lt;p>"/> Du får elevlistan i detta format när du väljer 'Skriv ut kursdagboken' i Wilma. Om du inte hittar knappen, gå till utskrifter i Wilma (uppe till höger) och klicka på 'Dagbok, rutnät'. Kopiera listan i fältet nedan. <x id="CLOSE_PARAGRAPH" ctype="x-p" equiv-text="&lt;/p>"/></target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/user-import-dialog.component.ts</context>
           <context context-type="linenumber">27,45</context>
@@ -10228,7 +10229,7 @@ Please generate login codes first.</target>
       </trans-unit>
       <trans-unit id="797766670117501813" datatype="html">
         <source> View exam document and audio/video materials </source>
-        <target state="new"> View exam document and audio/video materials </target>
+        <target state="translated"> Kolla provdokumentet och video- och audiomaterialet</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
           <context context-type="linenumber">444</context>
@@ -10236,7 +10237,7 @@ Please generate login codes first.</target>
       </trans-unit>
       <trans-unit id="8023863054421277417" datatype="html">
         <source> The exam has started! Students can now access the exam. Audio and video materials can be accessed via the "View exam document" link. </source>
-        <target state="new"> The exam has started! Students can now access the exam. Audio and video materials can be accessed via the "View exam document" link. </target>
+        <target state="translated"> Provet har börjat! Eleverna kan nu öppna provet. Du hittar hörförståelserna under knappen &lt;i&gt;Kolla provdokument och video- och audiomaterialet&lt;/i&gt;.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
           <context context-type="linenumber">558</context>
@@ -10244,7 +10245,7 @@ Please generate login codes first.</target>
       </trans-unit>
       <trans-unit id="6266613639885813372" datatype="html">
         <source>Could not load task data. Check your internet connection and try again.</source>
-        <target state="new">Could not load task data. Check your internet connection and try again.</target>
+        <target state="translated">Informationen om uppgiften kunde inte laddas. Försök spara dina svar. När sparandet har lyckats, stäng det här meddelande.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/answer/answer-browser.component.ts</context>
           <context context-type="linenumber">1555</context>
@@ -10256,7 +10257,7 @@ Please generate login codes first.</target>
       </trans-unit>
       <trans-unit id="142265385893814401" datatype="html">
         <source>There is an issue with the server. Try to save your work and reload the page.</source>
-        <target state="new">There is an issue with the server. Try to save your work and reload the page.</target>
+        <target state="translated">Anslutningsproblem med servern, försök spara ditt svar igen. När sparandet har lyckats, stäng det här meddelande.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/answer/answer-browser.component.ts</context>
           <context context-type="linenumber">1559</context>
@@ -10266,25 +10267,9 @@ Please generate login codes first.</target>
           <context context-type="linenumber">1792</context>
         </context-group>
       </trans-unit>
-      <trans-unit id="8985586082248904379" datatype="html">
-        <source> You are showing exam answers to the students.<x id="LINE_BREAK" ctype="lb" equiv-text="&lt;br>"/> To start a new exam, stop answer reviewing in section '4. Show answers to students'. </source>
-        <target state="new"> You are showing exam answers to the students.<x id="LINE_BREAK" ctype="lb" equiv-text="&lt;br>"/> To start a new exam, stop answer reviewing in section '4. Show answers to students'. </target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
-          <context context-type="linenumber">456,457</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="6383743377048106825" datatype="html">
-        <source> You can show answers only when they don't have an active exam running.<x id="LINE_BREAK" ctype="lb" equiv-text="&lt;br>"/> Stop the exam and disable login codes in section '3. Manage exams' to enable showing answers. </source>
-        <target state="new"> You can show answers only when they don't have an active exam running.<x id="LINE_BREAK" ctype="lb" equiv-text="&lt;br>"/> Stop the exam and disable login codes in section '3. Manage exams' to enable showing answers. </target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
-          <context context-type="linenumber">679,680</context>
-        </context-group>
-      </trans-unit>
       <trans-unit id="657151549921052159" datatype="html">
         <source>Begin showing answers to students</source>
-        <target state="new">Begin showing answers to students</target>
+        <target state="translated">Börja visa svaren för provgruppens elever</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
           <context context-type="linenumber">686,687</context>
@@ -10292,7 +10277,7 @@ Please generate login codes first.</target>
       </trans-unit>
       <trans-unit id="145563783771892719" datatype="html">
         <source>End showing answers to students</source>
-        <target state="new">End showing answers to students</target>
+        <target state="translated">Sluta visa svaren för provgruppens elever</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
           <context context-type="linenumber">688,689</context>
@@ -10300,7 +10285,7 @@ Please generate login codes first.</target>
       </trans-unit>
       <trans-unit id="5354903987559868415" datatype="html">
         <source>Note: You can only show the answers for the main exam (<x id="INTERPOLATION" equiv-text="{{ examByDocId.get(group.examDocId!)?.name }}"/>) and not for the practice exam.</source>
-        <target state="new">Note: You can only show the answers for the main exam (<x id="INTERPOLATION" equiv-text="{{ examByDocId.get(group.examDocId!)?.name }}"/>) and not for the practice exam.</target>
+        <target state="translated">Obs: Du kan endast visa svaren från det egentliga provet (<x id="INTERPOLATION" equiv-text="{{ examByDocId.get(group.examDocId!)?.name }}"/>). Visning av svar från övningsprov stöds inte.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
           <context context-type="linenumber">693,694</context>
@@ -10308,7 +10293,7 @@ Please generate login codes first.</target>
       </trans-unit>
       <trans-unit id="7762631717420068201" datatype="html">
         <source> Press the button above to allow students to review their answers for 1 hour. </source>
-        <target state="new"> Press the button above to allow students to review their answers for 1 hour. </target>
+        <target state="translated"> Tryck på knappen ovan för att börja visa svaren för eleverna. </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
           <context context-type="linenumber">703</context>
@@ -10316,7 +10301,7 @@ Please generate login codes first.</target>
       </trans-unit>
       <trans-unit id="3798070165070620146" datatype="html">
         <source>Guide</source>
-        <target state="new">Guide</target>
+        <target state="translated">Instruktion:</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
           <context context-type="linenumber">706,707</context>
@@ -10324,7 +10309,7 @@ Please generate login codes first.</target>
       </trans-unit>
       <trans-unit id="3773241316574942521" datatype="html">
         <source>Ask students to log in to the exam page using their login codes: <x id="START_LINK" ctype="x-a" equiv-text="&lt;a [href]=&quot;getExamUrl(examByDocId.get(group.examDocId!))&quot;>"/><x id="START_TAG_CODE" ctype="x-code" equiv-text="{{ getExa"/><x id="INTERPOLATION" equiv-text="yDocId.get(group.examDocId!)) }}"/><x id="CLOSE_TAG_CODE" ctype="x-code" equiv-text="&lt;/a>&lt;/li>"/><x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/li>"/></source>
-        <target state="new">Ask students to log in to the exam page using their login codes: <x id="START_LINK" ctype="x-a" equiv-text="&lt;a [href]=&quot;getExamUrl(examByDocId.get(group.examDocId!))&quot;>"/><x id="START_TAG_CODE" ctype="x-code" equiv-text="{{ getExa"/><x id="INTERPOLATION" equiv-text="yDocId.get(group.examDocId!)) }}"/><x id="CLOSE_TAG_CODE" ctype="x-code" equiv-text="&lt;/a>&lt;/li>"/><x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/li>"/></target>
+        <target state="translated">Be eleverna logga in i provsystemet: <x id="START_LINK" ctype="x-a" equiv-text="&lt;a [href]=&quot;getExamUrl(examByDocId.get(group.examDocId!))&quot;>"/><x id="START_TAG_CODE" ctype="x-code" equiv-text="{{ getExa"/><x id="INTERPOLATION" equiv-text="yDocId.get(group.examDocId!)) }}"/><x id="CLOSE_TAG_CODE" ctype="x-code" equiv-text="&lt;/a>&lt;/li>"/><x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/li>"/></target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
           <context context-type="linenumber">712,713</context>
@@ -10332,7 +10317,7 @@ Please generate login codes first.</target>
       </trans-unit>
       <trans-unit id="1229716178210207066" datatype="html">
         <source>Students can now review their answers. Students cannot submit new answers but can see their answers and model answers (if they are included).</source>
-        <target state="new">Students can now review their answers. Students cannot submit new answers but can see their answers and model answers (if they are included).</target>
+        <target state="translated">Eleverna kan självständigt kolla sina svar. De kan inte skicka in nya svar, men de kan se provets modell­svar på samma sätt som läraren.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
           <context context-type="linenumber">712,713</context>
@@ -10340,7 +10325,7 @@ Please generate login codes first.</target>
       </trans-unit>
       <trans-unit id="9173480621811532307" datatype="html">
         <source>Could not toggle answer review. Details: <x id="PH" equiv-text="res.result.error.error"/></source>
-        <target state="new">Could not toggle answer review. Details: <x id="PH" equiv-text="res.result.error.error"/></target>
+        <target state="translated">Det går för närvarande inte att visa svaren. Detaljer: <x id="PH" equiv-text="res.result.error.error"/></target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
           <context context-type="linenumber">1618,1617</context>
@@ -10348,7 +10333,7 @@ Please generate login codes first.</target>
       </trans-unit>
       <trans-unit id="1609834812747709494" datatype="html">
         <source> Students can access the answers to the exam '<x id="INTERPOLATION" equiv-text="{{ examByDocId.get(group.examDocId!)?.name }}"/>'. The access is automatically disabled on <x id="INTERPOLATION_1" equiv-text="{{toReadableDate(group.accessAnswersTo ?? '')}}"/>. </source>
-        <target state="new"> Students can access the answers to the exam '<x id="INTERPOLATION" equiv-text="{{ examByDocId.get(group.examDocId!)?.name }}"/>'. The access is automatically disabled on <x id="INTERPOLATION_1" equiv-text="{{toReadableDate(group.accessAnswersTo ?? '')}}"/>. </target>
+        <target state="translated"> Eleverna kan nu självständigt kolla svaren från provet '<x id="INTERPOLATION" equiv-text="{{ examByDocId.get(group.examDocId!)?.name }}"/>'. Provet är inte längre tillgängligt <x id="INTERPOLATION_1" equiv-text="{{toReadableDate(group.accessAnswersTo ?? '')}}"/>. </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
           <context context-type="linenumber">697,699</context>
@@ -10356,7 +10341,7 @@ Please generate login codes first.</target>
       </trans-unit>
       <trans-unit id="3038653550894083290" datatype="html">
         <source>The circuit is incorrect</source>
-        <target state="new">The circuit is incorrect</target>
+        <target state="translated">Kretsen är felaktig</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/quantum-error.component.ts</context>
           <context context-type="linenumber">41</context>
@@ -10372,7 +10357,7 @@ Please generate login codes first.</target>
       </trans-unit>
       <trans-unit id="6082636692959910230" datatype="html">
         <source>Add users</source>
-        <target state="new">Add users</target>
+        <target state="translated">Lägg till användare</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/tableForm/table-form.component.ts</context>
           <context context-type="linenumber">1577,1576</context>
@@ -10380,7 +10365,7 @@ Please generate login codes first.</target>
       </trans-unit>
       <trans-unit id="494185651714406389" datatype="html">
         <source>There are not groups defined in this table.</source>
-        <target state="new">There are not groups defined in this table.</target>
+        <target state="translated">Det finns inga grupper definierade i denna tabell.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/tableForm/table-form.component.ts</context>
           <context context-type="linenumber">1592</context>
@@ -10388,7 +10373,7 @@ Please generate login codes first.</target>
       </trans-unit>
       <trans-unit id="5791799200547215180" datatype="html">
         <source>Updated group.</source>
-        <target state="new">Updated group.</target>
+        <target state="translated">Gruppen har uppdaterats.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/tableForm/table-form.component.ts</context>
           <context context-type="linenumber">1631</context>
@@ -10396,7 +10381,7 @@ Please generate login codes first.</target>
       </trans-unit>
       <trans-unit id="6129598176641143387" datatype="html">
         <source>New members will be notified by email.</source>
-        <target state="new">New members will be notified by email.</target>
+        <target state="translated">Nya användare får ett meddelande via e-post.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/tableForm/table-form.component.ts</context>
           <context context-type="linenumber">1638,1636</context>
@@ -10405,8 +10390,8 @@ Please generate login codes first.</target>
       <trans-unit id="8143693159335456296" datatype="html">
         <source>Please provide email addresses or usernames.
 Separate multiple addresses with commas or write each address on a new line.</source>
-        <target state="new">Please provide email addresses or usernames.
-Separate multiple addresses with commas or write each address on a new line.</target>
+        <target state="translated">Ange e-postadresserna för de som ska läggas till i gruppen.
+Mata in flera användares adresser på separata rader eller åtskilda med kommatecken.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/tableForm/table-form.component.ts</context>
           <context context-type="linenumber">1577</context>
@@ -10414,7 +10399,7 @@ Separate multiple addresses with commas or write each address on a new line.</ta
       </trans-unit>
       <trans-unit id="1454510249537401836" datatype="html">
         <source>If the address does not have a TIM account, a new account will be created for them.</source>
-        <target state="new">If the address does not have a TIM account, a new account will be created for them.</target>
+        <target state="translated">Om adressen inte finns i systemet skapas ett nytt användarnamn för den.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/tableForm/table-form.component.ts</context>
           <context context-type="linenumber">1583,1581</context>
@@ -10422,7 +10407,7 @@ Separate multiple addresses with commas or write each address on a new line.</ta
       </trans-unit>
       <trans-unit id="6785769560062512577" datatype="html">
         <source>Added <x id="PH" equiv-text="result.added.length"/> users:</source>
-        <target state="new">Added <x id="PH" equiv-text="result.added.length"/> users:</target>
+        <target state="translated">Tillagda användare: <x id="PH" equiv-text="result.added.length"/></target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/tableForm/table-form.component.ts</context>
           <context context-type="linenumber">1634</context>
@@ -10430,7 +10415,7 @@ Separate multiple addresses with commas or write each address on a new line.</ta
       </trans-unit>
       <trans-unit id="116165617457296609" datatype="html">
         <source>Users already in group:</source>
-        <target state="new">Users already in group:</target>
+        <target state="translated">Användare som redan finns i gruppen:</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/tableForm/table-form.component.ts</context>
           <context context-type="linenumber">1646</context>
@@ -10438,7 +10423,7 @@ Separate multiple addresses with commas or write each address on a new line.</ta
       </trans-unit>
       <trans-unit id="4576508930871695312" datatype="html">
         <source>Users not found in TIM or address was wrong:</source>
-        <target state="new">Users not found in TIM or address was wrong:</target>
+        <target state="translated">TIM-användare hittades inte eller angiven adress är felaktig:</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/tableForm/table-form.component.ts</context>
           <context context-type="linenumber">1653</context>
@@ -10446,7 +10431,7 @@ Separate multiple addresses with commas or write each address on a new line.</ta
       </trans-unit>
       <trans-unit id="808449486721217429" datatype="html">
         <source>&lt;b&gt;Really remove the following users from group&lt;/b&gt; </source>
-        <target state="new">&lt;b&gt;Really remove the following users from group&lt;/b&gt; </target>
+        <target state="translated">&lt;b&gt;Vill du ta bort följande användarnamn från gruppen?&lt;/b&gt; </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/tableForm/table-form.component.ts</context>
           <context context-type="linenumber">1204</context>
@@ -10454,7 +10439,7 @@ Separate multiple addresses with commas or write each address on a new line.</ta
       </trans-unit>
       <trans-unit id="5532251880411219076" datatype="html">
         <source>Remove users from group </source>
-        <target state="new">Remove users from group </target>
+        <target state="translated">Ta bort användare från gruppen </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/tableForm/table-form.component.ts</context>
           <context context-type="linenumber">1209</context>
@@ -10462,7 +10447,7 @@ Separate multiple addresses with commas or write each address on a new line.</ta
       </trans-unit>
       <trans-unit id="989480357041643523" datatype="html">
         <source>Delete group</source>
-        <target state="new">Delete group</target>
+        <target state="translated">Ta bort provgruppen</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
           <context context-type="linenumber">295,296</context>
@@ -10470,7 +10455,7 @@ Separate multiple addresses with commas or write each address on a new line.</ta
       </trans-unit>
       <trans-unit id="2909829712528039593" datatype="html">
         <source> Press the toggle button to end the exam for the main student group. </source>
-        <target state="new"> Press the toggle button to end the exam for the main student group. </target>
+        <target state="translated"> Avsluta provet för de utan tilläggstid med knappen bredvid </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
           <context context-type="linenumber">603</context>
@@ -10478,7 +10463,7 @@ Separate multiple addresses with commas or write each address on a new line.</ta
       </trans-unit>
       <trans-unit id="2040009335604991778" datatype="html">
         <source> Press the toggle button to end the exam for all students </source>
-        <target state="new"> Press the toggle button to end the exam for all students </target>
+        <target state="translated"> Avsluta provet för alla elever med knappen bredvid </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
           <context context-type="linenumber">633</context>
@@ -10486,7 +10471,7 @@ Separate multiple addresses with commas or write each address on a new line.</ta
       </trans-unit>
       <trans-unit id="8036091162175708988" datatype="html">
         <source>Make sure the exam is ended and login codes are disabled in section <x id="START_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;i>"/>'3. Manage exams'<x id="CLOSE_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;/i>"/></source>
-        <target state="new">Make sure the exam is ended and login codes are disabled in section <x id="START_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;i>"/>'3. Manage exams'<x id="CLOSE_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;/i>"/></target>
+        <target state="translated">Se till att provet för provgruppen är avslutat och att inloggningskoderna har inaktiverats under <x id="START_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;i>"/>3. Hantera prov<x id="CLOSE_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;/i>"/>.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
           <context context-type="linenumber">717,718</context>
@@ -10494,7 +10479,7 @@ Separate multiple addresses with commas or write each address on a new line.</ta
       </trans-unit>
       <trans-unit id="3550757413033906635" datatype="html">
         <source>Students can open the exam using the <x id="START_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;i>"/>'Open exam'<x id="CLOSE_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;/i>"/> button.</source>
-        <target state="new">Students can open the exam using the <x id="START_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;i>"/>'Open exam'<x id="CLOSE_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;/i>"/> button.</target>
+        <target state="translated">Eleverna kan öppna provet själva med knappen <x id="START_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;i>"/>Öppna provet<x id="CLOSE_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;/i>"/>..</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
           <context context-type="linenumber">720,721</context>
@@ -10502,7 +10487,7 @@ Separate multiple addresses with commas or write each address on a new line.</ta
       </trans-unit>
       <trans-unit id="4189671442877791653" datatype="html">
         <source>To end the view right, press the <x id="START_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;i>"/>'End showing answers to students button'<x id="CLOSE_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;/i>"/>. The right is automatically disabled in 1 hour.</source>
-        <target state="new">To end the view right, press the <x id="START_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;i>"/>'End showing answers to students button'<x id="CLOSE_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;/i>"/>. The right is automatically disabled in 1 hour.</target>
+        <target state="translated">När du vill ta bort visningsrätten, tryck på knappen <x id="START_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;i>"/>Sluta visa svaren för provgruppens elever<x id="CLOSE_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;/i>"/>. Provsystemet tar bort visningsrätten automatiskt en timme efter att tillgången beviljats.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
           <context context-type="linenumber">722,723</context>
@@ -10510,7 +10495,7 @@ Separate multiple addresses with commas or write each address on a new line.</ta
       </trans-unit>
       <trans-unit id="6667488878974100003" datatype="html">
         <source>Press the <x id="START_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;i>"/>'Begin showing answers to students'<x id="CLOSE_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;/i>"/> button to allow students to review their answers for 1 hour.</source>
-        <target state="new">Press the <x id="START_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;i>"/>'Begin showing answers to students'<x id="CLOSE_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;/i>"/> button to allow students to review their answers for 1 hour.</target>
+        <target state="translated">Tryck på knappen <x id="START_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;i>"/>Börja visa svaren för provgruppens elever<x id="CLOSE_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;/i>"/>. Elevernas inloggningskoder aktiveras och de får tillgång till provet för en timme.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
           <context context-type="linenumber">718,719</context>
@@ -10534,7 +10519,7 @@ Separate multiple addresses with commas or write each address on a new line.</ta
       </trans-unit>
       <trans-unit id="3872000676108698626" datatype="html">
         <source>You will automatically be redirected when you can access the document.</source>
-        <target state="new">You will automatically be redirected when you can access the document.</target>
+        <target state="translated">Du omdirigeras automatiskt när du har tillgång till dokumentet.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/ui/goto-link.component.ts</context>
           <context context-type="linenumber">51</context>
@@ -10542,31 +10527,15 @@ Separate multiple addresses with commas or write each address on a new line.</ta
       </trans-unit>
       <trans-unit id="5383176661175383422" datatype="html">
         <source>Click here if you were not redirected.</source>
-        <target state="new">Click here if you were not redirected.</target>
+        <target state="translated">Klicka här om omdirigeringen inte skedde.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/ui/goto-link.component.ts</context>
           <context context-type="linenumber">63</context>
         </context-group>
       </trans-unit>
-      <trans-unit id="3606771354880883563" datatype="html">
-        <source> You can only show answers for the main exam (<x id="INTERPOLATION" equiv-text="{{ examByDocId.get(group.examDocId!)?.name }}"/>) and not for the practice exam. Change the exam in section '3. Manage exams' to enable showing answers. </source>
-        <target state="new"> You can only show answers for the main exam (<x id="INTERPOLATION" equiv-text="{{ examByDocId.get(group.examDocId!)?.name }}"/>) and not for the practice exam. Change the exam in section '3. Manage exams' to enable showing answers. </target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
-          <context context-type="linenumber">698,699</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="4454548802259509672" datatype="html">
-        <source> Select an exam in section '3. Manage exams' to enable showing answers. </source>
-        <target state="new"> Select an exam in section '3. Manage exams' to enable showing answers. </target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
-          <context context-type="linenumber">702</context>
-        </context-group>
-      </trans-unit>
       <trans-unit id="7571375880734710634" datatype="html">
         <source> Terms of Service </source>
-        <target state="new"> Terms of Service </target>
+        <target state="translated"> Villkor för tjänsten </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/footer.component.ts</context>
           <context context-type="linenumber">48,50</context>
@@ -10630,7 +10599,7 @@ Separate multiple addresses with commas or write each address on a new line.</ta
       </trans-unit>
       <trans-unit id="5369335165199679048" datatype="html">
         <source> Your Email <x id="START_TAG_SPAN" ctype="x-span" equiv-text="&lt;span>"/>(optional)<x id="CLOSE_TAG_SPAN" ctype="x-span" equiv-text="&lt;/span>"/></source>
-        <target state="new"> Your Email <x id="START_TAG_SPAN" ctype="x-span" equiv-text="&lt;span>"/>(optional)<x id="CLOSE_TAG_SPAN" ctype="x-span" equiv-text="&lt;/span>"/></target>
+        <target state="translated">Din e-post<x id="START_TAG_SPAN" ctype="x-span" equiv-text="&lt;span>"/>(icke obligatorisk)<x id="CLOSE_TAG_SPAN" ctype="x-span" equiv-text="&lt;/span>"/></target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/ui/report-content-dialog.component.ts</context>
           <context context-type="linenumber">76,78</context>
@@ -10638,7 +10607,7 @@ Separate multiple addresses with commas or write each address on a new line.</ta
       </trans-unit>
       <trans-unit id="452949630448939191" datatype="html">
         <source>Describe the issue</source>
-        <target state="new">Describe the issue</target>
+        <target state="translated">Beskriv frågan</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/ui/report-content-dialog.component.ts</context>
           <context context-type="linenumber">57</context>
@@ -10646,7 +10615,7 @@ Separate multiple addresses with commas or write each address on a new line.</ta
       </trans-unit>
       <trans-unit id="6151928365554450816" datatype="html">
         <source>Report Page</source>
-        <target state="new">Report Page</target>
+        <target state="translated">Rapportera sida</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/ui/report-content-dialog.component.ts</context>
           <context context-type="linenumber">76</context>
@@ -10654,7 +10623,7 @@ Separate multiple addresses with commas or write each address on a new line.</ta
       </trans-unit>
       <trans-unit id="2446227100022235850" datatype="html">
         <source>Please enter a valid email address.</source>
-        <target state="new">Please enter a valid email address.</target>
+        <target state="translated">Vänligen ange en giltig e-postadress.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/ui/report-content-dialog.component.ts</context>
           <context context-type="linenumber">96,97</context>
@@ -10662,7 +10631,7 @@ Separate multiple addresses with commas or write each address on a new line.</ta
       </trans-unit>
       <trans-unit id="6287738615734758922" datatype="html">
         <source>The email address cannot exceed 256 characters.</source>
-        <target state="new">The email address cannot exceed 256 characters.</target>
+        <target state="translated">E-postadressen får inte innehålla mer än 256 tecken.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/ui/report-content-dialog.component.ts</context>
           <context context-type="linenumber">97,98</context>
@@ -10670,7 +10639,7 @@ Separate multiple addresses with commas or write each address on a new line.</ta
       </trans-unit>
       <trans-unit id="5962072938234411707" datatype="html">
         <source><x id="START_TAG_SPAN" ctype="x-span" equiv-text="&quot;glyphicon glyphicon-exclamation-sign&quot;>"/><x id="CLOSE_TAG_SPAN" ctype="x-span" equiv-text="This field"/> This field is required.</source>
-        <target state="new"><x id="START_TAG_SPAN" ctype="x-span" equiv-text="&quot;glyphicon glyphicon-exclamation-sign&quot;>"/><x id="CLOSE_TAG_SPAN" ctype="x-span" equiv-text="This field"/> This field is required.</target>
+        <target state="translated"><x id="START_TAG_SPAN" ctype="x-span" equiv-text="&quot;glyphicon glyphicon-exclamation-sign&quot;>"/><x id="CLOSE_TAG_SPAN" ctype="x-span" equiv-text="This field"/> Detta fält är obligatoriskt.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/ui/report-content-dialog.component.ts</context>
           <context context-type="linenumber">115,116</context>
@@ -10678,7 +10647,7 @@ Separate multiple addresses with commas or write each address on a new line.</ta
       </trans-unit>
       <trans-unit id="7523042633016688692" datatype="html">
         <source>The description cannot exceed 2000 characters.</source>
-        <target state="new">The description cannot exceed 2000 characters.</target>
+        <target state="translated">Beskrivningen får inte innehålla mer än 2000 tecken.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/ui/report-content-dialog.component.ts</context>
           <context context-type="linenumber">116</context>
@@ -10686,7 +10655,7 @@ Separate multiple addresses with commas or write each address on a new line.</ta
       </trans-unit>
       <trans-unit id="4120435970812709184" datatype="html">
         <source><x id="START_TAG_STRONG" ctype="x-strong" equiv-text="Than"/>Thank you for your report.<x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong>"/></source>
-        <target state="new"><x id="START_TAG_STRONG" ctype="x-strong" equiv-text="Than"/>Thank you for your report.<x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong>"/></target>
+        <target state="translated"><x id="START_TAG_STRONG" ctype="x-strong" equiv-text="Than"/>Tack för din rapport.<x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong>"/></target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/ui/report-content-dialog.component.ts</context>
           <context context-type="linenumber">130,131</context>
@@ -10694,7 +10663,7 @@ Separate multiple addresses with commas or write each address on a new line.</ta
       </trans-unit>
       <trans-unit id="3765149214612773760" datatype="html">
         <source>Your message has been sent to the TIM administrators. We appreciate your help in keeping our content accurate and safe.</source>
-        <target state="new">Your message has been sent to the TIM administrators. We appreciate your help in keeping our content accurate and safe.</target>
+        <target state="translated">Ditt meddelande har skickats till TIM-administratörerna. Vi uppskattar din hjälp med att hålla vårt innehåll korrekt och säkert.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/ui/report-content-dialog.component.ts</context>
           <context context-type="linenumber">131,132</context>
@@ -10702,7 +10671,7 @@ Separate multiple addresses with commas or write each address on a new line.</ta
       </trans-unit>
       <trans-unit id="397098723873502323" datatype="html">
         <source>Done</source>
-        <target state="new">Done</target>
+        <target state="translated">Klart</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/ui/report-content-dialog.component.ts</context>
           <context context-type="linenumber">133,134</context>
@@ -10710,7 +10679,7 @@ Separate multiple addresses with commas or write each address on a new line.</ta
       </trans-unit>
       <trans-unit id="110871703751109989" datatype="html">
         <source> Report inappropriate content </source>
-        <target state="new"> Report inappropriate content </target>
+        <target state="translated"> Rapportera olämpligt innehåll </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/ui/report-content-dialog.component.ts</context>
           <context context-type="linenumber">32</context>
@@ -10718,7 +10687,7 @@ Separate multiple addresses with commas or write each address on a new line.</ta
       </trans-unit>
       <trans-unit id="8959949608841060449" datatype="html">
         <source> Page address <x id="START_TAG_SPAN" ctype="x-span" equiv-text="&lt;span>"/>(optional)<x id="CLOSE_TAG_SPAN" ctype="x-span" equiv-text="&lt;/span>"/></source>
-        <target state="new"> Page address <x id="START_TAG_SPAN" ctype="x-span" equiv-text="&lt;span>"/>(optional)<x id="CLOSE_TAG_SPAN" ctype="x-span" equiv-text="&lt;/span>"/></target>
+        <target state="translated"> Sidans adress<x id="START_TAG_SPAN" ctype="x-span" equiv-text="&lt;span>"/>(icke obligatorisk)<x id="CLOSE_TAG_SPAN" ctype="x-span" equiv-text="&lt;/span>"/></target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/ui/report-content-dialog.component.ts</context>
           <context context-type="linenumber">48,50</context>
@@ -10726,7 +10695,7 @@ Separate multiple addresses with commas or write each address on a new line.</ta
       </trans-unit>
       <trans-unit id="5607172656789974207" datatype="html">
         <source>Fill current address</source>
-        <target state="new">Fill current address</target>
+        <target state="translated">Fyll i aktuell adress</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/ui/report-content-dialog.component.ts</context>
           <context context-type="linenumber">61,62</context>
@@ -10734,7 +10703,7 @@ Separate multiple addresses with commas or write each address on a new line.</ta
       </trans-unit>
       <trans-unit id="5726155981923810218" datatype="html">
         <source>Fill user email</source>
-        <target state="new">Fill user email</target>
+        <target state="translated">Fyll i användarens e-postadress</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/ui/report-content-dialog.component.ts</context>
           <context context-type="linenumber">91,92</context>
@@ -10742,7 +10711,7 @@ Separate multiple addresses with commas or write each address on a new line.</ta
       </trans-unit>
       <trans-unit id="3333065049174534332" datatype="html">
         <source><x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;spa"/><x id="START_TAG_SPAN" ctype="x-span" equiv-text="n glyphicon-exclamation-sign&quot;>"/><x id="CLOSE_TAG_SPAN" ctype="x-span" equiv-text="There was a"/> There was an error.<x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong>"/></source>
-        <target state="new"><x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;spa"/><x id="START_TAG_SPAN" ctype="x-span" equiv-text="n glyphicon-exclamation-sign&quot;>"/><x id="CLOSE_TAG_SPAN" ctype="x-span" equiv-text="There was a"/> There was an error.<x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong>"/></target>
+        <target state="translated"><x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;spa"/><x id="START_TAG_SPAN" ctype="x-span" equiv-text="n glyphicon-exclamation-sign&quot;>"/><x id="CLOSE_TAG_SPAN" ctype="x-span" equiv-text="There was a"/> det uppstod ett fel.<x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong>"/></target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/ui/report-content-dialog.component.ts</context>
           <context context-type="linenumber">126,127</context>
@@ -10750,7 +10719,7 @@ Separate multiple addresses with commas or write each address on a new line.</ta
       </trans-unit>
       <trans-unit id="4180813104141834795" datatype="html">
         <source>Your report was not sent.</source>
-        <target state="new">Your report was not sent.</target>
+        <target state="translated">Din rapport har inte skickats.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/ui/report-content-dialog.component.ts</context>
           <context context-type="linenumber">128,129</context>
@@ -10758,7 +10727,7 @@ Separate multiple addresses with commas or write each address on a new line.</ta
       </trans-unit>
       <trans-unit id="6699791699859977301" datatype="html">
         <source>Could not connect to server. Check your internet connection and try again.</source>
-        <target state="new">Could not connect to server. Check your internet connection and try again.</target>
+        <target state="translated">Kunde inte ansluta till servern. Kontrollera din internetanslutning och försök igen.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/ui/report-content-dialog.component.ts</context>
           <context context-type="linenumber">211</context>
@@ -10766,7 +10735,7 @@ Separate multiple addresses with commas or write each address on a new line.</ta
       </trans-unit>
       <trans-unit id="2170321853448003764" datatype="html">
         <source>There is an issue with the server. Make a copy of your message and refresh the page, or contact TIM support directly at tim@jyu.fi.</source>
-        <target state="new">There is an issue with the server. Make a copy of your message and refresh the page, or contact TIM support directly at tim@jyu.fi.</target>
+        <target state="translated">Det är ett problem med servern. Gör en kopia av ditt meddelande och uppdatera sidan, eller kontakta TIM-support direkt på tim@jyu.fi.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/ui/report-content-dialog.component.ts</context>
           <context context-type="linenumber">213</context>
@@ -10774,7 +10743,7 @@ Separate multiple addresses with commas or write each address on a new line.</ta
       </trans-unit>
       <trans-unit id="4890967305882645389" datatype="html">
         <source>Please check the page address. You can only report addresses from TIM.</source>
-        <target state="new">Please check the page address. You can only report addresses from TIM.</target>
+        <target state="translated">Vänligen kontrollera sidans adress. Du kan bara rapportera adresser från TIM.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/ui/report-content-dialog.component.ts</context>
           <context context-type="linenumber">65,66</context>
@@ -10782,7 +10751,7 @@ Separate multiple addresses with commas or write each address on a new line.</ta
       </trans-unit>
       <trans-unit id="5227627642850381764" datatype="html">
         <source>Report inappropriate content</source>
-        <target state="new">Report inappropriate content</target>
+        <target state="translated">Rapportera olämpligt innehåll</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/footer.component.ts</context>
           <context context-type="linenumber">62,63</context>
@@ -10794,7 +10763,7 @@ Separate multiple addresses with commas or write each address on a new line.</ta
       </trans-unit>
       <trans-unit id="7537003864277929073" datatype="html">
         <source><x id="START_PARAGRAPH" ctype="x-p" equiv-text="Use this"/>Use this form to report any harmful or inappropriate content you encounter on TIM. If you would like a response from the TIM administrators, please provide your email address.<x id="CLOSE_PARAGRAPH" ctype="x-p" equiv-text="&lt;/p>"/></source>
-        <target state="new"><x id="START_PARAGRAPH" ctype="x-p" equiv-text="Use this"/>Use this form to report any harmful or inappropriate content you encounter on TIM. If you would like a response from the TIM administrators, please provide your email address.<x id="CLOSE_PARAGRAPH" ctype="x-p" equiv-text="&lt;/p>"/></target>
+        <target state="translated"><x id="START_PARAGRAPH" ctype="x-p" equiv-text="Use this"/>Använd detta formulär för att rapportera skadligt eller olämpligt innehåll som du stöter på på TIM. Om du vill ha svar från TIM-administratörerna, ange din e-postadress.<x id="CLOSE_PARAGRAPH" ctype="x-p" equiv-text="&lt;/p>"/></target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/ui/report-content-dialog.component.ts</context>
           <context context-type="linenumber">43,44</context>
@@ -10802,7 +10771,7 @@ Separate multiple addresses with commas or write each address on a new line.</ta
       </trans-unit>
       <trans-unit id="793497416353063752" datatype="html">
         <source>This is the page address where you encountered the issue. If you are reporting a problem on a different page, please paste the correct address here.</source>
-        <target state="new">This is the page address where you encountered the issue. If you are reporting a problem on a different page, please paste the correct address here.</target>
+        <target state="translated">Det här är sidadressen där du stötte på problemet. Om du rapporterar ett problem på en annan sida, vänligen klistra in rätt adress här.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/ui/report-content-dialog.component.ts</context>
           <context context-type="linenumber">70,71</context>
@@ -10810,7 +10779,7 @@ Separate multiple addresses with commas or write each address on a new line.</ta
       </trans-unit>
       <trans-unit id="6334384804553156455" datatype="html">
         <source>Please provide your email address if you wish for the TIM administrators to follow up with you regarding this report.</source>
-        <target state="new">Please provide your email address if you wish for the TIM administrators to follow up with you regarding this report.</target>
+        <target state="translated">Vänligen ange din e-postadress om du vill att TIM-administratörerna ska följa upp med dig angående denna rapport.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/ui/report-content-dialog.component.ts</context>
           <context context-type="linenumber">101,102</context>
@@ -10818,7 +10787,7 @@ Separate multiple addresses with commas or write each address on a new line.</ta
       </trans-unit>
       <trans-unit id="4678590939146937144" datatype="html">
         <source>Explain why you think the content is inappropriate. Be as specific as possible.</source>
-        <target state="new">Explain why you think the content is inappropriate. Be as specific as possible.</target>
+        <target state="translated">Förklara varför du tycker att innehållet är olämpligt. Var så specifik som möjligt.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/ui/report-content-dialog.component.ts</context>
           <context context-type="linenumber">120,121</context>
@@ -10826,7 +10795,7 @@ Separate multiple addresses with commas or write each address on a new line.</ta
       </trans-unit>
       <trans-unit id="1876317285885218816" datatype="html">
         <source>If you do not receive the message within 5 minutes, verify that your email address is entered correctly above. Additionally, check your Spam or Junk folder in case the message was filtered.</source>
-        <target state="new">If you do not receive the message within 5 minutes, verify that your email address is entered correctly above. Additionally, check your Spam or Junk folder in case the message was filtered.</target>
+        <target state="translated">Om du inte får meddelandet inom 5 minuter, kontrollera att din e-postadress är korrekt angiven ovan. Kontrollera också din skräppostmapp om meddelandet har filtrerats.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/login-dialog.component.ts</context>
           <context context-type="linenumber">209,210</context>
@@ -10834,7 +10803,7 @@ Separate multiple addresses with commas or write each address on a new line.</ta
       </trans-unit>
       <trans-unit id="5252011853704992482" datatype="html">
         <source>I have read and agree to the </source>
-        <target state="new">I have read and agree to the </target>
+        <target state="translated">Jag har läst och samtycker till  </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/login-dialog.component.ts</context>
           <context context-type="linenumber">224</context>
@@ -10842,7 +10811,7 @@ Separate multiple addresses with commas or write each address on a new line.</ta
       </trans-unit>
       <trans-unit id="2099768926011797391" datatype="html">
         <source>Terms of Service.</source>
-        <target state="new">Terms of Service.</target>
+        <target state="translated">villkoren för tjänsten..</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/login-dialog.component.ts</context>
           <context context-type="linenumber">224</context>
@@ -10850,7 +10819,7 @@ Separate multiple addresses with commas or write each address on a new line.</ta
       </trans-unit>
       <trans-unit id="9054131468802299331" datatype="html">
         <source>You can copy all documents and folders in this folder to another folder.</source>
-        <target state="new">You can copy all documents and folders in this folder to another folder.</target>
+        <target state="translated">Du kan kopiera alla dokument och mappar från mappen till en annan mapp.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/folder/copy-folder.component.ts</context>
           <context context-type="linenumber">29,30</context>
@@ -10858,7 +10827,7 @@ Separate multiple addresses with commas or write each address on a new line.</ta
       </trans-unit>
       <trans-unit id="8724125301600901569" datatype="html">
         <source>Copy options</source>
-        <target state="new">Copy options</target>
+        <target state="translated">Alternativ för kopiering</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/folder/copy-folder.component.ts</context>
           <context context-type="linenumber">30,31</context>
@@ -10866,7 +10835,7 @@ Separate multiple addresses with commas or write each address on a new line.</ta
       </trans-unit>
       <trans-unit id="5122641209934306863" datatype="html">
         <source> Copy active access rights</source>
-        <target state="new"> Copy active access rights</target>
+        <target state="translated">Kopiera aktiva åtkomsträttigheter</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/folder/copy-folder.component.ts</context>
           <context context-type="linenumber">33</context>
@@ -10874,7 +10843,7 @@ Separate multiple addresses with commas or write each address on a new line.</ta
       </trans-unit>
       <trans-unit id="3134631678726108556" datatype="html">
         <source> Copy expired access rights</source>
-        <target state="new"> Copy expired access rights</target>
+        <target state="translated">Kopiera utgångna rättigheter</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/folder/copy-folder.component.ts</context>
           <context context-type="linenumber">36</context>
@@ -10882,7 +10851,7 @@ Separate multiple addresses with commas or write each address on a new line.</ta
       </trans-unit>
       <trans-unit id="7005994245870834103" datatype="html">
         <source> Stop copying on errors</source>
-        <target state="new"> Stop copying on errors</target>
+        <target state="translated">Stoppa kopiering vid fel</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/folder/copy-folder.component.ts</context>
           <context context-type="linenumber">39</context>
@@ -10890,7 +10859,7 @@ Separate multiple addresses with commas or write each address on a new line.</ta
       </trans-unit>
       <trans-unit id="7918852881700996328" datatype="html">
         <source>You can optionally enter a regular expression to exclude specific documents or folders from being copied.</source>
-        <target state="new">You can optionally enter a regular expression to exclude specific documents or folders from being copied.</target>
+        <target state="translated">Du kan även ange ett reguljärt uttryck för att utesluta specifika dokument eller mappar från kopiering.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/folder/copy-folder.component.ts</context>
           <context context-type="linenumber">48,49</context>
@@ -10898,7 +10867,7 @@ Separate multiple addresses with commas or write each address on a new line.</ta
       </trans-unit>
       <trans-unit id="6819973710480044605" datatype="html">
         <source>For more information on copying see the </source>
-        <target state="new">For more information on copying see the </target>
+        <target state="translated">För mer information om kopiering, se </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/folder/copy-folder.component.ts</context>
           <context context-type="linenumber">49</context>
@@ -10906,7 +10875,7 @@ Separate multiple addresses with commas or write each address on a new line.</ta
       </trans-unit>
       <trans-unit id="6225170388354110007" datatype="html">
         <source>help page</source>
-        <target state="new">help page</target>
+        <target state="translated">hjälp-sidan</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/folder/copy-folder.component.ts</context>
           <context context-type="linenumber">49</context>
@@ -10914,7 +10883,7 @@ Separate multiple addresses with commas or write each address on a new line.</ta
       </trans-unit>
       <trans-unit id="7648491229604756233" datatype="html">
         <source>Exclude documents/folders that match:</source>
-        <target state="new">Exclude documents/folders that match:</target>
+        <target state="translated">Uteslut dokument/mappar som matchar:</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/folder/copy-folder.component.ts</context>
           <context context-type="linenumber">51,52</context>
@@ -10922,7 +10891,7 @@ Separate multiple addresses with commas or write each address on a new line.</ta
       </trans-unit>
       <trans-unit id="7259476176756479954" datatype="html">
         <source>Copy preview... </source>
-        <target state="new">Copy preview... </target>
+        <target state="translated">Förhandsgranskning av kopiering... </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/folder/copy-folder.component.ts</context>
           <context context-type="linenumber">59,60</context>
@@ -10930,7 +10899,7 @@ Separate multiple addresses with commas or write each address on a new line.</ta
       </trans-unit>
       <trans-unit id="5166214964122035544" datatype="html">
         <source>These are the items that will be copied. Select the items you want to exclude from being copied.</source>
-        <target state="new">These are the items that will be copied. Select the items you want to exclude from being copied.</target>
+        <target state="translated">Det här är de objekt som kommer att kopieras. Välj de objekt som du vill utesluta från att kopieras.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/folder/copy-folder.component.ts</context>
           <context context-type="linenumber">65,66</context>
@@ -10938,7 +10907,7 @@ Separate multiple addresses with commas or write each address on a new line.</ta
       </trans-unit>
       <trans-unit id="4467315881384291593" datatype="html">
         <source> The destination folder already exists. Make sure this is intended before copying. </source>
-        <target state="new"> The destination folder already exists. Make sure this is intended before copying. </target>
+        <target state="translated">Målmappen finns redan. Kontrollera att den är avsedd innan du kopierar. </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/folder/copy-folder.component.ts</context>
           <context context-type="linenumber">92</context>
@@ -10946,7 +10915,7 @@ Separate multiple addresses with commas or write each address on a new line.</ta
       </trans-unit>
       <trans-unit id="2996339800309212628" datatype="html">
         <source>The following errors occurred while copying:</source>
-        <target state="new">The following errors occurred while copying:</target>
+        <target state="translated">Följande fel inträffade under kopieringen:</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/folder/copy-folder.component.ts</context>
           <context context-type="linenumber">105,106</context>
@@ -10954,7 +10923,7 @@ Separate multiple addresses with commas or write each address on a new line.</ta
       </trans-unit>
       <trans-unit id="5646035883377382015" datatype="html">
         <source>Destination:</source>
-        <target state="new">Destination:</target>
+        <target state="translated">Destination:</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/folder/copy-folder.component.ts</context>
           <context context-type="linenumber">43,44</context>
@@ -10962,7 +10931,7 @@ Separate multiple addresses with commas or write each address on a new line.</ta
       </trans-unit>
       <trans-unit id="3400430107547156831" datatype="html">
         <source> Copying, this might take a while...</source>
-        <target state="new"> Copying, this might take a while...</target>
+        <target state="translated">Kopiering, detta kan ta en stund...</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/folder/copy-folder.component.ts</context>
           <context context-type="linenumber">99</context>
@@ -10970,7 +10939,7 @@ Separate multiple addresses with commas or write each address on a new line.</ta
       </trans-unit>
       <trans-unit id="3224778871824337213" datatype="html">
         <source>Folder </source>
-        <target state="new">Folder </target>
+        <target state="translated">Mapp </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/folder/copy-folder.component.ts</context>
           <context context-type="linenumber">101</context>
@@ -10978,7 +10947,7 @@ Separate multiple addresses with commas or write each address on a new line.</ta
       </trans-unit>
       <trans-unit id="8982532068172415683" datatype="html">
         <source>Exclude folder or document items</source>
-        <target state="new">Exclude folder or document items</target>
+        <target state="translated">Uteslut mapp- eller dokumentobjekt</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/folder/copy-folder.component.ts</context>
           <context context-type="linenumber">63,64</context>
@@ -10986,7 +10955,7 @@ Separate multiple addresses with commas or write each address on a new line.</ta
       </trans-unit>
       <trans-unit id="5351591262168826856" datatype="html">
         <source>Copy </source>
-        <target state="new">Copy </target>
+        <target state="translated">Kopiera </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/folder/copy-folder.component.ts</context>
           <context context-type="linenumber">98</context>
@@ -10994,7 +10963,7 @@ Separate multiple addresses with commas or write each address on a new line.</ta
       </trans-unit>
       <trans-unit id="5234854445110707803" datatype="html">
         <source>From</source>
-        <target state="new">From</target>
+        <target state="translated">Från</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/folder/copy-folder.component.ts</context>
           <context context-type="linenumber">73,75</context>
@@ -11004,7 +10973,7 @@ Separate multiple addresses with commas or write each address on a new line.</ta
       </trans-unit>
       <trans-unit id="9059588518991956593" datatype="html">
         <source>To</source>
-        <target state="new">To</target>
+        <target state="translated">Till</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/folder/copy-folder.component.ts</context>
           <context context-type="linenumber">76,77</context>
@@ -11014,7 +10983,7 @@ Separate multiple addresses with commas or write each address on a new line.</ta
       </trans-unit>
       <trans-unit id="491697219808104137" datatype="html">
         <source>You can copy all documents and folders from folder </source>
-        <target state="new">You can copy all documents and folders from folder </target>
+        <target state="translated">Du kan kopiera alla dokument och mappar från mappen </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/folder/copy-folder.component.ts</context>
           <context context-type="linenumber">38,39</context>
@@ -11022,7 +10991,7 @@ Separate multiple addresses with commas or write each address on a new line.</ta
       </trans-unit>
       <trans-unit id="6021380561456852386" datatype="html">
         <source>to another folder.</source>
-        <target state="new">to another folder.</target>
+        <target state="translated">till en annan mapp</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/folder/copy-folder.component.ts</context>
           <context context-type="linenumber">40,41</context>
@@ -11030,7 +10999,7 @@ Separate multiple addresses with commas or write each address on a new line.</ta
       </trans-unit>
       <trans-unit id="1201994481266057161" datatype="html">
         <source>Nothing would be copied.</source>
-        <target state="new">Nothing would be copied.</target>
+        <target state="translated">Ingenting skulle kopieras.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/folder/copy-folder.component.ts</context>
           <context context-type="linenumber">108,109</context>
@@ -11038,7 +11007,7 @@ Separate multiple addresses with commas or write each address on a new line.</ta
       </trans-unit>
       <trans-unit id="4460586915252709323" datatype="html">
         <source> copied to </source>
-        <target state="new"> copied to </target>
+        <target state="translated"> kopieras till </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/folder/copy-folder.component.ts</context>
           <context context-type="linenumber">128</context>
@@ -11046,7 +11015,7 @@ Separate multiple addresses with commas or write each address on a new line.</ta
       </trans-unit>
       <trans-unit id="2037530438482013410" datatype="html">
         <source> Terms of Service Update </source>
-        <target state="new"> Terms of Service Update </target>
+        <target state="translated"> Uppdatering av användarvillkor </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/ui/tos-dialog.component.ts</context>
           <context context-type="linenumber">20</context>
@@ -11054,7 +11023,7 @@ Separate multiple addresses with commas or write each address on a new line.</ta
       </trans-unit>
       <trans-unit id="7673566870612739975" datatype="html">
         <source>We have updated our Terms of Service</source>
-        <target state="new">We have updated our Terms of Service</target>
+        <target state="translated">Vi har uppdaterat våra användarvillkor</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/ui/tos-dialog.component.ts</context>
           <context context-type="linenumber">24,25</context>
@@ -11062,7 +11031,7 @@ Separate multiple addresses with commas or write each address on a new line.</ta
       </trans-unit>
       <trans-unit id="6510841402924705360" datatype="html">
         <source>Could not save the agreement. Try to refresh the page, if the problem persists you can contact TIM support at tim@jyu.fi</source>
-        <target state="new">Could not save the agreement. Try to refresh the page, if the problem persists you can contact TIM support at tim@jyu.fi</target>
+        <target state="translated">Det gick inte att spara avtalet. Försök att uppdatera sidan, om problemet kvarstår kan du kontakta TIM support på tim@jyu.fi.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/ui/tos-dialog.component.ts</context>
           <context context-type="linenumber">77</context>
@@ -11070,7 +11039,7 @@ Separate multiple addresses with commas or write each address on a new line.</ta
       </trans-unit>
       <trans-unit id="6077020405693328783" datatype="html">
         <source> Confirm</source>
-        <target state="new"> Confirm</target>
+        <target state="translated"> Bekräfta</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/ui/tos-dialog.component.ts</context>
           <context context-type="linenumber">46</context>
@@ -11078,7 +11047,7 @@ Separate multiple addresses with commas or write each address on a new line.</ta
       </trans-unit>
       <trans-unit id="5609403425822167661" datatype="html">
         <source> Log out</source>
-        <target state="new"> Log out</target>
+        <target state="translated"> Logga ut</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/ui/tos-dialog.component.ts</context>
           <context context-type="linenumber">47</context>
@@ -11086,7 +11055,7 @@ Separate multiple addresses with commas or write each address on a new line.</ta
       </trans-unit>
       <trans-unit id="5490996627311304999" datatype="html">
         <source>To continue using TIM, please review and accept the updated terms.</source>
-        <target state="new">To continue using TIM, please review and accept the updated terms.</target>
+        <target state="translated">För att fortsätta använda TIM, vänligen läs igenom och acceptera de uppdaterade villkoren.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/ui/tos-dialog.component.ts</context>
           <context context-type="linenumber">25,26</context>
@@ -11094,7 +11063,7 @@ Separate multiple addresses with commas or write each address on a new line.</ta
       </trans-unit>
       <trans-unit id="8343193648246401401" datatype="html">
         <source>By checking the box and clicking "Confirm", you acknowledge that you have read and agree to the Terms of Service.</source>
-        <target state="new">By checking the box and clicking "Confirm", you acknowledge that you have read and agree to the Terms of Service.</target>
+        <target state="translated">Genom att kryssa i rutan och klicka på "Bekräfta" bekräftar du att du har läst och godkänner användarvillkoren.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/ui/tos-dialog.component.ts</context>
           <context context-type="linenumber">26,27</context>
@@ -11102,7 +11071,7 @@ Separate multiple addresses with commas or write each address on a new line.</ta
       </trans-unit>
       <trans-unit id="4524017100327483982" datatype="html">
         <source>Select a group</source>
-        <target state="new">Select a group</target>
+        <target state="translated">Välj en grupp</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/groupJoin/group-join.component.ts</context>
           <context context-type="linenumber">62,63</context>
@@ -11310,7 +11279,7 @@ Separate multiple addresses with commas or write each address on a new line.</ta
       </trans-unit>
       <trans-unit id="18610244592166500" datatype="html">
         <source>Reset table state to</source>
-        <target state="new">Reset table state to</target>
+        <target state="translated">Återställ tabellstatus till</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/timTable/tim-table.component.ts</context>
           <context context-type="linenumber">1305,1304</context>
@@ -11318,7 +11287,7 @@ Separate multiple addresses with commas or write each address on a new line.</ta
       </trans-unit>
       <trans-unit id="2323081413317144899" datatype="html">
         <source>Reset table</source>
-        <target state="new">Reset table</target>
+        <target state="translated">återställ tabell</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/timTable/tim-table.component.ts</context>
           <context context-type="linenumber">1306,1304</context>
@@ -11326,7 +11295,7 @@ Separate multiple addresses with commas or write each address on a new line.</ta
       </trans-unit>
       <trans-unit id="5520520072410375513" datatype="html">
         <source>original</source>
-        <target state="new">original</target>
+        <target state="translated">originell</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/timTable/tim-table.component.ts</context>
           <context context-type="linenumber">1310</context>
@@ -11338,6 +11307,70 @@ Separate multiple addresses with commas or write each address on a new line.</ta
         <context-group purpose="location">
           <context context-type="sourcefile">modules/cs/js/jsframe.ts</context>
           <context context-type="linenumber">310</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="1599561053758341521" datatype="html">
+        <source>You are showing exam answers to the students.</source>
+        <target state="translated">Visning av svar är aktiverad för denna grupp.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
+          <context context-type="linenumber">466</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="6156295793414021264" datatype="html">
+        <source>You can show answers only when they don't have an active exam running.</source>
+        <target state="translated">Du kan endast visa svar när provgruppen inte har pågående prov.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
+          <context context-type="linenumber">694</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="6659491575322736264" datatype="html">
+        <source>You can only show answers for the main exam</source>
+        <target state="translated">Du kan endast visa svaren från det egentliga provet</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
+          <context context-type="linenumber">698</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="7179153993560145570" datatype="html">
+        <source>and not for the practice exam.</source>
+        <target state="translated">Visning av svar från övningsprovet stöds ännu inte.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
+          <context context-type="linenumber">698</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="5172400703221094368" datatype="html">
+        <source>To start a new exam, stop answer reviewing in section <x id="START_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;i>"/>4. Show answers to students<x id="CLOSE_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;/i>"/>.</source>
+        <target state="translated">Stoppa visningen av svar under <x id="START_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;i>"/>4. Visa provets svar till elever<x id="CLOSE_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;/i>"/> innan du kan påbörja ett nytt prov för gruppen.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
+          <context context-type="linenumber">467,468</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="6737499420976539156" datatype="html">
+        <source>Stop the exam and disable login codes in section <x id="START_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;i>"/>3. Manage exams<x id="CLOSE_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;/i>"/> to enable showing answers.</source>
+        <target state="translated">Avsluta provet och inaktivera inloggningskoderna under <x id="START_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;i>"/>3. Hantera prov<x id="CLOSE_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;/i>"/> innan du kan visa svar.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
+          <context context-type="linenumber">695,696</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="2888797400316878545" datatype="html">
+        <source>Change the exam in section <x id="START_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;i>"/>3. Manage exams<x id="CLOSE_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;/i>"/> to enable showing answers.</source>
+        <target state="translated">Byt prov under <x id="START_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;i>"/>3. Hantera prov<x id="CLOSE_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;/i>"/> för att kunna visa svaren.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
+          <context context-type="linenumber">699,700</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="6393914330108344860" datatype="html">
+        <source> Select an exam in section <x id="START_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;i>"/>3. Manage exams<x id="CLOSE_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;/i>"/> to enable showing answers. </source>
+        <target state="translated"> Välj prov under <x id="START_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;i>"/>3. Hantera prov<x id="CLOSE_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;/i>"/> för att kunna visa svaren. </target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
+          <context context-type="linenumber">702,703</context>
         </context-group>
       </trans-unit>
     </body>
