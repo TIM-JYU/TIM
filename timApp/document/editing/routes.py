@@ -1,4 +1,5 @@
 """Routes for editing a document."""
+
 import os
 import re
 import tempfile
@@ -387,6 +388,7 @@ def modify_paragraph_common(doc_id: int, md: str, par_id: str, par_next_id: str 
             original_par = doc.get_paragraph(par_id)
         except TimDbException as e:
             raise NotExist(str(e))
+        original_task_id = original_par.get_attr("taskId")
         edit_result = DocumentEditResult()
         pars = []
         changes = abort_if_duplicate_ids(
@@ -395,6 +397,7 @@ def modify_paragraph_common(doc_id: int, md: str, par_id: str, par_next_id: str 
             auto_rename_ids=True,
             no_other_checks=False,
             allow_id=par_id,
+            allow_task_id=original_task_id,
         )
         edit_result.warnings = list_to_html(changes)
         pars_to_add = editor_pars[1:]
@@ -701,12 +704,14 @@ def par_response(
             },
             "version": new_doc_version,
             "duplicates": duplicates,
-            "original_par": {
-                "md": original_par.get_markdown(),
-                "attrs": original_par.get_attrs(),
-            }
-            if original_par
-            else None,
+            "original_par": (
+                {
+                    "md": original_par.get_markdown(),
+                    "attrs": original_par.get_attrs(),
+                }
+                if original_par
+                else None
+            ),
             "new_par_ids": edit_result.new_par_ids if edit_result else None,
             "warnings": edit_result.warnings if edit_result else None,
         }
