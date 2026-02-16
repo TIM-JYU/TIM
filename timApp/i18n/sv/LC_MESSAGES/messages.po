@@ -8,116 +8,127 @@ msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
 "POT-Creation-Date: 2026-02-10 09:40+0000\n"
-"PO-Revision-Date: 2026-02-10 08:31+0000\n"
-"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
-"Language: sv\n"
+"PO-Revision-Date: 2026-02-16 09:18+0200\n"
+"Last-Translator: \n"
 "Language-Team: sv <LL@li.org>\n"
-"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"Language: sv\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
 "Generated-By: Babel 2.16.0\n"
+"X-Generator: Poedit 3.8\n"
 
 #: answer/routes.py:802
 msgid "You cannot submit new answers to the document."
-msgstr ""
+msgstr "Du kan inte skicka in nya svar till dokumentet."
 
 #: answer/routes.py:1166
 msgid ""
-"Your view access to this document has expired, so this answer was saved "
-"but marked as invalid."
+"Your view access to this document has expired, so this answer was saved but "
+"marked as invalid."
 msgstr ""
+"Din åtkomst till detta dokument har gått ut, så detta svar har sparats men "
+"markerats som ogiltigt."
 
 #: auth/accesshelper.py:374
 msgid "Sorry, you don't have permission to use this resource."
-msgstr ""
+msgstr "Tyvärr, du har inte behörighet att använda den här resursen."
 
 #: plugin/examGroupManager/examGroupManager.py:705
 #, python-format
 msgid ""
-"Invalid student row: %(data)s. Expected format: <grade> <surname> "
-"<given_names>"
+"Invalid student row: %(data)s. Expected format: <grade> <surname> <given_names>"
 msgstr ""
+"Ogiltig studentrad: %(data)s. Förväntat format: <betyg> <efternamn> <förnamn>"
 
 #: plugin/examGroupManager/examGroupManager.py:785
 msgid "Practice exam not set in the plugin markup."
-msgstr ""
+msgstr "Övningsprov är inte inställt i plugin-markeringen."
 
 #: plugin/examGroupManager/examGroupManager.py:788
 msgid "Exam info not found in the plugin markup."
-msgstr ""
+msgstr "Examensinformation hittades inte i plugin-markeringen."
 
 #: plugin/examGroupManager/examGroupManager.py:858
 msgid ""
-"No login codes found for the group. Generate login codes before starting "
-"the exam."
+"No login codes found for the group. Generate login codes before starting the "
+"exam."
 msgstr ""
+"Inga inloggningskoder hittades för gruppen. Generera inloggningskoder innan du "
+"påbörjar provet."
 
 #: plugin/examGroupManager/examGroupManager.py:900
 msgid "The group is currently not in an exam. Please set the exam document first."
 msgstr ""
+"Gruppen är för närvarande inte i en provsituation. Vänligen ställ in "
+"provdokumentet först."
 
 #: plugin/examGroupManager/examGroupManager.py:909
 msgid "You do not have access to the exam document."
-msgstr ""
+msgstr "Du har inte tillgång till provdokumentet."
 
 #: plugin/examGroupManager/examGroupManager.py:1061
 msgid ""
-"Cannot change exam state while the answers are revealed. Disable answer "
-"reveal in section 4."
+"Cannot change exam state while the answers are revealed. Disable answer reveal "
+"in section 4."
 msgstr ""
+"Det går inte att ändra provstatus medan svaren visas. Inaktivera visning av "
+"svar i avsnitt 4."
 
 #: plugin/examGroupManager/examGroupManager.py:1085
 msgid "You do not have sufficient access to the exam document to set it."
 msgstr ""
+"Du har inte tillräcklig åtkomst till examensdokumentet för att ställa in det."
 
 #: plugin/examGroupManager/examGroupManager.py:1143
 msgid ""
-"Cannot reveal answers while the exam is ongoing. Stop the exam and "
-"disable the login codes in the section 3."
+"Cannot reveal answers while the exam is ongoing. Stop the exam and disable the "
+"login codes in the section 3."
 msgstr ""
+"Svaren får inte avslöjas medan provet pågår. Avbryt provet och inaktivera "
+"inloggningskoderna i avsnitt 3."
 
 #: plugin/quantum_circuit/quantumCircuit.py:271
 msgid "Expand by moving mouse over the exercise or by clicking"
-msgstr ""
+msgstr "Expandera genom att flytta musen över övningen eller genom att klicka"
 
 #: plugin/tableform/tableForm.py:541
 msgid "Real name"
-msgstr ""
+msgstr "Verkligt namn"
 
 #: plugin/tableform/tableForm.py:543
 msgid "Username"
-msgstr ""
+msgstr "Användarnamn"
 
 #: plugin/tableform/tableForm.py:545
 msgid "Email"
-msgstr ""
+msgstr "E-postadress"
 
 #: templates/create_new.jinja2:2
 msgid "This page does not yet exist."
-msgstr ""
+msgstr "Denna sida finns ännu inte."
 
 #: templates/examgroupmanager/print_codes.jinja2:69
 msgid "Exam group codes"
-msgstr ""
+msgstr "Provgruppskoder"
 
 #: templates/examgroupmanager/print_codes.jinja2:71
 msgid "Exam"
-msgstr ""
+msgstr "Prov"
 
 #: templates/examgroupmanager/print_codes.jinja2:72
 msgid "Exam group"
-msgstr ""
+msgstr "Provgrupp"
 
 #: templates/examgroupmanager/print_codes.jinja2:78
 msgid "Name"
-msgstr ""
+msgstr "Namn"
 
 #: templates/examgroupmanager/print_codes.jinja2:80
 msgid "Exam address"
-msgstr ""
+msgstr "Webbadress för provet"
 
 #: templates/examgroupmanager/print_codes.jinja2:82
 msgid "Login code"
-msgstr ""
-
+msgstr "Inloggningskod"
