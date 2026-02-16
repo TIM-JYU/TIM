@@ -16,7 +16,16 @@ TODO: if par_id found in some other editing_area do not add
 from __future__ import annotations
 
 from html import escape
-from typing import TYPE_CHECKING, Callable, TypeAlias, Sequence, Any, Optional, TypeVar
+from typing import (
+    TYPE_CHECKING,
+    Callable,
+    TypeAlias,
+    Sequence,
+    Any,
+    Optional,
+    TypeVar,
+    cast,
+)
 import re
 from collections import Counter
 
@@ -198,8 +207,9 @@ def check_and_rename_attribute(
         # go through all new pars if they need to be renamed
         p_id: str
         p_attrs: dict[str, str]
-        p_is_dict = isinstance(p, dict)
-        if p_is_dict:
+        p_is_dict = False
+        if isinstance(p, dict):
+            p_is_dict = True
             p_attrs = p.get("attrs") or {}
             p_id = str(p.get("id"))
         else:
@@ -245,8 +255,9 @@ def check_and_rename_attribute(
                 for ni, np in enumerate(new_pars):
                     if np is p:
                         continue
-                    np_id = np.get_id()
-                    np_name = np.get_attr(attr_name)
+                    npd = cast(DocParagraph, np)
+                    np_id = npd.get_id()
+                    np_name = npd.get_attr(attr_name)
                     if np_name == new_name:
                         allow = ""  # if some other new par has the same name, do not allow original name
                         break
@@ -280,7 +291,6 @@ def abort_if_duplicate_ids(
     no_other_checks: bool = False,
     existing_ids: set[str] | None = None,
     allow_id: str = "",
-    allow_task_id: str = "",
 ) -> list[str]:
     """
     Aborts the request if any of the paragraphs
@@ -296,7 +306,6 @@ def abort_if_duplicate_ids(
     :param existing_ids: Optional set of existing paragraph IDs to check against.
                          If None, the IDs are fetched from the document.
     :param allow_id: for example first editing par id that is allowed even if duplicate
-    :param allow_task_id: for example first editing par task id that is allowed even if duplicate
     :raises RouteException: If there are conflicting paragraph IDs and auto_rename_ids is False.
     :return: List of changes made (e.g., renamings).
     """
