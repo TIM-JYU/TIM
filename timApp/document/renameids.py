@@ -255,9 +255,14 @@ def check_and_rename_attribute(
                 for ni, np in enumerate(new_pars):
                     if np is p:
                         continue
-                    npd = cast(DocParagraph, np)
-                    np_id = npd.get_id()
-                    np_name = npd.get_attr(attr_name)
+
+                    if isinstance(np, dict):
+                        np_id = str(np.get("id"))
+                        np_name = (np.get("attrs") or {}).get(attr_name)
+                    else:
+                        np_id = np.get_id()
+                        np_name = np.get_attr(attr_name)
+
                     if np_name == new_name:
                         allow = ""  # if some other new par has the same name, do not allow original name
                         break
