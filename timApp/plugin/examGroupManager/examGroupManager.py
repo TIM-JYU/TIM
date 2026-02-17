@@ -765,9 +765,14 @@ def generate_codes_for_members(group_id: int, users: list[ExamGroupMember]) -> R
 
     _verify_exam_group_access(ug)
 
-    members = (
-        list(ug.users) if len(users) == 0 else [User.get_by_id(u.id) for u in users]
-    )
+    members: list[User] = []
+    if len(users):
+        for u in users:
+            _u = User.get_by_id(u.id)
+            if _u:
+                members.append(_u)
+    else:
+        members = list(ug.users)
 
     # Disable previous codes of the members
     run_sql(
