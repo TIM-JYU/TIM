@@ -397,8 +397,11 @@ export class ToggleComponent {
                                 </div>
                                 <h4 i18n>Login codes</h4>
                                 <div class="button-controls">
-                                    <button class="timButton" (click)="generateLoginCodes(group)" i18n>
-                                        Generate new login codes
+                                    <button class="timButton" *ngIf="this.getSelectedMembers(group).length >= 0 && !group.allMembersSelected" [disabled]="this.getSelectedMembers(group).length == 0" (click)="generateLoginCodes(group)" i18n>
+                                        Generate new login codes for selected students
+                                    </button>
+                                    <button class="timButton" *ngIf="group.allMembersSelected" (click)="generateLoginCodes(group)" i18n>
+                                        Generate new login codes for all students
                                     </button>
                                     <button class="timButton" *ngIf="group.examDocId" (click)="printLoginCodes(group)"
                                             i18n>
@@ -1053,8 +1056,12 @@ export class ExamGroupManagerComponent
     async generateLoginCodes(group: ExamGroup) {
         this.loading = true;
         this.error = undefined;
-        const members = this.getMembersOf(group);
-        if (!members) {
+
+        let members = this.getSelectedMembers(group);
+        if (group.allMembersSelected) {
+            members = this.getMembersOf(group);
+        } else {
+            // no members selected
             return;
         }
 
@@ -1072,6 +1079,8 @@ export class ExamGroupManagerComponent
         const res = await toPromise(
             this.http.post("/examGroupManager/generateCodes", {
                 group_id: group.id,
+                // only send a list of selected members, empty list if all members are selected
+                users: members.length < group.memberCount ? members : [],
             })
         );
 
@@ -1144,6 +1153,7 @@ export class ExamGroupManagerComponent
             this.getMembersOf(group).push(newUser);
             group.memberCount++;
         }
+        await this.getGroupMembers(group);
     }
 
     /**
@@ -1236,7 +1246,7 @@ export class ExamGroupManagerComponent
         }
     }
 
-    private getSelectedMembers(group: ExamGroup): GroupMember[] {
+    getSelectedMembers(group: ExamGroup): GroupMember[] {
         return this.getMembersOf(group).filter((m) => m.selected);
     }
 
