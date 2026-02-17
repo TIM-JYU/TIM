@@ -216,6 +216,18 @@ exam_group_data_user_fields: dict[str, Field] = {
 EXAM_GROUP_DATA_USER_FIELDS = {f.name for f in fields(ExamGroupDataUser)}
 
 
+@dataclass
+class ExamGroupMember:
+    id: int
+    name: str
+    email: str
+    real_name: str
+    selected: bool
+    extraInfo: str | Missing = field(default=missing)
+    login_code: str | Missing = field(default=missing)
+    extraTime: bool | Missing = field(default=missing)
+
+
 def _get_latest_fields_any(task_fields: Iterable[str]) -> Sequence[Answer]:
     latest_answers_sub = (
         select(func.max(Answer.id))
@@ -655,6 +667,9 @@ def do_create_users(
     # Flush to make user be member of the group
     db.session.flush()
 
+    # Create a new login code for the user as soon as the user is created
+    _generate_login_code_for_new_user(user, group)
+
     extra_data = ExamGroupDataUser(extraInfo=extra_info)
     _update_exam_group_data_user(user, group, extra_data)
 
@@ -715,8 +730,30 @@ def import_users_to_group(group_id: int, text: str) -> Response:
     return ok_response()
 
 
+def _generate_login_code_for_new_user(user: User, group: UserGroup) -> None:
+    """
+    Generates a login code for the user and updates UserLoginCode properties.
+    Note: this function will always overwrite previous values
+    :return: None
+    """
+    # Disable previous codes of the User, if any exist
+    run_sql(
+        update(UserLoginCode)
+        .where(UserLoginCode.user_id == user.id)
+        .values(active_to=datetime.now(), valid=False)
+    )
+    db.session.flush()
+    UserLoginCode.generate_new(
+        user=user,
+        active_from=None,
+        active_to=datetime.now(),
+        name=group.name,
+    )
+    db.session.commit()
+
+
 @exam_group_manager_plugin.post("/generateCodes")
-def generate_codes_for_members(group_id: int) -> Response:
+def generate_codes_for_members(group_id: int, users: list[ExamGroupMember]) -> Response:
     """
     Updates UserLoginCode properties.
     Note: this function will always overwrite previous values
@@ -728,18 +765,24 @@ def generate_codes_for_members(group_id: int) -> Response:
 
     _verify_exam_group_access(ug)
 
-    ug_members = list(ug.users)
+    members: list[User] = []
+    if len(users):
+        for u in users:
+            _u = User.get_by_id(u.id)
+            if _u:
+                members.append(_u)
+    else:
+        members = list(ug.users)
 
     # Disable previous codes of the members
-    # TODO: Instead provide option on whether to disable previous codes
     run_sql(
         update(UserLoginCode)
-        .where(UserLoginCode.user_id.in_([u.id for u in ug_members]))
+        .where(UserLoginCode.user_id.in_([u.id for u in members]))
         .values(active_to=datetime.now(), valid=False)
     )
     db.session.flush()
 
-    for m in ug_members:
+    for m in members:
         UserLoginCode.generate_new(
             user=m,
             active_from=None,
