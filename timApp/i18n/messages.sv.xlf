@@ -9554,14 +9554,6 @@
           <context context-type="linenumber">363,364</context>
         </context-group>
       </trans-unit>
-      <trans-unit id="6831339066754446743" datatype="html">
-        <source> Generate new login codes </source>
-        <target state="translated"> Generera nya inloggningskoder </target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
-          <context context-type="linenumber">366</context>
-        </context-group>
-      </trans-unit>
       <trans-unit id="1867936196876545067" datatype="html">
         <source>Could not fetch groups. Details: <x id="PH" equiv-text="groups.result.error.error"/></source>
         <target state="translated">Gruppens information kunde inte hämtas. Mer information: <x id="PH" equiv-text="groups.result.error.error"/></target>
@@ -11371,6 +11363,22 @@ Mata in flera användares adresser på separata rader eller åtskilda med kommat
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
           <context context-type="linenumber">702,703</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="2974157942708563744" datatype="html">
+        <source> Generate new login codes for selected students </source>
+        <target state="translated"> Skapa nya inloggningskoder för utvalda studenter </target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
+          <context context-type="linenumber">401</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="9133674348570510594" datatype="html">
+        <source> Generate new login codes for all students </source>
+        <target state="translated"> Skapa nya inloggningskoder för alla elever </target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
+          <context context-type="linenumber">404</context>
         </context-group>
       </trans-unit>
     </body>
