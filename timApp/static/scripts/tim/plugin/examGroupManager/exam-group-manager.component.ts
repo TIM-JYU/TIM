@@ -503,7 +503,7 @@ export class ToggleComponent {
                                 </tim-alert>
                             </div>
                             <fieldset
-                                [disabled]="!group.currentExamDoc || group.allowAccess || (!!examByDocId.get(group.currentExamDoc)?.startingTime && !examStartingTimeReached)">
+                                [disabled]="!group.currentExamDoc || group.allowAccess || (!!examByDocId.get(group.currentExamDoc)?.startingTime && !examStartingTimeReached) || (!!practiceExamByDocId.get(group.currentExamDoc)?.endingTime && practiceExamEndingTimeReached)">
                                 <h5 i18n>Hold an exam</h5>
 
                                 <p i18n>
@@ -513,7 +513,7 @@ export class ToggleComponent {
 
                                 <div class="checklist">
                                     <div
-                                        [class.disabled]="!group.currentExamDoc || group.allowAccess || (!!examByDocId.get(group.currentExamDoc)?.startingTime && !examStartingTimeReached)">
+                                        [class.disabled]="!group.currentExamDoc || group.allowAccess || (!!examByDocId.get(group.currentExamDoc)?.startingTime && !examStartingTimeReached) || (!!practiceExamByDocId.get(group.currentExamDoc)?.endingTime && practiceExamEndingTimeReached)">
                                         <div class="cb">
                                             <input type="checkbox" title="Mark as done" i18n-title
                                                    [checked]="group.examState > 0"
