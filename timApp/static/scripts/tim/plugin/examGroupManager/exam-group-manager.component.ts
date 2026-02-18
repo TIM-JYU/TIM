@@ -484,27 +484,26 @@ export class ToggleComponent {
                                 *ngIf="group.currentExamDoc && (!!examByDocId.get(group.currentExamDoc)?.startingTime && !examStartingTimeReached)"
                                 class="mt">
                                 <tim-alert severity="warning">
-                                    <h5 i18n>Exam Reservation Details</h5>
+                                    <h5 i18n>Exam reservation details</h5>
                                     <p i18n>
-                                        You have a reservation for this exam. The exam will begin
-                                        at the reserved time. Starting the exam is not available before the scheduled date and time, so
-                                        please wait until the scheduled time before beginning. If you experience any
-                                        issues or require special arrangements, please contact the exam support.
+                                        You have a reservation for this exam.
+                                        Starting the exam will become available
+                                        on {{ toReadableDate(examByDocId.get(group.currentExamDoc)?.startingTime ?? "") }}.
                                     </p>
                                 </tim-alert>
                             </div>
                             <div
-                                *ngIf="group.currentExamDoc && (!!examByDocId.get(group.currentExamDoc)?.endingTime && examEndingTimeReached)"
+                                *ngIf="group.currentExamDoc && (!!examByDocId.get(group.currentExamDoc)?.endingTime && practiceExamEndingTimeReached)"
                                 class="mt">
                                 <tim-alert severity="warning">
-                                    <h5 i18n>Practice Exam Unavailable</h5>
+                                    <h5 i18n>This is a practice exam</h5>
                                     <p i18n>
-                                        The practice exam is no longer available. Please use the main exam at your reserved exam time.
+                                        To start the main exam, select it from the dropdown menu above.
                                     </p>
                                 </tim-alert>
                             </div>
                             <fieldset
-                                [disabled]="!group.currentExamDoc || group.allowAccess || (!!examByDocId.get(group.currentExamDoc)?.startingTime && !examStartingTimeReached) || (!!examByDocId.get(group.currentExamDoc)?.endingTime && examEndingTimeReached)">
+                                [disabled]="!group.currentExamDoc || group.allowAccess || (!!examByDocId.get(group.currentExamDoc)?.startingTime && !examStartingTimeReached)">
                                 <h5 i18n>Hold an exam</h5>
 
                                 <p i18n>
@@ -514,7 +513,7 @@ export class ToggleComponent {
 
                                 <div class="checklist">
                                     <div
-                                        [class.disabled]="!group.currentExamDoc || group.allowAccess || (!!examByDocId.get(group.currentExamDoc)?.startingTime && !examStartingTimeReached) || (!!examByDocId.get(group.currentExamDoc)?.endingTime && examEndingTimeReached)">
+                                        [class.disabled]="!group.currentExamDoc || group.allowAccess || (!!examByDocId.get(group.currentExamDoc)?.startingTime && !examStartingTimeReached)">
                                         <div class="cb">
                                             <input type="checkbox" title="Mark as done" i18n-title
                                                    [checked]="group.examState > 0"
@@ -742,10 +741,14 @@ export class ToggleComponent {
                             <tim-alert *ngIf="!group.currentExamDoc" severity="warning" i18n>
                                 Select an exam in section <i>3. Manage exams</i> to enable showing answers.
                             </tim-alert>
-                            <div *ngIf="group.currentExamDoc && (!!examByDocId.get(group.currentExamDoc)?.startingTime && !examStartingTimeReached) || !showAnswersTimeReached">
+                            <div
+                                *ngIf="group.currentExamDoc && ((!!examByDocId.get(group.currentExamDoc)?.startingTime && !examStartingTimeReached) || ((!!examByDocId.get(group.currentExamDoc)?.showAnswersStartingTime && !showAnswersTimeReached)))">
                                 <tim-alert severity="warning">
-                                    <p i18n>
-                                        Answers will be available to students only after the main exams have been released.
+                                    <p *ngIf="!examStartingTimeReached" i18n>
+                                        You can hold the exam after {{ toReadableDate(examByDocId.get(group.currentExamDoc!)?.startingTime ?? "") }}.
+                                    </p>
+                                    <p *ngIf="!showAnswersTimeReached" i18n>
+                                        You can show the answers only after {{ toReadableDate(examByDocId.get(group.currentExamDoc!)?.showAnswersStartingTime ?? "") }}.
                                     </p>
                                 </tim-alert>
                             </div>
@@ -826,8 +829,9 @@ export class ExamGroupManagerComponent
     members: Record<string, GroupMember[]> = {};
     error?: string;
     examByDocId = new Map<number, ExamWithPractice>();
+    practiceExamByDocId = new Map<number, ExamWithPractice>();
     examStartingTimeReached = true;
-    examEndingTimeReached = false;
+    practiceExamEndingTimeReached = false;
     showAnswersTimeReached = true;
 
     allowRestrictedAccess: boolean = false;
@@ -859,10 +863,18 @@ export class ExamGroupManagerComponent
             this.examByDocId.set(exam.docId, exam);
             if (exam.practice) {
                 this.examByDocId.set(exam.practice.docId, exam.practice);
+                this.practiceExamByDocId.set(
+                    exam.practice.docId,
+                    exam.practice
+                );
             }
         }
         if (this.markup.practiceExam) {
             this.examByDocId.set(
+                this.markup.practiceExam.docId,
+                this.markup.practiceExam
+            );
+            this.practiceExamByDocId.set(
                 this.markup.practiceExam.docId,
                 this.markup.practiceExam
             );
@@ -934,12 +946,12 @@ export class ExamGroupManagerComponent
             this.examStartingTimeReached = true;
         }
 
-        if (exam.endingTime) {
+        if (this.practiceExamByDocId.has(exam.docId) && exam.endingTime) {
             await this.checkIfBeforeServerTime(exam.endingTime).then(
-                (result) => (this.examEndingTimeReached = result)
+                (result) => (this.practiceExamEndingTimeReached = result)
             );
         } else {
-            this.examEndingTimeReached = false;
+            this.practiceExamEndingTimeReached = false;
         }
 
         if (exam.showAnswersStartingTime) {
@@ -1386,7 +1398,6 @@ export class ExamGroupManagerComponent
         const curGroup = this.visibleGroups.find(
             (g) => g.name === this.selectedGroupTab
         );
-        console.log(this.selectedGroupTab, curGroup);
         if (curGroup) {
             await this.getGroupMembers(curGroup);
         }
@@ -1781,7 +1792,6 @@ export class ExamGroupManagerComponent
     }
 
     toReadableDate(date: string): string {
-        console.log(date);
         return new Date(date).toLocaleString(Users.getCurrentLocale(), {
             dateStyle: "long",
             timeStyle: "short",

@@ -9960,7 +9960,7 @@ Generating new codes will overwrite the existing ones.
 
 Proceed?</source>
         <target state="translated">Vissa elever i provgruppen '<x id="PH" equiv-text="group.readableName"/>' har redan en inloggningskod.
-Att skapa nya koder inaktiverar de tidigare koderna. 
+Att skapa nya koder inaktiverar de tidigare koderna.
 
 Vill du fortsätta?</target>
         <context-group purpose="location">
@@ -10312,7 +10312,7 @@ Var god och skapa inloggningskoder först.</target>
         <target state="translated">Eleverna kan självständigt kolla sina svar. De kan inte skicka in nya svar, men de kan se provets modell­svar på samma sätt som läraren.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
-          <context context-type="linenumber">712,713</context>
+          <context context-type="linenumber">785,787</context>
         </context-group>
       </trans-unit>
       <trans-unit id="9173480621811532307" datatype="html">
