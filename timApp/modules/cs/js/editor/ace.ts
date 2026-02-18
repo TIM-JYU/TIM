@@ -41,6 +41,8 @@ export class AceEditorComponent implements IEditor {
     @ViewChild("area") area!: ElementRef;
     @Input() placeholder: string = ""; // TODO: make this work
 
+    @Input() hideLineNumbers?: boolean = false;
+
     @Input()
     set languageMode(lang: string) {
         this.languageMode_ = lang;
@@ -170,6 +172,10 @@ export class AceEditorComponent implements IEditor {
         if (this.startLineNumber_ !== undefined) {
             // Toggle start line update
             this.startLineNumber = this.startLineNumber_;
+        }
+
+        if (this.hideLineNumbers) {
+            this.aceEditor.renderer.setShowGutter(false);
         }
     }
 
