@@ -403,10 +403,10 @@ export class ToggleComponent {
                                 </div>
                                 <h4 i18n>Login codes</h4>
                                 <div class="button-controls">
-                                    <button class="timButton" *ngIf="this.getSelectedMembers(group).length >= 0 && !group.allMembersSelected" [disabled]="this.getSelectedMembers(group).length == 0" (click)="generateLoginCodes(group)" i18n>
+                                    <button class="timButton" *ngIf="this.getSelectedMembers(group).length > 0 && !group.allMembersSelected" (click)="generateLoginCodes(group)" i18n>
                                         Generate new login codes for selected students
                                     </button>
-                                    <button class="timButton" *ngIf="group.allMembersSelected" (click)="generateLoginCodes(group)" i18n>
+                                    <button class="timButton" *ngIf="group.allMembersSelected || this.getSelectedMembers(group).length == 0" (click)="generateLoginCodes(group)" i18n>
                                         Generate new login codes for all students
                                     </button>
                                     <button class="timButton" *ngIf="group.examDocId" (click)="printLoginCodes(group)"
@@ -1182,11 +1182,8 @@ export class ExamGroupManagerComponent
         this.error = undefined;
 
         let members = this.getSelectedMembers(group);
-        if (group.allMembersSelected) {
+        if (group.allMembersSelected || members.length == 0) {
             members = this.getMembersOf(group);
-        } else {
-            // no members selected
-            return;
         }
 
         const hasSomeWithCode = members.some((m) => m.login_code);
