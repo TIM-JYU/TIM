@@ -7,17 +7,16 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-02-10 09:40+0000\n"
+"POT-Creation-Date: 2026-02-18 12:58+0000\n"
 "PO-Revision-Date: 2026-02-16 09:25+0200\n"
 "Last-Translator: \n"
-"Language-Team: es <LL@li.org>\n"
 "Language: es\n"
+"Language-Team: es <LL@li.org>\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Plural-Forms: nplurals=2; plural=(n != 1);\n"
 "Generated-By: Babel 2.16.0\n"
-"X-Generator: Poedit 3.8\n"
 
 #: answer/routes.py:802
 msgid "You cannot submit new answers to the document."
@@ -25,8 +24,8 @@ msgstr "No puede enviar nuevas respuestas al documento."
 
 #: answer/routes.py:1166
 msgid ""
-"Your view access to this document has expired, so this answer was saved but "
-"marked as invalid."
+"Your view access to this document has expired, so this answer was saved "
+"but marked as invalid."
 msgstr ""
 "Tu acceso a este documento ha caducado, por lo que esta respuesta se ha "
 "guardado, pero se ha marcado como no válida."
@@ -35,74 +34,77 @@ msgstr ""
 msgid "Sorry, you don't have permission to use this resource."
 msgstr "Lo sentimos, no tienes permiso para utilizar este recurso."
 
-#: plugin/examGroupManager/examGroupManager.py:705
+#: plugin/examGroupManager/examGroupManager.py:720
 #, python-format
 msgid ""
-"Invalid student row: %(data)s. Expected format: <grade> <surname> <given_names>"
+"Invalid student row: %(data)s. Expected format: <grade> <surname> "
+"<given_names>"
 msgstr ""
 "Fila de estudiante no válida: %(data)s. Formato esperado: <calificación> "
 "<apellido> <nombres>"
 
-#: plugin/examGroupManager/examGroupManager.py:785
+#: plugin/examGroupManager/examGroupManager.py:828
 msgid "Practice exam not set in the plugin markup."
 msgstr "El examen de práctica no está configurado en el marcado del complemento."
 
-#: plugin/examGroupManager/examGroupManager.py:788
+#: plugin/examGroupManager/examGroupManager.py:831
 msgid "Exam info not found in the plugin markup."
 msgstr ""
-"No se ha encontrado información sobre el examen en el marcado del complemento."
+"No se ha encontrado información sobre el examen en el marcado del "
+"complemento."
 
-#: plugin/examGroupManager/examGroupManager.py:858
+#: plugin/examGroupManager/examGroupManager.py:901
 msgid ""
-"No login codes found for the group. Generate login codes before starting the "
-"exam."
+"No login codes found for the group. Generate login codes before starting "
+"the exam."
 msgstr ""
-"No se han encontrado códigos de inicio de sesión para el grupo. Genere códigos "
-"de inicio de sesión antes de comenzar el examen."
+"No se han encontrado códigos de inicio de sesión para el grupo. Genere "
+"códigos de inicio de sesión antes de comenzar el examen."
 
-#: plugin/examGroupManager/examGroupManager.py:900
+#: plugin/examGroupManager/examGroupManager.py:943
 msgid "The group is currently not in an exam. Please set the exam document first."
 msgstr ""
-"El grupo no está actualmente en un examen. Por favor, configure primero el "
-"documento del examen."
+"El grupo no está actualmente en un examen. Por favor, configure primero "
+"el documento del examen."
 
-#: plugin/examGroupManager/examGroupManager.py:909
+#: plugin/examGroupManager/examGroupManager.py:952
 msgid "You do not have access to the exam document."
 msgstr "No tienes acceso al documento del examen."
 
-#: plugin/examGroupManager/examGroupManager.py:1061
+#: plugin/examGroupManager/examGroupManager.py:1104
 msgid ""
-"Cannot change exam state while the answers are revealed. Disable answer reveal "
-"in section 4."
+"Cannot change exam state while the answers are revealed. Disable answer "
+"reveal in section 4."
 msgstr ""
-"No se puede cambiar el estado del examen mientras se muestran las respuestas. "
-"Desactiva la visualización de respuestas en la sección 4."
+"No se puede cambiar el estado del examen mientras se muestran las "
+"respuestas. Desactiva la visualización de respuestas en la sección 4."
 
-#: plugin/examGroupManager/examGroupManager.py:1085
+#: plugin/examGroupManager/examGroupManager.py:1128
 msgid "You do not have sufficient access to the exam document to set it."
 msgstr "No tienes acceso suficiente al documento del examen para configurarlo."
 
-#: plugin/examGroupManager/examGroupManager.py:1143
+#: plugin/examGroupManager/examGroupManager.py:1186
 msgid ""
-"Cannot reveal answers while the exam is ongoing. Stop the exam and disable the "
-"login codes in the section 3."
+"Cannot reveal answers while the exam is ongoing. Stop the exam and "
+"disable the login codes in the section 3."
 msgstr ""
-"No se pueden revelar las respuestas mientras el examen esté en curso. Detenga "
-"el examen y desactive los códigos de inicio de sesión en la sección 3."
+"No se pueden revelar las respuestas mientras el examen esté en curso. "
+"Detenga el examen y desactive los códigos de inicio de sesión en la "
+"sección 3."
 
 #: plugin/quantum_circuit/quantumCircuit.py:271
 msgid "Expand by moving mouse over the exercise or by clicking"
 msgstr "Expanda moviendo el ratón sobre el ejercicio o haciendo clic"
 
-#: plugin/tableform/tableForm.py:541
+#: plugin/tableform/tableForm.py:546
 msgid "Real name"
 msgstr "Nombre real"
 
-#: plugin/tableform/tableForm.py:543
+#: plugin/tableform/tableForm.py:548
 msgid "Username"
 msgstr "Nombre de usuario"
 
-#: plugin/tableform/tableForm.py:545
+#: plugin/tableform/tableForm.py:550
 msgid "Email"
 msgstr "Correo electrónico"
 
@@ -133,3 +135,20 @@ msgstr "Dirección web del examen"
 #: templates/examgroupmanager/print_codes.jinja2:82
 msgid "Login code"
 msgstr "Código de inicio de sesión"
+
+#: templates/partials/doc_content.jinja2:19
+msgid "Task Summary"
+msgstr ""
+
+#: templates/partials/doc_content.jinja2:20
+msgid "Total points"
+msgstr ""
+
+#: templates/partials/doc_content.jinja2:33
+msgid "total tasks"
+msgstr ""
+
+#: templates/partials/doc_content.jinja2:35
+msgid "Refresh (F5) to recount"
+msgstr ""
+
