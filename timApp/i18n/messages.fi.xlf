@@ -10541,7 +10541,7 @@ Syötä useiden käyttäjien osoitteet allekkain tai pilkulla erotettuina.</targ
       </trans-unit>
       <trans-unit id="8036091162175708988" datatype="html">
         <source>Make sure the exam is ended and login codes are disabled in section <x id="START_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;i>"/>'3. Manage exams'<x id="CLOSE_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;/i>"/></source>
-        <target state="translated">Varmista, että koeryhmän koe on lopetettu ja että kirjautumiskoodit on otettu pois käytöstä kohdassa <x id="START_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;i>"/>3. Hallinnoi kokeita<x id="CLOSE_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;/i>"/>.</target>
+        <target state="translated"> Varmista, että koeryhmän koe on lopetettu ja että kirjautumiskoodit on otettu pois käytöstä kohdassa <x id="START_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;i>"/>3. Hallinnoi kokeita<x id="CLOSE_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;/i>"/>.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
           <context context-type="linenumber">717,718</context>
@@ -11405,7 +11405,7 @@ Syötä useiden käyttäjien osoitteet allekkain tai pilkulla erotettuina.</targ
       </trans-unit>
       <trans-unit id="6964643867443964161" datatype="html">
         <source> You have a reservation for this exam. Starting the exam will become available on <x id="INTERPOLATION" equiv-text="{{ toReadableDate(examByDocId.get(group.currentExamDoc)?.startingTime ?? &quot;&quot;) }}"/>. </source>
-        <target state="translated">Sinulla on varaus tähän kokeeseen. Kokeen aloittaminen avautuu <x id="INTERPOLATION" equiv-text="{{ toReadableDate(examByDocId.get(group.currentExamDoc)?.startingTime ?? &quot;&quot;) }}"/>. </target>
+        <target state="translated"> Sinulla on varaus tähän kokeeseen. Kokeen aloittaminen avautuu <x id="INTERPOLATION" equiv-text="{{ toReadableDate(examByDocId.get(group.currentExamDoc)?.startingTime ?? &quot;&quot;) }}"/>. </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
           <context context-type="linenumber">486,489</context>
@@ -11459,14 +11459,6 @@ Syötä useiden käyttäjien osoitteet allekkain tai pilkulla erotettuina.</targ
           <context context-type="linenumber">694</context>
         </context-group>
       </trans-unit>
-      <trans-unit id="6659491575322736264" datatype="html">
-        <source>You can only show answers for the main exam</source>
-        <target state="translated">Voit näyttää vain varsinaisen kokeen </target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
-          <context context-type="linenumber">698</context>
-        </context-group>
-      </trans-unit>
       <trans-unit id="7179153993560145570" datatype="html">
         <source>and not for the practice exam.</source>
         <target state="translated">vastauksia. Harjoituskokeen vastausten näyttämistä ei vielä tueta.</target>
@@ -11501,7 +11493,7 @@ Syötä useiden käyttäjien osoitteet allekkain tai pilkulla erotettuina.</targ
       </trans-unit>
       <trans-unit id="6393914330108344860" datatype="html">
         <source> Select an exam in section <x id="START_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;i>"/>3. Manage exams<x id="CLOSE_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;/i>"/> to enable showing answers. </source>
-        <target state="translated">Valitse koe kohdassa <x id="START_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;i>"/>3. Hallinnoi kokeita<x id="CLOSE_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;/i>"/> voidaksesi näyttää vastauksia. </target>
+        <target state="translated"> Valitse koe kohdassa <x id="START_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;i>"/>3. Hallinnoi kokeita<x id="CLOSE_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;/i>"/> voidaksesi näyttää vastauksia. </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
           <context context-type="linenumber">702,703</context>
@@ -11521,6 +11513,14 @@ Syötä useiden käyttäjien osoitteet allekkain tai pilkulla erotettuina.</targ
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
           <context context-type="linenumber">404</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="856792486484034703" datatype="html">
+        <source>You can only show answers for the main exam </source>
+        <target state="new">Voit näyttää vain varsinaisen kokeen </target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
+          <context context-type="linenumber">737,738</context>
         </context-group>
       </trans-unit>
     </body>
