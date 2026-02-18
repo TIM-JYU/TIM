@@ -3,7 +3,7 @@ import secrets
 from collections import defaultdict
 from dataclasses import dataclass, field, fields
 from datetime import datetime, timedelta
-from typing import Sequence, Iterable, Any, Callable
+from typing import Sequence, Iterable, Any, Callable, Optional
 
 from flask import Response, render_template
 from flask_babel import gettext
@@ -543,11 +543,14 @@ def do_delete_exam_groups(group_ids: list[int]) -> None:
         soft_delete_document(doc)
 
 
-def _get_current_login_codes(ug: UserGroup) -> Sequence[UserLoginCode]:
+def _get_current_login_codes(
+    ug: UserGroup, users: list[User] | None = None
+) -> Sequence[UserLoginCode]:
+    users_to_select = users if users else ug.users
     return (
         run_sql(
             select(UserLoginCode).filter(
-                UserLoginCode.user_id.in_([u.id for u in ug.users])
+                UserLoginCode.user_id.in_([u.id for u in users_to_select])
                 & (UserLoginCode.name == ug.name)
                 & (UserLoginCode.valid.is_(True))
             )
@@ -664,6 +667,7 @@ def do_create_users(
     # Check permission for the group
     # Only users with manage access to the group can create and add new members
     _verify_exam_group_access(group, current_user)
+    exam_group_data = _get_exam_group_data_global(group)
     user = _create_examgroup_user(given_name, surname)
     user.add_to_group(group, current_user)
     # Flush to make user be member of the group
@@ -674,6 +678,13 @@ def do_create_users(
 
     extra_data = ExamGroupDataUser(extraInfo=extra_info)
     _update_exam_group_data_user(user, group, extra_data)
+    # Flush to update their info
+    db.session.flush()
+
+    # Sync user's state to the current exam state of the group
+    _sync_exam_state_for(
+        group, exam_group_data, [user], from_state=0, to_state=exam_group_data.examState
+    )
 
     db.session.commit()
     return user, extra_data
@@ -894,10 +905,11 @@ def _remove_review_tag(ug: UserGroup, exam_doc: DocInfo) -> None:
 def _enable_login_codes(
     ug: UserGroup,
     extra: ExamGroupDataGlobal,
+    users: list[User] | None = None,
     log: bool = True,
     duration: timedelta | None = None,
 ) -> None:
-    login_codes = list(_get_current_login_codes(ug))
+    login_codes = list(_get_current_login_codes(ug, users))
     if not login_codes:
         raise RouteException(
             gettext(
@@ -913,15 +925,19 @@ def _enable_login_codes(
     if log:
         u = get_current_user_object()
         doc = _get_current_exam_doc(extra)
+        users_count = len(users) if users else len(ug.users)
         log_info(
-            f"ExamGroupManage: {u.name} enabled login codes for group {ug.name} (exam doc: {doc.path})"
+            f"ExamGroupManage: {u.name} enabled login codes for {users_count} users in group {ug.name} (exam doc: {doc.path})"
         )
 
 
 def _disable_login_codes(
-    ug: UserGroup, extra: ExamGroupDataGlobal, log: bool = True
+    ug: UserGroup,
+    extra: ExamGroupDataGlobal,
+    users: list[User] | None = None,
+    log: bool = True,
 ) -> None:
-    login_codes = list(_get_current_login_codes(ug))
+    login_codes = list(_get_current_login_codes(ug, users))
     if not login_codes:
         return
 
@@ -933,8 +949,9 @@ def _disable_login_codes(
     if log:
         u = get_current_user_object()
         doc = _get_current_exam_doc(extra)
+        users_count = len(users) if users else len(ug.users)
         log_info(
-            f"ExamGroupManage: {u.name} disabled login codes for group {ug.name} (exam doc: {doc.path})"
+            f"ExamGroupManage: {u.name} disabled login codes for {users_count} users in group {ug.name} (exam doc: {doc.path})"
         )
 
 
@@ -956,93 +973,121 @@ def _get_current_exam_doc(extra: ExamGroupDataGlobal) -> DocInfo:
     return doc
 
 
-def _begin_exam(ug: UserGroup, extra: ExamGroupDataGlobal) -> None:
+def _begin_exam(
+    ug: UserGroup, extra: ExamGroupDataGlobal, users: list[User] | None = None
+) -> None:
     doc = _get_current_exam_doc(extra)
+    users = users if users else ug.users
     # TODO: Maybe set duration?
-    for u in ug.users:  # type: User
+    for u in users:  # type: User
         grant_access(u.get_personal_group(), doc, AccessType.view)
 
     cur_u = get_current_user_object()
     log_info(
-        f"ExamGroupManage: {cur_u.name} began exam for group {ug.name} (exam doc: {doc.path})"
+        f"ExamGroupManage: {cur_u.name} began exam for {len(users)} users in group {ug.name} (exam doc: {doc.path})"
     )
 
 
-def _interrupt_exam(ug: UserGroup, extra: ExamGroupDataGlobal) -> None:
+def _interrupt_exam(
+    ug: UserGroup, extra: ExamGroupDataGlobal, users: list[User] | None = None
+) -> None:
     doc = _get_current_exam_doc(extra)
-    for u in ug.users:  # type: User
+
+    users = users if users else ug.users
+
+    for u in users:  # type: User
         remove_access(u.get_personal_group(), doc, AccessType.view)
 
     cur_u = get_current_user_object()
     log_info(
-        f"ExamGroupManage: {cur_u.name} interrupted exam for group {ug.name} (exam doc: {doc.path})"
+        f"ExamGroupManage: {cur_u.name} interrupted exam for {len(users)} users in group {ug.name} (exam doc: {doc.path})"
     )
 
 
-def _end_exam_main_group(ug: UserGroup, extra: ExamGroupDataGlobal) -> None:
+def _end_exam_main_group(
+    ug: UserGroup, extra: ExamGroupDataGlobal, users: list[User] | None = None
+) -> None:
     doc = _get_current_exam_doc(extra)
     extra_data_by_uid = _get_exam_group_data_user(ug)
 
-    for u in ug.users:  # type: User
+    users = users if users else ug.users
+    total_expired = 0
+    for u in users:  # type: User
         extra_data = extra_data_by_uid[u.id]
 
         if not extra_data.extraTime:
+            total_expired += 1
             expire_access(u.get_personal_group(), doc, AccessType.view)
 
     cur_u = get_current_user_object()
     log_info(
-        f"ExamGroupManage: {cur_u.name} ended exam for main students in group {ug.name} (exam doc: {doc.path})"
+        f"ExamGroupManage: {cur_u.name} ended exam for main students ({total_expired} users) in group {ug.name} (exam doc: {doc.path})"
     )
 
 
-def _resume_exam_main_group(ug: UserGroup, extra: ExamGroupDataGlobal) -> None:
+def _resume_exam_main_group(
+    ug: UserGroup, extra: ExamGroupDataGlobal, users: list[User] | None = None
+) -> None:
     doc = _get_current_exam_doc(extra)
 
     extra_data_by_uid = _get_exam_group_data_user(ug)
+    users = users if users else ug.users
+    total_granted = 0
 
-    for u in ug.users:  # type: User
+    for u in users:  # type: User
         extra_data = extra_data_by_uid[u.id]
 
         if not extra_data.extraTime:
+            total_granted += 1
             grant_access(u.get_personal_group(), doc, AccessType.view)
 
     cur_u = get_current_user_object()
     log_info(
-        f"ExamGroupManage: {cur_u.name} resumed exam for main students in group {ug.name} (exam doc: {doc.path})"
+        f"ExamGroupManage: {cur_u.name} resumed exam for main students ({total_granted} users) in group {ug.name} (exam doc: {doc.path})"
     )
 
 
-def _end_exam_extra_time(ug: UserGroup, extra: ExamGroupDataGlobal) -> None:
+def _end_exam_extra_time(
+    ug: UserGroup, extra: ExamGroupDataGlobal, users: list[User] | None = None
+) -> None:
     doc = _get_current_exam_doc(extra)
 
     extra_data_by_uid = _get_exam_group_data_user(ug)
+    users = users if users else ug.users
+    total_expired = 0
 
-    for u in ug.users:  # type: User
+    for u in users:  # type: User
         extra_data = extra_data_by_uid[u.id]
 
         if extra_data.extraTime:
+            total_expired += 1
             expire_access(u.get_personal_group(), doc, AccessType.view)
 
     cur_u = get_current_user_object()
     log_info(
-        f"ExamGroupManage: {cur_u.name} ended exam for students with extra time in group {ug.name} (exam doc: {doc.path})"
+        f"ExamGroupManage: {cur_u.name} ended exam for students with extra time ({total_expired} users) in group {ug.name} (exam doc: {doc.path})"
     )
 
 
-def _resume_exam_extra_time(ug: UserGroup, extra: ExamGroupDataGlobal) -> None:
+def _resume_exam_extra_time(
+    ug: UserGroup, extra: ExamGroupDataGlobal, users: list[User] | None = None
+) -> None:
     doc = _get_current_exam_doc(extra)
 
     extra_data_by_uid = _get_exam_group_data_user(ug)
+    users = users if users else ug.users
+    total_granted = 0
 
-    for u in ug.users:  # type: User
+    for u in users:  # type: User
         extra_data = extra_data_by_uid[u.id]
 
         if extra_data.extraTime:
+            total_granted += 1
             grant_access(u.get_personal_group(), doc, AccessType.view)
 
     cur_u = get_current_user_object()
     log_info(
-        f"ExamGroupManage: {cur_u.name} resumed exam for students with extra time in group {ug.name} (exam doc: {doc.path})"
+        f"ExamGroupManage: {cur_u.name} resumed exam for students with extra time ({total_granted} users) in group {ug.name} (exam doc: {doc.path})"
     )
 
 
@@ -1050,7 +1095,9 @@ def _do_nothing(*_: Any) -> None:
     pass
 
 
-_state_apply_functions: list[Callable[[UserGroup, ExamGroupDataGlobal], None]] = [
+_state_apply_functions: list[
+    Callable[[UserGroup, ExamGroupDataGlobal, Optional[list[User]]], None]
+] = [
     _enable_login_codes,  # 0 -> 1, activate login codes
     _do_nothing,  # 1 -> 2, students log in
     _do_nothing,  # 2 -> 3, check that students log in
@@ -1059,7 +1106,9 @@ _state_apply_functions: list[Callable[[UserGroup, ExamGroupDataGlobal], None]] =
     _end_exam_extra_time,  # 5 -> 6, end exam for students with extra time
 ]
 
-_state_revert_functions: list[Callable[[UserGroup, ExamGroupDataGlobal], None]] = [
+_state_revert_functions: list[
+    Callable[[UserGroup, ExamGroupDataGlobal, Optional[list[User]]], None]
+] = [
     _do_nothing,  # 0 -> 0, needed so that the range() loop works
     _disable_login_codes,  # 1 -> 0, deactivate login codes
     _do_nothing,  # 2 -> 1, check
@@ -1073,9 +1122,27 @@ _state_revert_functions: list[Callable[[UserGroup, ExamGroupDataGlobal], None]] 
 def _set_exam_state_impl(
     ug: UserGroup, exam_group_data: ExamGroupDataGlobal, new_state: int
 ) -> None:
+    old_state = exam_group_data.examState
     new_state = max(0, min(len(_state_apply_functions), new_state))
+    _sync_exam_state_for(
+        ug,
+        exam_group_data,
+        users=None,
+        from_state=old_state,
+        to_state=new_state,
+    )
+    exam_group_data.examState = new_state
+    _update_exam_group_data_global(ug, exam_group_data)
 
-    direction: int = sign(new_state - exam_group_data.examState)
+
+def _sync_exam_state_for(
+    ug: UserGroup,
+    exam_group_data: ExamGroupDataGlobal,
+    users: list[User] | None = None,
+    from_state: int = 0,
+    to_state: int = 0,
+) -> None:
+    direction: int = sign(to_state - from_state)
     if direction == 0:
         return
 
@@ -1083,11 +1150,8 @@ def _set_exam_state_impl(
         _state_apply_functions if direction > 0 else _state_revert_functions
     )
 
-    for i in range(exam_group_data.examState, new_state, direction):
-        step_functions[i](ug, exam_group_data)
-
-    exam_group_data.examState = new_state
-    _update_exam_group_data_global(ug, exam_group_data)
+    for i in range(from_state, to_state, direction):
+        step_functions[i](ug, exam_group_data, users)
 
 
 @exam_group_manager_plugin.post("/setExamState")
