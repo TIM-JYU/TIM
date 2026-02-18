@@ -213,7 +213,8 @@ export class JSParsonsEditorComponent implements IEditor {
                                [minRows]="minRows_"
                                [maxRows]="maxRows_"
                                [placeholder]="file && file.placeholder ? file.placeholder : ''"
-                               [disabled]="isDisabled">
+                               [disabled]="isDisabled"
+                               [hideLineNumbers]="hideLineNumbers">
                 </cs-ace-editor>
             </ng-container>
             <div *ngIf="addTabActive" class="add-view">
@@ -245,6 +246,7 @@ export class EditorComponent implements IMultiEditor {
 
     @Input() disabled: boolean = false;
     @Input() spellcheck?: boolean;
+    @Input() hideLineNumbers?: boolean;
 
     allowedPaths?: string[]; // undefined for all allowed
     maxFiles: number = 1;

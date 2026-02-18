@@ -4067,6 +4067,10 @@ ${fhtml}
         return this.markup.spellcheck;
     }
 
+    get hideLineNumbers() {
+        return this.markup.hideLineNumbers;
+    }
+
     async setData(data: unknown, save: boolean = false) {
         if (SetData.is(data)) {
             for (const name of ["usercode", "userargs", "userinput"] as const) {
@@ -4322,7 +4326,8 @@ ${fhtml}
                                [parsonsOptions]="parsons"
                                (close)="onFileClose($event)"
                                (content)="onContentChange($event)"
-                               [spellcheck]="spellcheck">
+                               [spellcheck]="spellcheck"
+                               [hideLineNumbers]="hideLineNumbers">
                     </cs-editor>
                     <div class="csRunChanged" *ngIf="runChanged && !hide.changed"></div>
                     <div class="csRunNotSaved" *ngIf="isUnSaved()"></div>
