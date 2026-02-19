@@ -5553,14 +5553,6 @@
           <context context-type="linenumber">711,712</context>
         </context-group>
       </trans-unit>
-      <trans-unit id="5354903987559868415" datatype="html">
-        <source>Note: You can only show the answers for the main exam (<x id="INTERPOLATION" equiv-text="{{ examByDocId.get(group.examDocId!)?.name }}"/>) and not for the practice exam.</source>
-        <target state="translated">Nota: è possibile mostrare le risposte solo per l'esame principale (</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
-          <context context-type="linenumber">716,717</context>
-        </context-group>
-      </trans-unit>
       <trans-unit id="1609834812747709494" datatype="html">
         <source> Students can access the answers to the exam '<x id="INTERPOLATION" equiv-text="{{ examByDocId.get(group.examDocId!)?.name }}"/>'. The access is automatically disabled on <x id="INTERPOLATION_1" equiv-text="{{toReadableDate(group.accessAnswersTo ?? '')}}"/>. </source>
         <target state="translated">Gli studenti possono accedere alle risposte dell'esame '</target>

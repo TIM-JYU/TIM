@@ -763,11 +763,6 @@ export class ToggleComponent {
                                     i18n-disabledButton
                                 >
                                 </tim-toggle>
-                                <p class="mt">
-                                    <strong i18n>Note: You can only show the answers for the main exam
-                                        ({{ examByDocId.get(group.examDocId!)?.name }}) and not for the practice
-                                        exam.</strong>
-                                </p>
                                 <p>
                                     <strong class="text-success" *ngIf="group.allowAccess" i18n>
                                         Students can access the answers to the exam

@@ -10267,14 +10267,6 @@ Var god och skapa inloggningskoder först.</target>
           <context context-type="linenumber">688,689</context>
         </context-group>
       </trans-unit>
-      <trans-unit id="5354903987559868415" datatype="html">
-        <source>Note: You can only show the answers for the main exam (<x id="INTERPOLATION" equiv-text="{{ examByDocId.get(group.examDocId!)?.name }}"/>) and not for the practice exam.</source>
-        <target state="translated">Obs: Du kan endast visa svaren från det egentliga provet (<x id="INTERPOLATION" equiv-text="{{ examByDocId.get(group.examDocId!)?.name }}"/>). Visning av svar från övningsprov stöds inte.</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
-          <context context-type="linenumber">693,694</context>
-        </context-group>
-      </trans-unit>
       <trans-unit id="7762631717420068201" datatype="html">
         <source> Press the button above to allow students to review their answers for 1 hour. </source>
         <target state="translated"> Tryck på knappen ovan för att börja visa svaren för eleverna. </target>
