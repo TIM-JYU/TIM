@@ -9802,14 +9802,6 @@ Det går inte att ångra den här åtgärden!
           <context context-type="linenumber">649,650</context>
         </context-group>
       </trans-unit>
-      <trans-unit id="3438605880625234523" datatype="html">
-        <source>Ask students to log in to the exam page:</source>
-        <target state="translated">Be eleverna logga i provsystemet:</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
-          <context context-type="linenumber">507</context>
-        </context-group>
-      </trans-unit>
       <trans-unit id="6839138864615473489" datatype="html">
         <source>Not selected</source>
         <target state="translated">Inget prov valt</target>
@@ -9960,7 +9952,7 @@ Generating new codes will overwrite the existing ones.
 
 Proceed?</source>
         <target state="translated">Vissa elever i provgruppen '<x id="PH" equiv-text="group.readableName"/>' har redan en inloggningskod.
-Att skapa nya koder inaktiverar de tidigare koderna. 
+Att skapa nya koder inaktiverar de tidigare koderna.
 
 Vill du fortsätta?</target>
         <context-group purpose="location">
@@ -10275,14 +10267,6 @@ Var god och skapa inloggningskoder först.</target>
           <context context-type="linenumber">688,689</context>
         </context-group>
       </trans-unit>
-      <trans-unit id="5354903987559868415" datatype="html">
-        <source>Note: You can only show the answers for the main exam (<x id="INTERPOLATION" equiv-text="{{ examByDocId.get(group.examDocId!)?.name }}"/>) and not for the practice exam.</source>
-        <target state="translated">Obs: Du kan endast visa svaren från det egentliga provet (<x id="INTERPOLATION" equiv-text="{{ examByDocId.get(group.examDocId!)?.name }}"/>). Visning av svar från övningsprov stöds inte.</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
-          <context context-type="linenumber">693,694</context>
-        </context-group>
-      </trans-unit>
       <trans-unit id="7762631717420068201" datatype="html">
         <source> Press the button above to allow students to review their answers for 1 hour. </source>
         <target state="translated"> Tryck på knappen ovan för att börja visa svaren för eleverna. </target>
@@ -10300,19 +10284,11 @@ Var god och skapa inloggningskoder först.</target>
         </context-group>
       </trans-unit>
       <trans-unit id="3773241316574942521" datatype="html">
-        <source>Ask students to log in to the exam page using their login codes: <x id="START_LINK" ctype="x-a" equiv-text="&lt;a [href]=&quot;getExamUrl(examByDocId.get(group.examDocId!))&quot;>"/><x id="START_TAG_CODE" ctype="x-code" equiv-text="{{ getExa"/><x id="INTERPOLATION" equiv-text="yDocId.get(group.examDocId!)) }}"/><x id="CLOSE_TAG_CODE" ctype="x-code" equiv-text="&lt;/a>&lt;/li>"/><x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/li>"/></source>
-        <target state="translated">Be eleverna logga in i provsystemet: <x id="START_LINK" ctype="x-a" equiv-text="&lt;a [href]=&quot;getExamUrl(examByDocId.get(group.examDocId!))&quot;>"/><x id="START_TAG_CODE" ctype="x-code" equiv-text="{{ getExa"/><x id="INTERPOLATION" equiv-text="yDocId.get(group.examDocId!)) }}"/><x id="CLOSE_TAG_CODE" ctype="x-code" equiv-text="&lt;/a>&lt;/li>"/><x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/li>"/></target>
+        <source>Ask students to log in to the exam page using their login codes: <x id="START_LINK" ctype="x-a" equiv-text="&lt;a                                         [href]=&quot;getExamUrl(examByDocId.get(group.examDocId!))&quot;>"/><x id="START_TAG_CODE" ctype="x-code" equiv-text="{{ getExa"/><x id="INTERPOLATION" equiv-text="yDocId.get(group.examDocId!)) }}"/><x id="CLOSE_TAG_CODE" ctype="x-code" equiv-text="&lt;/a>"/><x id="CLOSE_LINK" ctype="x-a"/></source>
+        <target state="new">Be eleverna logga in i provsystemet: <x id="START_LINK" ctype="x-a" equiv-text="&lt;a [href]=&quot;getExamUrl(examByDocId.get(group.examDocId!))&quot;>"/><x id="START_TAG_CODE" ctype="x-code" equiv-text="{{ getExa"/><x id="INTERPOLATION" equiv-text="yDocId.get(group.examDocId!)) }}"/><x id="CLOSE_TAG_CODE" ctype="x-code" equiv-text="&lt;/a>&lt;/li>"/><x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/li>"/></target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
-          <context context-type="linenumber">712,713</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="1229716178210207066" datatype="html">
-        <source>Students can now review their answers. Students cannot submit new answers but can see their answers and model answers (if they are included).</source>
-        <target state="translated">Eleverna kan självständigt kolla sina svar. De kan inte skicka in nya svar, men de kan se provets modell­svar på samma sätt som läraren.</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
-          <context context-type="linenumber">712,713</context>
+          <context context-type="linenumber">791,793</context>
         </context-group>
       </trans-unit>
       <trans-unit id="9173480621811532307" datatype="html">
@@ -10475,22 +10451,6 @@ Mata in flera användares adresser på separata rader eller åtskilda med kommat
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
           <context context-type="linenumber">720,721</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="4189671442877791653" datatype="html">
-        <source>To end the view right, press the <x id="START_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;i>"/>'End showing answers to students button'<x id="CLOSE_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;/i>"/>. The right is automatically disabled in 1 hour.</source>
-        <target state="translated">När du vill ta bort visningsrätten, tryck på knappen <x id="START_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;i>"/>Sluta visa svaren för provgruppens elever<x id="CLOSE_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;/i>"/>. Provsystemet tar bort visningsrätten automatiskt en timme efter att tillgången beviljats.</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
-          <context context-type="linenumber">722,723</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="6667488878974100003" datatype="html">
-        <source>Press the <x id="START_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;i>"/>'Begin showing answers to students'<x id="CLOSE_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;/i>"/> button to allow students to review their answers for 1 hour.</source>
-        <target state="translated">Tryck på knappen <x id="START_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;i>"/>Börja visa svaren för provgruppens elever<x id="CLOSE_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;/i>"/>. Elevernas inloggningskoder aktiveras och de får tillgång till provet för en timme.</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
-          <context context-type="linenumber">718,719</context>
         </context-group>
       </trans-unit>
       <trans-unit id="5769201915047199693" datatype="html">
@@ -11317,14 +11277,6 @@ Mata in flera användares adresser på separata rader eller åtskilda med kommat
           <context context-type="linenumber">694</context>
         </context-group>
       </trans-unit>
-      <trans-unit id="6659491575322736264" datatype="html">
-        <source>You can only show answers for the main exam</source>
-        <target state="translated">Du kan endast visa svaren från det egentliga provet</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
-          <context context-type="linenumber">698</context>
-        </context-group>
-      </trans-unit>
       <trans-unit id="7179153993560145570" datatype="html">
         <source>and not for the practice exam.</source>
         <target state="translated">Visning av svar från övningsprovet stöds ännu inte.</target>
@@ -11379,6 +11331,94 @@ Mata in flera användares adresser på separata rader eller åtskilda med kommat
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
           <context context-type="linenumber">404</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="3400879224091860885" datatype="html">
+        <source>Exam reservation details</source>
+        <target state="new">Exam reservation details</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
+          <context context-type="linenumber">487,488</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="6964643867443964161" datatype="html">
+        <source> You have a reservation for this exam. Starting the exam will become available on <x id="INTERPOLATION" equiv-text="{{ toReadableDate(examByDocId.get(group.currentExamDoc)?.startingTime ?? &quot;&quot;) }}"/>. </source>
+        <target state="new"> You have a reservation for this exam. Starting the exam will become available on <x id="INTERPOLATION" equiv-text="{{ toReadableDate(examByDocId.get(group.currentExamDoc)?.startingTime ?? &quot;&quot;) }}"/>. </target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
+          <context context-type="linenumber">489,492</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="2121059493646918621" datatype="html">
+        <source>This is a practice exam</source>
+        <target state="new">This is a practice exam</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
+          <context context-type="linenumber">499,500</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="2112778509887488400" datatype="html">
+        <source> To start the main exam, select it from the dropdown menu above. </source>
+        <target state="new"> To start the main exam, select it from the dropdown menu above. </target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
+          <context context-type="linenumber">501</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="8242217576609732399" datatype="html">
+        <source>Ask students to log in to the exam page: </source>
+        <target state="translated">Be eleverna logga i provsystemet: </target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
+          <context context-type="linenumber">558,559</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="856792486484034703" datatype="html">
+        <source>You can only show answers for the main exam </source>
+        <target state="translated">Du kan endast visa svaren från det egentliga provet </target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
+          <context context-type="linenumber">737,738</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="5817483956876441203" datatype="html">
+        <source> You can hold the exam after <x id="INTERPOLATION" equiv-text="{{ toReadableDate(examByDocId.get(group.currentExamDoc!)?.startingTime ?? &quot;&quot;) }}"/>. </source>
+        <target state="new"> You can hold the exam after <x id="INTERPOLATION" equiv-text="{{ toReadableDate(examByDocId.get(group.currentExamDoc!)?.startingTime ?? &quot;&quot;) }}"/>. </target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
+          <context context-type="linenumber">748,749</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="6436234122184632938" datatype="html">
+        <source> You can show the answers only after <x id="INTERPOLATION" equiv-text="{{ toReadableDate(examByDocId.get(group.currentExamDoc!)?.showAnswersStartingTime ?? &quot;&quot;) }}"/>. </source>
+        <target state="new"> You can show the answers only after <x id="INTERPOLATION" equiv-text="{{ toReadableDate(examByDocId.get(group.currentExamDoc!)?.showAnswersStartingTime ?? &quot;&quot;) }}"/>. </target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
+          <context context-type="linenumber">751,752</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="824586679107177391" datatype="html">
+        <source>Press the <x id="START_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;i>"/>'Begin showing answers to students'<x id="CLOSE_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;/i>"/> button to allow students to review their answers for 1 hour. </source>
+        <target state="translated">Tryck på knappen <x id="START_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;i>"/>Börja visa svaren för provgruppens elever<x id="CLOSE_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;/i>"/>. Elevernas inloggningskoder aktiveras och de får tillgång till provet för en timme. </target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
+          <context context-type="linenumber">788,789</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="6417625933638057511" datatype="html">
+        <source>Students can now review their answers. Students cannot submit new answers but can see their answers and model answers (if they are included). </source>
+        <target state="translated">Eleverna kan självständigt kolla sina svar. De kan inte skicka in nya svar, men de kan se provets modellsvar på samma sätt som läraren. </target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
+          <context context-type="linenumber">795,796</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="5269168991544835375" datatype="html">
+        <source>To end the view right, press the <x id="START_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;i>"/>'End showing answers to students button'<x id="CLOSE_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;/i>"/>. The right is automatically disabled in 1 hour. </source>
+        <target state="translated">När du vill ta bort visningsrätten, tryck på knappen <x id="START_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;i>"/>Sluta visa svaren för provgruppens elever<x id="CLOSE_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;/i>"/>. Provsystemet tar bort visningsrätten automatiskt en timme efter att tillgången beviljats. </target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
+          <context context-type="linenumber">798,800</context>
         </context-group>
       </trans-unit>
     </body>

@@ -58,7 +58,7 @@ from timApp.util.flask.responsehelper import (
 from timApp.util.flask.typedblueprint import TypedBlueprint
 from timApp.util.logger import log_info
 from timApp.util.utils import slugify, get_current_time
-from tim_common.markupmodels import GenericMarkupModel
+from tim_common.markupmodels import GenericMarkupModel, PluginDateTime
 from tim_common.marshmallow_dataclass import class_schema, field_for_schema
 from tim_common.pluginserver_flask import (
     GenericHtmlModel,
@@ -106,7 +106,9 @@ class Exam:
     docId: int
     name: str
     url: str | None = None
-    disabled: str | None = None
+    startingTime: PluginDateTime | datetime | None = None
+    endingTime: PluginDateTime | datetime | None = None
+    showAnswersStartingTime: PluginDateTime | datetime | None = None
 
 
 @dataclass
