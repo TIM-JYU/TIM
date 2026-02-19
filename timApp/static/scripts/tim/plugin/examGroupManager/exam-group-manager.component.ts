@@ -1200,8 +1200,7 @@ export class ExamGroupManagerComponent
         const res = await toPromise(
             this.http.post("/examGroupManager/generateCodes", {
                 group_id: group.id,
-                // only send a list of selected members, empty list if all members are selected
-                users: members.length < group.memberCount ? members : [],
+                users: members.map((m) => m.id),
             })
         );
 

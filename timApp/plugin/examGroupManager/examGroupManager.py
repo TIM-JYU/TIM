@@ -218,18 +218,6 @@ exam_group_data_user_fields: dict[str, Field] = {
 EXAM_GROUP_DATA_USER_FIELDS = {f.name for f in fields(ExamGroupDataUser)}
 
 
-@dataclass
-class ExamGroupMember:
-    id: int
-    name: str
-    email: str
-    real_name: str
-    selected: bool
-    extraInfo: str | Missing = field(default=missing)
-    login_code: str | Missing = field(default=missing)
-    extraTime: bool | Missing = field(default=missing)
-
-
 def _get_latest_fields_any(task_fields: Iterable[str]) -> Sequence[Answer]:
     latest_answers_sub = (
         select(func.max(Answer.id))
@@ -766,7 +754,9 @@ def _generate_login_code_for_new_user(user: User, group: UserGroup) -> None:
 
 
 @exam_group_manager_plugin.post("/generateCodes")
-def generate_codes_for_members(group_id: int, users: list[ExamGroupMember]) -> Response:
+def generate_codes_for_members(
+    group_id: int, users: list[int] | None = None
+) -> Response:
     """
     Updates UserLoginCode properties.
     Note: this function will always overwrite previous values
@@ -778,14 +768,10 @@ def generate_codes_for_members(group_id: int, users: list[ExamGroupMember]) -> R
 
     _verify_exam_group_access(ug)
 
-    members: list[User] = []
-    if len(users):
-        for u in users:
-            _u = User.get_by_id(u.id)
-            if _u:
-                members.append(_u)
-    else:
-        members = list(ug.users)
+    members: list[User] = list(ug.users)
+    if users:
+        users_set = set(users)
+        members = [u for u in members if u.id in users_set]
 
     # Disable previous codes of the members
     run_sql(
