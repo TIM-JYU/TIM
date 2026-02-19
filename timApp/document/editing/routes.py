@@ -143,6 +143,7 @@ def update_document(doc_id):
 
         _, _, edit_result = doc.update(content, original, strict_validation)
         check_and_rename_pluginnamehere(editor_pars, doc)
+        """
         old_pars = doc.get_paragraphs()
         for op, ep in zip(old_pars, editor_pars):
             if ep.get_attr("taskId") and op.get_attr("taskId"):
@@ -153,6 +154,7 @@ def update_document(doc_id):
                         new_attrs=ep.get_attrs(),
                     )
                     edit_result.changed.append(p)
+        """
         if not edit_result.empty:
             docentry.update_last_modified()
             db.session.commit()

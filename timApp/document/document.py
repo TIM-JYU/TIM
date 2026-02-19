@@ -675,27 +675,38 @@ class Document:
         p = DocParagraph.create(doc=self, par_id=par_id, md=text, attrs=attrs)
         return self.add_paragraph_obj(p)
 
-    def delete_paragraph(self, par_id: str):
+    def delete_paragraph(self, par_id: str, par_index: int = -1) -> bool:
         """Removes a paragraph from the document.
 
         :param par_id: Paragraph id to remove.
-
+        :param par_index: The index of the paragraph to remove, or -1 if not known.
+        :return: Whether a paragraph was removed.
         """
         self.raise_if_not_exist(par_id)
         old_ver = self.get_version()
         new_ver = self.__increment_version("Deleted", par_id, increment_major=True)
         self.__update_metadata([], old_ver, new_ver)
+        index = 0
+        result = False
 
         with self.get_version_path(old_ver).open("r") as f_src:
             with self.get_version_path(new_ver).open("w") as f:
                 while True:
                     line = f_src.readline()
                     if not line:
-                        return
-                    if line.startswith(par_id):
+                        return result
+                    if (  # remove only the first occurrence of the par_id
+                        # if there are multiple with the same id,
+                        # or the one with the given index if par_index is specified
+                        (not result)
+                        and line.startswith(par_id)
+                        and (par_index == -1 or index == par_index)
+                    ):
+                        result = True
                         pass
                     else:
                         f.write(line)
+                    index += 1
 
     def insert_paragraph(
         self,
@@ -766,9 +777,11 @@ class Document:
             "Inserted",
             p.get_id(),
             increment_major=True,
-            op_params={"before_id": insert_before_id}
-            if insert_before_id
-            else {"after_id": insert_after_id},
+            op_params=(
+                {"before_id": insert_before_id}
+                if insert_before_id
+                else {"after_id": insert_after_id}
+            ),
         )
 
         new_line = p.get_id() + "/" + p.get_hash() + "\n"
@@ -935,9 +948,10 @@ class Document:
         id1, id2, edit_result = self._perform_update(
             new_pars,
             old_pars,
-            last_par_id=all_par_ids[end_index + 1]
-            if end_index + 1 < len(all_par_ids)
-            else None,
+            last_par_id=(
+                all_par_ids[end_index + 1] if end_index + 1 < len(all_par_ids) else None
+            ),
+            start_index=start_index,
         )
         if changes:
             edit_result.warnings = list_to_html(changes)
@@ -948,19 +962,37 @@ class Document:
         new_pars: list[DocParagraph],
         old_pars: list[DocParagraph],
         last_par_id=None,
+        start_index=0,
     ) -> tuple[str, str, DocumentEditResult] | tuple[None, None, DocumentEditResult]:
+        """
+        This is very unoptimized implementation that performs the update
+        by doing individual insert, delete and modify operations
+        for each paragraph.
+        :param new_pars: list of editor pars
+        :param old_pars: list of original pars in the document in the same section
+        :param last_par_id: documents lats block par id
+        :param start_index: the index of the first par in the section to update,
+               used for correct deletion when duplicate ids are present
+        :return:
+        """
         old_ids = [par.get_id() for par in old_pars]
         new_ids = [par.get_id() for par in new_pars]
         s = SequenceMatcher(None, old_ids, new_ids)
         opcodes = s.get_opcodes()
         result = DocumentEditResult()
         # Do delete operations first to avoid duplicate ids
+        del_count = 0
         for tag, i1, i2, j1, j2 in [
             opcode for opcode in opcodes if opcode[0] in ["delete", "replace"]
         ]:
-            for par, par_id in zip(old_pars[i1:i2], old_ids[i1:i2]):
-                self.delete_paragraph(par_id)
-                result.deleted.append(par)
+            for idx in range(i1, i2):
+                par = old_pars[idx]
+                par_id = old_ids[idx]
+                # Force to check par in given index because there is duplicate ids
+                # in the document and we want to delete only the correct one
+                if self.delete_paragraph(par_id, start_index + idx - del_count):
+                    del_count += 1
+                    result.deleted.append(par)
         for tag, i1, i2, j1, j2 in opcodes:
             if tag == "replace":
                 for par in new_pars[j1:j2]:
@@ -969,9 +1001,11 @@ class Document:
                         par.get_markdown(),
                         attrs=par.get_attrs(),
                         par_id=par.get_id(),
-                        insert_before_id=old_ids[before_i]
-                        if before_i < len(old_ids)
-                        else last_par_id,
+                        insert_before_id=(
+                            old_ids[before_i]
+                            if before_i < len(old_ids)
+                            else last_par_id
+                        ),
                     )
                     result.added.append(inserted)
             elif tag == "insert":
@@ -981,9 +1015,11 @@ class Document:
                         par.get_markdown(),
                         attrs=par.get_attrs(),
                         par_id=par.get_id(),
-                        insert_before_id=old_ids[before_i]
-                        if before_i < len(old_ids)
-                        else last_par_id,
+                        insert_before_id=(
+                            old_ids[before_i]
+                            if before_i < len(old_ids)
+                            else last_par_id
+                        ),
                     )
                     result.added.append(inserted)
             elif tag == "equal":
@@ -1007,9 +1043,11 @@ class Document:
                                 new_par.get_markdown(),
                                 attrs=new_par.get_attrs(),
                                 par_id=new_par.get_id(),
-                                insert_before_id=old_ids[before_i]
-                                if before_i < len(old_ids)
-                                else last_par_id,
+                                insert_before_id=(
+                                    old_ids[before_i]
+                                    if before_i < len(old_ids)
+                                    else last_par_id
+                                ),
                             )
                             result.added.append(inserted)
         if not new_ids:
@@ -1069,7 +1107,7 @@ class Document:
             raise ValidationException(get_duplicate_id_msg(conflicting_ids))
         """
         old_pars = DocParagraph.from_dicts(self, blocks)
-        return self._perform_update(new_pars, old_pars)
+        return self._perform_update(new_pars, old_pars, start_index=0)
 
     def find_insert_index(self, i2, old_ids):
         before_i = i2
