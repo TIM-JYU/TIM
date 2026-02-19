@@ -66,15 +66,22 @@ def update_par_content(
             r="tr",
             rd=matched_doc.id,
         )
+        tr_par.set_id(ref_par.id)
 
     else:
+        is_ref = ref_par.is_citation_par()
         tr_par = create_reference(
             tr_doc,
             doc_id=rd if rd else orig.doc_id,
             par_id=rp if rp else par_id,
             r="tr",
-            add_rd=ref_par.is_citation_par(),
+            add_rd=is_ref,
         )
+        if is_ref:
+            # if reference paragraph, we want to preserve the id
+            # so we can regognize it in the future when synchronizing translations again
+            # otherwise, the block was deletd and re-created with a new id
+            tr_par.set_id(ref_par.id)
         task_id = ref_par.get_attr("taskId", None)
         if task_id:
             tr_par.set_attr("taskId", task_id)
@@ -119,6 +126,7 @@ def synchronize_translations(doc: DocInfo, edit_result: DocumentEditResult):
             tr_rps, tr_ids = [], []
             for p in tr_pars:
                 tr_rp = p.get_attr("rp", None)
+                tr_rd = p.get_attr("rd", None)
                 tr_id = p.get_id()
                 # Since area citations do not have rp attributes, we need to account for them
                 # by finding the id of the referenced area and use those for the diff
@@ -130,7 +138,10 @@ def synchronize_translations(doc: DocInfo, edit_result: DocumentEditResult):
                         if refpar.get_attr("area") == tr_ra:
                             tr_rp = refpar.id
                 if tr_rp:
-                    tr_rps.append(tr_rp)
+                    if tr_rd and tr_rd != orig.doc_id:
+                        tr_rps.append(tr_id)
+                    else:
+                        tr_rps.append(tr_rp)
                     tr_ids.append(tr_id)
 
             s = SequenceMatcher(None, tr_rps, orig_ids)
