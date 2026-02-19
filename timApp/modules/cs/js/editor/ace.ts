@@ -41,7 +41,11 @@ export class AceEditorComponent implements IEditor {
     @ViewChild("area") area!: ElementRef;
     @Input() placeholder: string = ""; // TODO: make this work
 
-    @Input() hideLineNumbers?: boolean = false;
+    @Input() aceOptions?: {
+        showGutter?: boolean;
+        marginLine?: boolean;
+        highlightActiveLine?: boolean;
+    };
 
     @Input()
     set languageMode(lang: string) {
@@ -174,9 +178,15 @@ export class AceEditorComponent implements IEditor {
             this.startLineNumber = this.startLineNumber_;
         }
 
-        if (this.hideLineNumbers) {
-            this.aceEditor.renderer.setShowGutter(false);
-        }
+        const {
+            showGutter = true,
+            marginLine = true,
+            highlightActiveLine = true,
+        } = this.aceOptions ?? {};
+
+        this.aceEditor.renderer.setShowGutter(showGutter);
+        this.aceEditor.renderer.setShowPrintMargin(marginLine);
+        this.aceEditor.setHighlightActiveLine(highlightActiveLine);
     }
 
     get content(): string {

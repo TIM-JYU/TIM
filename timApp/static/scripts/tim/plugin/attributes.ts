@@ -79,7 +79,11 @@ export const GenericPluginMarkup = t.partial({
     previousTask: nullable(previousTaskType),
     saveTeacher: t.boolean,
     spellcheck: t.boolean,
-    hideLineNumbers: t.boolean,
+    ace: t.partial({
+        showGutter: t.boolean,
+        marginLine: t.boolean,
+        highlightActiveLine: t.boolean,
+    }),
     eagerlyLoadState: t.boolean,
     invalidMarker: nullable(InvalidMarkerSettings),
 });
