@@ -4067,8 +4067,8 @@ ${fhtml}
         return this.markup.spellcheck;
     }
 
-    get hideLineNumbers() {
-        return this.markup.hideLineNumbers;
+    get aceOptions() {
+        return this.markup.ace;
     }
 
     async setData(data: unknown, save: boolean = false) {
@@ -4327,7 +4327,7 @@ ${fhtml}
                                (close)="onFileClose($event)"
                                (content)="onContentChange($event)"
                                [spellcheck]="spellcheck"
-                               [hideLineNumbers]="hideLineNumbers">
+                               [aceOptions]="aceOptions">
                     </cs-editor>
                     <div class="csRunChanged" *ngIf="runChanged && !hide.changed"></div>
                     <div class="csRunNotSaved" *ngIf="isUnSaved()"></div>
