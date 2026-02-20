@@ -460,6 +460,15 @@ def pluginify(
     taketime("answ", "start")
     if not view_ctx.preview and has_edit_access(doc.get_docinfo()):
         for p in pars:
+            # Do not add the 'Translation out of date' and 'Check translation' markings to
+            # area pars if they are empty.
+            p_html_cache = p.html_cache.get(p.attrs.get("rt")) if p.html_cache else None
+            if (
+                (p.get_attr("area") or p.get_attr("area_end"))
+                and not p.get_markdown()
+                and not p_html_cache
+            ):
+                continue
             if p.is_translation_out_of_date():
                 p.add_class("troutofdate")
             else:
