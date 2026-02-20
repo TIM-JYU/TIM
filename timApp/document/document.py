@@ -1156,8 +1156,8 @@ class Document:
     def delete_section(self, area_start, area_end) -> DocumentEditResult:
         result = DocumentEditResult()
         for par in self.get_section(area_start, area_end):
-            self.delete_paragraph(par.get_id())
-            result.deleted.append(par)
+            if self.delete_paragraph(par.get_id()):
+                result.deleted.append(par)
         return result
 
     def get_paragraph_by_task_id(self, task_id: str) -> DocParagraph or None:
