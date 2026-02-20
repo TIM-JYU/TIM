@@ -31,7 +31,7 @@ def setup_logging(app: Flask) -> None:
         app.config["LOG_PATH"],
         when="D",
         interval=30,
-        backupCount=12,
+        backupCount=app.config["LOG_BACKUP_KEEP_COUNT"],
     )
     file_handler.setLevel(app.config["LOG_LEVEL"])
     file_handler.setFormatter(formatter)

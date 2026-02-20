@@ -55,6 +55,11 @@ LOG_PATH = os.path.join(LOG_DIR, LOG_FILE)
 # If True, requests are also logged before they are processed.
 # This is useful sometimes to profile calls that never complete.
 LOG_BEFORE_REQUESTS = False
+LOG_BACKUP_KEEP_COUNT = -1
+"""
+How many old log files to keep. 
+If 0, all log files are kept. Otherwise, only LOG_BACKUP_COUNT most recent log files are kept.
+"""
 MAX_CONTENT_LENGTH = 50 * 1024 * 1024
 PROFILE = False
 SECRET_KEY = "85db8764yhfZz7-U.-y968buyn89b54y8y45tg"
