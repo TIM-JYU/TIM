@@ -373,7 +373,7 @@ def update_users(ug: UserGroup, args: SCIMGroupModel) -> None:
     else:
         if ug.external_id.external_id != args.externalId:
             raise SCIMException(422, "externalId unexpectedly changed")
-    # BUG: JYU's SCIM API seems to sometimes send duplcate user data, so we dedupe it
+    # BUG: JYU's SCIM API seems to sometimes send duplicate user data, so we dedupe it
     new_members = list({m.value: m for m in args.members}.values())
     current_usernames = {u.value for u in new_members}
     removed_user_names = {u.name for u in ug.users} - current_usernames
