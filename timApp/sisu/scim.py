@@ -373,7 +373,9 @@ def update_users(ug: UserGroup, args: SCIMGroupModel) -> None:
     else:
         if ug.external_id.external_id != args.externalId:
             raise SCIMException(422, "externalId unexpectedly changed")
-    current_usernames = {u.value for u in args.members}
+    # BUG: JYU's SCIM API seems to sometimes send duplcate user data, so we dedupe it
+    new_members = list({m.value: m for m in args.members}.values())
+    current_usernames = {u.value for u in new_members}
     removed_user_names = {u.name for u in ug.users} - current_usernames
     expired_memberships: list[UserGroupMember] = list(
         get_scim_memberships(ug)
@@ -384,13 +386,13 @@ def update_users(ug: UserGroup, args: SCIMGroupModel) -> None:
         ms.set_expired(sync_mailing_lists=False)
     p = parse_sisu_group_display_name_or_error(args)
     ug.display_name = args.displayName
-    emails = [m.primary_email for m in args.members if m.primary_email is not None]
+    emails = [m.primary_email for m in new_members if m.primary_email is not None]
     unique_emails = set(emails)
     if len(emails) != len(unique_emails):
         raise SCIMException(422, f"The users do not have distinct emails.")
 
-    unique_usernames = {m.value for m in args.members}
-    if len(args.members) != len(unique_usernames):
+    unique_usernames = {m.value for m in new_members}
+    if len(new_members) != len(unique_usernames):
         raise SCIMException(422, f"The users do not have distinct usernames.")
 
     added_users = set()
@@ -410,7 +412,7 @@ def update_users(ug: UserGroup, args: SCIMGroupModel) -> None:
     }
     email_updates = []
     with db.session.no_autoflush:
-        for u in args.members:
+        for u in new_members:
             expected_name = u.name.derive_full_name(last_name_first=True)
             consistent = (
                 u.display.endswith(" " + u.name.familyName)
