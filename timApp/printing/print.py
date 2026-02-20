@@ -52,7 +52,7 @@ from timApp.util.flask.responsehelper import (
     ok_response,
 )
 from timApp.util.flask.typedblueprint import TypedBlueprint
-from tim_common.html_sanitize import sanitize_html
+from tim_common.html_sanitize import sanitize_html, sanitize_svg
 
 TEXPRINTTEMPLATE_KEY = "texprinttemplate"
 DEFAULT_PRINT_TEMPLATE_NAME = "templates/printing/runko"
@@ -265,6 +265,9 @@ def get_printed_document(
             def_file_type = "plain"
     elif doc_settings.is_textplain():
         def_file_type = "plain"
+    suffix = Path(doc_path).suffix
+    if suffix:
+        def_file_type = suffix[1:].lower()
 
     file_type = file_type or def_file_type
     # if doc_path != doc.name and doc_path.rfind('.') >= 0:  # name have been changed because . in name
@@ -273,7 +276,8 @@ def get_printed_document(
     line = request.args.get("line")
 
     if file_type.lower() not in (f.value for f in PrintFormat):
-        raise RouteException("The supplied query parameter 'file_type' was invalid.")
+        file_type = "plain"
+        # raise RouteException("The supplied query parameter 'file_type' was invalid.")
 
     print_type = PrintFormat(file_type)
     template_doc = None
@@ -407,13 +411,20 @@ def get_printed_document(
                 result = f.read()
             # TODO: This sanitizes the HTML, including PDF iframes.
             #       Those should be added back by rendering plugins as HTML.
-            result = sanitize_html(result, allow_styles=True)
+            # result = sanitize_html(result, allow_styles=True)
             response = make_response(
                 render_template("html_print.jinja2", content=result, title=doc.path)
             )
+        elif original_print_type == PrintFormat.SVG:
+            with open(cached, "r", encoding="utf-8") as f:
+                result = f.read()
+            result = sanitize_svg(result)
+            response = make_response(result)
+            response.headers["Content-Type"] = mime
         else:
             response = make_response(send_file(path_or_file=cached, mimetype=mime))
-        add_csp_if_not_script_safe(response, mime, "sandbox allow-scripts")
+        # add_csp_if_not_script_safe(response, mime, "sandbox allow-scripts")
+        add_csp_if_not_script_safe(response, mime, "sandbox")
     else:  # show LaTeX with line numbers
         styles = "p.red { color: red; }\n"
         styles += (
@@ -609,6 +620,8 @@ def get_mimetype_for_format(file_type: PrintFormat) -> str:
         return "text/html"
     elif file_type == PrintFormat.ICS:
         return "text/calendar"
+    elif file_type == PrintFormat.SVG:
+        return "image/svg+xml"
     else:
         return "text/plain"
 
