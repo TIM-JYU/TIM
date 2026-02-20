@@ -66,7 +66,7 @@ interface IConfig {
     messageListsEnabled: boolean;
 }
 
-export type Locale = "fi" | "sv" | "en-US";
+export type Locale = "fi" | "sv" | "en-US" | "it" | "es";
 
 export interface IFooterDocs {
     accessibilityStatement?: string;
