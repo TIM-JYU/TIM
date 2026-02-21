@@ -15,6 +15,8 @@ TODO: if par_id found in some other editing_area do not add
 
 from __future__ import annotations
 
+import re
+from collections import Counter
 from html import escape
 from typing import (
     TYPE_CHECKING,
@@ -24,17 +26,16 @@ from typing import (
     Any,
     Optional,
     TypeVar,
-    cast,
 )
-import re
-from collections import Counter
 
+from sqlalchemy import select
+
+from timApp.answer.answer import Answer
 from timApp.document.randutils import random_id, is_valid_id
 from timApp.timdb.sqa import run_sql
 from timApp.util.flask.requesthelper import RouteException
+from timApp.util.logger import log_info
 from timApp.util.utils import strip_not_allowed
-from sqlalchemy import select
-from timApp.answer.answer import Answer
 
 if TYPE_CHECKING:
     from timApp.document.docparagraph import DocParagraph
@@ -360,6 +361,8 @@ def abort_if_duplicate_ids(
         return changes
     changes += check_and_rename_attribute("taskId", pars_to_add, doc)[1]
     changes += check_and_rename_attribute("area", pars_to_add, doc, area_renamed)[1]
+    if changes:
+        log_info(f"CHANGES in {doc.doc_id}: " + "; ".join(changes))
     return changes
 
 

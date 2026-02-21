@@ -86,7 +86,7 @@ from timApp.util.flask.requesthelper import (
     NotExist,
 )
 from timApp.util.flask.responsehelper import json_response, ok_response, Response
-from timApp.util.utils import get_error_html, strip_not_allowed
+from timApp.util.utils import get_error_html, strip_not_allowed, get_g_errors
 from timApp.util.utils import temp_folder_path
 from tim_common.marshmallow_dataclass import dataclass
 
@@ -674,6 +674,15 @@ def par_response(
             p.output = r.new_html
 
     final_texts = post_process_result.texts
+    errors = get_g_errors()
+    warnings = ""
+    if errors:
+        warnings = errors
+    if edit_result and edit_result.warnings:
+        warnings += edit_result.warnings
+    if not warnings:
+        warnings = None
+
     r: Response = json_response(
         {
             "texts": render_template(
@@ -713,9 +722,10 @@ def par_response(
                 else None
             ),
             "new_par_ids": edit_result.new_par_ids if edit_result else None,
-            "warnings": edit_result.warnings if edit_result else None,
+            "warnings": warnings,
         }
     )
+
     db.session.commit()
     return r
 
@@ -871,7 +881,8 @@ def add_paragraph_common(md: str, doc_id: int, par_next_id: str | None):
 
     changes = abort_if_duplicate_ids(doc, editor_pars, auto_rename_ids=True)
 
-    editor_pars = check_and_rename_pluginnamehere(editor_pars, doc)
+    # TODO: next should not be needed, because it is done allready in previuos
+    # editor_pars = check_and_rename_pluginnamehere(editor_pars, doc)
 
     pars = []
     for p in editor_pars:

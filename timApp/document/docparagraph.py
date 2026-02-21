@@ -11,6 +11,7 @@ from typing import TYPE_CHECKING, Optional
 import commonmark
 import filelock
 from commonmark.node import Node
+from flask import g
 from jinja2.sandbox import SandboxedEnvironment
 
 from timApp.document.documentparser import DocumentParser
@@ -37,6 +38,7 @@ from timApp.util.utils import (
     get_error_html,
     title_to_id,
     get_boolean,
+    add_g_error,
 )
 from tim_common.dumboclient import DumboOptions, MathType, InputFormat
 from tim_common.html_sanitize import sanitize_html, strip_div
@@ -861,6 +863,10 @@ class DocParagraph:
                 log_error(
                     f"Preventing infinite recursion in {self.get_doc_id()} "
                     f"get_auto_macro_values for par {checked_pars}\n"
+                )
+                # flash(f"Maybe duplicate paragraph id. Check manage for more details.")
+                add_g_error(
+                    f"Maybe duplicate paragraph id. Check manage for more details."
                 )
 
         if prev_par is None or not can_recurse:  # prevent recursion

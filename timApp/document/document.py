@@ -842,7 +842,10 @@ class Document:
         old_line_start = f"{par_id}/"
         old_line_legacy = f"{par_id}\n"
         new_line = f"{par_id}/{new_hash}\n"
-        with self.get_version_path(old_ver).open("r") as f_src, self.get_version_path(
+
+        # This is not the most efficient way to modify a single line,
+        """  
+        # with self.get_version_path(old_ver).open("r") as f_src, self.get_version_path(
             new_ver
         ).open("w") as f:
             while True:
@@ -853,6 +856,19 @@ class Document:
                     f.write(new_line)
                 else:
                     f.write(line)
+        """
+        with self.get_version_path(old_ver).open("r") as f_src:
+            lines = f_src.readlines()
+
+        for i in range(len(lines)):
+            line = lines[i]
+            if line.startswith(old_line_start) or line == old_line_legacy:
+                lines[i] = new_line
+                break
+
+        with self.get_version_path(new_ver).open("w") as f:
+            f.write("".join(lines))
+
         self.__update_metadata([p], old_ver, new_ver)
         return p
 

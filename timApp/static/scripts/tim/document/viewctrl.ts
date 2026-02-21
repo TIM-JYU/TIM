@@ -88,6 +88,7 @@ import type {
 import type {ReviewCanvasComponent} from "tim/plugin/reviewcanvas/review-canvas.component";
 import type {IRight} from "tim/item/access-role.service";
 import {UnbrokenSelection} from "tim/document/editing/unbrokenSelection";
+import {showMessageDialog} from "tim/ui/showMessageDialog";
 
 markAsUsed(interceptor);
 
@@ -1587,6 +1588,12 @@ export class ViewCtrl implements IController {
                 Object.entries(response.result.data.changed_pars)
             )
         );
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore
+        const warnings: string | undefined = response.result.data?.warnings;
+        if (warnings && warnings.length > 0) {
+            await showMessageDialog(warnings);
+        }
     }
 
     pendingUpdatesCount() {

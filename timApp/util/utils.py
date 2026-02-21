@@ -1,4 +1,5 @@
 """Utility functions."""
+
 import base64
 import hashlib
 import json
@@ -19,6 +20,7 @@ from typing import Any, Sequence, Callable, TypeVar, Iterable
 import dateutil.parser
 import pytz
 import requests
+from flask import g
 from lxml.html import HtmlElement
 
 from tim_common.html_sanitize import sanitize_html
@@ -110,9 +112,11 @@ def get_error_html(message: str | Exception, response: str | None = None) -> str
     return sanitize_html(
         '<span class="error" ng-non-bindable>{}{}</span>'.format(
             str(message),
-            f"<pre>---Full response string start---\n{response}\n---Full response string end---</pre>"
-            if response is not None
-            else "",
+            (
+                f"<pre>---Full response string start---\n{response}\n---Full response string end---</pre>"
+                if response is not None
+                else ""
+            ),
         )
     )
 
@@ -132,9 +136,11 @@ def get_error_html_block(
         '<div class="error" ng-non-bindable><strong>{}</strong>{}{}</div>'.format(
             title,
             f"<pre>{message}</pre>" if message else "",
-            f"<pre>---Full response string start---\n{response}\n---Full response string end---</pre>"
-            if response is not None
-            else "",
+            (
+                f"<pre>---Full response string start---\n{response}\n---Full response string end---</pre>"
+                if response is not None
+                else ""
+            ),
         )
     )
 
@@ -579,3 +585,15 @@ def strip_not_allowed(s: str, allow_reg: str | None = None) -> str:
     if allow_reg is not None:
         return re.sub(rf"[^{allow_reg}]", "", s)
     return NOT_TIM_IDENTS_RE.sub("", s)
+
+
+def add_g_error(msg: str) -> None:
+    g.errors = getattr(g, "errors", [])
+    g.errors.append(msg)
+
+
+def get_g_errors(sep: str = "<br>") -> str:
+    errors = getattr(g, "errors", [])
+    if not errors:
+        return ""
+    return sep.join(errors)
