@@ -80,7 +80,7 @@ def update_par_content(
         if is_ref:
             # if reference paragraph, we want to preserve the id
             # so we can regognize it in the future when synchronizing translations again
-            # otherwise, the block was deletd and re-created with a new id
+            # otherwise, the block was deleted and re-created with a new id
             tr_par.set_id(ref_par.id)
         task_id = ref_par.get_attr("taskId", None)
         if task_id:

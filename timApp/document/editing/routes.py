@@ -681,7 +681,7 @@ def par_response(
     if errors:
         warnings += "<br>" + errors
     if not warnings:
-        warnings = None
+        warnings = ""
 
     r: Response = json_response(
         {
@@ -881,7 +881,7 @@ def add_paragraph_common(md: str, doc_id: int, par_next_id: str | None):
 
     changes = abort_if_duplicate_ids(doc, editor_pars, auto_rename_ids=True)
 
-    # TODO: next should not be needed, because it is done allready in previuos
+    # TODO: next should not be needed, because it is done already in previuos
     # editor_pars = check_and_rename_pluginnamehere(editor_pars, doc)
 
     pars = []
