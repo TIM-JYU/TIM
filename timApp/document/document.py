@@ -26,6 +26,7 @@ from timApp.document.documentwriter import DocumentWriter
 from timApp.document.editing.documenteditresult import DocumentEditResult
 from timApp.document.exceptions import DocExistsError, ValidationException
 from timApp.document.preloadoption import PreloadOption
+from timApp.document.randutils import random_id
 from timApp.document.validationresult import (
     ValidationResult,
     DoValidation,
@@ -45,6 +46,7 @@ from timApp.util.utils import (
     get_error_html,
     trim_markdown,
     cache_folder_path,
+    add_g_error,
 )
 from tim_common.html_sanitize import presanitize_html_body
 
@@ -72,6 +74,28 @@ This can still be used as an area name in addition to its special meaning.
 
 
 # noinspection DuplicatedCode
+def get_p_as_docline(p: DocParagraph) -> str:
+    return p.get_id() + "/" + p.get_hash() + "\n"
+
+
+def find_par_id_from_doc_lines(lines: list[str], par_id: str, start: int = 0) -> int:
+    """
+    Finds the index of the line that starts with the given par_id.
+    :param lines: Doc file lines to search through.
+    :param par_id: paragraph id to find. The line must start with par_id followed by a slash, e.g. "p1/".
+    :param start:
+    :return:
+    """
+    return next(
+        (
+            i
+            for i, line in enumerate(lines[start:], start=start)
+            if line.startswith(par_id)
+        ),
+        -1,
+    )
+
+
 class Document:
     def __init__(
         self,
@@ -645,6 +669,8 @@ class Document:
 
         """
         assert p.doc.doc_id == self.doc_id
+        lines = self.get_old_lines(self.get_version())
+        self.ensure_free_par_id(lines, p)
         p.store()
         p.set_latest()
         old_ver = self.get_version()
@@ -655,8 +681,7 @@ class Document:
             shutil.copyfile(old_path, new_path)
 
         with new_path.open("a") as f:
-            f.write(p.get_id() + "/" + p.get_hash())
-            f.write("\n")
+            f.write(get_p_as_docline(p))
         if update_meta:
             self.__update_metadata([p], old_ver, new_ver)
         return p
@@ -689,8 +714,25 @@ class Document:
         index = 0
         result = False
 
-        with self.get_version_path(old_ver).open("r") as f_src:
-            with self.get_version_path(new_ver).open("w") as f:
+        lines = self.get_old_lines(old_ver)
+        while index < len(lines):
+            line = lines[index]
+            if (  # remove only the first occurrence of the par_id
+                # if there are multiple with the same id,
+                # or the one with the given index if par_index is specified
+                (not result)
+                and line.startswith(par_id)
+                and (par_index == -1 or index == par_index)
+            ):
+                result = True
+                lines[index] = ""  # remove the line by setting it to empty string
+                break
+            else:
+                index += 1
+
+        """
+        # with self.get_version_path(old_ver).open("r") as f_src:
+        #    with self.get_version_path(new_ver).open("w") as f:
                 while True:
                     line = f_src.readline()
                     if not line:
@@ -707,6 +749,10 @@ class Document:
                     else:
                         f.write(line)
                     index += 1
+        """
+        with self.get_version_path(new_ver).open("w") as f:
+            f.write("".join(lines))
+        return result
 
     def insert_paragraph(
         self,
@@ -770,7 +816,9 @@ class Document:
             return self.add_paragraph_obj(p)
 
         old_ver = self.get_version()
-        old_path = self.get_version_path(old_ver)
+        lines = self.get_old_lines(old_ver)
+        self.ensure_free_par_id(lines, p)
+
         p.store()
         p.set_latest()
         new_ver = self.__increment_version(
@@ -784,8 +832,21 @@ class Document:
             ),
         )
 
-        new_line = p.get_id() + "/" + p.get_hash() + "\n"
-        with old_path.open("r") as f_src, self.get_version_path(new_ver).open("w") as f:
+        new_line = get_p_as_docline(p)
+        for i in range(len(lines)):
+            line = lines[i]
+            if insert_before_id and line.startswith(insert_before_id):
+                lines.insert(i, new_line)
+                break
+            if insert_after_id and line.startswith(insert_after_id):
+                lines.insert(i + 1, new_line)
+                break
+
+        with self.get_version_path(new_ver).open("w") as f:
+            f.write("".join(lines))
+
+        """ 
+        # with old_path.open("r") as f_src, self.get_version_path(new_ver).open("w") as f:
             while True:
                 line = f_src.readline()
                 if not line:
@@ -796,8 +857,45 @@ class Document:
                 f.write(line)
                 if insert_after_id and line.startswith(insert_after_id):
                     f.write(new_line)
+        """
         self.__update_metadata([p], old_ver, new_ver)
         return p
+
+    def ensure_free_par_id(self, lines, p: DocParagraph):
+        """
+        Ensures that the paragraph id of the given paragraph
+         is not already used in the document version.
+        :param lines: The lines of the document version to
+                      check for existing paragraph ids.
+        :param p: paragraph whose id should be checked and changed if necessary.
+        :return: free par_id
+        """
+        while True:
+            par_id = p.get_id()
+            idx = find_par_id_from_doc_lines(lines, par_id)
+            if idx == -1:
+                return par_id
+            new_par_id = random_id()
+            msg = (
+                f"Paragraph with id {par_id} already exists in document {self.doc_id}. "
+                f" - changing to {new_par_id}"
+            )
+            log_error(msg)
+            add_g_error(msg)
+            p.set_id(new_par_id)
+
+    def get_old_lines(self, ver: Version) -> list[str]:
+        """
+        Gets the lines of the document version as a list of strings.
+        :param ver: The version to get the lines from.
+        :return: List of lines in the document version
+                 or empty list if the version does not exist.
+        """
+        try:
+            with self.get_version_path(ver).open("r") as f:
+                return f.readlines()
+        except FileNotFoundError:
+            return []
 
     def modify_paragraph(
         self, par_id: str, new_text: str, new_attrs: dict | None = None
@@ -839,9 +937,8 @@ class Document:
             op_params={"old_hash": old_hash, "new_hash": new_hash},
         )
 
-        old_line_start = f"{par_id}/"
-        old_line_legacy = f"{par_id}\n"
-        new_line = f"{par_id}/{new_hash}\n"
+        old_line_start = par_id
+        new_line = get_p_as_docline(p)
 
         # This is not the most efficient way to modify a single line,
         """  
@@ -857,12 +954,11 @@ class Document:
                 else:
                     f.write(line)
         """
-        with self.get_version_path(old_ver).open("r") as f_src:
-            lines = f_src.readlines()
+        lines = self.get_old_lines(old_ver)
 
         for i in range(len(lines)):
             line = lines[i]
-            if line.startswith(old_line_start) or line == old_line_legacy:
+            if line.startswith(old_line_start):
                 lines[i] = new_line
                 break
 

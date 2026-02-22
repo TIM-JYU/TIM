@@ -676,10 +676,10 @@ def par_response(
     final_texts = post_process_result.texts
     errors = get_g_errors()
     warnings = ""
-    if errors:
-        warnings = errors
     if edit_result and edit_result.warnings:
-        warnings += edit_result.warnings
+        warnings = edit_result.warnings
+    if errors:
+        warnings += "<br>" + errors
     if not warnings:
         warnings = None
 
