@@ -105,10 +105,6 @@ manage_page = TypedBlueprint(
 
 @manage_page.get("/manage/<path:path>")
 def manage(path: str) -> Response | str:
-    random.seed(0)
-    from timApp.document.randutils import random_id
-
-    print(random_id())
     if has_special_chars(path):
         qs = request.query_string.decode("utf-8")
         return redirect(

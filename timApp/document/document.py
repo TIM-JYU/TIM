@@ -669,7 +669,7 @@ class Document:
 
         """
         assert p.doc.doc_id == self.doc_id
-        lines = self.get_old_lines(self.get_version())
+        lines = self.get_doc_lines(self.get_version())
         self.ensure_free_par_id(lines, p)
         p.store()
         p.set_latest()
@@ -714,7 +714,7 @@ class Document:
         index = 0
         result = False
 
-        lines = self.get_old_lines(old_ver)
+        lines = self.get_doc_lines(old_ver)
         while index < len(lines):
             line = lines[index]
             if (  # remove only the first occurrence of the par_id
@@ -816,7 +816,7 @@ class Document:
             return self.add_paragraph_obj(p)
 
         old_ver = self.get_version()
-        lines = self.get_old_lines(old_ver)
+        lines = self.get_doc_lines(old_ver)
         self.ensure_free_par_id(lines, p)
 
         p.store()
@@ -836,10 +836,10 @@ class Document:
         for i in range(len(lines)):
             line = lines[i]
             if insert_before_id and line.startswith(insert_before_id):
-                lines.insert(i, new_line)
+                lines[i] = new_line + line
                 break
             if insert_after_id and line.startswith(insert_after_id):
-                lines.insert(i + 1, new_line)
+                lines[i] += new_line
                 break
 
         with self.get_version_path(new_ver).open("w") as f:
@@ -884,7 +884,7 @@ class Document:
             add_g_error(msg)
             p.set_id(new_par_id)
 
-    def get_old_lines(self, ver: Version) -> list[str]:
+    def get_doc_lines(self, ver: Version) -> list[str]:
         """
         Gets the lines of the document version as a list of strings.
         :param ver: The version to get the lines from.
@@ -954,7 +954,7 @@ class Document:
                 else:
                     f.write(line)
         """
-        lines = self.get_old_lines(old_ver)
+        lines = self.get_doc_lines(old_ver)
 
         for i in range(len(lines)):
             line = lines[i]
