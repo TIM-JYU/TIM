@@ -717,6 +717,9 @@ class ScimTest(TimRouteTest):
         )
 
     def test_duplicate_usernames(self):
+        """
+        Test that duplicate usernames are allowed, the first one is picked
+        """
         self.json_post(
             "/scim/Groups",
             json_data={
@@ -738,7 +741,7 @@ class ScimTest(TimRouteTest):
                 ),
             },
             auth=a,
-            **scim_error("The users do not have distinct usernames."),
+            expect_status=201,
         )
 
     def test_inconsistent_name(self):
