@@ -1,0 +1,5 @@
+*
+!Dockerfile
+!.dockerignore
+!requirements.txt
+!startAll.sh
