@@ -31,6 +31,7 @@ import {ICsParsonsOptions} from "../cs-parsons/csparsons";
 import {NormalEditorComponent} from "./normal";
 import {AceEditorComponent} from "./ace";
 import {ParsonsEditorComponent} from "./parsons";
+import type {Ace} from "ace-builds/src-noconflict/ace";
 
 type ModeID = number;
 
@@ -246,11 +247,8 @@ export class EditorComponent implements IMultiEditor {
 
     @Input() disabled: boolean = false;
     @Input() spellcheck?: boolean;
-    @Input() aceOptions?: {
-        showGutter?: boolean;
-        marginLine?: boolean;
-        highlightActiveLine?: boolean;
-    };
+
+    @Input() aceOptions?: Ace.EditorOptions | undefined | {};
 
     allowedPaths?: string[]; // undefined for all allowed
     maxFiles: number = 1;
