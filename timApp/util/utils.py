@@ -236,7 +236,7 @@ def title_to_id(s: str) -> str:
 
 def getdatetime(s: str, default_val: datetime | None = None) -> datetime | None:
     try:
-        dt = dateutil.parser.parse(s, dayfirst=not "Z" in s)
+        dt = dateutil.parser.parse(s, dayfirst="Z" not in s)
         return dt if dt.tzinfo is not None else dt.replace(tzinfo=timezone.utc)
     except (ValueError, TypeError):
         return default_val
@@ -354,25 +354,25 @@ def get_error_message(e: Exception) -> str:
 Range = tuple[int, int]
 
 TASK_PROG = re.compile(
-    r"([\w\.]*)(:\w*)?\( *(\d*) *, *(\d*) *\)(.*)"
+    r"([\w.]*)(:\w*)?\( *(\d*) *, *(\d*) *\)(.*)"
 )  # see https://regex101.com/r/ZZuizF/4
 TASK_NAME_PROG = re.compile(
-    r"(\d+\.)?([\w\d]+)[.\[]?.*"
+    r"(\d+\.)?(\w+)[.\[]?.*"
 )  # see https://regex101.com/r/CFOLgd/1
 
 
-def widen_fields(fields: list[str] | str) -> list[str]:
+def widen_fields(flds: list[str] | str) -> list[str]:
     """
     if there is syntax d(1,3) in fields, it is made d1,d2
     from d(1,3)=t  would come d1=t1, d2=t2
 
-    :param fields: list of fields
+    :param flds: list of fields
     :return: array fields widened
     """
     fields1 = []
-    if not isinstance(fields, list):
-        fields = fields.split(";")
-    for field in fields:
+    if not isinstance(flds, list):
+        flds = flds.split(";")
+    for field in flds:
         parts = field.split(";")
         fields1.extend(parts)
 
@@ -590,6 +590,11 @@ def strip_not_allowed(s: str, allow_reg: str | None = None) -> str:
 def add_g_error(msg: str) -> None:
     g.errors = getattr(g, "errors", [])
     g.errors.append(msg)
+
+
+def clear_g_errors() -> None:
+    g.errors = getattr(g, "errors", [])
+    g.errors.clear()
 
 
 def get_g_errors(sep: str = "<br>") -> str:

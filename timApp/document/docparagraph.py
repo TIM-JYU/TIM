@@ -11,7 +11,6 @@ from typing import TYPE_CHECKING, Optional
 import commonmark
 import filelock
 from commonmark.node import Node
-from flask import g
 from jinja2.sandbox import SandboxedEnvironment
 
 from timApp.document.documentparser import DocumentParser
@@ -113,7 +112,11 @@ class DocParagraph:
         self.attrs: dict[str, str] | None = None
         self.nomacros = None
         self.ref_chain = None
-        self.answer_nr: int | None = None  # needed if variable tasks, None = not task at all or not variable task
+        self.answer_nr: int | None = (
+            None  # needed if variable tasks, None = not task at all or not variable task
+        )
+        self.md = ""
+        self.id = None
         self.ask_new: bool | None = None  # to send for plugins to force new question
         self.html_cache = None
 
@@ -512,7 +515,7 @@ class DocParagraph:
                 md + macros.get("username", "")
             ):  # TODO: RND_SEED: check what seed should be used, is this used to plugins?
                 macros = {**macros, **self.__rands}
-        except Exception as err:
+        except Exception as _err:
             # raise Exception('Error in rnd: ' + str(err)) from err
             pass  # TODO: show exception to user!
 
@@ -862,7 +865,6 @@ class DocParagraph:
                     f"Preventing infinite recursion in {self.get_doc_id()} "
                     f"get_auto_macro_values for par {checked_pars}\n"
                 )
-                # flash(f"Maybe duplicate paragraph id. Check manage for more details.")
                 add_g_error(
                     f"Maybe duplicate paragraph id. Check manage for more details."
                 )
@@ -1501,7 +1503,7 @@ def create_final_par(
 def get_heading_counts(ctx: DocParagraph):
     d = ctx.doc
     macro_cache_file = f"/tmp/tim_auto_macros_{d.doc_id}"
-    ps = commonmark.Parser()
+    # ps = commonmark.Parser()
     with shelve.open(macro_cache_file) as cache:
         vals = cache.get(str((ctx.get_id(), d.get_version())), {}).get("h")
         return vals

@@ -173,9 +173,9 @@ buttons: |!!
 [ "$", "$⁞$", "$ $", "t" ]
 !!
 mdButtons:
- - text: \[ \pi \]
-   data: \pi
-   expl: \pi
+ - text: \\[ \\pi \\]
+   data: \\pi
+   expl: \\pi
    type: q
 ```
 ``` {#textfield plugin="textfield"}

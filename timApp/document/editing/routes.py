@@ -86,7 +86,12 @@ from timApp.util.flask.requesthelper import (
     NotExist,
 )
 from timApp.util.flask.responsehelper import json_response, ok_response, Response
-from timApp.util.utils import get_error_html, strip_not_allowed, get_g_errors
+from timApp.util.utils import (
+    get_error_html,
+    strip_not_allowed,
+    get_g_errors,
+    clear_g_errors,
+)
 from timApp.util.utils import temp_folder_path
 from tim_common.marshmallow_dataclass import dataclass
 
@@ -637,6 +642,10 @@ def par_response(
                 ).save_bookmarks()
     else:
         duplicates = None
+        ge = get_g_errors()
+        if ge.startswith("Maybe duplicate"):
+            # In preview this is needed because duplicates is removed in save
+            clear_g_errors()
         if len(pars) == 1:
             p = pars[0]
             if p.is_translation():
