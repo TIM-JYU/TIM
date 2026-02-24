@@ -56,8 +56,8 @@ const JsframeMarkup = t.intersection([
         srchtml: t.string,
         iframeopts: t.string,
         message: t.string,
-        width: t.number,
-        height: t.number,
+        width: t.union([t.number, t.string]),
+        height: t.union([t.number, t.string]),
         tool: t.boolean,
         useurl: t.boolean,
         c: t.unknown,
@@ -191,8 +191,8 @@ export interface Iframesettings {
     allow: string | null;
     sandbox: string;
     src: SafeResourceUrl;
-    width: number | null;
-    height: number | null;
+    width: number | string | null;
+    height: number | string | null;
 }
 
 @Component({
@@ -209,8 +209,8 @@ export interface Iframesettings {
                         style='margin-left: auto;
                                margin-right: auto;
                                display: block; border: none;'
-                        [style.width.px]="iframesettings.width"
-                        [style.height.px]="iframesettings.height"
+                        [style.width]="this.getDesiredSize(iframesettings.width)"
+                        [style.height]="this.getDesiredSize(iframesettings.height)"
                         [src]="iframesettings.src"
                         [sandbox]="iframesettings.sandbox"
                         [attr.allow]="iframesettings.allow"
@@ -479,12 +479,30 @@ export class JsframeComponent
         return this.frame!.nativeElement as CustomFrame<JSFrameWindow>;
     }
 
+    getDesiredSize(value: number | string | null) {
+        if (value != null) {
+            if (typeof value == "number") {
+                return `${value}px`;
+            } else {
+                const valid_percent = value.match(new RegExp("^[0-9]+%"));
+                if (valid_percent) {
+                    return value;
+                }
+            }
+        }
+        return "";
+    }
+
     updateIframeSettings() {
         if (this.attrsall.preview) {
             // return "";
         } // TODO: replace when preview delay and preview from markup ready
         const w = this.markup.width ?? 800; // for some reason if w/h = 2, does not give hints on Chart.js
-        const h = this.markup.height ?? (208 * w) / 400; //  experimental result for Chart.js
+        const h =
+            // this.markup.height ?? (208 *  w) / 400; //  experimental result for Chart.js
+            // FIXME: we should probably just set an independent default height.
+            this.markup.height ??
+            (208 * (typeof w == "number" ? w : 800)) / 400;
         let src;
         if (this.markup.useurl) {
             const selectedUser = this.viewctrl.selectedUser;
