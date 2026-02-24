@@ -1,4 +1,5 @@
 """Answer-related routes."""
+
 import json
 import re
 import shutil
@@ -1443,9 +1444,9 @@ def preprocess_jsrunner_answer(
         runner_req.input.paramComps
     ):  # TODO: add paramComps to the interface, so no need to manipulate source code
         preprg = runnermarkup.preprogram or ""
-        plugin.values[
-            "preprogram"
-        ] = f"gtools.params = {json.dumps(runner_req.input.paramComps)};\n{preprg}"
+        plugin.values["preprogram"] = (
+            f"gtools.params = {json.dumps(runner_req.input.paramComps)};\n{preprg}"
+        )
     siw = runnermarkup.showInView
     markup_include_opt = value_or_default(
         runnermarkup.includeUsers, MembershipFilter.Current
@@ -1469,9 +1470,11 @@ def preprocess_jsrunner_answer(
         member_filter_type=value_or_default(
             runner_req.input.includeUsers, markup_include_opt
         ),
-        user_filter=User.name.in_(runner_req.input.userNames)
-        if runner_req.input.userNames
-        else None,
+        user_filter=(
+            User.name.in_(runner_req.input.userNames)
+            if runner_req.input.userNames
+            else None
+        ),
     )
     if runnermarkup.peerReview:
         # TODO: Query peer reviews from another document, check need for review anonymization
@@ -1635,9 +1638,12 @@ def find_tim_vars(plugin: Plugin) -> dict:
         "triesText": plugin.known.tries_text(),
         "pointsText": plugin.known.points_text(),
         "buttonNewTask": plugin.values.get("buttonNewTask", None),
-        "modelAnswer": asdict_skip_missing(plugin.known.modelAnswer)
-        if plugin.known.modelAnswer
-        else None,
+        "buttonNewTaskParent": plugin.values.get("buttonNewTaskParent", None),
+        "modelAnswer": (
+            asdict_skip_missing(plugin.known.modelAnswer)
+            if plugin.known.modelAnswer
+            else None
+        ),
     }
     if plugin.is_new_task():
         tim_vars["newtask"] = True
