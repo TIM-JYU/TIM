@@ -34,6 +34,85 @@ export interface IAnswerBrowserSettings
     // Empty
 }
 
+export const AceEditorOptions = t.partial({
+    // EditorOptions
+    selectionStyle: t.string,
+    highlightActiveLine: t.boolean,
+    highlightSelectedWord: t.boolean,
+    readOnly: t.boolean,
+    copyWithEmptySelection: t.boolean,
+    cursorStyle: t.union([
+        t.literal("ace"),
+        t.literal("slim"),
+        t.literal("smooth"),
+        t.literal("wide"),
+    ]),
+    mergeUndoDeltas: t.union([t.boolean, t.literal("always")]), // true | false | "always",
+    behavioursEnabled: t.boolean,
+    wrapBehavioursEnabled: t.boolean,
+    autoScrollEditorIntoView: t.boolean,
+    keyboardHandler: t.string,
+    value: t.string,
+    session: t.unknown,
+
+    // EditSessionOptions
+    wrap: t.union([t.string, t.number]),
+    wrapMethod: t.union([
+        t.literal("code"),
+        t.literal("text"),
+        t.literal("auto"),
+    ]),
+    indentedSoftWrap: t.boolean,
+    firstLineNumber: t.number,
+    useWorker: t.boolean,
+    useSoftTabs: t.boolean,
+    tabSize: t.number,
+    navigateWithinSoftTabs: t.boolean,
+    foldStyle: t.union([
+        t.literal("markbegin"),
+        t.literal("markbeginend"),
+        t.literal("manual"),
+    ]),
+    overwrite: t.boolean,
+    newLineMode: t.union([
+        t.literal("auto"),
+        t.literal("unix"),
+        t.literal("windows"),
+    ]),
+    mode: t.string,
+
+    // MouseHandlerOptions
+    scrollSpeed: t.number,
+    dragDelay: t.number,
+    dragEnabled: t.boolean,
+    focusTimeout: t.number,
+    tooltipFollowsMouse: t.boolean,
+
+    // VirtualRendererOptions {
+    animatedScroll: t.boolean,
+    showInvisibles: t.boolean,
+    showPrintMargin: t.boolean,
+    printMarginColumn: t.number,
+    printMargin: t.union([t.boolean, t.number]),
+    showGutter: t.boolean,
+    fadeFoldWidgets: t.boolean,
+    showFoldWidgets: t.boolean,
+    showLineNumbers: t.boolean,
+    displayIndentGuides: t.boolean,
+    highlightGutterLine: t.boolean,
+    hScrollBarAlwaysVisible: t.boolean,
+    vScrollBarAlwaysVisible: t.boolean,
+    fontSize: t.number,
+    fontFamily: t.string,
+    maxLines: t.number,
+    minLines: t.number,
+    scrollPastEnd: t.boolean,
+    fixedWidthGutter: t.boolean,
+    theme: t.string,
+    hasCssTransforms: t.boolean,
+    maxPixelHeight: t.number,
+});
+
 export const undoType = t.partial({
     button: nullable(t.string),
     title: nullable(t.string),
@@ -79,11 +158,7 @@ export const GenericPluginMarkup = t.partial({
     previousTask: nullable(previousTaskType),
     saveTeacher: t.boolean,
     spellcheck: t.boolean,
-    ace: t.partial({
-        showGutter: t.boolean,
-        marginLine: t.boolean,
-        highlightActiveLine: t.boolean,
-    }),
+    ace: nullable(AceEditorOptions),
     eagerlyLoadState: t.boolean,
     invalidMarker: nullable(InvalidMarkerSettings),
 });

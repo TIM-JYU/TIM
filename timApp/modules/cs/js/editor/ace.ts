@@ -22,6 +22,68 @@ import {CURSOR} from "./editor";
 
 type IAceEditor = Ace.Editor;
 
+export type IAceEditorOptions = {
+    // EditorOptions
+    selectionStyle?: string | undefined;
+    highlightActiveLine?: boolean | undefined;
+    highlightSelectedWord?: boolean | undefined;
+    readOnly?: boolean | undefined;
+    copyWithEmptySelection?: boolean | undefined;
+    cursorStyle?: "ace" | "slim" | "smooth" | "wide" | undefined;
+    mergeUndoDeltas?: boolean | "always"; // true | false | "always" | undefined,
+    behavioursEnabled?: boolean | undefined;
+    wrapBehavioursEnabled?: boolean | undefined;
+    autoScrollEditorIntoView?: boolean | undefined;
+    keyboardHandler?: string | undefined;
+    value?: string | undefined;
+    session?: unknown | undefined;
+
+    // EditSessionOptions
+    wrap?: string | number | undefined;
+    wrapMethod?: "code" | "text" | "auto" | undefined;
+    indentedSoftWrap?: boolean | undefined;
+    firstLineNumber?: number | undefined;
+    useWorker?: boolean | undefined;
+    useSoftTabs?: boolean | undefined;
+    tabSize?: number | undefined;
+    navigateWithinSoftTabs?: boolean | undefined;
+    foldStyle?: "markbegin" | "markbeginend" | "manual" | undefined;
+    overwrite?: boolean | undefined;
+    newLineMode?: "auto" | "unix" | "windows" | undefined;
+    mode?: string | undefined;
+
+    // MouseHandlerOptions
+    scrollSpeed?: number | undefined;
+    dragDelay?: number | undefined;
+    dragEnabled?: boolean | undefined;
+    focusTimeout?: number | undefined;
+    tooltipFollowsMouse?: boolean | undefined;
+
+    // VirtualRendererOptions {
+    animatedScroll?: boolean | undefined;
+    showInvisibles?: boolean | undefined;
+    showPrintMargin?: boolean | undefined;
+    printMarginColumn?: number | undefined;
+    printMargin?: boolean | number | undefined;
+    showGutter?: boolean | undefined;
+    fadeFoldWidgets?: boolean | undefined;
+    showFoldWidgets?: boolean | undefined;
+    showLineNumbers?: boolean | undefined;
+    displayIndentGuides?: boolean | undefined;
+    highlightGutterLine?: boolean | undefined;
+    hScrollBarAlwaysVisible?: boolean | undefined;
+    vScrollBarAlwaysVisible?: boolean | undefined;
+    fontSize?: number | undefined;
+    fontFamily?: string | undefined;
+    maxLines?: number | undefined;
+    minLines?: number | undefined;
+    scrollPastEnd?: boolean | undefined;
+    fixedWidthGutter?: boolean | undefined;
+    theme?: string | undefined;
+    hasCssTransforms?: boolean | undefined;
+    maxPixelHeight?: number | undefined;
+};
+
 @Component({
     selector: "cs-ace-editor",
     template: `
@@ -41,7 +103,7 @@ export class AceEditorComponent implements IEditor {
     @ViewChild("area") area!: ElementRef;
     @Input() placeholder: string = ""; // TODO: make this work
 
-    @Input() aceOptions?: Ace.EditorOptions | undefined | {};
+    @Input() aceOptions: IAceEditorOptions | null | undefined;
 
     @Input()
     set languageMode(lang: string) {
