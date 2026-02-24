@@ -307,8 +307,8 @@ export class AnswerBrowserComponent
     showRefresh = false;
     refreshing = false;
 
-    @ViewChild("buttonNewTask", {read: ElementRef})
-    buttonNewTaskElement?: ElementRef<HTMLElement>;
+    @ViewChild("buttonNewTaskStem", {read: ElementRef})
+    buttonNewTaskStem?: ElementRef<HTMLElement>;
 
     constructor(
         private element: ElementRef<HTMLElement>,
@@ -1922,8 +1922,6 @@ export class AnswerBrowserComponent
         }
     }
 
-    private newTaskButtonMoved = false;
-
     private setShowNewTask(show: boolean) {
         this.showNewTask = show;
         if (this.showNewTask) {
@@ -1932,12 +1930,8 @@ export class AnswerBrowserComponent
         }
     }
 
-    moveNewTaskButton() {
-        if (
-            // this.newTaskButtonMoved ||
-            !this.taskInfo?.buttonNewTaskParent ||
-            !this.buttonNewTaskElement
-        ) {
+    private moveNewTaskButton() {
+        if (!this.taskInfo?.buttonNewTaskParent || !this.buttonNewTaskStem) {
             return;
         }
         const host = this.element.nativeElement;
@@ -1951,13 +1945,7 @@ export class AnswerBrowserComponent
         if (!target) {
             return;
         }
-        target.appendChild(this.buttonNewTaskElement.nativeElement);
-        const btn =
-            this.buttonNewTaskElement.nativeElement.querySelector("button");
-        if (btn) {
-            btn.textContent = this.buttonNewTask;
-        }
-        this.newTaskButtonMoved = true;
+        target.appendChild(this.buttonNewTaskStem.nativeElement);
     }
 
     async checkUsers(force?: boolean) {

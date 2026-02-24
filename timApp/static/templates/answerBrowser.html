@@ -81,7 +81,7 @@
                             <input type="checkbox" [(ngModel)]="onlyValid" (ngModelChange)="onOnlyValidChanged()">{{markupSettings.validOnlyText}}</label>
                         <span class="all-answers" *ngIf="showTeacher()"> <span class="delimiter">|</span> <a i18n (click)="getAllAnswers()">All answers</a>
                     </span>
-                        <span #buttonNewTask><button  i18n-title class="timButton buttonNewTask" *ngIf="showNewTask" title="Change to new task" (click)="newTask()">{{ buttonNewTask }}</button></span>
+                        <span #buttonNewTaskStem2><button #buttonNewTaskStem i18n-title class="timButton buttonNewTask" *ngIf="showNewTask" title="Change to new task" (click)="newTask()">{{ buttonNewTask }}</button></span>
                         <span class="answer-link" *ngIf="selectedAnswer"><span class="delimiter">|</span> <a i18n i18n-title title="Link to currently selected answer"
                                                           (click)="$event.preventDefault()"
                                                           href="{{ getAnswerLink() }}">Link</a>
