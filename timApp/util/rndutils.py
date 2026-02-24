@@ -2,7 +2,9 @@
 Functions to produce random lists.
 For documentation, see: https://tim.jyu.fi/view/tim/ohjeita/satunnaistus
 """
+
 import json
+import secrets
 import time
 from dataclasses import dataclass
 from random import Random
@@ -219,15 +221,16 @@ def get_rnds(
     if attrs is None:
         return None, rnd_seed, state
 
-    jso = attrs.get(name, None)
-    if jso is None:
+    jso: str = attrs.get(name, "")
+    if not jso:
         return None, rnd_seed, state
 
     seed_to_use = rnd_seed
     attrs_seed = attrs.get("seed", None)
     if attrs_seed is not None:
         if attrs_seed == "" or attrs_seed == "time":
-            seed_to_use = int(time.perf_counter() * 1000)
+            # seed_to_use = int(time.perf_counter() * 1000)
+            seed_to_use = secrets.randbits(64)
         elif attrs_seed == "answernr":
             if isinstance(rnd_seed, SeedClass):
                 seed_to_use = rnd_seed.seed + rnd_seed.extraseed
@@ -242,7 +245,8 @@ def get_rnds(
 
     # noinspection PyBroadException
     if seed_to_use is None:
-        seed_to_use = int(time.perf_counter() * 1000)
+        # seed_to_use = int(time.perf_counter() * 1000)
+        seed_to_use = secrets.randbits(64)
 
     myrandom = Random()
     myrandom.seed(a=seed_to_use)

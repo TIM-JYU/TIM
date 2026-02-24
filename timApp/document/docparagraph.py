@@ -37,6 +37,7 @@ from timApp.util.utils import (
     get_error_html,
     title_to_id,
     get_boolean,
+    add_g_error,
 )
 from tim_common.dumboclient import DumboOptions, MathType, InputFormat
 from tim_common.html_sanitize import sanitize_html, strip_div
@@ -112,6 +113,8 @@ class DocParagraph:
         self.nomacros = None
         self.ref_chain = None
         self.answer_nr: int | None = None  # needed if variable tasks, None = not task at all or not variable task
+        self.md = ""
+        self.id = None
         self.ask_new: bool | None = None  # to send for plugins to force new question
         self.html_cache = None
 
@@ -510,7 +513,7 @@ class DocParagraph:
                 md + macros.get("username", "")
             ):  # TODO: RND_SEED: check what seed should be used, is this used to plugins?
                 macros = {**macros, **self.__rands}
-        except Exception as err:
+        except Exception as _err:
             # raise Exception('Error in rnd: ' + str(err)) from err
             pass  # TODO: show exception to user!
 
@@ -859,6 +862,9 @@ class DocParagraph:
                 log_error(
                     f"Preventing infinite recursion in {self.get_doc_id()} "
                     f"get_auto_macro_values for par {checked_pars}\n"
+                )
+                add_g_error(
+                    f"Maybe duplicate paragraph id. Check manage for more details."
                 )
 
         if prev_par is None or not can_recurse:  # prevent recursion
@@ -1495,7 +1501,7 @@ def create_final_par(
 def get_heading_counts(ctx: DocParagraph):
     d = ctx.doc
     macro_cache_file = f"/tmp/tim_auto_macros_{d.doc_id}"
-    ps = commonmark.Parser()
+    # ps = commonmark.Parser()
     with shelve.open(macro_cache_file) as cache:
         vals = cache.get(str((ctx.get_id(), d.get_version())), {}).get("h")
         return vals

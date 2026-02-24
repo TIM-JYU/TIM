@@ -180,9 +180,9 @@ buttons: |!!
 [ "$", "$⁞$", "$ $", "t" ]
 !!
 mdButtons:
- - text: \[ \pi \]
-   data: \pi
-   expl: \pi
+ - text: \\[ \\pi \\]
+   data: \\pi
+   expl: \\pi
    type: q
 ```
 ``` {#textfield plugin="textfield"}
@@ -238,15 +238,17 @@ autosave: true
             Keys.LEFT
         ).send_keys(Keys.LEFT).key_up(Keys.SHIFT).perform()
         dollar_button.click()
+        sleep(0.3)
         ActionChains(self.drv).send_keys("A").perform()
         self.wait_until_present_and_vis("#cstiny input")
         element = self.find_element("#cstiny input")
         element.click()
-        sleep(1)
+        sleep(0.1)
         ActionChains(self.drv).send_keys(Keys.END).send_keys(Keys.LEFT).key_down(
             Keys.SHIFT
         ).send_keys(Keys.LEFT).send_keys(Keys.LEFT).key_up(Keys.SHIFT).perform()
         dollar_button.click()
+        sleep(0.1)
         ActionChains(self.drv).send_keys("A").perform()
         self.wait_until_present_and_vis("#csnormal textarea")
         element = self.find_element("#csnormal textarea")
@@ -257,6 +259,7 @@ autosave: true
             Keys.SHIFT
         ).perform()
         dollar_button.click()
+        sleep(0.1)
         ActionChains(self.drv).send_keys("A").perform()
         self.wait_until_present_and_vis("#cshighlight cs-ace-editor")
         element = self.find_element("#cshighlight cs-ace-editor")
@@ -269,6 +272,7 @@ autosave: true
             Keys.SHIFT
         ).perform()
         dollar_button.click()
+        sleep(0.1)
         ActionChains(self.drv).send_keys("A").perform()
         self.get_uninteractable_element().click()
         self.goto_document(d)

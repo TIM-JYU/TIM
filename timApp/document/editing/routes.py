@@ -86,7 +86,12 @@ from timApp.util.flask.requesthelper import (
     NotExist,
 )
 from timApp.util.flask.responsehelper import json_response, ok_response, Response
-from timApp.util.utils import get_error_html, strip_not_allowed
+from timApp.util.utils import (
+    get_error_html,
+    strip_not_allowed,
+    get_g_errors,
+    clear_g_errors,
+)
 from timApp.util.utils import temp_folder_path
 from tim_common.marshmallow_dataclass import dataclass
 
@@ -143,6 +148,7 @@ def update_document(doc_id):
 
         _, _, edit_result = doc.update(content, original, strict_validation)
         check_and_rename_pluginnamehere(editor_pars, doc)
+        """
         old_pars = doc.get_paragraphs()
         for op, ep in zip(old_pars, editor_pars):
             if ep.get_attr("taskId") and op.get_attr("taskId"):
@@ -153,6 +159,7 @@ def update_document(doc_id):
                         new_attrs=ep.get_attrs(),
                     )
                     edit_result.changed.append(p)
+        """
         if not edit_result.empty:
             docentry.update_last_modified()
             db.session.commit()
@@ -635,6 +642,10 @@ def par_response(
                 ).save_bookmarks()
     else:
         duplicates = None
+        ge = get_g_errors()
+        if ge.startswith("Maybe duplicate"):
+            # In preview this is needed because duplicates is removed in save
+            clear_g_errors()
         if len(pars) == 1:
             p = pars[0]
             if p.is_translation():
@@ -672,6 +683,15 @@ def par_response(
             p.output = r.new_html
 
     final_texts = post_process_result.texts
+    errors = get_g_errors()
+    warnings = ""
+    if edit_result and edit_result.warnings:
+        warnings = edit_result.warnings
+    if errors:
+        warnings += "<br>" + errors
+    if not warnings:
+        warnings = ""
+
     r: Response = json_response(
         {
             "texts": render_template(
@@ -711,9 +731,10 @@ def par_response(
                 else None
             ),
             "new_par_ids": edit_result.new_par_ids if edit_result else None,
-            "warnings": edit_result.warnings if edit_result else None,
+            "warnings": warnings,
         }
     )
+
     db.session.commit()
     return r
 
@@ -869,7 +890,8 @@ def add_paragraph_common(md: str, doc_id: int, par_next_id: str | None):
 
     changes = abort_if_duplicate_ids(doc, editor_pars, auto_rename_ids=True)
 
-    editor_pars = check_and_rename_pluginnamehere(editor_pars, doc)
+    # TODO: next should not be needed, because it is done already in previuos
+    # editor_pars = check_and_rename_pluginnamehere(editor_pars, doc)
 
     pars = []
     for p in editor_pars:

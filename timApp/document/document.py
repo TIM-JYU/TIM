@@ -26,6 +26,7 @@ from timApp.document.documentwriter import DocumentWriter
 from timApp.document.editing.documenteditresult import DocumentEditResult
 from timApp.document.exceptions import DocExistsError, ValidationException
 from timApp.document.preloadoption import PreloadOption
+from timApp.document.randutils import random_id
 from timApp.document.validationresult import (
     ValidationResult,
     DoValidation,
@@ -45,6 +46,7 @@ from timApp.util.utils import (
     get_error_html,
     trim_markdown,
     cache_folder_path,
+    add_g_error,
 )
 from tim_common.html_sanitize import presanitize_html_body
 
@@ -72,6 +74,28 @@ This can still be used as an area name in addition to its special meaning.
 
 
 # noinspection DuplicatedCode
+def get_p_as_docline(p: DocParagraph) -> str:
+    return p.get_id() + "/" + p.get_hash() + "\n"
+
+
+def find_par_id_from_doc_lines(lines: list[str], par_id: str, start: int = 0) -> int:
+    """
+    Finds the index of the line that starts with the given par_id.
+    :param lines: Doc file lines to search through.
+    :param par_id: paragraph id to find. The line must start with par_id followed by a slash, e.g. "p1/".
+    :param start:
+    :return:
+    """
+    return next(
+        (
+            i
+            for i, line in enumerate(lines[start:], start=start)
+            if line.startswith(par_id)
+        ),
+        -1,
+    )
+
+
 class Document:
     def __init__(
         self,
@@ -645,6 +669,8 @@ class Document:
 
         """
         assert p.doc.doc_id == self.doc_id
+        lines = self.get_doc_lines(self.get_version())
+        self.ensure_free_par_id(lines, p)
         p.store()
         p.set_latest()
         old_ver = self.get_version()
@@ -655,8 +681,7 @@ class Document:
             shutil.copyfile(old_path, new_path)
 
         with new_path.open("a") as f:
-            f.write(p.get_id() + "/" + p.get_hash())
-            f.write("\n")
+            f.write(get_p_as_docline(p))
         if update_meta:
             self.__update_metadata([p], old_ver, new_ver)
         return p
@@ -675,27 +700,59 @@ class Document:
         p = DocParagraph.create(doc=self, par_id=par_id, md=text, attrs=attrs)
         return self.add_paragraph_obj(p)
 
-    def delete_paragraph(self, par_id: str):
+    def delete_paragraph(self, par_id: str, par_index: int = -1) -> bool:
         """Removes a paragraph from the document.
 
         :param par_id: Paragraph id to remove.
-
+        :param par_index: The index of the paragraph to remove, or -1 if not known.
+        :return: Whether a paragraph was removed.
         """
         self.raise_if_not_exist(par_id)
         old_ver = self.get_version()
         new_ver = self.__increment_version("Deleted", par_id, increment_major=True)
         self.__update_metadata([], old_ver, new_ver)
+        index = 0
+        result = False
 
-        with self.get_version_path(old_ver).open("r") as f_src:
-            with self.get_version_path(new_ver).open("w") as f:
+        lines = self.get_doc_lines(old_ver)
+        while index < len(lines):
+            line = lines[index]
+            if (  # remove only the first occurrence of the par_id
+                # if there are multiple with the same id,
+                # or the one with the given index if par_index is specified
+                (not result)
+                and line.startswith(par_id)
+                and (par_index == -1 or index == par_index)
+            ):
+                result = True
+                lines[index] = ""  # remove the line by setting it to empty string
+                break
+            else:
+                index += 1
+
+        """
+        # with self.get_version_path(old_ver).open("r") as f_src:
+        #    with self.get_version_path(new_ver).open("w") as f:
                 while True:
                     line = f_src.readline()
                     if not line:
-                        return
-                    if line.startswith(par_id):
+                        return result
+                    if (  # remove only the first occurrence of the par_id
+                        # if there are multiple with the same id,
+                        # or the one with the given index if par_index is specified
+                        (not result)
+                        and line.startswith(par_id)
+                        and (par_index == -1 or index == par_index)
+                    ):
+                        result = True
                         pass
                     else:
                         f.write(line)
+                    index += 1
+        """
+        with self.get_version_path(new_ver).open("w") as f:
+            f.write("".join(lines))
+        return result
 
     def insert_paragraph(
         self,
@@ -759,20 +816,37 @@ class Document:
             return self.add_paragraph_obj(p)
 
         old_ver = self.get_version()
-        old_path = self.get_version_path(old_ver)
+        lines = self.get_doc_lines(old_ver)
+        self.ensure_free_par_id(lines, p)
+
         p.store()
         p.set_latest()
         new_ver = self.__increment_version(
             "Inserted",
             p.get_id(),
             increment_major=True,
-            op_params={"before_id": insert_before_id}
-            if insert_before_id
-            else {"after_id": insert_after_id},
+            op_params=(
+                {"before_id": insert_before_id}
+                if insert_before_id
+                else {"after_id": insert_after_id}
+            ),
         )
 
-        new_line = p.get_id() + "/" + p.get_hash() + "\n"
-        with old_path.open("r") as f_src, self.get_version_path(new_ver).open("w") as f:
+        new_line = get_p_as_docline(p)
+        for i in range(len(lines)):
+            line = lines[i]
+            if insert_before_id and line.startswith(insert_before_id):
+                lines[i] = new_line + line
+                break
+            if insert_after_id and line.startswith(insert_after_id):
+                lines[i] += new_line
+                break
+
+        with self.get_version_path(new_ver).open("w") as f:
+            f.write("".join(lines))
+
+        """ 
+        # with old_path.open("r") as f_src, self.get_version_path(new_ver).open("w") as f:
             while True:
                 line = f_src.readline()
                 if not line:
@@ -783,8 +857,45 @@ class Document:
                 f.write(line)
                 if insert_after_id and line.startswith(insert_after_id):
                     f.write(new_line)
+        """
         self.__update_metadata([p], old_ver, new_ver)
         return p
+
+    def ensure_free_par_id(self, lines, p: DocParagraph):
+        """
+        Ensures that the paragraph id of the given paragraph
+         is not already used in the document version.
+        :param lines: The lines of the document version to
+                      check for existing paragraph ids.
+        :param p: paragraph whose id should be checked and changed if necessary.
+        :return: free par_id
+        """
+        while True:
+            par_id = p.get_id()
+            idx = find_par_id_from_doc_lines(lines, par_id)
+            if idx == -1:
+                return par_id
+            new_par_id = random_id()
+            msg = (
+                f"Paragraph with id {par_id} already exists in document {self.doc_id}. "
+                f" - changing to {new_par_id}"
+            )
+            log_error(msg)
+            add_g_error(msg)
+            p.set_id(new_par_id)
+
+    def get_doc_lines(self, ver: Version) -> list[str]:
+        """
+        Gets the lines of the document version as a list of strings.
+        :param ver: The version to get the lines from.
+        :return: List of lines in the document version
+                 or empty list if the version does not exist.
+        """
+        try:
+            with self.get_version_path(ver).open("r") as f:
+                return f.readlines()
+        except FileNotFoundError:
+            return []
 
     def modify_paragraph(
         self, par_id: str, new_text: str, new_attrs: dict | None = None
@@ -826,10 +937,12 @@ class Document:
             op_params={"old_hash": old_hash, "new_hash": new_hash},
         )
 
-        old_line_start = f"{par_id}/"
-        old_line_legacy = f"{par_id}\n"
-        new_line = f"{par_id}/{new_hash}\n"
-        with self.get_version_path(old_ver).open("r") as f_src, self.get_version_path(
+        old_line_start = par_id
+        new_line = get_p_as_docline(p)
+
+        # This is not the most efficient way to modify a single line,
+        """  
+        # with self.get_version_path(old_ver).open("r") as f_src, self.get_version_path(
             new_ver
         ).open("w") as f:
             while True:
@@ -840,6 +953,18 @@ class Document:
                     f.write(new_line)
                 else:
                     f.write(line)
+        """
+        lines = self.get_doc_lines(old_ver)
+
+        for i in range(len(lines)):
+            line = lines[i]
+            if line.startswith(old_line_start):
+                lines[i] = new_line
+                break
+
+        with self.get_version_path(new_ver).open("w") as f:
+            f.write("".join(lines))
+
         self.__update_metadata([p], old_ver, new_ver)
         return p
 
@@ -935,9 +1060,10 @@ class Document:
         id1, id2, edit_result = self._perform_update(
             new_pars,
             old_pars,
-            last_par_id=all_par_ids[end_index + 1]
-            if end_index + 1 < len(all_par_ids)
-            else None,
+            last_par_id=(
+                all_par_ids[end_index + 1] if end_index + 1 < len(all_par_ids) else None
+            ),
+            start_index=start_index,
         )
         if changes:
             edit_result.warnings = list_to_html(changes)
@@ -948,19 +1074,37 @@ class Document:
         new_pars: list[DocParagraph],
         old_pars: list[DocParagraph],
         last_par_id=None,
+        start_index=0,
     ) -> tuple[str, str, DocumentEditResult] | tuple[None, None, DocumentEditResult]:
+        """
+        This is very unoptimized implementation that performs the update
+        by doing individual insert, delete and modify operations
+        for each paragraph.
+        :param new_pars: list of editor pars
+        :param old_pars: list of original pars in the document in the same section
+        :param last_par_id: documents lats block par id
+        :param start_index: the index of the first par in the section to update,
+               used for correct deletion when duplicate ids are present
+        :return:
+        """
         old_ids = [par.get_id() for par in old_pars]
         new_ids = [par.get_id() for par in new_pars]
         s = SequenceMatcher(None, old_ids, new_ids)
         opcodes = s.get_opcodes()
         result = DocumentEditResult()
         # Do delete operations first to avoid duplicate ids
+        del_count = 0
         for tag, i1, i2, j1, j2 in [
             opcode for opcode in opcodes if opcode[0] in ["delete", "replace"]
         ]:
-            for par, par_id in zip(old_pars[i1:i2], old_ids[i1:i2]):
-                self.delete_paragraph(par_id)
-                result.deleted.append(par)
+            for idx in range(i1, i2):
+                par = old_pars[idx]
+                par_id = old_ids[idx]
+                # Force to check par in given index because there is duplicate ids
+                # in the document and we want to delete only the correct one
+                if self.delete_paragraph(par_id, start_index + idx - del_count):
+                    del_count += 1
+                    result.deleted.append(par)
         for tag, i1, i2, j1, j2 in opcodes:
             if tag == "replace":
                 for par in new_pars[j1:j2]:
@@ -969,9 +1113,11 @@ class Document:
                         par.get_markdown(),
                         attrs=par.get_attrs(),
                         par_id=par.get_id(),
-                        insert_before_id=old_ids[before_i]
-                        if before_i < len(old_ids)
-                        else last_par_id,
+                        insert_before_id=(
+                            old_ids[before_i]
+                            if before_i < len(old_ids)
+                            else last_par_id
+                        ),
                     )
                     result.added.append(inserted)
             elif tag == "insert":
@@ -981,9 +1127,11 @@ class Document:
                         par.get_markdown(),
                         attrs=par.get_attrs(),
                         par_id=par.get_id(),
-                        insert_before_id=old_ids[before_i]
-                        if before_i < len(old_ids)
-                        else last_par_id,
+                        insert_before_id=(
+                            old_ids[before_i]
+                            if before_i < len(old_ids)
+                            else last_par_id
+                        ),
                     )
                     result.added.append(inserted)
             elif tag == "equal":
@@ -1007,9 +1155,11 @@ class Document:
                                 new_par.get_markdown(),
                                 attrs=new_par.get_attrs(),
                                 par_id=new_par.get_id(),
-                                insert_before_id=old_ids[before_i]
-                                if before_i < len(old_ids)
-                                else last_par_id,
+                                insert_before_id=(
+                                    old_ids[before_i]
+                                    if before_i < len(old_ids)
+                                    else last_par_id
+                                ),
                             )
                             result.added.append(inserted)
         if not new_ids:
@@ -1069,7 +1219,7 @@ class Document:
             raise ValidationException(get_duplicate_id_msg(conflicting_ids))
         """
         old_pars = DocParagraph.from_dicts(self, blocks)
-        return self._perform_update(new_pars, old_pars)
+        return self._perform_update(new_pars, old_pars, start_index=0)
 
     def find_insert_index(self, i2, old_ids):
         before_i = i2
@@ -1118,8 +1268,8 @@ class Document:
     def delete_section(self, area_start, area_end) -> DocumentEditResult:
         result = DocumentEditResult()
         for par in self.get_section(area_start, area_end):
-            self.delete_paragraph(par.get_id())
-            result.deleted.append(par)
+            if self.delete_paragraph(par.get_id()):
+                result.deleted.append(par)
         return result
 
     def get_paragraph_by_task_id(self, task_id: str) -> DocParagraph or None:

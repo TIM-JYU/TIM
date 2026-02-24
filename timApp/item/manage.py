@@ -1,4 +1,6 @@
 """Routes for manage view."""
+
+import random
 import re
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
@@ -122,6 +124,7 @@ def manage(path: str) -> Response | str:
         item.changelog_length = get_option(request, "history", 100)
 
     item.metadata.info["route"] = "manage"
+    # For the result going to browser, see DocInfo toJson()
     return render_template(
         "manage.jinja2",
         route="manage",
@@ -619,8 +622,9 @@ def edit_permissions(m: PermissionMassEditModel) -> Response:
 def add_perm(
     p: PermissionEditModel,
     item: ItemBase | Block,
-    replace_active_duration: bool
-    | ReplaceAccessAction = ReplaceAccessAction.AlwaysReplace,
+    replace_active_duration: (
+        bool | ReplaceAccessAction
+    ) = ReplaceAccessAction.AlwaysReplace,
 ) -> list[BlockAccess]:
     if get_current_user_object().get_personal_folder().id == item.id:
         if p.type == AccessType.owner:

@@ -453,6 +453,8 @@ class DocInfo(Item):
             if (self.document.vr is not None) and add_errors:
                 errors = self.document.vr.get_as_html()
                 if errors and errors != "":
+                    if errors.index("Duplicate paragraph id") != -1:
+                        errors += "<br><br>Fix by removing duplicate paragraph ids or delete the extra paragraphs."
                     result["errors"] = errors
 
         return result
