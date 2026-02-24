@@ -21,7 +21,8 @@ class MathEditorTest(BrowserTest):
         """Tests adding new formulas with math editor"""
         self.login_browser_quick_test1()
         self.login_test1()
-        d = self.create_doc(initial_par="""
+        d = self.create_doc(
+            initial_par="""
 ```{#mqtest plugin="csPlugin"}
 type: md
 # highlight:
@@ -35,7 +36,8 @@ autorun: true
 autoupdate: 1000
 formulaEditor: true
 ```
-""")
+"""
+        )
         self.goto_document(d)
         open_formula_button = self.find_element(xpath="//button[@title='Ctrl+e']")
         open_formula_button.click()
@@ -53,7 +55,8 @@ formulaEditor: true
         """Tests editing existing formulas with math editor"""
         self.login_browser_quick_test1()
         self.login_test1()
-        d = self.create_doc(initial_par="""
+        d = self.create_doc(
+            initial_par="""
 ```{#mqtest plugin="csPlugin"}
 type: md
 # highlight:
@@ -67,7 +70,8 @@ autorun: true
 autoupdate: 1000
 formulaEditor: true
 ```
-""")
+"""
+        )
         self.goto_document(d)
         ace_input = self.find_element(xpath="//textarea[@class='ace_text-input']")
         ace_input.send_keys("$12345$")
@@ -111,7 +115,8 @@ formulaEditor: true
         """Tests math editor buttons"""
         self.login_browser_quick_test1()
         self.login_test1()
-        d = self.create_doc(initial_par="""
+        d = self.create_doc(
+            initial_par="""
 ```{#mqtest plugin="csPlugin"}
 type: md
 # highlight:
@@ -131,7 +136,8 @@ buttons: |!!
 [ "\\\\[ \\\\frac{\\\\square}{\\\\square} \\\\]", "e"]
 !!
 ```
-""")
+"""
+        )
         self.goto_document(d)
         quick_button = self.find_element(xpath="//button[@title='\\sin']")
         tim_button = self.find_element(xpath="//button[@title='\\cos']")
@@ -167,7 +173,8 @@ buttons: |!!
         -   Clicking the external editor does not generate extra autosaves"""
         self.login_browser_quick_test1()
         self.login_test1()
-        d = self.create_doc(initial_par="""
+        d = self.create_doc(
+            initial_par="""
 ``` {plugin="symbolbutton"}
 buttons: |!!
 [ "$", "$⁞$", "$ $", "t" ]
@@ -193,7 +200,8 @@ autosave: true
 type: text
 autosave: true
 ```
-            """)
+            """
+        )
         save_answer(
             [self.test_user_1],
             TaskId.parse(f"{d.id}.textfield"),
