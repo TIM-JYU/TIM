@@ -24,64 +24,64 @@ type IAceEditor = Ace.Editor;
 
 export type IAceEditorOptions = {
     // EditorOptions
-    selectionStyle?: string | undefined;
-    highlightActiveLine?: boolean | undefined;
-    highlightSelectedWord?: boolean | undefined;
-    readOnly?: boolean | undefined;
-    copyWithEmptySelection?: boolean | undefined;
-    cursorStyle?: "ace" | "slim" | "smooth" | "wide" | undefined;
-    mergeUndoDeltas?: boolean | "always"; // true | false | "always" | undefined,
-    behavioursEnabled?: boolean | undefined;
-    wrapBehavioursEnabled?: boolean | undefined;
-    autoScrollEditorIntoView?: boolean | undefined;
-    keyboardHandler?: string | undefined;
-    value?: string | undefined;
-    session?: unknown | undefined;
+    selectionStyle?: string;
+    highlightActiveLine?: boolean;
+    highlightSelectedWord?: boolean;
+    readOnly?: boolean;
+    copyWithEmptySelection?: boolean;
+    cursorStyle?: "ace" | "slim" | "smooth" | "wide";
+    mergeUndoDeltas?: boolean | "always"; // true | false | "always",
+    behavioursEnabled?: boolean;
+    wrapBehavioursEnabled?: boolean;
+    autoScrollEditorIntoView?: boolean;
+    keyboardHandler?: string;
+    value?: string;
+    session?: unknown;
 
     // EditSessionOptions
-    wrap?: string | number | undefined;
-    wrapMethod?: "code" | "text" | "auto" | undefined;
-    indentedSoftWrap?: boolean | undefined;
-    firstLineNumber?: number | undefined;
-    useWorker?: boolean | undefined;
-    useSoftTabs?: boolean | undefined;
-    tabSize?: number | undefined;
-    navigateWithinSoftTabs?: boolean | undefined;
-    foldStyle?: "markbegin" | "markbeginend" | "manual" | undefined;
-    overwrite?: boolean | undefined;
-    newLineMode?: "auto" | "unix" | "windows" | undefined;
-    mode?: string | undefined;
+    wrap?: string | number;
+    wrapMethod?: "code" | "text" | "auto";
+    indentedSoftWrap?: boolean;
+    firstLineNumber?: number;
+    useWorker?: boolean;
+    useSoftTabs?: boolean;
+    tabSize?: number;
+    navigateWithinSoftTabs?: boolean;
+    foldStyle?: "markbegin" | "markbeginend" | "manual";
+    overwrite?: boolean;
+    newLineMode?: "auto" | "unix" | "windows";
+    mode?: string;
 
     // MouseHandlerOptions
-    scrollSpeed?: number | undefined;
-    dragDelay?: number | undefined;
-    dragEnabled?: boolean | undefined;
-    focusTimeout?: number | undefined;
-    tooltipFollowsMouse?: boolean | undefined;
+    scrollSpeed?: number;
+    dragDelay?: number;
+    dragEnabled?: boolean;
+    focusTimeout?: number;
+    tooltipFollowsMouse?: boolean;
 
     // VirtualRendererOptions {
-    animatedScroll?: boolean | undefined;
-    showInvisibles?: boolean | undefined;
-    showPrintMargin?: boolean | undefined;
-    printMarginColumn?: number | undefined;
-    printMargin?: boolean | number | undefined;
-    showGutter?: boolean | undefined;
-    fadeFoldWidgets?: boolean | undefined;
-    showFoldWidgets?: boolean | undefined;
-    showLineNumbers?: boolean | undefined;
-    displayIndentGuides?: boolean | undefined;
-    highlightGutterLine?: boolean | undefined;
-    hScrollBarAlwaysVisible?: boolean | undefined;
-    vScrollBarAlwaysVisible?: boolean | undefined;
-    fontSize?: number | undefined;
-    fontFamily?: string | undefined;
-    maxLines?: number | undefined;
-    minLines?: number | undefined;
-    scrollPastEnd?: boolean | undefined;
-    fixedWidthGutter?: boolean | undefined;
-    theme?: string | undefined;
-    hasCssTransforms?: boolean | undefined;
-    maxPixelHeight?: number | undefined;
+    animatedScroll?: boolean;
+    showInvisibles?: boolean;
+    showPrintMargin?: boolean;
+    printMarginColumn?: number;
+    printMargin?: boolean | number;
+    showGutter?: boolean;
+    fadeFoldWidgets?: boolean;
+    showFoldWidgets?: boolean;
+    showLineNumbers?: boolean;
+    displayIndentGuides?: boolean;
+    highlightGutterLine?: boolean;
+    hScrollBarAlwaysVisible?: boolean;
+    vScrollBarAlwaysVisible?: boolean;
+    fontSize?: number;
+    fontFamily?: string;
+    maxLines?: number;
+    minLines?: number;
+    scrollPastEnd?: boolean;
+    fixedWidthGutter?: boolean;
+    theme?: string;
+    hasCssTransforms?: boolean;
+    maxPixelHeight?: number;
 };
 
 @Component({
