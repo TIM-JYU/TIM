@@ -29,6 +29,7 @@ import type {IFile} from "../util/file-select";
 import {getInt} from "../util/util";
 import {ICsParsonsOptions} from "../cs-parsons/csparsons";
 import {NormalEditorComponent} from "./normal";
+import type {IAceEditorOptions} from "./ace";
 import {AceEditorComponent} from "./ace";
 import {ParsonsEditorComponent} from "./parsons";
 
@@ -246,11 +247,8 @@ export class EditorComponent implements IMultiEditor {
 
     @Input() disabled: boolean = false;
     @Input() spellcheck?: boolean;
-    @Input() aceOptions?: {
-        showGutter?: boolean;
-        marginLine?: boolean;
-        highlightActiveLine?: boolean;
-    };
+
+    @Input() aceOptions?: IAceEditorOptions | null | undefined;
 
     allowedPaths?: string[]; // undefined for all allowed
     maxFiles: number = 1;
