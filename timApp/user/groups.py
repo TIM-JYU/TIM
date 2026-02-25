@@ -40,6 +40,7 @@ from timApp.user.usergroup import UserGroup
 from timApp.util.flask.requesthelper import load_data_from_req, RouteException, NotExist
 from timApp.util.flask.responsehelper import json_response
 from timApp.util.flask.typedblueprint import TypedBlueprint
+from timApp.util.locale import get_locale
 from timApp.util.utils import (
     remove_path_special_chars,
     get_current_time,
@@ -432,12 +433,25 @@ def add_member(
             "host": current_app.config["TIM_HOST"],
             "support_contact": current_app.config["HELP_EMAIL"],
         }
+        subject_obj = current_app.config[head_key]
+        body_obj = current_app.config[body_key]
+        if isinstance(subject_obj, dict):
+            if subject := subject_obj.get(get_locale()):
+                subject_obj = subject
+            else:
+                return
+        if isinstance(body_obj, dict):
+            if body := body_obj.get(get_locale()):
+                body_obj = body
+            else:
+                return
+
         subject_text = render_raw_template_string(
-            current_app.config[head_key],
+            subject_obj,
             **ctx,
         )
         body_text = render_raw_template_string(
-            current_app.config[body_key],
+            body_obj,
             **ctx,
         )
         multi_send_email(
