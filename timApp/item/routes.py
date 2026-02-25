@@ -801,6 +801,8 @@ def render_doc_view(
     task_groups = None
     show_task_info = False
     breaklines = False
+    hide_total_points = False
+    hide_total_tasks = False
     user_list = []
     teacher_or_see_answers = view_ctx.route.teacher_or_see_answers
     task_ids, plugin_count, no_accesses = find_task_ids(
@@ -900,6 +902,8 @@ def render_doc_view(
             if points_sum_rule:
                 breaklines = points_sum_rule.breaklines
                 show_task_info = show_task_info or points_sum_rule.force
+                hide_total_points = points_sum_rule.hide_total_points
+                hide_total_tasks = points_sum_rule.hide_total_tasks
 
     no_question_auto_numbering = None
 
@@ -1189,6 +1193,8 @@ def render_doc_view(
             "show": show_task_info,
             "groups": task_groups,
             "breaklines": breaklines,
+            "hide_total_points": hide_total_points,
+            "hide_total_tasks": hide_total_tasks,
         },
         peer_review_start=peer_review_start,
         peer_review_stop=peer_review_stop,

@@ -17,7 +17,9 @@
     <div class="taskSummary">
                 <span>
                 <strong>{{ gettext("Task Summary") }}</strong>
-                {{ gettext("Total points") }}: {{ task_info.total_points }}&nbsp;
+                    {% if not task_info.hide_total_points -%}
+                    {{ gettext("Total points") }}: {{ task_info.total_points }}&nbsp;
+                    {%- endif -%}
                     {%- if task_info.groups %}
                     {%- if task_info.breaklines %}
                             <br>
@@ -30,7 +32,9 @@
                     {%- endfor -%}),&nbsp;
                     {%- endif -%}
                     {%- endif -%}
-                {{ gettext("total tasks") }}: {{ task_info.tasks_done }}&nbsp;/&nbsp;{{ task_info.total_tasks }}
+                    {%- if not task_info.hide_total_tasks  -%}
+                    {{ gettext("total tasks") }}: {{ task_info.tasks_done }}&nbsp;/&nbsp;{{ task_info.total_tasks }}
+                    {% endif -%}
                 </span>
         <span style="font-size: x-small;" ng-click="reload()">{{ gettext("Refresh (F5) to recount") }}</span>
     </div>
