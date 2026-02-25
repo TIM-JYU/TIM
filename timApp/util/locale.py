@@ -13,21 +13,21 @@ def get_locale(force_refresh: bool = False) -> str:
     )  # type: ignore
     lng = request.cookies.get("lang")
     default_language: str | None = current_app.config["DEFAULT_UI_LANGUAGE"]
+    override = get_document_lang_override()
+    if override and override not in KNOWN_LANGUAGES:
+        override = None
     if default_language not in KNOWN_LANGUAGES:
         default_language = None
     if not lng or force_refresh:
         if not logged_in():
-            return default_language or header_lang
+            return override or default_language or header_lang
         u = get_current_user_object()
         lng = u.get_prefs().language
     if lng in KNOWN_LANGUAGES:
         header_lang = lng
     elif default_language is not None:
         header_lang = default_language
-    override = get_document_lang_override()
-    if override and override in KNOWN_LANGUAGES:
-        header_lang = override
-    return header_lang
+    return override or header_lang
 
 
 def update_locale_lang(resp: Response) -> Response:

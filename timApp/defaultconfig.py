@@ -195,6 +195,11 @@ DEFAULT_UI_LANGUAGE = None
 The default UI language to use when user's language is not explicitly set. 
 If not set, determines the language based on the user's browser settings.
 """
+USE_UI_LANGUAGE_FROM_DOCUMENT_LANGUAGE = False
+"""
+If True, the UI language is determined based on the document's language.
+This is essentially the same as uiLangOverride document setting, but is global.
+"""
 
 BOOKMARKS_ENABLED = True
 

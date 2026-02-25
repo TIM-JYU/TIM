@@ -154,6 +154,7 @@ from timApp.util.flask.responsehelper import (
     get_grid_modules,
 )
 from timApp.util.flask.typedblueprint import TypedBlueprint
+from timApp.util.locale import KNOWN_LANGUAGES, update_locale_lang, get_locale
 from timApp.util.timtiming import taketime
 from timApp.util.utils import get_error_message, cache_folder_path
 from timApp.util.utils import remove_path_special_chars, seq_to_str
@@ -578,6 +579,9 @@ def view(item_path: str, route: ViewRoute, render_doc: bool = True) -> FlaskView
     if m.hide_names is not None:
         session["hide_names"] = m.hide_names
 
+    if app.config["USE_UI_LANGUAGE_FROM_DOCUMENT_LANGUAGE"]:
+        update_lang_override_from_doc(doc_info)
+
     access = verify_route_access(doc_info, route, require=False)
     if not access:
         if route != ViewRoute.View:
@@ -656,8 +660,21 @@ def view(item_path: str, route: ViewRoute, render_doc: bool = True) -> FlaskView
     )
     r = make_response(final_html)
     add_no_cache_headers(r)
+
+    if app.config["USE_UI_LANGUAGE_FROM_DOCUMENT_LANGUAGE"]:
+        update_lang_override_from_doc(doc_info)
+        update_locale_lang(r)
+
     # db.session.commit()
     return r
+
+
+def update_lang_override_from_doc(doc_info: DocInfo):
+    if doc_info.lang_id and doc_info.lang_id in KNOWN_LANGUAGES:
+        set_document_lang_override(doc_info.lang_id)
+    else:
+        # Reset the lang to the default for the current request
+        set_document_lang_override(get_locale(force_refresh=True))
 
 
 def preload_personal_folder_and_breadcrumbs(current_user: User, doc_info: DocInfo):
