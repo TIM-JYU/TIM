@@ -29,11 +29,20 @@ jobs:
           - server
         include:
           - test_module: browser
-            chunk: "1/2"
+            chunk: "1/5"
             chunk_name: 1
           - test_module: browser
-            chunk: "2/2"
+            chunk: "2/5"
             chunk_name: 2
+          - test_module: browser
+            chunk: "3/5"
+            chunk_name: 3
+          - test_module: browser
+            chunk: "4/5"
+            chunk_name: 4
+          - test_module: browser
+            chunk: "5/5"
+            chunk_name: 5
     steps:
       - uses: actions/checkout@v4
         with:
