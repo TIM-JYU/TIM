@@ -4067,6 +4067,10 @@ ${fhtml}
         return this.markup.spellcheck;
     }
 
+    get allowContextMenu() {
+        return this.markup.allowContextMenu;
+    }
+
     get aceOptions() {
         return this.markup.ace;
     }
@@ -4327,6 +4331,7 @@ ${fhtml}
                                (close)="onFileClose($event)"
                                (content)="onContentChange($event)"
                                [spellcheck]="spellcheck"
+                               [allowContextMenu]="allowContextMenu"
                                [aceOptions]="aceOptions">
                     </cs-editor>
                     <div class="csRunChanged" *ngIf="runChanged && !hide.changed"></div>

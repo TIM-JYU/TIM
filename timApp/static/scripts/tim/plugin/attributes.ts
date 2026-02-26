@@ -158,6 +158,7 @@ export const GenericPluginMarkup = t.partial({
     previousTask: nullable(previousTaskType),
     saveTeacher: t.boolean,
     spellcheck: t.boolean,
+    allowContextMenu: t.boolean,
     ace: nullable(AceEditorOptions),
     eagerlyLoadState: t.boolean,
     invalidMarker: nullable(InvalidMarkerSettings),

@@ -200,7 +200,8 @@ export class JSParsonsEditorComponent implements IEditor {
                                   [maxRows]="maxRows_"
                                   [placeholder]="file && file.placeholder ? file.placeholder : ''"
                                   [disabled]="isDisabled"
-                                  [spellcheck]="spellcheck">
+                                  [spellcheck]="spellcheck"
+                                  [allowContextMenu]="allowContextMenu">
                 </cs-normal-editor>
                 <cs-parsons-editor *ngIf="mode == Mode.Parsons"
                                    [base]="base"
@@ -247,6 +248,8 @@ export class EditorComponent implements IMultiEditor {
 
     @Input() disabled: boolean = false;
     @Input() spellcheck?: boolean;
+    // FIXME: Pass this to ACE editor too
+    @Input() allowContextMenu?: boolean;
 
     @Input() aceOptions?: IAceEditorOptions | null | undefined;
 
