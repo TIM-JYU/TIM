@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-02-18 12:58+0000\n"
-"PO-Revision-Date: 2026-02-19 12:43+0200\n"
+"POT-Creation-Date: 2026-02-26 06:16+0000\n"
+"PO-Revision-Date: 2026-02-26 08:31+0200\n"
 "Last-Translator: \n"
 "Language-Team: sv <LL@li.org>\n"
 "Language: sv\n"
@@ -19,11 +19,11 @@ msgstr ""
 "Generated-By: Babel 2.16.0\n"
 "X-Generator: Poedit 3.8\n"
 
-#: answer/routes.py:802
+#: answer/routes.py:803
 msgid "You cannot submit new answers to the document."
 msgstr "Du kan inte skicka in nya svar till dokumentet."
 
-#: answer/routes.py:1166
+#: answer/routes.py:1167
 msgid ""
 "Your view access to this document has expired, so this answer was saved but "
 "marked as invalid."
@@ -35,18 +35,18 @@ msgstr ""
 msgid "Sorry, you don't have permission to use this resource."
 msgstr "Tyvärr, du har inte behörighet att använda den här resursen."
 
-#: plugin/examGroupManager/examGroupManager.py:720
+#: plugin/examGroupManager/examGroupManager.py:721
 #, python-format
 msgid ""
 "Invalid student row: %(data)s. Expected format: <grade> <surname> <given_names>"
 msgstr ""
 "Ogiltig studentrad: %(data)s. Förväntat format: <betyg> <efternamn> <förnamn>"
 
-#: plugin/examGroupManager/examGroupManager.py:828
+#: plugin/examGroupManager/examGroupManager.py:827
 msgid "Practice exam not set in the plugin markup."
 msgstr "Övningsprov är inte inställt i plugin-markeringen."
 
-#: plugin/examGroupManager/examGroupManager.py:831
+#: plugin/examGroupManager/examGroupManager.py:830
 msgid "Exam info not found in the plugin markup."
 msgstr "Examensinformation hittades inte i plugin-markeringen."
 
@@ -58,17 +58,17 @@ msgstr ""
 "Inga inloggningskoder hittades för gruppen. Generera inloggningskoder innan du "
 "påbörjar provet."
 
-#: plugin/examGroupManager/examGroupManager.py:943
+#: plugin/examGroupManager/examGroupManager.py:948
 msgid "The group is currently not in an exam. Please set the exam document first."
 msgstr ""
 "Gruppen är för närvarande inte i en provsituation. Vänligen ställ in "
 "provdokumentet först."
 
-#: plugin/examGroupManager/examGroupManager.py:952
+#: plugin/examGroupManager/examGroupManager.py:957
 msgid "You do not have access to the exam document."
 msgstr "Du har inte tillgång till provdokumentet."
 
-#: plugin/examGroupManager/examGroupManager.py:1104
+#: plugin/examGroupManager/examGroupManager.py:1156
 msgid ""
 "Cannot change exam state while the answers are revealed. Disable answer reveal "
 "in section 4."
@@ -76,12 +76,12 @@ msgstr ""
 "Det går inte att ändra provstatus medan svaren visas. Inaktivera visning av "
 "svar i avsnitt 4."
 
-#: plugin/examGroupManager/examGroupManager.py:1128
+#: plugin/examGroupManager/examGroupManager.py:1180
 msgid "You do not have sufficient access to the exam document to set it."
 msgstr ""
 "Du har inte tillräcklig åtkomst till examensdokumentet för att ställa in det."
 
-#: plugin/examGroupManager/examGroupManager.py:1186
+#: plugin/examGroupManager/examGroupManager.py:1238
 msgid ""
 "Cannot reveal answers while the exam is ongoing. Stop the exam and disable the "
 "login codes in the section 3."
@@ -135,16 +135,16 @@ msgstr "Inloggningskod"
 
 #: templates/partials/doc_content.jinja2:19
 msgid "Task Summary"
-msgstr "Uppgiftsöversikt"
+msgstr "Uppgifternas resultat"
 
-#: templates/partials/doc_content.jinja2:20
+#: templates/partials/doc_content.jinja2:21
 msgid "Total points"
 msgstr "Totala poäng"
 
-#: templates/partials/doc_content.jinja2:33
+#: templates/partials/doc_content.jinja2:36
 msgid "total tasks"
 msgstr "totalt antal uppgifter"
 
-#: templates/partials/doc_content.jinja2:35
+#: templates/partials/doc_content.jinja2:39
 msgid "Refresh (F5) to recount"
-msgstr "Tryck på (F5) för att beräkna om"
+msgstr "Uppdatera resultaten genom att trycka på F5-tangenten"
