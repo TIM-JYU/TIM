@@ -8,7 +8,7 @@ msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
 "POT-Creation-Date: 2026-02-26 06:16+0000\n"
-"PO-Revision-Date: 2026-02-26 08:31+0200\n"
+"PO-Revision-Date: 2026-02-26 23:14+0200\n"
 "Last-Translator: \n"
 "Language-Team: sv <LL@li.org>\n"
 "Language: sv\n"
@@ -111,7 +111,7 @@ msgstr "Denna sida finns ännu inte."
 
 #: templates/examgroupmanager/print_codes.jinja2:69
 msgid "Exam group codes"
-msgstr "Provgruppskoder"
+msgstr "Provgruppens koder"
 
 #: templates/examgroupmanager/print_codes.jinja2:71
 msgid "Exam"
@@ -127,7 +127,7 @@ msgstr "Namn"
 
 #: templates/examgroupmanager/print_codes.jinja2:80
 msgid "Exam address"
-msgstr "Webbadress för provet"
+msgstr "Provets webbadress"
 
 #: templates/examgroupmanager/print_codes.jinja2:82
 msgid "Login code"

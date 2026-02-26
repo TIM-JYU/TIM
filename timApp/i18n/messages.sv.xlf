@@ -9176,7 +9176,7 @@
       </trans-unit>
       <trans-unit id="6955490026273536125" datatype="html">
         <source> Add new student </source>
-        <target state="translated"> Lägg till ny elev </target>
+        <target state="translated"> Lägg till en ny elev </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/ui/group-management.component.ts</context>
           <context context-type="linenumber">249</context>
@@ -9480,7 +9480,7 @@
       </trans-unit>
       <trans-unit id="78551643453103268" datatype="html">
         <source> Create a new exam group </source>
-        <target state="translated"> Skapa en ny tentamensgrupp </target>
+        <target state="translated"> Skapa en ny provgrupp </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-create-dialog.component.ts</context>
           <context context-type="linenumber">21</context>
@@ -9488,7 +9488,7 @@
       </trans-unit>
       <trans-unit id="7508110452989609332" datatype="html">
         <source>Enter the name of the exam group</source>
-        <target state="translated">Ange namnet på tentamensgruppen</target>
+        <target state="translated">Ange namnet på provgruppen</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-create-dialog.component.ts</context>
           <context context-type="linenumber">34,35</context>
@@ -9496,7 +9496,7 @@
       </trans-unit>
       <trans-unit id="2009689739817524652" datatype="html">
         <source>Exam</source>
-        <target state="translated">Tenta</target>
+        <target state="translated">Prov</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-create-dialog.component.ts</context>
           <context context-type="linenumber">38,39</context>
@@ -9524,7 +9524,7 @@
       </trans-unit>
       <trans-unit id="5252506099102837481" datatype="html">
         <source>Duplicate group</source>
-        <target state="translated">Kopiera grupp</target>
+        <target state="translated">Kopiera gruppen</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
           <context context-type="linenumber">253,254</context>
@@ -9532,7 +9532,7 @@
       </trans-unit>
       <trans-unit id="1721144143235430098" datatype="html">
         <source>Create a new exam group</source>
-        <target state="translated">Skapa en ny tentamensgrupp</target>
+        <target state="translated">Skapa en ny provgrupp</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
           <context context-type="linenumber">275,276</context>
@@ -9540,7 +9540,7 @@
       </trans-unit>
       <trans-unit id="7773543288179248511" datatype="html">
         <source>Exam group members</source>
-        <target state="translated">Tentamengruppmedlemmar</target>
+        <target state="translated">Provgruppens elever</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
           <context context-type="linenumber">301,302</context>
@@ -9572,7 +9572,7 @@
       </trans-unit>
       <trans-unit id="1796772637162928200" datatype="html">
         <source>Delete exam group</source>
-        <target state="translated">Ta bort tentamensgrupp</target>
+        <target state="translated">Ta bort provgruppen</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
           <context context-type="linenumber">743</context>
@@ -10205,7 +10205,7 @@ Var god och skapa inloggningskoder först.</target>
       </trans-unit>
       <trans-unit id="269375217385324097" datatype="html">
         <source><x id="START_PARAGRAPH" ctype="x-p" equiv-text="&lt;p>"/> If your school uses Wilma, you can import students by copy-pasting the student list from Wilma. <x id="CLOSE_PARAGRAPH" ctype="x-p" equiv-text="&lt;/p>"/><x id="START_PARAGRAPH" ctype="x-p" equiv-text="&lt;p>"/> The required format for the input is as follows: <x id="CLOSE_PARAGRAPH" ctype="x-p" equiv-text="&lt;/p>"/><x id="START_TAG_PRE" ctype="x-pre" equiv-text="&lt;pre>"/>&lt; class &gt; &lt; last name &gt; &lt; first name &gt;<x id="CLOSE_TAG_PRE" ctype="x-pre" equiv-text="&lt;/pre>"/><x id="START_PARAGRAPH" ctype="x-p" equiv-text="&lt;p>"/> For example: <x id="CLOSE_PARAGRAPH" ctype="x-p" equiv-text="&lt;/p>"/><x id="START_TAG_PRE" ctype="x-pre" equiv-text="&lt;pre>"/>9b Duck Donald<x id="LINE_BREAK" ctype="lb" equiv-text="&lt;br>"/>9b Duck Daisy<x id="LINE_BREAK" ctype="lb" equiv-text="&lt;br>"/>9c Duck Scrooge<x id="CLOSE_TAG_PRE" ctype="x-pre" equiv-text="&lt;/pre>"/><x id="START_PARAGRAPH" ctype="x-p" equiv-text="&lt;p>"/> Students are separated by line-breaks so that one line of text represents one student. Each piece of information (class, last name, first name) is separated by a single space. <x id="CLOSE_PARAGRAPH" ctype="x-p" equiv-text="&lt;/p>"/><x id="START_PARAGRAPH" ctype="x-p" equiv-text="&lt;p>"/> You can obtain the student list from Wilma by selecting "Print course book" and selecting the students in the table. <x id="CLOSE_PARAGRAPH" ctype="x-p" equiv-text="&lt;/p>"/></source>
-        <target state="translated"><x id="START_PARAGRAPH" ctype="x-p" equiv-text="&lt;p>"/>Om din skola använder Wilma kan du importera elever genom att kopiera kursdagboken från Wilma. <x id="CLOSE_PARAGRAPH" ctype="x-p" equiv-text="&lt;/p>"/><x id="START_PARAGRAPH" ctype="x-p" equiv-text="&lt;p>"/> Listan måste följa följande format: <x id="CLOSE_PARAGRAPH" ctype="x-p" equiv-text="&lt;/p>"/><x id="START_TAG_PRE" ctype="x-pre" equiv-text="&lt;pre>"/> &lt; klass &gt; &lt; efternamn &gt; &lt; förnamn &gt;<x id="CLOSE_TAG_PRE" ctype="x-pre" equiv-text="&lt;/pre>"/><x id="START_PARAGRAPH" ctype="x-p" equiv-text="&lt;p>"/> Till exempel: <x id="CLOSE_PARAGRAPH" ctype="x-p" equiv-text="&lt;/p>"/><x id="START_TAG_PRE" ctype="x-pre" equiv-text="&lt;pre>"/>9b Ankka Aku<x id="LINE_BREAK" ctype="lb" equiv-text="&lt;br>"/>9b Ankka Iines<x id="LINE_BREAK" ctype="lb" equiv-text="&lt;br>"/>9c Ankka Roope<x id="CLOSE_TAG_PRE" ctype="x-pre" equiv-text="&lt;/pre>"/><x id="START_PARAGRAPH" ctype="x-p" equiv-text="&lt;p>"/> Varje elev ska stå på en egen rad, separerad med radbrytning. Varje fält (klass, efternamn, förnamn) ska separeras med ett blanksteg. <x id="CLOSE_PARAGRAPH" ctype="x-p" equiv-text="&lt;/p>"/><x id="START_PARAGRAPH" ctype="x-p" equiv-text="&lt;p>"/> Du får elevlistan i detta format när du väljer 'Skriv ut kursdagboken' i Wilma. Om du inte hittar knappen, gå till utskrifter i Wilma (uppe till höger) och klicka på 'Dagbok, rutnät'. Kopiera listan i fältet nedan. <x id="CLOSE_PARAGRAPH" ctype="x-p" equiv-text="&lt;/p>"/></target>
+        <target state="translated"><x id="START_PARAGRAPH" ctype="x-p" equiv-text="&lt;p>"/>Om din skola använder Wilma kan du importera elever genom att kopiera kursdagboken från Wilma. <x id="CLOSE_PARAGRAPH" ctype="x-p" equiv-text="&lt;/p>"/><x id="START_PARAGRAPH" ctype="x-p" equiv-text="&lt;p>"/> Listan måste följa följande format: <x id="CLOSE_PARAGRAPH" ctype="x-p" equiv-text="&lt;/p>"/><x id="START_TAG_PRE" ctype="x-pre" equiv-text="&lt;pre>"/> &lt; klass &gt; &lt; efternamn &gt; &lt; förnamn &gt;<x id="CLOSE_TAG_PRE" ctype="x-pre" equiv-text="&lt;/pre>"/><x id="START_PARAGRAPH" ctype="x-p" equiv-text="&lt;p>"/> Till exempel: <x id="CLOSE_PARAGRAPH" ctype="x-p" equiv-text="&lt;/p>"/><x id="START_TAG_PRE" ctype="x-pre" equiv-text="&lt;pre>"/>9b Ankka Aku<x id="LINE_BREAK" ctype="lb" equiv-text="&lt;br>"/>9b Ankka Iines<x id="LINE_BREAK" ctype="lb" equiv-text="&lt;br>"/>9c Ankka Roope<x id="CLOSE_TAG_PRE" ctype="x-pre" equiv-text="&lt;/pre>"/><x id="START_PARAGRAPH" ctype="x-p" equiv-text="&lt;p>"/> Varje elev ska stå på en egen rad, separerad med radbrytning. Varje fält (klass, efternamn, förnamn) ska separeras med ett blanksteg. <x id="CLOSE_PARAGRAPH" ctype="x-p" equiv-text="&lt;/p>"/><x id="START_PARAGRAPH" ctype="x-p" equiv-text="&lt;p>"/> Du får elevlistan i detta format när du väljer "Skriv ut kursdagboken" i Wilma. Om du inte hittar knappen, gå till utskrifter i Wilma (uppe till höger) och klicka på "Dagbok, rutnät". Kopiera listan i fältet nedan. <x id="CLOSE_PARAGRAPH" ctype="x-p" equiv-text="&lt;/p>"/></target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/user-import-dialog.component.ts</context>
           <context context-type="linenumber">27,45</context>
@@ -10217,14 +10217,6 @@ Var god och skapa inloggningskoder först.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
           <context context-type="linenumber">444</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="8023863054421277417" datatype="html">
-        <source> The exam has started! Students can now access the exam. Audio and video materials can be accessed via the "View exam document" link. </source>
-        <target state="translated"> Provet har börjat! Eleverna kan nu öppna provet. Du hittar hörförståelserna under knappen &lt;i&gt;Kolla provdokument och video- och audiomaterialet&lt;/i&gt;.</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
-          <context context-type="linenumber">558</context>
         </context-group>
       </trans-unit>
       <trans-unit id="6266613639885813372" datatype="html">
@@ -11419,6 +11411,14 @@ Mata in flera användares adresser på separata rader eller åtskilda med kommat
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
           <context context-type="linenumber">798,800</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="3881453063873243566" datatype="html">
+        <source> The exam has started! Students can now access the exam. Audio and video materials can be accessed via the <x id="START_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;i>"/>View exam document<x id="CLOSE_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;/i>"/> link. </source>
+        <target state="new"> Provet har börjat! Eleverna kan nu öppna provet. Du hittar hörförståelserna under knappen <x id="START_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;i>"/>Kolla provdokument och video- och audiomaterialet<x id="CLOSE_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;/i>"/>. </target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
+          <context context-type="linenumber">618,620</context>
         </context-group>
       </trans-unit>
     </body>

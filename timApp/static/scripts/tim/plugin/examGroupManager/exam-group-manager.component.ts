@@ -616,7 +616,7 @@ export class ToggleComponent {
                                             </div>
                                             <strong class="small text-success" *ngIf="group.examState > 3" i18n>
                                                 The exam has started! Students can now access the exam. Audio and video
-                                                materials can be accessed via the "View exam document" link.
+                                                materials can be accessed via the <i>View exam document</i> link.
                                             </strong>
                                         </div>
                                         <div>
