@@ -11271,7 +11271,7 @@ Mata in flera användares adresser på separata rader eller åtskilda med kommat
       </trans-unit>
       <trans-unit id="7179153993560145570" datatype="html">
         <source>and not for the practice exam.</source>
-        <target state="translated">Visning av svar från övningsprovet stöds ännu inte.</target>
+        <target state="translated">Visning av svar från övningsprovet stöds ännu inte. </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
           <context context-type="linenumber">698</context>
