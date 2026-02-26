@@ -626,6 +626,7 @@ def copy_members(from_id: int, to_id: int) -> Response:
         new_u.add_to_group(target_group, cur_user)
         db.session.flush()
         _update_exam_group_data_user(new_u, target_group, extra)
+        _generate_login_code_for_new_user(new_u, target_group)
     db.session.commit()
     return ok_response()
 
