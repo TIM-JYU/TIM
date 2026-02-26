@@ -185,6 +185,10 @@ class TableFormMarkupModel(GenericMarkupModel):
     createMissingUsers: bool | Missing = False
     emailCols: list[str | int] | Missing | None = missing
     useFirstEmail: bool | Missing | None = missing
+    usernameColumn: str | Missing | None = missing
+    emailColumn: str | Missing | None = missing
+    realnameColumn: str | Missing | None = missing
+    addUsersDialog: str | Missing | None = missing
 
 
 TableFormMarkupSchema = class_schema(TableFormMarkupModel)
