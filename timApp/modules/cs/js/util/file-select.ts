@@ -13,6 +13,7 @@ import {
 import type {HttpErrorResponse} from "@angular/common/http";
 import {HttpClient, HttpEventType} from "@angular/common/http";
 import {defaultWuffMessage} from "tim/util/utils";
+import {HttpParams} from "@angular/common/http";
 import {NotificationComponent} from "./notification";
 import {sizeString, timeString} from "./util";
 import {Set} from "./set";
@@ -123,6 +124,7 @@ export class FileSelectComponent {
     @Input() dragAndDrop: boolean = true;
     @Input() stem?: string;
     @Input() uploadUrl?: string;
+    @Input() forceUploadName?: string;
     @Input() maxSize: number = -1;
     @Input() mappingFunction?: MappingFunction;
     @Output("file") fileEmitter: EventEmitter<IFile> = new EventEmitter(true);
@@ -222,10 +224,17 @@ export class FileSelectComponent {
                         10000
                     );
                 }
+                let params = new HttpParams();
+                if (this.forceUploadName) {
+                    params = params
+                        .set("index", String(i))
+                        .set("forceUploadName", this.forceUploadName);
+                }
                 const _ = this.http
                     .post(this.uploadUrl!, formdata, {
                         reportProgress: true,
                         observe: "events",
+                        params: params,
                     })
                     .subscribe(
                         (event) => {
@@ -424,6 +433,7 @@ export class FileSelectComponent {
             [id]="info.id"
             [multiple]="allowMultiple || (fileInfo.length > 1 && (files.length > 1 || files[0].paths.length > 1))"
             [uploadUrl]="uploadUrl"
+            [forceUploadName]="forceUploadName"
             (file)="onFileLoad($event)"
             (files)="filesEmitter.emit($event)"
             (upload)="uploadEmitter.emit($event)"
@@ -438,6 +448,7 @@ export class FileSelectManagerComponent {
     @Input() allowMultiple: boolean = true;
     @Input() dragAndDrop: boolean = true;
     @Input() uploadUrl?: string;
+    @Input() forceUploadName?: string;
     @Input() stem?: string;
     @Input() maxSize: number = -1;
     @Input() accept?: string;

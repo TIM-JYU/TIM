@@ -776,6 +776,7 @@ const CsMarkupOptional = t.partial({
     resetUserInput: t.boolean,
     uploadAcceptPattern: t.string,
     uploadAcceptMaxSize: t.number,
+    forceUploadName: t.string,
     showAlwaysSavedText: t.boolean,
     startLineNumber: t.number,
     targetCanvas: t.string,
@@ -1513,6 +1514,7 @@ export class CsController extends CsBase implements ITimComponent {
         component.allowMultiple = this.markup.allowMultipleFiles;
         component.accept = this.markup.uploadAcceptPattern;
         component.maxSize = this.markup.uploadAcceptMaxSize;
+        component.forceUploadName = this.markup.forceUploadName;
         component.multipleElements = this.markup.multipleUploadElements;
         component.files = files;
     }
