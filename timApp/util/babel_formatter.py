@@ -16,7 +16,7 @@ class BabelFormatter(string.Formatter):
         :param format_spec:
         :return:
         """
-        if format_spec.endswith("bd"):
+        if format_spec.endswith("lf"):
             format_spec = format_spec[:-1]
             return format_decimal(
                 value, format=format_spec or None, locale=get_locale()
