@@ -7,7 +7,7 @@ from timApp.util.locale import get_locale
 
 
 class BabelFormatter(string.Formatter):
-    def format_field(self, value: Any, format_spec: str):
+    def format_field(self, value: Any, format_spec: str) -> str:
         """
         Additional formatter that can handle Babel number formatting.
         If the format spec ends with 'b', it will use Babel to format the number according to the current locale.
