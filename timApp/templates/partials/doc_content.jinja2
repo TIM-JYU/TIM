@@ -24,7 +24,7 @@
                     {%- if task_info.breaklines %}
                             <br>
                     {%- for k, v in task_info.groups.items() -%}
-                    {{ v.text }}{%- if v.link %} <a href="{{ v.link}}">{{ v.linktext }}</a>{%- endif -%}<br>
+                    {{ v.text|safe}}{%- if v.link %} <a href="{{ v.link}}">{{ v.linktext }}</a>{%- endif -%}<br>
                     {%- endfor -%}
                     {%- else -%}
                             ({%- for k, v in task_info.groups.items() -%}
