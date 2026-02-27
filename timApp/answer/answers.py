@@ -1200,9 +1200,10 @@ class UserPointInfo(SumFields):
 
 
 class ResultGroup(SumFields, DateFields, CountFields):
-    text: str
+    text: list[str | None]
     link: bool
     linktext: str
+    preformat_points: bool
 
 
 class UserPoints(TypedDict):
@@ -1482,23 +1483,35 @@ def flatten_points_result(
             except:
                 linktext = ""
                 link = False
+
+            text = []
+            group_text = groupname
             try:
                 try:
-                    text = rg.expl.format(
-                        groupname,
-                        babel.numbers.format_decimal(
-                            total_sum, format="###0.0", locale=get_locale()
-                        ),
-                    )
+                    if rg.preformat_points:
+                        points_text = rg.expl.format(
+                            babel.numbers.format_decimal(
+                                total_sum, format="###0.0", locale=get_locale()
+                            )
+                        )
+                    else:
+                        points_text = rg.expl.format(
+                            groupname,
+                            babel.numbers.format_decimal(
+                                total_sum, format="###0.0", locale=get_locale()
+                            ),
+                        )
                 except:
-                    text = rg.expl.format(
+                    points_text = rg.expl.format(
                         groupname,
                         float(total_sum if total_sum is not None else 0),
                         float(task_sum if task_sum is not None else 0),
                         float(velp_sum if velp_sum is not None else 0),
                     )
             except:
-                text = groupname + ": " + str(total_sum)
+                points_text = groupname + ": " + str(total_sum)
+            text.append(points_text)
+            text.append(group_text)
             row["groups"][groupname] = {
                 "task_sum": task_sum,
                 "velp_sum": velp_sum,
@@ -1511,6 +1524,7 @@ def flatten_points_result(
                 "answer_duration": answer_duration,
                 "task_count": task_count,
                 "velped_task_count": velped_task_count,
+                "preformat_points": rg.preformat_points,
             }
         result_list.append(row)
     return result_list
