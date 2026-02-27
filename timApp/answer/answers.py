@@ -54,6 +54,7 @@ from timApp.util.answerutil import (
 from timApp.util.babel_formatter import babel_fmt
 from timApp.util.logger import log_warning
 from timApp.velp.annotation_model import Annotation
+from tim_common.html_sanitize import sanitize_html
 from tim_common.utils import round_float_error
 
 
@@ -1201,7 +1202,6 @@ class ResultGroup(SumFields, DateFields, CountFields):
     text: str
     link: bool
     linktext: str
-    preformat_points: bool
 
 
 class UserPoints(TypedDict):
@@ -1404,6 +1404,7 @@ def flatten_points_result(
 ) -> list[UserPoints]:
     result_list = []
     hide_list = rule.hide
+
     for user_id, task_groups in result.items():
         first_answer_on = min(
             (
@@ -1481,10 +1482,6 @@ def flatten_points_result(
             except:
                 linktext = ""
                 link = False
-            try:
-                preformat_points = rg.preformat_points
-            except:
-                preformat_points = False
 
             try:
                 text = babel_fmt.format(
@@ -1496,6 +1493,7 @@ def flatten_points_result(
                 )
             except:
                 text = groupname + ": " + str(total_sum)
+            text = sanitize_html(text)
             row["groups"][groupname] = {
                 "task_sum": task_sum,
                 "velp_sum": velp_sum,
@@ -1508,7 +1506,6 @@ def flatten_points_result(
                 "answer_duration": answer_duration,
                 "task_count": task_count,
                 "velped_task_count": velped_task_count,
-                "preformat_points": preformat_points,
             }
         result_list.append(row)
     return result_list

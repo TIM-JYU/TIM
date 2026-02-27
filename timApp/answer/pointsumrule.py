@@ -56,7 +56,6 @@ class Group:
             self.expl = data.get("expl", "{0}: {1:.1f}")
             self.link = data.get("link", False)
             self.linktext = data.get("linktext", None)
-            self.preformat_points = data.get("preformat_points", False)
 
     def check_match(self, task_id: str) -> bool:
         try:

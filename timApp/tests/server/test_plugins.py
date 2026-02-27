@@ -900,7 +900,6 @@ user_99934f03a2c8a14eed17b3ab3e46180b4b96a8c552768f7c7781f9003b22ca70; None; {re
                             "answer_duration": None,
                             "task_count": 3,
                             "velped_task_count": 3,
-                            "preformat_points": False,
                         },
                     ),
                     (
@@ -917,7 +916,6 @@ user_99934f03a2c8a14eed17b3ab3e46180b4b96a8c552768f7c7781f9003b22ca70; None; {re
                             "answer_duration": None,
                             "task_count": 3,
                             "velped_task_count": 3,
-                            "preformat_points": False,
                         },
                     ),
                     (
@@ -934,7 +932,6 @@ user_99934f03a2c8a14eed17b3ab3e46180b4b96a8c552768f7c7781f9003b22ca70; None; {re
                             "answer_duration": None,
                             "task_count": 3,
                             "velped_task_count": 2,
-                            "preformat_points": False,
                         },
                     ),
                 ]
@@ -955,7 +952,6 @@ user_99934f03a2c8a14eed17b3ab3e46180b4b96a8c552768f7c7781f9003b22ca70; None; {re
                             "answer_duration": None,
                             "task_count": 3,
                             "velped_task_count": 3,
-                            "preformat_points": False,
                         },
                     ),
                     (
@@ -972,7 +968,6 @@ user_99934f03a2c8a14eed17b3ab3e46180b4b96a8c552768f7c7781f9003b22ca70; None; {re
                             "answer_duration": None,
                             "task_count": 3,
                             "velped_task_count": 3,
-                            "preformat_points": False,
                         },
                     ),
                     (
@@ -989,7 +984,6 @@ user_99934f03a2c8a14eed17b3ab3e46180b4b96a8c552768f7c7781f9003b22ca70; None; {re
                             "answer_duration": None,
                             "task_count": 3,
                             "velped_task_count": 2,
-                            "preformat_points": False,
                         },
                     ),
                 ]
