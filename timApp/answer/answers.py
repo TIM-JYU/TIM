@@ -17,8 +17,6 @@ from typing import (
     Sequence,
 )
 
-import babel.numbers
-
 # This ref exits in bs4 but doesn't seem to be correctly exported
 # noinspection PyUnresolvedReferences
 from bs4 import UnicodeDammit
@@ -53,7 +51,7 @@ from timApp.util.answerutil import (
     task_ids_to_strlist,
     AnswerPeriodOptions,
 )
-from timApp.util.locale import get_locale
+from timApp.util.babel_formatter import babel_fmt
 from timApp.util.logger import log_warning
 from timApp.velp.annotation_model import Annotation
 from tim_common.utils import round_float_error
@@ -1489,31 +1487,13 @@ def flatten_points_result(
                 preformat_points = False
 
             try:
-                try:
-                    if preformat_points:
-                        text = rg.expl.format(
-                            babel.numbers.format_decimal(
-                                total_sum if total_sum is not None else 0.0,
-                                format="###0.0",
-                                locale=get_locale(),
-                            )
-                        )
-                    else:
-                        text = rg.expl.format(
-                            groupname,
-                            babel.numbers.format_decimal(
-                                total_sum if total_sum is not None else 0.0,
-                                format="###0.0",
-                                locale=get_locale(),
-                            ),
-                        )
-                except:
-                    text = rg.expl.format(
-                        groupname,
-                        float(total_sum if total_sum is not None else 0),
-                        float(task_sum if task_sum is not None else 0),
-                        float(velp_sum if velp_sum is not None else 0),
-                    )
+                text = babel_fmt.format(
+                    rg.expl,
+                    groupname,
+                    float(total_sum if total_sum is not None else 0),
+                    float(task_sum if task_sum is not None else 0),
+                    float(velp_sum if velp_sum is not None else 0),
+                )
             except:
                 text = groupname + ": " + str(total_sum)
             row["groups"][groupname] = {
