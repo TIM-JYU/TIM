@@ -1483,20 +1483,28 @@ def flatten_points_result(
             except:
                 linktext = ""
                 link = False
+            try:
+                preformat_points = rg.preformat_points
+            except:
+                preformat_points = False
 
             try:
                 try:
-                    if rg.preformat_points:
+                    if preformat_points:
                         text = rg.expl.format(
                             babel.numbers.format_decimal(
-                                total_sum, format="###0.0", locale=get_locale()
+                                total_sum if total_sum is not None else 0.0,
+                                format="###0.0",
+                                locale=get_locale(),
                             )
                         )
                     else:
                         text = rg.expl.format(
                             groupname,
                             babel.numbers.format_decimal(
-                                total_sum, format="###0.0", locale=get_locale()
+                                total_sum if total_sum is not None else 0.0,
+                                format="###0.0",
+                                locale=get_locale(),
                             ),
                         )
                 except:
@@ -1520,7 +1528,7 @@ def flatten_points_result(
                 "answer_duration": answer_duration,
                 "task_count": task_count,
                 "velped_task_count": velped_task_count,
-                "preformat_points": rg.preformat_points,
+                "preformat_points": preformat_points,
             }
         result_list.append(row)
     return result_list
