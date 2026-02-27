@@ -1200,7 +1200,7 @@ class UserPointInfo(SumFields):
 
 
 class ResultGroup(SumFields, DateFields, CountFields):
-    text: list[str | None]
+    text: str
     link: bool
     linktext: str
     preformat_points: bool
@@ -1484,34 +1484,30 @@ def flatten_points_result(
                 linktext = ""
                 link = False
 
-            text = []
-            group_text = groupname
             try:
                 try:
                     if rg.preformat_points:
-                        points_text = rg.expl.format(
+                        text = rg.expl.format(
                             babel.numbers.format_decimal(
                                 total_sum, format="###0.0", locale=get_locale()
                             )
                         )
                     else:
-                        points_text = rg.expl.format(
+                        text = rg.expl.format(
                             groupname,
                             babel.numbers.format_decimal(
                                 total_sum, format="###0.0", locale=get_locale()
                             ),
                         )
                 except:
-                    points_text = rg.expl.format(
+                    text = rg.expl.format(
                         groupname,
                         float(total_sum if total_sum is not None else 0),
                         float(task_sum if task_sum is not None else 0),
                         float(velp_sum if velp_sum is not None else 0),
                     )
             except:
-                points_text = groupname + ": " + str(total_sum)
-            text.append(points_text)
-            text.append(group_text)
+                text = groupname + ": " + str(total_sum)
             row["groups"][groupname] = {
                 "task_sum": task_sum,
                 "velp_sum": velp_sum,

@@ -24,12 +24,7 @@
                     {%- if task_info.breaklines %}
                             <br>
                     {%- for k, v in task_info.groups.items() -%}
-{#                        {{ v.text[0] }}{% if v.text[1] is not none %}{{ v.text[1] }}{% endif %}{%- if v.link %} <a href="{{ v.link}}">{{ v.linktext }}</a>{%- endif -%}<br>#}
-                        {% if v.preformat_points is true %}{{ v.text[1] }}: <strong>{{ v.text[0] }} Pistettä.</strong>
-                        {%- else %}{{ v.text[0] }}{% endif -%}
-                        <br>
-                        Nimi: {{ k }} Text[0]: {{ v.text[0] }} Text[1]: {{ v.text[1] }} preformat: {{ v.preformat_points }}
-                        {%- if v.link %} <a href="{{ v.link}}">{{ v.linktext }}</a>{%- endif -%}<br>
+                        {% if v.preformat_points is true %}{{ k }}: <strong>{{ v.text }} {{ gettext("points") }}</strong>{%- else %}{{ v.text }}{% endif -%}{%- if v.link %} <a href="{{ v.link}}">{{ v.linktext }}</a>{%- endif -%}<br>
                     {%- endfor -%}
                     {%- else -%}
                             ({%- for k, v in task_info.groups.items() -%}
