@@ -156,6 +156,7 @@ export function redirectToItem(data: IItem) {
 
 export interface ITranslation extends IDocument {
     lang_id: string;
+    lang_name: string | null;
 }
 
 export interface IEditableTranslation extends ITranslation {

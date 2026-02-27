@@ -4,6 +4,7 @@ from sqlalchemy import UniqueConstraint, ForeignKey
 from sqlalchemy.orm import mapped_column, Mapped, relationship
 
 from timApp.document.docinfo import DocInfo
+from timApp.document.translation.language import Language
 from timApp.timdb.sqa import db
 
 if TYPE_CHECKING:
@@ -60,10 +61,12 @@ class Translation(db.Model, DocInfo):
         return self.docentry.trs
 
     def to_json(self, **kwargs):
+        lang = Language.query_by_code(self.lang_id)
         return {
             **super().to_json(**kwargs),
             "src_docid": self.src_docid,
             "lang_id": self.lang_id,
+            "lang_name": lang.autonym if lang else None,
         }
 
 
