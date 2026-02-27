@@ -9,6 +9,7 @@ from tim_common.pluginserver_flask import (
     launch_if_main,
     PluginAnswerResp,
     PluginReqs,
+    EditorTab,
 )
 
 
@@ -26,7 +27,8 @@ ChatTimStateModel = dict[str, Any]
 class ChatTimHtmlModel(
     GenericHtmlModel[ChatTimInputModel, ChatTimMarkupModel, ChatTimStateModel]
 ):
-    pass
+    def get_component_html_name(self) -> str:
+        return "chattim-runner"
 
 
 @dataclass
@@ -41,7 +43,37 @@ def answer(_args: ChatTimAnswerModel) -> PluginAnswerResp:
 
 
 def reqs() -> PluginReqs:
-    return {}
+    templates = [
+        """
+``` {plugin="chattim" }
+header: ChatTIM
+```
+""",
+    ]
+    editor_tabs: list[EditorTab] = [
+        {
+            "text": "Plugins",
+            "items": [
+                {
+                    "text": "ChatTIM",
+                    "items": [
+                        {
+                            "data": templates[0].strip(),
+                            "text": "Chattim",
+                            "expl": "Add a chatbot functionality",
+                        },
+                    ],
+                },
+            ],
+        },
+    ]
+    result: PluginReqs = {
+        "js": ["js/build/chattim.js"],
+        "multihtml": True,
+    }
+
+    result["editor_tabs"] = editor_tabs
+    return result
 
 
 app = register_plugin_app(
