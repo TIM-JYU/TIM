@@ -11461,7 +11461,7 @@ Syötä useiden käyttäjien osoitteet allekkain tai pilkulla erotettuina.</targ
       </trans-unit>
       <trans-unit id="6737499420976539156" datatype="html">
         <source>Stop the exam and disable login codes in section <x id="START_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;i>"/>3. Manage exams<x id="CLOSE_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;/i>"/> to enable showing answers.</source>
-        <target state="translated">Lopeta koe ja ota kirjautumiskoodit pois käytöstä kohdassa <x id="START_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;i>"/>3. Hallinnoi kokeita<x id="CLOSE_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;/i>"/> ennen kuin voit näyttää vastauksia.</target>
+        <target state="translated">Lopeta koe ja ota kirjautumiskoodit pois käytöstä kohdassa <x id="START_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;i>"/>3. Hallinnoi kokeita,<x id="CLOSE_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;/i>"/> ennen kuin voit näyttää vastauksia.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
           <context context-type="linenumber">695,696</context>
