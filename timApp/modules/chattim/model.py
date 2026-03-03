@@ -1,7 +1,9 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
+import os
+from dataclasses import dataclass, asdict
 from typing import Any, Literal, Protocol
+from openai import OpenAI
 
 Provider = Literal["openai"]
 
@@ -12,6 +14,11 @@ class Model(Protocol):
     def generate(
         self, messages: list[Message], options: GenerateOptions
     ) -> ModelResponse:
+        """Generate a model response from the given messages."""
+        ...
+
+    def get_models(self) -> list[Any]:
+        """Get all the available models from the Model API."""
         ...
 
 
@@ -32,9 +39,21 @@ class GenerateOptions:
 
 
 @dataclass(frozen=True)
+class Usage:
+    completion_tokens: int
+    """Number of tokens in the generated completion."""
+
+    prompt_tokens: int
+    """Number of tokens in the prompt."""
+
+    total_tokens: int
+    """Total number of tokens used in the request (prompt + completion)."""
+
+
+@dataclass(frozen=True)
 class ModelResponse:
     text: str
-    usage: dict[str, int] | None = None
+    usage: Usage | None = None
 
 
 @dataclass(frozen=True)
@@ -78,11 +97,10 @@ class ModelRegistry:
         Create a new model from a ModelSpec.
         Throws an error if the model is not supported.
         """
-        _ = self.get_model_info(spec.provider, spec.model)
+        info = self.get_model_info(spec.provider, spec.model)
         if spec.provider == "openai":
-            # TODO:
-            # return OpenAIModel()
-            pass
+            return OpenAiModel(spec, info)
+        # TODO: add more providers
         raise ValueError(f"Unknown provider: {spec.provider}")
 
 
@@ -97,3 +115,39 @@ SUPPORTED_MODELS: dict[Provider, list[ModelInfo]] = {
         ),
     ],
 }
+
+
+class OpenAiModel(Model):
+    def __init__(self, spec: ModelSpec, info: ModelInfo):
+        self._spec = spec
+        self._info = info
+        self._api_key = spec.api_key or os.environ.get("OPENAI_API_KEY")
+        if not self._api_key:
+            raise ValueError("OPENAI_API_KEY not set")
+        self._base_url = (spec.base_url or "https://api.openai.com/v1").rstrip("/")
+
+    def generate(
+        self, messages: list[Message], options: GenerateOptions
+    ) -> ModelResponse:
+        """Generate a model response from the given messages."""
+        if options.temperature is not None and not self._info.supports_temperature:
+            raise ValueError(
+                f"Model does not support option 'temperature': {self._spec.model} "
+            )
+        client = OpenAI(api_key=self._api_key, base_url=self._base_url)
+        msgs: list[dict[str, str]] = [asdict(m) for m in messages]
+
+        res = client.chat.completions.create(model=self._spec.model, messages=msgs)
+        return ModelResponse(
+            text=res.choices[0].message.content or "",
+            usage=Usage(
+                completion_tokens=res.usage.completion_tokens,
+                prompt_tokens=res.usage.prompt_tokens,
+                total_tokens=res.usage.total_tokens,
+            ),
+        )
+
+    def get_models(self) -> list[Any]:
+        """Get all the available models from the Model API."""
+        client = OpenAI(api_key=self._api_key, base_url=self._base_url)
+        return client.models.list().data
