@@ -4308,7 +4308,7 @@
       </trans-unit>
       <trans-unit id="892063502898494584" datatype="html">
         <source>I forgot my password</source>
-        <target state="translated">Jag minns inte mitt lösenord</target>
+        <target state="translated">Glömt lösenord</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/login-dialog.component.ts</context>
           <context context-type="linenumber">126</context>
@@ -11327,7 +11327,7 @@ Mata in flera användares adresser på separata rader eller åtskilda med kommat
       </trans-unit>
       <trans-unit id="3400879224091860885" datatype="html">
         <source>Exam reservation details</source>
-        <target state="new">Exam reservation details</target>
+        <target state="translated">Bokningsdetaljer för provet</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
           <context context-type="linenumber">487,488</context>
@@ -11335,7 +11335,7 @@ Mata in flera användares adresser på separata rader eller åtskilda med kommat
       </trans-unit>
       <trans-unit id="6964643867443964161" datatype="html">
         <source> You have a reservation for this exam. Starting the exam will become available on <x id="INTERPOLATION" equiv-text="{{ toReadableDate(examByDocId.get(group.currentExamDoc)?.startingTime ?? &quot;&quot;) }}"/>. </source>
-        <target state="new"> You have a reservation for this exam. Starting the exam will become available on <x id="INTERPOLATION" equiv-text="{{ toReadableDate(examByDocId.get(group.currentExamDoc)?.startingTime ?? &quot;&quot;) }}"/>. </target>
+        <target state="translated"> Du har en bokning för detta prov. Provet kan påbörjäs <x id="INTERPOLATION" equiv-text="{{ toReadableDate(examByDocId.get(group.currentExamDoc)?.startingTime ?? &quot;&quot;) }}"/>. </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
           <context context-type="linenumber">489,492</context>
@@ -11343,7 +11343,7 @@ Mata in flera användares adresser på separata rader eller åtskilda med kommat
       </trans-unit>
       <trans-unit id="2121059493646918621" datatype="html">
         <source>This is a practice exam</source>
-        <target state="new">This is a practice exam</target>
+        <target state="translated">Det här är ett övningsprov </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
           <context context-type="linenumber">499,500</context>
@@ -11351,7 +11351,7 @@ Mata in flera användares adresser på separata rader eller åtskilda med kommat
       </trans-unit>
       <trans-unit id="2112778509887488400" datatype="html">
         <source> To start the main exam, select it from the dropdown menu above. </source>
-        <target state="new"> To start the main exam, select it from the dropdown menu above. </target>
+        <target state="translated"> Välj det egentliga provet från rullgardinsmenyn ovan för att påbörjä det. </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
           <context context-type="linenumber">501</context>
@@ -11375,7 +11375,7 @@ Mata in flera användares adresser på separata rader eller åtskilda med kommat
       </trans-unit>
       <trans-unit id="5817483956876441203" datatype="html">
         <source> You can hold the exam after <x id="INTERPOLATION" equiv-text="{{ toReadableDate(examByDocId.get(group.currentExamDoc!)?.startingTime ?? &quot;&quot;) }}"/>. </source>
-        <target state="new"> You can hold the exam after <x id="INTERPOLATION" equiv-text="{{ toReadableDate(examByDocId.get(group.currentExamDoc!)?.startingTime ?? &quot;&quot;) }}"/>. </target>
+        <target state="translated"> Du kan påbörjä provet efter <x id="INTERPOLATION" equiv-text="{{ toReadableDate(examByDocId.get(group.currentExamDoc!)?.startingTime ?? &quot;&quot;) }}"/>. </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
           <context context-type="linenumber">748,749</context>
@@ -11383,7 +11383,7 @@ Mata in flera användares adresser på separata rader eller åtskilda med kommat
       </trans-unit>
       <trans-unit id="6436234122184632938" datatype="html">
         <source> You can show the answers only after <x id="INTERPOLATION" equiv-text="{{ toReadableDate(examByDocId.get(group.currentExamDoc!)?.showAnswersStartingTime ?? &quot;&quot;) }}"/>. </source>
-        <target state="new"> You can show the answers only after <x id="INTERPOLATION" equiv-text="{{ toReadableDate(examByDocId.get(group.currentExamDoc!)?.showAnswersStartingTime ?? &quot;&quot;) }}"/>. </target>
+        <target state="translated"> Du kan endast visa svaren efter <x id="INTERPOLATION" equiv-text="{{ toReadableDate(examByDocId.get(group.currentExamDoc!)?.showAnswersStartingTime ?? &quot;&quot;) }}"/>. </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
           <context context-type="linenumber">751,752</context>
@@ -11415,7 +11415,7 @@ Mata in flera användares adresser på separata rader eller åtskilda med kommat
       </trans-unit>
       <trans-unit id="3881453063873243566" datatype="html">
         <source> The exam has started! Students can now access the exam. Audio and video materials can be accessed via the <x id="START_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;i>"/>View exam document<x id="CLOSE_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;/i>"/> link. </source>
-        <target state="new"> Provet har börjat! Eleverna kan nu öppna provet. Du hittar hörförståelserna under knappen <x id="START_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;i>"/>Kolla provdokument och video- och audiomaterialet<x id="CLOSE_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;/i>"/>. </target>
+        <target state="translated"> Provet har börjat! Eleverna kan nu öppna provet. Du hittar hörförståelserna under knappen <x id="START_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;i>"/>Kolla provdokument och video- och audiomaterialet<x id="CLOSE_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;/i>"/>. </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
           <context context-type="linenumber">618,620</context>
