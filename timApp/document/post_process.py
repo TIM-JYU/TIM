@@ -249,6 +249,41 @@ def post_process_pars(
     )
 
 
+def expand_macro_for_bool_attr(
+    maybe_macro: str | None,
+    macro_delimiter: str,
+    macros,
+    settings: DocSettings | None,
+    env: TimSandboxedEnvironment,
+    ignore_errors: bool,
+    default: bool,
+) -> bool | None:
+    """
+    Parse boolean value from a macro string for a paragraph attribute that expects a boolean.
+    :param maybe_macro: string that is possibly a macro
+    :param macro_delimiter: delimiter used for defining macros
+    :param macros: document macros
+    :param settings: document settings
+    :param env: environ for expanding macros
+    :param ignore_errors:
+    :param default: default return value if the input string (`maybe_macro`) is not a macro or a string representing a boolean value
+    :return: a boolean representing the expanded macro value or boolean-as-string value, or None
+    """
+    result = maybe_macro
+
+    if isinstance(maybe_macro, str):
+        if maybe_macro.find(macro_delimiter) >= 0:
+            result = expand_macros(
+                maybe_macro, macros, settings, env=env, ignore_errors=ignore_errors
+            )
+        result = get_boolean(
+            result,
+            default=default,
+        )
+
+    return result
+
+
 @dataclass
 class Area:
     name: str
@@ -345,9 +380,18 @@ def process_areas(
 
                 if not is_single:
                     collapse = cur_area.attrs.get("collapse")
+                    collapse = expand_macro_for_bool_attr(
+                        collapse,
+                        macro_delimiter=delimiter,
+                        macros=macros,
+                        settings=settings,
+                        env=env,
+                        ignore_errors=True,
+                        default=False,
+                    )
                     html_par.areainfo = AreaStart(
                         area_start,
-                        collapse not in ("false", "") if collapse is not None else None,
+                        collapse,
                     )
                 new_pars.append(html_par)
 
@@ -356,12 +400,16 @@ def process_areas(
                     vis = cur_area.attrs.get("visible")
                 if vis is None:
                     vis = True
-                elif isinstance(vis, str):
-                    if vis.find(delimiter) >= 0:
-                        vis = expand_macros(
-                            vis, macros, settings, env=env, ignore_errors=True
-                        )
-                    vis = get_boolean(vis, True)
+                else:
+                    vis = expand_macro_for_bool_attr(
+                        vis,
+                        macro_delimiter=delimiter,
+                        macros=macros,
+                        settings=settings,
+                        env=env,
+                        ignore_errors=True,
+                        default=True,
+                    )
                 cur_area.visible = vis
                 if vis:
                     st = cur_area.attrs.get("starttime")
