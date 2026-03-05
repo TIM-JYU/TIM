@@ -1,4 +1,5 @@
 """Common functions for use with routes."""
+
 from collections import defaultdict
 from dataclasses import dataclass
 from datetime import datetime
@@ -264,10 +265,10 @@ def expand_macro_for_bool_attr(
     :param macro_delimiter: delimiter used for defining macros
     :param macros: document macros
     :param settings: document settings
-    :param env: environ for expanding macros
+    :param env: environment for expanding macros
     :param ignore_errors:
     :param default: default return value if the input string (`maybe_macro`) is not a macro or a string representing a boolean value
-    :return: a boolean representing the expanded macro value or boolean-as-string value, or None
+    :return: a boolean representing the expanded macro value or boolean-as-string value, or None.
     """
     result = maybe_macro
 
