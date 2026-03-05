@@ -1,10 +1,8 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, asdict
-from typing import Any, Literal, Protocol
+from typing import Literal, Protocol, Callable
 from openai import OpenAI
-
-Provider = Literal["openai"]
 
 
 class ChatModel(Protocol):
@@ -16,7 +14,7 @@ class ChatModel(Protocol):
         """Generate a model response from the given messages."""
         ...
 
-    def get_models(self) -> list[Any]:
+    def get_models(self) -> list[ModelInfo]:
         """Get all the available models from the Model API."""
         ...
 
@@ -25,7 +23,7 @@ class ChatModel(Protocol):
 class Message:
     """A message sent to the model."""
 
-    Role = Literal["system", "user"]
+    Role = Literal["system", "user", "assistant"]
 
     role: Role
     content: str
@@ -69,8 +67,8 @@ class ModelInfo:
 
     provider: Provider
     model_id: str
-    label: str
-    supports_temperature: bool = True
+    label: str | None = None
+    supports_temperature: bool = False
 
 
 class ModelRegistry:
@@ -86,23 +84,28 @@ class ModelRegistry:
         base_url: str | None = None
 
     def __init__(self, models: dict[Provider, list[ModelInfo]]):
-        self._models = models
+        self._models: dict[Provider, dict[str, ModelInfo]] = {
+            provider: {model.model_id: model for model in model_list}
+            for provider, model_list in models.items()
+        }
 
-    def get_models(self, provider: Provider | None = None) -> list[ModelInfo]:
+    def get_models(self, provider: Provider | None = None) -> dict[str, ModelInfo]:
         """Get all the supported models."""
         if not provider:
-            out: list[ModelInfo] = []
+            out: dict[str, ModelInfo] = {}
             for models in self._models.values():
-                out.extend(models)
+                out.update(models)
             return out
-        return list(self._models.get(provider, []))
+        return self._models.get(provider, {})
 
-    def get_model_info(self, provider: Provider, model_id: str) -> ModelInfo:
+    def get_model_info(
+        self,
+        provider: Provider,
+        model_id: str,
+    ) -> ModelInfo | None:
         """Get model info for a specific model."""
-        for m in self._models.get(provider, []):
-            if m.model_id == model_id:
-                return m
-        raise ValueError(f"Unsupported model: {provider}:{model_id}")
+        models = self._models.get(provider, [])
+        return models.get(model_id)
 
     def create(self, spec: ModelSpec) -> ChatModel:
         """
@@ -110,10 +113,13 @@ class ModelRegistry:
         Throws an error if the model is not supported.
         """
         info = self.get_model_info(spec.provider, spec.model_id)
-        if spec.provider == "openai":
-            return OpenAiModel(info, spec.api_key, spec.base_url)
-        # TODO: add more providers
-        raise ValueError(f"Unknown provider: {spec.provider}")
+        if info is None:
+            raise ValueError(f"Unknown model: {spec.provider}/{spec.model_id}")
+
+        init_fn = PROVIDERS.get(spec.provider)
+        if init_fn is None:
+            raise ValueError(f"Unknown provider: {spec.provider}")
+        return init_fn(info, spec.api_key, spec.base_url)
 
 
 class OpenAiModel(ChatModel):
@@ -139,20 +145,25 @@ class OpenAiModel(ChatModel):
             temperature=temperature,
             max_completion_tokens=options.max_tokens,
         )
-        response_text = res.choices[0].message.content or ""
-        return ModelResponse(
-            content=response_text,
-            usage=Usage(
+
+        message_content = res.choices[0].message.content or ""
+        usage = (
+            Usage(
                 completion_tokens=res.usage.completion_tokens,
                 prompt_tokens=res.usage.prompt_tokens,
                 total_tokens=res.usage.total_tokens,
-            ),
+            )
+            if res.usage
+            else None
         )
+        return ModelResponse(content=message_content, usage=usage)
 
-    def get_models(self) -> list[Any]:
+    def get_models(self) -> list[ModelInfo]:
         """Get all the available models from the Model API."""
         client = self._client
-        return client.models.list().data
+        return [
+            ModelInfo(model_id=m.id, provider="openai") for m in client.models.list()
+        ]
 
 
 # TODO: save in the database
@@ -165,4 +176,13 @@ SUPPORTED_MODELS: dict[Provider, list[ModelInfo]] = {
             supports_temperature=True,
         ),
     ],
+}
+
+# TODO: add more providers
+Provider = Literal["openai"]
+
+ProviderInitFn = Callable[[ModelInfo, str, str | None], ChatModel]
+
+PROVIDERS: dict[Provider, ProviderInitFn] = {
+    "openai": lambda info, key, url: OpenAiModel(info, key, url),
 }
