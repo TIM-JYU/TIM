@@ -1,8 +1,8 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, asdict
-from typing import Literal, Protocol, Callable
-from openai import OpenAI
+from typing import Literal, Protocol, Callable, Iterable, Any, cast
+from openai import OpenAI, types
 
 
 class ChatModel(Protocol):
@@ -12,6 +12,15 @@ class ChatModel(Protocol):
         self, messages: list[Message], options: GenerateOptions
     ) -> ModelResponse:
         """Generate a model response from the given messages."""
+        ...
+
+    def generate_stream(
+        self, messages: list[Message], options: GenerateOptions
+    ) -> Iterable[ModelResponseChunk]:
+        """
+        Generate a model response from the given messages.
+        Uses streaming and returns the response in chunks.
+        """
         ...
 
     def get_models(self) -> list[ModelInfo]:
@@ -58,7 +67,21 @@ class ModelResponse:
     """Completion request response from a model."""
 
     content: str
+    """The full response from the model."""
     usage: Usage | None = None
+    """Usage statistics."""
+
+
+@dataclass(frozen=True)
+class ModelResponseChunk:
+    """Streaming response chunk."""
+
+    delta: str | None = None
+    """Message chunk."""
+    usage: Usage | None = None
+    """Usage statistics."""
+    done: bool = False
+    """Is the last message in the stream."""
 
 
 @dataclass(frozen=True)
@@ -69,8 +92,99 @@ class ModelInfo:
     model_id: str
     label: str | None = None
     supports_temperature: bool = False
+    supports_streaming: bool = False
 
 
+class OpenAiModel(ChatModel):
+    """`ChatModel` implementation for OpenAI models."""
+
+    def __init__(self, info: ModelInfo, api_key: str, base_url: str | None = None):
+        self._info = info
+        self._api_key = api_key
+        self._base_url = (base_url or "https://api.openai.com/v1").rstrip("/")
+        self._client = OpenAI(api_key=self._api_key, base_url=self._base_url)
+
+    def generate(
+        self, messages: list[Message], options: GenerateOptions
+    ) -> ModelResponse:
+        """Generate a model response from the given messages."""
+        res = self.create_completion(options=options, messages=messages)
+        message_content = res.choices[0].message.content or ""
+        usage = OpenAiModel.get_usage(res.usage)
+        return ModelResponse(content=message_content, usage=usage)
+
+    def generate_stream(
+        self, messages: list[Message], options: GenerateOptions
+    ) -> Iterable[ModelResponseChunk]:
+        """
+        Generate a model response from the given messages.
+        Uses streaming and returns the response in chunks.
+        """
+        if not self._info.supports_streaming:
+            raise ValueError(
+                f"Streaming is not supported with model: {self._info.model_id}"
+            )
+
+        stream = self.create_completion(options=options, messages=messages, stream=True)
+
+        # Iterate the message chunks in the stream
+        for chunk in stream:
+            usage = OpenAiModel.get_usage(chunk.usage)
+            if len(chunk.choices) == 0:
+                # No more messages
+                yield ModelResponseChunk(usage=usage, done=True)
+                continue
+            msg = chunk.choices[0]
+            message_delta = msg.delta.content
+            # Return the partial message
+            yield ModelResponseChunk(delta=message_delta, usage=usage)
+
+    def get_models(self) -> list[ModelInfo]:
+        """Get all the available models from the Model API."""
+        client = self._client
+        return [
+            ModelInfo(model_id=m.id, provider="openai") for m in client.models.list()
+        ]
+
+    @staticmethod
+    def get_usage(
+        usage: types.completion_usage.CompletionUsage | None,
+    ) -> Usage | None:
+        """Convert completion usage to `Usage`"""
+        if not usage:
+            return None
+        return Usage(
+            completion_tokens=usage.completion_tokens,
+            prompt_tokens=usage.prompt_tokens,
+            total_tokens=usage.total_tokens,
+        )
+
+    def create_completion(
+        self,
+        messages: list[Message],
+        options: GenerateOptions,
+        stream: bool = False,
+    ):
+        """Create a completion response from the given messages."""
+        client = self._client
+        msgs: list[dict[str, str]] = [asdict(m) for m in messages]
+        temperature = options.temperature if self._info.supports_temperature else None
+        stream_options = (
+            {"stream": True, "stream_options": {"include_usage": True}}
+            if stream
+            else {}
+        )
+        return client.chat.completions.create(
+            model=self._info.model_id,
+            messages=cast(Any, msgs),
+            temperature=temperature,
+            max_completion_tokens=options.max_tokens,
+            **stream_options,
+        )
+
+
+# TODO: Let database handle the supported models and retrieving model info.
+# Here we should just create the correct model instance from the given spec.
 class ModelRegistry:
     """Registry for all the supported models."""
 
@@ -110,7 +224,7 @@ class ModelRegistry:
     def create(self, spec: ModelSpec) -> ChatModel:
         """
         Create a new model from a `ModelSpec`.
-        Throws an error if the model is not supported.
+        Throws an error if the provider or the model is not supported.
         """
         info = self.get_model_info(spec.provider, spec.model_id)
         if info is None:
@@ -122,49 +236,16 @@ class ModelRegistry:
         return init_fn(info, spec.api_key, spec.base_url)
 
 
-class OpenAiModel(ChatModel):
-    """`ChatModel` implementation for OpenAI models."""
+# TODO: add more providers
+Provider = Literal["openai"]
 
-    def __init__(self, info: ModelInfo, api_key: str, base_url: str | None = None):
-        self._info = info
-        self._api_key = api_key
-        self._base_url = (base_url or "https://api.openai.com/v1").rstrip("/")
-        self._client = OpenAI(api_key=self._api_key, base_url=self._base_url)
+ProviderInitFn = Callable[[ModelInfo, str, str | None], ChatModel]
+"""Function type for initializing `Model` instances from different providers."""
 
-    def generate(
-        self, messages: list[Message], options: GenerateOptions
-    ) -> ModelResponse:
-        """Generate a model response from the given messages."""
-        client = self._client
-        msgs: list[dict[str, str]] = [asdict(m) for m in messages]
-        temperature = options.temperature if self._info.supports_temperature else None
-
-        res = client.chat.completions.create(
-            model=self._info.model_id,
-            messages=msgs,
-            temperature=temperature,
-            max_completion_tokens=options.max_tokens,
-        )
-
-        message_content = res.choices[0].message.content or ""
-        usage = (
-            Usage(
-                completion_tokens=res.usage.completion_tokens,
-                prompt_tokens=res.usage.prompt_tokens,
-                total_tokens=res.usage.total_tokens,
-            )
-            if res.usage
-            else None
-        )
-        return ModelResponse(content=message_content, usage=usage)
-
-    def get_models(self) -> list[ModelInfo]:
-        """Get all the available models from the Model API."""
-        client = self._client
-        return [
-            ModelInfo(model_id=m.id, provider="openai") for m in client.models.list()
-        ]
-
+PROVIDERS: dict[Provider, ProviderInitFn] = {
+    "openai": lambda info, key, url: OpenAiModel(info, key, url),
+}
+"""All the supported providers."""
 
 # TODO: save in the database
 SUPPORTED_MODELS: dict[Provider, list[ModelInfo]] = {
@@ -174,15 +255,7 @@ SUPPORTED_MODELS: dict[Provider, list[ModelInfo]] = {
             model_id="gpt-4.1-mini",
             label="GPT-4.1 Mini",
             supports_temperature=True,
+            supports_streaming=True,
         ),
     ],
-}
-
-# TODO: add more providers
-Provider = Literal["openai"]
-
-ProviderInitFn = Callable[[ModelInfo, str, str | None], ChatModel]
-
-PROVIDERS: dict[Provider, ProviderInitFn] = {
-    "openai": lambda info, key, url: OpenAiModel(info, key, url),
 }
