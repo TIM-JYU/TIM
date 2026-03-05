@@ -10,6 +10,7 @@ from tim_common.pluginserver_flask import (
     PluginAnswerResp,
     PluginReqs,
     EditorTab,
+    PluginAnswerWeb,
 )
 
 
@@ -39,7 +40,11 @@ class ChatTimAnswerModel(
 
 
 def answer(_args: ChatTimAnswerModel) -> PluginAnswerResp:
-    return {}
+    web: PluginAnswerWeb = {}
+    result: PluginAnswerResp = {"web": web}
+    web["result"] = "answer from the server"
+
+    return result
 
 
 def reqs() -> PluginReqs:

@@ -34,36 +34,42 @@ const PluginFields = t.intersection([
     }),
 ]);
 
+export interface ChatEntry {
+    user: string;
+    agent: string;
+}
+
 // Huom: <tim-dialog-frame ei sisällä markupError attribuuttia
 // joten täytyy joka tehdä oma versio tai muuten markupErroria ei nähdä
 @Component({
     selector: "chattim-runner",
     template: `
         <tim-dialog-frame>
-            <tim-plugin-header *ngIf="header" header>
-                <span [innerHTML]="header | purify"></span>
-            </tim-plugin-header>
-
             <ng-container body>
-                <pre *ngIf="answer" [innerHTML]="answer | purify"></pre>
-                <div class="form-inline">
-                    <label>{{inputstem}}
-                        <input type="text"
-                               class="form-control"
-                               [(ngModel)]="userinput"
-                               >
-                    </label>
-                </div>
-            <div class="button">
-                <button class="timButton"
-                        *ngIf="buttonText()"
-                        [disabled]="isRunning || !userinput"
-                        (click)="sendUserInput()"
-                        [innerHTML]="buttonText() | purify">
-                </button>
-            </div>
-                <tim-loading *ngIf="isRunning"></tim-loading>
-                <div *ngIf="error" [innerHTML]="error | purify"></div>
+                    <div class="scroll-box">
+                        <div *ngFor="let entry of conversation">
+                            <div class="chat-user">{{ entry.user }}</div>
+                            <pre class="chat-bot" [innerHTML]="entry.agent | purify"></pre>
+                        </div>
+                    </div>
+                    <div class="form-inline">
+                        <label>{{inputstem}}
+                            <input type="text"
+                                   class="form-control"
+                                   [(ngModel)]="userinput"
+                                   (keyup.enter)="onEnter()"
+                            >
+                        </label>
+                        <button class="timButton"
+                                *ngIf="buttonText()"
+                                [disabled]="isRunning || !userinput"
+                                (click)="sendUserInput()"
+                                [innerHTML]="buttonText() | purify">
+                        </button>
+                    </div>
+
+                    <tim-loading *ngIf="isRunning"></tim-loading>
+                    <div *ngIf="error" [innerHTML]="error | purify"></div>
             </ng-container>
         </tim-dialog-frame>
     `,
@@ -78,7 +84,13 @@ export class ChatTIMComponent extends AngularPluginBase<
     error?: string;
     isRunning = false;
     userinput = "";
-    inputstem = "Chat";
+    inputstem = "";
+
+    conversation: ChatEntry[] = [];
+
+    onEnter() {
+        this.sendUserInput();
+    }
 
     buttonText() {
         return super.buttonText() ?? "Send";
@@ -88,10 +100,12 @@ export class ChatTIMComponent extends AngularPluginBase<
         return {};
     }
 
-    sendUserInput() {
-        this.answer = "hei";
-        // ei nyt vielä lähetetä mitään ennen kuin serveripuoli ok
-        // this.doSendUserInput();
+    async sendUserInput() {
+        if (!this.userinput?.trim() || this.isRunning) {
+            return;
+        }
+        await this.doSendUserInput();
+        this.userinput = "";
     }
 
     getAttributeType() {
@@ -116,6 +130,10 @@ export class ChatTIMComponent extends AngularPluginBase<
             const data = r.result;
             this.error = data.web.error;
             this.answer = data.web.result;
+            this.conversation.push({
+                user: this.userinput,
+                agent: this.answer,
+            });
         } else {
             this.error = r.result.error.error;
         }
