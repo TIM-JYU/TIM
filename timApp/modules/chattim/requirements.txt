@@ -10,3 +10,4 @@ python-dateutil
 isodate
 gunicorn==21.2.0
 gevent>=24.10.1
+openai
