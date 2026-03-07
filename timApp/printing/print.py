@@ -1,6 +1,7 @@
 """
 Routes for printing a document
 """
+
 import json
 import os
 import shutil
@@ -52,7 +53,7 @@ from timApp.util.flask.responsehelper import (
     ok_response,
 )
 from timApp.util.flask.typedblueprint import TypedBlueprint
-from tim_common.html_sanitize import sanitize_html
+from tim_common.html_sanitize import sanitize_html, sanitize_svg
 
 TEXPRINTTEMPLATE_KEY = "texprinttemplate"
 DEFAULT_PRINT_TEMPLATE_NAME = "templates/printing/runko"
@@ -139,6 +140,7 @@ def print_document(
     url_macros: dict[str, str]
     | None = field(metadata={"data_key": "urlMacros"}, default=None),
 ) -> Response:
+    _ = doc_path  # use for linter, actual doc is fetched in before_request
     if not file_type:
         file_type = "pdf"
 
@@ -175,7 +177,10 @@ def print_document(
         urlparams=urlparams,
     )
 
-    #  print_access_url = f'{request.url}?file_type={str(print_type.value).lower()}&template_doc_id={template_doc_id}&plugins_user_code={plugins_user_print}'
+    #  print_access_url = f'{request.url}
+    #    ?file_type={str(print_type.value).lower()}
+    #    &template_doc_id={template_doc_id}
+    #    &plugins_user_code={plugins_user_print}'
     print_access_url = f"{request.url}"  # create url for printed page
     sep = "?"
     if str(print_type.value).lower() != "pdf":
@@ -189,7 +194,7 @@ def print_document(
         sep = "&"
     if url_macros:
         print_access_url += f"{sep}{urlencode(url_macros)}"
-        sep = "&"
+        # sep = "&"
 
     if force:
         existing_doc = None
@@ -217,7 +222,12 @@ def print_document(
         try:
             print("Error occurred: " + str(err))
             e = err.value
-            latex_access_url = f"{request.url}?file_type=latex&template_doc_id={template_doc_id}&plugins_user_code={plugins_user_print}"
+            latex_access_url = (
+                f"{request.url}"
+                f"?file_type=latex"
+                f"&template_doc_id={template_doc_id}"
+                f"&plugins_user_code={plugins_user_print}"
+            )
             if url_macros:
                 latex_access_url += f"&{urlencode(url_macros)}"
             line = e.get("line", "")
@@ -242,7 +252,10 @@ def print_document(
         print("General error occurred: " + str(err))
         raise RouteException(str(err))  # TODO: maybe there's a better error code?
 
-    # print_access_url = f'{request.url}?file_type={str(print_type.value).lower()}&template_doc_id={template_doc_id}&plugins_user_code={plugins_user_print}'
+    # print_access_url = f'{request.url}
+    #   ?file_type={str(print_type.value).lower()}
+    #   &template_doc_id={template_doc_id}
+    #   &plugins_user_code={plugins_user_print}'
     db.session.commit()
     return json_response({"success": True, "url": print_access_url}, status_code=201)
 
@@ -265,6 +278,9 @@ def get_printed_document(
             def_file_type = "plain"
     elif doc_settings.is_textplain():
         def_file_type = "plain"
+    suffix = Path(doc_path).suffix
+    if suffix:
+        def_file_type = suffix[1:].lower()
 
     file_type = file_type or def_file_type
     # if doc_path != doc.name and doc_path.rfind('.') >= 0:  # name have been changed because . in name
@@ -273,7 +289,8 @@ def get_printed_document(
     line = request.args.get("line")
 
     if file_type.lower() not in (f.value for f in PrintFormat):
-        raise RouteException("The supplied query parameter 'file_type' was invalid.")
+        file_type = "plain"
+        # raise RouteException("The supplied query parameter 'file_type' was invalid.")
 
     print_type = PrintFormat(file_type)
     template_doc = None
@@ -356,8 +373,18 @@ def get_printed_document(
         rurl = request.url
         i = rurl.find("?")
         rurl = rurl[:i]
-        latex_access_url = f"{rurl}?file_type=latex&template_doc_id={template_doc_id}&plugins_user_code={plugins_user_code}"
-        pdf_access_url = f"{rurl}?file_type=pdf&template_doc_id={template_doc_id}&plugins_user_code={plugins_user_code}"
+        latex_access_url = (
+            f"{rurl}"
+            f"?file_type=latex"
+            f"&template_doc_id={template_doc_id}"
+            f"&plugins_user_code={plugins_user_code}"
+        )
+        pdf_access_url = (
+            f"{rurl}"
+            f"?file_type=pdf"
+            f"&template_doc_id={template_doc_id}"
+            f"&plugins_user_code={plugins_user_code}"
+        )
         if url_macros:
             latex_access_url += f"&{urlencode(url_macros)}"
             pdf_access_url += f"&{urlencode(url_macros)}"
@@ -411,9 +438,16 @@ def get_printed_document(
             response = make_response(
                 render_template("html_print.jinja2", content=result, title=doc.path)
             )
+        elif original_print_type == PrintFormat.SVG:
+            with open(cached, "r", encoding="utf-8") as f:
+                result = f.read()
+            result = sanitize_svg(result)
+            response = make_response(result)
+            response.headers["Content-Type"] = mime
         else:
             response = make_response(send_file(path_or_file=cached, mimetype=mime))
-        add_csp_if_not_script_safe(response, mime, "sandbox allow-scripts")
+        # add_csp_if_not_script_safe(response, mime, "sandbox allow-scripts")
+        add_csp_if_not_script_safe(response, mime, "sandbox")
     else:  # show LaTeX with line numbers
         styles = "p.red { color: red; }\n"
         styles += (
@@ -590,6 +624,7 @@ def get_numbering(doc_path: str, recurse: bool = False) -> Response:
 
 @print_blueprint.get("/templates/<path:doc_path>")
 def get_templates(doc_path: str) -> Response:
+    _ = doc_path  # use for linter, actual doc is fetched in before_request
     doc = g.doc_entry
 
     template_name = get_doc_template_name(doc)
@@ -609,6 +644,8 @@ def get_mimetype_for_format(file_type: PrintFormat) -> str:
         return "text/html"
     elif file_type == PrintFormat.ICS:
         return "text/calendar"
+    elif file_type == PrintFormat.SVG:
+        return "image/svg+xml"
     else:
         return "text/plain"
 
@@ -624,11 +661,12 @@ def check_print_cache(
     """
     Fetches the given document from the database.
 
-    :param url_macros:
     :param doc_entry:
     :param template:
     :param file_type:
     :param plugins_user_print:
+    :param url_macros:
+    :param urlparams:
     :return:
     """
 
@@ -672,15 +710,16 @@ def create_printed_doc(
     """
     Adds a marking for a printed document to the db
 
-    :param user_ctx: The user context.
-    :param view_ctx: The view context.
     :param doc_entry: Document that is being printed
     :param template_doc: printing template used
     :param file_type: File type for the document
     :param temp: Is the document stored only temporarily (gets deleted after some time)
+    :param user_ctx: The user context.
+    :param view_ctx: The view context.
     :param plugins_user_print: use users answers for plugins or not
     :param urlroot: url root for this route
     :param eol_type: EOL type. Same option as Pandoc (crlf, lf, native)
+    :param urlparams:
     :return str: path to the created file
     """
 
