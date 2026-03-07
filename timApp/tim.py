@@ -76,6 +76,7 @@ from timApp.plugin.timmenu.timMenu import timMenu_plugin
 from timApp.plugin.timtable.timTable import timTable_plugin
 from timApp.plugin.userselect.userselect import user_select_plugin
 from timApp.printing.print import print_blueprint
+from timApp.printing.print import svg_blueprint
 from timApp.proxy.routes import proxy
 from timApp.redirect.routes import redirect_route
 from timApp.readmark.routes import readings
@@ -151,6 +152,7 @@ blueprints = [
     steps_plugin,
     tags_blueprint,
     styles,
+    svg_blueprint,
     tr_bp,
     upload,
     velps,
