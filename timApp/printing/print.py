@@ -137,9 +137,8 @@ def print_document(
         metadata={"data_key": "removeOldImages"}, default=False
     ),
     force: bool = False,
-    url_macros: dict[str, str] | None = field(
-        metadata={"data_key": "urlMacros"}, default=None
-    ),
+    url_macros: dict[str, str]
+    | None = field(metadata={"data_key": "urlMacros"}, default=None),
 ) -> Response:
     _ = doc_path  # use for linter, actual doc is fetched in before_request
     if not file_type:
