@@ -25,20 +25,52 @@ export function addElementToParagraphMargin(par: ParContext, el: Element) {
     container.appendChild(el);
 }
 
+/**
+ * Checks if the user can edit the paragraph based on the
+ * edit attribute and document settings.
+ *
+ * @param item - The item containing the paragraph
+ * @param par - The paragraph context to check
+ * @returns true if the user can edit the paragraph, false otherwise
+ */
 export function canEditPar(item: IItem, par: ParContext) {
-    const edit = par.par.attrs.edit;
-    let res: boolean;
-    if (!RightNames.is(edit)) {
-        res = item.rights.editable;
-    } else {
-        res = item.rights[edit];
+    const editRaw = par.par.attrs.edit ?? "edit";
+    const edits = editRaw
+        .split(",")
+        .map((s) => s.trim())
+        .filter((s) => s.length > 0);
+
+    const user = Users.getCurrent();
+    const groups = user.groups;
+    let res: boolean = false;
+    for (const edit of edits) {
+        if (!RightNames.is(edit)) {
+            res = item.rights.editable;
+        } else {
+            res = item.rights[edit];
+        }
+        if (edit === "view") {
+            res = true;
+        }
+        if (res) {
+            break;
+        }
+
+        if (groups.some((g) => g.name === edit)) {
+            return true;
+        }
     }
 
     const globals = someglobals();
     if (isDocumentGlobals(globals) && globals.docSettings.parAuthorOnlyEdit) {
         const authorInfo = par.getAuthorInfo();
-        const userName = Users.getCurrent().name;
-        if (!item.rights.owner && !authorInfo?.usernames?.includes(userName)) {
+        if (!authorInfo) {
+            return res;
+        }
+        if (authorInfo?.usernames?.includes(user.name)) {
+            return true;
+        }
+        if (!item.rights.owner) {
             res = false;
         }
     }
