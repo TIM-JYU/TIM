@@ -106,7 +106,12 @@ def get_block_2(args: GetBlockModel):
         try:
             p = d.document.get_paragraph(args.par_id)
             if not can_see_par_source(get_current_user_object(), p):
-                raise AccessDenied()
+                try:
+                    from timApp.document.editing.routes import verify_par_edit_access
+
+                    verify_par_edit_access(p)
+                except AccessDenied:
+                    raise AccessDenied()
             if args.par_hash:
                 par = DocParagraph.get(
                     d.document, args.par_id, args.par_hash or p.get_hash()

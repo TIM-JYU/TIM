@@ -24,6 +24,7 @@ class AuthorInfo:
         self,
         user_map: dict[int, Union["User", "UserGroup"]],
         entries: dict[int, list[ChangelogEntry]],
+        hide: bool = False,
     ) -> None:
         self.authors: dict[Union["User", "UserGroup"], list[ChangelogEntry]] = {}
         for k, v in entries.items():
