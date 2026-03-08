@@ -339,26 +339,73 @@ def modify_paragraph():
 
 def verify_par_edit_access(par: DocParagraph):
     """Verifies that the current user has edit access to the specified DocParagraph."""
-    edit_attr = par.get_attr("edit", "edit")
-    message = (
-        f"Only users with {edit_attr} access can edit this paragraph ({par.get_id()})."
-    )
     d = par.doc.get_docinfo()
-    if edit_attr == "edit":
-        verify_edit_access(d, message=message)
-    elif edit_attr == "teacher":
-        verify_teacher_access(d, message=message)
-    elif edit_attr == "see_answers":
-        verify_seeanswers_access(d, message=message)
-    elif edit_attr == "manage":
-        verify_manage_access(d, message=message)
-    elif edit_attr == "owner":
-        verify_ownership(d, message=message)
+    if verify_ownership(d, require=False):  # Owners can always edit
+        return
+
+    edit_attrs = par.get_attr("edit", "edit")
+    attrs = [a.strip() for a in edit_attrs.split(",")] if edit_attrs else []
+    known = {"view", "edit", "teacher", "see_answers", "manage", "owner"}
+    access_attrs = [a for a in attrs if a in known]
+    group_attrs = [a for a in attrs if a not in known]
+    groups = []
+    group_access = True
+    if group_attrs:
+        group_access = False
+        groups = get_current_user_object().effective_groups
+
+    # If the user has at least one of the group accesses, they have
+    # edit access to the paragraph. Otherwise, we check the other access attributes.
+    for edit_attr in group_attrs:
+        b = any(gr.name == edit_attr for gr in groups)
+        if b:
+            return
+
+    # If parAuthorOnlyEdit is set, only the owner of the paragraph
+    # can edit it. This overrides any other access attributes.
+    doc = par.doc
+    settings = doc.get_settings()
+    if settings and settings.par_author_only_edit():
+        authors = doc.get_changelog(-1).get_authorinfo([par])
+        par_authors_info = authors.get(par.get_id(), None)
+        if par_authors_info:
+            par_authors = par_authors_info.username_list
+            if get_current_user_object().name in par_authors:
+                return
+            raise RouteException(
+                f"Not the original editor for paragraph {par.get_id()}!"
+            )
+
+    if not access_attrs:
+        access_attrs = ["owner"]
+    for edit_attr in access_attrs:
+        message = f"Only users with {edit_attr} access can edit this paragraph ({par.get_id()})."
+        if edit_attr == "view":
+            verify_view_access(d, message=message)
+            return
+        if edit_attr == "edit":
+            verify_edit_access(d, message=message)
+            return
+        elif edit_attr == "teacher":
+            verify_teacher_access(d, message=message)
+            return
+        elif edit_attr == "see_answers":
+            verify_seeanswers_access(d, message=message)
+            return
+        elif edit_attr == "manage":
+            verify_manage_access(d, message=message)
+            return
+        elif edit_attr == "owner":
+            verify_ownership(d, message=message)
+            return
+
+    if not group_access:
+        raise RouteException(f"No edit access")
 
 
 def modify_paragraph_common(doc_id: int, md: str, par_id: str, par_next_id: str | None):
     docinfo = get_doc_or_abort(doc_id)
-    verify_edit_access(docinfo)
+    # verify_edit_access(docinfo)
 
     doc = docinfo.document_as_current_user
 

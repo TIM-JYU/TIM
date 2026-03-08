@@ -121,7 +121,8 @@ def post_process_pars(
             has_plugin_errors=presult.has_errors,
         )
 
-    if settings.show_authors():
+    if settings.show_authors() or settings.par_author_only_edit():
+        hide = not settings.show_authors()
         hide_authors = view_ctx.hide_names_requested
         authors = doc.get_changelog(-1).get_authorinfo(pars)
         if hide_authors:
@@ -132,6 +133,8 @@ def post_process_pars(
         for p in final_pars:
             ppar = p.prepare(view_ctx)
             ppar.authorinfo = authors.get(ppar.id)
+            if hide:
+                ppar.authorinfo.hide = True
     # There can be several references of the same paragraph in the document, which is why we need a dict of lists
     pars_dict: DefaultDict[tuple[str, int], list[PreparedPar]] = defaultdict(list)
 
