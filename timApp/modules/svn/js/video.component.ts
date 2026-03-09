@@ -1,4 +1,6 @@
-﻿import * as t from "io-ts";
+﻿// TODO: setting popup
+
+import * as t from "io-ts";
 import type {ApplicationRef, DoBootstrap} from "@angular/core";
 import {Component, ElementRef, NgModule, ViewChild} from "@angular/core";
 import {
@@ -13,7 +15,6 @@ import {
     parseIframeopts,
     seconds2Time,
     TimStorage,
-    valueDefu,
 } from "tim/util/utils";
 import {AngularPluginBase} from "tim/plugin/angular-plugin-base.directive";
 import {FormsModule} from "@angular/forms";
@@ -117,6 +118,8 @@ const ShowFileMarkup = t.intersection([
         defaultSubtitles: t.string,
         autoplay: t.boolean,
         endJSRunner: t.string,
+        audio: t.boolean,
+        nolimits: t.boolean,
     }),
     GenericPluginMarkup,
     t.type({
@@ -126,8 +129,8 @@ const ShowFileMarkup = t.intersection([
         open: withDefault(t.boolean, false),
         videoicon: withDefault(t.boolean, true),
         type: withDefault(
-            t.keyof({normal: null, small: null, list: null}),
-            "normal"
+            t.keyof({normal: null, small: null, list: null, "": null}),
+            ""
         ),
     }),
 ]);
@@ -146,10 +149,10 @@ const ShowFileAll = t.type({
              tabindex="0"
              (keydown.-)="speed(1.0/1.2, $event)"
              (keydown.1)="speed(0, $event)"
-             (keydown.+)="speed(1.2/1.0, $event)"
+             (keydown.+)="speed(1.2, $event)"
              (keydown.x)="zoom(1.0/1.4, $event)"
              (keydown.r)="zoom(0, $event)"
-             (keydown.z)="zoom(1.4/1.0, $event)"
+             (keydown.z)="zoom(1.4, $event)"
              (keydown.s)="markStart($event)"
              (keydown.e)="markEnd($event)"
              (keydown.c)="copyStartEnd($event)"
@@ -164,17 +167,20 @@ const ShowFileAll = t.type({
              (keydown.h)="jump(1, $event)"
              (keydown.j)="jump(10, $event)"
         >
-            <tim-markup-error *ngIf="markupError" [data]="markupError"></tim-markup-error>
+            <tim-markup-error *ngIf="markupError" [data]="markupError!"></tim-markup-error>
             <p *ngIf="header" [innerHtml]="header | purify"></p>
             <p *ngIf="stem && isNormalSize" class="stem" [innerHtml]="stem | purify"></p>
 
             <div *ngIf="!isNormalSize" class="videoInfo">
-                <span [innerHtml]="stem | purify"></span>&ngsp;
+                <span class="stem" [innerHtml]="stem | purify"></span>&ngsp;
                 <a *ngIf="videoName" class="videoname"
                    (click)="toggleVideo()">
-                    <i *ngIf="markup.videoicon" class="glyphicon glyphicon-facetime-video"></i>
+                        <i *ngIf="markup.videoicon && !markup.audio" class="glyphicon glyphicon-play-circle"
+                           title="Click here to show the video"></i>
+                        <i *ngIf="markup.videoicon && markup.audio" class="glyphicon glyphicon-volume-up"
+                           title="Click here to play the audio"></i>
                     {{videoName}}
-                    <ng-container *ngIf="markup.type === 'list'">
+                    <ng-container *ngIf="mtype === 'list'">
                         &ndash;
                         {{startt}}
                     </ng-container>
@@ -191,7 +197,6 @@ const ShowFileAll = t.type({
             <ng-container *ngIf="videoOn">
                 <iframe *ngIf="iframesettings && isPdf"
                         class="showVideo"
-                        frameborder="0"
                         allowfullscreen
                         [src]="iframesettings.src"
                         [style.width.px]="width"
@@ -201,7 +206,6 @@ const ShowFileAll = t.type({
                 </iframe>
                 <iframe *ngIf="iframesettings && !isPdf"
                         class="showVideo"
-                        frameborder="0"
                         allowfullscreen
                         [src]="iframesettings.src"
                         [style.width.px]="width"
@@ -224,15 +228,32 @@ const ShowFileAll = t.type({
                        [crossOrigin]="videosettings.crossOrigin"
                        [autoplay]="videoAutoPlay"
                 >
-                        <track *ngFor="let subtitle of markup.subtitles" [src]="subtitle.file" [label]="subtitle.name" [srclang]="getVTTSrcLang(subtitle.file)"/>    
-                </video>
+                        <track *ngFor="let subtitle of markup.subtitles" [src]="subtitle.file" [label]="subtitle.name" [srclang]="getVTTSrcLang(subtitle.file)"/>
+                </video>            
+                <audio *ngIf="audiosettings"
+                       #video
+                       class="showAudio"
+                       controls
+                       (loadedmetadata)="metadataloaded()"
+                       (timeupdate)="timeupdate()"
+                       (pause)="handlePause()"
+                       (ended)="handleEnded()"
+                       [style.width.px]="width"
+                       [style.height.px]="height"
+                       [src]="audiosettings.src"
+                       [crossOrigin]="audiosettings.crossOrigin"
+                       [autoplay]="videoAutoPlay"
+                >
+                </audio>
             </ng-container>
             <ng-container *ngIf="isNormalSize">
                 <div *ngIf="!videoOn" class="no-popup-menu play">
                     <a (click)="toggleVideo()" [class.video-thumbnail]="markup.thumbnailFile">
-                        <img *ngIf="markup.thumbnailFile" class="video-thumbnail-image" [src]="markup.thumbnailFile">
-                        <i *ngIf="markup.videoicon" class="glyphicon glyphicon-play-circle video-icon"
+                        <img *ngIf="markup.thumbnailFile" alt="thumbnail" class="video-thumbnail-image" [src]="markup.thumbnailFile">
+                        <i *ngIf="markup.videoicon && !markup.audio" class="glyphicon glyphicon-play-circle video-icon"
                            title="Click here to show the video"></i>
+                        <i *ngIf="markup.videoicon && markup.audio" class="glyphicon glyphicon-volume-up video-icon"
+                           title="Click here to play the audio"></i>
                     </a>
                 </div>
                 <tim-video-link
@@ -242,24 +263,27 @@ const ShowFileAll = t.type({
                         [target]="markup.target"
                 ></tim-video-link>
             </ng-container>
-            <div class="flex" *ngIf="videoOn" style="justify-content: flex-end">
-                <div *ngIf="videosettings" class="margin-5-right">
-                    <label class="normalLabel" title="Advanced video controls">Adv <input type="checkbox" [(ngModel)]="advVideo" (ngModelChange)="onAdvVideoStateChange($event)" /></label>
-                    Speed:
-                    <span class="text-smaller">
-                        {{playbackRateString}}
-                    </span>
-                    <a (click)="speed(1.0/1.2)" title="Slower speed (-)"><i class="glyphicon glyphicon-minus"></i></a>&ngsp;
-                    <a (click)="speed(0)" title="Normal speed (1)">1x</a>&ngsp;
-                    <a (click)="speed(1.2)" title="Faster speed (+)"><i class="glyphicon glyphicon-plus"></i></a>&ngsp;
-                </div>
-                <div class="margin-5-right">
-                    Zoom:
-                    <a (click)="zoom(1.0/1.4)" title="Zoom out (x)"><i class="glyphicon glyphicon-minus"></i></a>&ngsp;
-                    <a (click)="zoom(0)" title="Normal zoom (r)">R</a>&ngsp;
-                    <a (click)="zoom(1.4)" title="Zoom in (z)"><i class="glyphicon glyphicon-plus"></i></a>
-                </div>
-                <a (click)="hideVideo()">{{hidetext}}</a>
+            <div class="flex settings" *ngIf="videoOn" style="justify-content: flex-end">
+                <button class="settings-btn" (click)="showSettings = !showSettings" type="button" title="More settings">⋮</button>
+                <div class="settings-popover" *ngIf="showSettings">
+                    <div *ngIf="videosettings || audiosettings" class="margin-5-right speed-controls">
+                        Speed:
+                        <span class="text-smaller speed-rate">
+                            {{playbackRateString}}
+                        </span>
+                        <a class="speed-minus" (click)="speed(1.0/1.2)" title="Slower speed (-)"><i class="glyphicon glyphicon-minus"></i></a>&ngsp;
+                        <a class="speed-reset" (click)="speed(0)" title="Normal speed (1)">1x</a>&ngsp;
+                        <a class="speed-plus" (click)="speed(1.2)" title="Faster speed (+)"><i class="glyphicon glyphicon-plus"></i></a>&ngsp;
+                    </div>
+                    <div *ngIf="videosettings" class="margin-5-right zoom-controls" >
+                        Zoom:
+                        <a class="zoom-minus" (click)="zoom(1.0/1.4)" title="Zoom out (x)"><i class="glyphicon glyphicon-minus"></i></a>&ngsp;
+                        <a class="zoom-reset" (click)="zoom(0)" title="Normal zoom (r)">R</a>&ngsp;
+                        <a class="zoom-plus" (click)="zoom(1.4)" title="Zoom in (z)"><i class="glyphicon glyphicon-plus"></i></a>
+                    </div>
+                    <label class="normalLabel" title="Advanced media controls">Adv <input type="checkbox" [(ngModel)]="advVideo" (ngModelChange)="onAdvVideoStateChange($event)" /></label>
+                <a class="hide-text" (click)="hideVideo()">{{hidetext}}</a>
+                </div>    
             </div>
             <div *ngIf="advVideo && videoOn">
                 <span>Jump sec: </span>
@@ -289,21 +313,25 @@ export class VideoComponent extends AngularPluginBase<
     typeof ShowFileAll
 > {
     get videoClass() {
-        switch (this.markup.type) {
+        let a = "";
+        if (this.markup.audio) {
+            a = " audio";
+        }
+        switch (this.mtype) {
             case "normal": {
-                return "videoRunDiv";
+                return "videoRunDiv" + a;
             }
             case "small": {
-                return "smallVideoRunDiv";
+                return "smallVideoRunDiv" + a;
             }
             case "list": {
-                return "listVideoRunDiv";
+                return "listVideoRunDiv" + a;
             }
         }
     }
 
     get isNormalSize() {
-        return this.markup.type === "normal";
+        return this.mtype === "normal";
     }
 
     get iframe(): boolean {
@@ -319,10 +347,6 @@ export class VideoComponent extends AngularPluginBase<
         } catch {
             return false;
         }
-    }
-
-    get hidetext() {
-        return valueDefu(this.markup.hidetext, "Hide file");
     }
 
     get doctext() {
@@ -351,10 +375,15 @@ export class VideoComponent extends AngularPluginBase<
     iframesettings?: Iframesettings;
     isPdf = false;
     videosettings?: {src: string; crossOrigin: string | null};
+    audiosettings?: {src: string; crossOrigin: string | null};
     playbackRateString = "";
     advVideo: boolean = true;
     requiresTaskId = false;
     advVideoState = new TimStorage("advVideoState", t.boolean);
+    mtype: string = "normal";
+    nolimits: boolean = false;
+    showSettings: boolean = false;
+    hidetext: string = "Hide file";
 
     onAdvVideoStateChange(newValue: boolean) {
         this.advVideoState.set(newValue);
@@ -362,6 +391,20 @@ export class VideoComponent extends AngularPluginBase<
 
     ngOnInit() {
         super.ngOnInit();
+        if (this.markup.audio) {
+            this.mtype = "small";
+            this.nolimits = true;
+            this.hidetext = "";
+        } else {
+            this.mtype = "normal";
+            this.nolimits = false;
+            this.hidetext = "Hide video";
+        }
+
+        this.hidetext = this.markup.hidetext ?? this.hidetext;
+        this.mtype = this.markup.type || this.mtype;
+        this.nolimits = this.markup.nolimits ?? this.nolimits;
+
         this.advVideo = this.advVideoState.get() ?? false;
         this.start = toSeconds(this.markup.start);
         this.end = toSeconds(this.markup.end);
@@ -385,6 +428,9 @@ export class VideoComponent extends AngularPluginBase<
             this.limits = null;
             this.startt = null;
         }
+        if (this.nolimits) {
+            this.limits = null;
+        }
         this.getPrevZoom();
         this.videoName = this.markup.videoname ?? undefined;
         if (this.markup.open) {
@@ -398,6 +444,7 @@ export class VideoComponent extends AngularPluginBase<
         this.removeEventListeners();
         this.videoOn = false;
         this.span = "";
+        this.showSettings = false;
     }
 
     eventListenersActive: boolean = false;
@@ -413,12 +460,15 @@ export class VideoComponent extends AngularPluginBase<
 
     private addEventListeners() {
         return;
+        /*
         if (this.eventListenersActive) {
             return;
         }
         this.eventListenersActive = true;
         document.addEventListener("keydown", this.keyDownVideo);
         // document.addEventListener("click", this.onClick);
+
+         */
     }
 
     private keyDownVideo = (ev: KeyboardEvent) => {
@@ -469,10 +519,15 @@ export class VideoComponent extends AngularPluginBase<
             $event.preventDefault();
         }
         const v = this.video.nativeElement;
-        if (mult === 0) {
-            v.playbackRate = 1.0;
-        } else {
-            v.playbackRate *= mult;
+        try {
+            if (mult === 0) {
+                v.playbackRate = 1.0;
+            } else {
+                v.playbackRate *= mult;
+            }
+        } catch (e) {
+            // Some browsers (e.g. Safari on iOS) do not support
+            // changing playbackRate for certain media types, e.g. audio.
         }
         this.playbackRateString = v.playbackRate.toFixed(1);
     }
@@ -669,10 +724,17 @@ export class VideoComponent extends AngularPluginBase<
             if (range) {
                 srcUrl.hash = "#t=" + range;
             }
-            this.videosettings = {
-                src: srcUrl.toString(),
-                crossOrigin: this.markup.crossOrigin ?? corsOptions ?? null,
-            };
+            if (this.markup.audio) {
+                this.audiosettings = {
+                    src: srcUrl.toString(),
+                    crossOrigin: this.markup.crossOrigin ?? corsOptions ?? null,
+                };
+            } else {
+                this.videosettings = {
+                    src: srcUrl.toString(),
+                    crossOrigin: this.markup.crossOrigin ?? corsOptions ?? null,
+                };
+            }
         }
         this.videoOn = true;
         this.watchEnd = this.end;
@@ -774,7 +836,7 @@ export class VideoComponent extends AngularPluginBase<
     ],
 })
 export class VideoModule implements DoBootstrap {
-    ngDoBootstrap(appRef: ApplicationRef) {}
+    ngDoBootstrap(_appRef: ApplicationRef) {}
 }
 
 registerPlugin("tim-video", VideoModule, VideoComponent);

@@ -6,3 +6,53 @@
     top: 50%;
   }
 }
+
+.settings-btn {
+    padding: 0 4px;
+    border: 1px solid #ccc;
+    background: #f7f7f7;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 19px;
+    font-weight: bold;
+    height: 25px;
+    display: inline-flex;
+}
+
+.settings-popover {
+    position: absolute;
+    right: 0;
+    top: 90%;
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    padding: 6px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    box-shadow: 0 2px 8px rgba(0,0,0,.15);
+    z-index: 5;
+}
+
+.audio .flex.settings {
+    display: inline-flex;
+}
+
+.audio audio {
+    height: 25px;
+    display: inline-flex;
+    margin-left: 0.5em;
+    vertical-align: -0.4em;
+    max-width: 90%;
+}
+
+.videoInfo {
+    padding-top: 1em;
+    display: inline-flex;
+    padding-bottom: 0.5em;
+}
+
+.audio.smallVideoRunDiv.lazy {
+    margin-top: 0.7em;
+    margin-bottom: 0.7em;
+}
