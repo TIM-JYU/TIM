@@ -23,6 +23,10 @@ class ChatModel(Protocol):
         """
         ...
 
+    def get_info(self) -> ModelInfo:
+        """Return info about the model."""
+        ...
+
     def get_models(self) -> list[ModelInfo]:
         """Get all the available models from the Model API."""
         ...
@@ -138,6 +142,10 @@ class OpenAiModel(ChatModel):
             message_delta = msg.delta.content
             # Return the partial message
             yield ModelResponseChunk(delta=message_delta, usage=usage)
+
+    def get_info(self) -> ModelInfo:
+        """Return info about the model."""
+        return self._info
 
     def get_models(self) -> list[ModelInfo]:
         """Get all the available models from the Model API."""
