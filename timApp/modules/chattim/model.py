@@ -3,6 +3,25 @@ from __future__ import annotations
 from dataclasses import dataclass, asdict
 from typing import Literal, Protocol, Callable, Iterable, Any, cast
 from openai import OpenAI, types
+from enum import StrEnum
+
+
+class ModelErrorKind(StrEnum):
+    timeout = "timeout"
+    rate_limit = "rate_limit"
+    auth = "auth"
+    unknown = "unknown"
+
+
+@dataclass(frozen=True)
+class ChatModelError(Exception):
+    kind: ModelErrorKind
+    description: str | None = None
+    cause: BaseException | None = None
+    """Original exception cause."""
+
+    def __str__(self) -> str:
+        return f"{self.kind}: {self.description}"
 
 
 class ChatModel(Protocol):
@@ -182,6 +201,7 @@ class OpenAiModel(ChatModel):
             if stream
             else {}
         )
+        # TODO: handle errors
         return client.chat.completions.create(
             model=self._info.model_id,
             messages=cast(Any, msgs),
