@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-import os
 from dataclasses import dataclass
+from typing import Iterable
 from model import (
     ChatModel,
     GenerateOptions,
@@ -10,11 +10,15 @@ from model import (
     ModelResponseChunk,
     ModelRegistry,
     SUPPORTED_MODELS,
+    get_dummy_model,
 )
 from enum import Enum
 
 _DEFAULT_SYSTEM_PROMPT_RETRIEVE = ""
 _DEFAULT_SYSTEM_PROMPT_CREATIVE = ""
+
+# TODO: remove
+registry = ModelRegistry(SUPPORTED_MODELS)
 
 
 @dataclass
@@ -30,9 +34,9 @@ class RagMode(Enum):
 
 @dataclass
 class RagOptions:
-    top_k: int
-    max_history_len: int
-    max_context_tokens: int
+    top_k: int = 5
+    max_history_len: int = 10
+    max_context_tokens: int = 200_000
 
 
 class Rag:
@@ -41,43 +45,31 @@ class Rag:
     mode: RagMode
     # TODO:
     # Need reference to PluginCore/indexer/database
-    # or callbacks to fetch functions
-    # to get context, user chat history
+    # or callbacks to functions to get context, user chat history
 
-    def __init__(self):
-        # TODO: per request or owned in the class?
-        # Options should be modifiable per plugin instance
-        self.options = RagOptions(
-            top_k=5,
-            max_history_len=10,
-            max_context_tokens=200_000,
-        )
-        self.mode = RagMode.RETRIEVE
+    def __init__(
+        self,
+        options: RagOptions = RagOptions(),
+        mode: RagMode = RagMode.RETRIEVE,
+        model_spec: ModelRegistry.ModelSpec | None = None,
+    ):
+        self.options = options
+        self.mode = mode
         # TODO: modify model creation
-        # `ModelRegistry` is temporary
-        # Get the info needed to create the model from the caller
-        reg = ModelRegistry(SUPPORTED_MODELS)
-        info = SUPPORTED_MODELS.get("openai")[0]
-        try:
-            api_key = os.getenv("OPENAI_API_KEY")
-        except ValueError as e:
-            print("Failed to get api_key: ", str(e))
-            return
-        self.model = reg.create(
-            ModelRegistry.ModelSpec(
-                provider=info.provider,
-                model_id=info.model_id,
-                api_key=api_key,
-            )
-        )
+        self.model = registry.create(model_spec) if model_spec else get_dummy_model()
 
-    def answer(self, user_prompt: UserPrompt) -> ModelResponse:
+    def answer(self, user_prompt: UserPrompt) -> Iterable[ModelResponseChunk]:
+        """Give an answer to the user using the model."""
+        # TODO: append chat history here or in the caller?
         messages = self.build_prompt(user_prompt)
-        print(messages)
-        res = self.model.generate(messages, GenerateOptions())
-        return res
+        # TODO: simplify?
+        if self.model.get_info().supports_streaming:
+            return self.model.generate_stream(messages, GenerateOptions())
+        res: ModelResponse = self.model.generate(messages, GenerateOptions())
+        return [ModelResponseChunk(delta=res.content, usage=res.usage, done=True)]
 
     def build_prompt(self, user_prompt: UserPrompt) -> list[Message]:
+        """Build the message list to send to the model."""
         system_msg: Message = self.system_message()
         history: list[Message] = self.get_history(user_prompt.user_id)
         context: str = self.find_similar_context(user_prompt.content)
@@ -94,6 +86,7 @@ class Rag:
         return prompt
 
     def system_message(self) -> Message:
+        """Initialize the system message."""
         # TODO: optimize
         if self.mode == RagMode.RETRIEVE:
             msg = _DEFAULT_SYSTEM_PROMPT_RETRIEVE
@@ -104,13 +97,15 @@ class Rag:
         return Message(role="system", content=msg)
 
     def get_history(self, user_id: str) -> list[Message]:
+        """Fetch the current chat history of the user."""
         # TODO: get history with callback or somehow else
         # Trim history
         # Include only user messages or also the assistant responses?
-        # Summarize earlier history?
+        # Summarize earlier history? Configurable option for summarizing?
         return []
 
     def find_similar_context(self, msg: str) -> str:
+        """Find similar context from the vector index."""
         # TODO: callback to use embeddings
         # Change return type to include more info like urls
         return ""

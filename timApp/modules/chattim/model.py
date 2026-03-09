@@ -191,8 +191,8 @@ class OpenAiModel(ChatModel):
         )
 
 
-class DummyModel(ChatModel):
-    """A dummy model for testing."""
+class DummyChatModel(ChatModel):
+    """A dummy chat model for testing."""
 
     def __init__(self, info: ModelInfo):
         self._info = info
@@ -308,4 +308,11 @@ SUPPORTED_MODELS: dict[Provider, list[ModelInfo]] = {
 
 def get_dummy_model() -> ChatModel:
     """Create a dummy model for testing."""
-    return DummyModel(ModelInfo(provider="dummy", model_id="dummy-model-1"))
+    return DummyChatModel(
+        ModelInfo(
+            provider="dummy",
+            model_id="dummy-model-1",
+            label="Dummy model",
+            supports_streaming=True,
+        )
+    )
