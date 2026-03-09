@@ -43,7 +43,7 @@ export function addElementToParagraphMargin(par: ParContext, el: Element) {
  */
 export function canEditPar(item: IItem, par: ParContext) {
     if (item.rights.owner) {
-        return true; // Owner is allways allowed to edit
+        return true; // Owner is always allowed to edit
     }
     let res: boolean = false;
     const editRaw = par.par.attrs.edit ?? "";
