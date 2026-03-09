@@ -191,6 +191,43 @@ class OpenAiModel(ChatModel):
         )
 
 
+class DummyModel(ChatModel):
+    """A dummy model for testing."""
+
+    def __init__(self, info: ModelInfo):
+        self._info = info
+
+    def generate(
+        self, messages: list[Message], options: GenerateOptions
+    ) -> ModelResponse:
+        return ModelResponse(
+            content="This is a dummy response",
+            usage=Usage(completion_tokens=0, prompt_tokens=0, total_tokens=0),
+        )
+
+    def generate_stream(
+        self, messages: list[Message], options: GenerateOptions
+    ) -> Iterable[ModelResponseChunk]:
+        return [
+            ModelResponseChunk(delta="This", usage=None, done=False),
+            ModelResponseChunk(delta=" is", usage=None, done=False),
+            ModelResponseChunk(delta=" a", usage=None, done=False),
+            ModelResponseChunk(delta=" dummy", usage=None, done=False),
+            ModelResponseChunk(delta=" response", usage=None, done=False),
+            ModelResponseChunk(
+                delta=None,
+                usage=Usage(completion_tokens=0, prompt_tokens=0, total_tokens=0),
+                done=True,
+            ),
+        ]
+
+    def get_info(self) -> ModelInfo:
+        return self._info
+
+    def get_models(self) -> list[ModelInfo]:
+        return []
+
+
 # TODO: Let database handle the supported models and retrieving model info.
 # Here we should just create the correct model instance from the given spec.
 class ModelRegistry:
@@ -245,7 +282,7 @@ class ModelRegistry:
 
 
 # TODO: add more providers
-Provider = Literal["openai"]
+Provider = Literal["openai", "dummy"]
 
 ProviderInitFn = Callable[[ModelInfo, str, str | None], ChatModel]
 """Function type for initializing `Model` instances from different providers."""
@@ -267,3 +304,8 @@ SUPPORTED_MODELS: dict[Provider, list[ModelInfo]] = {
         ),
     ],
 }
+
+
+def get_dummy_model() -> ChatModel:
+    """Create a dummy model for testing."""
+    return DummyModel(ModelInfo(provider="dummy", model_id="dummy-model-1"))
