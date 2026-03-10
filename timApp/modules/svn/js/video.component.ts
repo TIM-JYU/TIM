@@ -180,8 +180,7 @@ const ShowFileAll = t.type({
                         <i *ngIf="markup.videoicon && markup.audio" class="glyphicon glyphicon-volume-up"
                            title="Click here to play the audio"></i>
                     {{videoName}}
-                    <ng-container *ngIf="mtype === 'list'">
-                        &ndash;
+                    <ng-container *ngIf="mtype === 'list' && startt && !markup.audio">
                         {{startt}}
                     </ng-container>
                     {{duration}} {{span}}</a>
@@ -214,37 +213,43 @@ const ShowFileAll = t.type({
                         [attr.allow]="iframesettings.allow"
                 >
                 </iframe>
-                <video *ngIf="videosettings"
-                       #video
-                       class="showVideo"
-                       controls
-                       (loadedmetadata)="metadataloaded()"
-                       (timeupdate)="timeupdate()"
-                       (pause)="handlePause()"
-                       (ended)="handleEnded()"
-                       [style.width.px]="width"
-                       [style.height.px]="height"
-                       [src]="videosettings.src"
-                       [crossOrigin]="videosettings.crossOrigin"
-                       [autoplay]="videoAutoPlay"
-                >
-                        <track *ngFor="let subtitle of markup.subtitles" [src]="subtitle.file" [label]="subtitle.name" [srclang]="getVTTSrcLang(subtitle.file)"/>
-                </video>            
-                <audio *ngIf="audiosettings"
-                       #video
-                       class="showAudio"
-                       controls
-                       (loadedmetadata)="metadataloaded()"
-                       (timeupdate)="timeupdate()"
-                       (pause)="handlePause()"
-                       (ended)="handleEnded()"
-                       [style.width.px]="width"
-                       [style.height.px]="height"
-                       [src]="audiosettings.src"
-                       [crossOrigin]="audiosettings.crossOrigin"
-                       [autoplay]="videoAutoPlay"
-                >
-                </audio>
+                <span class="videoRow" *ngIf="videosettings">
+                    <video 
+                           #video
+                           class="showVideo"
+                           controls
+                           (loadedmetadata)="metadataloaded()"
+                           (timeupdate)="timeupdate()"
+                           (pause)="handlePause()"
+                           (ended)="handleEnded()"
+                           [style.width.px]="width"
+                           [style.height.px]="height"
+                           [src]="videosettings.src"
+                           [crossOrigin]="videosettings.crossOrigin"
+                           [autoplay]="videoAutoPlay"
+                    >
+                            <track *ngFor="let subtitle of markup.subtitles" [src]="subtitle.file" [label]="subtitle.name" [srclang]="getVTTSrcLang(subtitle.file)"/>
+                    </video>
+                    <button class="settings-btn" (click)="toggleSettings()" type="button" title="More settings">⋮</button>
+                </span> 
+                <span class="audioRow" *ngIf="audiosettings">
+                    <audio
+                           #video
+                           class="showAudio"
+                           controls
+                           (loadedmetadata)="metadataloaded()"
+                           (timeupdate)="timeupdate()"
+                           (pause)="handlePause()"
+                           (ended)="handleEnded()"
+                           [style.width.px]="width"
+                           [style.height.px]="height"
+                           [src]="audiosettings.src"
+                           [crossOrigin]="audiosettings.crossOrigin"
+                           [autoplay]="videoAutoPlay"
+                    >
+                  </audio>
+                  <button class="settings-btn" (click)="toggleSettings()" type="button" title="More settings">⋮</button>
+                </span>
             </ng-container>
             <ng-container *ngIf="isNormalSize">
                 <div *ngIf="!videoOn" class="no-popup-menu play">
@@ -263,29 +268,30 @@ const ShowFileAll = t.type({
                         [target]="markup.target"
                 ></tim-video-link>
             </ng-container>
-            <div class="flex settings" *ngIf="videoOn" style="justify-content: flex-end">
-                <button class="settings-btn" (click)="showSettings = !showSettings" type="button" title="More settings">⋮</button>
+            <div class="flex video-settings" *ngIf="videoOn" >
                 <div class="settings-popover" *ngIf="showSettings">
+                    <button class="close-btn" (click)="closeSettings()" title="Close">×</button>
                     <div *ngIf="videosettings || audiosettings" class="margin-5-right speed-controls">
-                        Speed:
-                        <span class="text-smaller speed-rate">
-                            {{playbackRateString}}
-                        </span>
+                        <span class="video-setting-label">Speed:
+                            <span class="text-smaller speed-rate">
+                                {{playbackRateString}}
+                            </span>
+                        </span>        
                         <a class="speed-minus" (click)="speed(1.0/1.2)" title="Slower speed (-)"><i class="glyphicon glyphicon-minus"></i></a>&ngsp;
                         <a class="speed-reset" (click)="speed(0)" title="Normal speed (1)">1x</a>&ngsp;
                         <a class="speed-plus" (click)="speed(1.2)" title="Faster speed (+)"><i class="glyphicon glyphicon-plus"></i></a>&ngsp;
                     </div>
                     <div *ngIf="videosettings" class="margin-5-right zoom-controls" >
-                        Zoom:
+                        <span class="video-setting-label">Zoom:</span>
                         <a class="zoom-minus" (click)="zoom(1.0/1.4)" title="Zoom out (x)"><i class="glyphicon glyphicon-minus"></i></a>&ngsp;
                         <a class="zoom-reset" (click)="zoom(0)" title="Normal zoom (r)">R</a>&ngsp;
                         <a class="zoom-plus" (click)="zoom(1.4)" title="Zoom in (z)"><i class="glyphicon glyphicon-plus"></i></a>
                     </div>
-                    <label class="normalLabel" title="Advanced media controls">Adv <input type="checkbox" [(ngModel)]="advVideo" (ngModelChange)="onAdvVideoStateChange($event)" /></label>
-                <a class="hide-text" (click)="hideVideo()">{{hidetext}}</a>
+                   <label class="normalLabel video-setting-label" title="Advanced media controls">Advanced<input type="checkbox" [(ngModel)]="advVideo" (ngModelChange)="onAdvVideoStateChange($event)" /></label>
+                   <a class="hide-text video-setting-label" (click)="hideVideo()">{{hidetext}}</a>
                 </div>    
             </div>
-            <div *ngIf="advVideo && videoOn">
+            <div *ngIf="advVideo && videoOn" class="advanced-controls">
                 <span>Jump sec: </span>
                 <a (click)="jump(-10)" title="Jump -10s (ctrl <- or f)">-10</a>
                 <a (click)="jump(-2)" title="Jump -2s">-2</a>
@@ -391,6 +397,17 @@ export class VideoComponent extends AngularPluginBase<
 
     ngOnInit() {
         super.ngOnInit();
+
+        if (isSafari()) {
+            const style = document.createElement("style");
+            style.textContent = `
+                .audio .settings-btn {
+                    color: white !important;
+                }
+            `;
+            document.head.appendChild(style);
+        }
+
         if (this.markup.audio) {
             this.mtype = "small";
             this.nolimits = true;
@@ -422,7 +439,7 @@ export class VideoComponent extends AngularPluginBase<
             this.limits = `(${time2String(this.start)}-${time2String(
                 this.end
             )})`;
-            this.startt = time2String(this.start);
+            this.startt = "- " + time2String(this.start);
         } else {
             this.duration = null;
             this.limits = null;
@@ -822,6 +839,33 @@ export class VideoComponent extends AngularPluginBase<
             return "";
         }
         return end;
+    }
+
+    // ClickOutside-handler
+    private handleDocumentClick = (event: Event) => {
+        const target = event.target as HTMLElement;
+        const clickedOnButton = target.closest(
+            ".settings-btn, .settings-popover"
+        );
+        if (!clickedOnButton) {
+            this.closeSettings();
+        }
+    };
+
+    toggleSettings() {
+        this.showSettings = !this.showSettings;
+
+        if (this.showSettings) {
+            // Kuuntele documentia vain popoverin ollessa auki
+            document.addEventListener("click", this.handleDocumentClick);
+        } else {
+            this.closeSettings();
+        }
+    }
+
+    closeSettings() {
+        this.showSettings = false;
+        document.removeEventListener("click", this.handleDocumentClick);
     }
 }
 
