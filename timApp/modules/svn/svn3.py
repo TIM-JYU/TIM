@@ -244,11 +244,12 @@ def replace_time_params(query, htmlstr):
     return s
 
 
-def small__and_list_html(query, duration_template):
+def small__and_list_html(query, duration_template, audio=False):
     if not check_video_minimum_visibility(query):
         s = "Open plugin"
     else:
         s = replace_template_param(query, "{{stem}} ", "stem")
+        s = '<span class="stem">' + s + "</span>"
     vidname = replace_template_param(query, " {{videoname}}", "videoname")
     if vidname:
         dur = replace_time_params(query, duration_template)
@@ -256,7 +257,10 @@ def small__and_list_html(query, duration_template):
         if not has_icon:
             icon_html = ""
         else:
-            icon_html = '<i class="glyphicon glyphicon-facetime-video"></i>'
+            if audio:
+                icon_html = '<i class="glyphicon glyphicon-volume-up"></i>'
+            else:
+                icon_html = '<i class="glyphicon glyphicon-facetime-video"></i>'
         s += ' <a class="videoname">' + icon_html + vidname + dur + "</a>"
     s += get_link(query)
     return s
@@ -303,11 +307,15 @@ def images_html(query):
 
 def small_video_html(query):
     # Kokeiltu myös listoilla, ei mitattavasti parempi
-    s = '<div class="smallVideoRunDiv">'
+    audio = query.jso.get("markup", {}).get("audio", False)
+    a = ""
+    if audio:
+        a = "audio "
+    s = '<div class="' + a + 'smallVideoRunDiv lazy">'
     s += get_header(query)
     s += (
         '<div class="videoInfo">'
-        + small__and_list_html(query, "{{duration}}")
+        + small__and_list_html(query, "{{duration}}", audio)
         + "</div>"
     )
     s += get_footer(query)
@@ -316,11 +324,15 @@ def small_video_html(query):
 
 
 def list_video_html(query):
-    s = '<div class="listVideoRunDiv">'
+    audio = query.jso.get("markup", {}).get("audio", False)
+    a = ""
+    if audio:
+        a = "audio "
+    s = '<div class="' + a + 'listVideoRunDiv lazy">'
     s += get_header(query)
     s += (
         '<div class="videoInfo">'
-        + small__and_list_html(query, "{{startt}} {{duration}}")
+        + small__and_list_html(query, "{{startt}} {{duration}}", audio)
         + "</div>"
     )
     s += get_footer(query)
@@ -329,12 +341,20 @@ def list_video_html(query):
 
 
 def video_html(query):
-    s = '<div class="videoRunDiv">'
+    audio = query.jso.get("markup", {}).get("audio", False)
+    a = ""
+    icon = "glyphicon-play-circle"
+    if audio:
+        a = "audio "
+        icon = "glyphicon-volume-up"
+    s = '<div class="' + a + 'videoRunDiv">'
     s += get_header(query)
     s += replace_template_param(query, '<p class="stem">{{stem}}</p>', "stem")
     s += (
         '<div class="no-popup-menu play">'
-        '<a><i class="glyphicon glyphicon-play-circle" title="Click here to show the video"></i></a>'
+        '<a><i class="glyphicon '
+        + icon
+        + '" title="Click here to show the video"></i></a>'
         "</div>"
     )
     s += get_link(query)
@@ -387,7 +407,10 @@ def get_video_html(query: QueryClass):
     js = query_params_to_map_check_parts(query)
     jso = json.dumps(js)
 
-    video_type = get_param(query, "type", "icon")
+    video_type = get_param(query, "type", "")
+    audio = get_param(query, "audio", False)
+    if audio and not video_type:
+        video_type = "small"
     encoded = encode_json_data(jso)
     s = f'<tim-video json="{encoded}"></tim-video>'
     htmlfunc = video_html

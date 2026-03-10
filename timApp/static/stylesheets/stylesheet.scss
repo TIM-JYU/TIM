@@ -1668,3 +1668,14 @@ tim-rights-editor {
 .preview-warnings ul {
     margin-bottom: 0;
 }
+
+.audio.smallVideoRunDiv.lazy, .audio.listVideoRunDiv.lazy {
+    margin-top: 0.7em;
+    margin-bottom: 0.7em;
+    padding-left: 0.3em;
+}
+
+.audio .stem {
+    /* white-space: nowrap; */
+    margin-left: 0;
+}

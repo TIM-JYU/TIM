@@ -609,7 +609,7 @@ class FileParams:
         return n1, n2
 
     def scan_needed_lines(self, lines, escape_html=False):
-        (n1, n2) = self.scan_needed_range(lines)
+        n1, n2 = self.scan_needed_range(lines)
         ni = 0
 
         result = ""
