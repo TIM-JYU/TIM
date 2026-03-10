@@ -194,6 +194,7 @@ const ShowFileAll = t.type({
             </div>
 
             <ng-container *ngIf="videoOn">
+               <div *ngIf="iframesettings" class="iframeContainer"> 
                 <iframe *ngIf="iframesettings && isPdf"
                         class="showVideo"
                         allowfullscreen
@@ -203,16 +204,27 @@ const ShowFileAll = t.type({
                         [attr.allow]="iframesettings.allow"
                 >
                 </iframe>
-                <iframe *ngIf="iframesettings && !isPdf"
-                        class="showVideo"
-                        allowfullscreen
-                        [src]="iframesettings.src"
-                        [style.width.px]="width"
-                        [style.height.px]="height"
-                        [sandbox]="iframesettings.sandbox"
-                        [attr.allow]="iframesettings.allow"
-                >
-                </iframe>
+                <span class="videoRow" *ngIf="iframesettings && !isPdf">
+                    <iframe 
+                            class="showVideo"
+                            allowfullscreen
+                            [src]="iframesettings.src"
+                            [style.width.px]="width"
+                            [style.height.px]="height"
+                            [sandbox]="iframesettings.sandbox"
+                            [attr.allow]="iframesettings.allow"
+                    >
+                    </iframe>
+                  <!-- <button class="settings-btn" (click)="toggleSettings()" type="button" title="More settings">⋮</button> -->
+                </span>            
+                    <span class="margin-5-right zoom-controls iframe-setting-label" >
+                        <span class="zoom-label">Zoom:</span>
+                        <a class="zoom-minus" (click)="zoom(1.0/1.4)" title="Zoom out (x)"><i class="glyphicon glyphicon-minus"></i></a>&ngsp;
+                        <a class="zoom-reset" (click)="zoom(0)" title="Normal zoom (r)">R</a>&ngsp;
+                        <a class="zoom-plus" (click)="zoom(1.4)" title="Zoom in (z)"><i class="glyphicon glyphicon-plus"></i></a>
+                        <a class="hide-text" (click)="hideVideo()">{{hidetext}}</a>
+                    </span>
+               </div> 
                 <span class="videoRow" *ngIf="videosettings">
                     <video 
                            #video
@@ -281,17 +293,17 @@ const ShowFileAll = t.type({
                         <a class="speed-reset" (click)="speed(0)" title="Normal speed (1)">1x</a>&ngsp;
                         <a class="speed-plus" (click)="speed(1.2)" title="Faster speed (+)"><i class="glyphicon glyphicon-plus"></i></a>&ngsp;
                     </div>
-                    <div *ngIf="videosettings" class="margin-5-right zoom-controls" >
+                    <div *ngIf="videosettings || iframesettings" class="margin-5-right zoom-controls" >
                         <span class="video-setting-label">Zoom:</span>
                         <a class="zoom-minus" (click)="zoom(1.0/1.4)" title="Zoom out (x)"><i class="glyphicon glyphicon-minus"></i></a>&ngsp;
                         <a class="zoom-reset" (click)="zoom(0)" title="Normal zoom (r)">R</a>&ngsp;
                         <a class="zoom-plus" (click)="zoom(1.4)" title="Zoom in (z)"><i class="glyphicon glyphicon-plus"></i></a>
                     </div>
-                   <label class="normalLabel video-setting-label" title="Advanced media controls">Advanced<input type="checkbox" [(ngModel)]="advVideo" (ngModelChange)="onAdvVideoStateChange($event)" /></label>
+                   <label *ngIf="!iframesettings" class="normalLabel video-setting-label" title="Advanced media controls">Advanced<input type="checkbox" [(ngModel)]="advVideo" (ngModelChange)="onAdvVideoStateChange($event)" /></label>
                    <a class="hide-text video-setting-label" (click)="hideVideo()">{{hidetext}}</a>
                 </div>    
             </div>
-            <div *ngIf="advVideo && videoOn" class="advanced-controls">
+            <div *ngIf="advVideo && videoOn && !iframesettings" class="advanced-controls">
                 <span>Jump sec: </span>
                 <a (click)="jump(-10)" title="Jump -10s (ctrl <- or f)">-10</a>
                 <a (click)="jump(-2)" title="Jump -2s">-2</a>
@@ -390,6 +402,8 @@ export class VideoComponent extends AngularPluginBase<
     nolimits: boolean = false;
     showSettings: boolean = false;
     hidetext: string = "Hide file";
+    srcUrl!: URL;
+    src: string = "";
 
     onAdvVideoStateChange(newValue: boolean) {
         this.advVideoState.set(newValue);
@@ -397,6 +411,9 @@ export class VideoComponent extends AngularPluginBase<
 
     ngOnInit() {
         super.ngOnInit();
+
+        this.srcUrl = new URL(this.markup.file, location.origin);
+        this.src = this.srcUrl.toString();
 
         if (isSafari()) {
             const style = document.createElement("style");
@@ -415,7 +432,11 @@ export class VideoComponent extends AngularPluginBase<
         } else {
             this.mtype = "normal";
             this.nolimits = false;
-            this.hidetext = "Hide video";
+            if (this.src.includes(".pdf")) {
+                this.hidetext = "Hide PDF";
+            } else {
+                this.hidetext = "Hide video";
+            }
         }
 
         this.hidetext = this.markup.hidetext ?? this.hidetext;
@@ -616,7 +637,6 @@ export class VideoComponent extends AngularPluginBase<
     }
 
     zoom(mult: number, $event: Event | undefined = undefined) {
-        console.log("zoom", mult, this.width, this.height);
         if ($event) {
             $event.preventDefault();
         }
@@ -659,7 +679,7 @@ export class VideoComponent extends AngularPluginBase<
 
         this.span = this.limits;
         let corsOptions: string | null = null;
-        const srcUrl = new URL(this.markup.file, location.origin);
+        const srcUrl = this.srcUrl;
         if (moniviestinDomains.has(srcUrl.hostname)) {
             if (this.start) {
                 srcUrl.hash = "#position=" + this.start;
@@ -713,6 +733,7 @@ export class VideoComponent extends AngularPluginBase<
                 src.includes(".pdf") && // TODO: hack for Mac Safari see https://github.com/TIM-JYU/TIM/issues/2114
                 isSafari();
             let defaultOpts = 'sandbox="allow-scripts allow-same-origin"';
+            // let defaultOpts = 'sandbox="allow-same-origin"';
             if (this.markup.autoplay) {
                 defaultOpts += ' allow="autoplay"';
             }

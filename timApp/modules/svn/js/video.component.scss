@@ -84,6 +84,12 @@
     font-size: 0.8em;
 }
 
+.iframe-setting-label {
+    display: inline-block;
+    text-align: left;
+    font-size: 0.8em;
+}
+
 .settings-popover .close-btn {
     position: absolute;
     top: -2px;
@@ -160,6 +166,17 @@
 
 .audioRow audio {
     flex: 0 0 auto;         /* audio ei kutistu */
+}
+
+.iframeContainer {
+    display: flex;
+    flex-direction: column;
+}
+
+.iframeContainer .zoom-controls{
+    display: flex;
+    flex-direction: row;
+    margin-left: auto;
 }
 
 
