@@ -634,11 +634,7 @@ def add_perm(
 
     doc = item.docentries[0] if isinstance(item, Block) and item.docentries else item
     docs: list[DocInfo | Block] = []
-    if (
-        isinstance(doc, DocInfo)
-        and p.edit_translation_perms
-        and doc.is_original_translation
-    ):
+    if isinstance(doc, DocInfo) and p.edit_translation_perms:
         docs.extend(doc.translations)
     else:
         docs.append(doc)
@@ -804,11 +800,7 @@ def remove_perm(
     item = b.docentries[0] if (isinstance(b, Block) and b.docentries) else b
     items: list[Block] = (
         item.translations
-        if (
-            isinstance(item, DocInfo)
-            and process_translations
-            and item.is_original_translation
-        )
+        if (isinstance(item, DocInfo) and process_translations)
         else [item]
     )
 
