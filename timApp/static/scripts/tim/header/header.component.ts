@@ -108,6 +108,7 @@ export class HeaderComponent implements OnInit {
             "breadcrumbs" in g ? [...g.breadcrumbs].reverse() : undefined;
         this.translations = "translations" in g ? g.translations : [];
         this.docSettings = "docSettings" in g ? g.docSettings : undefined;
+
         this.route = getViewName();
         if (!this.item) {
             return;
@@ -120,7 +121,7 @@ export class HeaderComponent implements OnInit {
     }
 
     getLanguageDisplayName(tr: ITranslation) {
-        if (tr.lang_name) {
+        if (this.docSettings?.showFullLanguageNames && tr.lang_name) {
             return `${tr.lang_name} (${tr.lang_id})`;
         }
         return tr.lang_id || "language not set";
