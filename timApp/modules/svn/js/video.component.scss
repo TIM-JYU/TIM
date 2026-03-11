@@ -34,7 +34,7 @@
 .settings-popover {
     position: absolute;
     right: 0;
-    top: 100%;        /* aukeaa napin yläpuolelle */
+    bottom: -1em;        /* aukeaa napin yläpuolelle */
 
     display: flex;
     flex-direction: column;
