@@ -1,5 +1,6 @@
 from enum import Enum
 from dataclasses import dataclass
+from rag import Rag
 
 
 # Nämä pitää siirtää myöhemmin jonnekkin muualle
@@ -13,12 +14,9 @@ class StudentPolicy:
     pass
 
 
-class ChatMode(Enum):
-    Freeform = 0
-    Summarizing = 1
-
-
 class PluginCore:
+    rag: Rag
+
     def chat_request(self, caller_id: str, document_id: int):
         pass
 
@@ -36,7 +34,7 @@ class PluginCore:
     def get_history(self, caller_id: str, document_id: int):
         pass
 
-    def change_chatmode(self, caller_id: str, document_id: int, mode: ChatMode):
+    def change_chatmode(self, caller_id: str, document_id: int, mode: RagMode):
         pass
 
     def set_globalpolicy(self, caller_id: str, document_id: int, policy: GlobalPolicy):
