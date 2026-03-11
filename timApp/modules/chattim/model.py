@@ -3,6 +3,25 @@ from __future__ import annotations
 from dataclasses import dataclass, asdict
 from typing import Literal, Protocol, Callable, Iterable, Any, cast
 from openai import OpenAI, types
+from enum import StrEnum
+
+
+class ModelErrorKind(StrEnum):
+    timeout = "timeout"
+    rate_limit = "rate_limit"
+    auth = "auth"
+    unknown = "unknown"
+
+
+@dataclass(frozen=True)
+class ChatModelError(Exception):
+    kind: ModelErrorKind
+    description: str | None = None
+    cause: BaseException | None = None
+    """Original exception cause."""
+
+    def __str__(self) -> str:
+        return f"{self.kind}: {self.description}"
 
 
 class ChatModel(Protocol):
@@ -21,6 +40,10 @@ class ChatModel(Protocol):
         Generate a model response from the given messages.
         Uses streaming and returns the response in chunks.
         """
+        ...
+
+    def get_info(self) -> ModelInfo:
+        """Return info about the model."""
         ...
 
     def get_models(self) -> list[ModelInfo]:
@@ -139,6 +162,10 @@ class OpenAiModel(ChatModel):
             # Return the partial message
             yield ModelResponseChunk(delta=message_delta, usage=usage)
 
+    def get_info(self) -> ModelInfo:
+        """Return info about the model."""
+        return self._info
+
     def get_models(self) -> list[ModelInfo]:
         """Get all the available models from the Model API."""
         client = self._client
@@ -174,6 +201,7 @@ class OpenAiModel(ChatModel):
             if stream
             else {}
         )
+        # TODO: handle errors
         return client.chat.completions.create(
             model=self._info.model_id,
             messages=cast(Any, msgs),
@@ -181,6 +209,43 @@ class OpenAiModel(ChatModel):
             max_completion_tokens=options.max_tokens,
             **stream_options,
         )
+
+
+class DummyChatModel(ChatModel):
+    """A dummy chat model for testing."""
+
+    def __init__(self, info: ModelInfo):
+        self._info = info
+
+    def generate(
+        self, messages: list[Message], options: GenerateOptions
+    ) -> ModelResponse:
+        return ModelResponse(
+            content="This is a dummy response",
+            usage=Usage(completion_tokens=0, prompt_tokens=0, total_tokens=0),
+        )
+
+    def generate_stream(
+        self, messages: list[Message], options: GenerateOptions
+    ) -> Iterable[ModelResponseChunk]:
+        return [
+            ModelResponseChunk(delta="This", usage=None, done=False),
+            ModelResponseChunk(delta=" is", usage=None, done=False),
+            ModelResponseChunk(delta=" a", usage=None, done=False),
+            ModelResponseChunk(delta=" dummy", usage=None, done=False),
+            ModelResponseChunk(delta=" response", usage=None, done=False),
+            ModelResponseChunk(
+                delta=None,
+                usage=Usage(completion_tokens=0, prompt_tokens=0, total_tokens=0),
+                done=True,
+            ),
+        ]
+
+    def get_info(self) -> ModelInfo:
+        return self._info
+
+    def get_models(self) -> list[ModelInfo]:
+        return []
 
 
 # TODO: Let database handle the supported models and retrieving model info.
@@ -237,7 +302,7 @@ class ModelRegistry:
 
 
 # TODO: add more providers
-Provider = Literal["openai"]
+Provider = Literal["openai", "dummy"]
 
 ProviderInitFn = Callable[[ModelInfo, str, str | None], ChatModel]
 """Function type for initializing `Model` instances from different providers."""
@@ -259,3 +324,15 @@ SUPPORTED_MODELS: dict[Provider, list[ModelInfo]] = {
         ),
     ],
 }
+
+
+def get_dummy_model() -> ChatModel:
+    """Create a dummy model for testing."""
+    return DummyChatModel(
+        ModelInfo(
+            provider="dummy",
+            model_id="dummy-model-1",
+            label="Dummy model",
+            supports_streaming=True,
+        )
+    )
