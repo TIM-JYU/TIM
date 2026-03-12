@@ -6,6 +6,7 @@ import random
 import re
 from dataclasses import dataclass, field
 from datetime import date, datetime, timedelta
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 from dateutil import parser
 from re import Pattern
 from typing import TYPE_CHECKING, Iterable, Any
@@ -434,6 +435,20 @@ def preinc(v, delta=1):
     return v[0]
 
 
+def timezone_filter(s: Any, timezone: Any = None) -> Any:
+    if timezone is None:
+        return s
+    try:
+        dt = datetime.fromisoformat(str(s))
+        if dt.tzinfo is None:
+            dt = dt.replace(tzinfo=ZoneInfo(timezone))
+        return dt
+    except ValueError:
+        return s
+    except ZoneInfoNotFoundError:
+        return s
+
+
 # ------------------------ Jinja filters end ---------------------------------------------------------------
 
 
@@ -729,6 +744,7 @@ tim_filters = {
     "endvalue": end_value,
     "shuffle": shuffle,
     "hasrights": placeholder_filter("hasrights"),
+    "tz": timezone_filter,
     "userdata": placeholder_filter("userdata"),
 }
 
