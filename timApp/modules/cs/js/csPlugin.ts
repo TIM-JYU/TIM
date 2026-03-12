@@ -279,7 +279,14 @@ class LanguageTypes {
     }
 
     // What are known test types (be careful not to include partial word):
-    testTypes = ["ccomtest", "jcomtest", "comtest", "scomtest", "runtest"];
+    testTypes = [
+        "ccomtest",
+        "jcomtest",
+        "comtest",
+        "scomtest",
+        "runtest",
+        "pydoctest",
+    ];
     testAceModes = ["c_cpp", "java", "csharp", "scala"];
     unitTestTypes = ["junit", "unit"];
 
@@ -292,6 +299,8 @@ class LanguageTypes {
         scala: "scomtest",
         "c++": "ccomtest",
         jypeli: "comtest",
+        py3: "pydoctest",
+        py: "pydoctest",
     };
     // If test type is unit, how to change it for specific languages
     impUnitTestTypes: Record<string, string> = {
@@ -302,6 +311,8 @@ class LanguageTypes {
         scala: "junit",
         "c++": "cunit",
         jypeli: "nunit",
+        py3: "pyunittest",
+        py: "pyunittest",
     };
 
     getCommentMarkers(type: string) {
