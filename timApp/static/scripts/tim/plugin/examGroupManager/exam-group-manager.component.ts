@@ -437,7 +437,7 @@ export class ToggleComponent {
                              heading="{{group.readableName}}"
                              [active]="group.selected ?? false"
                              [id]="group.name"
-                             (selectTab)="group.selected = true; onGroupTabSelected($event); handleGroupTabChangeForExamTime($event)"
+                             (selectTab)="group.selected = true; onGroupTabSelected($event)"
                              (deselect)="group.selected = false">
 
                             <tim-alert severity="success" *ngIf="examReset" i18n>
@@ -911,6 +911,10 @@ export class ExamGroupManagerComponent
 
         await this.getGroups();
 
+        await this.refreshExamTimes();
+    }
+
+    async refreshExamTimes() {
         const currentSelectedGroup = this.visibleGroups.find(
             (group) => group.selected
         );
@@ -955,16 +959,6 @@ export class ExamGroupManagerComponent
             ).then((result) => (this.showAnswersTimeReached = result));
         } else {
             this.showAnswersTimeReached = true;
-        }
-    }
-
-    async handleGroupTabChangeForExamTime(event: TabDirective) {
-        const curGroup = this.visibleGroups.find((g) => g.name === event.id);
-        if (curGroup?.currentExamDoc) {
-            const currentExam = this.examByDocId.get(curGroup.currentExamDoc);
-            if (currentExam) {
-                await this.checkForExamTimes(currentExam);
-            }
         }
     }
 
@@ -1054,6 +1048,7 @@ export class ExamGroupManagerComponent
         );
         if (prevSelectedGroupTab !== this.selectedGroupTab && curGroup) {
             await this.getGroupMembers(curGroup);
+            await this.refreshExamTimes();
         }
     }
 
@@ -1391,6 +1386,8 @@ export class ExamGroupManagerComponent
         );
         if (curGroup) {
             await this.getGroupMembers(curGroup);
+
+            await this.refreshExamTimes();
         }
     }
 
@@ -1783,10 +1780,24 @@ export class ExamGroupManagerComponent
     }
 
     toReadableDate(date: string): string {
-        return new Date(date).toLocaleString(Users.getCurrentLocale(), {
+        const locale = Users.getCurrentLocale();
+        const standardString = new Date(date).toLocaleString(locale, {
             dateStyle: "long",
             timeStyle: "short",
         });
+
+        // Specify which locales need dots in the time (e.g., 14.30 instead of 14:30)
+        // Yes, apparently we need this because Unicode's CLDR specifies that sv locale should use colons
+        // BUT the client REALLY wants a dot.
+        // Yes, we are in this kind of territory...
+        const localesNeedingDots = ["sv"];
+        const baseLanguage = locale.split("-")[0].toLowerCase();
+
+        if (localesNeedingDots.includes(baseLanguage)) {
+            return standardString.replace(/(\d):(\d{2})/, "$1.$2");
+        }
+
+        return standardString;
     }
 
     async checkIfBeforeServerTime(examTime: string) {
