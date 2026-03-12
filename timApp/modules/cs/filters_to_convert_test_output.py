@@ -14,14 +14,6 @@ def convert_pydoctest_verbose(out):
             out += line
             continue
 
-        # Lines inside a failure block
-        if print_block:
-            out += line
-            # Empty line ends failure block
-            if line.strip() == "":
-                print_block = False
-            continue
-
         # Filter out unnecessary verbose lines outside failure block
         if (
             line.startswith("Trying:")
@@ -31,6 +23,10 @@ def convert_pydoctest_verbose(out):
             print_block = False
             continue
         if "items had no tests" in line:
+            print_block = False
+            continue
+        if "item had no tests" in line:
+            print_block = False
             continue
         if "tests in" in line:
             continue
@@ -41,5 +37,14 @@ def convert_pydoctest_verbose(out):
         if "items had failures" in line:
             line = line.replace("items had failures", "item had failures")
             out += line
+            continue
+
+        # Lines inside a failure block
+        if print_block:
+            out += line
+            # Empty line ends failure block
+            if line.strip() == "":
+                print_block = False
+            continue
 
     return out

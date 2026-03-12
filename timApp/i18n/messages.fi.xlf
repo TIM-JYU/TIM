@@ -6138,7 +6138,7 @@
       </trans-unit>
       <trans-unit id="7808756054397155068" datatype="html">
         <source>Reset</source>
-        <target state="translated">Resetoi</target>
+        <target state="translated">Alusta</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/item/active-group-lock-dialog/active-group-lock-dialog.component.ts</context>
           <context context-type="linenumber">208</context>

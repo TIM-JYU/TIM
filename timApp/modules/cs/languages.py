@@ -18,6 +18,7 @@ from zipfile import ZipFile
 import requests
 
 from file_util import File, default_filename, write_safe, rm_safe
+from filters_to_convert_test_output import convert_pydoctest_verbose
 from modifiers import Modifier
 from tim_common.cs_points_rule import give_points
 from run import (
@@ -1430,49 +1431,19 @@ class PY3(Language):
         return code, out, err, pwddir
 
 
-def convert_pytest_output(out):
-    # Convert pytest output to more compact form
-    lines = out.splitlines(keepends=True)
-    out = ""
-    print_block = False
-
-    for line in lines:
-        # Start of a failure block
-        if line.startswith("_____________________________"):
-            print_block = True
-            out += line
-            continue
-
-        # Lines inside a failure block
-        if print_block:
-            out += line
-            # Empty line ends failure block
-            if line.strip() == "":
-                print_block = False
-            continue
-
-        # Filter out unnecessary lines outside failure block
-        if line.startswith("collected ") and " items" in line:
-            continue
-        if line.startswith("pytest") and " collected " in line:
-            continue
-        if re.match(r"=+.*=+", line):
-            continue
-
-        out += line
-
-    return out
-
-
 def check_pydoctest(self, code, _err, out, points_rule, result, _sourcelines):
-    eri = -1
+    if out.find("Test passed.") >= 0:
+        give_points(points_rule, "testrun")
+        self.run_points_given = True
+        give_points(points_rule, "test")
+        result["web"]["testGreen"] = True
+        return ""
+
     if code == -9:
         out = "Runtime exceeded, maybe loop forever\n" + out
-        eri = 0
-    out = out.strip(" \t\n\r")
-    if eri < 0:
-        eri = out.find("Test Failed")
     # noinspection DuplicatedCode
+    out = out.strip(" \t\n\r")
+
     if out.find("Unhandled exceptions:") >= 0:
         if out.find("StackOverflowException:") >= 0:
             out = out[0:300]
@@ -1480,16 +1451,39 @@ def check_pydoctest(self, code, _err, out, points_rule, result, _sourcelines):
     give_points(points_rule, "testrun")
     self.run_points_given = True
     web = result["web"]
-    web["testGreen"] = True
-    if eri >= 0:
-        web["testGreen"] = False
-        web["testRed"] = True
-        web["comtestError"] = "Test Failed!  See reason below:"
+    web["testGreen"] = False
+    web["testRed"] = True
+    web["comtestError"] = "Test Failed!  See reason below:"
 
-        out = convert_pytest_output(out)
-    else:
-        give_points(points_rule, "test")
+    out = convert_pydoctest_verbose(out)
+    return out
+
+
+def check_pyunittest(self, code, _err, out, points_rule, result, _sourcelines):
+    if out.endswith("OK\n"):
+        give_points(points_rule, "testrun")
         self.run_points_given = True
+        give_points(points_rule, "test")
+        result["web"]["testGreen"] = True
+        return ""
+
+    if code == -9:
+        out = "Runtime exceeded, maybe loop forever\n" + out
+        eri = 0
+    # noinspection DuplicatedCode
+    out = out.strip(" \t\n\r")
+
+    if out.find("Unhandled exceptions:") >= 0:
+        if out.find("StackOverflowException:") >= 0:
+            out = out[0:300]
+        return out
+    give_points(points_rule, "testrun")
+    self.run_points_given = True
+    web = result["web"]
+    web["testGreen"] = False
+    web["testRed"] = True
+    web["comtestError"] = "Test Failed!  See reason below:"
+
     return out
 
 
@@ -1511,6 +1505,37 @@ class PYDocTest(Language):
             ["python3", "-m", "doctest", "-v", self.testcs]
         )
         out = check_pydoctest(
+            self,
+            code,
+            err,
+            out,
+            points_rule,
+            result,
+            sourcelines,
+        )
+        return code, out, err, pwddir
+
+
+class PYUnitTest(Language):
+    ttype = "pyunittest"
+
+    def __init__(self, query, sourcecode):
+        super().__init__(query, sourcecode)
+        base_fname, _ = os.path.splitext(self.filename)
+        self.sourcefilename = f"/tmp/{self.basename}/{self.filename}.py"
+        self.exename = self.sourcefilename
+        self.pure_exename = f"./{self.filename}.py"
+        self.fileext = "py"
+        self.testcs = f"{base_fname:s}.py"
+        self.hide_compile_out = True
+
+    def run(self, result, sourcelines, points_rule):
+        code, out, err, pwddir = self.runself(
+            ["python3", "-m", "unittest", "-v", self.testcs]
+        )
+        out = err
+        err = ""
+        out = check_pyunittest(
             # self, "pydoctest", code, out, err, result, points_rule, code
             self,
             code,
