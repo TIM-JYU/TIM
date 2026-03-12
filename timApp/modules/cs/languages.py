@@ -18,6 +18,7 @@ from zipfile import ZipFile
 import requests
 
 from file_util import File, default_filename, write_safe, rm_safe
+from filters_to_convert_test_output import convert_pydoctest_verbose
 from modifiers import Modifier
 from tim_common.cs_points_rule import give_points
 from run import (
@@ -43,7 +44,6 @@ from tim_common.fileParams import (
     get_value,
 )
 from tim_common.utils import replace_in_file
-
 
 """
 Adding new language to csPlugin:
@@ -934,6 +934,7 @@ def check_comtest_csharp(self, code, err, out, points_rule, result, sourcelines)
         eri = out.find("Error : ")
     if is_compile_error(out, err):
         return out
+    # noinspection DuplicatedCode
     if out.find("Unhandled exceptions:") >= 0:
         if out.find("StackOverflowException:") >= 0:
             out = out[0:300]
@@ -1427,6 +1428,123 @@ class PY3(Language):
             if wav_ok:
                 web["wav"] = f"/csgenerated/{self.wavname}"
 
+        return code, out, err, pwddir
+
+
+def check_pydoctest(self, code, _err, out, points_rule, result, _sourcelines):
+    if out.find("Test passed.") >= 0:
+        give_points(points_rule, "testrun")
+        self.run_points_given = True
+        give_points(points_rule, "test")
+        result["web"]["testGreen"] = True
+        return ""
+
+    if code == -9:
+        out = "Runtime exceeded, maybe loop forever\n" + out
+    # noinspection DuplicatedCode
+    out = out.strip(" \t\n\r")
+
+    if out.find("Unhandled exceptions:") >= 0:
+        if out.find("StackOverflowException:") >= 0:
+            out = out[0:300]
+        return out
+    give_points(points_rule, "testrun")
+    self.run_points_given = True
+    web = result["web"]
+    web["testGreen"] = False
+    web["testRed"] = True
+    web["comtestError"] = "Test Failed!  See reason below:"
+
+    out = convert_pydoctest_verbose(out)
+    return out
+
+
+def check_pyunittest(self, code, _err, out, points_rule, result, _sourcelines):
+    if out.endswith("OK\n"):
+        give_points(points_rule, "testrun")
+        self.run_points_given = True
+        give_points(points_rule, "test")
+        result["web"]["testGreen"] = True
+        return ""
+
+    if code == -9:
+        out = "Runtime exceeded, maybe loop forever\n" + out
+        eri = 0
+    # noinspection DuplicatedCode
+    out = out.strip(" \t\n\r")
+
+    if out.find("Unhandled exceptions:") >= 0:
+        if out.find("StackOverflowException:") >= 0:
+            out = out[0:300]
+        return out
+    give_points(points_rule, "testrun")
+    self.run_points_given = True
+    web = result["web"]
+    web["testGreen"] = False
+    web["testRed"] = True
+    web["comtestError"] = "Test Failed!  See reason below:"
+
+    return out
+
+
+class PYDocTest(Language):
+    ttype = "pydoctest"
+
+    def __init__(self, query, sourcecode):
+        super().__init__(query, sourcecode)
+        base_fname, _ = os.path.splitext(self.filename)
+        self.sourcefilename = f"/tmp/{self.basename}/{self.filename}.py"
+        self.exename = self.sourcefilename
+        self.pure_exename = f"./{self.filename}.py"
+        self.fileext = "py"
+        self.testcs = f"{base_fname:s}.py"
+        self.hide_compile_out = True
+
+    def run(self, result, sourcelines, points_rule):
+        code, out, err, pwddir = self.runself(
+            ["python3", "-m", "doctest", "-v", self.testcs]
+        )
+        out = check_pydoctest(
+            self,
+            code,
+            err,
+            out,
+            points_rule,
+            result,
+            sourcelines,
+        )
+        return code, out, err, pwddir
+
+
+class PYUnitTest(Language):
+    ttype = "pyunittest"
+
+    def __init__(self, query, sourcecode):
+        super().__init__(query, sourcecode)
+        base_fname, _ = os.path.splitext(self.filename)
+        self.sourcefilename = f"/tmp/{self.basename}/{self.filename}.py"
+        self.exename = self.sourcefilename
+        self.pure_exename = f"./{self.filename}.py"
+        self.fileext = "py"
+        self.testcs = f"{base_fname:s}.py"
+        self.hide_compile_out = True
+
+    def run(self, result, sourcelines, points_rule):
+        code, out, err, pwddir = self.runself(
+            ["python3", "-m", "unittest", "-v", self.testcs]
+        )
+        out = err
+        err = ""
+        out = check_pyunittest(
+            # self, "pydoctest", code, out, err, result, points_rule, code
+            self,
+            code,
+            err,
+            out,
+            points_rule,
+            result,
+            sourcelines,
+        )
         return code, out, err, pwddir
 
 

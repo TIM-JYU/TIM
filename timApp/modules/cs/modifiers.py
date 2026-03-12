@@ -119,3 +119,7 @@ class Console(Modifier):
 
 class Vis(Modifier):
     ttype = "vis"
+
+
+class Unit(Modifier):
+    ttype = "unit"
