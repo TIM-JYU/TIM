@@ -44,7 +44,6 @@ from tim_common.fileParams import (
 )
 from tim_common.utils import replace_in_file
 
-
 """
 Adding new language to csPlugin:
 
@@ -210,9 +209,9 @@ class Language:
         self.check_extensions(extensions)
 
         for i in range(len(self.filenames)):
-            self.sourcefiles[
-                i
-            ].path = f"/tmp/{self.basename}/{self.filenames[i]}{self.sourcefiles[i].filedext}"
+            self.sourcefiles[i].path = (
+                f"/tmp/{self.basename}/{self.filenames[i]}{self.sourcefiles[i].filedext}"
+            )
 
         self.ifilename = get_param(query, "inputfilename", "/input.txt")
         self.exename = f"/tmp/{self.basename}/{self.filename}.exe"
@@ -934,6 +933,7 @@ def check_comtest_csharp(self, code, err, out, points_rule, result, sourcelines)
         eri = out.find("Error : ")
     if is_compile_error(out, err):
         return out
+    # noinspection DuplicatedCode
     if out.find("Unhandled exceptions:") >= 0:
         if out.find("StackOverflowException:") >= 0:
             out = out[0:300]
@@ -1427,6 +1427,99 @@ class PY3(Language):
             if wav_ok:
                 web["wav"] = f"/csgenerated/{self.wavname}"
 
+        return code, out, err, pwddir
+
+
+def convert_pytest_output(out):
+    # Convert pytest output to more compact form
+    lines = out.splitlines(keepends=True)
+    out = ""
+    print_block = False
+
+    for line in lines:
+        # Start of a failure block
+        if line.startswith("_____________________________"):
+            print_block = True
+            out += line
+            continue
+
+        # Lines inside a failure block
+        if print_block:
+            out += line
+            # Empty line ends failure block
+            if line.strip() == "":
+                print_block = False
+            continue
+
+        # Filter out unnecessary lines outside failure block
+        if line.startswith("collected ") and " items" in line:
+            continue
+        if line.startswith("pytest") and " collected " in line:
+            continue
+        if re.match(r"=+.*=+", line):
+            continue
+
+        out += line
+
+    return out
+
+
+def check_pydoctest(self, code, _err, out, points_rule, result, _sourcelines):
+    eri = -1
+    if code == -9:
+        out = "Runtime exceeded, maybe loop forever\n" + out
+        eri = 0
+    out = out.strip(" \t\n\r")
+    if eri < 0:
+        eri = out.find("Test Failed")
+    # noinspection DuplicatedCode
+    if out.find("Unhandled exceptions:") >= 0:
+        if out.find("StackOverflowException:") >= 0:
+            out = out[0:300]
+        return out
+    give_points(points_rule, "testrun")
+    self.run_points_given = True
+    web = result["web"]
+    web["testGreen"] = True
+    if eri >= 0:
+        web["testGreen"] = False
+        web["testRed"] = True
+        web["comtestError"] = "Test Failed!  See reason below:"
+
+        out = convert_pytest_output(out)
+    else:
+        give_points(points_rule, "test")
+        self.run_points_given = True
+    return out
+
+
+class PYDocTest(Language):
+    ttype = "pydoctest"
+
+    def __init__(self, query, sourcecode):
+        super().__init__(query, sourcecode)
+        base_fname, _ = os.path.splitext(self.filename)
+        self.sourcefilename = f"/tmp/{self.basename}/{self.filename}.py"
+        self.exename = self.sourcefilename
+        self.pure_exename = f"./{self.filename}.py"
+        self.fileext = "py"
+        self.testcs = f"{base_fname:s}.py"
+        self.hide_compile_out = True
+
+    def run(self, result, sourcelines, points_rule):
+        code, out, err, pwddir = self.runself(
+            ["python3", "-m", "doctest", "-v", self.testcs]
+        )
+        out = check_pydoctest(
+            # self, "pydoctest", code, out, err, result, points_rule, code
+            self,
+            code,
+            err,
+            out,
+            points_rule,
+            result,
+            sourcelines,
+        )
         return code, out, err, pwddir
 
 
