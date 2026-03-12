@@ -11279,7 +11279,7 @@ Mata in flera användares adresser på separata rader eller åtskilda med kommat
       </trans-unit>
       <trans-unit id="5172400703221094368" datatype="html">
         <source>To start a new exam, stop answer reviewing in section <x id="START_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;i&gt;"/>4. Show answers to students<x id="CLOSE_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;/i&gt;"/>.</source>
-        <target state="translated">Stoppa visningen av svar under <x id="START_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;i&gt;"/>4. Visa provets svar till elever4. Visa provets svar till elever<x id="CLOSE_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;/i&gt;"/> innan du kan påbörja ett nytt prov för gruppen. innan du kan påbörja ett nytt prov för gruppen.</target>
+        <target state="translated">Stoppa visningen av svar under <x id="START_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;i&gt;"/>4. Visa provets svar till elever<x id="CLOSE_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;/i&gt;"/> innan du kan påbörja ett nytt prov för gruppen.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
           <context context-type="linenumber">467,468</context>
@@ -11287,7 +11287,7 @@ Mata in flera användares adresser på separata rader eller åtskilda med kommat
       </trans-unit>
       <trans-unit id="6737499420976539156" datatype="html">
         <source>Stop the exam and disable login codes in section <x id="START_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;i&gt;"/>3. Manage exams<x id="CLOSE_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;/i&gt;"/> to enable showing answers.</source>
-        <target state="translated">Avsluta provet och inaktivera inloggningskoderna under <x id="START_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;i&gt;"/>3. Hantera prov3. Hantera prov<x id="CLOSE_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;/i&gt;"/> innan du kan visa svar. innan du kan visa svar.</target>
+        <target state="translated">Avsluta provet och inaktivera inloggningskoderna under <x id="START_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;i&gt;"/>3. Hantera prov<x id="CLOSE_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;/i&gt;"/> innan du kan visa svar.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
           <context context-type="linenumber">695,696</context>
@@ -11295,7 +11295,7 @@ Mata in flera användares adresser på separata rader eller åtskilda med kommat
       </trans-unit>
       <trans-unit id="2888797400316878545" datatype="html">
         <source>Change the exam in section <x id="START_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;i&gt;"/>3. Manage exams<x id="CLOSE_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;/i&gt;"/> to enable showing answers.</source>
-        <target state="translated">Byt prov under <x id="START_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;i&gt;"/>3. Hantera prov3. Hantera prov<x id="CLOSE_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;/i&gt;"/> för att kunna visa svaren. för att kunna visa svaren.</target>
+        <target state="translated">Byt prov under <x id="START_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;i&gt;"/>3. Hantera prov<x id="CLOSE_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;/i&gt;"/> för att kunna visa svaren.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
           <context context-type="linenumber">699,700</context>
@@ -11303,7 +11303,7 @@ Mata in flera användares adresser på separata rader eller åtskilda med kommat
       </trans-unit>
       <trans-unit id="6393914330108344860" datatype="html">
         <source> Select an exam in section <x id="START_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;i&gt;"/>3. Manage exams<x id="CLOSE_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;/i&gt;"/> to enable showing answers. </source>
-        <target state="translated"> Välj prov under <x id="START_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;i&gt;"/>3. Hantera prov3. Hantera prov<x id="CLOSE_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;/i&gt;"/> för att kunna visa svaren.  för att kunna visa svaren. </target>
+        <target state="translated"> Välj prov under <x id="START_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;i&gt;"/>3. Hantera prov<x id="CLOSE_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;/i&gt;"/> för att kunna visa svaren.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
           <context context-type="linenumber">702,703</context>
@@ -11375,7 +11375,7 @@ Mata in flera användares adresser på separata rader eller åtskilda med kommat
       </trans-unit>
       <trans-unit id="5817483956876441203" datatype="html">
         <source> You can hold the exam after <x id="INTERPOLATION" equiv-text="{{ toReadableDate(examByDocId.get(group.currentExamDoc!)?.startingTime ?? &quot;&quot;) }}"/>. </source>
-        <target state="translated">Du kan påbörja provet tidigast  <x id="INTERPOLATION" equiv-text="{{ toReadableDate(examByDocId.get(group.currentExamDoc!)?.startingTime ?? &quot;&quot;) }}"/>. . </target>
+        <target state="translated">Du kan påbörja provet tidigast  <x id="INTERPOLATION" equiv-text="{{ toReadableDate(examByDocId.get(group.currentExamDoc!)?.startingTime ?? &quot;&quot;) }}"/>.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
           <context context-type="linenumber">748,749</context>
@@ -11383,7 +11383,7 @@ Mata in flera användares adresser på separata rader eller åtskilda med kommat
       </trans-unit>
       <trans-unit id="6436234122184632938" datatype="html">
         <source> You can show the answers only after <x id="INTERPOLATION" equiv-text="{{ toReadableDate(examByDocId.get(group.currentExamDoc!)?.showAnswersStartingTime ?? &quot;&quot;) }}"/>. </source>
-        <target state="translated">Du kan visa svaren till eleverna först efter <x id="INTERPOLATION" equiv-text="{{ toReadableDate(examByDocId.get(group.currentExamDoc!)?.showAnswersStartingTime ?? &quot;&quot;) }}"/>. . </target>
+        <target state="translated">Du kan visa svaren till eleverna först efter <x id="INTERPOLATION" equiv-text="{{ toReadableDate(examByDocId.get(group.currentExamDoc!)?.showAnswersStartingTime ?? &quot;&quot;) }}"/>.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
           <context context-type="linenumber">751,752</context>
