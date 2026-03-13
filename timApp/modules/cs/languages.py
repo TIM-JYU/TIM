@@ -210,9 +210,9 @@ class Language:
         self.check_extensions(extensions)
 
         for i in range(len(self.filenames)):
-            self.sourcefiles[
-                i
-            ].path = f"/tmp/{self.basename}/{self.filenames[i]}{self.sourcefiles[i].filedext}"
+            self.sourcefiles[i].path = (
+                f"/tmp/{self.basename}/{self.filenames[i]}{self.sourcefiles[i].filedext}"
+            )
 
         self.ifilename = get_param(query, "inputfilename", "/input.txt")
         self.exename = f"/tmp/{self.basename}/{self.filename}.exe"
@@ -1337,6 +1337,8 @@ class RunTest(Language, Modifier):
             out = check_comtest_csharp(
                 self, code, err, out, points_rule, result, sourcelines
             )
+        elif self.test_ttype == "pytest":
+            out = check_pytest(self, code, err, out, points_rule, result, sourcelines)
         else:
             out, err = check_comtest(
                 self,
@@ -1439,9 +1441,9 @@ def check_pydoctest(self, code, _err, out, points_rule, result, _sourcelines):
         result["web"]["testGreen"] = True
         return ""
 
+    # noinspection DuplicatedCode
     if code == -9:
         out = "Runtime exceeded, maybe loop forever\n" + out
-    # noinspection DuplicatedCode
     out = out.strip(" \t\n\r")
 
     if out.find("Unhandled exceptions:") >= 0:
@@ -1467,10 +1469,41 @@ def check_pyunittest(self, code, _err, out, points_rule, result, _sourcelines):
         result["web"]["testGreen"] = True
         return ""
 
+    # noinspection DuplicatedCode
     if code == -9:
         out = "Runtime exceeded, maybe loop forever\n" + out
-        eri = 0
+    out = out.strip(" \t\n\r")
+
+    if out.find("Unhandled exceptions:") >= 0:
+        if out.find("StackOverflowException:") >= 0:
+            out = out[0:300]
+        return out
+    give_points(points_rule, "testrun")
+    self.run_points_given = True
+    web = result["web"]
+    web["testGreen"] = False
+    web["testRed"] = True
+    web["comtestError"] = "Test Failed!  See reason below:"
+
+    return out
+
+
+def check_pytest(self, code, _err, out, points_rule, result, _sourcelines):
+    pattern = r"^=+ \d+ passed in [\d\.]+s =+$"
+    last_line = out.strip().splitlines()[-1]
+    if re.match(pattern, last_line):
+        out = remove_before("collected", out)
+        give_points(points_rule, "testrun")
+        self.run_points_given = True
+        give_points(points_rule, "test")
+        result["web"]["testGreen"] = True
+        return (
+            out  # change to "" if you don't want to show pytest output when tests pass
+        )
+
     # noinspection DuplicatedCode
+    if code == -9:
+        out = "Runtime exceeded, maybe loop forever\n" + out
     out = out.strip(" \t\n\r")
 
     if out.find("Unhandled exceptions:") >= 0:
