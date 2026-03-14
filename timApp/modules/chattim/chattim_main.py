@@ -2,6 +2,7 @@ from dataclasses import dataclass
 from typing import Any
 
 from timApp.tim_app import csrf
+from timApp.util.flask.responsehelper import json_response
 from timApp.util.flask.typedblueprint import TypedBlueprint
 from tim_common.markupmodels import GenericMarkupModel
 from tim_common.pluginserver_flask import (
@@ -93,3 +94,8 @@ chattim = create_blueprint(
     reqs,
     csrf,
 )
+
+
+@chattim.post("/ask")
+def define_ask_route():
+    return json_response({"web": {"result": "hello from server"}})
