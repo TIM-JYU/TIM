@@ -216,7 +216,7 @@ def get_plugins() -> dict[str, PluginReg]:
             regexattrs=FBMDATTRS,
             automd=True,
         ),
-        PluginReg(name="chattim", domain=CHATTIM_DOMAIN, path="/chattim/"),
+        PluginReg(name="chattim", domain=internal_domain, path="/chattim/"),
         PluginReg(
             name="drag", domain=DRAGPLUGIN_DOMAIN, regexattrs=DRAGATTRS, automd=True
         ),
