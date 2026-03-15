@@ -246,7 +246,7 @@ def show_slide(doc_path):
 
 @view_page.get("/view/<path:doc_path>")
 def view_document(doc_path):
-    taketime("route view begin")
+    taketime("route view begin", zero=True)
     ret = view(doc_path, ViewRoute.View)
     taketime("route view end")
     return ret
@@ -1712,7 +1712,7 @@ def set_piece_size(pieceSize: int):
 
 @view_page.get("/viewrange/get/<int:doc_id>/<int:index>/<int:forwards>")
 def get_viewrange(doc_id: int, index: int, forwards: int):
-    taketime("route view begin")
+    taketime("route view begin", zero=True)
     current_set_size = get_piece_size_from_cookie(request)
     if not current_set_size:
         raise RouteException("Piece size not found!")
