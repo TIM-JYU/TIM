@@ -415,6 +415,7 @@ This will delete the whole ${
                     return {error: r.result.data.error};
                 } else {
                     const saveData = r.result.data;
+                    /*
                     if (
                         saveData.duplicates &&
                         saveData.duplicates.length > 0 &&
@@ -436,6 +437,7 @@ This will delete the whole ${
                     } else {
                         this.addSavedParToDom(saveData, params);
                     }
+                    */
                     if (saveData.warnings && saveData.warnings.length > 0) {
                         const chs = "Changes made:<br>\n" + saveData.warnings;
                         await showMessageDialog(chs);

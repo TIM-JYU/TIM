@@ -86,6 +86,7 @@ from timApp.util.flask.requesthelper import (
     NotExist,
 )
 from timApp.util.flask.responsehelper import json_response, ok_response, Response
+from timApp.util.timtiming import taketime
 from timApp.util.utils import (
     get_error_html,
     strip_not_allowed,
@@ -332,6 +333,7 @@ def modify_paragraph():
     :return: A JSON object containing the paragraphs in HTML form along with JS, CSS and Angular module dependencies.
 
     """
+    taketime("modify_paragraph", zero=True)
     doc_id, md, par_id = verify_json_params("docId", "text", "par")
     (par_next_id,) = verify_json_params("par_next", require=False)
     return modify_paragraph_common(doc_id, md, par_id, par_next_id)
@@ -491,6 +493,7 @@ def preview_paragraphs(doc_id):
     :return: A JSON object containing the paragraphs in HTML form along with JS, CSS and Angular module dependencies.
 
     """
+    taketime("preview_paragraphs", zero=True)
     (text,) = verify_json_params("text")
     (proofread,) = verify_json_params("proofread", require=False, default=False)
     (settings,) = verify_json_params("settings", require=False, default={})

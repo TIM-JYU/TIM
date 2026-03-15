@@ -72,10 +72,17 @@ Name for pseudo-area that indicates the whole document.
 This can still be used as an area name in addition to its special meaning.
 """
 
+CACHED_ATTR_NAMES = ["taskId", "area", "area_end"]
+"""
+List of attribute names that are cached in 
+Document.par_id_attrs_name_maps for quick access. 
+"""
+
 
 # noinspection DuplicatedCode
 def get_p_as_docline(p: DocParagraph) -> str:
-    return p.get_id() + "/" + p.get_hash() + "\n"
+    astr = json.dumps(p.attrs) if p.attrs else ""
+    return p.get_id() + "/" + p.get_hash() + "/" + astr + "\n"
 
 
 def find_par_id_from_doc_lines(lines: list[str], par_id: str, start: int = 0) -> int:
@@ -94,6 +101,22 @@ def find_par_id_from_doc_lines(lines: list[str], par_id: str, start: int = 0) ->
         ),
         -1,
     )
+
+
+def parse_docline(line: str) -> tuple[str, str | None, dict[str, str] | None]:
+    parts = line.rstrip("\n").split("/", 2)
+    parts += [None, None]
+    par_id = parts[0]
+    t = parts[1]
+    astr = parts[2]
+    if astr is not None:
+        if astr == "":
+            attrs = {}
+        else:
+            attrs = json.loads(astr) if astr else None
+    else:
+        attrs = None
+    return par_id, t, attrs
 
 
 class Document:
@@ -115,6 +138,10 @@ class Document:
         self.par_ids: list[str] | None = None
         # List of corresponding hashes
         self.par_hashes: list[str] | None = None
+        # List of attributes read from disk for pars
+        self.par_hashes: list[str] | None = None
+        # List of lines in the document file
+        self.doc_lines: list[str] | None = None
         # Whether par_cache is incomplete -
         # this is the case when insert_temporary_pars
         # is called with PreloadOption.none
@@ -144,6 +171,15 @@ class Document:
 
         self.plugin_task_ids = None  # cache for naemd plugin task ids
         self.plugin_count = 0  # cache for number of all plugins in the document
+
+        # cache for parId/attributes-name maps for pars
+        self.par_id_attrs_name_maps: dict[str, dict[str, str]] | None = None
+
+        # cache for attributes-name/parId maps for pars
+        self.attrs_name_par_id_maps: dict[str, dict[str, str]] | None = None
+
+        # cache for id-attributes-name lists
+        self.attrs_name_lists: dict[str, list[str]] | None = None
 
     @property
     def id(self):
@@ -204,6 +240,7 @@ class Document:
             self.par_map[curr_p.get_id()] = {"p": prev_p, "n": next_p, "c": curr_p}
         self.par_ids = [par.get_id() for par in self.par_cache]
         self.par_hashes = [par.get_hash() for par in self.par_cache]
+        self.par_attrs = [par.attrs for par in self.par_cache]
         if not self.is_incomplete_cache:
             self.single_par_cache.update({p.get_id(): p for p in self.par_cache})
 
@@ -587,6 +624,7 @@ class Document:
         self.par_map = None
         self.par_ids = None
         self.par_hashes = None
+        self.par_attrs = None
         self.source_doc = None
         self.settings_cache = {}
         self.own_settings = None
@@ -789,7 +827,7 @@ class Document:
         # There may be preamble pars in the loaded par_ids list,
         # so we need to load the original par list to find the first par in the original document
         # TODO: It may be better to load paragraphs in an iterator and filter out preamble pars
-        par_ids, _ = self._get_par_ids_impl()
+        par_ids, _, _ = self._get_par_ids_impl()
         if par_ids:
             first_par = self.get_paragraph(par_ids[0])
         last_settings_par = None
@@ -1276,12 +1314,7 @@ class Document:
         return result
 
     def get_paragraph_by_task_id(self, task_id: str) -> DocParagraph or None:
-        # TODO: optimize with par_ids and par_hashes
-        with self.__iter__() as i:
-            for par in i:
-                if par.get_attr("taskId") == task_id:
-                    return par
-        return None
+        return self.get_par_id("taskId", task_id, None)
 
     def get_named_section(self, section_name: str) -> list[DocParagraph]:
         if self.preload_option == PreloadOption.all:
@@ -1456,28 +1489,38 @@ class Document:
             self._load_par_ids()
 
     def _load_par_ids(self):
-        ids, hashes = self._get_par_ids_impl()
+        ids, hashes, attrs = self._get_par_ids_impl()
         self.par_ids = ids
         self.par_hashes = hashes
+        self.par_attrs = attrs
 
-    def _get_par_ids_impl(self) -> tuple[list[str], list[str]]:
+    def _get_par_ids_impl(self) -> tuple[list[str], list[str], list[dict]]:
         par_ids = []
         par_hashes = []
+        par_attrs = []
         if not self.get_version_path().exists():
-            return [], []
+            return [], [], []
         with self.get_version_path().open("r", encoding="UTF-8") as f:
-            while True:
-                line = f.readline()
-                if not line:
-                    break
-                if len(line) > 14:
-                    # Line contains both par_id and t
-                    par_id, t, *_ = line.rstrip("\n").split("/", 2)
-                else:
-                    par_id, t = line.replace("\n", ""), None
-                par_ids.append(par_id)
-                par_hashes.append(t)
-        return par_ids, par_hashes
+            self.doc_lines = f.readlines()
+
+        need_to_save_attrs = False
+        for line in self.doc_lines:
+            par_id, t, attrs = parse_docline(line)
+            par_ids.append(par_id)
+            par_hashes.append(t)
+            par_attrs.append(attrs)
+            if attrs is None:
+                need_to_save_attrs = True
+        if need_to_save_attrs:
+            self.load_pars()
+            self._save_doc_lines()
+        return par_ids, par_hashes, par_attrs
+
+    def _save_doc_lines(self):
+        with self.get_version_path().open("w", encoding="UTF-8") as f:
+            for par in self.par_cache:
+                line = get_p_as_docline(par)
+                f.write(line)
 
     def insert_preamble_pars(self, class_names: list[str] | None = None):
         """
@@ -1609,6 +1652,45 @@ class Document:
                     set_of_words.add(part)
         return list(set_of_words)
 
+    def generate_name_maps(self):
+        self.ensure_par_ids_loaded()
+        self.par_id_attrs_name_maps = {}
+        self.attrs_name_par_id_maps = {}
+        self.attrs_name_lists = {}
+        for attr_name in CACHED_ATTR_NAMES:
+            self.par_id_attrs_name_maps[attr_name] = {}
+            self.attrs_name_par_id_maps[attr_name] = {}
+            self.attrs_name_lists[attr_name] = []
+        for i in range(len(self.par_ids)):
+            par_id = self.par_ids[i]
+            attrs = self.par_attrs[i]
+            for attr_name in CACHED_ATTR_NAMES:
+                attr_value = attrs.get(attr_name, None)
+                if attr_value:
+                    self.attrs_name_lists[attr_name].append(attr_value)
+                    self.par_id_attrs_name_maps[attr_name][par_id] = attr_value
+                    self.attrs_name_par_id_maps[attr_name][attr_value] = par_id
+
+    def get_par_id_name_map(self, attr_name: str) -> dict[str, str]:
+        if self.par_id_attrs_name_maps is None:
+            self.generate_name_maps()
+        return self.par_id_attrs_name_maps.get(attr_name, {})
+
+    def get_name_par_id_map(self, attr_name: str) -> dict[str, str]:
+        if self.attrs_name_par_id_maps is None:
+            self.generate_name_maps()
+        return self.attrs_name_par_id_maps.get(attr_name, {})
+
+    def get_name_list(self, attr_name: str) -> list[str]:
+        if self.attrs_name_lists is None:
+            self.generate_name_maps()
+        return self.attrs_name_lists.get(attr_name, [])
+
+    def get_par_id(
+        self, attr_name: str, attr_value: str, def_value: str | None
+    ) -> str | None:
+        return self.get_name_par_id_map(attr_name).get(attr_value, def_value)
+
 
 def add_index_entry(index_table, current_headers, header):
     level = int(header.tag[1:])
@@ -1710,9 +1792,8 @@ class DocParagraphIter:
                 self.close()
                 raise StopIteration
             if line != "\n":
-                if len(line) > 14:
-                    # Line contains both par_id and t
-                    par_id, t, *_ = line.rstrip("\n").split("/", 2)
+                par_id, t, attrs = parse_docline(line)
+                if t:
                     cached = self.doc.single_par_cache.get(par_id)
                     if cached:
                         return cached

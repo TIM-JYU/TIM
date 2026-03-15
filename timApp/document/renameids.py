@@ -221,14 +221,8 @@ def check_and_rename_attribute(
             continue
 
         if names_to_check is None:  # now names_to_check is needed, load them once
-            doc_pars = doc.get_paragraphs()
-            names_to_check = []
-            for paragraph in doc_pars:
-                name = paragraph.get_attr(attr_name)
-                if name:
-                    did = paragraph.get_id()
-                    names_to_check.append(name)
-                    names_to_check_map[did] = name
+            names_to_check = doc.get_name_list(attr_name)
+            names_to_check_map = doc.get_par_id_name_map(attr_name)
             name_counts = Counter(n for n in names_to_check if n is not None)
 
         new_name = strip_not_allowed(p_name)
@@ -402,45 +396,21 @@ def check_and_rename_pluginnamehere(
 # Check new paragraphs with plugins for duplicate task ids
 def check_duplicates(pars: list[DocParagraph], doc: Document) -> list[list[str]]:
     duplicates = []
-    all_pars = None  # cache all_pars
     for par in pars:
         task_id = par.get_attr("taskId")
         if task_id:
-            if all_pars is None:  # now we need the pars
-                doc.clear_mem_cache()
-                docpars = doc.get_paragraphs()
-                all_pars = []
-                for paragraph in docpars:
-                    d_task_id = paragraph.get_attr("taskId")
-                    if d_task_id:
-                        all_pars.append(paragraph)
-
             duplicate = []
-            # task_id = par.get_attr("taskId")  # already got above
             par_id = par.get_id()
-            count_of_same_task_ids = 0
-            j = 0
-            while j < len(all_pars):
+            doc_par_id = doc.get_par_id("taskId", task_id, "")
+            if doc_par_id != par_id:
+                duplicate.append(task_id)
+                duplicate.append(par.get_id())
+                task_id_to_check = str(doc.doc_id) + "." + str(task_id)
                 if (
-                    all_pars[j].get_id() != par_id
-                    and all_pars[j].get_attr("taskId") == task_id
-                ):  # count not self
-                    count_of_same_task_ids += 1
-                    if count_of_same_task_ids > 0:
-                        duplicate.append(task_id)
-                        duplicate.append(par.get_id())
-                        task_id_to_check = str(doc.doc_id) + "." + str(task_id)
-                        if (
-                            run_sql(
-                                select(Answer)
-                                .filter_by(task_id=task_id_to_check)
-                                .limit(1)
-                            )
-                            .scalars()
-                            .first()
-                        ):
-                            duplicate.append("hasAnswers")
-                        duplicates.append(duplicate)
-                        break
-                j += 1
+                    run_sql(select(Answer).filter_by(task_id=task_id_to_check).limit(1))
+                    .scalars()
+                    .first()
+                ):
+                    duplicate.append("hasAnswers")
+                duplicates.append(duplicate)
     return duplicates
