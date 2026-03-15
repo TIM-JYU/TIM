@@ -14,6 +14,7 @@ from timApp.answer.answer import Answer
 from timApp.auth.accesstype import AccessType
 from timApp.auth.auth_models import BlockAccess
 from timApp.auth.sessioninfo import get_current_user_object
+from timApp.document.attributeparser import AttributeParser
 from timApp.document.docentry import DocEntry
 from timApp.document.docinfo import DocInfo
 from timApp.document.docparagraph import DocParagraph
@@ -260,6 +261,7 @@ class Plugin:
         par: DocParagraph, view_ctx: ViewContext, user: UserContext | None = None
     ):
         doc = par.doc
+        check_yaml_attrs_attribute(par)
         original_par = par
         is_translation = par.is_translation()
         if is_translation:
@@ -281,13 +283,16 @@ class Plugin:
             use_exported=is_translation,
         )
         p = Plugin(
-            TaskId.parse(task_id_name, require_doc_id=False, allow_block_hint=False)
-            if task_id_name
-            else None,
+            (
+                TaskId.parse(task_id_name, require_doc_id=False, allow_block_hint=False)
+                if task_id_name
+                else None
+            ),
             plugin_data,
             plugin_name,
             par=par,
         )
+        par.plugin_ref = p
         return p
 
     def is_new_task(self) -> bool:
@@ -492,12 +497,14 @@ class Plugin:
             **access,
             "state": state,
             "taskID": self.task_id.doc_task if self.task_id else self.fake_task_id,
-            "taskIDExt": self.task_id.extended_or_doc_task
-            if self.task_id
-            else self.fake_task_id,
-            "doLazy": (options.do_lazy and self.is_lazy())
-            if isinstance(options.do_lazy, bool)
-            else options.do_lazy,
+            "taskIDExt": (
+                self.task_id.extended_or_doc_task if self.task_id else self.fake_task_id
+            ),
+            "doLazy": (
+                (options.do_lazy and self.is_lazy())
+                if isinstance(options.do_lazy, bool)
+                else options.do_lazy
+            ),
             "userPrint": options.user_print,
             # added preview here so that whether or not the window is in preview can be
             # checked in python so that decisions on what data is sent can be made.
@@ -954,7 +961,7 @@ def maybe_get_plugin_from_par(
     inline_plugin_finder: InlinePluginFinder | None = None,
 ) -> Plugin | None:
     t_attr = p.get_attr("taskId")
-    if t_attr and p.get_attr("plugin"):
+    if t_attr and p.is_plugin():
         try:
             p_tid = TaskId.parse(t_attr, allow_block_hint=False, require_doc_id=False)
         except PluginException:
@@ -1119,6 +1126,39 @@ def finalize_inline_yaml(p_yaml: str | None):
     return p_yaml
 
 
+def give_second_line(s: str) -> str | None:
+    """
+    Gives the second line of the given string, or None if there is no second line.
+    :param s:  the string to get the second line from
+    :return:  the second line of the string, or None if there is no second line
+    """
+    i1 = s.find("\n")
+    if i1 == -1:
+        return None
+    i2 = s.find("\n", i1 + 1)
+    if i2 == -1:
+        return None
+    return s[i1 + 1 : i2]
+
+
+def check_yaml_attrs_attribute(block: DocParagraph) -> None:
+    """
+    Check if there id attribute attrs that contains additional attributes
+    for the plugin and if so, parse it and add the attributes
+    to the block's attributes.
+    :param block: the block to check for the attrs attribute
+    """
+    if block.attrs_handled:
+        return
+    block.attrs_handled = True
+    s = block.get_markdown() or ""
+    second_line = give_second_line(s)
+    if second_line.startswith("attrs: "):
+        attrs2, _ = AttributeParser(second_line[7 + 1 : -1]).get_attributes()
+        if attrs2:
+            block.attrs.update(attrs2)
+
+
 def find_task_ids(
     blocks: list[DocParagraph],
     view_ctx: ViewContext,
@@ -1127,7 +1167,16 @@ def find_task_ids(
     inline_plugin_finder: InlinePluginFinder | None = None,
 ) -> tuple[list[TaskId], int, list[TaskId]]:
     """Finds all task plugins from the given list of paragraphs and returns their ids.
-    :param user_ctx:
+    :param blocks:  lista of paragraphs to search for task plugins
+    :param view_ctx: view context for access checks
+    :param user_ctx: user context for access checks
+    :param check_access:  whether to check access to the tasks; if True,
+                          tasks that the user doesn't have access to are
+                          not included in the results and their ids are
+                          added to the access_missing list
+    :param inline_plugin_finder: optional InlinePluginFinder to use for
+                          finding inline plugins; if not provided,
+                          a new one is created for each block
     """
     task_ids = []
     plugin_count = 0
@@ -1145,9 +1194,10 @@ def find_task_ids(
 
     for block in blocks:
         task_id = block.get_attr("taskId")
-        plugin = block.get_attr("plugin")
-        if plugin:
+        plugin = block.get_attr("plugin", None)
+        if plugin is not None:
             plugin_count += 1
+            check_yaml_attrs_attribute(block)
             if task_id:
                 try:
                     tid = TaskId.parse(

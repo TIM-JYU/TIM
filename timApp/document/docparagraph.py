@@ -10,6 +10,7 @@ from typing import TYPE_CHECKING, Optional
 
 import commonmark
 import filelock
+
 from commonmark.node import Node
 from jinja2.sandbox import SandboxedEnvironment
 
@@ -89,6 +90,8 @@ class DocParagraph:
         "html_cache",  # stored as 'h'
         "id",
         "md",
+        "plugin_ref",
+        "attrs_handled",
     }
 
     def __init__(self, doc: Document):
@@ -112,11 +115,15 @@ class DocParagraph:
         self.attrs: dict[str, str] | None = None
         self.nomacros = None
         self.ref_chain = None
-        self.answer_nr: int | None = None  # needed if variable tasks, None = not task at all or not variable task
+        self.answer_nr: int | None = (
+            None  # needed if variable tasks, None = not task at all or not variable task
+        )
         self.md = ""
         self.id = None
         self.ask_new: bool | None = None  # to send for plugins to force new question
         self.html_cache = None
+        self.plugin_ref = None
+        self.attrs_handled = False
 
     def __eq__(self, other):
         if isinstance(other, self.__class__):
@@ -1281,8 +1288,7 @@ class DocParagraph:
 
     def is_plugin(self) -> bool:
         """Returns whether this paragraph is a plugin."""
-
-        return bool(self.get_attr("plugin"))
+        return "plugin" in self.attrs
 
     def has_plugins(self) -> bool:
         """Returns whether this paragraph has inline plugins."""
