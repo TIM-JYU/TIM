@@ -537,6 +537,8 @@ def get_plugin_from_request(
         if p.get_id() == par_id:
             if answernr is not None:
                 p.answer_nr = answernr
+            if p.plugin_ref:
+                return ctx_doc, p.plugin_ref
             return ctx_doc, maybe_get_plugin_from_par(p, task_id, u, view_ctx)
     return doc, plug
 
@@ -574,11 +576,16 @@ def verify_task_access(
     view_ctx: ViewContext,
     allow_grace_period: bool = False,
     answernr: int | None = None,
+    found_plg: Plugin | None = None,
 ) -> TaskAccessVerification:
     assert d.id == task_id.doc_id
-    doc, found_plugin = get_plugin_from_request(
-        d.document, task_id, context_user, view_ctx, answernr
-    )
+    if found_plg:
+        doc = d.document
+        found_plugin = found_plg
+    else:
+        doc, found_plugin = get_plugin_from_request(
+            d.document, task_id, context_user, view_ctx, answernr
+        )
     access = verify_access(
         doc.get_docinfo(), access_type, require=False, user=context_user.logged_user
     )
@@ -742,7 +749,13 @@ def verify_route_access(
             if not is_peerreview_enabled(doc_info):
                 return None
             return verify_view_access(doc_info, require=require, check_duration=True)
-        case ViewRoute.View | ViewRoute.Lecture | ViewRoute.Slide | ViewRoute.ShowSlide | ViewRoute.Velp:
+        case (
+            ViewRoute.View
+            | ViewRoute.Lecture
+            | ViewRoute.Slide
+            | ViewRoute.ShowSlide
+            | ViewRoute.Velp
+        ):
             return verify_view_access(doc_info, require=require, check_duration=True)
         case _:
             raise ValueError(f"Unknown route {route}")

@@ -758,6 +758,7 @@ def get_postanswer_plugin_etc(
             view_ctx=view_ctx,
             allow_grace_period=True,
             answernr=answernr_to_user,
+            found_plg=found_plugin,
         )
     except (PluginException, TimDbException) as e:
         raise PluginException(str(e))
@@ -1444,9 +1445,9 @@ def preprocess_jsrunner_answer(
         runner_req.input.paramComps
     ):  # TODO: add paramComps to the interface, so no need to manipulate source code
         preprg = runnermarkup.preprogram or ""
-        plugin.values[
-            "preprogram"
-        ] = f"gtools.params = {json.dumps(runner_req.input.paramComps)};\n{preprg}"
+        plugin.values["preprogram"] = (
+            f"gtools.params = {json.dumps(runner_req.input.paramComps)};\n{preprg}"
+        )
     siw = runnermarkup.showInView
     markup_include_opt = value_or_default(
         runnermarkup.includeUsers, MembershipFilter.Current
@@ -1612,6 +1613,7 @@ def get_task_info(task_id: str) -> Response:
             allow_grace_period=True,
             context_user=user_ctx,
             view_ctx=view_ctx,
+            found_plg=plugin,
         )
         tim_vars = find_tim_vars(plugin)
         disable_answer = d.document.get_settings().disable_answer()

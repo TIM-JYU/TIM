@@ -1,4 +1,5 @@
 """Functions for dealing with plugin paragraphs."""
+
 import json
 from collections import OrderedDict, defaultdict
 from dataclasses import dataclass
@@ -502,9 +503,12 @@ def pluginify(
 
     if load_states and custom_answer is None and user_ctx.user.logged_in:
         # TODO: could this return also the plugins, then there is no need for other iteration
-        task_ids, _, _ = find_task_ids(
-            pars, view_ctx, user_ctx, check_access=user_ctx.is_different
-        )
+        if doc.plugin_task_ids and pars == doc.par_cache:
+            task_ids = doc.plugin_task_ids
+        else:
+            task_ids, _, _ = find_task_ids(
+                pars, view_ctx, user_ctx, check_access=user_ctx.is_different
+            )
         get_answers(user_ctx.user, task_ids, answer_map)
         # get_answers(User.get_by_id(user_ctx.user.id), task_ids, answer_map)
         # db.session.close()
@@ -526,9 +530,9 @@ def pluginify(
                 # TODO: Gamification map should be its own plugin
                 gd = YamlBlock.from_markdown(md).values
                 runner = "gamification-map"
-                html_pars[
-                    idx
-                ].output = f"<{runner} data={quoteattr(json.dumps(gd))}></{runner}>"
+                html_pars[idx].output = (
+                    f"<{runner} data={quoteattr(json.dumps(gd))}></{runner}>"
+                )
             except yaml.YAMLError as e:
                 has_errors = True
                 html_pars[idx].output = (

@@ -805,12 +805,20 @@ def render_doc_view(
     hide_total_tasks = False
     user_list = []
     teacher_or_see_answers = view_ctx.route.teacher_or_see_answers
-    task_ids, plugin_count, no_accesses = find_task_ids(
-        xs,
-        view_ctx,
-        UserContext.from_one_user(current_user),
-        check_access=teacher_or_see_answers,
-    )
+    if doc.plugin_task_ids and xs == doc.par_cache:
+        task_ids = doc.plugin_task_ids
+        plugin_count = doc.plugin_count
+        no_accesses = []
+    else:
+        task_ids, plugin_count, no_accesses = find_task_ids(
+            xs,
+            view_ctx,
+            UserContext.from_one_user(current_user),
+            check_access=teacher_or_see_answers,
+        )
+        if xs == doc.par_cache:
+            doc.plugin_task_ids = task_ids
+            doc.plugin_count = plugin_count
     if teacher_or_see_answers and no_accesses:
         flash(
             "You do not have full access to the following tasks: "
