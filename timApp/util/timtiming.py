@@ -1,4 +1,5 @@
 """Functions for dealing taking time."""
+
 import inspect
 import time
 from functools import wraps
@@ -16,7 +17,7 @@ timing_last_t_z = time.time()
 
 
 def taketime(s1: str = "", s2: str = "", n: int = 0, zero: bool = False) -> None:
-    return  # comment this to take times, uncomment for production and tests
+    # return  # comment this to take times, uncomment for production and tests
     global timing_last
     global timing_last_t
     global timing_last_z
