@@ -142,6 +142,9 @@ class Document:
 
         self.vr: ValidationResult | None = None
 
+        self.plugin_task_ids = None  # cache for naemd plugin task ids
+        self.plugin_count = 0  # cache for number of all plugins in the document
+
     @property
     def id(self):
         return self.doc_id
