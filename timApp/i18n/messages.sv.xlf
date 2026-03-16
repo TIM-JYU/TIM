@@ -1,4 +1,4 @@
-<?xml version='1.0' encoding='UTF-8'?>
+<?xml version="1.0" encoding="UTF-8"?>
 <xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" version="1.2">
   <file source-language="en-US" datatype="plaintext" original="ng2.template" target-language="sv">
     <body>
@@ -675,8 +675,8 @@
         </context-group>
       </trans-unit>
       <trans-unit id="4577528096804984395" datatype="html">
-        <source><x id="TAG_INPUT" ctype="x-input" equiv-text="&quot;checkbox&quot;                                (change)=&quot;fetchFunctions()&quot;                                [(ngModel)]=&quot;showAllUsers&quot;&gt;"/> Show functions from all users </source>
-        <target state="translated"><x id="TAG_INPUT" ctype="x-input" equiv-text="&lt;input type=&quot;checkbox&quot;                                (change)=&quot;fetchFunctions()&quot;                                [(ngModel)]=&quot;showAllUsers&quot;&gt;"/> Visa funktioner från alla användare </target>
+        <source><x id="TAG_INPUT" ctype="x-input" equiv-text="&quot;checkbox&quot;                                (change)=&quot;fetchFunctions()&quot;                                [(ngModel)]=&quot;showAllUsers&quot;>"/> Show functions from all users </source>
+        <target state="translated"><x id="TAG_INPUT" ctype="x-input" equiv-text="&lt;input type=&quot;checkbox&quot;                                (change)=&quot;fetchFunctions()&quot;                                [(ngModel)]=&quot;showAllUsers&quot;>"/> Visa funktioner från alla användare </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/document/scheduling/schedule-dialog.component.ts</context>
           <context context-type="linenumber">84,87</context>
@@ -979,8 +979,8 @@
         </context-group>
       </trans-unit>
       <trans-unit id="5297511590172009633" datatype="html">
-        <source>Examples <x id="START_SUPERSCRIPT" ctype="x-sup" equiv-text="&lt;sup *ngIf=&quot;notFinnish()&quot;&gt;"/>(F)<x id="CLOSE_SUPERSCRIPT" ctype="x-sup" equiv-text="&lt;/sup&gt;"/></source>
-        <target state="translated">Exempel <x id="START_SUPERSCRIPT" ctype="x-sup" equiv-text="&lt;sup *ngIf=&quot;notFinnish()&quot;&gt;"/>(F)<x id="CLOSE_SUPERSCRIPT" ctype="x-sup" equiv-text="&lt;/sup&gt;"/></target>
+        <source>Examples <x id="START_SUPERSCRIPT" ctype="x-sup" equiv-text="&lt;sup *ngIf=&quot;notFinnish()&quot;>"/>(F)<x id="CLOSE_SUPERSCRIPT" ctype="x-sup" equiv-text="&lt;/sup>"/></source>
+        <target state="translated">Exempel <x id="START_SUPERSCRIPT" ctype="x-sup" equiv-text="&lt;sup *ngIf=&quot;notFinnish()&quot;>"/>(F)<x id="CLOSE_SUPERSCRIPT" ctype="x-sup" equiv-text="&lt;/sup>"/></target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/frontpage/front-page.component.ts</context>
           <context context-type="linenumber">93</context>
@@ -1011,8 +1011,8 @@
         </context-group>
       </trans-unit>
       <trans-unit id="3673091046572661203" datatype="html">
-        <source><x id="START_SUPERSCRIPT" ctype="x-sup" equiv-text="(F)&lt;/su"/>(F)<x id="CLOSE_SUPERSCRIPT" ctype="x-sup" equiv-text="&lt;/sup&gt;"/> in Finnish </source>
-        <target state="translated"><x id="START_SUPERSCRIPT" ctype="x-sup" equiv-text="&lt;sup&gt;"/>(F)<x id="CLOSE_SUPERSCRIPT" ctype="x-sup" equiv-text="&lt;/sup&gt;"/> på Finska </target>
+        <source><x id="START_SUPERSCRIPT" ctype="x-sup" equiv-text="(F)&lt;/su"/>(F)<x id="CLOSE_SUPERSCRIPT" ctype="x-sup" equiv-text="&lt;/sup>"/> in Finnish </source>
+        <target state="translated"><x id="START_SUPERSCRIPT" ctype="x-sup" equiv-text="&lt;sup>"/>(F)<x id="CLOSE_SUPERSCRIPT" ctype="x-sup" equiv-text="&lt;/sup>"/> på Finska </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/frontpage/front-page.component.ts</context>
           <context context-type="linenumber">105,107</context>
@@ -1123,8 +1123,8 @@
         </context-group>
       </trans-unit>
       <trans-unit id="4817865548432760172" datatype="html">
-        <source> You will be able to access this <x id="ICU" equiv-text="{ item.isFolder, select, true {folder} false {document} }" xid="2430415615241833222"/> in <x id="START_TAG_TIM_COUNTDOWN" ctype="x-tim_countdown" equiv-text="&lt;tim-countdown [seconds]=&quot;waitTime&quot;                               [displayUnits]=&quot;['y', 'mo', 'w', 'd', 'h', 'm', 's']&quot;                               (onFinish)=&quot;this.countDown = false&quot;&gt;"/><x id="CLOSE_TAG_TIM_COUNTDOWN" ctype="x-tim_countdown" equiv-text="&lt;/tim-countdown&gt;"/>. </source>
-        <target state="translated"> Du kommer att kunna komma åt detta <x id="ICU" equiv-text="{ item.isFolder, select, true {folder} false {document} }"/> inom <x id="START_TAG_TIM_COUNTDOWN" ctype="x-tim_countdown" equiv-text="&lt;tim-countdown [seconds]=&quot;waitTime&quot;                               [displayUnits]=&quot;['y', 'mo', 'w', 'd', 'h', 'm', 's']&quot;                               (onFinish)=&quot;this.countDown = false&quot;&gt;"/><x id="CLOSE_TAG_TIM_COUNTDOWN" ctype="x-tim_countdown" equiv-text="&lt;/tim-countdown&gt;"/>. </target>
+        <source> You will be able to access this <x id="ICU" equiv-text="{ item.isFolder, select, true {folder} false {document} }" xid="2430415615241833222"/> in <x id="START_TAG_TIM_COUNTDOWN" ctype="x-tim_countdown" equiv-text="&lt;tim-countdown [seconds]=&quot;waitTime&quot;                               [displayUnits]=&quot;['y', 'mo', 'w', 'd', 'h', 'm', 's']&quot;                               (onFinish)=&quot;this.countDown = false&quot;>"/><x id="CLOSE_TAG_TIM_COUNTDOWN" ctype="x-tim_countdown" equiv-text="&lt;/tim-countdown>"/>. </source>
+        <target state="translated"> Du kommer att kunna komma åt detta <x id="ICU" equiv-text="{ item.isFolder, select, true {folder} false {document} }"/> inom <x id="START_TAG_TIM_COUNTDOWN" ctype="x-tim_countdown" equiv-text="&lt;tim-countdown [seconds]=&quot;waitTime&quot;                               [displayUnits]=&quot;['y', 'mo', 'w', 'd', 'h', 'm', 's']&quot;                               (onFinish)=&quot;this.countDown = false&quot;>"/><x id="CLOSE_TAG_TIM_COUNTDOWN" ctype="x-tim_countdown" equiv-text="&lt;/tim-countdown>"/>. </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/item/access-countdown.component.ts</context>
           <context context-type="linenumber">9,14</context>
@@ -1139,8 +1139,8 @@
         </context-group>
       </trans-unit>
       <trans-unit id="8367583638953157691" datatype="html">
-        <source> You can access the <x id="ICU" equiv-text="{ item.isFolder, select, true { folder } false { document } }" xid="906293260225293784"/> now. <x id="START_TAG_TIM_GOTO_LINK" ctype="x-tim_goto_link" equiv-text="&lt;tim-goto-link href=&quot;&quot; [maxWait]=&quot;waitOffset&quot; [autoOpen]=&quot;true&quot;&gt;"/>Refresh the page<x id="CLOSE_TAG_TIM_GOTO_LINK" ctype="x-tim_goto_link" equiv-text="&lt;/tim-goto-link&gt;"/></source>
-        <target state="translated"> Du kan komma åt detta <x id="ICU" equiv-text="{ item.isFolder, select, true { folder } false { document } }"/> nu. <x id="START_TAG_TIM_GOTO_LINK" ctype="x-tim_goto_link" equiv-text="&lt;tim-goto-link href=&quot;&quot; [maxWait]=&quot;waitOffset&quot; [autoOpen]=&quot;true&quot;&gt;"/>Uppdatera sidan.<x id="CLOSE_TAG_TIM_GOTO_LINK" ctype="x-tim_goto_link" equiv-text="&lt;/tim-goto-link&gt;"/></target>
+        <source> You can access the <x id="ICU" equiv-text="{ item.isFolder, select, true { folder } false { document } }" xid="906293260225293784"/> now. <x id="START_TAG_TIM_GOTO_LINK" ctype="x-tim_goto_link" equiv-text="&lt;tim-goto-link href=&quot;&quot; [maxWait]=&quot;waitOffset&quot; [autoOpen]=&quot;true&quot;>"/>Refresh the page<x id="CLOSE_TAG_TIM_GOTO_LINK" ctype="x-tim_goto_link" equiv-text="&lt;/tim-goto-link>"/></source>
+        <target state="translated"> Du kan komma åt detta <x id="ICU" equiv-text="{ item.isFolder, select, true { folder } false { document } }"/> nu. <x id="START_TAG_TIM_GOTO_LINK" ctype="x-tim_goto_link" equiv-text="&lt;tim-goto-link href=&quot;&quot; [maxWait]=&quot;waitOffset&quot; [autoOpen]=&quot;true&quot;>"/>Uppdatera sidan.<x id="CLOSE_TAG_TIM_GOTO_LINK" ctype="x-tim_goto_link" equiv-text="&lt;/tim-goto-link>"/></target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/item/access-countdown.component.ts</context>
           <context context-type="linenumber">15,17</context>
@@ -2291,8 +2291,8 @@
         </context-group>
       </trans-unit>
       <trans-unit id="1092513435408623514" datatype="html">
-        <source> Read receipt can be cancelled in <x id="START_LINK" ctype="x-a" equiv-text="&lt;a href=&quot;/view/{{message.doc_path}}&quot;&gt;"/>the message document<x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a&gt;"/></source>
-        <target state="translated"> Läskvitto kan makuleras i <x id="START_LINK" ctype="x-a" equiv-text="&lt;a href=&quot;/view/{{message.doc_path}}&quot;&gt;"/>meddelandedokumentet<x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a&gt;"/></target>
+        <source> Read receipt can be cancelled in <x id="START_LINK" ctype="x-a" equiv-text="&lt;a href=&quot;/view/{{message.doc_path}}&quot;>"/>the message document<x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a>"/></source>
+        <target state="translated"> Läskvitto kan makuleras i <x id="START_LINK" ctype="x-a" equiv-text="&lt;a href=&quot;/view/{{message.doc_path}}&quot;>"/>meddelandedokumentet<x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a>"/></target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/messaging/tim-message.component.ts</context>
           <context context-type="linenumber">66,67</context>
@@ -2323,8 +2323,8 @@
         </context-group>
       </trans-unit>
       <trans-unit id="6922195937313529911" datatype="html">
-        <source><x id="START_PARAGRAPH" ctype="x-p" equiv-text="&lt;p&gt;"/>Loading times can be improved by setting static column widths.<x id="CLOSE_PARAGRAPH" ctype="x-p" equiv-text="&lt;/p&gt;"/><x id="START_PARAGRAPH" ctype="x-p" equiv-text="&lt;p&gt;"/>Copy the below settings under <x id="START_TAG_CODE" ctype="x-code" equiv-text="&lt;code&gt;"/>dataView<x id="CLOSE_TAG_CODE" ctype="x-code" equiv-text="&lt;/code&gt;"/> configuration:<x id="CLOSE_PARAGRAPH" ctype="x-p" equiv-text="&lt;/p&gt;"/></source>
-        <target state="translated"><x id="START_PARAGRAPH" ctype="x-p" equiv-text="&lt;p&gt;"/>Laddningstiderna kan förbättras genom att ställa in statiska kolumnbredder.<x id="CLOSE_PARAGRAPH" ctype="x-p" equiv-text="&lt;/p&gt;"/><x id="START_PARAGRAPH" ctype="x-p" equiv-text="&lt;p&gt;"/>Kopiera de inställningarna nedanför till <x id="START_TAG_CODE" ctype="x-code" equiv-text="&lt;code&gt;"/>dataView<x id="CLOSE_TAG_CODE" ctype="x-code" equiv-text="&lt;/code&gt;"/> konfiguration:<x id="CLOSE_PARAGRAPH" ctype="x-p" equiv-text="&lt;/p&gt;"/></target>
+        <source><x id="START_PARAGRAPH" ctype="x-p" equiv-text="&lt;p>"/>Loading times can be improved by setting static column widths.<x id="CLOSE_PARAGRAPH" ctype="x-p" equiv-text="&lt;/p>"/><x id="START_PARAGRAPH" ctype="x-p" equiv-text="&lt;p>"/>Copy the below settings under <x id="START_TAG_CODE" ctype="x-code" equiv-text="&lt;code>"/>dataView<x id="CLOSE_TAG_CODE" ctype="x-code" equiv-text="&lt;/code>"/> configuration:<x id="CLOSE_PARAGRAPH" ctype="x-p" equiv-text="&lt;/p>"/></source>
+        <target state="translated"><x id="START_PARAGRAPH" ctype="x-p" equiv-text="&lt;p>"/>Laddningstiderna kan förbättras genom att ställa in statiska kolumnbredder.<x id="CLOSE_PARAGRAPH" ctype="x-p" equiv-text="&lt;/p>"/><x id="START_PARAGRAPH" ctype="x-p" equiv-text="&lt;p>"/>Kopiera de inställningarna nedanför till <x id="START_TAG_CODE" ctype="x-code" equiv-text="&lt;code>"/>dataView<x id="CLOSE_TAG_CODE" ctype="x-code" equiv-text="&lt;/code>"/> konfiguration:<x id="CLOSE_PARAGRAPH" ctype="x-p" equiv-text="&lt;/p>"/></target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/dataview/copy-table-width-dialog.component.ts</context>
           <context context-type="linenumber">17,18</context>
@@ -2347,16 +2347,16 @@
         </context-group>
       </trans-unit>
       <trans-unit id="7466722129747967831" datatype="html">
-        <source><x id="START_TAG_STRONG" ctype="x-strong" equiv-text="Colu"/>Column size computation took <x id="INTERPOLATION" equiv-text="{{sizeComputationTime}}"/> seconds.<x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong&gt;"/> You can speed up loading by <x id="START_LINK" ctype="x-a" equiv-text="&lt;a href=&quot;#&quot; class=&quot;alert-link&quot; (click)=&quot;showTableWidthExportDialog($event)&quot;&gt;"/>setting static column widths<x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a&gt;"/>. </source>
-        <target state="translated"><x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong&gt;"/>Beräkning av kolumnstorlek tog <x id="INTERPOLATION" equiv-text="{{sizeComputationTime}}"/> sekunder.<x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong&gt;"/> Du kan påskynda inläsningen genom att <x id="START_LINK" ctype="x-a" equiv-text="&lt;a href=&quot;#&quot; class=&quot;alert-link&quot; (click)=&quot;showTableWidthExportDialog($event)&quot;&gt;"/>ställa in statiska kolumnbredder<x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a&gt;"/>. </target>
+        <source><x id="START_TAG_STRONG" ctype="x-strong" equiv-text="Colu"/>Column size computation took <x id="INTERPOLATION" equiv-text="{{sizeComputationTime}}"/> seconds.<x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong>"/> You can speed up loading by <x id="START_LINK" ctype="x-a" equiv-text="&lt;a href=&quot;#&quot; class=&quot;alert-link&quot; (click)=&quot;showTableWidthExportDialog($event)&quot;>"/>setting static column widths<x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a>"/>. </source>
+        <target state="translated"><x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong>"/>Beräkning av kolumnstorlek tog <x id="INTERPOLATION" equiv-text="{{sizeComputationTime}}"/> sekunder.<x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong>"/> Du kan påskynda inläsningen genom att <x id="START_LINK" ctype="x-a" equiv-text="&lt;a href=&quot;#&quot; class=&quot;alert-link&quot; (click)=&quot;showTableWidthExportDialog($event)&quot;>"/>ställa in statiska kolumnbredder<x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a>"/>. </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/dataview/data-view.component.ts</context>
           <context context-type="linenumber">171,174</context>
         </context-group>
       </trans-unit>
       <trans-unit id="3372236332154985924" datatype="html">
-        <source><x id="START_TAG_STRONG" ctype="x-strong" equiv-text="The"/>The column count has changed since the last time.<x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong&gt;"/> Remove this warning by <x id="START_LINK" ctype="x-a" equiv-text="&lt;a href=&quot;#&quot; class=&quot;alert-link&quot; (click)=&quot;showTableWidthExportDialog($event, true)&quot;&gt;"/> setting static column widths<x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a&gt;"/>. </source>
-        <target state="translated"><x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong&gt;"/>Antalet kolumner har ändrats sedan förra gången.<x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong&gt;"/> Ta bort denna varning genom att <x id="START_LINK" ctype="x-a" equiv-text="&lt;a href=&quot;#&quot; class=&quot;alert-link&quot; (click)=&quot;showTableWidthExportDialog($event, true)&quot;&gt;"/> ställa in statiska kolumnbredder<x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a&gt;"/>. </target>
+        <source><x id="START_TAG_STRONG" ctype="x-strong" equiv-text="The"/>The column count has changed since the last time.<x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong>"/> Remove this warning by <x id="START_LINK" ctype="x-a" equiv-text="&lt;a href=&quot;#&quot; class=&quot;alert-link&quot; (click)=&quot;showTableWidthExportDialog($event, true)&quot;>"/> setting static column widths<x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a>"/>. </source>
+        <target state="translated"><x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong>"/>Antalet kolumner har ändrats sedan förra gången.<x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong>"/> Ta bort denna varning genom att <x id="START_LINK" ctype="x-a" equiv-text="&lt;a href=&quot;#&quot; class=&quot;alert-link&quot; (click)=&quot;showTableWidthExportDialog($event, true)&quot;>"/> ställa in statiska kolumnbredder<x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a>"/>. </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/dataview/data-view.component.ts</context>
           <context context-type="linenumber">178,180</context>
@@ -2747,24 +2747,24 @@
         </context-group>
       </trans-unit>
       <trans-unit id="5141645080814386241" datatype="html">
-        <source><x id="START_PARAGRAPH" ctype="x-p" equiv-text="&lt;p&gt;"/> There were problems while undoing. Someone might have edited the permissions at the same time as you. <x id="CLOSE_PARAGRAPH" ctype="x-p" equiv-text="&lt;/p&gt;"/><x id="START_PARAGRAPH" ctype="x-p" equiv-text="&lt;p&gt;"/>You can reapply permissions or fix them manually.<x id="CLOSE_PARAGRAPH" ctype="x-p" equiv-text="&lt;/p&gt;"/><x id="START_PARAGRAPH" ctype="x-p" equiv-text="&lt;p&gt;"/>Detailed error messages:<x id="CLOSE_PARAGRAPH" ctype="x-p" equiv-text="&lt;/p&gt;"/></source>
-        <target state="translated"><x id="START_PARAGRAPH" ctype="x-p" equiv-text="&lt;p&gt;"/> Det uppstod problem när du ångrade. Någon kanske har redigerat behörigheterna samtidigt som du. <x id="CLOSE_PARAGRAPH" ctype="x-p" equiv-text="&lt;/p&gt;"/><x id="START_PARAGRAPH" ctype="x-p" equiv-text="&lt;p&gt;"/>Du kan återansöka behörigheter eller åtgärda dem manuellt.<x id="CLOSE_PARAGRAPH" ctype="x-p" equiv-text="&lt;/p&gt;"/><x id="START_PARAGRAPH" ctype="x-p" equiv-text="&lt;p&gt;"/>Detaljerade felmeddelanden:<x id="CLOSE_PARAGRAPH" ctype="x-p" equiv-text="&lt;/p&gt;"/></target>
+        <source><x id="START_PARAGRAPH" ctype="x-p" equiv-text="&lt;p>"/> There were problems while undoing. Someone might have edited the permissions at the same time as you. <x id="CLOSE_PARAGRAPH" ctype="x-p" equiv-text="&lt;/p>"/><x id="START_PARAGRAPH" ctype="x-p" equiv-text="&lt;p>"/>You can reapply permissions or fix them manually.<x id="CLOSE_PARAGRAPH" ctype="x-p" equiv-text="&lt;/p>"/><x id="START_PARAGRAPH" ctype="x-p" equiv-text="&lt;p>"/>Detailed error messages:<x id="CLOSE_PARAGRAPH" ctype="x-p" equiv-text="&lt;/p>"/></source>
+        <target state="translated"><x id="START_PARAGRAPH" ctype="x-p" equiv-text="&lt;p>"/> Det uppstod problem när du ångrade. Någon kanske har redigerat behörigheterna samtidigt som du. <x id="CLOSE_PARAGRAPH" ctype="x-p" equiv-text="&lt;/p>"/><x id="START_PARAGRAPH" ctype="x-p" equiv-text="&lt;p>"/>Du kan återansöka behörigheter eller åtgärda dem manuellt.<x id="CLOSE_PARAGRAPH" ctype="x-p" equiv-text="&lt;/p>"/><x id="START_PARAGRAPH" ctype="x-p" equiv-text="&lt;p>"/>Detaljerade felmeddelanden:<x id="CLOSE_PARAGRAPH" ctype="x-p" equiv-text="&lt;/p>"/></target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/userselect/user-select.component.ts</context>
           <context context-type="linenumber">286,291</context>
         </context-group>
       </trans-unit>
       <trans-unit id="4128190404321529743" datatype="html">
-        <source><x id="START_ITALIC_TEXT" ctype="x-i" equiv-text="yphicon glyphicon-chevron-down&quot;&gt;"/><x id="CLOSE_ITALIC_TEXT" ctype="x-i" equiv-text="Show"/>Show details</source>
-        <target state="translated"><x id="START_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;i class=&quot;glyphicon glyphicon-chevron-down&quot;&gt;"/><x id="CLOSE_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;/i&gt;"/>Visa detaljer</target>
+        <source><x id="START_ITALIC_TEXT" ctype="x-i" equiv-text="yphicon glyphicon-chevron-down&quot;>"/><x id="CLOSE_ITALIC_TEXT" ctype="x-i" equiv-text="Show"/>Show details</source>
+        <target state="translated"><x id="START_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;i class=&quot;glyphicon glyphicon-chevron-down&quot;>"/><x id="CLOSE_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;/i>"/>Visa detaljer</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/userselect/user-select.component.ts</context>
           <context context-type="linenumber">294,295</context>
         </context-group>
       </trans-unit>
       <trans-unit id="7272675779595492580" datatype="html">
-        <source><x id="START_TAG_SPAN" ctype="x-span" equiv-text="{{erro"/><x id="INTERPOLATION" equiv-text="&lt;/s"/><x id="CLOSE_TAG_SPAN" ctype="x-span"/><x id="START_TAG_DIV_1" ctype="x-div_1" equiv-text="&lt;div class=&quot;alert-details&quot;&gt;"/><x id="START_PARAGRAPH" ctype="x-p" equiv-text="&lt;p&gt;"/>Please try refreshing the page and try again.<x id="CLOSE_PARAGRAPH" ctype="x-p" equiv-text="&lt;/p&gt;"/><x id="START_TAG_NG_CONTAINER" ctype="x-ng_container" equiv-text="&lt;ng-container *ngIf=&quot;detailedError&quot;&gt;"/><x id="START_TAG_DIV" ctype="x-div" equiv-text="&lt;div&gt;"/><x id="START_LINK" ctype="x-a" equiv-text="&lt;a (click)=&quot;showErrorMessage = !showErrorMessage&quot;&gt;"/><x id="START_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;i class=&quot;glyphicon glyphicon-chevron-down&quot;&gt;"/><x id="CLOSE_ITALIC_TEXT" ctype="x-i"/> Show details <x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a&gt;"/><x id="CLOSE_TAG_DIV" ctype="x-div" equiv-text="&lt;/div&gt;"/><x id="START_TAG_PRE" ctype="x-pre" equiv-text="&lt;pre *ngIf=&quot;showErrorMessage&quot;&gt;"/><x id="INTERPOLATION_1" equiv-text="&lt;"/><x id="CLOSE_TAG_PRE" ctype="x-pre"/><x id="CLOSE_TAG_NG_CONTAINER" ctype="x-ng_container" equiv-text="&lt;/ng-container&gt;"/><x id="CLOSE_TAG_DIV" ctype="x-div" equiv-text="&lt;/div&gt;"/></source>
-        <target state="translated"><x id="START_TAG_SPAN" ctype="x-span" equiv-text="&lt;span&gt;"/><x id="INTERPOLATION" equiv-text="{{errorMessage}}"/><x id="CLOSE_TAG_SPAN" ctype="x-span" equiv-text="&lt;/span&gt;"/><x id="START_TAG_DIV_1" ctype="x-div_1" equiv-text="&lt;div class=&quot;alert-details&quot;&gt;"/><x id="START_PARAGRAPH" ctype="x-p" equiv-text="&lt;p&gt;"/>Försök att uppdatera sidan och försök igen.<x id="CLOSE_PARAGRAPH" ctype="x-p" equiv-text="&lt;/p&gt;"/><x id="START_TAG_NG_CONTAINER" ctype="x-ng_container" equiv-text="&lt;ng-container *ngIf=&quot;detailedError&quot;&gt;"/><x id="START_TAG_DIV" ctype="x-div" equiv-text="&lt;div&gt;"/><x id="START_LINK" ctype="x-a" equiv-text="&lt;a (click)=&quot;showErrorMessage = !showErrorMessage&quot;&gt;"/><x id="START_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;i class=&quot;glyphicon glyphicon-chevron-down&quot;&gt;"/><x id="CLOSE_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;/i&gt;"/> Visa detaljer <x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a&gt;"/><x id="CLOSE_TAG_DIV" ctype="x-div" equiv-text="&lt;/div&gt;"/><x id="START_TAG_PRE" ctype="x-pre" equiv-text="&lt;pre *ngIf=&quot;showErrorMessage&quot;&gt;"/><x id="INTERPOLATION_1" equiv-text="{{detailedError}}"/><x id="CLOSE_TAG_PRE" ctype="x-pre" equiv-text="&lt;/pre&gt;"/><x id="CLOSE_TAG_NG_CONTAINER" ctype="x-ng_container" equiv-text="&lt;/ng-container&gt;"/><x id="CLOSE_TAG_DIV" ctype="x-div" equiv-text="&lt;/div&gt;"/></target>
+        <source><x id="START_TAG_SPAN" ctype="x-span" equiv-text="{{erro"/><x id="INTERPOLATION" equiv-text="&lt;/s"/><x id="CLOSE_TAG_SPAN" ctype="x-span"/><x id="START_TAG_DIV_1" ctype="x-div_1" equiv-text="&lt;div class=&quot;alert-details&quot;>"/><x id="START_PARAGRAPH" ctype="x-p" equiv-text="&lt;p>"/>Please try refreshing the page and try again.<x id="CLOSE_PARAGRAPH" ctype="x-p" equiv-text="&lt;/p>"/><x id="START_TAG_NG_CONTAINER" ctype="x-ng_container" equiv-text="&lt;ng-container *ngIf=&quot;detailedError&quot;>"/><x id="START_TAG_DIV" ctype="x-div" equiv-text="&lt;div>"/><x id="START_LINK" ctype="x-a" equiv-text="&lt;a (click)=&quot;showErrorMessage = !showErrorMessage&quot;>"/><x id="START_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;i class=&quot;glyphicon glyphicon-chevron-down&quot;>"/><x id="CLOSE_ITALIC_TEXT" ctype="x-i"/> Show details <x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a>"/><x id="CLOSE_TAG_DIV" ctype="x-div" equiv-text="&lt;/div>"/><x id="START_TAG_PRE" ctype="x-pre" equiv-text="&lt;pre *ngIf=&quot;showErrorMessage&quot;>"/><x id="INTERPOLATION_1" equiv-text="&lt;"/><x id="CLOSE_TAG_PRE" ctype="x-pre"/><x id="CLOSE_TAG_NG_CONTAINER" ctype="x-ng_container" equiv-text="&lt;/ng-container>"/><x id="CLOSE_TAG_DIV" ctype="x-div" equiv-text="&lt;/div>"/></source>
+        <target state="translated"><x id="START_TAG_SPAN" ctype="x-span" equiv-text="&lt;span>"/><x id="INTERPOLATION" equiv-text="{{errorMessage}}"/><x id="CLOSE_TAG_SPAN" ctype="x-span" equiv-text="&lt;/span>"/><x id="START_TAG_DIV_1" ctype="x-div_1" equiv-text="&lt;div class=&quot;alert-details&quot;>"/><x id="START_PARAGRAPH" ctype="x-p" equiv-text="&lt;p>"/>Försök att uppdatera sidan och försök igen.<x id="CLOSE_PARAGRAPH" ctype="x-p" equiv-text="&lt;/p>"/><x id="START_TAG_NG_CONTAINER" ctype="x-ng_container" equiv-text="&lt;ng-container *ngIf=&quot;detailedError&quot;>"/><x id="START_TAG_DIV" ctype="x-div" equiv-text="&lt;div>"/><x id="START_LINK" ctype="x-a" equiv-text="&lt;a (click)=&quot;showErrorMessage = !showErrorMessage&quot;>"/><x id="START_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;i class=&quot;glyphicon glyphicon-chevron-down&quot;>"/><x id="CLOSE_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;/i>"/> Visa detaljer <x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a>"/><x id="CLOSE_TAG_DIV" ctype="x-div" equiv-text="&lt;/div>"/><x id="START_TAG_PRE" ctype="x-pre" equiv-text="&lt;pre *ngIf=&quot;showErrorMessage&quot;>"/><x id="INTERPOLATION_1" equiv-text="{{detailedError}}"/><x id="CLOSE_TAG_PRE" ctype="x-pre" equiv-text="&lt;/pre>"/><x id="CLOSE_TAG_NG_CONTAINER" ctype="x-ng_container" equiv-text="&lt;/ng-container>"/><x id="CLOSE_TAG_DIV" ctype="x-div" equiv-text="&lt;/div>"/></target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/userselect/user-select.component.ts</context>
           <context context-type="linenumber">304,317</context>
@@ -2979,8 +2979,8 @@
         </context-group>
       </trans-unit>
       <trans-unit id="3880104539461951428" datatype="html">
-        <source>Index <x id="START_LINK" ctype="x-a" equiv-text="&lt;a (click)=&quot;goToTop()&quot; i18n-title title=&quot;Go to top&quot; class=&quot;pull-right&quot;&gt;"/>Go to top<x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a&gt;"/></source>
-        <target state="translated">Index <x id="START_LINK" ctype="x-a" equiv-text="&lt;a (click)=&quot;goToTop()&quot; i18n-title title=&quot;Go to top&quot; class=&quot;pull-right&quot;&gt;"/>Gå till toppen<x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a&gt;"/></target>
+        <source>Index <x id="START_LINK" ctype="x-a" equiv-text="&lt;a (click)=&quot;goToTop()&quot; i18n-title title=&quot;Go to top&quot; class=&quot;pull-right&quot;>"/>Go to top<x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a>"/></source>
+        <target state="translated">Index <x id="START_LINK" ctype="x-a" equiv-text="&lt;a (click)=&quot;goToTop()&quot; i18n-title title=&quot;Go to top&quot; class=&quot;pull-right&quot;>"/>Gå till toppen<x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a>"/></target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/sidebarmenu/tabs/index-tab.component.ts</context>
           <context context-type="linenumber">17</context>
@@ -3075,16 +3075,16 @@
         </context-group>
       </trans-unit>
       <trans-unit id="2764567568324210100" datatype="html">
-        <source>People logged in: <x id="START_TAG_SPAN" ctype="x-span" equiv-text="&lt;span&gt;"/><x id="INTERPOLATION" equiv-text="{{lctrl.lecturerTable.length + lctrl.studentTable.length}}"/><x id="CLOSE_TAG_SPAN" ctype="x-span" equiv-text="&lt;/span&gt;"/></source>
-        <target state="translated">Personer som är inloggade: <x id="START_TAG_SPAN" ctype="x-span" equiv-text="&lt;span&gt;"/> <x id="INTERPOLATION" equiv-text="{{lctrl.lecturerTable.length + lctrl.studentTable.length}}"/> <x id="CLOSE_TAG_SPAN" ctype="x-span" equiv-text="&lt;/span&gt;"/></target>
+        <source>People logged in: <x id="START_TAG_SPAN" ctype="x-span" equiv-text="&lt;span>"/><x id="INTERPOLATION" equiv-text="{{lctrl.lecturerTable.length + lctrl.studentTable.length}}"/><x id="CLOSE_TAG_SPAN" ctype="x-span" equiv-text="&lt;/span>"/></source>
+        <target state="translated">Personer som är inloggade: <x id="START_TAG_SPAN" ctype="x-span" equiv-text="&lt;span>"/> <x id="INTERPOLATION" equiv-text="{{lctrl.lecturerTable.length + lctrl.studentTable.length}}"/> <x id="CLOSE_TAG_SPAN" ctype="x-span" equiv-text="&lt;/span>"/></target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/sidebarmenu/tabs/logged-users-tab.component.ts</context>
           <context context-type="linenumber">8</context>
         </context-group>
       </trans-unit>
       <trans-unit id="3522945725389041013" datatype="html">
-        <source>Lecturers (<x id="START_TAG_SPAN" ctype="x-span" equiv-text="&lt;span&gt;"/><x id="INTERPOLATION" equiv-text="{{lctrl.lecturerTable.length}}"/><x id="CLOSE_TAG_SPAN" ctype="x-span" equiv-text="&lt;/span&gt;"/>)</source>
-        <target state="translated">Föreläsare (<x id="START_TAG_SPAN" ctype="x-span" equiv-text="&lt;span&gt;"/><x id="INTERPOLATION" equiv-text="{{lctrl.lecturerTable.length}}"/><x id="CLOSE_TAG_SPAN" ctype="x-span" equiv-text="&lt;/span&gt;"/>)</target>
+        <source>Lecturers (<x id="START_TAG_SPAN" ctype="x-span" equiv-text="&lt;span>"/><x id="INTERPOLATION" equiv-text="{{lctrl.lecturerTable.length}}"/><x id="CLOSE_TAG_SPAN" ctype="x-span" equiv-text="&lt;/span>"/>)</source>
+        <target state="translated">Föreläsare (<x id="START_TAG_SPAN" ctype="x-span" equiv-text="&lt;span>"/><x id="INTERPOLATION" equiv-text="{{lctrl.lecturerTable.length}}"/><x id="CLOSE_TAG_SPAN" ctype="x-span" equiv-text="&lt;/span>"/>)</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/sidebarmenu/tabs/logged-users-tab.component.ts</context>
           <context context-type="linenumber">9</context>
@@ -3099,8 +3099,8 @@
         </context-group>
       </trans-unit>
       <trans-unit id="4851338224428351823" datatype="html">
-        <source>Students (<x id="START_TAG_SPAN" ctype="x-span" equiv-text="&lt;span&gt;"/><x id="INTERPOLATION" equiv-text="{{lctrl.studentTable.length}}"/><x id="CLOSE_TAG_SPAN" ctype="x-span" equiv-text="&lt;/span&gt;"/>)</source>
-        <target state="translated">Elever (<x id="START_TAG_SPAN" ctype="x-span" equiv-text="&lt;span&gt;"/><x id="INTERPOLATION" equiv-text="{{lctrl.studentTable.length}}"/><x id="CLOSE_TAG_SPAN" ctype="x-span" equiv-text="&lt;/span&gt;"/>)</target>
+        <source>Students (<x id="START_TAG_SPAN" ctype="x-span" equiv-text="&lt;span>"/><x id="INTERPOLATION" equiv-text="{{lctrl.studentTable.length}}"/><x id="CLOSE_TAG_SPAN" ctype="x-span" equiv-text="&lt;/span>"/>)</source>
+        <target state="translated">Elever (<x id="START_TAG_SPAN" ctype="x-span" equiv-text="&lt;span>"/><x id="INTERPOLATION" equiv-text="{{lctrl.studentTable.length}}"/><x id="CLOSE_TAG_SPAN" ctype="x-span" equiv-text="&lt;/span>"/>)</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/sidebarmenu/tabs/logged-users-tab.component.ts</context>
           <context context-type="linenumber">20</context>
@@ -3239,8 +3239,8 @@
         </context-group>
       </trans-unit>
       <trans-unit id="5372481859541149959" datatype="html">
-        <source> Edit relevance (<x id="START_TAG_SPAN" ctype="x-span" equiv-text="&lt;span i18n-tooltip tooltip=&quot;Current relevance value&quot;&gt;"/><x id="INTERPOLATION" equiv-text="}"/><x id="CLOSE_TAG_SPAN" ctype="x-span" equiv-text=")"/>) </source>
-        <target state="translated"> Redigera relevans (<x id="START_TAG_SPAN" ctype="x-span" equiv-text="&lt;span i18n-tooltip tooltip=&quot;Current relevance value&quot;&gt;"/><x id="INTERPOLATION" equiv-text="{{currentRelevance}}"/><x id="CLOSE_TAG_SPAN" ctype="x-span" equiv-text="&lt;/span&gt;"/>) </target>
+        <source> Edit relevance (<x id="START_TAG_SPAN" ctype="x-span" equiv-text="&lt;span i18n-tooltip tooltip=&quot;Current relevance value&quot;>"/><x id="INTERPOLATION" equiv-text="}"/><x id="CLOSE_TAG_SPAN" ctype="x-span" equiv-text=")"/>) </source>
+        <target state="translated"> Redigera relevans (<x id="START_TAG_SPAN" ctype="x-span" equiv-text="&lt;span i18n-tooltip tooltip=&quot;Current relevance value&quot;>"/><x id="INTERPOLATION" equiv-text="{{currentRelevance}}"/><x id="CLOSE_TAG_SPAN" ctype="x-span" equiv-text="&lt;/span>"/>) </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/sidebarmenu/tabs/settings-tab.component.ts</context>
           <context context-type="linenumber">71,72</context>
@@ -3431,24 +3431,24 @@
         </context-group>
       </trans-unit>
       <trans-unit id="1304170677752702304" datatype="html">
-        <source><x id="TAG_INPUT" ctype="x-input" equiv-text="&quot;checkbox&quot; [(ngModel)]=&quot;lctrl.lectureSettings.useWall&quot;                                    (ngModelChange)=&quot;lctrl.refreshWall()&quot;&gt;"/> Show wall</source>
-        <target state="translated"><x id="TAG_INPUT" ctype="x-input" equiv-text="&lt;input type=&quot;checkbox&quot; [(ngModel)]=&quot;lctrl.lectureSettings.useWall&quot;                                    (ngModelChange)=&quot;lctrl.refreshWall()&quot;&gt;"/> Visa väggen</target>
+        <source><x id="TAG_INPUT" ctype="x-input" equiv-text="&quot;checkbox&quot; [(ngModel)]=&quot;lctrl.lectureSettings.useWall&quot;                                    (ngModelChange)=&quot;lctrl.refreshWall()&quot;>"/> Show wall</source>
+        <target state="translated"><x id="TAG_INPUT" ctype="x-input" equiv-text="&lt;input type=&quot;checkbox&quot; [(ngModel)]=&quot;lctrl.lectureSettings.useWall&quot;                                    (ngModelChange)=&quot;lctrl.refreshWall()&quot;>"/> Visa väggen</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/sidebarmenu/tabs/settings-tab.component.ts</context>
           <context context-type="linenumber">143,145</context>
         </context-group>
       </trans-unit>
       <trans-unit id="2865158227582611884" datatype="html">
-        <source><x id="TAG_INPUT" ctype="x-input" equiv-text="&quot;checkbox&quot; [(ngModel)]=&quot;lctrl.lectureSettings.useQuestions&quot;&gt;"/> Show questions </source>
-        <target state="translated"><x id="TAG_INPUT" ctype="x-input" equiv-text="&lt;input type=&quot;checkbox&quot; [(ngModel)]=&quot;lctrl.lectureSettings.useQuestions&quot;&gt;"/> Visa frågor </target>
+        <source><x id="TAG_INPUT" ctype="x-input" equiv-text="&quot;checkbox&quot; [(ngModel)]=&quot;lctrl.lectureSettings.useQuestions&quot;>"/> Show questions </source>
+        <target state="translated"><x id="TAG_INPUT" ctype="x-input" equiv-text="&lt;input type=&quot;checkbox&quot; [(ngModel)]=&quot;lctrl.lectureSettings.useQuestions&quot;>"/> Visa frågor </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/sidebarmenu/tabs/settings-tab.component.ts</context>
           <context context-type="linenumber">148,149</context>
         </context-group>
       </trans-unit>
       <trans-unit id="4058133633628035062" datatype="html">
-        <source><x id="TAG_INPUT" ctype="x-input" equiv-text="&quot;checkbox&quot; [(ngModel)]=&quot;lctrl.lectureSettings.useAnswers&quot;&gt;"/> Show answers</source>
-        <target state="translated"><x id="TAG_INPUT" ctype="x-input" equiv-text="&lt;input type=&quot;checkbox&quot; [(ngModel)]=&quot;lctrl.lectureSettings.useAnswers&quot;&gt;"/> Visa svar</target>
+        <source><x id="TAG_INPUT" ctype="x-input" equiv-text="&quot;checkbox&quot; [(ngModel)]=&quot;lctrl.lectureSettings.useAnswers&quot;>"/> Show answers</source>
+        <target state="translated"><x id="TAG_INPUT" ctype="x-input" equiv-text="&lt;input type=&quot;checkbox&quot; [(ngModel)]=&quot;lctrl.lectureSettings.useAnswers&quot;>"/> Visa svar</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/sidebarmenu/tabs/settings-tab.component.ts</context>
           <context context-type="linenumber">152,153</context>
@@ -3623,8 +3623,8 @@
         </context-group>
       </trans-unit>
       <trans-unit id="7359309035708185948" datatype="html">
-        <source>Linked <x id="START_LINK" ctype="x-a" equiv-text="&lt;a href=&quot;/view/{{sisugroupPath}}&quot;&gt;"/>course groups<x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a&gt;"/></source>
-        <target state="translated">Länkade <x id="START_LINK" ctype="x-a" equiv-text="&lt;a href=&quot;/view/{{sisugroupPath}}&quot;&gt;"/>kursgrupper<x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a&gt;"/></target>
+        <source>Linked <x id="START_LINK" ctype="x-a" equiv-text="&lt;a href=&quot;/view/{{sisugroupPath}}&quot;>"/>course groups<x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a>"/></source>
+        <target state="translated">Länkade <x id="START_LINK" ctype="x-a" equiv-text="&lt;a href=&quot;/view/{{sisugroupPath}}&quot;>"/>kursgrupper<x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a>"/></target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/sidebarmenu/tabs/settings-tab.component.ts</context>
           <context context-type="linenumber">223</context>
@@ -3827,8 +3827,8 @@
         </context-group>
       </trans-unit>
       <trans-unit id="8327531442582201391" datatype="html">
-        <source><x id="START_ITALIC_TEXT" ctype="x-i" equiv-text="yphicon glyphicon-plus&quot;&gt;"/><x id="CLOSE_ITALIC_TEXT" ctype="x-i" equiv-text="New bookmark..."/> New bookmark... </source>
-        <target state="translated"><x id="START_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;i class=&quot;glyphicon glyphicon-plus&quot;&gt;"/><x id="CLOSE_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;/i&gt;"/> Nytt bokmärke… </target>
+        <source><x id="START_ITALIC_TEXT" ctype="x-i" equiv-text="yphicon glyphicon-plus&quot;>"/><x id="CLOSE_ITALIC_TEXT" ctype="x-i" equiv-text="New bookmark..."/> New bookmark... </source>
+        <target state="translated"><x id="START_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;i class=&quot;glyphicon glyphicon-plus&quot;>"/><x id="CLOSE_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;/i>"/> Nytt bokmärke… </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/sidebarmenu/util/bookmarks.component.ts</context>
           <context context-type="linenumber">59,61</context>
@@ -3851,16 +3851,16 @@
         </context-group>
       </trans-unit>
       <trans-unit id="1282825972440368994" datatype="html">
-        <source> I allow <x id="START_LINK" ctype="x-a" equiv-text="&lt;a href=&quot;/view/tim/Rekisteriseloste#rekisterin-tietosis%C3%A4lt%C3%B6&quot;&gt;"/> the collected data <x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a&gt;"/> to be used for scientific research purposes after anonymization. </source>
-        <target state="translated"> Jag tillåter att <x id="START_LINK" ctype="x-a" equiv-text="&lt;a href=&quot;/view/tim/Rekisteriseloste#rekisterin-tietosis%C3%A4lt%C3%B6&quot;&gt;"/> den insamlade informationen <x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a&gt;"/> används för vetenskapliga forskningsändamål efter anonymisering. </target>
+        <source> I allow <x id="START_LINK" ctype="x-a" equiv-text="&lt;a href=&quot;/view/tim/Rekisteriseloste#rekisterin-tietosis%C3%A4lt%C3%B6&quot;>"/> the collected data <x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a>"/> to be used for scientific research purposes after anonymization. </source>
+        <target state="translated"> Jag tillåter att <x id="START_LINK" ctype="x-a" equiv-text="&lt;a href=&quot;/view/tim/Rekisteriseloste#rekisterin-tietosis%C3%A4lt%C3%B6&quot;>"/> den insamlade informationen <x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a>"/> används för vetenskapliga forskningsändamål efter anonymisering. </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/ui/consent-choice.component.ts</context>
           <context context-type="linenumber">11,17</context>
         </context-group>
       </trans-unit>
       <trans-unit id="7549221046249449872" datatype="html">
-        <source> I do not allow <x id="START_LINK" ctype="x-a" equiv-text="&lt;a href=&quot;/view/tim/Rekisteriseloste#rekisterin-tietosis%C3%A4lt%C3%B6&quot;&gt;"/> the collected data <x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a&gt;"/> to be used for scientific research purposes after anonymization. </source>
-        <target state="translated"> Jag förbjuder att <x id="START_LINK" ctype="x-a" equiv-text="&lt;a href=&quot;/view/tim/Rekisteriseloste#rekisterin-tietosis%C3%A4lt%C3%B6&quot;&gt;"/> den insamlade informationen <x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a&gt;"/> används för vetenskapliga forskningsändamål efter anonymisering. </target>
+        <source> I do not allow <x id="START_LINK" ctype="x-a" equiv-text="&lt;a href=&quot;/view/tim/Rekisteriseloste#rekisterin-tietosis%C3%A4lt%C3%B6&quot;>"/> the collected data <x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a>"/> to be used for scientific research purposes after anonymization. </source>
+        <target state="translated"> Jag förbjuder att <x id="START_LINK" ctype="x-a" equiv-text="&lt;a href=&quot;/view/tim/Rekisteriseloste#rekisterin-tietosis%C3%A4lt%C3%B6&quot;>"/> den insamlade informationen <x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a>"/> används för vetenskapliga forskningsändamål efter anonymisering. </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/ui/consent-choice.component.ts</context>
           <context context-type="linenumber">23,29</context>
@@ -4511,16 +4511,16 @@
         </context-group>
       </trans-unit>
       <trans-unit id="426514155240557396" datatype="html">
-        <source>You are attempting to authenticate to <x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong&gt;"/><x id="INTERPOLATION" equiv-text="{{data.oauthClientName}}"/><x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong&gt;"/> with TIM.</source>
-        <target state="translated">Du försöker autentisera till <x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong&gt;"/><x id="INTERPOLATION" equiv-text="{{data.oauthClientName}}"/><x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong&gt;"/> med TIM.</target>
+        <source>You are attempting to authenticate to <x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong>"/><x id="INTERPOLATION" equiv-text="{{data.oauthClientName}}"/><x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong>"/> with TIM.</source>
+        <target state="translated">Du försöker autentisera till <x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong>"/><x id="INTERPOLATION" equiv-text="{{data.oauthClientName}}"/><x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong>"/> med TIM.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/oauth-authorize.component.ts</context>
           <context context-type="linenumber">43</context>
         </context-group>
       </trans-unit>
       <trans-unit id="3914978142342238712" datatype="html">
-        <source><x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong&gt;"/><x id="INTERPOLATION" equiv-text="{{data.oauthClientName}}"/><x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong&gt;"/> will be able to</source>
-        <target state="translated"><x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong&gt;"/><x id="INTERPOLATION" equiv-text="{{data.oauthClientName}}"/><x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong&gt;"/> kommer att kunna</target>
+        <source><x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong>"/><x id="INTERPOLATION" equiv-text="{{data.oauthClientName}}"/><x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong>"/> will be able to</source>
+        <target state="translated"><x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong>"/><x id="INTERPOLATION" equiv-text="{{data.oauthClientName}}"/><x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong>"/> kommer att kunna</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/oauth-authorize.component.ts</context>
           <context context-type="linenumber">44</context>
@@ -4639,8 +4639,8 @@
         </context-group>
       </trans-unit>
       <trans-unit id="5380572116300325278" datatype="html">
-        <source> You have no styles selected. You can add styles via the <x id="START_LINK" ctype="x-a" equiv-text="&lt;a (click)=&quot;changeStyleTab(1)&quot;&gt;"/>Available styles<x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a&gt;"/> tab. </source>
-        <target state="translated"> Du har inga stilar valda. Du kan lägga till stilar via fliken <x id="START_LINK" ctype="x-a" equiv-text="&lt;a (click)=&quot;changeStyleTab(1)&quot;&gt;"/>Tillgängliga stilar<x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a&gt;"/>. </target>
+        <source> You have no styles selected. You can add styles via the <x id="START_LINK" ctype="x-a" equiv-text="&lt;a (click)=&quot;changeStyleTab(1)&quot;>"/>Available styles<x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a>"/> tab. </source>
+        <target state="translated"> Du har inga stilar valda. Du kan lägga till stilar via fliken <x id="START_LINK" ctype="x-a" equiv-text="&lt;a (click)=&quot;changeStyleTab(1)&quot;>"/>Tillgängliga stilar<x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a>"/>. </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
           <context context-type="linenumber">150,152</context>
@@ -4687,24 +4687,24 @@
         </context-group>
       </trans-unit>
       <trans-unit id="3197188819017309601" datatype="html">
-        <source><x id="START_TAG_STRONG" ctype="x-strong" equiv-text="Offi"/>Official styles<x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong&gt;"/> are maintained and supported by TIM maintainers. </source>
-        <target state="translated"><x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong&gt;"/>Officiella stilar<x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong&gt;"/> underhålls och stöds av TIM-underhållare. </target>
+        <source><x id="START_TAG_STRONG" ctype="x-strong" equiv-text="Offi"/>Official styles<x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong>"/> are maintained and supported by TIM maintainers. </source>
+        <target state="translated"><x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong>"/>Officiella stilar<x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong>"/> underhålls och stöds av TIM-underhållare. </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
           <context context-type="linenumber">188,189</context>
         </context-group>
       </trans-unit>
       <trans-unit id="5633802735834461146" datatype="html">
-        <source>To remove styles or edit their ordering, use the <x id="START_LINK" ctype="x-a" equiv-text="&lt;a (click)=&quot;changeStyleTab(0)&quot;&gt;"/>Selected styles<x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a&gt;"/> tab.</source>
-        <target state="translated">För att ta bort stilar eller redigera deras ordning, använd fliken <x id="START_LINK" ctype="x-a" equiv-text="&lt;a (click)=&quot;changeStyleTab(0)&quot;&gt;"/>Valda stilar<x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a&gt;"/>.</target>
+        <source>To remove styles or edit their ordering, use the <x id="START_LINK" ctype="x-a" equiv-text="&lt;a (click)=&quot;changeStyleTab(0)&quot;>"/>Selected styles<x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a>"/> tab.</source>
+        <target state="translated">För att ta bort stilar eller redigera deras ordning, använd fliken <x id="START_LINK" ctype="x-a" equiv-text="&lt;a (click)=&quot;changeStyleTab(0)&quot;>"/>Valda stilar<x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a>"/>.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
           <context context-type="linenumber">193,194</context>
         </context-group>
       </trans-unit>
       <trans-unit id="2068094190303764265" datatype="html">
-        <source><x id="START_TAG_STRONG" ctype="x-strong" equiv-text="Note"/>Note:<x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong&gt;"/> Your current styles will be temporarily disabled while previewing.</source>
-        <target state="translated"><x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong&gt;"/>Obs!<x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong&gt;"/> Dina nuvarande stilar kommer att inaktiveras tillfälligt under förhandsgranskning.</target>
+        <source><x id="START_TAG_STRONG" ctype="x-strong" equiv-text="Note"/>Note:<x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong>"/> Your current styles will be temporarily disabled while previewing.</source>
+        <target state="translated"><x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong>"/>Obs!<x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong>"/> Dina nuvarande stilar kommer att inaktiveras tillfälligt under förhandsgranskning.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
           <context context-type="linenumber">195,196</context>
@@ -4771,8 +4771,8 @@
         </context-group>
       </trans-unit>
       <trans-unit id="4387425307250994986" datatype="html">
-        <source> For extended styling using SCSS, refer to <x id="START_LINK" ctype="x-a" equiv-text="&lt;a href=&quot;/view/tim/ohjeita/styles&quot;&gt;"/>style authoring guide<x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a&gt;"/>. </source>
-        <target state="translated"> För utökad stil med SCSS, se <x id="START_LINK" ctype="x-a" equiv-text="&lt;a href=&quot;/view/tim/ohjeita/styles&quot;&gt;"/>guide för stilförfattare<x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a&gt;"/>. </target>
+        <source> For extended styling using SCSS, refer to <x id="START_LINK" ctype="x-a" equiv-text="&lt;a href=&quot;/view/tim/ohjeita/styles&quot;>"/>style authoring guide<x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a>"/>. </source>
+        <target state="translated"> För utökad stil med SCSS, se <x id="START_LINK" ctype="x-a" equiv-text="&lt;a href=&quot;/view/tim/ohjeita/styles&quot;>"/>guide för stilförfattare<x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a>"/>. </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
           <context context-type="linenumber">232,234</context>
@@ -4899,8 +4899,8 @@
         </context-group>
       </trans-unit>
       <trans-unit id="3568299798809723019" datatype="html">
-        <source>Type one regular expression per line that should match any part of the path of the folder or document, e.g. <x id="START_TAG_CODE" ctype="x-code" equiv-text="&lt;code&gt;"/>/ht/<x id="CLOSE_TAG_CODE" ctype="x-code" equiv-text="&lt;/code&gt;"/> would match any path with <x id="START_TAG_CODE" ctype="x-code" equiv-text="&lt;code&gt;"/>/ht/<x id="CLOSE_TAG_CODE" ctype="x-code" equiv-text="&lt;/code&gt;"/> in it.</source>
-        <target state="translated">Skriv ett reguljärt uttryck per rad som ska matcha någon del av sökvägen till mappen eller dokumentet, t.ex. <x id="START_TAG_CODE" ctype="x-code" equiv-text="&lt;code&gt;"/>/ht/<x id="CLOSE_TAG_CODE" ctype="x-code" equiv-text="&lt;/code&gt;"/> skulle matcha vilken sökväg som helst med <x id="START_TAG_CODE" ctype="x-code" equiv-text="&lt;code&gt;"/>/ht/<x id="CLOSE_TAG_CODE" ctype="x-code" equiv-text="&lt;/code&gt;"/> i den.</target>
+        <source>Type one regular expression per line that should match any part of the path of the folder or document, e.g. <x id="START_TAG_CODE" ctype="x-code" equiv-text="&lt;code>"/>/ht/<x id="CLOSE_TAG_CODE" ctype="x-code" equiv-text="&lt;/code>"/> would match any path with <x id="START_TAG_CODE" ctype="x-code" equiv-text="&lt;code>"/>/ht/<x id="CLOSE_TAG_CODE" ctype="x-code" equiv-text="&lt;/code>"/> in it.</source>
+        <target state="translated">Skriv ett reguljärt uttryck per rad som ska matcha någon del av sökvägen till mappen eller dokumentet, t.ex. <x id="START_TAG_CODE" ctype="x-code" equiv-text="&lt;code>"/>/ht/<x id="CLOSE_TAG_CODE" ctype="x-code" equiv-text="&lt;/code>"/> skulle matcha vilken sökväg som helst med <x id="START_TAG_CODE" ctype="x-code" equiv-text="&lt;code>"/>/ht/<x id="CLOSE_TAG_CODE" ctype="x-code" equiv-text="&lt;/code>"/> i den.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
           <context context-type="linenumber">299,301</context>
@@ -5059,8 +5059,8 @@
         </context-group>
       </trans-unit>
       <trans-unit id="582891413766289599" datatype="html">
-        <source> This email is managed by <x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong                                     [style.color]=&quot;originInfo.bgColor&quot;&gt;"/><x id="INTERPOLATION"/><x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="."/>. The address will be automatically updated by the system. </source>
-        <target state="translated"> Det här e-postmeddelandet hanteras av <x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong                                     [style.color]=&quot;originInfo.bgColor&quot;&gt;"/><x id="INTERPOLATION" equiv-text="{{originInfo.name}}"/><x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong&gt;"/>. Adressen kommer automatiskt att uppdateras av systemet. </target>
+        <source> This email is managed by <x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong                                     [style.color]=&quot;originInfo.bgColor&quot;>"/><x id="INTERPOLATION"/><x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="."/>. The address will be automatically updated by the system. </source>
+        <target state="translated"> Det här e-postmeddelandet hanteras av <x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong                                     [style.color]=&quot;originInfo.bgColor&quot;>"/><x id="INTERPOLATION" equiv-text="{{originInfo.name}}"/><x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong>"/>. Adressen kommer automatiskt att uppdateras av systemet. </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
           <context context-type="linenumber">517,519</context>
@@ -5291,16 +5291,16 @@
         </context-group>
       </trans-unit>
       <trans-unit id="6060837509033289235" datatype="html">
-        <source>Contact information: <x id="START_TAG_CODE" ctype="x-code" equiv-text="&lt;code&gt;"/><x id="INTERPOLATION" equiv-text="&lt;/c"/><x id="CLOSE_TAG_CODE" ctype="x-code" equiv-text="&lt;/li&gt;"/></source>
-        <target state="translated">Kontaktinformation: <x id="START_TAG_CODE" ctype="x-code" equiv-text="&lt;code&gt;"/><x id="INTERPOLATION" equiv-text="{{info.contact}}"/><x id="CLOSE_TAG_CODE" ctype="x-code" equiv-text="&lt;/code&gt;"/></target>
+        <source>Contact information: <x id="START_TAG_CODE" ctype="x-code" equiv-text="&lt;code>"/><x id="INTERPOLATION" equiv-text="&lt;/c"/><x id="CLOSE_TAG_CODE" ctype="x-code" equiv-text="&lt;/li>"/></source>
+        <target state="translated">Kontaktinformation: <x id="START_TAG_CODE" ctype="x-code" equiv-text="&lt;code>"/><x id="INTERPOLATION" equiv-text="{{info.contact}}"/><x id="CLOSE_TAG_CODE" ctype="x-code" equiv-text="&lt;/code>"/></target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/user-action-verify.component.ts</context>
           <context context-type="linenumber">72,73</context>
         </context-group>
       </trans-unit>
       <trans-unit id="5353556497172163824" datatype="html">
-        <source><x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;cod"/><x id="START_TAG_CODE" ctype="x-code" equiv-text="{{info.contact}"/><x id="INTERPOLATION" equiv-text="&lt;/c"/><x id="CLOSE_TAG_CODE" ctype="x-code" equiv-text="&lt;/strong&gt; w"/><x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="will be m"/> will be made your primary <x id="INTERPOLATION_1" equiv-text="{{contactType.toLowerCase()}}"/>.</source>
-        <target state="translated"><x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong&gt;"/><x id="START_TAG_CODE" ctype="x-code" equiv-text="&lt;code&gt;"/><x id="INTERPOLATION" equiv-text="{{info.contact}}"/><x id="CLOSE_TAG_CODE" ctype="x-code" equiv-text="&lt;/code&gt;"/><x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong&gt;"/> kommer att bli din primära <x id="INTERPOLATION_1" equiv-text="{{contactType.toLowerCase()}}"/>.</target>
+        <source><x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;cod"/><x id="START_TAG_CODE" ctype="x-code" equiv-text="{{info.contact}"/><x id="INTERPOLATION" equiv-text="&lt;/c"/><x id="CLOSE_TAG_CODE" ctype="x-code" equiv-text="&lt;/strong> w"/><x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="will be m"/> will be made your primary <x id="INTERPOLATION_1" equiv-text="{{contactType.toLowerCase()}}"/>.</source>
+        <target state="translated"><x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong>"/><x id="START_TAG_CODE" ctype="x-code" equiv-text="&lt;code>"/><x id="INTERPOLATION" equiv-text="{{info.contact}}"/><x id="CLOSE_TAG_CODE" ctype="x-code" equiv-text="&lt;/code>"/><x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong>"/> kommer att bli din primära <x id="INTERPOLATION_1" equiv-text="{{contactType.toLowerCase()}}"/>.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/user-action-verify.component.ts</context>
           <context context-type="linenumber">96,99</context>
@@ -5943,8 +5943,8 @@
         </context-group>
       </trans-unit>
       <trans-unit id="6399772650014693596" datatype="html">
-        <source> You are previewing the page with access limited to level "<x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong&gt;"/><x id="INTERPOLATION" equiv-text="&lt;"/><x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&quot;."/>". </source>
-        <target state="translated"> Du förhandsgranskar sidan med begränsad åtkomst till nivån "<x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong&gt;"/><x id="INTERPOLATION" equiv-text="{{lockedAccessName}}"/><x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong&gt;"/>". </target>
+        <source> You are previewing the page with access limited to level "<x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong>"/><x id="INTERPOLATION" equiv-text="&lt;"/><x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&quot;."/>". </source>
+        <target state="translated"> Du förhandsgranskar sidan med begränsad åtkomst till nivån "<x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong>"/><x id="INTERPOLATION" equiv-text="{{lockedAccessName}}"/><x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong>"/>". </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/header/role-info.component.ts</context>
           <context context-type="linenumber">29,31</context>
@@ -6135,8 +6135,8 @@
         </context-group>
       </trans-unit>
       <trans-unit id="4380848271552864934" datatype="html">
-        <source>Loading images (<x id="INTERPOLATION" equiv-text="{{loadedImages}}"/> /<x id="INTERPOLATION_1" equiv-text="{{bgSources.length}}"/>) <x id="START_TAG_TIM_LOADING" ctype="x-tim_loading" equiv-text="&lt;tim-loading&gt;"/><x id="CLOSE_TAG_TIM_LOADING" ctype="x-tim_loading" equiv-text="&lt;/tim-loading&gt;"/></source>
-        <target state="translated">Laddar bilder (<x id="INTERPOLATION" equiv-text="{{loadedImages}}"/> /<x id="INTERPOLATION_1" equiv-text="{{bgSources.length}}"/>) <x id="START_TAG_TIM_LOADING" ctype="x-tim_loading" equiv-text="&lt;tim-loading&gt;"/><x id="CLOSE_TAG_TIM_LOADING" ctype="x-tim_loading" equiv-text="&lt;/tim-loading&gt;"/></target>
+        <source>Loading images (<x id="INTERPOLATION" equiv-text="{{loadedImages}}"/> /<x id="INTERPOLATION_1" equiv-text="{{bgSources.length}}"/>) <x id="START_TAG_TIM_LOADING" ctype="x-tim_loading" equiv-text="&lt;tim-loading>"/><x id="CLOSE_TAG_TIM_LOADING" ctype="x-tim_loading" equiv-text="&lt;/tim-loading>"/></source>
+        <target state="translated">Laddar bilder (<x id="INTERPOLATION" equiv-text="{{loadedImages}}"/> /<x id="INTERPOLATION_1" equiv-text="{{bgSources.length}}"/>) <x id="START_TAG_TIM_LOADING" ctype="x-tim_loading" equiv-text="&lt;tim-loading>"/><x id="CLOSE_TAG_TIM_LOADING" ctype="x-tim_loading" equiv-text="&lt;/tim-loading>"/></target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/draw-canvas/draw-canvas.components.ts</context>
           <context context-type="linenumber">1070,1072</context>
@@ -6485,8 +6485,8 @@
         </context-group>
       </trans-unit>
       <trans-unit id="6774950862300413361" datatype="html">
-        <source>Adding <x id="START_TAG_CODE" ctype="x-code" equiv-text="&lt;code&gt;"/>"delete": true<x id="CLOSE_TAG_CODE" ctype="x-code" equiv-text="&lt;/code&gt;"/> to an event will delete it.</source>
-        <target state="translated">Om du lägger till <x id="START_TAG_CODE" ctype="x-code" equiv-text="&lt;code&gt;"/>"delete": true<x id="CLOSE_TAG_CODE" ctype="x-code" equiv-text="&lt;/code&gt;"/> till en händelse raderas den.</target>
+        <source>Adding <x id="START_TAG_CODE" ctype="x-code" equiv-text="&lt;code>"/>"delete": true<x id="CLOSE_TAG_CODE" ctype="x-code" equiv-text="&lt;/code>"/> to an event will delete it.</source>
+        <target state="translated">Om du lägger till <x id="START_TAG_CODE" ctype="x-code" equiv-text="&lt;code>"/>"delete": true<x id="CLOSE_TAG_CODE" ctype="x-code" equiv-text="&lt;/code>"/> till en händelse raderas den.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/calendar/edit-json-event-dialog.component.ts</context>
           <context context-type="linenumber">25</context>
@@ -6889,24 +6889,24 @@
         </context-group>
       </trans-unit>
       <trans-unit id="5546447057806901596" datatype="html">
-        <source><x id="START_PARAGRAPH" ctype="x-p" equiv-text="&lt;p&gt;"/> Message verification is disabled by the mailing list. All message lists options can be used, but some of them can cause messages being marked as spam. <x id="CLOSE_PARAGRAPH" ctype="x-p" equiv-text="&lt;/p&gt;"/><x id="START_PARAGRAPH" ctype="x-p" equiv-text="&lt;p&gt;"/><x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong&gt;"/>This option is not recommended!<x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong&gt;"/> Messages sent through the list will most likely be marked as spam by most mail providers. <x id="CLOSE_PARAGRAPH" ctype="x-p" equiv-text="&lt;/p&gt;"/></source>
-        <target state="translated"><x id="START_PARAGRAPH" ctype="x-p" equiv-text="&lt;p&gt;"/> Meddelandekontrollen är inaktiverad av sändlistan. Alla alternativ i meddelandelistorna kan användas, men vissa av dem kan leda till att meddelanden markeras som skräppost. <x id="CLOSE_PARAGRAPH" ctype="x-p" equiv-text="&lt;/p&gt;"/><x id="START_PARAGRAPH" ctype="x-p" equiv-text="&lt;p&gt;"/><x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong&gt;"/>Detta alternativ rekommenderas inte!<x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong&gt;"/> Meddelanden som skickas via listan kommer med största sannolikhet att markeras som skräppost av de flesta e-postleverantörer. <x id="CLOSE_PARAGRAPH" ctype="x-p" equiv-text="&lt;/p&gt;"/></target>
+        <source><x id="START_PARAGRAPH" ctype="x-p" equiv-text="&lt;p>"/> Message verification is disabled by the mailing list. All message lists options can be used, but some of them can cause messages being marked as spam. <x id="CLOSE_PARAGRAPH" ctype="x-p" equiv-text="&lt;/p>"/><x id="START_PARAGRAPH" ctype="x-p" equiv-text="&lt;p>"/><x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong>"/>This option is not recommended!<x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong>"/> Messages sent through the list will most likely be marked as spam by most mail providers. <x id="CLOSE_PARAGRAPH" ctype="x-p" equiv-text="&lt;/p>"/></source>
+        <target state="translated"><x id="START_PARAGRAPH" ctype="x-p" equiv-text="&lt;p>"/> Meddelandekontrollen är inaktiverad av sändlistan. Alla alternativ i meddelandelistorna kan användas, men vissa av dem kan leda till att meddelanden markeras som skräppost. <x id="CLOSE_PARAGRAPH" ctype="x-p" equiv-text="&lt;/p>"/><x id="START_PARAGRAPH" ctype="x-p" equiv-text="&lt;p>"/><x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong>"/>Detta alternativ rekommenderas inte!<x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong>"/> Meddelanden som skickas via listan kommer med största sannolikhet att markeras som skräppost av de flesta e-postleverantörer. <x id="CLOSE_PARAGRAPH" ctype="x-p" equiv-text="&lt;/p>"/></target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/messaging/manage/message-list-admin.component.ts</context>
           <context context-type="linenumber">139,146</context>
         </context-group>
       </trans-unit>
       <trans-unit id="6122818737080834499" datatype="html">
-        <source><x id="START_PARAGRAPH" ctype="x-p" equiv-text="&lt;p&gt;"/> The message list verifies all messages before sending them to the receiver. All message lists options can be used and the messages will pass spam filters of most mail providers. <x id="CLOSE_PARAGRAPH" ctype="x-p" equiv-text="&lt;/p&gt;"/><x id="START_PARAGRAPH" ctype="x-p" equiv-text="&lt;p&gt;"/><x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong&gt;"/>Note: this modifies the sender information!<x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong&gt;"/> Messages sent through the list will have the list's address as the sender. However, the receiver will see the name of the sender and will be able to reply directly to them. <x id="CLOSE_PARAGRAPH" ctype="x-p" equiv-text="&lt;/p&gt;"/></source>
-        <target state="translated"><x id="START_PARAGRAPH" ctype="x-p" equiv-text="&lt;p&gt;"/> Meddelandelistan kontrollerar alla meddelanden innan de skickas till mottagaren. Alla alternativ i meddelandelistorna kan användas och meddelandena passerar de flesta e-postleverantörers skräppostfilter. <x id="CLOSE_PARAGRAPH" ctype="x-p" equiv-text="&lt;/p&gt;"/><x id="START_PARAGRAPH" ctype="x-p" equiv-text="&lt;p&gt;"/><x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong&gt;"/>Obs: detta ändrar avsändarinformationen!<x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong&gt;"/> Meddelanden som skickas via listan kommer att ha listans adress som avsändare. Mottagaren kommer dock att se namnet på avsändaren och kan svara direkt till denne. <x id="CLOSE_PARAGRAPH" ctype="x-p" equiv-text="&lt;/p&gt;"/></target>
+        <source><x id="START_PARAGRAPH" ctype="x-p" equiv-text="&lt;p>"/> The message list verifies all messages before sending them to the receiver. All message lists options can be used and the messages will pass spam filters of most mail providers. <x id="CLOSE_PARAGRAPH" ctype="x-p" equiv-text="&lt;/p>"/><x id="START_PARAGRAPH" ctype="x-p" equiv-text="&lt;p>"/><x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong>"/>Note: this modifies the sender information!<x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong>"/> Messages sent through the list will have the list's address as the sender. However, the receiver will see the name of the sender and will be able to reply directly to them. <x id="CLOSE_PARAGRAPH" ctype="x-p" equiv-text="&lt;/p>"/></source>
+        <target state="translated"><x id="START_PARAGRAPH" ctype="x-p" equiv-text="&lt;p>"/> Meddelandelistan kontrollerar alla meddelanden innan de skickas till mottagaren. Alla alternativ i meddelandelistorna kan användas och meddelandena passerar de flesta e-postleverantörers skräppostfilter. <x id="CLOSE_PARAGRAPH" ctype="x-p" equiv-text="&lt;/p>"/><x id="START_PARAGRAPH" ctype="x-p" equiv-text="&lt;p>"/><x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong>"/>Obs: detta ändrar avsändarinformationen!<x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong>"/> Meddelanden som skickas via listan kommer att ha listans adress som avsändare. Mottagaren kommer dock att se namnet på avsändaren och kan svara direkt till denne. <x id="CLOSE_PARAGRAPH" ctype="x-p" equiv-text="&lt;/p>"/></target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/messaging/manage/message-list-admin.component.ts</context>
           <context context-type="linenumber">158,166</context>
         </context-group>
       </trans-unit>
       <trans-unit id="8050420007390838966" datatype="html">
-        <source><x id="START_PARAGRAPH" ctype="x-p" equiv-text="&lt;p&gt;"/> The message list forwards messages to the receiver without modifications. <x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong&gt;"/>This verification method disables the following list options:<x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong&gt;"/><x id="CLOSE_PARAGRAPH" ctype="x-p" equiv-text="&lt;/p&gt;"/><x id="START_UNORDERED_LIST" ctype="x-ul" equiv-text="&lt;ul&gt;"/><x id="START_LIST_ITEM" ctype="x-li" equiv-text="&lt;li&gt;"/>Subject prefix<x id="CLOSE_LIST_ITEM" ctype="x-li" equiv-text="&lt;/li&gt;"/><x id="START_LIST_ITEM" ctype="x-li" equiv-text="&lt;li&gt;"/>Automatic message headers and footers are reset to empty<x id="CLOSE_LIST_ITEM" ctype="x-li" equiv-text="&lt;/li&gt;"/><x id="CLOSE_UNORDERED_LIST" ctype="x-ul" equiv-text="&lt;/ul&gt;"/><x id="START_PARAGRAPH" ctype="x-p" equiv-text="&lt;p&gt;"/> This option relies on the verification information provided by the sender's mail provider. <x id="CLOSE_PARAGRAPH" ctype="x-p" equiv-text="&lt;/p&gt;"/></source>
-        <target state="translated"><x id="START_PARAGRAPH" ctype="x-p" equiv-text="&lt;p&gt;"/> Meddelandelistan vidarebefordrar meddelanden till mottagaren utan ändringar. <x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong&gt;"/>Denna verifieringsmetod inaktiverar följande listalternativ:<x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong&gt;"/><x id="CLOSE_PARAGRAPH" ctype="x-p" equiv-text="&lt;/p&gt;"/><x id="START_UNORDERED_LIST" ctype="x-ul" equiv-text="&lt;ul&gt;"/><x id="START_LIST_ITEM" ctype="x-li" equiv-text="&lt;li&gt;"/>Ämnesprefix<x id="CLOSE_LIST_ITEM" ctype="x-li" equiv-text="&lt;/li&gt;"/><x id="START_LIST_ITEM" ctype="x-li" equiv-text="&lt;li&gt;"/>Automatiska rubriker och sidfötter för meddelanden återställs till tomma.<x id="CLOSE_LIST_ITEM" ctype="x-li" equiv-text="&lt;/li&gt;"/><x id="CLOSE_UNORDERED_LIST" ctype="x-ul" equiv-text="&lt;/ul&gt;"/><x id="START_PARAGRAPH" ctype="x-p" equiv-text="&lt;p&gt;"/> Det här alternativet är beroende av den verifieringsinformation som tillhandahålls av avsändarens e-postleverantör. <x id="CLOSE_PARAGRAPH" ctype="x-p" equiv-text="&lt;/p&gt;"/></target>
+        <source><x id="START_PARAGRAPH" ctype="x-p" equiv-text="&lt;p>"/> The message list forwards messages to the receiver without modifications. <x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong>"/>This verification method disables the following list options:<x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong>"/><x id="CLOSE_PARAGRAPH" ctype="x-p" equiv-text="&lt;/p>"/><x id="START_UNORDERED_LIST" ctype="x-ul" equiv-text="&lt;ul>"/><x id="START_LIST_ITEM" ctype="x-li" equiv-text="&lt;li>"/>Subject prefix<x id="CLOSE_LIST_ITEM" ctype="x-li" equiv-text="&lt;/li>"/><x id="START_LIST_ITEM" ctype="x-li" equiv-text="&lt;li>"/>Automatic message headers and footers are reset to empty<x id="CLOSE_LIST_ITEM" ctype="x-li" equiv-text="&lt;/li>"/><x id="CLOSE_UNORDERED_LIST" ctype="x-ul" equiv-text="&lt;/ul>"/><x id="START_PARAGRAPH" ctype="x-p" equiv-text="&lt;p>"/> This option relies on the verification information provided by the sender's mail provider. <x id="CLOSE_PARAGRAPH" ctype="x-p" equiv-text="&lt;/p>"/></source>
+        <target state="translated"><x id="START_PARAGRAPH" ctype="x-p" equiv-text="&lt;p>"/> Meddelandelistan vidarebefordrar meddelanden till mottagaren utan ändringar. <x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong>"/>Denna verifieringsmetod inaktiverar följande listalternativ:<x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong>"/><x id="CLOSE_PARAGRAPH" ctype="x-p" equiv-text="&lt;/p>"/><x id="START_UNORDERED_LIST" ctype="x-ul" equiv-text="&lt;ul>"/><x id="START_LIST_ITEM" ctype="x-li" equiv-text="&lt;li>"/>Ämnesprefix<x id="CLOSE_LIST_ITEM" ctype="x-li" equiv-text="&lt;/li>"/><x id="START_LIST_ITEM" ctype="x-li" equiv-text="&lt;li>"/>Automatiska rubriker och sidfötter för meddelanden återställs till tomma.<x id="CLOSE_LIST_ITEM" ctype="x-li" equiv-text="&lt;/li>"/><x id="CLOSE_UNORDERED_LIST" ctype="x-ul" equiv-text="&lt;/ul>"/><x id="START_PARAGRAPH" ctype="x-p" equiv-text="&lt;p>"/> Det här alternativet är beroende av den verifieringsinformation som tillhandahålls av avsändarens e-postleverantör. <x id="CLOSE_PARAGRAPH" ctype="x-p" equiv-text="&lt;/p>"/></target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/messaging/manage/message-list-admin.component.ts</context>
           <context context-type="linenumber">149,159</context>
@@ -7062,7 +7062,7 @@
       </trans-unit>
       <trans-unit id="6627696457152714946" datatype="html">
         <source>Velps</source>
-        <target state="translated">Velper</target>
+        <target state="translated">Velps</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/templates/answerBrowser.html</context>
           <context context-type="linenumber">145</context>
@@ -7289,8 +7289,8 @@
         </context-group>
       </trans-unit>
       <trans-unit id="3515714258847417727" datatype="html">
-        <source>Press <x id="START_TAG_SPAN" ctype="x-span" equiv-text="&lt;span class=&quot;text-italic&quot;&gt;"/>Ctrl-F / ⌘-F<x id="CLOSE_TAG_SPAN" ctype="x-span" equiv-text="&lt;/span&gt;"/> to search for text on the current page.</source>
-        <target state="translated">Tryck <x id="START_TAG_SPAN" ctype="x-span" equiv-text="&lt;span class=&quot;text-italic&quot;&gt;"/>Ctrl-F / ⌘-F<x id="CLOSE_TAG_SPAN" ctype="x-span" equiv-text="&lt;/span&gt;"/> för att söka text på den aktuella sidan.</target>
+        <source>Press <x id="START_TAG_SPAN" ctype="x-span" equiv-text="&lt;span class=&quot;text-italic&quot;>"/>Ctrl-F / ⌘-F<x id="CLOSE_TAG_SPAN" ctype="x-span" equiv-text="&lt;/span>"/> to search for text on the current page.</source>
+        <target state="translated">Tryck <x id="START_TAG_SPAN" ctype="x-span" equiv-text="&lt;span class=&quot;text-italic&quot;>"/>Ctrl-F / ⌘-F<x id="CLOSE_TAG_SPAN" ctype="x-span" equiv-text="&lt;/span>"/> för att söka text på den aktuella sidan.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/search/search-box.component.ts</context>
           <context context-type="linenumber">117,118</context>
@@ -7705,8 +7705,8 @@
         </context-group>
       </trans-unit>
       <trans-unit id="4518343884091856656" datatype="html">
-        <source><x id="START_LINK" ctype="x-a" equiv-text="focusMe&gt;"/>Refresh<x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a&gt;"/> the page to continue.</source>
-        <target state="translated"><x id="START_LINK" ctype="x-a" equiv-text="focusMe&gt;"/>Uppdatera<x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a&gt;"/> sidan för att fortsätta.</target>
+        <source><x id="START_LINK" ctype="x-a" equiv-text="focusMe>"/>Refresh<x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a>"/> the page to continue.</source>
+        <target state="translated"><x id="START_LINK" ctype="x-a" equiv-text="focusMe>"/>Uppdatera<x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a>"/> sidan för att fortsätta.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/login-dialog.component.ts</context>
           <context context-type="linenumber">312,314</context>
@@ -8887,8 +8887,8 @@
         </context-group>
       </trans-unit>
       <trans-unit id="1805269398693443899" datatype="html">
-        <source>Error: <x id="START_TAG_SPAN" ctype="x-span" equiv-text="&lt;span [innerHTML]=&quot;error | purify&quot;&gt;"/><x id="CLOSE_TAG_SPAN" ctype="x-span" equiv-text="&lt;/span&gt;"/></source>
-        <target state="translated">Fel: <x id="START_TAG_SPAN" ctype="x-span" equiv-text="&lt;span [innerHTML]=&quot;error | purify&quot;&gt;"/><x id="CLOSE_TAG_SPAN" ctype="x-span" equiv-text="&lt;/span&gt;"/></target>
+        <source>Error: <x id="START_TAG_SPAN" ctype="x-span" equiv-text="&lt;span [innerHTML]=&quot;error | purify&quot;>"/><x id="CLOSE_TAG_SPAN" ctype="x-span" equiv-text="&lt;/span>"/></source>
+        <target state="translated">Fel: <x id="START_TAG_SPAN" ctype="x-span" equiv-text="&lt;span [innerHTML]=&quot;error | purify&quot;>"/><x id="CLOSE_TAG_SPAN" ctype="x-span" equiv-text="&lt;/span>"/></target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/ui/error-description.component.ts</context>
           <context context-type="linenumber">20</context>
@@ -9039,8 +9039,8 @@
         </context-group>
       </trans-unit>
       <trans-unit id="8720702577528832728" datatype="html">
-        <source> You have no quick styles selected. You can add styles via the <x id="START_LINK" ctype="x-a" equiv-text="&lt;a (click)=&quot;changeStyleTab(1)&quot;&gt;"/>Available styles<x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a&gt;"/> tab. </source>
-        <target state="translated"> Du har inte valt några snabbstilar. Du kan lägga till stilar via fliken <x id="START_LINK" ctype="x-a" equiv-text="&lt;a (click)=&quot;changeStyleTab(1)&quot;&gt;"/>Tillgängliga stilar<x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a&gt;"/> </target>
+        <source> You have no quick styles selected. You can add styles via the <x id="START_LINK" ctype="x-a" equiv-text="&lt;a (click)=&quot;changeStyleTab(1)&quot;>"/>Available styles<x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a>"/> tab. </source>
+        <target state="translated"> Du har inte valt några snabbstilar. Du kan lägga till stilar via fliken <x id="START_LINK" ctype="x-a" equiv-text="&lt;a (click)=&quot;changeStyleTab(1)&quot;>"/>Tillgängliga stilar<x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a>"/> </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
           <context context-type="linenumber">206,207</context>
@@ -9055,8 +9055,8 @@
         </context-group>
       </trans-unit>
       <trans-unit id="8054904775519687363" datatype="html">
-        <source><x id="START_TAG_STRONG" ctype="x-strong" equiv-text="User"/>User-made styles<x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong&gt;"/> are made and maintained by TIM's users. For more information, see <x id="START_LINK" ctype="x-a" equiv-text="&lt;a href=&quot;/view/tim/ohjeita/styles&quot;&gt;"/>style authoring guide<x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a&gt;"/>. </source>
-        <target state="translated"><x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong&gt;"/>Användargjorda stilar<x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong&gt;"/> skapas och underhålls av TIMs användare. För mer information, se <x id="START_LINK" ctype="x-a" equiv-text="&lt;a href=&quot;/view/tim/ohjeita/styles&quot;&gt;"/>guide för stilförfattare<x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a&gt;"/>.</target>
+        <source><x id="START_TAG_STRONG" ctype="x-strong" equiv-text="User"/>User-made styles<x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong>"/> are made and maintained by TIM's users. For more information, see <x id="START_LINK" ctype="x-a" equiv-text="&lt;a href=&quot;/view/tim/ohjeita/styles&quot;>"/>style authoring guide<x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a>"/>. </source>
+        <target state="translated"><x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong>"/>Användargjorda stilar<x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong>"/> skapas och underhålls av TIMs användare. För mer information, se <x id="START_LINK" ctype="x-a" equiv-text="&lt;a href=&quot;/view/tim/ohjeita/styles&quot;>"/>guide för stilförfattare<x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a>"/>.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
           <context context-type="linenumber">270,272</context>
@@ -10204,8 +10204,8 @@ Var god och skapa inloggningskoder först.</target>
         </context-group>
       </trans-unit>
       <trans-unit id="269375217385324097" datatype="html">
-        <source><x id="START_PARAGRAPH" ctype="x-p" equiv-text="&lt;p&gt;"/> If your school uses Wilma, you can import students by copy-pasting the student list from Wilma. <x id="CLOSE_PARAGRAPH" ctype="x-p" equiv-text="&lt;/p&gt;"/><x id="START_PARAGRAPH" ctype="x-p" equiv-text="&lt;p&gt;"/> The required format for the input is as follows: <x id="CLOSE_PARAGRAPH" ctype="x-p" equiv-text="&lt;/p&gt;"/><x id="START_TAG_PRE" ctype="x-pre" equiv-text="&lt;pre&gt;"/>&lt; class &gt; &lt; last name &gt; &lt; first name &gt;<x id="CLOSE_TAG_PRE" ctype="x-pre" equiv-text="&lt;/pre&gt;"/><x id="START_PARAGRAPH" ctype="x-p" equiv-text="&lt;p&gt;"/> For example: <x id="CLOSE_PARAGRAPH" ctype="x-p" equiv-text="&lt;/p&gt;"/><x id="START_TAG_PRE" ctype="x-pre" equiv-text="&lt;pre&gt;"/>9b Duck Donald<x id="LINE_BREAK" ctype="lb" equiv-text="&lt;br&gt;"/>9b Duck Daisy<x id="LINE_BREAK" ctype="lb" equiv-text="&lt;br&gt;"/>9c Duck Scrooge<x id="CLOSE_TAG_PRE" ctype="x-pre" equiv-text="&lt;/pre&gt;"/><x id="START_PARAGRAPH" ctype="x-p" equiv-text="&lt;p&gt;"/> Students are separated by line-breaks so that one line of text represents one student. Each piece of information (class, last name, first name) is separated by a single space. <x id="CLOSE_PARAGRAPH" ctype="x-p" equiv-text="&lt;/p&gt;"/><x id="START_PARAGRAPH" ctype="x-p" equiv-text="&lt;p&gt;"/> You can obtain the student list from Wilma by selecting "Print course book" and selecting the students in the table. <x id="CLOSE_PARAGRAPH" ctype="x-p" equiv-text="&lt;/p&gt;"/></source>
-        <target state="translated"><x id="START_PARAGRAPH" ctype="x-p" equiv-text="&lt;p&gt;"/>Om din skola använder Wilma kan du importera elever genom att kopiera kursdagboken från Wilma. <x id="CLOSE_PARAGRAPH" ctype="x-p" equiv-text="&lt;/p&gt;"/><x id="START_PARAGRAPH" ctype="x-p" equiv-text="&lt;p&gt;"/> Listan måste följa följande format: <x id="CLOSE_PARAGRAPH" ctype="x-p" equiv-text="&lt;/p&gt;"/><x id="START_TAG_PRE" ctype="x-pre" equiv-text="&lt;pre&gt;"/> &lt; klass &gt; &lt; efternamn &gt; &lt; förnamn &gt;<x id="CLOSE_TAG_PRE" ctype="x-pre" equiv-text="&lt;/pre&gt;"/><x id="START_PARAGRAPH" ctype="x-p" equiv-text="&lt;p&gt;"/> Till exempel: <x id="CLOSE_PARAGRAPH" ctype="x-p" equiv-text="&lt;/p&gt;"/><x id="START_TAG_PRE" ctype="x-pre" equiv-text="&lt;pre&gt;"/>9b Ankka Aku<x id="LINE_BREAK" ctype="lb" equiv-text="&lt;br&gt;"/>9b Ankka Iines<x id="LINE_BREAK" ctype="lb" equiv-text="&lt;br&gt;"/>9c Ankka Roope<x id="CLOSE_TAG_PRE" ctype="x-pre" equiv-text="&lt;/pre&gt;"/><x id="START_PARAGRAPH" ctype="x-p" equiv-text="&lt;p&gt;"/> Varje elev ska stå på en egen rad, separerad med radbrytning. Varje fält (klass, efternamn, förnamn) ska separeras med ett blanksteg. <x id="CLOSE_PARAGRAPH" ctype="x-p" equiv-text="&lt;/p&gt;"/><x id="START_PARAGRAPH" ctype="x-p" equiv-text="&lt;p&gt;"/> Du får elevlistan i detta format när du väljer "Skriv ut kursdagboken" i Wilma. Om du inte hittar knappen, gå till utskrifter i Wilma (uppe till höger) och klicka på "Dagbok, rutnät". Kopiera listan i fältet nedan. <x id="CLOSE_PARAGRAPH" ctype="x-p" equiv-text="&lt;/p&gt;"/></target>
+        <source><x id="START_PARAGRAPH" ctype="x-p" equiv-text="&lt;p>"/> If your school uses Wilma, you can import students by copy-pasting the student list from Wilma. <x id="CLOSE_PARAGRAPH" ctype="x-p" equiv-text="&lt;/p>"/><x id="START_PARAGRAPH" ctype="x-p" equiv-text="&lt;p>"/> The required format for the input is as follows: <x id="CLOSE_PARAGRAPH" ctype="x-p" equiv-text="&lt;/p>"/><x id="START_TAG_PRE" ctype="x-pre" equiv-text="&lt;pre>"/>&lt; class &gt; &lt; last name &gt; &lt; first name &gt;<x id="CLOSE_TAG_PRE" ctype="x-pre" equiv-text="&lt;/pre>"/><x id="START_PARAGRAPH" ctype="x-p" equiv-text="&lt;p>"/> For example: <x id="CLOSE_PARAGRAPH" ctype="x-p" equiv-text="&lt;/p>"/><x id="START_TAG_PRE" ctype="x-pre" equiv-text="&lt;pre>"/>9b Duck Donald<x id="LINE_BREAK" ctype="lb" equiv-text="&lt;br>"/>9b Duck Daisy<x id="LINE_BREAK" ctype="lb" equiv-text="&lt;br>"/>9c Duck Scrooge<x id="CLOSE_TAG_PRE" ctype="x-pre" equiv-text="&lt;/pre>"/><x id="START_PARAGRAPH" ctype="x-p" equiv-text="&lt;p>"/> Students are separated by line-breaks so that one line of text represents one student. Each piece of information (class, last name, first name) is separated by a single space. <x id="CLOSE_PARAGRAPH" ctype="x-p" equiv-text="&lt;/p>"/><x id="START_PARAGRAPH" ctype="x-p" equiv-text="&lt;p>"/> You can obtain the student list from Wilma by selecting "Print course book" and selecting the students in the table. <x id="CLOSE_PARAGRAPH" ctype="x-p" equiv-text="&lt;/p>"/></source>
+        <target state="translated"><x id="START_PARAGRAPH" ctype="x-p" equiv-text="&lt;p>"/>Om din skola använder Wilma kan du importera elever genom att kopiera kursdagboken från Wilma. <x id="CLOSE_PARAGRAPH" ctype="x-p" equiv-text="&lt;/p>"/><x id="START_PARAGRAPH" ctype="x-p" equiv-text="&lt;p>"/> Listan måste följa följande format: <x id="CLOSE_PARAGRAPH" ctype="x-p" equiv-text="&lt;/p>"/><x id="START_TAG_PRE" ctype="x-pre" equiv-text="&lt;pre>"/> &lt; klass &gt; &lt; efternamn &gt; &lt; förnamn &gt;<x id="CLOSE_TAG_PRE" ctype="x-pre" equiv-text="&lt;/pre>"/><x id="START_PARAGRAPH" ctype="x-p" equiv-text="&lt;p>"/> Till exempel: <x id="CLOSE_PARAGRAPH" ctype="x-p" equiv-text="&lt;/p>"/><x id="START_TAG_PRE" ctype="x-pre" equiv-text="&lt;pre>"/>9b Ankka Aku<x id="LINE_BREAK" ctype="lb" equiv-text="&lt;br>"/>9b Ankka Iines<x id="LINE_BREAK" ctype="lb" equiv-text="&lt;br>"/>9c Ankka Roope<x id="CLOSE_TAG_PRE" ctype="x-pre" equiv-text="&lt;/pre>"/><x id="START_PARAGRAPH" ctype="x-p" equiv-text="&lt;p>"/> Varje elev ska stå på en egen rad, separerad med radbrytning. Varje fält (klass, efternamn, förnamn) ska separeras med ett blanksteg. <x id="CLOSE_PARAGRAPH" ctype="x-p" equiv-text="&lt;/p>"/><x id="START_PARAGRAPH" ctype="x-p" equiv-text="&lt;p>"/> Du får elevlistan i detta format när du väljer "Skriv ut kursdagboken" i Wilma. Om du inte hittar knappen, gå till utskrifter i Wilma (uppe till höger) och klicka på "Dagbok, rutnät". Kopiera listan i fältet nedan. <x id="CLOSE_PARAGRAPH" ctype="x-p" equiv-text="&lt;/p>"/></target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/user-import-dialog.component.ts</context>
           <context context-type="linenumber">27,45</context>
@@ -10276,8 +10276,8 @@ Var god och skapa inloggningskoder först.</target>
         </context-group>
       </trans-unit>
       <trans-unit id="3773241316574942521" datatype="html">
-        <source>Ask students to log in to the exam page using their login codes: <x id="START_LINK" ctype="x-a" equiv-text="&lt;a                                         [href]=&quot;getExamUrl(examByDocId.get(group.examDocId!))&quot;&gt;"/><x id="START_TAG_CODE" ctype="x-code" equiv-text="{{ getExa"/><x id="INTERPOLATION" equiv-text="yDocId.get(group.examDocId!)) }}"/><x id="CLOSE_TAG_CODE" ctype="x-code" equiv-text="&lt;/a&gt;"/><x id="CLOSE_LINK" ctype="x-a"/></source>
-        <target state="translated">Be eleverna logga in i provsystemet: <x id="START_LINK" ctype="x-a" equiv-text="&lt;a [href]=&quot;getExamUrl(examByDocId.get(group.examDocId!))&quot;&gt;"/><x id="START_TAG_CODE" ctype="x-code" equiv-text="{{ getExa"/><x id="INTERPOLATION" equiv-text="yDocId.get(group.examDocId!)) }}"/><x id="CLOSE_TAG_CODE" ctype="x-code" equiv-text="&lt;/a&gt;&lt;/li&gt;"/><x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/li&gt;"/></target>
+        <source>Ask students to log in to the exam page using their login codes: <x id="START_LINK" ctype="x-a" equiv-text="&lt;a                                         [href]=&quot;getExamUrl(examByDocId.get(group.examDocId!))&quot;>"/><x id="START_TAG_CODE" ctype="x-code" equiv-text="{{ getExa"/><x id="INTERPOLATION" equiv-text="yDocId.get(group.examDocId!)) }}"/><x id="CLOSE_TAG_CODE" ctype="x-code" equiv-text="&lt;/a>"/><x id="CLOSE_LINK" ctype="x-a"/></source>
+        <target state="translated">Be eleverna logga in i provsystemet: <x id="START_LINK" ctype="x-a" equiv-text="&lt;a [href]=&quot;getExamUrl(examByDocId.get(group.examDocId!))&quot;>"/><x id="START_TAG_CODE" ctype="x-code" equiv-text="{{ getExa"/><x id="INTERPOLATION" equiv-text="yDocId.get(group.examDocId!)) }}"/><x id="CLOSE_TAG_CODE" ctype="x-code" equiv-text="&lt;/a>&lt;/li>"/><x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/li>"/></target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
           <context context-type="linenumber">791,793</context>
@@ -10430,16 +10430,16 @@ Mata in flera användares adresser på separata rader eller åtskilda med kommat
         </context-group>
       </trans-unit>
       <trans-unit id="8036091162175708988" datatype="html">
-        <source>Make sure the exam is ended and login codes are disabled in section <x id="START_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;i&gt;"/>'3. Manage exams'<x id="CLOSE_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;/i&gt;"/></source>
-        <target state="translated">Se till att provet för provgruppen är avslutat och att inloggningskoderna har inaktiverats under <x id="START_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;i&gt;"/>3. Hantera prov<x id="CLOSE_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;/i&gt;"/>.</target>
+        <source>Make sure the exam is ended and login codes are disabled in section <x id="START_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;i>"/>'3. Manage exams'<x id="CLOSE_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;/i>"/></source>
+        <target state="translated">Se till att provet för provgruppen är avslutat och att inloggningskoderna har inaktiverats under <x id="START_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;i>"/>3. Hantera prov<x id="CLOSE_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;/i>"/>.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
           <context context-type="linenumber">717,718</context>
         </context-group>
       </trans-unit>
       <trans-unit id="3550757413033906635" datatype="html">
-        <source>Students can open the exam using the <x id="START_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;i&gt;"/>'Open exam'<x id="CLOSE_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;/i&gt;"/> button.</source>
-        <target state="translated">Eleverna kan öppna provet själva med knappen <x id="START_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;i&gt;"/>Öppna provet<x id="CLOSE_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;/i&gt;"/>..</target>
+        <source>Students can open the exam using the <x id="START_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;i>"/>'Open exam'<x id="CLOSE_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;/i>"/> button.</source>
+        <target state="translated">Eleverna kan öppna provet själva med knappen <x id="START_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;i>"/>Öppna provet<x id="CLOSE_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;/i>"/>..</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
           <context context-type="linenumber">720,721</context>
@@ -10542,8 +10542,8 @@ Mata in flera användares adresser på separata rader eller åtskilda med kommat
         </context-group>
       </trans-unit>
       <trans-unit id="5369335165199679048" datatype="html">
-        <source> Your Email <x id="START_TAG_SPAN" ctype="x-span" equiv-text="&lt;span&gt;"/>(optional)<x id="CLOSE_TAG_SPAN" ctype="x-span" equiv-text="&lt;/span&gt;"/></source>
-        <target state="translated">Din e-post<x id="START_TAG_SPAN" ctype="x-span" equiv-text="&lt;span&gt;"/>(icke obligatorisk)<x id="CLOSE_TAG_SPAN" ctype="x-span" equiv-text="&lt;/span&gt;"/></target>
+        <source> Your Email <x id="START_TAG_SPAN" ctype="x-span" equiv-text="&lt;span>"/>(optional)<x id="CLOSE_TAG_SPAN" ctype="x-span" equiv-text="&lt;/span>"/></source>
+        <target state="translated">Din e-post<x id="START_TAG_SPAN" ctype="x-span" equiv-text="&lt;span>"/>(icke obligatorisk)<x id="CLOSE_TAG_SPAN" ctype="x-span" equiv-text="&lt;/span>"/></target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/ui/report-content-dialog.component.ts</context>
           <context context-type="linenumber">76,78</context>
@@ -10582,8 +10582,8 @@ Mata in flera användares adresser på separata rader eller åtskilda med kommat
         </context-group>
       </trans-unit>
       <trans-unit id="5962072938234411707" datatype="html">
-        <source><x id="START_TAG_SPAN" ctype="x-span" equiv-text="&quot;glyphicon glyphicon-exclamation-sign&quot;&gt;"/><x id="CLOSE_TAG_SPAN" ctype="x-span" equiv-text="This field"/> This field is required.</source>
-        <target state="translated"><x id="START_TAG_SPAN" ctype="x-span" equiv-text="&quot;glyphicon glyphicon-exclamation-sign&quot;&gt;"/><x id="CLOSE_TAG_SPAN" ctype="x-span" equiv-text="This field"/> Detta fält är obligatoriskt.</target>
+        <source><x id="START_TAG_SPAN" ctype="x-span" equiv-text="&quot;glyphicon glyphicon-exclamation-sign&quot;>"/><x id="CLOSE_TAG_SPAN" ctype="x-span" equiv-text="This field"/> This field is required.</source>
+        <target state="translated"><x id="START_TAG_SPAN" ctype="x-span" equiv-text="&quot;glyphicon glyphicon-exclamation-sign&quot;>"/><x id="CLOSE_TAG_SPAN" ctype="x-span" equiv-text="This field"/> Detta fält är obligatoriskt.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/ui/report-content-dialog.component.ts</context>
           <context context-type="linenumber">115,116</context>
@@ -10598,8 +10598,8 @@ Mata in flera användares adresser på separata rader eller åtskilda med kommat
         </context-group>
       </trans-unit>
       <trans-unit id="4120435970812709184" datatype="html">
-        <source><x id="START_TAG_STRONG" ctype="x-strong" equiv-text="Than"/>Thank you for your report.<x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong&gt;"/></source>
-        <target state="translated"><x id="START_TAG_STRONG" ctype="x-strong" equiv-text="Than"/>Tack för din rapport.<x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong&gt;"/></target>
+        <source><x id="START_TAG_STRONG" ctype="x-strong" equiv-text="Than"/>Thank you for your report.<x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong>"/></source>
+        <target state="translated"><x id="START_TAG_STRONG" ctype="x-strong" equiv-text="Than"/>Tack för din rapport.<x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong>"/></target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/ui/report-content-dialog.component.ts</context>
           <context context-type="linenumber">130,131</context>
@@ -10630,8 +10630,8 @@ Mata in flera användares adresser på separata rader eller åtskilda med kommat
         </context-group>
       </trans-unit>
       <trans-unit id="8959949608841060449" datatype="html">
-        <source> Page address <x id="START_TAG_SPAN" ctype="x-span" equiv-text="&lt;span&gt;"/>(optional)<x id="CLOSE_TAG_SPAN" ctype="x-span" equiv-text="&lt;/span&gt;"/></source>
-        <target state="translated"> Sidans adress<x id="START_TAG_SPAN" ctype="x-span" equiv-text="&lt;span&gt;"/>(icke obligatorisk)<x id="CLOSE_TAG_SPAN" ctype="x-span" equiv-text="&lt;/span&gt;"/></target>
+        <source> Page address <x id="START_TAG_SPAN" ctype="x-span" equiv-text="&lt;span>"/>(optional)<x id="CLOSE_TAG_SPAN" ctype="x-span" equiv-text="&lt;/span>"/></source>
+        <target state="translated"> Sidans adress<x id="START_TAG_SPAN" ctype="x-span" equiv-text="&lt;span>"/>(icke obligatorisk)<x id="CLOSE_TAG_SPAN" ctype="x-span" equiv-text="&lt;/span>"/></target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/ui/report-content-dialog.component.ts</context>
           <context context-type="linenumber">48,50</context>
@@ -10654,8 +10654,8 @@ Mata in flera användares adresser på separata rader eller åtskilda med kommat
         </context-group>
       </trans-unit>
       <trans-unit id="3333065049174534332" datatype="html">
-        <source><x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;spa"/><x id="START_TAG_SPAN" ctype="x-span" equiv-text="n glyphicon-exclamation-sign&quot;&gt;"/><x id="CLOSE_TAG_SPAN" ctype="x-span" equiv-text="There was a"/> There was an error.<x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong&gt;"/></source>
-        <target state="translated"><x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;spa"/><x id="START_TAG_SPAN" ctype="x-span" equiv-text="n glyphicon-exclamation-sign&quot;&gt;"/><x id="CLOSE_TAG_SPAN" ctype="x-span" equiv-text="There was a"/> det uppstod ett fel.<x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong&gt;"/></target>
+        <source><x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;spa"/><x id="START_TAG_SPAN" ctype="x-span" equiv-text="n glyphicon-exclamation-sign&quot;>"/><x id="CLOSE_TAG_SPAN" ctype="x-span" equiv-text="There was a"/> There was an error.<x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong>"/></source>
+        <target state="translated"><x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;spa"/><x id="START_TAG_SPAN" ctype="x-span" equiv-text="n glyphicon-exclamation-sign&quot;>"/><x id="CLOSE_TAG_SPAN" ctype="x-span" equiv-text="There was a"/> det uppstod ett fel.<x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong>"/></target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/ui/report-content-dialog.component.ts</context>
           <context context-type="linenumber">126,127</context>
@@ -10706,8 +10706,8 @@ Mata in flera användares adresser på separata rader eller åtskilda med kommat
         </context-group>
       </trans-unit>
       <trans-unit id="7537003864277929073" datatype="html">
-        <source><x id="START_PARAGRAPH" ctype="x-p" equiv-text="Use this"/>Use this form to report any harmful or inappropriate content you encounter on TIM. If you would like a response from the TIM administrators, please provide your email address.<x id="CLOSE_PARAGRAPH" ctype="x-p" equiv-text="&lt;/p&gt;"/></source>
-        <target state="translated"><x id="START_PARAGRAPH" ctype="x-p" equiv-text="Use this"/>Använd detta formulär för att rapportera skadligt eller olämpligt innehåll som du stöter på på TIM. Om du vill ha svar från TIM-administratörerna, ange din e-postadress.<x id="CLOSE_PARAGRAPH" ctype="x-p" equiv-text="&lt;/p&gt;"/></target>
+        <source><x id="START_PARAGRAPH" ctype="x-p" equiv-text="Use this"/>Use this form to report any harmful or inappropriate content you encounter on TIM. If you would like a response from the TIM administrators, please provide your email address.<x id="CLOSE_PARAGRAPH" ctype="x-p" equiv-text="&lt;/p>"/></source>
+        <target state="translated"><x id="START_PARAGRAPH" ctype="x-p" equiv-text="Use this"/>Använd detta formulär för att rapportera skadligt eller olämpligt innehåll som du stöter på på TIM. Om du vill ha svar från TIM-administratörerna, ange din e-postadress.<x id="CLOSE_PARAGRAPH" ctype="x-p" equiv-text="&lt;/p>"/></target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/ui/report-content-dialog.component.ts</context>
           <context context-type="linenumber">43,44</context>
@@ -11278,32 +11278,32 @@ Mata in flera användares adresser på separata rader eller åtskilda med kommat
         </context-group>
       </trans-unit>
       <trans-unit id="5172400703221094368" datatype="html">
-        <source>To start a new exam, stop answer reviewing in section <x id="START_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;i&gt;"/>4. Show answers to students<x id="CLOSE_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;/i&gt;"/>.</source>
-        <target state="translated">Stoppa visningen av svar under <x id="START_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;i&gt;"/>4. Visa provets svar till elever<x id="CLOSE_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;/i&gt;"/> innan du kan påbörja ett nytt prov för gruppen.</target>
+        <source>To start a new exam, stop answer reviewing in section <x id="START_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;i>"/>4. Show answers to students<x id="CLOSE_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;/i>"/>.</source>
+        <target state="translated">Stoppa visningen av svar under <x id="START_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;i>"/>4. Visa provets svar till elever<x id="CLOSE_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;/i>"/> innan du kan påbörja ett nytt prov för gruppen.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
           <context context-type="linenumber">467,468</context>
         </context-group>
       </trans-unit>
       <trans-unit id="6737499420976539156" datatype="html">
-        <source>Stop the exam and disable login codes in section <x id="START_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;i&gt;"/>3. Manage exams<x id="CLOSE_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;/i&gt;"/> to enable showing answers.</source>
-        <target state="translated">Avsluta provet och inaktivera inloggningskoderna under <x id="START_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;i&gt;"/>3. Hantera prov<x id="CLOSE_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;/i&gt;"/> innan du kan visa svar.</target>
+        <source>Stop the exam and disable login codes in section <x id="START_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;i>"/>3. Manage exams<x id="CLOSE_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;/i>"/> to enable showing answers.</source>
+        <target state="translated">Avsluta provet och inaktivera inloggningskoderna under <x id="START_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;i>"/>3. Hantera prov<x id="CLOSE_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;/i>"/> innan du kan visa svar.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
           <context context-type="linenumber">695,696</context>
         </context-group>
       </trans-unit>
       <trans-unit id="2888797400316878545" datatype="html">
-        <source>Change the exam in section <x id="START_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;i&gt;"/>3. Manage exams<x id="CLOSE_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;/i&gt;"/> to enable showing answers.</source>
-        <target state="translated">Byt prov under <x id="START_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;i&gt;"/>3. Hantera prov<x id="CLOSE_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;/i&gt;"/> för att kunna visa svaren.</target>
+        <source>Change the exam in section <x id="START_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;i>"/>3. Manage exams<x id="CLOSE_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;/i>"/> to enable showing answers.</source>
+        <target state="translated">Byt prov under <x id="START_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;i>"/>3. Hantera prov<x id="CLOSE_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;/i>"/> för att kunna visa svaren.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
           <context context-type="linenumber">699,700</context>
         </context-group>
       </trans-unit>
       <trans-unit id="6393914330108344860" datatype="html">
-        <source> Select an exam in section <x id="START_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;i&gt;"/>3. Manage exams<x id="CLOSE_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;/i&gt;"/> to enable showing answers. </source>
-        <target state="translated"> Välj prov under <x id="START_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;i&gt;"/>3. Hantera prov<x id="CLOSE_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;/i&gt;"/> för att kunna visa svaren.</target>
+        <source> Select an exam in section <x id="START_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;i>"/>3. Manage exams<x id="CLOSE_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;/i>"/> to enable showing answers. </source>
+        <target state="translated"> Välj prov under <x id="START_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;i>"/>3. Hantera prov<x id="CLOSE_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;/i>"/> för att kunna visa svaren.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
           <context context-type="linenumber">702,703</context>
@@ -11390,8 +11390,8 @@ Mata in flera användares adresser på separata rader eller åtskilda med kommat
         </context-group>
       </trans-unit>
       <trans-unit id="824586679107177391" datatype="html">
-        <source>Press the <x id="START_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;i&gt;"/>'Begin showing answers to students'<x id="CLOSE_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;/i&gt;"/> button to allow students to review their answers for 1 hour. </source>
-        <target state="translated">Tryck på knappen <x id="START_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;i&gt;"/>Börja visa svaren för provgruppens elever<x id="CLOSE_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;/i&gt;"/>. Elevernas inloggningskoder aktiveras och de får tillgång till provet för en timme. </target>
+        <source>Press the <x id="START_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;i>"/>'Begin showing answers to students'<x id="CLOSE_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;/i>"/> button to allow students to review their answers for 1 hour. </source>
+        <target state="translated">Tryck på knappen <x id="START_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;i>"/>Börja visa svaren för provgruppens elever<x id="CLOSE_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;/i>"/>. Elevernas inloggningskoder aktiveras och de får tillgång till provet för en timme. </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
           <context context-type="linenumber">788,789</context>
@@ -11406,16 +11406,16 @@ Mata in flera användares adresser på separata rader eller åtskilda med kommat
         </context-group>
       </trans-unit>
       <trans-unit id="5269168991544835375" datatype="html">
-        <source>To end the view right, press the <x id="START_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;i&gt;"/>'End showing answers to students button'<x id="CLOSE_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;/i&gt;"/>. The right is automatically disabled in 1 hour. </source>
-        <target state="translated">När du vill ta bort visningsrätten, tryck på knappen <x id="START_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;i&gt;"/>Sluta visa svaren för provgruppens elever<x id="CLOSE_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;/i&gt;"/>. Provsystemet tar automatiskt bort visningsrätten en timme efter att tillgången har beviljats. </target>
+        <source>To end the view right, press the <x id="START_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;i>"/>'End showing answers to students button'<x id="CLOSE_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;/i>"/>. The right is automatically disabled in 1 hour. </source>
+        <target state="translated">När du vill ta bort visningsrätten, tryck på knappen <x id="START_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;i>"/>Sluta visa svaren för provgruppens elever<x id="CLOSE_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;/i>"/>. Provsystemet tar automatiskt bort visningsrätten en timme efter att tillgången har beviljats. </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
           <context context-type="linenumber">798,800</context>
         </context-group>
       </trans-unit>
       <trans-unit id="3881453063873243566" datatype="html">
-        <source> The exam has started! Students can now access the exam. Audio and video materials can be accessed via the <x id="START_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;i&gt;"/>View exam document<x id="CLOSE_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;/i&gt;"/> link. </source>
-        <target state="translated"> Provet har börjat! Eleverna kan nu öppna provet. Du hittar hörförståelserna under knappen <x id="START_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;i&gt;"/>Kolla provdokument och video- och audiomaterialet<x id="CLOSE_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;/i&gt;"/>. </target>
+        <source> The exam has started! Students can now access the exam. Audio and video materials can be accessed via the <x id="START_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;i>"/>View exam document<x id="CLOSE_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;/i>"/> link. </source>
+        <target state="translated"> Provet har börjat! Eleverna kan nu öppna provet. Du hittar hörförståelserna under knappen <x id="START_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;i>"/>Kolla provdokument och video- och audiomaterialet<x id="CLOSE_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;/i>"/>. </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
           <context context-type="linenumber">618,620</context>
