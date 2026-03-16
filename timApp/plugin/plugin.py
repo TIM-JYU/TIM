@@ -1153,6 +1153,8 @@ def check_yaml_attrs_attribute(block: DocParagraph) -> None:
     block.attrs_handled = True
     s = block.get_markdown() or ""
     second_line = give_second_line(s)
+    if not second_line:
+        return
     if second_line.startswith("attrs: "):
         attrs2, _ = AttributeParser(second_line[7 + 1 : -1]).get_attributes()
         if attrs2:
