@@ -125,11 +125,6 @@ export class ChatTIMComponent extends AngularPluginBase<
     async doSendUserInput() {
         this.isRunning = true;
         this.answer = undefined;
-        const params = {
-            input: {
-                userinput: this.userinput,
-            },
-        };
 
         const result = await this.httpPost<{
             web: {result: string; error?: string};

@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 from typing import Any
+from flask import request
 
 from timApp.tim_app import csrf
 from timApp.util.flask.responsehelper import json_response
@@ -43,6 +44,7 @@ class ChatTimAnswerModel(
     pass
 
 
+# TODO: hankkiudu eroon (ehkä pitää muuttaa myös create_blueprint)
 def answer(_args: ChatTimAnswerModel) -> PluginAnswerResp:
     web: PluginAnswerWeb = {}
     result: PluginAnswerResp = {"web": web}
@@ -98,4 +100,13 @@ chattim = create_blueprint(
 
 @chattim.post("/ask")
 def define_ask_route():
-    return json_response({"web": {"result": "hello from server"}})
+    web: PluginAnswerWeb = {"result": "hello from server"}
+    result: PluginAnswerResp = {"web": web}
+
+    # TODO: pitäisi varmaan muuttaa jotenkin tyyliin: define_ask_route(input: SomeDataClass) jne
+    data = request.get_json()
+    input = data.get("input")
+    id = data.get("id")
+    # TODO: kytke plugincoreen
+
+    return json_response(result)
