@@ -2,10 +2,11 @@
 
 Format is major, minor.
 
-Major version is incremented whenever a paragraph is added, inserted or deleted from the document. The minor version is reset to
-zero.
-Minor version is incremented whenever a paragraph is modified.
+Adding, inserting, or deleting a paragraph increases the major version and
+resets the minor version to zero.
+Modifying a paragraph increases the minor version.
 """
+
 Version = tuple[int, int]
 
 

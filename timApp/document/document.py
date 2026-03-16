@@ -619,17 +619,8 @@ class Document:
             with self.get_version_path(ver).open("w"):
                 pass
         self.__write_changelog(ver, op, par_id, op_params)
-        self.version = ver
-        self.par_cache = None
-        self.par_map = None
-        self.par_ids = None
-        self.par_hashes = None
-        self.par_attrs = None
-        self.source_doc = None
-        self.settings_cache = {}
-        self.own_settings = None
-        self.single_par_cache = {}
-        self.ref_doc_cache = {}
+        self.own_settings = None  # TODO: this on not cleared in clear_mem_cache?
+        self.clear_mem_cache(ver)
         return ver
 
     def __update_metadata(
@@ -1584,16 +1575,19 @@ class Document:
             self.is_incomplete_cache = True
         self.__update_par_map()
 
-    def clear_mem_cache(self) -> None:
+    def clear_mem_cache(self, ver=None) -> None:
+        self.version = ver
         self.par_cache = None
         self.par_map = None
-        self.version = None
         self.par_ids = None
         self.par_hashes = None
         self.source_doc = None
         self.settings_cache = {}
         self.ref_doc_cache = {}
         self.single_par_cache = {}
+        self.attrs_name_par_id_maps = None
+        self.par_id_attrs_name_maps = None
+        self.attrs_name_lists = None
 
     def get_ref_doc(
         self,
