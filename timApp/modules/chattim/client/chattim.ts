@@ -130,7 +130,7 @@ export class ChatTIMComponent extends AngularPluginBase<
             web: {result: string; error?: string};
         }>("/chattim/ask", {
             input: this.userinput,
-            id: String(Users.getCurrent().id),
+            user_id: String(Users.getCurrent().id),
         });
 
         this.isRunning = false;
