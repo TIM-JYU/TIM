@@ -126,7 +126,7 @@ export class ChatTIMComponent extends AngularPluginBase<
         this.isRunning = true;
         this.answer = undefined;
 
-        const result = await this.httpPost<{
+        const response = await this.httpPost<{
             web: {result: string; error?: string};
         }>("/chattim/ask", {
             input: this.userinput,
@@ -134,8 +134,8 @@ export class ChatTIMComponent extends AngularPluginBase<
         });
 
         this.isRunning = false;
-        if (result.ok) {
-            const data = result.result;
+        if (response.ok) {
+            const data = response.result;
             this.error = data.web.error;
             this.answer = data.web.result;
             this.conversation.push({
@@ -143,7 +143,7 @@ export class ChatTIMComponent extends AngularPluginBase<
                 agent: this.answer,
             });
         } else {
-            this.error = result.result.error.error;
+            this.error = response.result.error.error;
         }
     }
 }
