@@ -10533,7 +10533,7 @@ Syötä useiden käyttäjien osoitteet allekkain tai pilkulla erotettuina.</targ
       </trans-unit>
       <trans-unit id="3550757413033906635" datatype="html">
         <source>Students can open the exam using the <x id="START_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;i&gt;"/>'Open exam'<x id="CLOSE_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;/i&gt;"/> button.</source>
-        <target state="translated">Oppilaat voivat avata kokeen <x id="START_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;i&gt;"/>Avaa koe<x id="CLOSE_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;/i&gt;"/> -painikkeesta omatoimisesti.</target>
+        <target state="translated">Oppilaat voivat avata kokeen omatoimisesti <x id="START_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;i&gt;"/>Avaa koe<x id="CLOSE_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;/i&gt;"/> -painikkeesta.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
           <context context-type="linenumber">720,721</context>
@@ -11405,7 +11405,7 @@ Syötä useiden käyttäjien osoitteet allekkain tai pilkulla erotettuina.</targ
       </trans-unit>
       <trans-unit id="2112778509887488400" datatype="html">
         <source> To start the main exam, select it from the dropdown menu above. </source>
-        <target state="translated">Jos haluat aloittaa varsinaisen kokeen, vaihda koe yllä olevasta alasvetovalikosta. </target>
+        <target state="translated">Jos haluat aloittaa varsinaisen kokeen, valitse koe yllä olevasta alasvetovalikosta. </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
           <context context-type="linenumber">498</context>
