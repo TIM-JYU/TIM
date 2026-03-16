@@ -16,7 +16,6 @@ services:
    - imagex
    - feedback
    - oiko
-   - chattim
    """ if not tim.is_dev else "[]"}
   volumes:
    - .:/service
@@ -240,21 +239,6 @@ ${ partial("docker", "csplugin_mongodb.tmpl.yml") if csplugin.is_mongodb_enabled
   environment:
    PYTHONPATH: /app
   command: ${ "./startAll.sh" if not feedback.is_dev else "sleep infinity" }
-  restart: unless-stopped
-  read_only: true
-  tmpfs:
-   - /tmp
- chattim:
-  image: chattim
-  build:
-    context: ./timApp/modules/chattim
-  volumes:
-   - ./timApp/modules/chattim:/app/chattim:ro
-   - ./tim_common:/app/tim_common:ro
-  working_dir: /app/chattim
-  environment:
-   PYTHONPATH: /app
-  command: ${ "./startAll.sh" if not chattim.is_dev else "sleep infinity" }
   restart: unless-stopped
   read_only: true
   tmpfs:

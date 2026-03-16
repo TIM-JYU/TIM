@@ -8,8 +8,8 @@ import {
     nullable,
 } from "tim/plugin/attributes";
 import type {ApplicationRef, DoBootstrap} from "@angular/core";
-import {Component, NgModule} from "@angular/core";
-import {HttpClientModule} from "@angular/common/http";
+import {Component, NgModule, ElementRef} from "@angular/core";
+import {HttpClient, HttpClientModule} from "@angular/common/http";
 import {FormsModule} from "@angular/forms";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {AngularPluginBase} from "tim/plugin/angular-plugin-base.directive";
@@ -17,6 +17,8 @@ import {DialogModule} from "tim/ui/angulardialog/dialog.module";
 import {PurifyModule} from "tim/util/purify.module";
 import {registerPlugin} from "tim/plugin/pluginRegistry";
 import {CommonModule} from "@angular/common";
+import {DomSanitizer} from "@angular/platform-browser";
+import {Users} from "tim/user/userService";
 
 const PluginMarkupFields = t.intersection([
     t.partial({
@@ -88,6 +90,14 @@ export class ChatTIMComponent extends AngularPluginBase<
 
     conversation: ChatEntry[] = [];
 
+    constructor(
+        el: ElementRef<HTMLElement>,
+        http: HttpClient,
+        domSanitizer: DomSanitizer
+    ) {
+        super(el, http, domSanitizer);
+    }
+
     onEnter() {
         this.sendUserInput();
     }
@@ -115,19 +125,17 @@ export class ChatTIMComponent extends AngularPluginBase<
     async doSendUserInput() {
         this.isRunning = true;
         this.answer = undefined;
-        const params = {
-            input: {
-                userinput: this.userinput,
-            },
-        };
 
-        const r = await this.postAnswer<{
+        const response = await this.httpPost<{
             web: {result: string; error?: string};
-        }>(params);
+        }>("/chattim/ask", {
+            input: this.userinput,
+            id: String(Users.getCurrent().id),
+        });
 
         this.isRunning = false;
-        if (r.ok) {
-            const data = r.result;
+        if (response.ok) {
+            const data = response.result;
             this.error = data.web.error;
             this.answer = data.web.result;
             this.conversation.push({
@@ -135,7 +143,7 @@ export class ChatTIMComponent extends AngularPluginBase<
                 agent: this.answer,
             });
         } else {
-            this.error = r.result.error.error;
+            this.error = response.result.error.error;
         }
     }
 }

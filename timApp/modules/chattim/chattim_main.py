@@ -1,6 +1,10 @@
 from dataclasses import dataclass
 from typing import Any
+from flask import request
 
+from timApp.tim_app import csrf
+from timApp.util.flask.responsehelper import json_response
+from timApp.util.flask.typedblueprint import TypedBlueprint
 from tim_common.markupmodels import GenericMarkupModel
 from tim_common.pluginserver_flask import (
     GenericHtmlModel,
@@ -11,6 +15,7 @@ from tim_common.pluginserver_flask import (
     PluginReqs,
     EditorTab,
     PluginAnswerWeb,
+    create_blueprint,
 )
 
 
@@ -39,6 +44,7 @@ class ChatTimAnswerModel(
     pass
 
 
+# TODO: hankkiudu eroon (ehkä pitää muuttaa myös create_blueprint)
 def answer(_args: ChatTimAnswerModel) -> PluginAnswerResp:
     web: PluginAnswerWeb = {}
     result: PluginAnswerResp = {"web": web}
@@ -81,13 +87,26 @@ header: ChatTIM
     return result
 
 
-app = register_plugin_app(
+chattim = create_blueprint(
     __name__,
-    html_model=ChatTimHtmlModel,
-    answer_model=ChatTimAnswerModel,
-    answer_handler=answer,
-    reqs_handler=reqs,
+    "chattim",
+    ChatTimHtmlModel,
+    ChatTimAnswerModel,
+    answer,
+    reqs,
+    csrf,
 )
 
 
-launch_if_main(__name__, app)
+@chattim.post("/ask")
+def define_ask_route():
+    web: PluginAnswerWeb = {"result": "hello from server"}
+    result: PluginAnswerResp = {"web": web}
+
+    # TODO: pitäisi varmaan muuttaa jotenkin tyyliin: define_ask_route(input: SomeDataClass) jne
+    data = request.get_json()
+    input = data.get("input")
+    id = data.get("id")
+    # TODO: kytke plugincoreen
+
+    return json_response(result)
