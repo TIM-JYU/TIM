@@ -9152,7 +9152,7 @@
       </trans-unit>
       <trans-unit id="187187500641108332" datatype="html">
         <source><x id="INTERPOLATION" equiv-text="ngs.extraInfoTitle ?? &quot;Extra info&quot;}}"/></source>
-        <target state="translated">{ngs.extraInfoTitle ?? "Extra information"}}}</target>
+        <target state="translated">{Folder() ?? "Ange plats eller lämna tom"}}}</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/ui/group-management.component.ts</context>
           <context context-type="linenumber">221,223</context>
@@ -9200,7 +9200,7 @@
       </trans-unit>
       <trans-unit id="3438398600349705966" datatype="html">
         <source>Enter a username for the user</source>
-        <target state="translated">Ange ett användarnamn för användare</target>
+        <target state="translated">Ange användarnamn</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/user-creation-dialog.component.ts</context>
           <context context-type="linenumber">50,51</context>
@@ -9216,7 +9216,7 @@
       </trans-unit>
       <trans-unit id="7259493919346164577" datatype="html">
         <source>User's given name, list first and middle names in order</source>
-        <target state="translated">Användarens förnamn, lista för- och mellannamn i ordning</target>
+        <target state="translated">Elevens förnamn och vid behov mellannamn</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/user-creation-dialog.component.ts</context>
           <context context-type="linenumber">64,65</context>
@@ -9232,7 +9232,7 @@
       </trans-unit>
       <trans-unit id="1873235879343846913" datatype="html">
         <source>User's surname</source>
-        <target state="translated">Användarens efternamn</target>
+        <target state="translated">Elevens efternamn</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/user-creation-dialog.component.ts</context>
           <context context-type="linenumber">78,79</context>
@@ -9240,7 +9240,7 @@
       </trans-unit>
       <trans-unit id="3797679965749234166" datatype="html">
         <source>Additional information related to the user, eg. class or group name</source>
-        <target state="translated">Ytterligare information relaterad till användaren, t.ex. klass- eller gruppnamn</target>
+        <target state="translated">Ytterligare information relaterad om eleven, t.ex. klas  eller undervisningsgrupp</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/user-creation-dialog.component.ts</context>
           <context context-type="linenumber">89,90</context>
@@ -9488,7 +9488,7 @@
       </trans-unit>
       <trans-unit id="7508110452989609332" datatype="html">
         <source>Enter the name of the exam group</source>
-        <target state="translated">Ange namnet på provgruppen</target>
+        <target state="translated">Ange namnet på provgruppen (t.ex. 9a A-engelska)</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-create-dialog.component.ts</context>
           <context context-type="linenumber">34,35</context>
