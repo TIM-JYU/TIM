@@ -547,7 +547,7 @@ def gen_spreadsheet_impl(args: GenerateSpreadSheetModel) -> Response | str:
     )
     data: list[list[str | float | None]] = [[]]
     if show_real_names:
-        data[0].append(gettext("Real name"))
+        data[0].append(gettext("Full name"))
     if show_user_names:
         data[0].append(gettext("Username"))
     if show_emails:

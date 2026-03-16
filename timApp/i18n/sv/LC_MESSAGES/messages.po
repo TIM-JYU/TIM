@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-02-26 06:16+0000\n"
-"PO-Revision-Date: 2026-02-26 23:14+0200\n"
+"POT-Creation-Date: 2026-03-16 12:35+0000\n"
+"PO-Revision-Date: 2026-03-16 14:41+0200\n"
 "Last-Translator: \n"
 "Language-Team: sv <LL@li.org>\n"
 "Language: sv\n"
@@ -35,22 +35,22 @@ msgstr ""
 msgid "Sorry, you don't have permission to use this resource."
 msgstr "Tyvärr, du har inte behörighet att använda den här resursen."
 
-#: plugin/examGroupManager/examGroupManager.py:721
+#: plugin/examGroupManager/examGroupManager.py:722
 #, python-format
 msgid ""
 "Invalid student row: %(data)s. Expected format: <grade> <surname> <given_names>"
 msgstr ""
 "Ogiltig studentrad: %(data)s. Förväntat format: <betyg> <efternamn> <förnamn>"
 
-#: plugin/examGroupManager/examGroupManager.py:827
+#: plugin/examGroupManager/examGroupManager.py:828
 msgid "Practice exam not set in the plugin markup."
 msgstr "Övningsprov är inte inställt i plugin-markeringen."
 
-#: plugin/examGroupManager/examGroupManager.py:830
+#: plugin/examGroupManager/examGroupManager.py:831
 msgid "Exam info not found in the plugin markup."
 msgstr "Examensinformation hittades inte i plugin-markeringen."
 
-#: plugin/examGroupManager/examGroupManager.py:901
+#: plugin/examGroupManager/examGroupManager.py:902
 msgid ""
 "No login codes found for the group. Generate login codes before starting the "
 "exam."
@@ -58,17 +58,17 @@ msgstr ""
 "Inga inloggningskoder hittades för gruppen. Generera inloggningskoder innan du "
 "påbörjar provet."
 
-#: plugin/examGroupManager/examGroupManager.py:948
+#: plugin/examGroupManager/examGroupManager.py:949
 msgid "The group is currently not in an exam. Please set the exam document first."
 msgstr ""
 "Gruppen är för närvarande inte i en provsituation. Vänligen ställ in "
 "provdokumentet först."
 
-#: plugin/examGroupManager/examGroupManager.py:957
+#: plugin/examGroupManager/examGroupManager.py:958
 msgid "You do not have access to the exam document."
 msgstr "Du har inte tillgång till provdokumentet."
 
-#: plugin/examGroupManager/examGroupManager.py:1156
+#: plugin/examGroupManager/examGroupManager.py:1157
 msgid ""
 "Cannot change exam state while the answers are revealed. Disable answer reveal "
 "in section 4."
@@ -76,12 +76,12 @@ msgstr ""
 "Det går inte att ändra provstatus medan svaren visas. Inaktivera visning av "
 "svar i avsnitt 4."
 
-#: plugin/examGroupManager/examGroupManager.py:1180
+#: plugin/examGroupManager/examGroupManager.py:1181
 msgid "You do not have sufficient access to the exam document to set it."
 msgstr ""
 "Du har inte tillräcklig åtkomst till examensdokumentet för att ställa in det."
 
-#: plugin/examGroupManager/examGroupManager.py:1238
+#: plugin/examGroupManager/examGroupManager.py:1239
 msgid ""
 "Cannot reveal answers while the exam is ongoing. Stop the exam and disable the "
 "login codes in the section 3."
@@ -93,15 +93,15 @@ msgstr ""
 msgid "Expand by moving mouse over the exercise or by clicking"
 msgstr "Expandera genom att flytta musen över övningen eller genom att klicka"
 
-#: plugin/tableform/tableForm.py:546
-msgid "Real name"
-msgstr "Verkligt namn"
+#: plugin/tableform/tableForm.py:550
+msgid "Full name"
+msgstr "Fullständigt namn"
 
-#: plugin/tableform/tableForm.py:548
+#: plugin/tableform/tableForm.py:552
 msgid "Username"
 msgstr "Användarnamn"
 
-#: plugin/tableform/tableForm.py:550
+#: plugin/tableform/tableForm.py:554
 msgid "Email"
 msgstr "E-postadress"
 
