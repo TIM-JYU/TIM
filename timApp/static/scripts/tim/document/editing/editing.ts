@@ -438,6 +438,7 @@ This will delete the whole ${
                         this.addSavedParToDom(saveData, params);
                     }
                     */
+                    this.addSavedParToDom(saveData, params);
                     if (saveData.warnings && saveData.warnings.length > 0) {
                         const chs = "Changes made:<br>\n" + saveData.warnings;
                         await showMessageDialog(chs);

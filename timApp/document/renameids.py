@@ -402,7 +402,7 @@ def check_duplicates(pars: list[DocParagraph], doc: Document) -> list[list[str]]
             duplicate = []
             par_id = par.get_id()
             doc_par_id = doc.get_par_id("taskId", task_id, "")
-            if doc_par_id != par_id:
+            if doc_par_id and doc_par_id != par_id:
                 duplicate.append(task_id)
                 duplicate.append(par.get_id())
                 task_id_to_check = str(doc.doc_id) + "." + str(task_id)
