@@ -3,11 +3,10 @@ from __future__ import annotations
 import dataclasses
 import os
 import json
+from dataclasses import dataclass
+from timApp.defaultconfig import FILES_PATH
 
 # from timApp.modules.chattim.model import Message
-from dataclasses import dataclass
-from typing import cast
-from timApp.defaultconfig import FILES_PATH
 
 
 @dataclass
@@ -42,17 +41,15 @@ class ConversationManager:
         self.store.append_message(plugin_id, user_id, conversation_id, message)
 
     def get_history(
-        self, plugin_id: str, user_id: str, conversation_id: str
+        self,
+        plugin_id: str,
+        user_id: str,
+        conversation_id: str,
+        last_n: int | None = None,
     ) -> list[ChatMessage]:
         """Return the history of the specified conversation."""
         # TODO: check if in memory already
-        return self.get_history_from_disk(plugin_id, user_id, conversation_id)
-
-    def get_history_from_disk(
-        self, plugin_id: str, user_id: str, conversation_id: str
-    ) -> list[ChatMessage]:
-        """Loads the conversation history from the disk."""
-        messages = self.store.load_messages(plugin_id, user_id, conversation_id)
+        messages = self.store.load_messages(plugin_id, user_id, conversation_id, last_n)
         return messages or []
 
 
@@ -80,27 +77,48 @@ class ConversationStore:
         )
         os.makedirs(os.path.dirname(file_path), exist_ok=True)
         msg_dict = dataclasses.asdict(message)
-        with open(file_path, "a+") as f:
+        with open(file_path, "a", encoding="utf-8") as f:
             f.write(json.dumps(msg_dict) + "\n")
-        f.close()
 
     def load_messages(
-        self, plugin_id: str, user_id: str, conversation_id: str
+        self,
+        plugin_id: str,
+        user_id: str,
+        conversation_id: str,
+        last_n: int | None = None,
     ) -> list[ChatMessage] | None:
         """
-        Loads a list of `ChatMessage` from disk if the conversation exists.
-        Returns `None` in the case the conversation does not exist.
+        Loads messages from disk if the conversation exists.
+
+        :param plugin_id: Plugin instance ID.
+        :param user_id: User ID.
+        :param conversation_id: Conversation ID.
+        :param last_n: Last N messages to return or all if None.
+        :return: List of `ChatMessage` objects or None if no history.
         """
+        if last_n is not None and last_n <= 0:
+            return []
         file_path = self.resolve_conversation_file_path(
             plugin_id, user_id, conversation_id
         )
         try:
-            f = open(file_path, "r")
-        except FileNotFoundError as e:
+            out: list[ChatMessage] = []
+
+            with open(file_path, "r", encoding="utf-8") as f:
+                # TODO: last_n read can be optimized for large files
+                lines = f.readlines()[-last_n:] if last_n is not None else f.readlines()
+                for line in lines:
+                    line = line.strip()
+                    if not line:
+                        continue
+                    d = json.loads(line)
+                    if not isinstance(d, dict):
+                        continue
+                    out.append(ChatMessage(**d))
+            return out
+
+        except FileNotFoundError:
             return None
-        messages = [cast(ChatMessage, json.loads(line)) for line in f]
-        f.close()
-        return messages
 
     def resolve_conversation_file_path(
         self,
