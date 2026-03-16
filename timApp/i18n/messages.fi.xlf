@@ -8898,7 +8898,7 @@
       </trans-unit>
       <trans-unit id="187187500641108332" datatype="html">
         <source><x id="INTERPOLATION" equiv-text="Folder() ?? 'Enter the location or leave empty'}}"/></source>
-        <target state="new"><x id="INTERPOLATION" equiv-text="Folder() ?? 'Enter the location or leave empty'}}"/></target>
+        <target state="translated"><x id="INTERPOLATION" equiv-text="foTitle()}}"/></target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/user-group-dialog.component.ts</context>
           <context context-type="linenumber">61,62</context>
@@ -8954,7 +8954,7 @@
       </trans-unit>
       <trans-unit id="7259493919346164577" datatype="html">
         <source>User's given name, list first and middle names in order</source>
-        <target state="translated">Oppilaan etunimet, listaa etunimi ja keskimmäinen nimi tarvittaessa</target>
+        <target state="translated">Oppilaan etunimi ja tarvittaessa keskimmäinen nimi</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/user-creation-dialog.component.ts</context>
           <context context-type="linenumber">64,65</context>
@@ -8978,7 +8978,7 @@
       </trans-unit>
       <trans-unit id="3797679965749234166" datatype="html">
         <source>Additional information related to the user, eg. class or group name</source>
-        <target state="translated">Lisätietoa käyttäjästä, esim. luokka tai opetusryhmä</target>
+        <target state="translated">Lisätietoa oppilaasta, esim. luokka tai opetusryhmä</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/user-creation-dialog.component.ts</context>
           <context context-type="linenumber">89,90</context>
@@ -9294,7 +9294,7 @@
       </trans-unit>
       <trans-unit id="7508110452989609332" datatype="html">
         <source>Enter the name of the exam group</source>
-        <target state="translated">Anna koeryhmän nimi</target>
+        <target state="translated">Anna koeryhmän nimi (esim. 9a A-englanti)</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-create-dialog.component.ts</context>
           <context context-type="linenumber">34,35</context>
