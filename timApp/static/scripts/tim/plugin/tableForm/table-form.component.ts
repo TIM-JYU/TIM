@@ -148,6 +148,10 @@ const TableFormMarkup = t.intersection([
         addUsersButton: nullable(t.string),
         notifyOnAdd: t.boolean,
         createMissingUsers: t.boolean,
+        usernameColumn: nullable(t.string),
+        emailColumn: nullable(t.string),
+        realnameColumn: nullable(t.string),
+        addUsersDialog: nullable(t.string),
     }),
     GenericPluginMarkup,
     t.type({
@@ -995,9 +999,9 @@ export class TableFormComponent
             } else {
                 this.data.headers = [
                     // NOTE: if change these, change also exported names!
-                    $localize`User's name`,
-                    $localize`Username`,
-                    $localize`E-mail`,
+                    this.markup.realnameColumn ?? $localize`User's name`,
+                    this.markup.usernameColumn ?? $localize`Username`,
+                    this.markup.emailColumn ?? $localize`E-mail`,
                     $localize`Added`,
                     $localize`:@@userGroupRemoved:Removed`,
                 ];
@@ -1669,7 +1673,9 @@ export class TableFormComponent
         }
         this.isAddingUsers = true;
 
-        let prompt = $localize`Please provide email addresses or usernames.
+        let prompt =
+            this.markup.addUsersDialog ??
+            $localize`Please provide email addresses or usernames.
 Separate multiple addresses with commas or write each address on a new line.`;
 
         if (this.markup.createMissingUsers) {

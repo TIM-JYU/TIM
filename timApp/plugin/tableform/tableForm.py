@@ -185,6 +185,10 @@ class TableFormMarkupModel(GenericMarkupModel):
     createMissingUsers: bool | Missing = False
     emailCols: list[str | int] | Missing | None = missing
     useFirstEmail: bool | Missing | None = missing
+    usernameColumn: str | Missing | None = missing
+    emailColumn: str | Missing | None = missing
+    realnameColumn: str | Missing | None = missing
+    addUsersDialog: str | Missing | None = missing
 
 
 TableFormMarkupSchema = class_schema(TableFormMarkupModel)
@@ -543,7 +547,7 @@ def gen_spreadsheet_impl(args: GenerateSpreadSheetModel) -> Response | str:
     )
     data: list[list[str | float | None]] = [[]]
     if show_real_names:
-        data[0].append(gettext("Real name"))
+        data[0].append(gettext("Full name"))
     if show_user_names:
         data[0].append(gettext("Username"))
     if show_emails:

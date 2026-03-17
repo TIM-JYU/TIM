@@ -1,6 +1,7 @@
 """
 Routes for printing a document
 """
+
 import json
 import os
 import shutil
@@ -14,7 +15,7 @@ from flask import g
 from flask import make_response
 from flask import request
 from flask import send_file, Response
-from marshmallow import EXCLUDE
+from marshmallow import EXCLUDE, fields as mm_fields
 
 from timApp.auth import sessioninfo
 from timApp.auth.accesshelper import (
@@ -52,7 +53,7 @@ from timApp.util.flask.responsehelper import (
     ok_response,
 )
 from timApp.util.flask.typedblueprint import TypedBlueprint
-from tim_common.html_sanitize import sanitize_html
+from tim_common.html_sanitize import sanitize_html, sanitize_svg
 
 TEXPRINTTEMPLATE_KEY = "texprinttemplate"
 DEFAULT_PRINT_TEMPLATE_NAME = "templates/printing/runko"
@@ -61,6 +62,7 @@ TEMP_DIR_PATH = tempfile.gettempdir()
 DOWNLOADED_IMAGES_ROOT = os.path.join(TEMP_DIR_PATH, "tim-img-dls")
 
 print_blueprint = TypedBlueprint("print", __name__, url_prefix="/print")
+svg_blueprint = TypedBlueprint("svg", __name__, url_prefix="/svg")
 
 
 @print_blueprint.before_request
@@ -139,6 +141,7 @@ def print_document(
     url_macros: dict[str, str]
     | None = field(metadata={"data_key": "urlMacros"}, default=None),
 ) -> Response:
+    _ = doc_path  # use for linter, actual doc is fetched in before_request
     if not file_type:
         file_type = "pdf"
 
@@ -175,7 +178,10 @@ def print_document(
         urlparams=urlparams,
     )
 
-    #  print_access_url = f'{request.url}?file_type={str(print_type.value).lower()}&template_doc_id={template_doc_id}&plugins_user_code={plugins_user_print}'
+    #  print_access_url = f'{request.url}
+    #    ?file_type={str(print_type.value).lower()}
+    #    &template_doc_id={template_doc_id}
+    #    &plugins_user_code={plugins_user_print}'
     print_access_url = f"{request.url}"  # create url for printed page
     sep = "?"
     if str(print_type.value).lower() != "pdf":
@@ -189,7 +195,7 @@ def print_document(
         sep = "&"
     if url_macros:
         print_access_url += f"{sep}{urlencode(url_macros)}"
-        sep = "&"
+        # sep = "&"
 
     if force:
         existing_doc = None
@@ -217,7 +223,12 @@ def print_document(
         try:
             print("Error occurred: " + str(err))
             e = err.value
-            latex_access_url = f"{request.url}?file_type=latex&template_doc_id={template_doc_id}&plugins_user_code={plugins_user_print}"
+            latex_access_url = (
+                f"{request.url}"
+                f"?file_type=latex"
+                f"&template_doc_id={template_doc_id}"
+                f"&plugins_user_code={plugins_user_print}"
+            )
             if url_macros:
                 latex_access_url += f"&{urlencode(url_macros)}"
             line = e.get("line", "")
@@ -242,7 +253,10 @@ def print_document(
         print("General error occurred: " + str(err))
         raise RouteException(str(err))  # TODO: maybe there's a better error code?
 
-    # print_access_url = f'{request.url}?file_type={str(print_type.value).lower()}&template_doc_id={template_doc_id}&plugins_user_code={plugins_user_print}'
+    # print_access_url = f'{request.url}
+    #   ?file_type={str(print_type.value).lower()}
+    #   &template_doc_id={template_doc_id}
+    #   &plugins_user_code={plugins_user_print}'
     db.session.commit()
     return json_response({"success": True, "url": print_access_url}, status_code=201)
 
@@ -265,6 +279,9 @@ def get_printed_document(
             def_file_type = "plain"
     elif doc_settings.is_textplain():
         def_file_type = "plain"
+    suffix = Path(doc_path).suffix
+    if suffix:
+        def_file_type = suffix[1:].lower()
 
     file_type = file_type or def_file_type
     # if doc_path != doc.name and doc_path.rfind('.') >= 0:  # name have been changed because . in name
@@ -273,7 +290,8 @@ def get_printed_document(
     line = request.args.get("line")
 
     if file_type.lower() not in (f.value for f in PrintFormat):
-        raise RouteException("The supplied query parameter 'file_type' was invalid.")
+        file_type = "plain"
+        # raise RouteException("The supplied query parameter 'file_type' was invalid.")
 
     print_type = PrintFormat(file_type)
     template_doc = None
@@ -356,8 +374,18 @@ def get_printed_document(
         rurl = request.url
         i = rurl.find("?")
         rurl = rurl[:i]
-        latex_access_url = f"{rurl}?file_type=latex&template_doc_id={template_doc_id}&plugins_user_code={plugins_user_code}"
-        pdf_access_url = f"{rurl}?file_type=pdf&template_doc_id={template_doc_id}&plugins_user_code={plugins_user_code}"
+        latex_access_url = (
+            f"{rurl}"
+            f"?file_type=latex"
+            f"&template_doc_id={template_doc_id}"
+            f"&plugins_user_code={plugins_user_code}"
+        )
+        pdf_access_url = (
+            f"{rurl}"
+            f"?file_type=pdf"
+            f"&template_doc_id={template_doc_id}"
+            f"&plugins_user_code={plugins_user_code}"
+        )
         if url_macros:
             latex_access_url += f"&{urlencode(url_macros)}"
             pdf_access_url += f"&{urlencode(url_macros)}"
@@ -411,9 +439,16 @@ def get_printed_document(
             response = make_response(
                 render_template("html_print.jinja2", content=result, title=doc.path)
             )
+        elif original_print_type == PrintFormat.SVG:
+            with open(cached, "r", encoding="utf-8") as f:
+                result = f.read()
+            result = sanitize_svg(result)
+            response = make_response(result)
+            response.headers["Content-Type"] = mime
         else:
             response = make_response(send_file(path_or_file=cached, mimetype=mime))
-        add_csp_if_not_script_safe(response, mime, "sandbox allow-scripts")
+        # add_csp_if_not_script_safe(response, mime, "sandbox allow-scripts")
+        add_csp_if_not_script_safe(response, mime, "sandbox")
     else:  # show LaTeX with line numbers
         styles = "p.red { color: red; }\n"
         styles += (
@@ -590,6 +625,7 @@ def get_numbering(doc_path: str, recurse: bool = False) -> Response:
 
 @print_blueprint.get("/templates/<path:doc_path>")
 def get_templates(doc_path: str) -> Response:
+    _ = doc_path  # use for linter, actual doc is fetched in before_request
     doc = g.doc_entry
 
     template_name = get_doc_template_name(doc)
@@ -609,6 +645,8 @@ def get_mimetype_for_format(file_type: PrintFormat) -> str:
         return "text/html"
     elif file_type == PrintFormat.ICS:
         return "text/calendar"
+    elif file_type == PrintFormat.SVG:
+        return "image/svg+xml"
     else:
         return "text/plain"
 
@@ -624,11 +662,12 @@ def check_print_cache(
     """
     Fetches the given document from the database.
 
-    :param url_macros:
     :param doc_entry:
     :param template:
     :param file_type:
     :param plugins_user_print:
+    :param url_macros:
+    :param urlparams:
     :return:
     """
 
@@ -672,15 +711,16 @@ def create_printed_doc(
     """
     Adds a marking for a printed document to the db
 
-    :param user_ctx: The user context.
-    :param view_ctx: The view context.
     :param doc_entry: Document that is being printed
     :param template_doc: printing template used
     :param file_type: File type for the document
     :param temp: Is the document stored only temporarily (gets deleted after some time)
+    :param user_ctx: The user context.
+    :param view_ctx: The view context.
     :param plugins_user_print: use users answers for plugins or not
     :param urlroot: url root for this route
     :param eol_type: EOL type. Same option as Pandoc (crlf, lf, native)
+    :param urlparams:
     :return str: path to the created file
     """
 
@@ -734,9 +774,129 @@ def create_printed_doc(
     return p_doc.path_to_file
 
 
+NOT_FOUND_SVG = (
+    '<svg xmlns="http://www.w3.org/2000/svg" width="200" height="20">'
+    '<text x="0" y="15" font-family="sans-serif" font-size="15">NOTFOUNDFILE</text>'
+    "</svg>"
+)
+
+
 def remove_images(doc_id: int) -> None:
     # noinspection PyBroadException
     try:
         shutil.rmtree(os.path.join(DOWNLOADED_IMAGES_ROOT, str(doc_id)))
     except:
         pass
+
+
+@svg_blueprint.before_request
+def do_before_requests() -> None:
+    g.user = sessioninfo.get_current_user_object()
+
+
+@svg_blueprint.url_value_preprocessor
+def pull_doc_path_svg(endpoint: str | None, values: dict[str, str] | None) -> None:
+    if not endpoint or not values:
+        return
+    if current_app.url_map.is_endpoint_expecting(endpoint, "doc_path"):
+        doc_path = values["doc_path"]
+        if doc_path is None:
+            g.setdefault("error", "Docname is missing")
+            return
+        g.doc_path = doc_path
+        g.doc_entry = DocEntry.find_by_path(doc_path)
+        if not g.doc_entry:
+            g.setdefault("error", "Doc not found")
+            return
+        verify_view_access(g.doc_entry)
+
+
+@svg_blueprint.get("/<path:doc_path>")
+def svg_document(
+    doc_path: str,
+    task_id: str | None = field(metadata={"data_key": "taskid"}, default=None),
+    pid: str | None = field(metadata={"data_key": "id"}, default=None),
+    ftype: str | None = field(metadata={"data_key": "fileType"}, default=None),
+    _force: bool = False,
+    _url_macros: dict[str, str]
+    | None = field(metadata={"data_key": "urlMacros"}, default=None),
+    r: list[str]
+    | None = field(
+        metadata={
+            "data_key": "r",
+            "marshmallow_field": mm_fields.List(mm_fields.String()),
+        },
+        default=None,
+    ),
+) -> Response:
+    file_type = ftype
+    if not file_type:
+        file_type = "svg"
+
+    def get_data() -> tuple[str, str | None]:
+        nonlocal file_type
+        # nonlocal url_macros
+
+        if file_type.lower() not in [f.value for f in PrintFormat]:
+            return "", "Invalid file type"
+        err = g.pop("error", "")
+
+        if err:
+            return "", err
+        doc: DocInfo = g.doc_entry
+        # doc_settings = doc.document.get_settings()
+
+        """
+        if doc_settings.urlmacros():
+            view_ctx = view_ctx_with_urlmacros(ViewRoute.View, urlmacros=url_macros)
+        else:
+            view_ctx = default_view_ctx
+            url_macros = None
+        """
+        task = None
+        tid = "taskid"
+        if pid:
+            task = doc.document.get_paragraph(pid)
+            tid = pid
+        elif task_id:
+            task = doc.document.get_paragraph_by_task_id(task_id)
+            tid = task_id
+
+        if not task:
+            return "", f"{tid} not found"
+
+        # urlparams: DocPrintParams = PrintModelSchema.load(request.args, unknown=EXCLUDE)
+
+        attrs = task.get_attrs()
+        if attrs.get("plugin", "") != "csPlugin":
+            return "", f"{task_id} not csPlugin"
+
+        js = YamlBlock.from_markdown(task.md).values
+        if js.get("type", "") != "drawio":
+            return "", f"{task_id} is not drawio"
+
+        data = js.get("data", "")
+        if not data:
+            return "", f"No data in {task_id}"
+        if r:
+            for rep in r:
+                parts = rep.split("|", 1)
+                if len(parts) == 2:
+                    data = data.replace(parts[0], parts[1])
+        return data, None
+
+    result, error = get_data()
+    if error:
+        file_type = "svg"
+        result = NOT_FOUND_SVG.replace("NOTFOUNDFILE", error)
+
+    db.session.commit()
+
+    print_type = PrintFormat(file_type)
+    mime = get_mimetype_for_format(print_type)
+    result = sanitize_svg(result)
+    response = make_response(result)
+    response.headers["Content-Type"] = mime
+    add_csp_if_not_script_safe(response, mime, "sandbox")
+
+    return response

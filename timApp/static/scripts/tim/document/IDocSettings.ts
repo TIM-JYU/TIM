@@ -58,6 +58,7 @@ export interface IDocSettings {
     redirectAnonymousNoRight?: string;
     disable_answer?: string;
     nonAnswerAnnotationsDisabled?: string;
+    showFullLanguageNames?: boolean;
 }
 
 export interface ISlideDocSettings extends IDocSettings {

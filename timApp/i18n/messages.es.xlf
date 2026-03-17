@@ -5393,14 +5393,6 @@
           <context context-type="linenumber">579</context>
         </context-group>
       </trans-unit>
-      <trans-unit id="8023863054421277417" datatype="html">
-        <source> The exam has started! Students can now access the exam. Audio and video materials can be accessed via the "View exam document" link. </source>
-        <target state="translated">"¡El examen ha comenzado! Los estudiantes ya pueden acceder al examen. Se puede acceder a los materiales de audio y vídeo a través del enlace ""Ver documento del examen""."</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
-          <context context-type="linenumber">582</context>
-        </context-group>
-      </trans-unit>
       <trans-unit id="5539097211548480304" datatype="html">
         <source>Start exam</source>
         <target state="translated">Comenzar examen</target>
@@ -11522,6 +11514,14 @@ Separate multiple addresses with commas or write each address on a new line.</so
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
           <context context-type="linenumber">798,800</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="3881453063873243566" datatype="html">
+        <source> The exam has started! Students can now access the exam. Audio and video materials can be accessed via the <x id="START_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;i&gt;"/>View exam document<x id="CLOSE_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;/i&gt;"/> link. </source>
+        <target state="new"> ¡El examen ha comenzado! Los estudiantes ya pueden acceder al examen. Se puede acceder a los materiales de audio y vídeo a través del enlace <x id="START_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;i&gt;"/>Ver documento del examen<x id="CLOSE_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;/i&gt;"/>. </target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
+          <context context-type="linenumber">618,620</context>
         </context-group>
       </trans-unit>
     </body>

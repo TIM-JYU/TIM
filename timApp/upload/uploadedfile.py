@@ -215,6 +215,7 @@ class UploadedFile(ItemBase):
         file_data: bytes | None = None,
         original_file: Path | None = None,
         upload_info: PluginUploadInfo | None = None,
+        forced_name: bool = False,
     ) -> "UploadedFile":
         if file_data is None and original_file is None:
             raise TimDbException(
@@ -226,15 +227,23 @@ class UploadedFile(ItemBase):
         if block_type == BlockType.Upload:
             assert upload_info
             base_path = get_storage_path(block_type)
-            path = (
-                base_path
-                / str(upload_info.doc.id)
-                / upload_info.task_id_name
-                / upload_info.user.name
-            )
-            path.mkdir(parents=True, exist_ok=True)
-            file_id = len(os.listdir(path)) + 1
-            path = path / str(file_id) / secured_name
+            path = base_path / str(upload_info.doc.id) / upload_info.task_id_name
+            if not forced_name:
+                path = path / upload_info.user.name
+                path.mkdir(parents=True, exist_ok=True)
+                file_id = len(os.listdir(path)) + 1
+                path = path / str(file_id)
+            else:  # /uploads/ -route wants 2 directories before the filename
+                parts = file_filename.rsplit("/")
+                missing = 3 - len(parts)
+                if missing > 0:
+                    parts = ["0"] * missing + parts
+                dir_parts = [secure_filename(p) or "0" for p in parts[:-1]]
+                for part in dir_parts:
+                    path = path / part
+                secured_name = secure_filename(parts[-1]) or "0"
+
+            path = path / secured_name
             file_block = insert_block(
                 block_type=block_type,
                 description=path.relative_to(base_path).as_posix(),
@@ -246,7 +255,7 @@ class UploadedFile(ItemBase):
         db.session.flush()
         f = CLASS_MAPPING[block_type](file_block)
         p = f.filesystem_path
-        p.parent.mkdir(parents=True)
+        p.parent.mkdir(parents=True, exist_ok=True)
         if file_data is not None:
             with p.open(mode="wb") as fi:
                 fi.write(file_data)

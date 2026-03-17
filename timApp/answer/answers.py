@@ -51,8 +51,10 @@ from timApp.util.answerutil import (
     task_ids_to_strlist,
     AnswerPeriodOptions,
 )
+from timApp.util.babel_formatter import babel_fmt
 from timApp.util.logger import log_warning
 from timApp.velp.annotation_model import Annotation
+from tim_common.html_sanitize import sanitize_html
 from tim_common.utils import round_float_error
 
 
@@ -1402,6 +1404,7 @@ def flatten_points_result(
 ) -> list[UserPoints]:
     result_list = []
     hide_list = rule.hide
+
     for user_id, task_groups in result.items():
         first_answer_on = min(
             (
@@ -1479,8 +1482,10 @@ def flatten_points_result(
             except:
                 linktext = ""
                 link = False
+
             try:
-                text = rg.expl.format(
+                text = babel_fmt.format(
+                    rg.expl,
                     groupname,
                     float(total_sum if total_sum is not None else 0),
                     float(task_sum if task_sum is not None else 0),
@@ -1488,6 +1493,7 @@ def flatten_points_result(
                 )
             except:
                 text = groupname + ": " + str(total_sum)
+            text = sanitize_html(text)
             row["groups"][groupname] = {
                 "task_sum": task_sum,
                 "velp_sum": velp_sum,

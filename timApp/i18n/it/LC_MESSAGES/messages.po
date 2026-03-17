@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-02-18 12:58+0000\n"
-"PO-Revision-Date: 2026-02-19 12:42+0200\n"
+"POT-Creation-Date: 2026-03-16 12:35+0000\n"
+"PO-Revision-Date: 2026-03-16 14:42+0200\n"
 "Last-Translator: \n"
 "Language-Team: it <LL@li.org>\n"
 "Language: it\n"
@@ -19,11 +19,11 @@ msgstr ""
 "Generated-By: Babel 2.16.0\n"
 "X-Generator: Poedit 3.8\n"
 
-#: answer/routes.py:802
+#: answer/routes.py:803
 msgid "You cannot submit new answers to the document."
 msgstr "Non è possibile inviare nuove risposte al documento."
 
-#: answer/routes.py:1166
+#: answer/routes.py:1167
 msgid ""
 "Your view access to this document has expired, so this answer was saved but "
 "marked as invalid."
@@ -35,7 +35,7 @@ msgstr ""
 msgid "Sorry, you don't have permission to use this resource."
 msgstr "Spiacenti, non disponi dell'autorizzazione per utilizzare questa risorsa."
 
-#: plugin/examGroupManager/examGroupManager.py:720
+#: plugin/examGroupManager/examGroupManager.py:722
 #, python-format
 msgid ""
 "Invalid student row: %(data)s. Expected format: <grade> <surname> <given_names>"
@@ -50,7 +50,7 @@ msgstr "Esame di prova non impostato nel markup del plugin."
 msgid "Exam info not found in the plugin markup."
 msgstr "Informazioni sull'esame non trovate nel markup del plugin."
 
-#: plugin/examGroupManager/examGroupManager.py:901
+#: plugin/examGroupManager/examGroupManager.py:902
 msgid ""
 "No login codes found for the group. Generate login codes before starting the "
 "exam."
@@ -58,17 +58,17 @@ msgstr ""
 "Non sono stati trovati codici di accesso per il gruppo. Generare i codici di "
 "accesso prima di iniziare l'esame."
 
-#: plugin/examGroupManager/examGroupManager.py:943
+#: plugin/examGroupManager/examGroupManager.py:949
 msgid "The group is currently not in an exam. Please set the exam document first."
 msgstr ""
 "Il gruppo non è attualmente in fase di esame. Si prega di impostare prima il "
 "documento d'esame."
 
-#: plugin/examGroupManager/examGroupManager.py:952
+#: plugin/examGroupManager/examGroupManager.py:958
 msgid "You do not have access to the exam document."
 msgstr "Non hai accesso al documento d'esame."
 
-#: plugin/examGroupManager/examGroupManager.py:1104
+#: plugin/examGroupManager/examGroupManager.py:1157
 msgid ""
 "Cannot change exam state while the answers are revealed. Disable answer reveal "
 "in section 4."
@@ -76,11 +76,11 @@ msgstr ""
 "Non è possibile modificare lo stato dell'esame mentre le risposte sono "
 "visibili. Disattiva la visualizzazione delle risposte nella sezione 4."
 
-#: plugin/examGroupManager/examGroupManager.py:1128
+#: plugin/examGroupManager/examGroupManager.py:1181
 msgid "You do not have sufficient access to the exam document to set it."
 msgstr "Non hai accesso sufficiente al documento d'esame per impostarlo."
 
-#: plugin/examGroupManager/examGroupManager.py:1186
+#: plugin/examGroupManager/examGroupManager.py:1239
 msgid ""
 "Cannot reveal answers while the exam is ongoing. Stop the exam and disable the "
 "login codes in the section 3."
@@ -92,15 +92,15 @@ msgstr ""
 msgid "Expand by moving mouse over the exercise or by clicking"
 msgstr "Espandi spostando il mouse sull'esercizio o cliccando"
 
-#: plugin/tableform/tableForm.py:546
-msgid "Real name"
-msgstr "Nome reale"
+#: plugin/tableform/tableForm.py:550
+msgid "Full name"
+msgstr "Nome completo"
 
-#: plugin/tableform/tableForm.py:548
+#: plugin/tableform/tableForm.py:552
 msgid "Username"
 msgstr "Nome utente"
 
-#: plugin/tableform/tableForm.py:550
+#: plugin/tableform/tableForm.py:554
 msgid "Email"
 msgstr "Indirizzo e-mail"
 
@@ -136,14 +136,14 @@ msgstr "Codice di accesso"
 msgid "Task Summary"
 msgstr "Riepilogo delle attività"
 
-#: templates/partials/doc_content.jinja2:20
+#: templates/partials/doc_content.jinja2:21
 msgid "Total points"
 msgstr "Punti totali"
 
-#: templates/partials/doc_content.jinja2:33
+#: templates/partials/doc_content.jinja2:36
 msgid "total tasks"
 msgstr "attività totali"
 
-#: templates/partials/doc_content.jinja2:35
+#: templates/partials/doc_content.jinja2:39
 msgid "Refresh (F5) to recount"
 msgstr "Premere (F5) per ricalcolare"

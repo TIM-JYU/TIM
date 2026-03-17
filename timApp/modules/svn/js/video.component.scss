@@ -6,3 +6,185 @@
     top: 50%;
   }
 }
+
+.audio .settings-btn {
+    padding: 0 4px;
+    /* border: 1px solid #ccc; */
+    border: none;
+    margin-left: -1em;
+    margin-top: -6px;
+    /* background: #f7f7f7; */
+    background: transparent;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 19px;
+    font-weight: bold;
+    height: 25px;
+    flex: 0 0 auto;
+    /* display: inline-flex; */
+    z-index: 1;
+}
+
+.video-settings {
+    position: relative;   /* ankkuri popoverille */
+}
+
+
+/* koko popover blockiksi */
+.settings-popover {
+    position: absolute;
+    right: 0;
+    bottom: -1em;        /* aukeaa napin yläpuolelle */
+
+    display: flex;
+    flex-direction: column;
+    gap: 0.2em;
+
+    padding: 0.6em 0.6em 0.1em;
+    background: white;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+
+    z-index: 10;
+}
+
+/* speed- ja zoom-controls blockiksi */
+.settings-popover .speed-controls,
+.settings-popover .zoom-controls {
+    display: flex;
+    align-items: center;
+    gap: 0.5em; /* väli nappejen ja tekstin välillä */
+}
+
+/* adv ja hide-video omille riveilleen */
+.settings-popover .normalLabel,
+.settings-popover .hide-text {
+    display: flex;          /* tai block jos haluat täyden rivin */
+    align-items: center;
+    gap: 0.5em;
+}
+
+.speed-controls, .zoom-controls {
+  display: flex;
+  align-items: center; /* painikkeet ja teksti samalla rivillä */
+  gap: 0.3em;
+}
+
+.speed-reset, .zoom-reset {
+    width: 25px;
+    text-align: center;
+}
+
+.video-setting-label {
+   display: inline-block;
+    width: 70px;
+    text-align: left;
+    margin-right: 0.5em;
+    font-size: 0.8em;
+}
+
+.iframe-setting-label {
+    display: inline-block;
+    text-align: left;
+    font-size: 0.8em;
+}
+
+.settings-popover .close-btn {
+    position: absolute;
+    top: -2px;
+    right: -3px;
+    background: transparent;
+    border: none;
+    font-size: 1em;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.audio .flex.settings {
+    display: inline-flex;
+}
+
+.audio audio {
+    height: 30px;
+    max-width: 97%;
+}
+
+.videoInfo {
+    flex: 1 1 auto;         /* vie niin paljon tilaa kuin mahdollista */
+    min-width: 0;           /* tärkeä pitkälle tekstille */
+}
+
+.audio.smallVideoRunDiv, .audio.listVideoRunDiv {
+    margin-top: 0.7em;
+    margin-bottom: 0.7em;
+    text-align: left;
+
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.3em;
+    padding-left: 0.3em;
+}
+
+.audio.smallVideoRunDiv.lazy {
+    /* Lazy settings must be in stylesheet.css to avoid FOUC */
+}
+
+.audio.smallVideoRunDiv.videoOn {
+}
+
+
+
+.audioRow {
+    display: flex;
+    align-items: center;
+    flex: 0 1 auto;         /* vie rivin leveydestä tarvittaessa koko rivin */
+    margin-left: auto;
+    margin-right: auto;
+    max-width: 90%;
+}
+
+.audioRow audio {
+    flex: 1 1 auto;        /* audio voi kutistua tarvittaessa */
+    min-width: 50px;       /* halutessa minimikoko, ettei katoa kokonaan */
+}
+
+
+.videoRow {
+    position: relative;
+    display: inline-block; /* pysyy videon kokoisena */
+}
+
+.videoRow .settings-btn {
+    position: absolute;
+    right: 1px;
+    bottom: 1px;
+    background: rgba(255,255,255,0.8); /* valinnainen jotta näkyy tummalla videolla */
+    border: none;
+}
+
+.audioRow audio {
+    flex: 0 0 auto;         /* audio ei kutistu */
+}
+
+.iframeContainer {
+    display: flex;
+    flex-direction: column;
+}
+
+.iframeContainer .zoom-controls{
+    display: flex;
+    flex-direction: row;
+    margin-left: auto;
+}
+
+
+@supports (-webkit-touch-callout: none) { /* vain iOS Safari */
+    .audio .settings-btn {
+        color: white;
+    }
+    .audio audio {
+        height: 40px;
+    }
+}

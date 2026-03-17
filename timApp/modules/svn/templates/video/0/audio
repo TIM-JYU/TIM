@@ -1,0 +1,13 @@
+Audio
+Audio player
+``` {plugin="showVideo"}
+# type: list
+audio: true
+open: false
+autoplay: true
+videoname: Keskustelua tähän jaksoon liittyen.
+# start: 10
+# end: 50
+width: 350
+file: "https://tim.jyu.fi/files/983014/KvaakA11.mp3"
+```

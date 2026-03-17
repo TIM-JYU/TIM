@@ -680,11 +680,17 @@ class DocumentPrinter:
                         )
 
             # TODO: add also variables from texpandocvariables document setting, but this may lead to security hole?
+
+            # TODO: if textplain use easier conversion?
+            to_format = str(target_format.value)
+            if target_format == PrintFormat.SVG:
+                to_format = "plain"
+
             try:
                 tim_convert_text(
                     source=src,
                     from_format=from_format,
-                    to=str(target_format.value),
+                    to=to_format,
                     outputfile=path.absolute().as_posix(),  # output_file.name,
                     extra_args=[
                         "--template=" + template_file.name,

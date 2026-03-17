@@ -279,7 +279,14 @@ class LanguageTypes {
     }
 
     // What are known test types (be careful not to include partial word):
-    testTypes = ["ccomtest", "jcomtest", "comtest", "scomtest", "runtest"];
+    testTypes = [
+        "ccomtest",
+        "jcomtest",
+        "comtest",
+        "scomtest",
+        "runtest",
+        "pydoctest",
+    ];
     testAceModes = ["c_cpp", "java", "csharp", "scala"];
     unitTestTypes = ["junit", "unit"];
 
@@ -292,6 +299,8 @@ class LanguageTypes {
         scala: "scomtest",
         "c++": "ccomtest",
         jypeli: "comtest",
+        py3: "pydoctest",
+        py: "pydoctest",
     };
     // If test type is unit, how to change it for specific languages
     impUnitTestTypes: Record<string, string> = {
@@ -302,6 +311,8 @@ class LanguageTypes {
         scala: "junit",
         "c++": "cunit",
         jypeli: "nunit",
+        py3: "pyunittest",
+        py: "pyunittest",
     };
 
     getCommentMarkers(type: string) {
@@ -776,6 +787,7 @@ const CsMarkupOptional = t.partial({
     resetUserInput: t.boolean,
     uploadAcceptPattern: t.string,
     uploadAcceptMaxSize: t.number,
+    forceUploadName: t.string,
     showAlwaysSavedText: t.boolean,
     startLineNumber: t.number,
     targetCanvas: t.string,
@@ -1513,6 +1525,7 @@ export class CsController extends CsBase implements ITimComponent {
         component.allowMultiple = this.markup.allowMultipleFiles;
         component.accept = this.markup.uploadAcceptPattern;
         component.maxSize = this.markup.uploadAcceptMaxSize;
+        component.forceUploadName = this.markup.forceUploadName;
         component.multipleElements = this.markup.multipleUploadElements;
         component.files = files;
     }
@@ -4067,6 +4080,10 @@ ${fhtml}
         return this.markup.spellcheck;
     }
 
+    get allowContextMenu() {
+        return this.markup.allowContextMenu;
+    }
+
     get aceOptions() {
         return this.markup.ace;
     }
@@ -4327,6 +4344,7 @@ ${fhtml}
                                (close)="onFileClose($event)"
                                (content)="onContentChange($event)"
                                [spellcheck]="spellcheck"
+                               [allowContextMenu]="allowContextMenu"
                                [aceOptions]="aceOptions">
                     </cs-editor>
                     <div class="csRunChanged" *ngIf="runChanged && !hide.changed"></div>
