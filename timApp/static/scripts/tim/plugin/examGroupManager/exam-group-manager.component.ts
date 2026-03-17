@@ -453,7 +453,7 @@ export class ToggleComponent {
                                         class="form-control"
                                         [ngModel]="group.currentExamDoc"
                                         (ngModelChange)="confirmSelectExam(group, $event); handleOptionSelectForExamTime($event)">
-                                    <option *ngIf="examByDocId.get(group.examDocId ?? -1) ?? markup['practiceExam']"
+                                    <option *ngIf="examByDocId.get(group.examDocId ?? -1)?.practice ?? markup['practiceExam']"
                                             [ngValue]="examByDocId.get(group.examDocId ?? -1)?.practice?.docId ?? markup['practiceExam']?.docId ?? -1">
                                         {{ examByDocId.get(group.examDocId ?? -1)?.practice?.name ?? markup['practiceExam']?.name ?? "" }}
                                     </option>
