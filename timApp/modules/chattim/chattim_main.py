@@ -4,18 +4,13 @@ from flask import request
 
 from timApp.tim_app import csrf
 from timApp.util.flask.responsehelper import json_response
-from timApp.util.flask.typedblueprint import TypedBlueprint
 from tim_common.markupmodels import GenericMarkupModel
 from tim_common.pluginserver_flask import (
     GenericHtmlModel,
-    GenericAnswerModel,
-    register_plugin_app,
-    launch_if_main,
     PluginAnswerResp,
     PluginReqs,
     EditorTab,
     PluginAnswerWeb,
-    create_blueprint,
     create_nontask_blueprint,
 )
 
@@ -90,6 +85,7 @@ def define_ask_route():
     data = request.get_json()
     user_input = data.get("input")
     user_id = data.get("user_id")
+    document_id = data.get("document_id")
 
     # TODO: kytke plugincoreen
 
