@@ -195,15 +195,9 @@ class Plugin:
             self.task_id.maybe_set_hint(par.get_id())
             if par.get_attr("readonly") == "view" and not self.task_id.access_specifier:
                 self.task_id.access_specifier = TaskIdAccess.ReadOnly
-        assert isinstance(values, dict)
-        self.values = values
-        try:
-            self.known: KnownMarkupFields = KnownMarkupFieldsSchema.load(
-                {k: v for k, v in values.items()},
-                unknown=EXCLUDE,
-            )
-        except ValidationError as e:
-            raise PluginException(f"Invalid markup: {e}") from e
+        self.values = {}
+        self.known: KnownMarkupFields | None = None
+        self.set_values(values)
         self.type = plugin_type
         self.ptype = PluginTypeLazy(plugin_type)
         self.par = par
@@ -213,6 +207,17 @@ class Plugin:
         self.access_end_for_user = None
         self.hidden: None | bool = None
         self._show_points = None
+
+    def set_values(self, values: dict):
+        assert isinstance(values, dict)
+        self.values = values
+        try:
+            self.known = KnownMarkupFieldsSchema.load(
+                {k: v for k, v in values.items()},
+                unknown=EXCLUDE,
+            )
+        except ValidationError as e:
+            raise PluginException(f"Invalid markup: {e}") from e
 
     # TODO don't set task_id in HTML or JSON at all if there isn't one.
     #  Currently at least csPlugin cannot handle taskID being None.
@@ -257,7 +262,7 @@ class Plugin:
         return find_plugin_from_document(doc, tid, user_ctx, view_ctx), d
 
     @staticmethod
-    def from_paragraph(
+    def values_from_paragraph(
         par: DocParagraph, view_ctx: ViewContext, user: UserContext | None = None
     ):
         doc = par.doc
@@ -281,6 +286,15 @@ class Plugin:
             global_attrs=doc.get_settings().global_plugin_attrs(),
             macroinfo=doc.get_settings().get_macroinfo(view_ctx, user),
             use_exported=is_translation,
+        )
+        return plugin_data, task_id_name, plugin_name
+
+    @staticmethod
+    def from_paragraph(
+        par: DocParagraph, view_ctx: ViewContext, user: UserContext | None = None
+    ):
+        plugin_data, task_id_name, plugin_name = Plugin.values_from_paragraph(
+            par, view_ctx, user
         )
         p = Plugin(
             (
