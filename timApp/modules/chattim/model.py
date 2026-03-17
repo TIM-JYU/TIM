@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass, asdict
 from typing import Literal, Protocol, Callable, Iterable, Any, cast
-from openai import OpenAI, types
 from enum import StrEnum
 
 
@@ -118,13 +117,21 @@ class ModelInfo:
     supports_streaming: bool = False
 
 
-class OpenAiModel(ChatModel):
-    """`ChatModel` implementation for OpenAI models."""
+class GenericApiChatModel(ChatModel):
+    """
+    `ChatModel` implementation for providers that are OpenAI SDK compatible.
+    """
 
-    def __init__(self, info: ModelInfo, api_key: str, base_url: str | None = None):
+    def __init__(self, info: ModelInfo, api_key: str, base_url: str):
+        # TODO: move or change lib
+        try:
+            from openai import OpenAI, types, AsyncOpenAI  # type: ignore
+        except ModuleNotFoundError as e:
+            raise ModuleNotFoundError("Python module `openai` not found.") from e
+
         self._info = info
         self._api_key = api_key
-        self._base_url = (base_url or "https://api.openai.com/v1").rstrip("/")
+        self._base_url = base_url
         self._client = OpenAI(api_key=self._api_key, base_url=self._base_url)
 
     def generate(
@@ -133,7 +140,7 @@ class OpenAiModel(ChatModel):
         """Generate a model response from the given messages."""
         res = self.create_completion(options=options, messages=messages)
         message_content = res.choices[0].message.content or ""
-        usage = OpenAiModel.get_usage(res.usage)
+        usage = OpenAiChatModel.get_usage(res.usage)
         return ModelResponse(content=message_content, usage=usage)
 
     def generate_stream(
@@ -152,7 +159,7 @@ class OpenAiModel(ChatModel):
 
         # Iterate the message chunks in the stream
         for chunk in stream:
-            usage = OpenAiModel.get_usage(chunk.usage)
+            usage = OpenAiChatModel.get_usage(chunk.usage)
             if len(chunk.choices) == 0:
                 # No more messages
                 yield ModelResponseChunk(usage=usage, done=True)
@@ -175,7 +182,7 @@ class OpenAiModel(ChatModel):
 
     @staticmethod
     def get_usage(
-        usage: types.completion_usage.CompletionUsage | None,
+        usage: Any,
     ) -> Usage | None:
         """Convert completion usage to `Usage`"""
         if not usage:
@@ -209,6 +216,14 @@ class OpenAiModel(ChatModel):
             max_completion_tokens=options.max_tokens,
             **stream_options,
         )
+
+
+class OpenAiChatModel(GenericApiChatModel):
+    """`ChatModel` implementation for OpenAI models."""
+
+    def __init__(self, info: ModelInfo, api_key: str, base_url: str | None = None):
+        _base_url = (base_url or "https://api.openai.com/v1").rstrip("/")
+        super().__init__(info, api_key, base_url)
 
 
 class DummyChatModel(ChatModel):
@@ -283,7 +298,7 @@ class ModelRegistry:
         model_id: str,
     ) -> ModelInfo | None:
         """Get model info for a specific model."""
-        models = self._models.get(provider, [])
+        models = self._models.get(provider, {})
         return models.get(model_id)
 
     def create(self, spec: ModelSpec) -> ChatModel:
@@ -308,7 +323,7 @@ ProviderInitFn = Callable[[ModelInfo, str, str | None], ChatModel]
 """Function type for initializing `Model` instances from different providers."""
 
 PROVIDERS: dict[Provider, ProviderInitFn] = {
-    "openai": lambda info, key, url: OpenAiModel(info, key, url),
+    "openai": lambda info, key, url: OpenAiChatModel(info, key, url),
 }
 """All the supported providers."""
 
