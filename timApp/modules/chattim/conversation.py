@@ -3,22 +3,19 @@ from __future__ import annotations
 import os
 import json
 from dataclasses import dataclass, asdict
+from timApp.modules.chattim.model import Message, Usage
 from timApp.defaultconfig import FILES_PATH
-
-# from timApp.modules.chattim.model import Message, Usage
 
 
 @dataclass
 class ChatMessage:
     content: str
     """Content of the message."""
-    # TODO: better to use a date for readability?
     timestamp: int
     """Timestamp of when the message was sent."""
-    # role: Message.Role
-    role: str
+    role: Message.Role
     """Role of the message sender."""
-    # usage: Usage | None = None
+    usage: Usage | None = None
     """Tokens used for generating the message."""
 
 
@@ -43,7 +40,7 @@ class ConversationManager:
         messages: list[ChatMessage],
     ):
         """Append messages to the history of the specified conversation."""
-        # TODO: update cache
+        # TODO: update cache we have one
         self.store.append_messages(plugin_id, user_id, conversation_id, messages)
 
     def get_history(
@@ -54,7 +51,7 @@ class ConversationManager:
         last_n: int | None = None,
     ) -> list[ChatMessage]:
         """Return the history of the specified conversation."""
-        # TODO: check if in memory already
+        # TODO: check if in memory
         messages = self.store.load_messages(plugin_id, user_id, conversation_id, last_n)
         return messages or []
 
