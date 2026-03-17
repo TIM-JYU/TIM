@@ -748,6 +748,12 @@ def get_postanswer_plugin_etc(
             ask_new = answernr == answerinfo.count
             allow_save = ask_new
 
+        # count new pöugin values using answer_nr
+        par = found_plugin.par
+        par.answer_nr = answernr_to_user
+        plg_values, _, _ = Plugin.values_from_paragraph(par, view_ctx, context_user)
+        found_plugin.set_values(plg_values)
+
     try:
         vr = verify_task_access(
             d,
@@ -1445,9 +1451,9 @@ def preprocess_jsrunner_answer(
         runner_req.input.paramComps
     ):  # TODO: add paramComps to the interface, so no need to manipulate source code
         preprg = runnermarkup.preprogram or ""
-        plugin.values["preprogram"] = (
-            f"gtools.params = {json.dumps(runner_req.input.paramComps)};\n{preprg}"
-        )
+        plugin.values[
+            "preprogram"
+        ] = f"gtools.params = {json.dumps(runner_req.input.paramComps)};\n{preprg}"
     siw = runnermarkup.showInView
     markup_include_opt = value_or_default(
         runnermarkup.includeUsers, MembershipFilter.Current
