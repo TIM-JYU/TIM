@@ -323,7 +323,9 @@ def get_extra_gates() -> dict[str, np.ndarray]:
             [0, 1 / np.sqrt(2), -1 / np.sqrt(2), 0],
         ]
     )
-    return {"SX": sx, "B": B, "D": D}
+    s_inv = np.array([[1, 0], [0, -1j]], complex)
+    t_inv = np.array([[1, 0], [0, 1 / np.sqrt(2) - 1j / np.sqrt(2)]], complex)
+    return {"SX": sx, "B": B, "D": D, "S*": s_inv, "T*": t_inv}
 
 
 def get_gate_matrix(
@@ -350,17 +352,19 @@ def get_gate_matrix(
 
 def get_all_gate_names(custom_gates: dict[str, np.ndarray]) -> set[str]:
     """
-    Get all available names of gates including some default gate names and
+    Get all available names of gates including some default gate names, extra gate names and
     names from custom gate definitions.
     :param custom_gates:
     :return:
     """
     custom_names = custom_gates.keys()
     def_names = ["H", "X", "Y", "Z", "S", "T", "swap"]
+    extra_names = get_extra_gates().keys()
 
     all_names: set[str] = set()
     all_names.update(custom_names)
     all_names.update(def_names)
+    all_names.update(extra_names)
 
     return all_names
 

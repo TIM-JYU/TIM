@@ -1,6 +1,6 @@
 import {Injectable} from "@angular/core";
 import type {Complex} from "mathjs";
-import {add} from "mathjs";
+import {add, subtract} from "mathjs";
 import {
     complex,
     divide,
@@ -110,6 +110,22 @@ export class GateService {
             [0, sin45, neg_sin45, 0],
         ]);
 
+        const S_inv = matrix([
+            [1, 0],
+            [0, complex(0, -1)],
+        ]);
+
+        const T_inv = matrix([
+            [1, 0],
+            [
+                0,
+                subtract(
+                    divide(1, sqrt(2)),
+                    divide(complex(0, 1), sqrt(2))
+                ) as Complex,
+            ],
+        ]);
+
         this.gates = [
             {
                 name: "H",
@@ -147,11 +163,25 @@ export class GateService {
                 info: "Phase S",
             },
             {
+                name: "S*",
+                matrix: S_inv,
+                hidden: false,
+                group: "phase",
+                info: "inverse S",
+            },
+            {
                 name: "T",
                 matrix: T,
                 hidden: false,
                 group: "phase",
                 info: "Phase T",
+            },
+            {
+                name: "T*",
+                matrix: T_inv,
+                hidden: false,
+                group: "phase",
+                info: "inverse T",
             },
             {
                 name: "SX",
