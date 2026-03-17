@@ -7,7 +7,12 @@ import {
     getTopLevelFields,
     nullable,
 } from "tim/plugin/attributes";
-import type {ApplicationRef, DoBootstrap} from "@angular/core";
+import type {
+    AfterViewInit,
+    ApplicationRef,
+    DoBootstrap,
+    OnInit,
+} from "@angular/core";
 import {Component, NgModule, ElementRef} from "@angular/core";
 import {HttpClient, HttpClientModule} from "@angular/common/http";
 import {FormsModule} from "@angular/forms";
@@ -77,16 +82,20 @@ export interface ChatEntry {
     `,
     styleUrls: ["./chattim.scss"],
 })
-export class ChatTIMComponent extends AngularPluginBase<
-    t.TypeOf<typeof PluginMarkupFields>,
-    t.TypeOf<typeof PluginFields>,
-    typeof PluginFields
-> {
+export class ChatTIMComponent
+    extends AngularPluginBase<
+        t.TypeOf<typeof PluginMarkupFields>,
+        t.TypeOf<typeof PluginFields>,
+        typeof PluginFields
+    >
+    implements AfterViewInit
+{
     answer?: string;
     error?: string;
     isRunning = false;
     userinput = "";
     inputstem = "";
+    document_id = -1;
 
     conversation: ChatEntry[] = [];
 
@@ -96,6 +105,12 @@ export class ChatTIMComponent extends AngularPluginBase<
         domSanitizer: DomSanitizer
     ) {
         super(el, http, domSanitizer);
+    }
+
+    ngAfterViewInit() {
+        /* calling this.pluginMeta.getTaskIdUrl() too
+         early crashes thus we call in ngAfterViewInit */
+        this.initDocId();
     }
 
     onEnter() {
@@ -122,15 +137,39 @@ export class ChatTIMComponent extends AngularPluginBase<
         return PluginFields;
     }
 
+    /* Extracts the tim-document id from the taskidurl. */
+    initDocId() {
+        const task_id_url: string = String(this.pluginMeta.getTaskIdUrl());
+        const id_str: string | undefined = task_id_url
+            .split("/")
+            .pop()
+            ?.split(".")[0];
+
+        this.document_id = Number(id_str);
+
+        if (this.document_id === 0) {
+            console.error(
+                "Warning: could not parse document_id from task_id_url: ${task_id_url}"
+            );
+
+            this.document_id = -1;
+        }
+    }
+
     async doSendUserInput() {
         this.isRunning = true;
         this.answer = undefined;
 
+        const input: string = this.userinput;
+        const user_id: string = String(Users.getCurrent().id);
+        const document_id: number = this.document_id;
+
         const response = await this.httpPost<{
             web: {result: string; error?: string};
         }>("/chattim/ask", {
-            input: this.userinput,
-            user_id: String(Users.getCurrent().id),
+            input,
+            user_id,
+            document_id,
         });
 
         this.isRunning = false;
