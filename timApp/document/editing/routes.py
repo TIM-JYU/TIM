@@ -991,7 +991,7 @@ def get_updated_pars(m: GetUpdatedParsModel, doc_id: int):
     """
     d = get_doc_or_abort(doc_id)
     verify_route_access(d, m.view)
-    d.document.preload_option = PreloadOption.all
+    # d.document.preload_option = PreloadOption.all
     return par_response(
         [],
         d,
