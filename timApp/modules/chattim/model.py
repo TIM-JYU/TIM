@@ -177,13 +177,11 @@ class GenericApiChatModel(ChatModel):
         """Get all the available models from the Model API."""
         client = self._client
         return [
-            ModelInfo(model_id=m.id, provider="openai") for m in client.models.list()
+            ModelInfo(model_id=m.id, provider=self._info.provider) for m in client.models.list()
         ]
 
     @staticmethod
-    def get_usage(
-        usage: Any,
-    ) -> Usage | None:
+    def get_usage(usage: Any) -> Usage | None:
         """Convert completion usage to `Usage`"""
         if not usage:
             return None
@@ -223,6 +221,22 @@ class OpenAiChatModel(GenericApiChatModel):
 
     def __init__(self, info: ModelInfo, api_key: str, base_url: str | None = None):
         _base_url = (base_url or "https://api.openai.com/v1").rstrip("/")
+        super().__init__(info, api_key, base_url)
+
+
+class AnthropicChatModel(GenericApiChatModel):
+    """`ChatModel` implementation for Anthropic models."""
+
+    def __init__(self, info: ModelInfo, api_key: str, base_url: str | None = None):
+        _base_url = (base_url or "https://api.anthropic.com/v1").rstrip("/")
+        super().__init__(info, api_key, base_url)
+
+
+class GoogleChatModel(GenericApiChatModel):
+    """`ChatModel` implementation for Google Gemini models."""
+
+    def __init__(self, info: ModelInfo, api_key: str, base_url: str | None = None):
+        _base_url = (base_url or "https://generativelanguage.googleapis.com/v1beta/openai").rstrip("/")
         super().__init__(info, api_key, base_url)
 
 
@@ -316,14 +330,15 @@ class ModelRegistry:
         return init_fn(info, spec.api_key, spec.base_url)
 
 
-# TODO: add more providers
-Provider = Literal["openai", "dummy"]
+Provider = Literal["openai", "anthropic", "google", "dummy"]
 
 ProviderInitFn = Callable[[ModelInfo, str, str | None], ChatModel]
 """Function type for initializing `Model` instances from different providers."""
 
 PROVIDERS: dict[Provider, ProviderInitFn] = {
     "openai": lambda info, key, url: OpenAiChatModel(info, key, url),
+    "anthropic": lambda info, key, url: AnthropicChatModel(info, key, url),
+    "google": lambda info, key, url: GoogleChatModel(info, key, url),
 }
 """All the supported providers."""
 
