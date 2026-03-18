@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, asdict
-from typing import Literal, Protocol, Callable, Iterable, Any, cast
+from typing import Literal, Protocol, Callable, Iterable, Any, cast, AsyncIterable
 from enum import StrEnum
 
 
@@ -46,6 +46,33 @@ class ChatModel(Protocol):
         ...
 
     def get_models(self) -> list[ModelInfo]:
+        """Get all the available models from the Model API."""
+        ...
+
+
+class AsyncChatModel(Protocol):
+    """An abstract async model class for generating responses."""
+
+    async def generate(
+            self, messages: list[Message], options: GenerateOptions
+    ) -> ModelResponse:
+        """Generate a model response from the given messages."""
+        ...
+
+    async def generate_stream(
+            self, messages: list[Message], options: GenerateOptions
+    ) -> AsyncIterable[ModelResponseChunk]:
+        """
+        Generate a model response from the given messages.
+        Uses streaming and returns the response in chunks.
+        """
+        ...
+
+    def get_info(self) -> ModelInfo:
+        """Return info about the model."""
+        ...
+
+    async def get_models(self) -> list[ModelInfo]:
         """Get all the available models from the Model API."""
         ...
 
@@ -125,7 +152,7 @@ class GenericApiChatModel(ChatModel):
     def __init__(self, info: ModelInfo, api_key: str, base_url: str):
         # TODO: move or change lib
         try:
-            from openai import OpenAI, types, AsyncOpenAI  # type: ignore
+            from openai import OpenAI, types  # type: ignore
         except ModuleNotFoundError as e:
             raise ModuleNotFoundError("Python module `openai` not found.") from e
 
@@ -140,7 +167,7 @@ class GenericApiChatModel(ChatModel):
         """Generate a model response from the given messages."""
         res = self.create_completion(options=options, messages=messages)
         message_content = res.choices[0].message.content or ""
-        usage = OpenAiChatModel.get_usage(res.usage)
+        usage = convert_usage(res.usage)
         return ModelResponse(content=message_content, usage=usage)
 
     def generate_stream(
@@ -159,7 +186,7 @@ class GenericApiChatModel(ChatModel):
 
         # Iterate the message chunks in the stream
         for chunk in stream:
-            usage = OpenAiChatModel.get_usage(chunk.usage)
+            usage = convert_usage(chunk.usage)
             if len(chunk.choices) == 0:
                 # No more messages
                 yield ModelResponseChunk(usage=usage, done=True)
@@ -179,17 +206,6 @@ class GenericApiChatModel(ChatModel):
         return [
             ModelInfo(model_id=m.id, provider=self._info.provider) for m in client.models.list()
         ]
-
-    @staticmethod
-    def get_usage(usage: Any) -> Usage | None:
-        """Convert completion usage to `Usage`"""
-        if not usage:
-            return None
-        return Usage(
-            completion_tokens=usage.completion_tokens,
-            prompt_tokens=usage.prompt_tokens,
-            total_tokens=usage.total_tokens,
-        )
 
     def create_completion(
         self,
@@ -215,6 +231,92 @@ class GenericApiChatModel(ChatModel):
             **stream_options,
         )
 
+
+class AsyncGenericApiChatModel(AsyncChatModel):
+    """
+    `AsyncChatModel` implementation for providers that are OpenAI SDK compatible.
+    """
+
+    def __init__(self, info: ModelInfo, api_key: str, base_url: str):
+        # TODO: move or change lib
+        try:
+            from openai import AsyncOpenAI, types  # type: ignore
+        except ModuleNotFoundError as e:
+            raise ModuleNotFoundError("Python module `openai` not found.") from e
+
+        self._info = info
+        self._api_key = api_key
+        self._base_url = base_url
+        self._client = AsyncOpenAI(api_key=self._api_key, base_url=self._base_url)
+
+    async def generate(
+            self, messages: list[Message], options: GenerateOptions
+    ) -> ModelResponse:
+        """Generate a model response from the given messages."""
+        res = await self.create_completion(options=options, messages=messages)
+        message_content = res.choices[0].message.content or ""
+        usage = convert_usage(res.usage)
+        return ModelResponse(content=message_content, usage=usage)
+
+    async def generate_stream(
+            self, messages: list[Message], options: GenerateOptions
+    ) -> AsyncIterable[ModelResponseChunk]:
+        """
+        Generate a model response from the given messages.
+        Uses streaming and returns the response in chunks.
+        """
+        if not self._info.supports_streaming:
+            raise ValueError(
+                f"Streaming is not supported with model: {self._info.model_id}"
+            )
+
+        stream = await self.create_completion(options=options, messages=messages, stream=True)
+
+        # Iterate the message chunks in the stream
+        async for chunk in stream:
+            usage = convert_usage(chunk.usage)
+            if len(chunk.choices) == 0:
+                # No more messages
+                yield ModelResponseChunk(usage=usage, done=True)
+                continue
+            msg = chunk.choices[0]
+            message_delta = msg.delta.content
+            # Return the partial message
+            yield ModelResponseChunk(delta=message_delta, usage=usage)
+
+    def get_info(self) -> ModelInfo:
+        """Return info about the model."""
+        return self._info
+
+    async def get_models(self) -> list[ModelInfo]:
+        """Get all the available models from the Model API."""
+        client = self._client
+        return [
+            ModelInfo(model_id=m.id, provider=self._info.provider) for m in await client.models.list()
+        ]
+
+    async def create_completion(
+            self,
+            messages: list[Message],
+            options: GenerateOptions,
+            stream: bool = False,
+    ):
+        """Create a completion response from the given messages."""
+        msgs: list[dict[str, str]] = [asdict(m) for m in messages]
+        temperature = options.temperature if self._info.supports_temperature else None
+        stream_options = (
+            {"stream": True, "stream_options": {"include_usage": True}}
+            if stream
+            else {}
+        )
+        # TODO: handle errors
+        return await self._client.chat.completions.create(
+            model=self._info.model_id,
+            messages=cast(Any, msgs),
+            temperature=temperature,
+            max_completion_tokens=options.max_tokens,
+            **stream_options,
+        )
 
 class OpenAiChatModel(GenericApiChatModel):
     """`ChatModel` implementation for OpenAI models."""
@@ -328,6 +430,17 @@ class ModelRegistry:
         if init_fn is None:
             raise ValueError(f"Unknown provider: {spec.provider}")
         return init_fn(info, spec.api_key, spec.base_url)
+
+
+def convert_usage(usage: Any) -> Usage | None:
+    """Convert completion usage from the API response to `Usage`"""
+    if not usage:
+        return None
+    return Usage(
+        completion_tokens=usage.completion_tokens,
+        prompt_tokens=usage.prompt_tokens,
+        total_tokens=usage.total_tokens,
+    )
 
 
 Provider = Literal["openai", "anthropic", "google", "dummy"]
