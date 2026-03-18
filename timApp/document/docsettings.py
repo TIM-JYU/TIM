@@ -761,6 +761,64 @@ def resolve_settings_for_pars(pars: Iterable[DocParagraph]) -> YamlBlock:
     return result
 
 
+def resolve_settings_for_par_ids(doc, par_ids: list[str]) -> YamlBlock:
+    result, _ = __resolve_final_settings_impl_from_ids(doc, par_ids)
+    return result
+
+
+def __resolve_final_settings_impl_from_ids(
+    doc,
+    par_ids: list[str],
+) -> tuple[YamlBlock, bool]:
+    result = YamlBlock()
+    had_settings = False
+    for curr_id in par_ids:
+        curr_attrs = doc.get_attrs(curr_id)
+        if not DocParagraph.is_setting_attrs(curr_attrs):
+            break
+        try:
+            curr = doc.get_paragraph(curr_id)
+        except TimDbException:
+            break
+        if not DocParagraph.is_reference_attrs(curr_attrs):
+            try:
+                settings = DocSettings.from_paragraph(curr)
+            except TimDbException:
+                break
+            result = result.merge_with(settings.get_dict())
+            had_settings = True
+        else:
+            curr_own_settings = None
+
+            is_tr_or_cit = curr.is_translation() or curr.is_citation()
+            if is_tr_or_cit:
+                try:
+                    curr_own_settings = DocSettings.from_paragraph(curr).get_dict()
+                except TimDbException:
+                    curr_own_settings = YamlBlock()
+
+            try:
+                # We temporarily pretend that this isn't a translated paragraph
+                # so that we always get the original markdown.
+                tr_attr = curr.get_attr("r")
+                curr.set_attr("r", None)
+                refs = curr.get_referenced_pars(
+                    blind_settings=False
+                )  # Don't blind when resolving and parsing settings
+                curr.set_attr("r", tr_attr)
+            except InvalidReferenceException:
+                break
+            ref_settings, ref_had_settings = __resolve_final_settings_impl(refs)
+            if ref_had_settings:
+                result = result.merge_with(ref_settings)
+                had_settings = True
+                if is_tr_or_cit:
+                    result = result.merge_with(curr_own_settings)
+            else:
+                break
+    return result, had_settings
+
+
 def __resolve_final_settings_impl(
     pars: Iterable[DocParagraph],
 ) -> tuple[YamlBlock, bool]:
