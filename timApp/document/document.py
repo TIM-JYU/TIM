@@ -19,7 +19,11 @@ from lxml import etree, html
 from timApp.document.changelog import Changelog
 from timApp.document.changelogentry import ChangelogEntry
 from timApp.document.docparagraph import DocParagraph
-from timApp.document.docsettings import DocSettings, resolve_settings_for_pars
+from timApp.document.docsettings import (
+    DocSettings,
+    resolve_settings_for_pars,
+    resolve_settings_for_par_ids,
+)
 from timApp.document.documentparser import DocumentParser
 from timApp.document.documentparseroptions import DocumentParserOptions
 from timApp.document.documentwriter import DocumentWriter
@@ -139,7 +143,9 @@ class Document:
         # List of corresponding hashes
         self.par_hashes: list[str] | None = None
         # List of attributes read from disk for pars
-        self.par_hashes: list[str] | None = None
+        self.par_attrs: list[dict] | None = None
+        # List of setting pars
+        self.par_settings: list[str] | None = None
         # List of lines in the document file
         self.doc_lines: list[str] | None = None
         # Whether par_cache is incomplete -
@@ -158,6 +164,8 @@ class Document:
         self.own_settings = None
         # Whether preamble has been loaded
         self.preamble_included = False
+        # If preamble loaded, but not included yet
+        self.preamble_should_include = False
         # Cache for documents that are referenced by this document
         self.ref_doc_cache: dict[str, Document] = {}
         # Cache for single paragraphs
@@ -180,6 +188,9 @@ class Document:
 
         # cache for id-attributes-name lists
         self.attrs_name_lists: dict[str, list[str]] | None = None
+
+        # cache for id-attrs maps for pars
+        self.par_id_attrs_map: dict[str, dict] | None = None
 
     @property
     def id(self):
@@ -233,20 +244,39 @@ class Document:
 
     def __update_par_map(self):
         self.par_map = {}
+        self.par_ids = []
+        self.par_settings = []
+        self.par_attrs = []
+        self.par_hashes = []
+        self.par_id_attrs_map = {}
+        settings_allowed = True
         for i in range(0, len(self.par_cache)):
             curr_p = self.par_cache[i]
+            par_id = curr_p.get_id()
             prev_p = self.par_cache[i - 1] if i > 0 else None
             next_p = self.par_cache[i + 1] if i + 1 < len(self.par_cache) else None
-            self.par_map[curr_p.get_id()] = {"p": prev_p, "n": next_p, "c": curr_p}
-        self.par_ids = [par.get_id() for par in self.par_cache]
-        self.par_hashes = [par.get_hash() for par in self.par_cache]
-        self.par_attrs = [par.attrs for par in self.par_cache]
+            self.par_map[par_id] = {"p": prev_p, "n": next_p, "c": curr_p}
+            self.par_ids.append(par_id)
+            self.par_hashes.append(curr_p.get_hash())
+            if curr_p.is_setting() and settings_allowed:
+                self.par_settings.append(curr_p.get_id())
+            else:
+                settings_allowed = False
+            attrs = curr_p.attrs if curr_p.attrs else {}
+            self.par_attrs.append(attrs)
+            self.par_id_attrs_map[par_id] = attrs
         if not self.is_incomplete_cache:
             self.single_par_cache.update({p.get_id(): p for p in self.par_cache})
 
     def load_pars(self):
         """Loads the paragraphs from disk to memory so that subsequent iterations for the Document are faster."""
+        # self.par_cache = list(self.preamble_pars) if self.preamble_pars else []
         self.par_cache = [par for par in self]
+        # is preamble loaded but not included yet? if so, include it now
+        if self.preamble_should_include and self.preamble_pars:
+            self.par_cache = list(self.preamble_pars) + self.par_cache
+            self.preamble_included = True
+            self.preamble_should_include = False
         self.__update_par_map()
 
     def ensure_pars_loaded(self):
@@ -365,7 +395,7 @@ class Document:
         """Returns the settings for this document excluding any preamble documents."""
         if self.own_settings is None:
             self.ensure_par_ids_loaded()
-            self.own_settings = resolve_settings_for_pars(self.get_settings_pars())
+            self.own_settings = resolve_settings_for_par_ids(self, self.par_settings)
         return self.own_settings
 
     def get_settings(self) -> DocSettings:
@@ -661,6 +691,8 @@ class Document:
         :return: Boolean.
 
         """
+        if self.single_par_cache.get(par_id):
+            return True
         self.ensure_par_ids_loaded()
         return par_id in self.par_ids
 
@@ -818,7 +850,7 @@ class Document:
         # There may be preamble pars in the loaded par_ids list,
         # so we need to load the original par list to find the first par in the original document
         # TODO: It may be better to load paragraphs in an iterator and filter out preamble pars
-        par_ids, _, _ = self._get_par_ids_impl()
+        par_ids, _, _, _ = self._get_par_ids_impl()
         if par_ids:
             first_par = self.get_paragraph(par_ids[0])
         last_settings_par = None
@@ -1305,7 +1337,10 @@ class Document:
         return result
 
     def get_paragraph_by_task_id(self, task_id: str) -> DocParagraph or None:
-        return self.get_par_id("taskId", task_id, None)
+        par_id = self.get_par_id("taskId", task_id, None)
+        if par_id is None:
+            return None
+        return self.get_paragraph(par_id)
 
     def get_named_section(self, section_name: str) -> list[DocParagraph]:
         if self.preload_option == PreloadOption.all:
@@ -1480,21 +1515,24 @@ class Document:
             self._load_par_ids()
 
     def _load_par_ids(self):
-        ids, hashes, attrs = self._get_par_ids_impl()
+        ids, hashes, attrs, settings = self._get_par_ids_impl()
         self.par_ids = ids
         self.par_hashes = hashes
         self.par_attrs = attrs
+        self.par_settings = settings
 
-    def _get_par_ids_impl(self) -> tuple[list[str], list[str], list[dict]]:
+    def _get_par_ids_impl(self) -> tuple[list[str], list[str], list[dict], list[str]]:
         par_ids = []
         par_hashes = []
         par_attrs = []
+        par_settings = []
         if not self.get_version_path().exists():
-            return [], [], []
+            return [], [], [], []
         with self.get_version_path().open("r", encoding="UTF-8") as f:
             self.doc_lines = f.readlines()
 
         need_to_save_attrs = False
+        settings_allowed = True
         for line in self.doc_lines:
             par_id, t, attrs = parse_docline(line)
             par_ids.append(par_id)
@@ -1502,10 +1540,15 @@ class Document:
             par_attrs.append(attrs)
             if attrs is None:
                 need_to_save_attrs = True
+            else:
+                if DocParagraph.is_setting_attrs(attrs) and settings_allowed:
+                    par_settings.append(par_id)
+                else:
+                    settings_allowed = False
         if need_to_save_attrs:
             self.load_pars()
             self._save_doc_lines()
-        return par_ids, par_hashes, par_attrs
+        return par_ids, par_hashes, par_attrs, par_settings
 
     def _save_doc_lines(self):
         with self.get_version_path().open("w", encoding="UTF-8") as f:
@@ -1521,7 +1564,7 @@ class Document:
         """
         if self.preamble_included:
             return self.preamble_pars
-        self.ensure_pars_loaded()
+        self.ensure_par_ids_loaded()
 
         # We must clone the preamble pars because they may be used in the context of multiple documents.
         # See the test test_preamble_ref.
@@ -1549,8 +1592,14 @@ class Document:
             p.preamble_doc = p.doc.get_docinfo()
             p.doc = self
         self.preamble_pars = pars
-        self.par_cache = pars + self.par_cache
-        self.__update_par_map()
+        if pars and self.par_cache is not None:
+            self.par_cache = pars + self.par_cache
+            self.__update_par_map()
+        elif pars:  # no full cache, add to single par cache for dereferencing
+            for p in pars:
+                self.single_par_cache[p.get_id()] = p
+                self.add_name_par_id_map("taskId", p.get_attr("taskId"), p.get_id())
+                self.preamble_should_include = True
         self.preamble_included = True
         return pars
 
@@ -1651,6 +1700,7 @@ class Document:
         self.par_id_attrs_name_maps = {}
         self.attrs_name_par_id_maps = {}
         self.attrs_name_lists = {}
+        self.par_id_attrs_map = {}
         for attr_name in CACHED_ATTR_NAMES:
             self.par_id_attrs_name_maps[attr_name] = {}
             self.attrs_name_par_id_maps[attr_name] = {}
@@ -1658,6 +1708,7 @@ class Document:
         for i in range(len(self.par_ids)):
             par_id = self.par_ids[i]
             attrs = self.par_attrs[i]
+            self.par_id_attrs_map[par_id] = attrs
             for attr_name in CACHED_ATTR_NAMES:
                 attr_value = attrs.get(attr_name, None)
                 if attr_value:
@@ -1675,15 +1726,25 @@ class Document:
             self.generate_name_maps()
         return self.attrs_name_par_id_maps.get(attr_name, {})
 
+    def add_name_par_id_map(self, attr_name: str, value_name: str, par_id: str):
+        if self.attrs_name_par_id_maps is None:
+            self.generate_name_maps()
+        self.attrs_name_par_id_maps[attr_name][value_name] = par_id
+
     def get_name_list(self, attr_name: str) -> list[str]:
         if self.attrs_name_lists is None:
             self.generate_name_maps()
         return self.attrs_name_lists.get(attr_name, [])
 
+    def get_attrs(self, par_id: str) -> dict:
+        if self.par_id_attrs_map is None:
+            self.generate_name_maps()
+        return self.par_id_attrs_map.get(par_id, {})
+
     def get_par_id(
-        self, attr_name: str, attr_value: str, def_value: str | None
+        self, attr_name: str, value_name: str, def_value: str | None
     ) -> str | None:
-        return self.get_name_par_id_map(attr_name).get(attr_value, def_value)
+        return self.get_name_par_id_map(attr_name).get(value_name, def_value)
 
 
 def add_index_entry(index_table, current_headers, header):

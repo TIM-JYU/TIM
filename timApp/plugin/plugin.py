@@ -908,7 +908,7 @@ def parse_plugin_values(
 
 
 TASK_MATCH_PROG = re.compile(
-    r"{#([\.\w:]*)([\s\S]*?)?#}"
+    r"{#([.\w:]*)([\s\S]*?)?#}"
 )  # see https://regex101.com/r/XmnIZv/33
 
 
@@ -1076,33 +1076,46 @@ def find_plugin_from_document(
     view_ctx: ViewContext,
     inline_plugin_finder: InlinePluginFinder | None = None,
 ) -> Plugin:
-    d.insert_preamble_pars()
     used_hint = False
+    d.insert_preamble_pars()
+
+    def check(p: DocParagraph) -> Plugin | None:
+        nonlocal used_hint
+        if task_id.block_id_hint and p.get_id() != task_id.block_id_hint:
+            used_hint = True
+            return None
+        if p.is_reference():
+            try:
+                ref_pars = p.get_referenced_pars()
+            except TimDbException:  # Ignore invalid references
+                return None
+            else:
+                for rp in ref_pars:
+                    plugi = maybe_get_plugin_from_par(
+                        rp,
+                        task_id,
+                        u,
+                        view_ctx,
+                        True,
+                        inline_plugin_finder=inline_plugin_finder,
+                    )
+                    if plugi:
+                        return plugi
+        plugi = maybe_get_plugin_from_par(
+            p, task_id, u, view_ctx, inline_plugin_finder=inline_plugin_finder
+        )
+        if plugi:
+            return plugi
+
+    p = d.get_paragraph_by_task_id(task_id.task_name)
+    if p and p.is_plugin():
+        plug = check(p)
+        if plug:
+            return plug
+
     with d.__iter__() as it:
         for p in it:
-            if task_id.block_id_hint and p.get_id() != task_id.block_id_hint:
-                used_hint = True
-                continue
-            if p.is_reference():
-                try:
-                    ref_pars = p.get_referenced_pars()
-                except TimDbException:  # Ignore invalid references
-                    continue
-                else:
-                    for rp in ref_pars:
-                        plug = maybe_get_plugin_from_par(
-                            rp,
-                            task_id,
-                            u,
-                            view_ctx,
-                            True,
-                            inline_plugin_finder=inline_plugin_finder,
-                        )
-                        if plug:
-                            return plug
-            plug = maybe_get_plugin_from_par(
-                p, task_id, u, view_ctx, inline_plugin_finder=inline_plugin_finder
-            )
+            plug = check(p)
             if plug:
                 return plug
 
