@@ -949,6 +949,7 @@ export class TimTableComponent
     maxCols = maxContentOrFitContent();
     permTable: number[] = [];
     private permTableToScreen: number[] = []; // inverse perm table to get screencoordinate for row
+    private visiblePermTableToScreen: number[] = []; // inverse perm table to get screencoordinate for visible row
     editedInternal = false;
     @ViewChild("editInput") private editInput?: ElementRef<HTMLTextAreaElement>;
     @ViewChild("inlineEditor") private editorDiv!: ElementRef<HTMLDivElement>;
@@ -1698,6 +1699,7 @@ export class TimTableComponent
 
     updateVisibleRows() {
         this.visibleRowIndices = [];
+        this.visiblePermTableToScreen = Array(this.permTable.length).fill(-1);
         this.rowNumbers = [];
         const isSequential = this.isSequentialNr();
 
@@ -1718,6 +1720,11 @@ export class TimTableComponent
             } else {
                 this.rowNumbers.push(rowIndex + this.nrColStart);
             }
+        }
+
+        for (let i = 0; i < this.visibleRowIndices.length; i++) {
+            const rowIndex = this.visibleRowIndices[i];
+            this.visiblePermTableToScreen[rowIndex] = i;
         }
     }
     private applyFilters = async (filterData?: Filters): Promise<void> => {
@@ -4251,7 +4258,7 @@ export class TimTableComponent
         }
         let rowi = this.currentCell.row;
         let coli = this.currentCell.col;
-        const sr = this.permTableToScreen[rowi];
+        const sr = this.visiblePermTableToScreen[rowi];
         const table = $(this.tableElem.nativeElement);
         if (rowi >= this.cellDataMatrix.length) {
             rowi--;
