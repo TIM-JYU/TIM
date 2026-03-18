@@ -1107,19 +1107,38 @@ class DocParagraph:
         # Clear cached referenced paragraphs because this was modified
         self.ref_pars = {}
 
+    @staticmethod
+    def is_reference_attrs(attrs: dict) -> bool:
+        """Returns whether this paragraph is a reference to some other paragraph."""
+        return (
+            DocParagraph.is_par_reference_attrs(attrs)
+            or DocParagraph.is_area_reference_attrs(attrs)
+            or attrs.get("rd", None) is not None
+        )
+
     def is_reference(self) -> bool:
         """Returns whether this paragraph is a reference to some other paragraph."""
         return self.__is_ref
 
+    @staticmethod
+    def is_par_reference_attrs(attrs: dict) -> bool:
+        """Returns whether the given attributes indicate that this paragraph is a reference to a single paragraph."""
+        if attrs.get("rtask", None) is not None:
+            return True
+        return attrs.get("rp", None) is not None
+
     def is_par_reference(self) -> bool:
         """Returns whether this paragraph is a reference to a single paragraph."""
-        if self.get_attr("rtask") is not None:
-            return True
-        return self.get_attr("rp") is not None
+        return DocParagraph.is_par_reference_attrs(self.attrs)
+
+    @staticmethod
+    def is_area_reference_attrs(attrs: dict) -> bool:
+        """Returns whether this paragraph is a reference to an area."""
+        return attrs.get("ra") is not None
 
     def is_area_reference(self) -> bool:
         """Returns whether this paragraph is a reference to an area."""
-        return self.get_attr("ra") is not None
+        return DocParagraph.is_area_reference_attrs(self.attrs)
 
     def is_citation_par(self) -> bool:
         """Return bool value indicating whether this paragraph is a citation or not."""
@@ -1304,6 +1323,11 @@ class DocParagraph:
     def is_question(self) -> bool:
         """Returns whether this paragraph is a question paragraph."""
         return self.is_plugin() and str(self.get_attr("question")).lower() == "true"
+
+    @staticmethod
+    def is_setting_attrs(attrs) -> bool:
+        """Returns whether this paragraph is a settings paragraph."""
+        return attrs.get("settings", None) is not None
 
     def is_setting(self) -> bool:
         """Returns whether this paragraph is a settings paragraph."""
