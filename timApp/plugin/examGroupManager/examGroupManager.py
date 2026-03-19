@@ -967,7 +967,7 @@ def _begin_exam(
     users = users if users else ug.users
     # TODO: Maybe set duration?
     for u in users:  # type: User
-        grant_access(u.get_personal_group(), doc, AccessType.view)
+        _do_grant_access(u.get_personal_group(), doc, AccessType.view)
 
     cur_u = get_current_user_object()
     log_info(
@@ -983,7 +983,7 @@ def _interrupt_exam(
     users = users if users else ug.users
 
     for u in users:  # type: User
-        remove_access(u.get_personal_group(), doc, AccessType.view)
+        _do_remove_access(u.get_personal_group(), doc, AccessType.view)
 
     cur_u = get_current_user_object()
     log_info(
@@ -1004,7 +1004,7 @@ def _end_exam_main_group(
 
         if not extra_data.extraTime:
             total_expired += 1
-            expire_access(u.get_personal_group(), doc, AccessType.view)
+            _do_expire_access(u.get_personal_group(), doc, AccessType.view)
 
     cur_u = get_current_user_object()
     log_info(
@@ -1026,7 +1026,7 @@ def _resume_exam_main_group(
 
         if not extra_data.extraTime:
             total_granted += 1
-            grant_access(u.get_personal_group(), doc, AccessType.view)
+            _do_grant_access(u.get_personal_group(), doc, AccessType.view)
 
     cur_u = get_current_user_object()
     log_info(
@@ -1048,7 +1048,7 @@ def _end_exam_extra_time(
 
         if extra_data.extraTime:
             total_expired += 1
-            expire_access(u.get_personal_group(), doc, AccessType.view)
+            _do_expire_access(u.get_personal_group(), doc, AccessType.view)
 
     cur_u = get_current_user_object()
     log_info(
@@ -1070,7 +1070,7 @@ def _resume_exam_extra_time(
 
         if extra_data.extraTime:
             total_granted += 1
-            grant_access(u.get_personal_group(), doc, AccessType.view)
+            _do_grant_access(u.get_personal_group(), doc, AccessType.view)
 
     cur_u = get_current_user_object()
     log_info(
@@ -1258,7 +1258,7 @@ def set_answer_review(group_id: int, state: bool) -> Response:
         _enable_login_codes(ug, exam_group_data, log=False, duration=dt)
         _add_review_tag(ug, doc, duration=dt)
         for u in ug.users:
-            grant_access(
+            _do_grant_access(
                 u.get_personal_group(),
                 doc,
                 AccessType.view,
@@ -1270,7 +1270,7 @@ def set_answer_review(group_id: int, state: bool) -> Response:
         _disable_login_codes(ug, exam_group_data, log=False)
         _remove_review_tag(ug, doc)
         for u in ug.users:
-            expire_access(u.get_personal_group(), doc, AccessType.view)
+            _do_expire_access(u.get_personal_group(), doc, AccessType.view)
         exam_group_data.accessAnswersTo = None
 
     _update_exam_group_data_global(ug, exam_group_data)
@@ -1282,6 +1282,29 @@ def set_answer_review(group_id: int, state: bool) -> Response:
 
     db.session.commit()
     return json_response({"accessAnswersTo": exam_group_data.accessAnswersTo})
+
+
+def _do_grant_access(
+    ug: UserGroup,
+    doc: DocInfo,
+    access: AccessType,
+    accessible_from: datetime | None = None,
+    accessible_to: datetime | None = None,
+) -> None:
+    for d in doc.translations:
+        grant_access(
+            ug, d, access, accessible_from=accessible_from, accessible_to=accessible_to
+        )
+
+
+def _do_remove_access(ug: UserGroup, doc: DocInfo, access: AccessType) -> None:
+    for d in doc.translations:
+        remove_access(ug, d, access)
+
+
+def _do_expire_access(ug: UserGroup, doc: DocInfo, view: AccessType) -> None:
+    for d in doc.translations:
+        expire_access(ug, d, view)
 
 
 def reqs_handle() -> PluginReqs:

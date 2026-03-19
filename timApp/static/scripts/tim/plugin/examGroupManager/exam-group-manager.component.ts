@@ -977,7 +977,7 @@ export class ExamGroupManagerComponent
         const groups = await toPromise(
             this.http.get<ExamGroup[]>(`/examGroupManager/groups`, {
                 params: {
-                    ...this.getPar()!.par.getJsonForServer(),
+                    ...this.getPar()!.originalPar.getJsonForServer(),
                 },
             })
         );
@@ -1219,7 +1219,7 @@ export class ExamGroupManagerComponent
             );
             return;
         }
-        const {doc_id, par_id} = this.getPar()!.par.getJsonForServer();
+        const {doc_id, par_id} = this.getPar()!.originalPar.getJsonForServer();
         const urlParams = new URLSearchParams();
         urlParams.append("doc_id", doc_id.toString());
         urlParams.append("par_id", par_id.toString());
@@ -1231,7 +1231,7 @@ export class ExamGroupManagerComponent
     }
 
     /**
-     * Fetches users belonging to the specified group
+     * Fetches users belonging to the specified groupgetPar
      * @param group
      */
     async getGroupMembers(group: ExamGroup) {
