@@ -188,3 +188,60 @@
         height: 40px;
     }
 }
+
+.transcript-search {
+    margin-top: 0.5em;
+}
+
+.transcript-toggle {
+    cursor: pointer;
+    user-select: none;
+
+    .glyphicon {
+        font-size: 0.8em;
+        margin-right: 0.3em;
+    }
+}
+
+.transcript-search-panel {
+    margin-top: 0.5em;
+}
+
+.transcript-search-input {
+    max-width: 400px;
+    margin-bottom: 0.5em;
+}
+
+.transcript-search-results {
+    max-height: 300px;
+    overflow-y: auto;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+.transcript-result-item {
+    padding: 0.4em 0.6em;
+    cursor: pointer;
+    border-bottom: 1px solid #eee;
+
+    &:last-child {
+        border-bottom: none;
+    }
+
+    &:hover {
+        background-color: #f5f5f5;
+    }
+}
+
+.transcript-search .timestamp {
+    font-family: monospace;
+    color: #337ab7;
+    margin-right: 0.6em;
+    white-space: nowrap;
+}
+
+.transcript-no-results {
+    color: #999;
+    font-style: italic;
+    padding: 0.4em 0;
+}
