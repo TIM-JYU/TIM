@@ -1108,13 +1108,28 @@ def find_plugin_from_document(
             return plugi
 
     p = d.get_paragraph_by_task_id(task_id.task_name)
-    if p and p.is_plugin():
+    if p:
         plug = check(p)
         if plug:
             return plug
 
-    with d.__iter__() as it:
-        for p in it:
+    # this is needed if preamble loaded, but not all paragraphs
+    # and the plugin might be inline plugin in par
+    for p in d.single_par_cache.values():
+        plug = check(p)
+        if plug:
+            return plug
+
+    # this is needed if plugin is inline plugin
+    # TODO: this could be optimized by iterating par_ids
+    # that have the defaultplugin attribute and only checking
+    # those pars for inline plugins
+    # with d.__iter__() as it:
+    #    for p in it:
+    for par_id in d.par_ids:
+        attrs = d.get_attrs(par_id)
+        if DocParagraph.has_plugins_attrs(attrs):
+            p = d.get_paragraph(par_id)
             plug = check(p)
             if plug:
                 return plug
