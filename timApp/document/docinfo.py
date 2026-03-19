@@ -41,6 +41,10 @@ GROUP_PREAMBLE_PATTERN = re.compile(
 class DocInfo(Item):
     """A base class for DocEntry and Translation."""
 
+    def __init__(self):
+        self._preamble_docs = None
+        self._doc = None
+
     @property
     def path(self) -> str:
         raise NotImplementedError

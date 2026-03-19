@@ -1309,9 +1309,14 @@ class DocParagraph:
         """Returns whether this paragraph is a plugin."""
         return "plugin" in self.attrs
 
+    @staticmethod
+    def has_plugins_attrs(attrs: dict) -> bool:
+        """Returns whether this paragraph has inline plugins."""
+        return attrs.get("defaultplugin", None) is not None
+
     def has_plugins(self) -> bool:
         """Returns whether this paragraph has inline plugins."""
-        return bool(self.get_attr("defaultplugin"))
+        return DocParagraph.has_plugins_attrs(self.attrs)
 
     def is_theme_style(self) -> bool:
         return self.get_attr("code_lang") in ("scss", "css")

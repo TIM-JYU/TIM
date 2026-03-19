@@ -1,3 +1,21 @@
+"""
+This module contains the Document class,
+which represents a document in the system
+and provides methods for manipulating it.
+
+The Document class has methods for creating, loading, and saving documents,
+as well as for adding, deleting, and modifying paragraphs within the document.
+It also has methods for handling document settings, versions,
+and references to other documents.
+
+This can include full DocParagraph objects
+or just their ids and hashes for faster access.
+
+TODO: check that full DocParagraph objects are not loaded
+      when only ids and hashes are needed,
+TODO: copy paragraphs seems to load them to memory, check if this can be avoided
+"""
+
 from __future__ import annotations
 
 import json
@@ -1500,8 +1518,11 @@ class Document:
         return self.source_doc
 
     def get_last_par(self):
-        pars = [par for par in self]
-        return pars[-1] if pars else None
+        self.ensure_par_ids_loaded()
+        last_par_id = self.par_ids[-1] if self.par_ids else None
+        if last_par_id is None:
+            return None
+        return self.get_paragraph(last_par_id)
 
     def get_par_ids(self, no_preamble=False) -> list[str]:
         self.ensure_par_ids_loaded()
@@ -1826,43 +1847,47 @@ class DocParagraphIter:
     def __init__(self, doc: Document):
         self.doc = doc
         self.next_index = 0
-        name = doc.get_version_path(doc.get_version())
-        self.f = name.open("r") if name.is_file() else None
+        # name = doc.get_version_path(doc.get_version())
+        # self.f = name.open("r") if name.is_file() else None
+        if self.doc.doc_lines is None:
+            self.doc.ensure_par_ids_loaded()
+        if self.doc.doc_lines is None:
+            self.next_index = -1
 
     def __enter__(self):
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        self.close()
+        self.next_index = -1
 
     def __iter__(self):
         return self
 
     def __next__(self) -> DocParagraph:
-        if not self.f:
+        if self.next_index < 0:
             raise StopIteration
         while True:
-            line = self.f.readline()
-            if not line:
-                self.close()
+            if self.next_index < 0:
                 raise StopIteration
+            line = self.doc.doc_lines[self.next_index]
+            self.next_index += 1
+            if self.next_index >= len(self.doc.doc_lines):
+                self.next_index = -1
             if line != "\n":
                 par_id, t, attrs = parse_docline(line)
+                cached = self.doc.single_par_cache.get(par_id)
+                if cached:
+                    return cached
                 if t:
-                    cached = self.doc.single_par_cache.get(par_id)
-                    if cached:
-                        return cached
                     fetched = DocParagraph.get(self.doc, par_id, t)
-                    self.doc.single_par_cache[par_id] = fetched
-                    return fetched
                 else:
-                    # Line contains just par_id, use the latest t
-                    return DocParagraph.get_latest(self.doc, line.rstrip("\n"))
+                    # Line contains just par_id (old docs), use the latest t
+                    fetched = DocParagraph.get_latest(self.doc, line.rstrip("\n"))
+                self.doc.single_par_cache[par_id] = fetched
+                return fetched
 
     def close(self):
-        if self.f:
-            self.f.close()
-            self.f = None
+        self.next_index = -1
 
 
 def get_index_from_html_list(html_table) -> list[tuple]:
