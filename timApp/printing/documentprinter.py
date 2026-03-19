@@ -9,8 +9,7 @@ import tempfile
 from pathlib import Path
 
 from flask import current_app
-from pypandoc import _as_unicode, _validate_formats
-from pypandoc.py3compat import string_types, cast_bytes
+from pypandoc import _validate_formats
 from sqlalchemy import select
 
 from timApp.auth.accesshelper import has_view_access
@@ -953,7 +952,6 @@ def tim_convert_text(
     to: str,
     from_format: str,
     extra_args: list[str] = (),
-    encoding: str = "utf-8",
     outputfile: str | None = None,
     filters: list[str] | None = None,
     removethis: list[str] | None = None,
@@ -968,7 +966,6 @@ def tim_convert_text(
     :param str from_format: the format of the inputs; can be one of `pypandoc.get_pandoc_formats()[1]`
     :param list extra_args: extra arguments (list of strings) to be passed to pandoc
             (Default value = ())
-    :param str encoding: the encoding of the input bytes (Default value = 'utf-8')
     :param str outputfile: output will be written to outfilename or the converted content
             returned if None (Default value = None)
     :param list filters: pandoc filters e.g. filters=['pandoc-citeproc']
@@ -982,7 +979,6 @@ def tim_convert_text(
     :raises OSError: if pandoc is not found; make sure it has been installed and is available at
             path.
     """
-    source = _as_unicode(source, encoding)
     return tim_convert_input(
         source,
         from_format,
@@ -1032,6 +1028,8 @@ def tim_convert_input(
 
     if is_pdf:
         latex_file = outputfile.replace(".pdf", ".latex")
+        # We are going to run latex manually, so we first convert to latex
+        to = "latex"
 
     for texfile in texfiles or []:
         get_file(latex_file, texfile, new_env)
@@ -1061,7 +1059,7 @@ def tim_convert_input(
 
         # adds the proper filter syntax for each item in the filters list
         if filters is not None:
-            if isinstance(filters, string_types):
+            if isinstance(filters, str):
                 filters = filters.split()
             f = ["--filter=" + x for x in filters]
             args.extend(f)
@@ -1084,7 +1082,7 @@ def tim_convert_input(
             )
 
         try:
-            bsource = cast_bytes(source, encoding="utf-8")
+            bsource = source.encode("utf-8")
         except (UnicodeDecodeError, UnicodeEncodeError):
             # assume that it is already a utf-8 encoded string
             bsource = source

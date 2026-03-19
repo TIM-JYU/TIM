@@ -52,7 +52,7 @@ jobs:
     name: Lint Python
     runs-on: ubuntu-latest
     env:
-      PYTHON_VERSION: "3.11"
+      PYTHON_VERSION: "3.12"
 
     needs: skip_check
     if: needs.skip_check.outputs.should_skip != 'true'
