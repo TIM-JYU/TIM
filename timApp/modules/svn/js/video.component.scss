@@ -207,9 +207,18 @@
     margin-top: 0.5em;
 }
 
-.transcript-search-input {
-    max-width: 400px;
+.transcript-search-row {
+    display: flex;
+    gap: 0.5em;
     margin-bottom: 0.5em;
+}
+
+.transcript-search-input {
+    max-width: 300px;
+}
+
+.transcript-subtitle-select {
+    max-width: 200px;
 }
 
 .transcript-search-results {
