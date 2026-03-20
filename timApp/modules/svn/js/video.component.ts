@@ -122,7 +122,7 @@ const ShowFileMarkup = t.intersection([
         endJSRunner: t.string,
         audio: t.boolean,
         nolimits: t.boolean,
-        transcriptFile: nullable(t.string),
+        transcriptSearch: t.boolean,
         transcriptPlaceholder: nullable(t.string),
         transcriptMaxResults: nullable(t.number),
     }),
@@ -334,13 +334,22 @@ const ShowFileAll = t.type({
                     Transcript Search
                 </a>
                 <div *ngIf="transcriptOpen" class="transcript-search-panel">
-                    <input type="text"
-                           class="form-control transcript-search-input"
-                           [(ngModel)]="transcriptQuery"
-                           (ngModelChange)="onTranscriptSearch()"
-                           (keydown)="$event.stopPropagation()"
-                           [attr.placeholder]="markup.transcriptPlaceholder ?? 'Search transcript...'"
-                    >
+                    <div class="transcript-search-row">
+                        <input type="text"
+                               class="form-control transcript-search-input"
+                               [(ngModel)]="transcriptQuery"
+                               (ngModelChange)="onTranscriptSearch()"
+                               (keydown)="$event.stopPropagation()"
+                               [attr.placeholder]="markup.transcriptPlaceholder ?? 'Search transcript...'"
+                        >
+                        <select *ngIf="transcriptSubtitleMap.size > 1"
+                                class="form-control transcript-subtitle-select"
+                                [(ngModel)]="selectedTranscriptName"
+                                (ngModelChange)="onTranscriptSubtitleChange()"
+                                (keydown)="$event.stopPropagation()">
+                            <option *ngFor="let name of transcriptSubtitleMap.keys()" [value]="name">{{name}}</option>
+                        </select>
+                    </div>
                     <div class="transcript-search-results" *ngIf="filteredCues.length > 0">
                         <div class="transcript-result-item"
                              *ngFor="let cue of filteredCues"
@@ -437,7 +446,8 @@ export class VideoComponent extends AngularPluginBase<
     hidetext: string = "Hide file";
     srcUrl!: URL;
     src: string = "";
-    transcriptCues: VttCue[] = [];
+    transcriptSubtitleMap = new Map<string, VttCue[]>();
+    selectedTranscriptName = "";
     transcriptQuery = "";
     filteredCues: VttCue[] = [];
     transcriptOpen = false;
@@ -515,12 +525,29 @@ export class VideoComponent extends AngularPluginBase<
             this.videoName = $localize`Open embedded content`;
         }
 
-        if (this.markup.transcriptFile) {
+        if (this.markup.transcriptSearch === false) {
+            return;
+        }
+        for (const subtitle of this.markup.subtitles) {
+            if (!subtitle.file) {
+                continue;
+            }
             this.http
-                .get(this.markup.transcriptFile, {responseType: "text"})
+                .get(subtitle.file, {responseType: "text"})
                 .subscribe((content) => {
-                    this.transcriptCues = parseVtt(content);
-                    this.transcriptLoaded = true;
+                    const label = subtitle.name || subtitle.file;
+                    this.transcriptSubtitleMap.set(label, parseVtt(content));
+                    if (!this.transcriptLoaded) {
+                        const defaultMatch = this.markup.subtitles.find(
+                            (s) =>
+                                s.name === this.markup.defaultSubtitles ||
+                                s.file === this.markup.defaultSubtitles
+                        );
+                        this.selectedTranscriptName =
+                            (defaultMatch?.name || defaultMatch?.file) ??
+                            label;
+                        this.transcriptLoaded = true;
+                    }
                 });
         }
     }
@@ -895,11 +922,13 @@ export class VideoComponent extends AngularPluginBase<
             this.filteredCues = [];
             return;
         }
+        const cues =
+            this.transcriptSubtitleMap.get(this.selectedTranscriptName) ?? [];
         const maxResults = this.markup.transcriptMaxResults ?? 50;
         const escaped = query.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
         const re = new RegExp(escaped, "gi");
         const results: VttCue[] = [];
-        for (const cue of this.transcriptCues) {
+        for (const cue of cues) {
             if (results.length >= maxResults) {
                 break;
             }
@@ -914,6 +943,11 @@ export class VideoComponent extends AngularPluginBase<
             }
         }
         this.filteredCues = results;
+    }
+
+    onTranscriptSubtitleChange() {
+        this.transcriptQuery = "";
+        this.filteredCues = [];
     }
 
     seekTo(seconds: number) {
