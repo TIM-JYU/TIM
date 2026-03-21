@@ -218,6 +218,7 @@ def post_process_pars(
     )
     comment_docs = {docinfo.id: docinfo}
     teacher_access_cache = {}
+    personal_group_id = curr_user.get_personal_group().id
     for n, u in notes:
         key = (n.par_id, n.doc_id)
         pars = pars_dict.get(key)
@@ -229,6 +230,12 @@ def post_process_pars(
                 has_teacher = bool(curr_user.has_teacher_access(comment_docs[n.doc_id]))
                 teacher_access_cache[n.doc_id] = has_teacher
             editable = n.usergroup_id == group or has_teacher
+            if (
+                n.access == "teachers"
+                and not has_teacher
+                and n.usergroup_id != personal_group_id
+            ):
+                continue
             private = n.access == "justme"
             for p in pars:
                 if p.notes is None:
