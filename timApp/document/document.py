@@ -1469,7 +1469,7 @@ class Document:
                     break
                 if len(line) > 14:
                     # Line contains both par_id and t
-                    par_id, t = line.replace("\n", "").split("/")
+                    par_id, t, *_ = line.rstrip("\n").split("/", 2)
                 else:
                     par_id, t = line.replace("\n", ""), None
                 par_ids.append(par_id)
@@ -1709,7 +1709,7 @@ class DocParagraphIter:
             if line != "\n":
                 if len(line) > 14:
                     # Line contains both par_id and t
-                    par_id, t = line.rstrip("\n").split("/")
+                    par_id, t, *_ = line.rstrip("\n").split("/", 2)
                     cached = self.doc.single_par_cache.get(par_id)
                     if cached:
                         return cached
