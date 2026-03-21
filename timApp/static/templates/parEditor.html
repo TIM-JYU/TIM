@@ -125,7 +125,7 @@
         <div class="choices" ng-show="$ctrl.getOptions().choices">
             <div ng-repeat="choice in $ctrl.getOptions().choices" title="{{ choice.title }}">
                 <span>{{ choice.desc }}</span>
-                <label ng-repeat="opt in choice.opts" title="{{ opt.title }}">
+                <label class="{{opt.value}}" ng-repeat="opt in choice.opts" title="{{ opt.title }}">
                     <input type="radio" ng-model="$ctrl.getExtraData()[choice.name]"
                            ng-value="opt.value"/>{{ opt.desc }}&nbsp;
                 </label>

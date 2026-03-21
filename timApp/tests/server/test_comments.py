@@ -333,7 +333,7 @@ c
          title="Click to mark this paragraph as read"
     ></div>
     <div class="notes">
-        <div class="note editable"
+        <div class="note editable access-everyone"
              ng-non-bindable
              note-id="{note.id}">
             <p>test</p>
@@ -376,7 +376,7 @@ c
          title="Click to mark this paragraph as read"
     ></div>
     <div class="notes">
-        <div class="note editable"
+        <div class="note editable access-everyone"
              ng-non-bindable
              note-id="{note.id}">
             <p>test</p>
