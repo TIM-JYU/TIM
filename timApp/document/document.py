@@ -14,6 +14,9 @@ or just their ids and hashes for faster access.
 TODO: check that full DocParagraph objects are not loaded
       when only ids and hashes are needed,
 TODO: copy paragraphs seems to load them to memory, check if this can be avoided
+TODO: iterating single_par_cache fails if new par added (plugin.py)
+TODO: get_settings par is unefficient if there are many settings pars,
+      as it loads all of them to memory, check if this can be optimized
 """
 
 from __future__ import annotations
@@ -488,8 +491,8 @@ class Document:
             return []
         if par_id_start is None or par_id_end is None:
             raise TimDbException("Either of par_id_start and par_id_end was None")
-        all_pars = [par for par in self]
-        all_par_ids = [par.get_id() for par in all_pars]
+        # all_pars = [par for par in self]
+        all_par_ids = self.get_par_ids()
         try:
             start_index = all_par_ids.index(par_id_start)
         except ValueError:
@@ -503,7 +506,10 @@ class Document:
             return self._raise_not_found(par_id_end)
         if end_index < start_index:
             start_index, end_index = end_index, start_index
-        return all_pars[start_index : end_index + 1]
+        section_pars = []
+        for i in range(start_index, end_index + 1):
+            section_pars.append(self.get_paragraph(all_par_ids[i]))
+        return section_pars
 
     def text_to_paragraphs(
         self,
