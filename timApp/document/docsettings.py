@@ -473,6 +473,7 @@ class DocSettings:
         psr_dict = self.__dict.get(self.point_sum_rule_key, default)
         if not psr_dict:
             return None
+        # noinspection PyBroadException
         try:
             return PointSumRule(psr_dict)
         except:
@@ -541,7 +542,11 @@ class DocSettings:
         macro_delim = macroinfo.get_macro_delimiter()
         autocounters = self.autocounters()
         return hashfunc(
-            f"{macros}{macro_delim}{charmacros}{self.auto_number_headings()}{self.heading_format()}{self.mathtype()}{self.get_globalmacros()}{self.preamble()}{self.input_format()}{self.smart_punct()}{autocounters}{self.macro_lstrip_blocks()}{self.macro_trim_blocks()}"
+            f"{macros}{macro_delim}{charmacros}"
+            f"{self.auto_number_headings()}{self.heading_format()}{self.mathtype()}"
+            f"{self.get_globalmacros()}{self.preamble()}{self.input_format()}"
+            f"{self.smart_punct()}{autocounters}{self.macro_lstrip_blocks()}"
+            f"{self.macro_trim_blocks()}"
         )
 
     def math_preamble(self):
@@ -736,12 +741,6 @@ class DocSettings:
 
     def ide_course(self) -> list[IdeDocument]:
         return self.get_setting_or_default("ideCourse", [])
-
-    def use_login_codes(self) -> bool:
-        return self.get_setting_or_default("loginCodes", False)
-
-    def login_message(self) -> str | None:
-        return self.get_setting_or_default("loginMessage", None)
 
     def custom_index(self) -> list[tuple[Any, Any]]:
         return self.get_setting_or_default("customIndex", [])
