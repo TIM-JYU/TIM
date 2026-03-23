@@ -165,7 +165,7 @@ class Document:
         self.par_hashes: list[str] | None = None
         # List of attributes read from disk for pars
         self.par_attrs: list[dict] | None = None
-        # List of setting pars
+        # List of settings pars
         self.par_settings: list[str] | None = None
         # List of lines in the document file
         self.doc_lines: list[str] | None = None
@@ -360,12 +360,22 @@ class Document:
             pass
         return pars
 
+    def get_last_settings_par_id(self) -> str | None:
+        if not self.par_settings:
+            return None
+        return self.par_settings[-1]
+
+    def get_last_settings_par(self) -> DocParagraph | None:
+        if not self.par_settings:
+            return None
+        return self.get_paragraph(self.par_settings[-1])
+
     def add_setting(self, key: str, value) -> None:
-        pars = list(self.get_settings_pars())
-        if not pars:
+        last = self.get_last_settings_par()
+        if not last:
             current_settings = {}
         else:
-            current_settings = DocSettings.from_paragraph(pars[-1]).get_dict()
+            current_settings = DocSettings.from_paragraph(last).get_dict()
         current_settings[key] = value
         self.set_settings(current_settings)
 
@@ -378,12 +388,21 @@ class Document:
             else:
                 break
 
+    def is_reference(self, par_id: str) -> bool:
+        if self.par_id_attrs_map is None:
+            self.generate_name_maps()
+        attrs = self.par_id_attrs_map.get(par_id)
+        if not attrs:
+            return False
+        return DocParagraph.is_reference_attrs(attrs)
+
     def set_settings(self, settings: dict | YamlBlock, force_new_par: bool = False):
-        first_par = None
+        first_par_id = None
         self.ensure_par_ids_loaded()
         if self.par_ids:
-            first_par = self.get_paragraph(self.par_ids[0])
-        last_settings_par = None
+            first_par_id = self.par_ids[0]
+        # last_settings_par = self.get_last_settings_par()
+        last_settings_par_id = self.get_last_settings_par_id()
         settings_pars = list(self.get_settings_pars())
         if settings_pars:
             last_settings_par = settings_pars[-1]
@@ -391,17 +410,17 @@ class Document:
             assert isinstance(settings, dict)
             settings = YamlBlock(values=settings)
         new_par = DocSettings(self, settings).to_paragraph()
-        if first_par is None:
+        if first_par_id is None:
             self.add_paragraph_obj(new_par)
         else:
-            if last_settings_par is None:
-                self.insert_paragraph_obj(new_par, insert_before_id=first_par.get_id())
+            if last_settings_par_id is None:
+                self.insert_paragraph_obj(new_par, insert_before_id=first_par_id)
             else:
-                if not last_settings_par.is_reference() and not force_new_par:
-                    self.modify_paragraph_obj(last_settings_par.get_id(), new_par)
+                if not self.is_reference(last_settings_par_id) and not force_new_par:
+                    self.modify_paragraph_obj(last_settings_par_id, new_par)
                 else:
                     self.insert_paragraph_obj(
-                        new_par, insert_after_id=last_settings_par.get_id()
+                        new_par, insert_after_id=last_settings_par_id
                     )
 
     def get_tasks(self) -> Generator[DocParagraph, None, None]:
@@ -770,8 +789,10 @@ class Document:
 
         with new_path.open("a") as f:
             f.write(get_p_as_docline(p))
+        self.doc_lines = None
         if update_meta:
             self.__update_metadata([p], old_ver, new_ver)
+            self.ensure_par_ids_loaded()
         return p
 
     def add_paragraph(
@@ -840,6 +861,7 @@ class Document:
         """
         with self.get_version_path(new_ver).open("w") as f:
             f.write("".join(lines))
+        self.doc_lines = None
         return result
 
     def insert_paragraph(
@@ -870,26 +892,24 @@ class Document:
         p: DocParagraph,
         insert_before_id: str | None = None,
     ):
-        first_par = None
+        first_par_id = None
         # There may be preamble pars in the loaded par_ids list,
         # so we need to load the original par list to find the first par in the original document
         # TODO: It may be better to load paragraphs in an iterator and filter out preamble pars
-        par_ids, _, _, _ = self._get_par_ids_impl()
+        self.ensure_par_ids_loaded()
+        par_ids = self.par_ids
         if par_ids:
-            first_par = self.get_paragraph(par_ids[0])
-        last_settings_par = None
-        settings_pars = list(self.get_settings_pars())
-        if settings_pars:
-            last_settings_par = settings_pars[-1]
-        if first_par is None:
+            first_par_id = par_ids[0]
+        last_settings_par_id = self.get_last_settings_par_id()
+        if first_par_id is None:
             return self.add_paragraph_obj(p)
-        for par in settings_pars:
+        for par in self.par_settings:
             if par.id == insert_before_id:
                 return self.insert_paragraph_obj(p, insert_before_id)
-        if last_settings_par:
-            return self.insert_paragraph_obj(p, insert_after_id=last_settings_par.id)
+        if last_settings_par_id:
+            return self.insert_paragraph_obj(p, insert_after_id=last_settings_par_id)
         else:
-            return self.insert_paragraph_obj(p, insert_before_id=first_par.id)
+            return self.insert_paragraph_obj(p, insert_before_id=first_par_id)
 
     def insert_paragraph_obj(
         self,
@@ -947,6 +967,7 @@ class Document:
                     f.write(new_line)
         """
         self.__update_metadata([p], old_ver, new_ver)
+        self.doc_lines = None
         return p
 
     def ensure_free_par_id(self, lines, p: DocParagraph):
@@ -1250,6 +1271,9 @@ class Document:
                                 ),
                             )
                             result.added.append(inserted)
+        self.doc_lines = (
+            None  # Clear doc lines cache because they are not valid anymore
+        )
         if not new_ids:
             return None, None, result
         return new_ids[0], new_ids[-1], result
@@ -1505,7 +1529,9 @@ class Document:
                 # We can't call get_settings method here because of potential infinite recursion.
                 # We therefore require that the source_document is always in the first settings paragraph of the
                 # document. This should be true for citation docs.
-                first_setting_par = next(self.get_settings_pars(), None)
+                if not self.par_settings:
+                    return None
+                first_setting_par = self.get_paragraph(self.par_settings[0])
                 if not first_setting_par:
                     return None
                 try:
@@ -1538,7 +1564,7 @@ class Document:
             return self.par_ids
 
     def ensure_par_ids_loaded(self) -> None:
-        if self.par_ids is None or self.is_incomplete_cache:
+        if self.par_ids is None or self.doc_lines is None or self.is_incomplete_cache:
             self._load_par_ids()
 
     def _load_par_ids(self):
@@ -1664,6 +1690,7 @@ class Document:
         self.attrs_name_par_id_maps = None
         self.par_id_attrs_name_maps = None
         self.attrs_name_lists = None
+        self.doc_lines = None
 
     def get_ref_doc(
         self,
@@ -1857,7 +1884,7 @@ class DocParagraphIter:
         # self.f = name.open("r") if name.is_file() else None
         if self.doc.doc_lines is None:
             self.doc.ensure_par_ids_loaded()
-        if self.doc.doc_lines is None:
+        if not self.doc.doc_lines:
             self.next_index = -1
 
     def __enter__(self):
