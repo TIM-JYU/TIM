@@ -61,6 +61,7 @@ from timApp.document.validationresult import (
 from timApp.document.version import Version
 from timApp.document.viewcontext import ViewContext, default_view_ctx
 from timApp.document.yamlblock import YamlBlock
+from timApp.plugin.pluginexception import PluginException
 from timApp.timdb.exceptions import (
     TimDbException,
     PreambleException,
@@ -789,7 +790,7 @@ class Document:
 
         with new_path.open("a") as f:
             f.write(get_p_as_docline(p))
-        self.doc_lines = None
+        self.clear_doc_lines_cache()
         if update_meta:
             self.__update_metadata([p], old_ver, new_ver)
             self.ensure_par_ids_loaded()
@@ -861,7 +862,7 @@ class Document:
         """
         with self.get_version_path(new_ver).open("w") as f:
             f.write("".join(lines))
-        self.doc_lines = None
+        self.clear_doc_lines_cache()
         return result
 
     def insert_paragraph(
@@ -967,7 +968,7 @@ class Document:
                     f.write(new_line)
         """
         self.__update_metadata([p], old_ver, new_ver)
-        self.doc_lines = None
+        self.clear_doc_lines_cache()
         return p
 
     def ensure_free_par_id(self, lines, p: DocParagraph):
@@ -1677,6 +1678,9 @@ class Document:
             self.is_incomplete_cache = True
         self.__update_par_map()
 
+    def clear_doc_lines_cache(self):
+        self.doc_lines = None
+
     def clear_mem_cache(self, ver=None) -> None:
         self.version = ver
         self.par_cache = None
@@ -1690,7 +1694,7 @@ class Document:
         self.attrs_name_par_id_maps = None
         self.par_id_attrs_name_maps = None
         self.attrs_name_lists = None
-        self.doc_lines = None
+        self.clear_doc_lines_cache()
 
     def get_ref_doc(
         self,
@@ -1765,10 +1769,22 @@ class Document:
             self.par_id_attrs_map[par_id] = attrs
             for attr_name in CACHED_ATTR_NAMES:
                 attr_value = attrs.get(attr_name, None)
-                if attr_value:
+                if attr_value is not None:
                     self.attrs_name_lists[attr_name].append(attr_value)
                     self.par_id_attrs_name_maps[attr_name][par_id] = attr_value
                     self.attrs_name_par_id_maps[attr_name][attr_value] = par_id
+                    if attr_name == "taskId":
+                        from timApp.plugin.taskid import TaskId
+
+                        try:
+                            # noinspection PyTypeChecker
+                            tid = TaskId.parse(
+                                attr_value, allow_block_hint=False, require_doc_id=False
+                            )
+                            self.attrs_name_lists[attr_name].append(tid.task_name)
+                            self.add_name_par_id_map(attr_name, tid.task_name, par_id)
+                        except PluginException:
+                            pass
 
     def get_par_id_name_map(self, attr_name: str) -> dict[str, str]:
         if self.par_id_attrs_name_maps is None:
