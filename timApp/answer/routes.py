@@ -1131,7 +1131,7 @@ def post_answer_impl(
                 try:
                     content = get_from_url(lib)
                     if content.startswith('{"error"'):
-                        web["error"] += lib + "\n" + content
+                        web["error"] = web.get("error", "") + lib + "\n" + content
                         postprogram = ""
                         break
                     libedit = postlibraries_edit.get(libnr, None)
@@ -1143,7 +1143,7 @@ def post_answer_impl(
                                 content = content[0:delpos]
                     libs += content
                 except Exception as ex:
-                    web["error"] += lib + "\n" + str(ex)
+                    web["error"] = web.get("error", "") + lib + "\n" + str(ex)
                     postprogram = ""
                 libnr += 1
             if postprogram:
