@@ -15,7 +15,9 @@ class ModelErrorKind(StrEnum):
 @dataclass(frozen=True)
 class ChatModelError(Exception):
     kind: ModelErrorKind
+    """Error kind."""
     description: str | None = None
+    """Error description."""
     cause: BaseException | None = None
     """Original exception cause."""
 
@@ -24,12 +26,21 @@ class ChatModelError(Exception):
 
 
 class ChatModel(Protocol):
-    """An abstract model class for generating responses."""
+    """
+    An abstract model class for generating responses.
+    Any new chat model must implement this protocol.
+    """
 
     def generate(
         self, messages: list[Message], options: GenerateOptions
     ) -> ModelResponse:
-        """Generate a model response from the given messages."""
+        """
+        Generate a model response from the given messages.
+
+        :param messages: The messages to send to the model.
+        :param options: Options for controlling the model response.
+        :return: Response from the model.
+        """
         ...
 
     def generate_stream(
@@ -38,25 +49,43 @@ class ChatModel(Protocol):
         """
         Generate a model response from the given messages.
         Uses streaming and returns the response in chunks.
+
+        :param messages: The messages to send to the model.
+        :param options: Options for controlling the model response.
+        :return: Response from the model.
         """
         ...
 
     def get_info(self) -> ModelInfo:
-        """Return info about the model."""
+        """
+        Return info about the model.
+
+        :return: `ModelInfo` of the chat model.
+        """
         ...
 
+    # TODO: needed?
     def get_models(self) -> list[ModelInfo]:
         """Get all the available models from the Model API."""
         ...
 
 
 class AsyncChatModel(Protocol):
-    """An abstract async model class for generating responses."""
+    """
+    An abstract async model class for generating responses.
+    Any new async chat model must implement this protocol.
+    """
 
     async def generate(
         self, messages: list[Message], options: GenerateOptions
     ) -> ModelResponse:
-        """Generate a model response from the given messages."""
+        """
+        Generate a model response from the given messages.
+
+        :param messages: The messages to send to the model.
+        :param options: Options for controlling the model response.
+        :return: Response from the model.
+        """
         ...
 
     def generate_stream(
@@ -65,11 +94,19 @@ class AsyncChatModel(Protocol):
         """
         Generate a model response from the given messages.
         Uses streaming and returns the response in chunks.
+
+        :param messages: The messages to send to the model.
+        :param options: Options for controlling the model response.
+        :return: Response from the model.
         """
         ...
 
     def get_info(self) -> ModelInfo:
-        """Return info about the model."""
+        """
+        Return info about the model.
+
+        :return: `ModelInfo` of the chat model.
+        """
         ...
 
     async def get_models(self) -> list[ModelInfo]:
@@ -103,10 +140,8 @@ class Usage:
 
     completion_tokens: int
     """Number of tokens in the generated completion."""
-
     prompt_tokens: int
     """Number of tokens in the prompt."""
-
     total_tokens: int
     """Total number of tokens used in the request (prompt + completion)."""
 
@@ -264,10 +299,9 @@ class GenericApiChatModel(ChatModel):
 
     def get_models(self) -> list[ModelInfo]:
         """Get all the available models from the Model API."""
-        client = self._client
         return [
             ModelInfo(model_id=m.id, provider=self._info.provider)
-            for m in client.models.list()
+            for m in self._client.models.list()
         ]
 
     def create_completion(
@@ -277,12 +311,9 @@ class GenericApiChatModel(ChatModel):
         stream: bool = False,
     ):
         """Create a completion response from the given messages."""
-        client = self._client
         kwargs = _completion_kwargs(self._info, messages, options, stream)
         # TODO: handle errors
-        return client.chat.completions.create(
-            **kwargs,
-        )
+        return self._client.chat.completions.create(**kwargs)
 
 
 class AsyncGenericApiChatModel(AsyncChatModel):
@@ -338,10 +369,9 @@ class AsyncGenericApiChatModel(AsyncChatModel):
 
     async def get_models(self) -> list[ModelInfo]:
         """Get all the available models from the Model API."""
-        client = self._client
         return [
             ModelInfo(model_id=m.id, provider=self._info.provider)
-            for m in await client.models.list()
+            for m in await self._client.models.list()
         ]
 
     async def create_completion(
@@ -387,36 +417,70 @@ class DummyChatModel(ChatModel):
 
     def __init__(self, info: ModelInfo):
         self._info = info
+        self.response = "This is a dummy response"
 
     def generate(
         self, messages: list[Message], options: GenerateOptions
     ) -> ModelResponse:
-        return ModelResponse(
-            content="This is a dummy response",
-            usage=Usage(completion_tokens=0, prompt_tokens=0, total_tokens=0),
-        )
+        return ModelResponse(content=self.response, usage=Usage(0, 0, 0))
 
     def generate_stream(
         self, messages: list[Message], options: GenerateOptions
     ) -> Iterable[ModelResponseChunk]:
-        return [
-            ModelResponseChunk(delta="This", usage=None, done=False),
-            ModelResponseChunk(delta=" is", usage=None, done=False),
-            ModelResponseChunk(delta=" a", usage=None, done=False),
-            ModelResponseChunk(delta=" dummy", usage=None, done=False),
-            ModelResponseChunk(delta=" response", usage=None, done=False),
-            ModelResponseChunk(
-                delta=None,
-                usage=Usage(completion_tokens=0, prompt_tokens=0, total_tokens=0),
-                done=True,
-            ),
-        ]
+        for part in _split_keep_left(self.response, " "):
+            yield ModelResponseChunk(delta=part)
+        yield ModelResponseChunk(delta=None, usage=Usage(0, 0, 0), done=True)
 
     def get_info(self) -> ModelInfo:
         return self._info
 
     def get_models(self) -> list[ModelInfo]:
         return []
+
+
+class DummyAsyncChatModel(AsyncChatModel):
+    """A dummy async chat model for testing."""
+
+    def __init__(self, info: ModelInfo):
+        self._info = info
+        self.response = "This is a dummy response"
+
+    async def generate(
+        self, messages: list[Message], options: GenerateOptions
+    ) -> ModelResponse:
+        return ModelResponse(content=self.response, usage=Usage(0, 0, 0))
+
+    def generate_stream(
+        self, messages: list[Message], options: GenerateOptions
+    ) -> AsyncIterator[ModelResponseChunk]:
+
+        async def gen() -> AsyncIterator[ModelResponseChunk]:
+            for part in _split_keep_left(self.response, " "):
+                yield ModelResponseChunk(delta=part)
+            yield ModelResponseChunk(delta=None, usage=Usage(0, 0, 0), done=True)
+
+        return gen()
+
+    def get_info(self) -> ModelInfo:
+        return self._info
+
+    async def get_models(self) -> list[ModelInfo]:
+        return []
+
+
+def _split_keep_left(data: str, d: str) -> list[str]:
+    """
+    Split the string based on the specified delimiter.
+    Keep the delimiter on the left side of each split segment.
+
+    :param data: String to split.
+    :param d: The split delimiter.
+    :return: Split string in a list.
+    """
+    parts = [p + d for p in data.split(d) if p]
+    if data.endswith(d):
+        return parts
+    return parts[:-1] + [parts[-1][: -len(d)]] if parts else []
 
 
 # TODO: Let database handle the supported models and retrieving model info.
@@ -498,9 +562,9 @@ SUPPORTED_MODELS: dict[Provider, list[ModelInfo]] = {
 }
 
 
-def get_dummy_model() -> ChatModel:
+def get_dummy_model() -> AsyncChatModel:
     """Create a dummy model for testing."""
-    return DummyChatModel(
+    return DummyAsyncChatModel(
         ModelInfo(
             provider="dummy",
             model_id="dummy-model-1",
