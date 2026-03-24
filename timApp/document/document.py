@@ -794,6 +794,7 @@ class Document:
         if update_meta:
             self.__update_metadata([p], old_ver, new_ver)
             self.ensure_par_ids_loaded()
+            self.clear_mem_cache(new_ver)
         return p
 
     def add_paragraph(
@@ -969,6 +970,7 @@ class Document:
         """
         self.__update_metadata([p], old_ver, new_ver)
         self.clear_doc_lines_cache()
+        self.clear_mem_cache(new_ver)
         return p
 
     def ensure_free_par_id(self, lines, p: DocParagraph):
@@ -1683,14 +1685,16 @@ class Document:
 
     def clear_mem_cache(self, ver=None) -> None:
         self.version = ver
-        self.par_cache = None
+        self.settings_cache = None
         self.par_map = None
         self.par_ids = None
         self.par_hashes = None
+        self.par_id_attrs_map = None
         self.source_doc = None
-        self.settings_cache = {}
+        self.settings_cache = None
         self.ref_doc_cache = {}
         self.single_par_cache = {}
+        self.par_cache = None
         self.attrs_name_par_id_maps = None
         self.par_id_attrs_name_maps = None
         self.attrs_name_lists = None
@@ -1770,9 +1774,6 @@ class Document:
             for attr_name in CACHED_ATTR_NAMES:
                 attr_value = attrs.get(attr_name, None)
                 if attr_value is not None:
-                    self.attrs_name_lists[attr_name].append(attr_value)
-                    self.par_id_attrs_name_maps[attr_name][par_id] = attr_value
-                    self.attrs_name_par_id_maps[attr_name][attr_value] = par_id
                     if attr_name == "taskId":
                         from timApp.plugin.taskid import TaskId
 
@@ -1781,10 +1782,12 @@ class Document:
                             tid = TaskId.parse(
                                 attr_value, allow_block_hint=False, require_doc_id=False
                             )
-                            self.attrs_name_lists[attr_name].append(tid.task_name)
-                            self.add_name_par_id_map(attr_name, tid.task_name, par_id)
+                            attr_value = tid.task_name
                         except PluginException:
                             pass
+                    self.attrs_name_lists[attr_name].append(attr_value)
+                    self.par_id_attrs_name_maps[attr_name][par_id] = attr_value
+                    self.attrs_name_par_id_maps[attr_name][attr_value] = par_id
 
     def get_par_id_name_map(self, attr_name: str) -> dict[str, str]:
         if self.par_id_attrs_name_maps is None:
@@ -1900,7 +1903,12 @@ class DocParagraphIter:
         # self.f = name.open("r") if name.is_file() else None
         if self.doc.doc_lines is None:
             self.doc.ensure_par_ids_loaded()
-        if not self.doc.doc_lines:
+        # Use same set of lines for the whole iteration
+        # to avoid issues with concurrent modifications.
+        # This also allows to avoid loading lines multiple
+        # times if they have already been loaded.
+        self.doc_lines = self.doc.doc_lines
+        if not self.doc_lines:
             self.next_index = -1
 
     def __enter__(self):
@@ -1918,9 +1926,9 @@ class DocParagraphIter:
         while True:
             if self.next_index < 0:
                 raise StopIteration
-            line = self.doc.doc_lines[self.next_index]
+            line = self.doc_lines[self.next_index]
             self.next_index += 1
-            if self.next_index >= len(self.doc.doc_lines):
+            if self.next_index >= len(self.doc_lines):
                 self.next_index = -1
             if line != "\n":
                 par_id, t, attrs = parse_docline(line)
