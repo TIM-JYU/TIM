@@ -404,9 +404,6 @@ class Document:
             first_par_id = self.par_ids[0]
         # last_settings_par = self.get_last_settings_par()
         last_settings_par_id = self.get_last_settings_par_id()
-        settings_pars = list(self.get_settings_pars())
-        if settings_pars:
-            last_settings_par = settings_pars[-1]
         if not isinstance(settings, YamlBlock):
             assert isinstance(settings, dict)
             settings = YamlBlock(values=settings)

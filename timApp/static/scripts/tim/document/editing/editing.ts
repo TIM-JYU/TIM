@@ -21,15 +21,10 @@ import {
     markPageDirty,
     TimStorage,
     to,
-    to2,
 } from "tim/util/utils";
 import {openEditor} from "tim/editor/pareditorOpen";
 import {getCurrentEditor} from "tim/editor/editorScope";
 import {showDiffDialog} from "tim/document/showDiffDialog";
-import {
-    isManageResponse,
-    showRenameDialog,
-} from "tim/document/editing/showRenameDialog";
 import {showMessageDialog} from "tim/ui/showMessageDialog";
 import * as t from "io-ts";
 import {UserSelection} from "tim/document/editing/userSelection";
