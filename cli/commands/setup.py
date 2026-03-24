@@ -37,7 +37,7 @@ This command is intended to be run once, but can be re-run to re-initialize the 
 POETRY_MIN_VERSION = "1.5.1"
 
 # Minimal Python version needed for development
-PYTHON_MIN_DEV_VERSION = [3, 10]
+PYTHON_MIN_DEV_VERSION = [3, 12]
 
 VENV_NAME = ".venv"
 
