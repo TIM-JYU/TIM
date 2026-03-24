@@ -8,8 +8,7 @@ from timApp.tests.server.timroutetest import TimRouteTest
 class IndexTest(TimRouteTest):
     def test_index_one_heading_per_par(self):
         self.login_test1()
-        doc = self.create_doc(
-            initial_par="""
+        doc = self.create_doc(initial_par="""
 # Heading level 1
 Lorem ipsum.
 
@@ -21,8 +20,7 @@ Lorem ipsum.
 ### Heading level 3
 #-
 # Second heading level 1
-        """
-        ).document
+        """).document
         self.assertEqual(
             [
                 (
@@ -51,8 +49,7 @@ Lorem ipsum.
             ],
             doc.get_index(default_view_ctx),
         )
-        doc = self.create_doc(
-            initial_par="""
+        doc = self.create_doc(initial_par="""
 # Heading level 1
 Lorem ipsum.
 
@@ -72,8 +69,7 @@ Lorem ipsum.
 ### Heading level 3
 #-
 # Second heading level 1
-        """
-        ).document
+        """).document
         doc.set_settings(
             {"auto_number_headings": True, "heading_format": {2: "{h1}.{h2}. {text}"}}
         )
@@ -197,8 +193,7 @@ Lorem ipsum.
 
     def test_index_many_headings_per_par(self):
         self.login_test1()
-        doc = self.create_doc(
-            initial_par="""
+        doc = self.create_doc(initial_par="""
 # Heading level 1
 Lorem ipsum.
 
@@ -211,8 +206,7 @@ Lorem ipsum.
 ### Heading level 3
 #-
 # Second heading level 1
-        """
-        ).document
+        """).document
         self.assertEqual(
             [
                 (
@@ -270,8 +264,7 @@ Lorem ipsum.
 
     def test_index_skip_level(self):
         self.login_test1()
-        doc = self.create_doc(
-            initial_par="""
+        doc = self.create_doc(initial_par="""
 # Heading level 1
 Lorem ipsum.
 
@@ -284,8 +277,7 @@ Lorem ipsum.
 ### Second heading level 3
 #-
 # Second heading level 1
-        """
-        ).document
+        """).document
         self.assertEqual(
             [
                 (
@@ -380,13 +372,11 @@ Lorem ipsum.
 
     def test_index_duplicate_headings(self):
         self.login_test1()
-        doc = self.create_doc(
-            initial_par="""
+        doc = self.create_doc(initial_par="""
 # Same
 
 # Same
-        """
-        ).document
+        """).document
         self.assertEqual(
             [
                 ({"id": "same", "level": 1, "text": "Same"}, []),
@@ -395,8 +385,7 @@ Lorem ipsum.
             doc.get_index(default_view_ctx),
         )
 
-        doc = self.create_doc(
-            initial_par="""
+        doc = self.create_doc(initial_par="""
 # Same
 #-
 # Same
@@ -404,8 +393,7 @@ Lorem ipsum.
 # Same
 #-
 # Same
-        """
-        ).document
+        """).document
         self.assertEqual(
             [
                 ({"id": "same", "level": 1, "text": "Same"}, []),
@@ -568,21 +556,17 @@ Lorem ipsum.
 
     def test_too_deep_heading(self):
         self.login_test1()
-        d = self.create_doc(
-            initial_par="""
+        d = self.create_doc(initial_par="""
 ####### a
 
-#-"""
-        )
+#-""")
         self.get(d.url)
 
     def test_formatted_heading(self):
         self.login_test1()
-        d = self.create_doc(
-            initial_par="""
+        d = self.create_doc(initial_par="""
 # test ([test]{.red}) {#test}
-        """
-        )
+        """)
         self.assertEqual(
             [({"id": "test-test", "level": 1, "text": "test (test)"}, [])],
             d.document.get_index(default_view_ctx),
