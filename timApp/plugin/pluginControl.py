@@ -530,9 +530,9 @@ def pluginify(
                 # TODO: Gamification map should be its own plugin
                 gd = YamlBlock.from_markdown(md).values
                 runner = "gamification-map"
-                html_pars[idx].output = (
-                    f"<{runner} data={quoteattr(json.dumps(gd))}></{runner}>"
-                )
+                html_pars[
+                    idx
+                ].output = f"<{runner} data={quoteattr(json.dumps(gd))}></{runner}>"
             except yaml.YAMLError as e:
                 has_errors = True
                 html_pars[idx].output = (
