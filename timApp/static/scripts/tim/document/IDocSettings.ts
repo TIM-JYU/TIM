@@ -59,6 +59,7 @@ export interface IDocSettings {
     disable_answer?: string;
     nonAnswerAnnotationsDisabled?: string;
     showFullLanguageNames?: boolean;
+    edit_buttons?: boolean;
 }
 
 export interface ISlideDocSettings extends IDocSettings {

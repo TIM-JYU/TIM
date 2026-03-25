@@ -185,6 +185,7 @@ class DocSettings:
     auto_confirm_key = "auto_confirm"
     expire_next_doc_message_key = "expire_next_doc_message"
     answer_grace_period_key = "answer_grace_period"
+    edit_buttons_key = "edit_buttons"
 
     @classmethod
     def from_paragraph(cls, par: DocParagraph):
@@ -754,6 +755,9 @@ class DocSettings:
 
     def macro_trim_blocks(self) -> bool:
         return self.get_setting_or_default("macro_trim_blocks", True)
+
+    def get_edit_buttons(self, default=None) -> bool | None:
+        return self.__dict.get(self.edit_buttons_key, default)
 
 
 def resolve_settings_for_pars(pars: Iterable[DocParagraph]) -> YamlBlock:

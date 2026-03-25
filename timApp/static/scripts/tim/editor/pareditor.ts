@@ -1229,6 +1229,13 @@ ${backTicks}
         this.proeditor =
             this.storage.proeditor.get() ??
             (saveTag === "par" || saveTag === TIM_TABLE_CELL);
+        // start pareditor in simple form for chat messages
+        // unless user has changed it to advanced view manually
+        if (documentglobals().docSettings.edit_buttons) {
+            if (!this.storage.proeditor.get()) {
+                this.proeditor = false;
+            }
+        }
         this.activeTab = this.storage.editortab.get() ?? "navigation";
         if (this.originalDocument && this.activeTab == "translator") {
             this.activeTab = "navigation";

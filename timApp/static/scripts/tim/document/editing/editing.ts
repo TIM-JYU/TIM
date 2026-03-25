@@ -211,11 +211,51 @@ export class EditingHandler {
             onClick(".addBelow", ($this, e) => {
                 this.viewctrl.closePopupIfOpen();
                 const [par, options] = prepareOptions($this[0], "addBelow");
+
+                if (documentglobals().docSettings.edit_buttons) {
+                    options.forcedClasses?.push("chatReply");
+                }
+
                 return this.showAddParagraphBelow(
                     e.originalEvent,
                     par,
                     options
                 );
+            });
+
+            onClick(".editChat", ($this, e) => {
+                this.viewctrl.closePopupIfOpen();
+                const [par, options] = prepareOptions($this[0], "addBelow");
+                const selection = UnbrokenSelection.explicit(par);
+                return this.toggleParEditor(
+                    {type: EditType.Edit, pars: selection},
+                    options
+                );
+            });
+
+            onClick(".deleteChat", ($this, e) => {
+                this.viewctrl.closePopupIfOpen();
+                const [par, options] = prepareOptions($this[0], "addBelow");
+                const selection = UnbrokenSelection.explicit(par);
+                // console.log(par.par.htmlElement);
+
+                const docId = this.viewctrl.docId;
+                console.log("delete docId", docId);
+                const parId = par.par.id;
+                console.log("delete parId", parId);
+                return this.deleteChatMessage(docId, parId, selection);
+                /*
+                const div = document.createElement("div");
+                div.textContent = "poistettu";
+                const [par2, options2] = prepareOptions(div, "addAbove");
+                void this.addParagraph(
+                    e.originalEvent,
+                    EditType.AddAbove,
+                    par2,
+                    options2
+                );
+
+                 */
             });
 
             onClick(".pasteBottom", (_$this, e) => {
@@ -255,6 +295,37 @@ export class EditingHandler {
                 this.createItemVisible = false;
             });
         });
+    }
+
+    async deleteChatMessage(
+        docId: number,
+        parId: string,
+        selection: UnbrokenSelection
+    ) {
+        const confirmDi = window.confirm(
+            "Are you sure you want to delete this message"
+        );
+        if (confirmDi) {
+            const response = await to(
+                $http.post<IParResponse>(`/deleteParagraph/${docId}`, {
+                    par: parId,
+                })
+            );
+            if (!response.ok) {
+                throw Error("deleteChat failed");
+            } else {
+                this.handleDelete({type: EditType.Edit, pars: selection});
+            }
+        }
+    }
+
+    getEditButtonsText() {
+        return (
+            "    \\\n" +
+            "        [vastaa]{.timButton .addBelow}\n" +
+            "        [muokkaa]{.timButton .editChat}\n" +
+            "        [poista]{.timButton .deleteChat}\n"
+        );
     }
 
     setSelection(s: UserSelection | undefined) {
@@ -345,6 +416,21 @@ export class EditingHandler {
             }
         }
         this.viewctrl.editing = true;
+
+        let firstChatLine = "";
+
+        if (documentglobals().docSettings.edit_buttons) {
+            // remove first line when editing chat message
+            // #- {.chat forceclass="chat"}
+            const firstLineEnd = initialText.indexOf("\n");
+            if (firstLineEnd !== -1) {
+                firstChatLine = initialText.substring(0, firstLineEnd + 1);
+                initialText = initialText.substring(firstLineEnd + 1);
+            }
+
+            // remove buttons when editing chat message
+            initialText = initialText.replace(this.getEditButtonsText(), "");
+        }
         this.editorLoad = openEditor({
             viewCtrl: this.viewctrl,
             extraData,
@@ -404,6 +490,10 @@ This will delete the whole ${
                 return r.result.data;
             },
             saveCb: async (text, data) => {
+                if (documentglobals().docSettings.edit_buttons) {
+                    text = firstChatLine + text;
+                    text = text + this.getEditButtonsText();
+                }
                 const r = await to(
                     $http.post<IParResponse>(url, {
                         text,
@@ -653,6 +743,14 @@ auto_number_headings: 0${CURSOR}
                     par = $(".addBottomContainer").prev();
                     break;
                 case EditType.AddAbove:
+                    /*
+                    if (documentglobals().docSettings.edit_buttons) {
+                        console.log("hello");
+                    } else {
+                        console.log("nope");
+                    }
+                    */
+
                     par = $(
                         position.par.getElementForInsert(EditType.AddAbove)
                     );
