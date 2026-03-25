@@ -28,7 +28,10 @@ pub fn read_document_blocks(
         .filter(|line| !line.is_empty())
         .map(|line| {
             // FIXME: Some older files may still use the "current" symlink and thus not have the separator!
-            let (doc_par_id, doc_par_hash) = line.split_once("/").unwrap();
+            // Take only the first two segments; ignore any extra '/' parts.
+            let mut parts = line.splitn(3, '/');
+            let doc_par_id = parts.next().unwrap();
+            let doc_par_hash = parts.next().unwrap();
             (doc_par_id, doc_par_hash, skip_blocks.contains(doc_par_id))
         })
         .collect::<Vec<_>>();
