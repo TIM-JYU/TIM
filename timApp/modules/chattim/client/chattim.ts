@@ -24,6 +24,7 @@ import {registerPlugin} from "tim/plugin/pluginRegistry";
 import {CommonModule} from "@angular/common";
 import {DomSanitizer} from "@angular/platform-browser";
 import {Users} from "tim/user/userService";
+import {ChatControlPanelComponent} from "./controlpanel";
 
 const PluginMarkupFields = t.intersection([
     t.partial({
@@ -59,12 +60,15 @@ export interface ChatEntry {
                             <pre class="chat-bot" [innerHTML]="entry.agent | purify"></pre>
                         </div>
                     </div>
+                
+
+                
                     <div class="form-inline">
                         <label>{{inputstem}}
                             <input type="text"
                                    class="form-control"
                                    [(ngModel)]="userinput"
-                                   (keyup.enter)="onEnter()"
+                                   (keyup.enter)="onEnter()"    
                             >
                         </label>
                         <button class="timButton"
@@ -73,6 +77,11 @@ export interface ChatEntry {
                                 (click)="sendUserInput()"
                                 [innerHTML]="buttonText() | purify">
                         </button>
+                            <chattim-control-panel
+                    [(selectedModel)]="selectedModel"
+                    [(temperature)]="temperature"
+                    [(maxTokens)]="maxTokens">
+                </chattim-control-panel>
                     </div>
 
                     <tim-loading *ngIf="isRunning"></tim-loading>
@@ -96,6 +105,10 @@ export class ChatTIMComponent
     userinput = "";
     inputstem = "";
     document_id = -1;
+
+    selectedModel = "gpt-4o";
+    temperature = 0.7;
+    maxTokens = 1000;
 
     conversation: ChatEntry[] = [];
 
@@ -188,7 +201,7 @@ export class ChatTIMComponent
 }
 
 @NgModule({
-    declarations: [ChatTIMComponent],
+    declarations: [ChatTIMComponent, ChatControlPanelComponent],
     imports: [
         CommonModule,
         HttpClientModule,
