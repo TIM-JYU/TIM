@@ -209,11 +209,35 @@ export class EditingHandler {
             });
 
             onClick(".addBelow", ($this, e) => {
+                console.log("add below");
                 this.viewctrl.closePopupIfOpen();
                 const [par, options] = prepareOptions($this[0], "addBelow");
 
                 if (documentglobals().docSettings.edit_buttons) {
-                    options.forcedClasses?.push("chatReply");
+                    let indent = 0;
+
+                    const chatClasses = par.getClasses();
+                    console.log(chatClasses);
+                    for (const c of chatClasses) {
+                        if (
+                            c.startsWith("chatReply") &&
+                            c.length > "chatReply".length
+                        ) {
+                            indent = parseInt(
+                                c.substring("chatReply".length),
+                                10
+                            );
+                            console.log(c);
+                        }
+                    }
+                    if (indent === 0) {
+                        options.forcedClasses?.push("chatReply1");
+                    } else {
+                        options.forcedClasses?.push("chatReply" + (indent + 1));
+                    }
+                    options.forcedClasses?.push("chat");
+
+                    console.log(options.forcedClasses);
                 }
 
                 return this.showAddParagraphBelow(
@@ -224,6 +248,7 @@ export class EditingHandler {
             });
 
             onClick(".editChat", ($this, e) => {
+                console.log("editchat");
                 this.viewctrl.closePopupIfOpen();
                 const [par, options] = prepareOptions($this[0], "addBelow");
                 const selection = UnbrokenSelection.explicit(par);
@@ -234,6 +259,7 @@ export class EditingHandler {
             });
 
             onClick(".deleteChat", ($this, e) => {
+                console.log("delete chat");
                 this.viewctrl.closePopupIfOpen();
                 const [par, options] = prepareOptions($this[0], "addBelow");
                 const selection = UnbrokenSelection.explicit(par);
@@ -418,18 +444,28 @@ export class EditingHandler {
         this.viewctrl.editing = true;
 
         let firstChatLine = "";
-
+        let isChatMessage = false;
         if (documentglobals().docSettings.edit_buttons) {
             // remove first line when editing chat message
             // #- {.chat forceclass="chat"}
+            const chatRegex = /#- \{.*\.chat.*}/;
+            console.log(initialText);
             const firstLineEnd = initialText.indexOf("\n");
             if (firstLineEnd !== -1) {
                 firstChatLine = initialText.substring(0, firstLineEnd + 1);
-                initialText = initialText.substring(firstLineEnd + 1);
+                isChatMessage = chatRegex.test(firstChatLine);
+                if (isChatMessage) {
+                    initialText = initialText.substring(firstLineEnd + 1);
+                }
             }
 
-            // remove buttons when editing chat message
-            initialText = initialText.replace(this.getEditButtonsText(), "");
+            if (isChatMessage) {
+                // remove buttons when editing chat message
+                initialText = initialText.replace(
+                    this.getEditButtonsText(),
+                    ""
+                );
+            }
         }
         this.editorLoad = openEditor({
             viewCtrl: this.viewctrl,
@@ -490,8 +526,16 @@ This will delete the whole ${
                 return r.result.data;
             },
             saveCb: async (text, data) => {
-                if (documentglobals().docSettings.edit_buttons) {
+                if (
+                    documentglobals().docSettings.edit_buttons &&
+                    isChatMessage
+                ) {
                     text = firstChatLine + text;
+                    text = text + this.getEditButtonsText();
+                } else if (
+                    documentglobals().docSettings.edit_buttons &&
+                    options.localSaveTag === "addBelow"
+                ) {
                     text = text + this.getEditButtonsText();
                 }
                 const r = await to(
