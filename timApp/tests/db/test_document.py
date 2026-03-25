@@ -3,6 +3,7 @@
 
 import random
 
+from timApp.document.docparagraph import DocParagraph
 from timApp.document.document import Document
 from timApp.document.documentparser import DocumentParser
 from timApp.document.documents import import_document_from_file
@@ -222,15 +223,15 @@ class DocumentTest(TimDbTest):
                 .add_missing_attributes()
                 .get_blocks()
             )
+            new_pars = DocParagraph.from_dicts(d, new_pars)
             start_repl_index = 1
             end_repl_index = 4
             repl_length = len(new_pars)
             length_diff = repl_length - (end_repl_index - start_repl_index + 1)
-            section_text = DocumentWriter(new_pars).get_text()
-            d.update_section(section_text, ids[start_repl_index], ids[end_repl_index])
+            d.update_section(new_pars, ids[start_repl_index], ids[end_repl_index])
             new_ids = [par.get_id() for par in d]
             self.assertListEqual(
-                [par["id"] for par in new_pars],
+                [par.get_id() for par in new_pars],
                 new_ids[start_repl_index : start_repl_index + repl_length],
             )
             self.assertEqual(length_diff, len(new_ids) - len(ids))
@@ -336,7 +337,8 @@ class DocumentTest(TimDbTest):
             p.get_expanded_markdown(d.get_settings().get_macroinfo(default_view_ctx)),
         )
 
-    def test_import(self):
+    @staticmethod
+    def test_import():
         import_document_from_file(
             static_tim_doc("mmcq_example.md"),
             "Multiple choice plugin example",

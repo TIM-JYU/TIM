@@ -2271,6 +2271,7 @@ a: b
             expect_content={
                 "answerLimit": None,
                 "buttonNewTask": None,
+                "buttonNewTaskParent": None,
                 "deadline": None,
                 "maxPoints": None,
                 "pointsText": None,

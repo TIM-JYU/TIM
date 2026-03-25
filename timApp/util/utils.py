@@ -1,4 +1,5 @@
 """Utility functions."""
+
 import base64
 import hashlib
 import json
@@ -19,6 +20,7 @@ from typing import Any, Sequence, Callable, TypeVar, Iterable
 import dateutil.parser
 import pytz
 import requests
+from flask import g
 from lxml.html import HtmlElement
 
 from tim_common.html_sanitize import sanitize_html
@@ -47,6 +49,10 @@ def get_exception_code(
             h.update(f.f_code.co_name.encode())
         result += f"_{h.hexdigest(2)}"
     return result
+
+
+def is_int(s: str) -> bool:
+    return bool(s) and all("0" <= ch <= "9" for ch in s)
 
 
 def datestr_to_relative(d: str | datetime) -> str:
@@ -106,9 +112,11 @@ def get_error_html(message: str | Exception, response: str | None = None) -> str
     return sanitize_html(
         '<span class="error" ng-non-bindable>{}{}</span>'.format(
             str(message),
-            f"<pre>---Full response string start---\n{response}\n---Full response string end---</pre>"
-            if response is not None
-            else "",
+            (
+                f"<pre>---Full response string start---\n{response}\n---Full response string end---</pre>"
+                if response is not None
+                else ""
+            ),
         )
     )
 
@@ -128,9 +136,11 @@ def get_error_html_block(
         '<div class="error" ng-non-bindable><strong>{}</strong>{}{}</div>'.format(
             title,
             f"<pre>{message}</pre>" if message else "",
-            f"<pre>---Full response string start---\n{response}\n---Full response string end---</pre>"
-            if response is not None
-            else "",
+            (
+                f"<pre>---Full response string start---\n{response}\n---Full response string end---</pre>"
+                if response is not None
+                else ""
+            ),
         )
     )
 
@@ -226,7 +236,7 @@ def title_to_id(s: str) -> str:
 
 def getdatetime(s: str, default_val: datetime | None = None) -> datetime | None:
     try:
-        dt = dateutil.parser.parse(s, dayfirst=not "Z" in s)
+        dt = dateutil.parser.parse(s, dayfirst="Z" not in s)
         return dt if dt.tzinfo is not None else dt.replace(tzinfo=timezone.utc)
     except (ValueError, TypeError):
         return default_val
@@ -344,25 +354,25 @@ def get_error_message(e: Exception) -> str:
 Range = tuple[int, int]
 
 TASK_PROG = re.compile(
-    r"([\w\.]*)(:\w*)?\( *(\d*) *, *(\d*) *\)(.*)"
+    r"([\w.]*)(:\w*)?\( *(\d*) *, *(\d*) *\)(.*)"
 )  # see https://regex101.com/r/ZZuizF/4
 TASK_NAME_PROG = re.compile(
-    r"(\d+\.)?([\w\d]+)[.\[]?.*"
+    r"(\d+\.)?(\w+)[.\[]?.*"
 )  # see https://regex101.com/r/CFOLgd/1
 
 
-def widen_fields(fields: list[str] | str) -> list[str]:
+def widen_fields(flds: list[str] | str) -> list[str]:
     """
     if there is syntax d(1,3) in fields, it is made d1,d2
     from d(1,3)=t  would come d1=t1, d2=t2
 
-    :param fields: list of fields
+    :param flds: list of fields
     :return: array fields widened
     """
     fields1 = []
-    if not isinstance(fields, list):
-        fields = fields.split(";")
-    for field in fields:
+    if not isinstance(flds, list):
+        flds = flds.split(";")
+    for field in flds:
         parts = field.split(";")
         fields1.extend(parts)
 
@@ -534,3 +544,61 @@ def normalize_newlines(text: str) -> str:
     :return: Modified source text.
     """
     return re.sub(NORM_NEWLINES_COMPILED, " ", text)
+
+
+""" SQL to find used characters in task IDs:
+SELECT string_agg(DISTINCT ch, '' ORDER BY ch) AS chars_used
+FROM (
+  SELECT substr(task_id, g, 1) AS ch
+  FROM answer
+  CROSS JOIN LATERAL generate_series(1, char_length(task_id)) AS g
+) t
+WHERE ch <> '';
+=>  ,-._0123456789aAåäbBcCdDeEfFgGhHiIjJkKlLmMnNoOöpPqQrRsStTuUvVwWxXyYzZ
+"""
+TIM_IDENTS = "a-zA-Z0-9_.,/åäöÅÄÖ-"
+
+TIM_IDENTS_RE = re.compile(rf"^[{TIM_IDENTS}]*$")
+NOT_TIM_IDENTS_RE = re.compile(rf"[^{TIM_IDENTS}]")
+
+
+def is_valid_tim_indetifier(s: str) -> bool:
+    """
+    Check whether the given string is a valid TIM identifier.
+
+    :param s: The string to check.
+    :return: True if the string is a valid TIM identifier, False otherwise.
+    """
+    return bool(TIM_IDENTS_RE.match(s))
+
+
+def strip_not_allowed(s: str, allow_reg: str | None = None) -> str:
+    """
+    Strips characters that are not allowed in TIM identifiers.
+
+    :param s: The string to strip.
+    :param allow_reg: Optional regex pattern to specify allowed characters.
+    :return: The stripped string.
+    """
+    if s is None or s.strip() == "":
+        return ""
+    if allow_reg is not None:
+        return re.sub(rf"[^{allow_reg}]", "", s)
+    return NOT_TIM_IDENTS_RE.sub("", s)
+
+
+def add_g_error(msg: str) -> None:
+    g.errors = getattr(g, "errors", [])
+    g.errors.append(msg)
+
+
+def clear_g_errors() -> None:
+    g.errors = getattr(g, "errors", [])
+    g.errors.clear()
+
+
+def get_g_errors(sep: str = "<br>") -> str:
+    errors = getattr(g, "errors", [])
+    if not errors:
+        return ""
+    return sep.join(errors)

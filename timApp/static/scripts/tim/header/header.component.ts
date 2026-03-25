@@ -58,7 +58,7 @@ function isExpired(tag: ITag) {
                 <ng-container *ngIf="translations && translations.length > 1">
             <span *ngFor="let tr of translations">
                 <a class="label label-primary"
-                   href="/{{ route }}/{{ tr.path + this.sanitizeSearch() }}">{{ tr.lang_id || 'language not set' }}</a>&ngsp;
+                   href="/{{ route }}/{{ tr.path + this.sanitizeSearch() }}">{{ getLanguageDisplayName(tr) }}</a>&ngsp;
             </span>
                 </ng-container>
             </div>
@@ -108,6 +108,7 @@ export class HeaderComponent implements OnInit {
             "breadcrumbs" in g ? [...g.breadcrumbs].reverse() : undefined;
         this.translations = "translations" in g ? g.translations : [];
         this.docSettings = "docSettings" in g ? g.docSettings : undefined;
+
         this.route = getViewName();
         if (!this.item) {
             return;
@@ -117,6 +118,13 @@ export class HeaderComponent implements OnInit {
             await this.checkIfBookmarked();
             void this.checkIfTaggedAsCourse();
         })();
+    }
+
+    getLanguageDisplayName(tr: ITranslation) {
+        if (this.docSettings?.showFullLanguageNames && tr.lang_name) {
+            return `${tr.lang_name} (${tr.lang_id})`;
+        }
+        return tr.lang_id || "language not set";
     }
 
     isActive(i: IItemLink) {

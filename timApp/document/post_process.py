@@ -1,4 +1,5 @@
 """Common functions for use with routes."""
+
 from collections import defaultdict
 from dataclasses import dataclass
 from datetime import datetime
@@ -11,7 +12,7 @@ from timApp.document.areainfo import AreaStart, AreaEnd
 from timApp.document.docentry import DocEntry
 from timApp.document.docparagraph import DocParagraph
 from timApp.document.docsettings import DocSettings
-from timApp.document.document import Document, dereference_pars
+from timApp.document.document import Document, dereference_pars, MISSING_AREA_END_PAR_ID
 from timApp.document.editing.globalparid import GlobalParId
 from timApp.document.hide_names import force_hide_names
 from timApp.document.macroinfo import get_user_specific_macros
@@ -217,6 +218,7 @@ def post_process_pars(
     )
     comment_docs = {docinfo.id: docinfo}
     teacher_access_cache = {}
+    personal_group_id = curr_user.get_personal_group().id
     for n, u in notes:
         key = (n.par_id, n.doc_id)
         pars = pars_dict.get(key)
@@ -228,6 +230,12 @@ def post_process_pars(
                 has_teacher = bool(curr_user.has_teacher_access(comment_docs[n.doc_id]))
                 teacher_access_cache[n.doc_id] = has_teacher
             editable = n.usergroup_id == group or has_teacher
+            if (
+                n.access == "teachers"
+                and not has_teacher
+                and n.usergroup_id != personal_group_id
+            ):
+                continue
             private = n.access == "justme"
             for p in pars:
                 if p.notes is None:
@@ -247,6 +255,41 @@ def post_process_pars(
         plugins=presult.all_plugins,
         has_plugin_errors=presult.has_errors,
     )
+
+
+def expand_macro_for_bool_attr(
+    maybe_macro: str | None,
+    macro_delimiter: str,
+    macros,
+    settings: DocSettings | None,
+    env: TimSandboxedEnvironment,
+    ignore_errors: bool,
+    default: bool,
+) -> bool | None:
+    """
+    Parse boolean value from a macro string for a paragraph attribute that expects a boolean.
+    :param maybe_macro: string that is possibly a macro
+    :param macro_delimiter: delimiter used for defining macros
+    :param macros: document macros
+    :param settings: document settings
+    :param env: environment for expanding macros
+    :param ignore_errors:
+    :param default: default return value if the input string (`maybe_macro`) is not a macro or a string representing a boolean value
+    :return: a boolean representing the expanded macro value or boolean-as-string value, or None.
+    """
+    result = maybe_macro
+
+    if isinstance(maybe_macro, str):
+        if maybe_macro.find(macro_delimiter) >= 0:
+            result = expand_macros(
+                maybe_macro, macros, settings, env=env, ignore_errors=ignore_errors
+            )
+        result = get_boolean(
+            result,
+            default=default,
+        )
+
+    return result
 
 
 @dataclass
@@ -345,9 +388,18 @@ def process_areas(
 
                 if not is_single:
                     collapse = cur_area.attrs.get("collapse")
+                    collapse = expand_macro_for_bool_attr(
+                        collapse,
+                        macro_delimiter=delimiter,
+                        macros=macros,
+                        settings=settings,
+                        env=env,
+                        ignore_errors=True,
+                        default=False,
+                    )
                     html_par.areainfo = AreaStart(
                         area_start,
-                        collapse not in ("false", "") if collapse is not None else None,
+                        collapse,
                     )
                 new_pars.append(html_par)
 
@@ -356,12 +408,16 @@ def process_areas(
                     vis = cur_area.attrs.get("visible")
                 if vis is None:
                     vis = True
-                elif isinstance(vis, str):
-                    if vis.find(delimiter) >= 0:
-                        vis = expand_macros(
-                            vis, macros, settings, env=env, ignore_errors=True
-                        )
-                    vis = get_boolean(vis, True)
+                else:
+                    vis = expand_macro_for_bool_attr(
+                        vis,
+                        macro_delimiter=delimiter,
+                        macros=macros,
+                        settings=settings,
+                        env=env,
+                        ignore_errors=True,
+                        default=True,
+                    )
                 cur_area.visible = vis
                 if vis:
                     st = cur_area.attrs.get("starttime")
@@ -402,7 +458,7 @@ def process_areas(
                         vis, macros, settings, env=env, ignore_errors=True
                     )
                 vis = get_boolean(vis, True)
-                if not vis:  #  TODO: if in preview, put this always True
+                if not vis:  # TODO: if in preview, put this always True
                     access = False  # TODO: this should be added as some kind of small par that is visible in edit-mode
             if access:
                 new_pars.append(html_par)
@@ -413,6 +469,7 @@ def process_areas(
             f"{len(current_areas)} areas are missing area_end: {current_areas}",
             view_ctx,
         )
+        """
         for _ in current_areas:
             new_pars.append(
                 PreparedPar(
@@ -424,6 +481,26 @@ def process_areas(
                     html_class="",
                 )
             )
+        """
+        for i in range(len(current_areas) - 1, -1, -1):
+            area = current_areas[i]
+            area_end = PreparedPar(
+                data=ParBasicData(
+                    attrs={"area_end": area.name},
+                    doc_id=-1,
+                    hash="",
+                    id=MISSING_AREA_END_PAR_ID,
+                    md="",
+                ),
+                output="",
+                from_preamble=None,
+                target=None,
+                areainfo=AreaEnd(name=area.name),
+                html_class="par",
+            )
+            area_end.areainfo = AreaEnd(name=area.name)
+            new_pars.append(area_end)
+
     return new_pars
 
 

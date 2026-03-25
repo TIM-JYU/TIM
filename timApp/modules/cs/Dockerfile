@@ -237,11 +237,11 @@ USER agent
 
 # Trigger first-time scripts and folder creation
 RUN dotnet help && \
-    # Generate dotnet config folder
+    # Generate dotnet config folder \
     dotnet new --list && \
-    # Generate default NuGet config
+    # Generate default NuGet config \
     dotnet nuget list source && \
-    # Clean up NuGet locks
+    # Clean up NuGet locks \
     rm -rf /tmp/NuGetScratch
 
 EXPOSE 5000
@@ -266,6 +266,9 @@ RUN $PIP_INSTALL numpy scipy matplotlib pandas statsmodels control scikit-learn 
 ENV SKIMAGE_DATADIR=/etc/skimage
 RUN $PYTHON -c "import skimage; print(skimage.__version__)"
 
+# pytest and doctest
+RUN $PIP_INSTALL pytest pytest-mock && bash -c "${APT_CLEANUP}"
+
 # pyod
 RUN $PIP_INSTALL pyod && bash -c "${APT_CLEANUP}"
 
@@ -280,7 +283,7 @@ RUN wget -q https://github.com/industrial-optimization-group/DESDEO/releases/dow
     tar -xzf solver_binaries.tgz -C /etc/desdeo/solver_binaries && \
     rm solver_binaries.tgz
 ENV PATH=$PATH:/etc/desdeo/solver_binaries/ampl.linux-intel64
-RUN $PIP_INSTALL git+https://github.com/industrial-optimization-group/DESDEO.git@4d3bb915a1dd9a3e6c4f8d6eb90fa32052b6d1a8 && bash -c "${APT_CLEANUP}"
+RUN $PIP_INSTALL git+https://github.com/industrial-optimization-group/DESDEO.git@a13f5270d95e1fe589e73259446fa1eaf0d238ff && bash -c "${APT_CLEANUP}"
 
 # sktime
 RUN bash -c "$PIP_INSTALL sktime[all_extras] && ${APT_CLEANUP}"
@@ -384,7 +387,7 @@ RUN npm i ts-node -g && bash -c "${APT_CLEANUP}"
 # Install NUnit runner for .NET
 ENV NUNIT_RUNNER_VERSION=3.19.0
 RUN dotnet tool install --tool-path /dotnet_tools/ NUnit.ConsoleRunner.NetCore --version ${NUNIT_RUNNER_VERSION} && \
-    # We need to call NUnit directly with dotnet exec in order to properly declare custom references
+    # We need to call NUnit directly with dotnet exec in order to properly declare custom references \
     ln -s /dotnet_tools/.store/nunit.consolerunner.netcore/${NUNIT_RUNNER_VERSION}/nunit.consolerunner.netcore/${NUNIT_RUNNER_VERSION}/tools/net8.0/any/nunit3-console.dll /dotnet_tools/nunit.console.dll
 
 # Install ffmpeg for transcoding videos

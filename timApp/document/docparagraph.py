@@ -30,12 +30,14 @@ from timApp.markdown.markdownconverter import (
     AutoCounters,
 )
 from timApp.timdb.exceptions import TimDbException, InvalidReferenceException
+from timApp.util.logger import log_error
 from timApp.util.rndutils import get_rands_as_dict, SeedType
 from timApp.util.utils import (
     count_chars_from_beginning,
     get_error_html,
     title_to_id,
     get_boolean,
+    add_g_error,
 )
 from tim_common.dumboclient import DumboOptions, MathType, InputFormat
 from tim_common.html_sanitize import sanitize_html, strip_div
@@ -45,7 +47,7 @@ if TYPE_CHECKING:
     from timApp.document.document import Document
     from timApp.document.docinfo import DocInfo
 
-SKIPPED_ATTRS = {"r", "rd", "rp", "ra", "rt", "mt", "settings"}
+SKIPPED_ATTRS = {"r", "rd", "rp", "ra", "rt", "rtask", "mt", "settings"}
 
 BLINDED_SETTINGS_TEXT = """```
 # Setting paragraphs cannot be shown via references
@@ -111,6 +113,8 @@ class DocParagraph:
         self.nomacros = None
         self.ref_chain = None
         self.answer_nr: int | None = None  # needed if variable tasks, None = not task at all or not variable task
+        self.md = ""
+        self.id = None
         self.ask_new: bool | None = None  # to send for plugins to force new question
         self.html_cache = None
 
@@ -227,6 +231,20 @@ class DocParagraph:
         par._cache_props()
         par._compute_hash()
         return par
+
+    @classmethod
+    def from_dicts(cls, doc: Document, par_dicts: list[dict]) -> list[DocParagraph]:
+        """Creates a list of DocParagraphs from a list of dictionaries.
+
+        :param par_dicts: The list of dictionaries.
+        :param doc: The Document object to which these paragraphs are connected.
+        :return: The created list of DocParagraphs.
+        """
+        pars = []
+        for par_dict in par_dicts:
+            par = DocParagraph.from_dict(doc, par_dict)
+            pars.append(par)
+        return pars
 
     def no_macros(self):
         nm = self.attrs.get("nomacros", None)
@@ -398,10 +416,16 @@ class DocParagraph:
 
     def _cache_props(self):
         """Caches some boolean properties about this paragraph in internal attributes."""
-
         self.__is_ref = self.is_par_reference() or self.is_area_reference()
+        if self.attrs.get("rd"):
+            if not self.__is_ref:
+                self.__is_ref = True
         self.__is_setting = "settings" in self.attrs
         self.__setting_type = self.attrs.get("settings", None)
+
+    def is_settings(self) -> bool:
+        """Determines whether this paragraph is a settings paragraph."""
+        return self.__is_setting
 
     def get_doc_id(self) -> int:
         """Returns the Document id to which this paragraph is attached."""
@@ -489,7 +513,7 @@ class DocParagraph:
                 md + macros.get("username", "")
             ):  # TODO: RND_SEED: check what seed should be used, is this used to plugins?
                 macros = {**macros, **self.__rands}
-        except Exception as err:
+        except Exception as _err:
             # raise Exception('Error in rnd: ' + str(err)) from err
             pass  # TODO: show exception to user!
 
@@ -666,7 +690,7 @@ class DocParagraph:
                     return p
                 try:
                     return p.get_referenced_pars()[0]
-                except InvalidReferenceException as e:
+                except (InvalidReferenceException, IndexError) as e:
                     p.was_invalid = True
                     p._set_html(get_error_html(e))
                     return p
@@ -732,7 +756,12 @@ class DocParagraph:
             try:
                 auto_number_start = settings.auto_number_start()
                 auto_macros = par.get_auto_macro_values(
-                    macros, env, auto_macro_cache, heading_cache, auto_number_start
+                    macros,
+                    env,
+                    auto_macro_cache,
+                    heading_cache,
+                    auto_number_start,
+                    set(),
                 )
             except RecursionError:
                 raise TimDbException(
@@ -798,17 +827,19 @@ class DocParagraph:
         auto_macro_cache,
         heading_cache,
         auto_number_start,
+        checked_pars: set[str],
     ):
         """Returns the auto macros values for the current paragraph. Auto macros include things like current
         heading/table/figure numbers.
 
+        :param macros: Macros to apply for the paragraph.
+        :param env: Environment for macros.
+        :param auto_macro_cache: The cache object from which to retrieve and store the auto macro data.
         :param heading_cache: A cache object to store headings into. The key is paragraph id and value is a list of headings
          in that paragraph.
-        :param macros: Macros to apply for the paragraph.
-        :param auto_macro_cache: The cache object from which to retrieve and store the auto macro data.
         :param auto_number_start: Object of heading start numbers.
+        :param checked_pars: to follow recursion and avoid infinite loops
         :return: Auto macro values as a dict.
-        :param env: Environment for macros.
         :return: A dict(str, dict(int,int)) containing the auto macro information.
 
         """
@@ -818,21 +849,45 @@ class DocParagraph:
         if cached is not None:
             return cached
 
+        can_recurse = True
+
         prev_par: DocParagraph = self.doc.get_previous_par(self)
-        if prev_par is None:
+        if prev_par is not None:  # check for too deep recursion
+            if prev_par == self:
+                can_recurse = False
+                checked_pars.add(self.get_id())
+            elif prev_par.get_id() in checked_pars:
+                can_recurse = False
+            if not can_recurse:
+                log_error(
+                    f"Preventing infinite recursion in {self.get_doc_id()} "
+                    f"get_auto_macro_values for par {checked_pars}\n"
+                )
+                add_g_error(
+                    f"Maybe duplicate paragraph id. Check manage for more details."
+                )
+
+        if prev_par is None or not can_recurse:  # prevent recursion
             prev_par_auto_values = {"h": auto_number_start}
             heading_cache[self.get_id()] = []
         else:
+            checked_pars.add(prev_par.get_id())
             prev_par_auto_values = prev_par.get_auto_macro_values(
-                macros, env, auto_macro_cache, heading_cache, auto_number_start
+                macros,
+                env,
+                auto_macro_cache,
+                heading_cache,
+                auto_number_start,
+                checked_pars,
             )
 
-        # If the paragraph is a translation but it has not been translated (empty markdown), we use the md from the original.
+        # If the paragraph is a translation but it has not been translated
+        # (empty markdown), we use the md from the original.
         deref = None
         if prev_par is not None and prev_par.is_translation():
             try:
                 deref = prev_par.get_referenced_pars()[0]
-            except InvalidReferenceException:
+            except (InvalidReferenceException, IndexError):
                 # In case of an invalid reference, just skip this one.
                 deref = None
         if (
@@ -954,11 +1009,23 @@ class DocParagraph:
         self._cache_props()
         self._compute_hash()
 
-    def is_task(self):
+    def is_task(self) -> bool:
         """Returns whether the paragraph is a task."""
         return (
             self.get_attr("taskId") is not None and self.get_attr("plugin") is not None
         )
+
+    def get_area_name(self) -> str | None:
+        """Returns the area name if this paragraph is an area reference.
+        :return: The area name or None if this paragraph is not an area reference.
+        """
+        return self.get_attr("area")
+
+    def get_area_end_name(self) -> str | None:
+        """Returns the area name if this paragraph is an area reference.
+        :return: The area name or None if this paragraph is not an area reference.
+        """
+        return self.get_attr("area_end")
 
     def get_attrs(self) -> dict:
         return self.attrs
@@ -1039,6 +1106,8 @@ class DocParagraph:
 
     def is_par_reference(self) -> bool:
         """Returns whether this paragraph is a reference to a single paragraph."""
+        if self.get_attr("rtask") is not None:
+            return True
         return self.get_attr("rp") is not None
 
     def is_area_reference(self) -> bool:
@@ -1081,6 +1150,7 @@ class DocParagraph:
         referrer: Optional["DocParagraph"] = None,
         blind_settings: bool = True,
         resolve_preamble_refs: bool = False,
+        path: str = "",
     ) -> list[DocParagraph]:
         """Returns the paragraphs that are referenced by this paragraph.
 
@@ -1091,6 +1161,7 @@ class DocParagraph:
         :param referrer: The paragraph that is referencing this paragraph.
         :param blind_settings: Whether to hide the settings of referenced paragraph.
         :param resolve_preamble_refs: Whether to resolve preambles in reference documents.
+        :param path: The path of the document containing this paragraph
         :return: The list of resolved paragraphs.
 
         """
@@ -1109,12 +1180,7 @@ class DocParagraph:
 
         attrs = self.attrs
         if "rd" in attrs:
-            try:
-                ref_docid = int(attrs["rd"])
-            except ValueError:
-                raise InvalidReferenceException(
-                    f'Invalid reference document id: "{attrs["rd"]}"'
-                )
+            ref_docid = attrs["rd"]
         else:
             ref_doc = (
                 self.doc.get_source_document()
@@ -1124,13 +1190,15 @@ class DocParagraph:
 
         if ref_doc is None:
             if ref_docid is None:
-                raise InvalidReferenceException(
-                    "Source document for reference not specified."
-                )
+                ref_docid = par_doc_id[0]
+                # raise InvalidReferenceException(
+                #    "Source document for reference not specified."
+                # )
             ref_doc = self.doc.get_ref_doc(
                 ref_docid,
                 preload_option=PreloadOption.none,
                 resolve_preamble_refs=resolve_preamble_refs,
+                path=path,
             )
 
         if not ref_doc.exists():
@@ -1138,7 +1206,13 @@ class DocParagraph:
 
         if self.is_par_reference():
             try:
-                par = ref_doc.get_paragraph(attrs["rp"])
+                task_id = attrs.get("rtask", None)
+                if task_id is not None:
+                    par = ref_doc.get_paragraph_by_task_id(task_id)
+                    if par is None:
+                        return []
+                else:
+                    par = ref_doc.get_paragraph(attrs["rp"])
                 par.prev_deref = self
             except TimDbException:
                 raise InvalidReferenceException(
@@ -1147,16 +1221,20 @@ class DocParagraph:
 
             if par.is_reference():
                 ref_pars = par.get_referenced_pars_impl(
-                    visited_pars=visited_pars, referrer=self
+                    visited_pars=visited_pars,
+                    referrer=self,
+                    path=path,
                 )
             else:
                 ref_pars = [par]
-        elif self.is_area_reference():
+        # elif self.is_area_reference():
+        else:
+            area_name = attrs.get("ra", "ALL")
             if self.is_translation():
                 raise InvalidReferenceException(
                     "A translated paragraph cannot be an area reference."
                 )
-            section_pars = ref_doc.get_named_section(attrs["ra"])
+            section_pars = ref_doc.get_named_section(area_name)
             ref_pars = []
             for p in section_pars:
                 p.prev_deref = self
@@ -1168,8 +1246,8 @@ class DocParagraph:
                     )
                 else:
                     ref_pars.append(p)
-        else:
-            assert False
+        # else:
+        #    assert False
 
         if referrer and blind_settings:
             # Prevent setting pars from leaking via references
@@ -1423,7 +1501,7 @@ def create_final_par(
 def get_heading_counts(ctx: DocParagraph):
     d = ctx.doc
     macro_cache_file = f"/tmp/tim_auto_macros_{d.doc_id}"
-    ps = commonmark.Parser()
+    # ps = commonmark.Parser()
     with shelve.open(macro_cache_file) as cache:
         vals = cache.get(str((ctx.get_id(), d.get_version())), {}).get("h")
         return vals

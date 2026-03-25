@@ -109,6 +109,8 @@ class PointSumRule:
             self.count_type, self.count_amount = "worst", pr.count.worst
 
         self.scoreboard = pr.scoreboard
+        self.hide_total_points = data.get("hide_total_points", False)
+        self.hide_total_tasks = data.get("hide_total_tasks", False)
         self.include_groupless = pr.include_groupless
         self.point_count_method = pr.point_count_method
         self.total = data.get("total", None)

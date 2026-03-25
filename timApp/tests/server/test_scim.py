@@ -717,10 +717,13 @@ class ScimTest(TimRouteTest):
         )
 
     def test_duplicate_usernames(self):
+        """
+        Test that duplicate usernames are allowed, the first one is picked
+        """
         self.json_post(
             "/scim/Groups",
             json_data={
-                "externalId": "jy-CUR-1235-teachers",
+                "externalId": "jy-CUR-1239-teachers",
                 "displayName": "ITKP104 2019-09-09--2019-12-20: Luento 1: Opettajat",
                 "members": add_name_parts(
                     [
@@ -738,7 +741,7 @@ class ScimTest(TimRouteTest):
                 ),
             },
             auth=a,
-            **scim_error("The users do not have distinct usernames."),
+            expect_status=201,
         )
 
     def test_inconsistent_name(self):
@@ -771,9 +774,9 @@ class ScimTest(TimRouteTest):
                 "displayName": "ITKP105 2019-09-09--2019-12-20: Luento 1: Opettajat",
                 "members": [
                     {
-                        "value": "aaa",
+                        "value": "aaa2",
                         "display": "John Doe",
-                        "email": "aaa2@example.com",
+                        "email": "aaa@example.com",
                         "name": {
                             "givenName": "John",
                             "middleName": None,

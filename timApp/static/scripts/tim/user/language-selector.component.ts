@@ -14,6 +14,8 @@ const webBrowser = "UseWebBrowser";
             >
                 <option [ngValue]="webBrowser" i18n>Use web browser preference</option>
                 <option [ngValue]="'en-US'">English</option>
+                <option [ngValue]="'es'">Español</option>
+                <option [ngValue]="'it'">Italiano</option>
                 <option [ngValue]="'fi'">Suomi</option>
                 <option [ngValue]="'sv'">Svenska</option>
             </select>

@@ -497,6 +497,9 @@ div.error {
     &.private {
         border-color: $note-private-color;
     }
+    &.access-teachers {
+        border-color: $note-teachers-color;
+    }
 }
 
 .notes, .speaker {
@@ -736,6 +739,11 @@ a.timButton {
     [data-area]::after {
         content: "End area: " attr(data-area);
         color: gray;
+    }
+
+    [data-area]:has(> div#MISSING_END:last-child)::after {
+      content: "End area: " attr(data-area) " — missing end";
+      color: red;
     }
 
     .areaContent {
@@ -1650,3 +1658,27 @@ tim-rights-editor {
     vertical-align: middle !important;
 }
 
+.doc-error {
+    background: #{$warning-bg-color};
+    padding: 1em;
+}
+
+.preview-warnings {
+    background: #{$warning-bg-color};
+    padding-left: 0.5em;
+}
+
+.preview-warnings ul {
+    margin-bottom: 0;
+}
+
+.audio.smallVideoRunDiv.lazy, .audio.listVideoRunDiv.lazy {
+    margin-top: 0.7em;
+    margin-bottom: 0.7em;
+    padding-left: 0.3em;
+}
+
+.audio .stem {
+    /* white-space: nowrap; */
+    margin-left: 0;
+}

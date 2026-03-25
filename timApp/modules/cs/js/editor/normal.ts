@@ -35,7 +35,10 @@ import {CURSOR} from "./editor";
                   [(ngModel)]="content"
                   [placeholder]="placeholder"
                   [disabled]="disabled"
-                  [attr.spellcheck]="spellcheck">
+                  [attr.spellcheck]="spellcheck"
+                  [attr.autocomplete]="spellcheck === false ? 'off' : null"
+                  [attr.autocorrect]="spellcheck === false ? 'off' : null"
+                  [attr.autocapitalize]="spellcheck === false ? 'off' : null">
         </textarea>`,
 })
 export class NormalEditorComponent implements IEditor {
@@ -46,11 +49,38 @@ export class NormalEditorComponent implements IEditor {
     @Input() placeholder: string = "";
     @Input() disabled: boolean = false;
     @Input() spellcheck?: boolean;
+
+    allowContextMenuField?: boolean;
+
+    @Input() set allowContextMenu(value: boolean | undefined) {
+        if (this.allowContextMenuField === value) {
+            return;
+        }
+        this.allowContextMenuField = value;
+        if (value !== undefined) {
+            if (value) {
+                this.area.nativeElement.removeEventListener(
+                    "contextmenu",
+                    this.preventContextMenu
+                );
+            } else {
+                this.area.nativeElement.addEventListener(
+                    "contextmenu",
+                    this.preventContextMenu
+                );
+            }
+        }
+    }
+
     @ViewChild("area") private area!: ElementRef<HTMLTextAreaElement>;
     private editorreadonly: boolean = false;
     formulaFunction?: () => void;
 
     constructor(private cdr: ChangeDetectorRef) {}
+
+    private preventContextMenu(event: MouseEvent) {
+        event.preventDefault();
+    }
 
     focus() {
         const element = this.area.nativeElement;

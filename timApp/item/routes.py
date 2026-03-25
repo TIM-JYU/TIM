@@ -1,4 +1,5 @@
 """Routes for document view."""
+
 import dataclasses
 import html
 import logging
@@ -153,6 +154,7 @@ from timApp.util.flask.responsehelper import (
     get_grid_modules,
 )
 from timApp.util.flask.typedblueprint import TypedBlueprint
+from timApp.util.locale import KNOWN_LANGUAGES, update_locale_lang, get_locale
 from timApp.util.timtiming import taketime
 from timApp.util.utils import get_error_message, cache_folder_path
 from timApp.util.utils import remove_path_special_chars, seq_to_str
@@ -564,7 +566,7 @@ def view(item_path: str, route: ViewRoute, render_doc: bool = True) -> FlaskView
             defaultload(DocEntry._block)
             .defaultload(Block.accesses)
             .joinedload(BlockAccess.usergroup),
-            joinedload(DocEntry.trs)
+            joinedload(DocEntry.trs),
             # TODO: These selectinloads are for some reason very inefficient at least for certain documents.
             #  See https://github.com/TIM-JYU/TIM/issues/2201. Needs more investigation.
             # .selectinload(Translation.docentry),
@@ -576,6 +578,9 @@ def view(item_path: str, route: ViewRoute, render_doc: bool = True) -> FlaskView
 
     if m.hide_names is not None:
         session["hide_names"] = m.hide_names
+
+    if app.config["USE_UI_LANGUAGE_FROM_DOCUMENT_LANGUAGE"]:
+        update_lang_override_from_doc(doc_info)
 
     access = verify_route_access(doc_info, route, require=False)
     if not access:
@@ -655,8 +660,21 @@ def view(item_path: str, route: ViewRoute, render_doc: bool = True) -> FlaskView
     )
     r = make_response(final_html)
     add_no_cache_headers(r)
+
+    if app.config["USE_UI_LANGUAGE_FROM_DOCUMENT_LANGUAGE"]:
+        update_lang_override_from_doc(doc_info)
+        update_locale_lang(r)
+
     # db.session.commit()
     return r
+
+
+def update_lang_override_from_doc(doc_info: DocInfo):
+    if doc_info.lang_id and doc_info.lang_id in KNOWN_LANGUAGES:
+        set_document_lang_override(doc_info.lang_id)
+    else:
+        # Reset the lang to the default for the current request
+        set_document_lang_override(get_locale(force_refresh=True))
 
 
 def preload_personal_folder_and_breadcrumbs(current_user: User, doc_info: DocInfo):
@@ -783,6 +801,8 @@ def render_doc_view(
     task_groups = None
     show_task_info = False
     breaklines = False
+    hide_total_points = False
+    hide_total_tasks = False
     user_list = []
     teacher_or_see_answers = view_ctx.route.teacher_or_see_answers
     task_ids, plugin_count, no_accesses = find_task_ids(
@@ -820,6 +840,7 @@ def render_doc_view(
         if show_valid_only
         else AnswerCountRule.ValidThenInvalid
     )
+    url_groups = usergroups
     if teacher_or_see_answers:
         user_list = None
         ugs = None
@@ -850,7 +871,8 @@ def render_doc_view(
                     if not verify_group_view_access(
                         ug, require=False, user=current_user
                     ):
-                        flash(f"You don't have access to group '{ug.name}'.")
+                        if not (url_groups and ug.is_personal_group):
+                            flash(f"You don't have access to group '{ug.name}'.")
                         ugs_without_access.append(ug)
             # We allow empty `groups` option to hide all answers by default.
             # In that case, users can use the `groups` URL parameter to show answers.
@@ -880,6 +902,8 @@ def render_doc_view(
             if points_sum_rule:
                 breaklines = points_sum_rule.breaklines
                 show_task_info = show_task_info or points_sum_rule.force
+                hide_total_points = points_sum_rule.hide_total_points
+                hide_total_tasks = points_sum_rule.hide_total_tasks
 
     no_question_auto_numbering = None
 
@@ -1024,7 +1048,12 @@ def render_doc_view(
         )
 
     if index is None:
-        index = get_index_from_html_list(t.output for t in post_process_result.texts)
+        index = get_index_from_html_list(
+            t.output
+            for t in post_process_result.texts
+            # All noindex starting elements are ignored in the index
+            if " noindex" not in " " + t.html_class
+        )
         doc_hash = get_doc_version_hash(doc_info)
         save_index(index, index_cache_folder / f"{doc_hash}.json")
 
@@ -1164,6 +1193,8 @@ def render_doc_view(
             "show": show_task_info,
             "groups": task_groups,
             "breaklines": breaklines,
+            "hide_total_points": hide_total_points,
+            "hide_total_tasks": hide_total_tasks,
         },
         peer_review_start=peer_review_start,
         peer_review_stop=peer_review_stop,

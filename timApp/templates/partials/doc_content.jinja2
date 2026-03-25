@@ -16,13 +16,15 @@
     {% if task_info and task_info.show %}
     <div class="taskSummary">
                 <span>
-                <strong>Task Summary</strong>
-                Total points: {{ task_info.total_points }}&nbsp;
+                <strong>{{ gettext("Task Summary") }}</strong>
+                    {% if not task_info.hide_total_points -%}
+                    {{ gettext("Total points") }}: {{ task_info.total_points }}&nbsp;
+                    {%- endif -%}
                     {%- if task_info.groups %}
                     {%- if task_info.breaklines %}
                             <br>
                     {%- for k, v in task_info.groups.items() -%}
-                    {{ v.text }}{%- if v.link %} <a href="{{ v.link}}">{{ v.linktext }}</a>{%- endif -%}<br>
+                    {{ v.text|safe}}{%- if v.link %} <a href="{{ v.link}}">{{ v.linktext }}</a>{%- endif -%}<br>
                     {%- endfor -%}
                     {%- else -%}
                             ({%- for k, v in task_info.groups.items() -%}
@@ -30,9 +32,11 @@
                     {%- endfor -%}),&nbsp;
                     {%- endif -%}
                     {%- endif -%}
-                total tasks: {{ task_info.tasks_done }}&nbsp;/&nbsp;{{ task_info.total_tasks }}
+                    {%- if not task_info.hide_total_tasks  -%}
+                    {{ gettext("total tasks") }}: {{ task_info.tasks_done }}&nbsp;/&nbsp;{{ task_info.total_tasks }}
+                    {% endif -%}
                 </span>
-        <span style="font-size: x-small;" ng-click="reload()">Refresh (F5) to recount</span>
+        <span class="refresh-notice" style="font-size: x-small;" ng-click="reload()">{{ gettext("Refresh (F5) to recount") }}</span>
     </div>
     <div class="taskSmallSummary"><p>{{ task_info.total_points }} p</p></div>
     {% endif %}

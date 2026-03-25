@@ -1,6 +1,7 @@
 """
 TIM example plugin: a tableFormndrome checker.
 """
+
 import datetime
 import io
 import json
@@ -12,8 +13,8 @@ from zipfile import ZipFile, ZIP_DEFLATED
 from flask import render_template_string, Response, send_file
 from flask_babel import gettext
 from marshmallow.utils import missing
-from openpyxl import Workbook
-from openpyxl.writer.excel import ExcelWriter
+from openpyxl import Workbook  # type: ignore[import-untyped]
+from openpyxl.writer.excel import ExcelWriter  # type: ignore[import-untyped]
 from sqlalchemy import select
 from sqlalchemy.orm import selectinload
 from webargs.flaskparser import use_args
@@ -152,6 +153,7 @@ class TableFormMarkupModel(GenericMarkupModel):
     maxWidth: str | Missing = missing
     minWidth: str | Missing | None = missing
     nrColumn: bool | Missing | None = missing
+    sequentialNr: bool | Missing | None = missing
     charRow: bool | Missing | None = missing
     open: bool | Missing = True
     openButtonText: str | Missing | None = missing
@@ -168,6 +170,7 @@ class TableFormMarkupModel(GenericMarkupModel):
     showToolbar: bool | Missing | None = missing
     tinyFilters: bool | Missing | None = missing
     singleLine: bool | Missing | None = missing
+    forceToolbar: bool | Missing | None = missing
     sisugroups: str | Missing = missing
     sortBy: str | Missing | None = missing
     table: bool | Missing = missing
@@ -182,6 +185,10 @@ class TableFormMarkupModel(GenericMarkupModel):
     createMissingUsers: bool | Missing = False
     emailCols: list[str | int] | Missing | None = missing
     useFirstEmail: bool | Missing | None = missing
+    usernameColumn: str | Missing | None = missing
+    emailColumn: str | Missing | None = missing
+    realnameColumn: str | Missing | None = missing
+    addUsersDialog: str | Missing | None = missing
 
 
 TableFormMarkupSchema = class_schema(TableFormMarkupModel)
@@ -243,9 +250,11 @@ def get_sisugroups(user: User, sisu_id: str | None) -> "TableFormObj":
         rows={
             get_ext_id(g).external_id: {
                 "TIM-nimi": g.name,
-                "URL": f'<a href="{g.admin_doc.docentries[0].url_relative}">URL</a>'
-                if g.admin_doc
-                else None,
+                "URL": (
+                    f'<a href="{g.admin_doc.docentries[0].url_relative}">URL</a>'
+                    if g.admin_doc
+                    else None
+                ),
                 "Jäseniä": len(g.current_memberships),
                 "Kurssisivu": get_course_page(g),
             }
@@ -253,9 +262,9 @@ def get_sisugroups(user: User, sisu_id: str | None) -> "TableFormObj":
         },
         users={
             get_ext_id(g).external_id: TableFormUserInfo(
-                real_name=get_sisu_group_desc_for_table(g)
-                if sisu_id
-                else get_display_name(g),
+                real_name=(
+                    get_sisu_group_desc_for_table(g) if sisu_id else get_display_name(g)
+                ),
                 # The rows are not supposed to match any real user when handling sisu groups,
                 # so we try to use an id value that does not match anyone.
                 id=-100000,
@@ -404,6 +413,7 @@ addedDates: false # Show the date the user was added
 #buttonText: Tallenna    # Name your save button here
 cbColumn: true    # show checkboxes
 nrColumn: true    # show numbers
+sequentialNr: true # show numbers sequentially even if some rows are hidden
 # maxRows: 40em   # Hiw long is the table
 # maxCols: fit-content # width of the table
 # maxWidth: 30em  # max for column
@@ -537,7 +547,7 @@ def gen_spreadsheet_impl(args: GenerateSpreadSheetModel) -> Response | str:
     )
     data: list[list[str | float | None]] = [[]]
     if show_real_names:
-        data[0].append(gettext("Real name"))
+        data[0].append(gettext("Full name"))
     if show_user_names:
         data[0].append(gettext("Username"))
     if show_emails:

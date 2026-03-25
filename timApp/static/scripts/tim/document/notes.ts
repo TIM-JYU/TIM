@@ -41,7 +41,7 @@ export interface INote {
     content: string;
     created: Moment;
     modified?: Moment;
-    access: "everyone" | "justme";
+    access: "everyone" | "justme" | "teachers";
     html: string;
     tags: string[];
     usergroup: IGroup;
@@ -49,6 +49,9 @@ export interface INote {
 
 const NOTES_AUTHOR_SELF = "Just me";
 const NOTES_AUTHOR_SELF_TITLE = "No one can answer to this note!";
+
+const NOTES_TEACHERS = "Teachers";
+const NOTES_TEACHERS_TITLE = "Only note writer and teachers can see the note!";
 
 export class NotesHandler {
     private hideVars: IVisibilityVars = getVisibilityVars();
@@ -98,6 +101,8 @@ export class NotesHandler {
         let initialText = "";
         let justMeLabel = NOTES_AUTHOR_SELF;
         let justMeTitle = NOTES_AUTHOR_SELF_TITLE;
+        const justTeacherLabel = NOTES_TEACHERS;
+        const justTeacherTitle = NOTES_TEACHERS_TITLE;
         if (!options.noteData) {
             caption = "Add comment";
             url = "/postNote";
@@ -176,6 +181,11 @@ export class NotesHandler {
                                 desc: justMeLabel,
                                 value: "justme",
                                 title: justMeTitle,
+                            },
+                            {
+                                desc: justTeacherLabel,
+                                value: "teachers",
+                                title: justTeacherTitle,
                             },
                         ],
                     },

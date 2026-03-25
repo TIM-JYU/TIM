@@ -29,6 +29,7 @@ import type {IFile} from "../util/file-select";
 import {getInt} from "../util/util";
 import {ICsParsonsOptions} from "../cs-parsons/csparsons";
 import {NormalEditorComponent} from "./normal";
+import type {IAceEditorOptions} from "./ace";
 import {AceEditorComponent} from "./ace";
 import {ParsonsEditorComponent} from "./parsons";
 
@@ -199,7 +200,8 @@ export class JSParsonsEditorComponent implements IEditor {
                                   [maxRows]="maxRows_"
                                   [placeholder]="file && file.placeholder ? file.placeholder : ''"
                                   [disabled]="isDisabled"
-                                  [spellcheck]="spellcheck">
+                                  [spellcheck]="spellcheck"
+                                  [allowContextMenu]="allowContextMenu">
                 </cs-normal-editor>
                 <cs-parsons-editor *ngIf="mode == Mode.Parsons"
                                    [base]="base"
@@ -213,7 +215,8 @@ export class JSParsonsEditorComponent implements IEditor {
                                [minRows]="minRows_"
                                [maxRows]="maxRows_"
                                [placeholder]="file && file.placeholder ? file.placeholder : ''"
-                               [disabled]="isDisabled">
+                               [disabled]="isDisabled"
+                               [aceOptions]="aceOptions">
                 </cs-ace-editor>
             </ng-container>
             <div *ngIf="addTabActive" class="add-view">
@@ -245,6 +248,10 @@ export class EditorComponent implements IMultiEditor {
 
     @Input() disabled: boolean = false;
     @Input() spellcheck?: boolean;
+    // FIXME: Pass this to ACE editor too
+    @Input() allowContextMenu?: boolean;
+
+    @Input() aceOptions?: IAceEditorOptions | null | undefined;
 
     allowedPaths?: string[]; // undefined for all allowed
     maxFiles: number = 1;

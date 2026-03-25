@@ -156,6 +156,10 @@ export interface DataModelProvider {
 
     isNrColumn(def: boolean): boolean;
 
+    isNrColumn(def: boolean): boolean;
+
+    isSequentialNr(): boolean;
+
     isCbColumn(def: boolean): boolean;
 
     isLastVisible(tx: number, ty: number, d: CellIndex): boolean;
@@ -554,6 +558,9 @@ export class DataViewComponent implements AfterViewInit, OnInit {
                 }
             }
             this.updateHeaderCellSizes();
+            if (this.modelProvider.isSequentialNr() && this.nrColumn) {
+                this.updateChildrenRowNumbers();
+            }
         }
         this.updateTableSummary();
     }
@@ -594,6 +601,8 @@ export class DataViewComponent implements AfterViewInit, OnInit {
         if (!this.shouldRenderTable) {
             return;
         }
+        const isSequential =
+            this.modelProvider.isSequentialNr() && this.nrColumn;
         this.rowAxis.itemOrder = order;
         this.rowAxis.refresh();
 
@@ -603,7 +612,7 @@ export class DataViewComponent implements AfterViewInit, OnInit {
             });
             return;
         }
-
+        let nr = 1;
         for (const rowIndex of order) {
             const tableRow = this.dataTableCache.getRow(rowIndex);
             this.mainDataBody.nativeElement.appendChild(tableRow);
@@ -614,6 +623,10 @@ export class DataViewComponent implements AfterViewInit, OnInit {
 
             if (this.idTableCache && this.idBody) {
                 const rowHeader = this.idTableCache.getRow(rowIndex);
+                if (isSequential && !rowHeader.hidden) {
+                    const cell = rowHeader.cells[0];
+                    cell.innerText = String(nr++);
+                }
                 this.idBody.nativeElement.appendChild(rowHeader);
             }
         }
@@ -640,6 +653,17 @@ export class DataViewComponent implements AfterViewInit, OnInit {
 
         updateSymbol(this.headerIdTableCache, this.colAxis);
         updateSymbol(this.fixedColHeaderIdTableCache, this.fixedColAxis);
+    }
+
+    updateChildrenRowNumbers() {
+        let nr = 1;
+        for (const elem of this.idBody.nativeElement.children) {
+            const rowHeader = elem as HTMLTableRowElement;
+            if (!rowHeader.hidden) {
+                const cell = rowHeader.cells[0];
+                cell.innerText = String(nr++);
+            }
+        }
     }
 
     /**
@@ -1391,6 +1415,7 @@ export class DataViewComponent implements AfterViewInit, OnInit {
         // Do not get "global" values, because they may change during yields
         // const {vertical, horizontal} = this.viewport;
         // console.log(vertical, horizontal);
+        const isSequential = this.modelProvider.isSequentialNr();
         this.dataTableCache.setSize(
             this.viewport.vertical.count,
             this.viewport.horizontal.count
@@ -1476,7 +1501,13 @@ export class DataViewComponent implements AfterViewInit, OnInit {
                 );
                 if (this.nrColumn) {
                     const idCell = this.idTableCache.getCell(rowNumber, 0);
-                    idCell.textContent = `${rowIndex + this.columnIdStart}`;
+                    if (isSequential) {
+                        idCell.textContent = `${
+                            vertical.startOrdinal + rowNumber + 1
+                        }`;
+                    } else {
+                        idCell.textContent = `${rowIndex + this.columnIdStart}`;
+                    }
                 }
                 if (this.cbColumn) {
                     const input = this.idTableCache

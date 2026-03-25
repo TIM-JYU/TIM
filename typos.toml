@@ -25,6 +25,10 @@ extend-exclude = [
     "timApp/migrations/versions/*.py",
 ]
 
+[type.po]
+extend-glob = ["*.po"]
+check-file = false
+
 [default.extend-identifiers]
 # False positives/otherwise not worth fixing:
 ba = "ba"

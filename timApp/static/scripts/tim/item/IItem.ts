@@ -14,6 +14,7 @@ export interface IDocument extends IItem {
 
 export interface IFullDocument extends IDocument {
     fulltext: string;
+    errors?: string;
     versions: Array<IChangelogEntry>;
 }
 
@@ -155,6 +156,7 @@ export function redirectToItem(data: IItem) {
 
 export interface ITranslation extends IDocument {
     lang_id: string;
+    lang_name: string | null;
 }
 
 export interface IEditableTranslation extends ITranslation {

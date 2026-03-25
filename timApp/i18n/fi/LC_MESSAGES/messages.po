@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2025-03-25 16:47+0000\n"
-"PO-Revision-Date: 2025-03-26 09:07+0200\n"
+"POT-Creation-Date: 2026-03-16 12:35+0000\n"
+"PO-Revision-Date: 2026-03-16 14:41+0200\n"
 "Last-Translator: \n"
 "Language-Team: fi <LL@li.org>\n"
 "Language: fi\n"
@@ -17,13 +17,13 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 "Generated-By: Babel 2.16.0\n"
-"X-Generator: Poedit 3.5\n"
+"X-Generator: Poedit 3.8\n"
 
-#: answer/routes.py:798
+#: answer/routes.py:803
 msgid "You cannot submit new answers to the document."
 msgstr "Et voi lähettää uusia vastauksia tähän dokumenttiin."
 
-#: answer/routes.py:1161
+#: answer/routes.py:1167
 msgid ""
 "Your view access to this document has expired, so this answer was saved but "
 "marked as invalid."
@@ -35,7 +35,7 @@ msgstr ""
 msgid "Sorry, you don't have permission to use this resource."
 msgstr "Pahoittelut, sinulla ei ole tarvittavia oikeuksia tähän kohteeseen."
 
-#: plugin/examGroupManager/examGroupManager.py:703
+#: plugin/examGroupManager/examGroupManager.py:722
 #, python-format
 msgid ""
 "Invalid student row: %(data)s. Expected format: <grade> <surname> <given_names>"
@@ -43,15 +43,15 @@ msgstr ""
 "Vääränmuotoinen oppilasrivi: %(data)s. Odotettu muoto: <luokka> <sukunimi> "
 "<etunimet>"
 
-#: plugin/examGroupManager/examGroupManager.py:783
+#: plugin/examGroupManager/examGroupManager.py:828
 msgid "Practice exam not set in the plugin markup."
 msgstr "Harjoituskoe ei ole asetettu pluginin asetuksissa."
 
-#: plugin/examGroupManager/examGroupManager.py:786
+#: plugin/examGroupManager/examGroupManager.py:831
 msgid "Exam info not found in the plugin markup."
 msgstr "Harjoituskoe ei ole asetettu pluginin asetuksissa."
 
-#: plugin/examGroupManager/examGroupManager.py:856
+#: plugin/examGroupManager/examGroupManager.py:902
 msgid ""
 "No login codes found for the group. Generate login codes before starting the "
 "exam."
@@ -59,17 +59,17 @@ msgstr ""
 "Kirjautumiskoodeja ei löydetty koeryhmälle. Luo uudet kirjautumiskoodit ennen "
 "kuin aloitat kokeen."
 
-#: plugin/examGroupManager/examGroupManager.py:898
+#: plugin/examGroupManager/examGroupManager.py:949
 msgid "The group is currently not in an exam. Please set the exam document first."
 msgstr ""
 "Koeryhmällä ei ole tällä hetkellä koedokumenttia. Aseta ryhmälle sopiva "
 "koedokumentti."
 
-#: plugin/examGroupManager/examGroupManager.py:907
+#: plugin/examGroupManager/examGroupManager.py:958
 msgid "You do not have access to the exam document."
 msgstr "Sinulla ei ole pääsyä koedokumenttiin."
 
-#: plugin/examGroupManager/examGroupManager.py:1059
+#: plugin/examGroupManager/examGroupManager.py:1157
 msgid ""
 "Cannot change exam state while the answers are revealed. Disable answer reveal "
 "in section 4."
@@ -77,11 +77,11 @@ msgstr ""
 "Kokeen tilaa ei voi muuttaa, kun vastauksia näytetään. Lopeta vastausten "
 "näyttäminen osiossa 4."
 
-#: plugin/examGroupManager/examGroupManager.py:1083
+#: plugin/examGroupManager/examGroupManager.py:1181
 msgid "You do not have sufficient access to the exam document to set it."
 msgstr "Sinulla ei ole tarpeeksi korkeaa oikeutta koedokumenttiin."
 
-#: plugin/examGroupManager/examGroupManager.py:1141
+#: plugin/examGroupManager/examGroupManager.py:1239
 msgid ""
 "Cannot reveal answers while the exam is ongoing. Stop the exam and disable the "
 "login codes in the section 3."
@@ -89,19 +89,19 @@ msgstr ""
 "Vastauksia ei voi näyttää, kun koe on menossa. Lopeta koe ja ota "
 "kirjautumiskoodit pois käytöstä osiossa 3."
 
-#: plugin/quantum_circuit/quantumCircuit.py:268
+#: plugin/quantum_circuit/quantumCircuit.py:271
 msgid "Expand by moving mouse over the exercise or by clicking"
 msgstr "Laajenna viemällä hiiri tehtävän päälle tai klikkaamalla"
 
-#: plugin/tableform/tableForm.py:520
-msgid "Real name"
+#: plugin/tableform/tableForm.py:550
+msgid "Full name"
 msgstr "Koko nimi"
 
-#: plugin/tableform/tableForm.py:522
+#: plugin/tableform/tableForm.py:552
 msgid "Username"
 msgstr "Käyttäjätunnus"
 
-#: plugin/tableform/tableForm.py:524
+#: plugin/tableform/tableForm.py:554
 msgid "Email"
 msgstr "Sähköpostiosoite"
 
@@ -132,3 +132,19 @@ msgstr "Kokeen osoite"
 #: templates/examgroupmanager/print_codes.jinja2:82
 msgid "Login code"
 msgstr "Kirjautumiskoodi"
+
+#: templates/partials/doc_content.jinja2:19
+msgid "Task Summary"
+msgstr "Tehtävien tulokset"
+
+#: templates/partials/doc_content.jinja2:21
+msgid "Total points"
+msgstr "Kokonaispisteet"
+
+#: templates/partials/doc_content.jinja2:36
+msgid "total tasks"
+msgstr "tehtyjä tehtäviä"
+
+#: templates/partials/doc_content.jinja2:39
+msgid "Refresh (F5) to recount"
+msgstr "Virkistä laskenta painamalla F5-näppäintä"

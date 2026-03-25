@@ -1,7 +1,7 @@
 """Routes for editing a document."""
-import re
+
 import os
-import secrets
+import re
 import tempfile
 import zipfile
 from dataclasses import field
@@ -9,10 +9,9 @@ from dataclasses import field
 from flask import Blueprint, render_template
 from flask import current_app
 from flask import request
-from sqlalchemy import select
+from pypandoc import convert_file
 
 from timApp.admin.associate_old_uploads import upload_regexes
-from timApp.answer.answer import Answer
 from timApp.auth.accesshelper import (
     verify_edit_access,
     verify_view_access,
@@ -23,7 +22,6 @@ from timApp.auth.accesshelper import (
     verify_seeanswers_access,
     has_edit_access,
     verify_route_access,
-    AccessDenied,
     verify_logged_in,
 )
 from timApp.auth.get_user_rights_for_item import get_user_rights_for_item
@@ -38,7 +36,6 @@ from timApp.document.docentry import DocEntry, create_document_and_block
 from timApp.document.docinfo import DocInfo
 from timApp.document.docparagraph import DocParagraph
 from timApp.document.docsettings import DocSettings
-from timApp.document.document import Document, get_duplicate_id_msg
 from timApp.document.editing.documenteditresult import DocumentEditResult
 from timApp.document.editing.editrequest import get_pars_from_editor_text, EditRequest
 from timApp.document.editing.globalparid import GlobalParId
@@ -48,10 +45,17 @@ from timApp.document.hide_names import is_hide_names
 from timApp.document.post_process import post_process_pars, should_hide_readmarks
 from timApp.document.preloadoption import PreloadOption
 from timApp.document.prepared_par import PreparedPar
+from timApp.document.renameids import (
+    check_and_rename_pluginnamehere,
+    check_duplicates,
+    abort_if_duplicate_ids,
+    check_and_rename_new_name,
+)
 from timApp.document.translation.synchronize_translations import (
     synchronize_translations,
 )
 from timApp.document.translation.translation import Translation
+from timApp.document.validationresult import DoValidation, list_to_html
 from timApp.document.version import Version
 from timApp.document.viewcontext import ViewRoute, ViewContext, default_view_ctx
 from timApp.document.yamlblock import YamlBlock
@@ -68,7 +72,13 @@ from timApp.readmark.readings import mark_read
 
 # from timApp.timdb.dbaccess import get_timdb
 from timApp.timdb.exceptions import TimDbException
-from timApp.timdb.sqa import db, run_sql
+from timApp.timdb.sqa import db
+from timApp.upload.upload import save_file_and_grant_access
+from timApp.upload.uploadedfile import (
+    is_script_safe_mimetype,
+    ALLOWED_DOC_IMPORT_EXT_MIMETYPES,
+    UploadedFile,
+)
 from timApp.util.flask.requesthelper import (
     verify_json_params,
     use_model,
@@ -76,18 +86,14 @@ from timApp.util.flask.requesthelper import (
     NotExist,
 )
 from timApp.util.flask.responsehelper import json_response, ok_response, Response
-from timApp.util.utils import get_error_html
-from tim_common.marshmallow_dataclass import dataclass
-
-from timApp.upload.upload import ALLOWED_PANDOC_EXTENSIONS, save_file_and_grant_access
-from timApp.upload.uploadedfile import (
-    is_script_safe_mimetype,
-    ALLOWED_DOC_IMPORT_EXT_MIMETYPES,
-    UploadedFile,
+from timApp.util.utils import (
+    get_error_html,
+    strip_not_allowed,
+    get_g_errors,
+    clear_g_errors,
 )
-from pypandoc import convert_file
 from timApp.util.utils import temp_folder_path
-
+from tim_common.marshmallow_dataclass import dataclass
 
 edit_page = Blueprint("edit_page", __name__, url_prefix="")  # TODO: Better URL prefix.
 
@@ -142,6 +148,7 @@ def update_document(doc_id):
 
         _, _, edit_result = doc.update(content, original, strict_validation)
         check_and_rename_pluginnamehere(editor_pars, doc)
+        """
         old_pars = doc.get_paragraphs()
         for op, ep in zip(old_pars, editor_pars):
             if ep.get_attr("taskId") and op.get_attr("taskId"):
@@ -152,6 +159,7 @@ def update_document(doc_id):
                         new_attrs=ep.get_attrs(),
                     )
                     edit_result.changed.append(p)
+        """
         if not edit_result.empty:
             docentry.update_last_modified()
             db.session.commit()
@@ -246,9 +254,11 @@ def rename_task_ids():
     old_pars = doc.get_paragraphs()
 
     # Get paragraphs with taskIds
-    for paragraph in old_pars:
-        if not paragraph.is_task():
-            old_pars.remove(paragraph)
+    old_pars = [p for p in old_pars if p.get_attr("taskId")]
+    # TODO: next would be wrong
+    # for paragraph in old_pars:
+    #    if not paragraph.is_task():
+    #        old_pars.remove(paragraph)
     i = 0
     while len(duplicates) > i:
         duplicate = duplicates[i]
@@ -357,11 +367,13 @@ def modify_paragraph_common(doc_id: int, md: str, par_id: str, par_next_id: str 
     area_end = edit_request.area_end
     editing_area = edit_request.editing_area
     try:
-        editor_pars = edit_request.get_pars(skip_access_check=True)
+        editor_pars = edit_request.get_pars(
+            skip_access_check=True, do_validation=DoValidation.RAISE_END_OF_BLOCK
+        )
     except ValidationException as e:
         raise RouteException(str(e))
 
-    editor_pars = check_and_rename_pluginnamehere(editor_pars, doc)
+    # editor_pars = check_and_rename_pluginnamehere(editor_pars, doc)
 
     if editing_area:
         try:
@@ -369,25 +381,37 @@ def modify_paragraph_common(doc_id: int, md: str, par_id: str, par_next_id: str 
             for p in curr_section:
                 verify_par_edit_access(p)
             new_start, new_end, edit_result = doc.update_section(
-                md, area_start, area_end
+                editor_pars, area_start, area_end, do_validation=DoValidation.NONE
             )
             pars = doc.get_section(new_start, new_end)
         except (ValidationException, TimDbException) as e:
             raise RouteException(str(e))
     else:
+        # TODO: if par_id found in some other editing_area do not add
+        if len(editor_pars) > 0:
+            editor_pars[0].set_id(par_id)
+
         try:
             original_par = doc.get_paragraph(par_id)
         except TimDbException as e:
             raise NotExist(str(e))
         edit_result = DocumentEditResult()
         pars = []
+        changes = abort_if_duplicate_ids(
+            doc,
+            editor_pars,
+            auto_rename_ids=True,
+            no_other_checks=False,
+            allow_id=par_id,
+        )
+        edit_result.warnings = list_to_html(changes)
         pars_to_add = editor_pars[1:]
-        abort_if_duplicate_ids(doc, pars_to_add)
 
         p = editor_pars[0]
         # The ID of the first paragraph needs to match the ID of the paragraph to modify
         # This is needed for any edit logic that requires the ID of the paragraph (e.g. heading numbering)
         p.set_id(par_id)
+
         tr_opt = edit_request.mark_translated
         if tr_opt is None:
             pass
@@ -459,12 +483,6 @@ def mark_translation_as_checked(p: DocParagraph) -> None:
     p.set_attr("mt", None)
 
 
-def abort_if_duplicate_ids(doc: Document, pars_to_add: list[DocParagraph]):
-    conflicting_ids = {p.get_id() for p in pars_to_add} & set(doc.get_par_ids())
-    if conflicting_ids:
-        raise RouteException(get_duplicate_id_msg(conflicting_ids))
-
-
 @edit_page.post("/preview/<int:doc_id>")
 def preview_paragraphs(doc_id):
     """Route for previewing paragraphs.
@@ -485,16 +503,20 @@ def preview_paragraphs(doc_id):
         doc = docinfo.document
         edit_request = EditRequest.from_request(doc, preview=True)
         try:
-            blocks = edit_request.get_pars()
+            blocks = edit_request.get_pars(do_validation=DoValidation.CHECK)
         except ValidationException as e:
             blocks = [DocParagraph.create(doc=doc, md="", html=get_error_html(e))]
             proofread = False
             edit_request = None
+        edit_result = DocumentEditResult(just_preview=True)
+        if doc.vr:
+            edit_result.warnings = doc.vr.get_as_html()
         return par_response(
             blocks,
             docinfo,
             proofread,
             edit_request=edit_request,
+            edit_result=edit_result,
             extra_doc_settings=extra_doc_settings,
         )
     else:
@@ -559,7 +581,7 @@ def par_response(
     if extra_doc_settings:
         settings = DocSettings(doc, settings.get_dict().merge_with(extra_doc_settings))
 
-    if edit_result:
+    if edit_result and not edit_result.just_preview:
         preview = False
     else:
         preview = bool(edit_request and edit_request.preview)
@@ -592,7 +614,7 @@ def par_response(
 
             # If the document was changed, there is no HTML cache for the new version, so we "cheat" by lying the
             # document version so that the preload_htmls call is still fast.
-            if edit_result:
+            if edit_result and not edit_result.just_preview:
                 for p in pars:
                     assert p.doc is doc
                 doc.version = edit_request.old_doc_version
@@ -620,6 +642,10 @@ def par_response(
                 ).save_bookmarks()
     else:
         duplicates = None
+        ge = get_g_errors()
+        if ge.startswith("Maybe duplicate"):
+            # In preview this is needed because duplicates is removed in save
+            clear_g_errors()
         if len(pars) == 1:
             p = pars[0]
             if p.is_translation():
@@ -657,7 +683,16 @@ def par_response(
             p.output = r.new_html
 
     final_texts = post_process_result.texts
-    r = json_response(
+    errors = get_g_errors()
+    warnings = ""
+    if edit_result and edit_result.warnings:
+        warnings = edit_result.warnings
+    if errors:
+        warnings += "<br>" + errors
+    if not warnings:
+        warnings = ""
+
+    r: Response = json_response(
         {
             "texts": render_template(
                 "partials/paragraphs.jinja2",
@@ -687,15 +722,19 @@ def par_response(
             },
             "version": new_doc_version,
             "duplicates": duplicates,
-            "original_par": {
-                "md": original_par.get_markdown(),
-                "attrs": original_par.get_attrs(),
-            }
-            if original_par
-            else None,
+            "original_par": (
+                {
+                    "md": original_par.get_markdown(),
+                    "attrs": original_par.get_attrs(),
+                }
+                if original_par
+                else None
+            ),
             "new_par_ids": edit_result.new_par_ids if edit_result else None,
+            "warnings": warnings,
         }
     )
+
     db.session.commit()
     return r
 
@@ -767,83 +806,6 @@ def get_next_available_task_id(attrs, old_pars, duplicates, par_id):
             else:
                 j += 1
         return task_id
-
-
-# Automatically rename plugins with name pluginnamehere
-def check_and_rename_pluginnamehere(blocks: list[DocParagraph], doc: Document):
-    # Get the paragraphs from the document with taskids
-    old_pars = None  # lazy load for old_pars
-    i = 1
-    j = 0
-    # For all blocks check if taskId is pluginnamehere, if it is find next available name.
-    for p in blocks:  # go through all new pars if they need to be renamed
-        if p.is_task():
-            task_id = p.get_attr("taskId")
-            if task_id == "PLUGINNAMEHERE":
-                if old_pars is None:  # now old_pars is needed, load them once
-                    pars = doc.get_paragraphs()
-                    old_pars = []
-                    for paragraph in pars:
-                        if not paragraph.is_task():
-                            old_pars.append(paragraph)
-
-                task_id = "Plugin" + str(i)
-                while j < len(old_pars):
-                    if task_id == old_pars[j].get_attr("taskId"):
-                        i += 1
-                        task_id = "Plugin" + str(i)
-                        j = 0
-                    else:
-                        j += 1
-                p.set_attr("taskId", task_id)
-                old_pars.append(p)
-                j = 0
-    return blocks
-
-
-# Check new paragraphs with plugins for duplicate task ids
-def check_duplicates(pars, doc):
-    duplicates = []
-    all_pars = None  # cache all_pars
-    for par in pars:
-        if par.is_task():
-            if all_pars is None:  # now we need the pars
-                doc.clear_mem_cache()
-                docpars = doc.get_paragraphs()
-                all_pars = []
-                for paragraph in docpars:
-                    if paragraph.is_task():
-                        all_pars.append(paragraph)
-
-            duplicate = []
-            task_id = par.get_attr("taskId")
-            par_id = par.get_id()
-            count_of_same_task_ids = 0
-            j = 0
-            while j < len(all_pars):
-                if (
-                    all_pars[j].get_id() != par_id
-                    and all_pars[j].get_attr("taskId") == task_id
-                ):  # count not self
-                    count_of_same_task_ids += 1
-                    if count_of_same_task_ids > 0:
-                        duplicate.append(task_id)
-                        duplicate.append(par.get_id())
-                        task_id_to_check = str(doc.doc_id) + "." + task_id
-                        if (
-                            run_sql(
-                                select(Answer)
-                                .filter_by(task_id=task_id_to_check)
-                                .limit(1)
-                            )
-                            .scalars()
-                            .first()
-                        ):
-                            duplicate.append("hasAnswers")
-                        duplicates.append(duplicate)
-                        break
-                j += 1
-    return duplicates
 
 
 def mark_pars_as_read_if_chosen(pars, doc):
@@ -920,13 +882,16 @@ def add_paragraph_common(md: str, doc_id: int, par_next_id: str | None):
     edit_result = DocumentEditResult()
     edit_request = EditRequest.from_request(doc, md)
     try:
-        editor_pars = edit_request.get_pars()
+        editor_pars = edit_request.get_pars(
+            do_validation=DoValidation.RAISE_END_OF_BLOCK
+        )
     except ValidationException as e:
         raise RouteException(str(e))
 
-    abort_if_duplicate_ids(doc, editor_pars)
+    changes = abort_if_duplicate_ids(doc, editor_pars, auto_rename_ids=True)
 
-    editor_pars = check_and_rename_pluginnamehere(editor_pars, doc)
+    # TODO: next should not be needed, because it is done already in previuos
+    # editor_pars = check_and_rename_pluginnamehere(editor_pars, doc)
 
     pars = []
     for p in editor_pars:
@@ -949,6 +914,7 @@ def add_paragraph_common(md: str, doc_id: int, par_next_id: str | None):
             par=pars[0],
             old_version=edit_request.old_doc_version,
         )
+    edit_result.warnings = list_to_html(changes)
     return par_response(
         pars,
         docinfo,
@@ -1040,10 +1006,13 @@ def name_area(doc_id, area_name):
 
     docentry = get_doc_or_abort(doc_id)
     verify_edit_access(docentry)
+    area_name = strip_not_allowed(area_name)
     if not area_name or " " in area_name or "´" in area_name:
         raise RouteException("Invalid area name")
 
     doc = docentry.document_as_current_user
+    area_name, changes = check_and_rename_new_name("area", area_name, doc)
+
     area_attrs = {"area": area_name}
     area_title = ""
     after_title = ""

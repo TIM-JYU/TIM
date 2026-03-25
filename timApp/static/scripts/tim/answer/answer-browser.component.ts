@@ -109,6 +109,7 @@ export interface ITaskInfo {
     showPoints: boolean;
     newtask?: boolean;
     buttonNewTask: string;
+    buttonNewTaskParent: string;
     modelAnswer?: IModelAnswerSettings;
     starttime?: string;
     deadline?: string;
@@ -302,8 +303,12 @@ export class AnswerBrowserComponent
     peerReviewEnabled = false;
     showNewTask = false;
     buttonNewTask = $localize`New task`;
+    buttonNewTaskParent = "";
     showRefresh = false;
     refreshing = false;
+
+    @ViewChild("buttonNewTaskStem", {read: ElementRef})
+    buttonNewTaskStem?: ElementRef<HTMLElement>;
 
     constructor(
         private element: ElementRef<HTMLElement>,
@@ -430,7 +435,7 @@ export class AnswerBrowserComponent
         this.shouldFocus = false;
         this.alerts = [];
         this.feedback = "";
-        this.showNewTask = this.isAndSetShowNewTask();
+        this.isAndSetShowNewTask();
 
         if (this.viewctrl?.docSettings.answerBrowser) {
             this.markupSettings = {
@@ -1706,7 +1711,7 @@ export class AnswerBrowserComponent
             return false;
         }
         const selidx = this.findSelectedAnswerIndexFromUnFiltered();
-        this.showNewTask = selidx >= 0;
+        this.setShowNewTask(selidx >= 0);
         return this.showNewTask;
     }
 
@@ -1911,10 +1916,36 @@ export class AnswerBrowserComponent
                 }
             }
         }
-        this.showNewTask = this.isAndSetShowNewTask();
+        this.isAndSetShowNewTask();
         if (this.taskInfo.buttonNewTask) {
             this.buttonNewTask = this.taskInfo.buttonNewTask;
         }
+    }
+
+    private setShowNewTask(show: boolean) {
+        this.showNewTask = show;
+        if (this.showNewTask) {
+            // } && !this.newTaskButtonMoved) {
+            this.moveNewTaskButton();
+        }
+    }
+
+    private moveNewTaskButton() {
+        if (!this.taskInfo?.buttonNewTaskParent || !this.buttonNewTaskStem) {
+            return;
+        }
+        const host = this.element.nativeElement;
+        const pluginRoot = host.closest(".csRunDiv, tim-plugin-loader, .par");
+        if (!pluginRoot) {
+            return;
+        }
+        const target = pluginRoot.querySelector(
+            this.taskInfo.buttonNewTaskParent
+        );
+        if (!target) {
+            return;
+        }
+        target.appendChild(this.buttonNewTaskStem.nativeElement);
     }
 
     async checkUsers(force?: boolean) {

@@ -272,13 +272,24 @@ def pluginupload_file(doc_id: int, task_id: str):
     file = request.files.get("file")
     if file is None:
         raise RouteException("Missing file")
+    force_upload_name = request.args.get("forceUploadName")
+    force_index = request.args.get("index")
     content = file.read()
     u = get_current_user_object()
+    filename = file.filename
+    if force_upload_name:
+        file_extension = Path(filename).suffix
+        filename = force_upload_name
+        if force_index and force_index != "0":
+            filename += f"_{force_index}"
+        filename += file_extension
+
     f = UploadedFile.save_new(
-        file.filename,
+        filename,
         BlockType.Upload,
         file_data=content,
         upload_info=PluginUploadInfo(task_id_name=task_id, user=u, doc=d),
+        forced_name=bool(force_upload_name),
     )
     f.block.set_owner(u.get_personal_group())
     grant_access_to_session_users(f)

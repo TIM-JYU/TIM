@@ -117,6 +117,7 @@ const TableFormMarkup = t.intersection([
 
         cbColumn: t.boolean,
         nrColumn: t.boolean,
+        sequentialNr: t.boolean,
         charRow: t.boolean,
         groups: t.array(t.string),
         report: nullable(t.boolean),
@@ -133,6 +134,7 @@ const TableFormMarkup = t.intersection([
         forceUpdateButtonText: nullable(t.string),
         fields: t.array(t.string),
         showToolbar: t.boolean,
+        forceToolbar: t.boolean,
         tinyFilters: t.boolean,
         hide: t.partial({
             removeMenu: t.boolean,
@@ -146,6 +148,10 @@ const TableFormMarkup = t.intersection([
         addUsersButton: nullable(t.string),
         notifyOnAdd: t.boolean,
         createMissingUsers: t.boolean,
+        usernameColumn: nullable(t.string),
+        emailColumn: nullable(t.string),
+        realnameColumn: nullable(t.string),
+        addUsersDialog: nullable(t.string),
     }),
     GenericPluginMarkup,
     t.type({
@@ -312,6 +318,9 @@ const sortLang = "fi";
                                   (change)="listUsernames()">;</label>&nbsp;
                     <label><input type="radio" name="listsep" [(ngModel)]="listSep" value="\n"
                                   (change)="listUsernames()">\\n</label>&nbsp;
+                    <label title="Use this if username can include other username">
+                           <input type="radio" name="listsep" [(ngModel)]="listSep" value="$|^"
+                                  (change)="listUsernames()">^$</label>&nbsp;
                 </p>
                 <label><input type="checkbox" [(ngModel)]="listName" (change)="listUsernames()">Name</label>&nbsp;
                 <label><input type="checkbox" [(ngModel)]="listUsername"
@@ -638,6 +647,9 @@ export class TableFormComponent
         if (this.markup.showToolbar !== undefined) {
             this.data.hide.toolbar = !this.markup.showToolbar;
         }
+        if (this.markup.forceToolbar !== undefined) {
+            this.data.forceToolbar = this.markup.forceToolbar;
+        }
 
         if (this.markup.tinyFilters) {
             this.data.tinyFilters = this.markup.tinyFilters;
@@ -704,6 +716,7 @@ export class TableFormComponent
 
         this.data.cbColumn = this.markup.cbColumn;
         this.data.nrColumn = this.markup.nrColumn;
+        this.data.sequentialNr = this.markup.sequentialNr;
         this.data.charRow = this.markup.charRow;
         this.data.filterRow = this.markup.filterRow;
         this.data.filters = this.markup.filters;
@@ -986,9 +999,9 @@ export class TableFormComponent
             } else {
                 this.data.headers = [
                     // NOTE: if change these, change also exported names!
-                    $localize`User's name`,
-                    $localize`Username`,
-                    $localize`E-mail`,
+                    this.markup.realnameColumn ?? $localize`User's name`,
+                    this.markup.usernameColumn ?? $localize`Username`,
+                    this.markup.emailColumn ?? $localize`E-mail`,
                     $localize`Added`,
                     $localize`:@@userGroupRemoved:Removed`,
                 ];
@@ -1309,6 +1322,7 @@ export class TableFormComponent
     }
 
     listUsernames() {
+        this.userlist = " ";
         const timTable = this.getTimTable();
         if (timTable == null) {
             return;
@@ -1352,6 +1366,12 @@ export class TableFormComponent
             preseparator,
             midseparator
         );
+        if (sep === "$|^" && this.userlist) {
+            this.userlist = "^" + this.userlist + "$";
+        }
+        if (!this.userlist) {
+            this.userlist = " ";
+        }
     }
 
     copyList() {
@@ -1653,7 +1673,9 @@ export class TableFormComponent
         }
         this.isAddingUsers = true;
 
-        let prompt = $localize`Please provide email addresses or usernames.
+        let prompt =
+            this.markup.addUsersDialog ??
+            $localize`Please provide email addresses or usernames.
 Separate multiple addresses with commas or write each address on a new line.`;
 
         if (this.markup.createMissingUsers) {

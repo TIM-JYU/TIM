@@ -108,6 +108,7 @@ interface AnswerReturnSuccess {
             refreshRunJSRunners?: string[];
             md?: string;
             html?: string;
+            jumplink?: string;
         };
     };
     savedata: IToolsResult[];

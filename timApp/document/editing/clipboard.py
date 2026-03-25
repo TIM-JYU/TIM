@@ -164,7 +164,7 @@ class Clipboard:
             pars = self.read(as_ref)
             if pars is None:
                 raise TimDbException("There is nothing to paste.")
-
+            """
             metadata = self.read_metadata()
             if (
                 not as_ref
@@ -174,21 +174,36 @@ class Clipboard:
                 new_area_name = metadata["area_name"] + "_" + random_id()
                 pars[0]["attrs"]["area"] = new_area_name
                 pars[len(pars) - 1]["attrs"]["area_end"] = new_area_name
-
+            """
             doc_pars = []
             par_before = par_id
             if is_real_id(par_before):
                 doc.raise_if_not_exist(par_before)
-            for par in reversed(pars):
-                # We need to reverse the sequence because we're inserting before, not after
+
+            new_pars = []
+            for par in pars:
                 new_par_id = (
                     par["id"] if not doc.has_paragraph(par["id"]) else random_id()
                 )
-                new_par = doc.insert_paragraph(
-                    par["md"],
+                new_par = DocParagraph.create(
+                    doc, new_par_id, par["md"], attrs=par.get("attrs")
+                )
+                new_pars.append(new_par)
+
+            from timApp.document.renameids import (
+                check_and_rename_attribute,
+                area_renamed,
+            )
+
+            check_and_rename_attribute("taskId", new_pars, doc)
+
+            check_and_rename_attribute("area", new_pars, doc, area_renamed)
+
+            for new_par in reversed(new_pars):
+                # We need to reverse the sequence because we're inserting before, not after
+                new_par = doc.insert_paragraph_obj(
+                    new_par,
                     insert_before_id=par_before,
-                    par_id=new_par_id,
-                    attrs=par.get("attrs"),
                 )
                 doc_pars.append(new_par)
                 par_before = new_par.get_id()

@@ -1,10 +1,10 @@
-import random
 import unittest
 
 from timApp.document.documentparser import DocumentParser
 from timApp.document.documentparseroptions import DocumentParserOptions
 from timApp.document.documentwriter import DocumentWriter
 from timApp.document.exceptions import ValidationException
+from timApp.document.randutils import seed_for_tests
 
 
 class DocumentParserTest(unittest.TestCase):
@@ -132,7 +132,8 @@ var a = 1 + 1;
         self.assertListEqual(expected, result)
         exported = DocumentWriter(result).get_text()
         self.assertListEqual(expected, DocumentParser(exported).get_blocks())
-        random.seed(0)
+        # random.seed(0)
+        seed_for_tests(0)
         dp.add_missing_attributes()
         self.assertListEqual(
             [
@@ -242,7 +243,9 @@ var a = 1 + 1;
             {"md": "text1\n\ntext2", "type": "autonormal", "attrs": {}},
             {"md": "```\ncode2\n```", "type": "code", "attrs": {"plugin": "mmcq"}},
             {
-                "md": "# Header 1\n\nheaderpar 1\n\nheaderpar 2\n\n```\nnormal code\n```\n\n# Header 2\n\nheaderpar 3\n\nheaderpar 4",
+                "md": "# Header 1\n\nheaderpar 1\n\nheaderpar 2\n\n"
+                "```\nnormal code\n```\n\n# Header 2\n\n"
+                "headerpar 3\n\nheaderpar 4",
                 "type": "header",
                 "attrs": {},
             },
@@ -254,7 +257,9 @@ var a = 1 + 1;
             {"md": "# Test1\n\n# Test2\n\n# Test3", "type": "atom", "attrs": {}},
             {"md": "```\ncode\n```\n\ntest", "type": "code", "attrs": {}},
             {
-                "md": "# Test\n\n````\n#- {rd=x rp=y}\n\n``` {rp=x rd=y}\n```\n\n````\n\n````\ntest\n````\n\n```cs\nvar a = 1 + 1;\n```\n\n```js\nvar a = 1 + 1;\n```",
+                "md": "# Test\n\n````\n#- {rd=x rp=y}\n\n"
+                "``` {rp=x rd=y}\n```\n\n````\n\n````\ntest\n````\n\n```cs\n"
+                "var a = 1 + 1;\n```\n\n```js\nvar a = 1 + 1;\n```",
                 "type": "header",
                 "attrs": {"a": "b"},
             },

@@ -8,7 +8,7 @@ authors = [
 readme = "readme.md"
 
 [tool.poetry.dependencies]
-python = "^3.11"
+python = "^3.12"
 flask = "^2.3.2"
 lxml = "^4.9.2"
 webargs = "5.5"
@@ -36,7 +36,7 @@ Flask-SQLAlchemy = "^3.0.5"
 Flask-Testing = "^0.8.1"
 Flask-WTF = "^1.0.1"
 gevent = "^23.7.0"
-webassets = { git = "https://github.com/miracle2k/webassets.git" }
+webassets = {git = "https://github.com/miracle2k/webassets.git"}
 gunicorn = "^21.2.0"
 html5lib = "^1.1"
 httpagentparser = "^1.9.2"
@@ -55,7 +55,7 @@ psycogreen = "^1.0.2"
 psycopg2-binary = "^2.9.3"
 pyaml = "^23.5.9"
 PyLaTeX = "^1.4.1"
-pypandoc = "^1.8.1"
+pypandoc = "^1.17"
 python-dateutil = "^2.8.2"
 python-magic = "^0.4.26"
 pytz = "^2023.3"
@@ -77,6 +77,7 @@ qulacs = "^0.6.11"
 flask-babel = "^4.0.0"
 openpyxl = "^3.1.5"
 psutil = "^7.2.1"
+openai = "^2.29.0"
 
 [tool.poetry.group.dev.dependencies]
 mypy = "^1.4.1"
@@ -100,6 +101,7 @@ qulacs = "^0.6.11"
 SQLAlchemy = "^2.0.19"
 flask-babel = "^4.0.0"
 types-openpyxl = "^3.1.5.20241225"
+openai = "^2.29.0"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]

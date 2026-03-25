@@ -112,11 +112,13 @@ class DocumentVersion(Document):
         raise Exception("Called DocumentVersion.modify_paragraph")
 
     def update_section(
-        self, text: str, par_id_first: str, par_id_last: str
+        self, text: str, par_id_first: str, par_id_last: str, do_validate=True
     ) -> tuple[str, str]:
         raise Exception("Called DocumentVersion.update_section")
 
-    def update(self, text: str, original: str, strict_validation=True):
+    def update(
+        self, text: str, original: str, strict_validation=True, do_validate=True
+    ):
         raise Exception("Called DocumentVersion.update")
 
     def modify_paragraph_obj(self, par_id: str, p: DocParagraph) -> DocParagraph:

@@ -228,6 +228,13 @@ par 22
         menu = self.find_element_avoid_staleness("tim-popup-menu-dialog")
         return menu
 
+    def open_menu2(self, p) -> WebElement:
+        self.find_element_avoid_staleness(".parContent", parent=p, click=True)
+        # self.find_element_avoid_staleness(".editline", parent=p, click=True)
+        self.find_element_avoid_staleness(".edit-menu-button", parent=p, click=True)
+        menu = self.find_element_avoid_staleness("tim-popup-menu-dialog")
+        return menu
+
     def test_area_delete_par(self):
         self.login_test1()
         d = self.create_doc(
@@ -245,11 +252,11 @@ par 2
         )
         self.login_browser_quick_test1()
         self.goto_document(d)
-        self.use_left_menu()
+        # self.use_left_menu()
         # FIXME: There should be a consistent indicator for refreshing the page
         time.sleep(2)
         pars = self.find_par_elems()
-        menu = self.open_menu(pars[2])
+        menu = self.open_menu2(pars[2])
         self.find_element_by_text("Edit", element="button", parent=menu).click()
         self.wait_until_present_and_vis("pareditor")
         old_len = len(pars)

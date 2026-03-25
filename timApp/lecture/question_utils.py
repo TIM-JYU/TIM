@@ -55,8 +55,8 @@ def qst_rand_array(
         except ValueError:
             pass
     seed = int("".join(map(str, seed_array)))
-    random.seed(seed + random_seed)
-    random.shuffle(orig)
+    qst_random = random.Random(seed + random_seed)
+    qst_random.shuffle(orig)
     for i in range(1, total + 1):
         if len(locks) >= total - len(ret):
             ret.append(locks[0])

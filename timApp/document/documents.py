@@ -40,21 +40,30 @@ def apply_citation(new_doc: DocInfo, src_doc: Document):
 
 
 def find_lang_matching_cite_source(
-    tr_doc: Document, rd: str, rp: str | None = None, ra: str | None = None
+    tr_doc: Document,
+    rd: str,
+    rp: str | None = None,
+    ra: str | None = None,
+    rtask: str | None = None,
 ) -> tuple[Document | None, str | None]:
     """
     Find document and paragraph id from cited source Translation whose language matches
     the Translation we are currently creating.
     Note some elements of the return value may be None.
+    :param tr_doc: Translation that is citing the source document
     :param rd: source document id
     :param rp: source document paragraph id
     :param ra: source document paragraph area name
-    :param tr_doc: Translation that is citing the source document
+    :param rtask: source document paragraph task id
     :return: the matched source Translation and paragraph id as a tuple.
     """
     matched_doc = None
     par_id = None
-    source_docinfo = DocEntry.find_by_id(int(rd)) if rd else None
+    source_docinfo = (
+        DocEntry.find_by_rd(rd, path=tr_doc.docinfo.location if tr_doc.docinfo else "")
+        if rd
+        else None
+    )
 
     if source_docinfo:
         for source_tr in source_docinfo.translations:
@@ -67,8 +76,10 @@ def find_lang_matching_cite_source(
                 matched_doc = source_tr
                 # Find matching paragraph hash for translated citation par
                 for p in source_tr.document:
-                    if (rp and p.get_attr("rp") == rp) or (
-                        ra and p.get_attr("area") == ra
+                    if (
+                        (rp and p.get_attr("rp") == rp)
+                        or (ra and p.get_attr("area") == ra)
+                        or (rtask and p.get_attr("taskId") == rtask)
                     ):
                         par_id = p.id
                         break
