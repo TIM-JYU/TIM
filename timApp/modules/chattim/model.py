@@ -3,6 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass, asdict
 from typing import Literal, Protocol, Callable, Iterable, Any, cast, AsyncIterator
 from enum import StrEnum
+from openai import OpenAI, AsyncOpenAI
 
 
 class ModelErrorKind(StrEnum):
@@ -257,12 +258,6 @@ class GenericApiChatModel(ChatModel):
     """
 
     def __init__(self, info: ModelInfo, api_key: str, base_url: str):
-        # TODO: move or change lib
-        try:
-            from openai import OpenAI, types  # type: ignore
-        except ModuleNotFoundError as e:
-            raise ModuleNotFoundError("Python module `openai` not found.") from e
-
         self._info = info
         self._api_key = api_key
         self._base_url = base_url
@@ -272,7 +267,9 @@ class GenericApiChatModel(ChatModel):
         self, messages: list[Message], options: GenerateOptions
     ) -> ModelResponse:
         """Generate a model response from the given messages."""
-        res = self.create_completion(options=options, messages=messages)
+        kwargs = _completion_kwargs(self._info, messages, options, False)
+        # TODO: handle errors
+        res = self._client.chat.completions.create(**kwargs)
         return _parse_completion_response(res)
 
     def generate_stream(
@@ -287,7 +284,9 @@ class GenericApiChatModel(ChatModel):
                 f"Streaming is not supported with model: {self._info.model_id}"
             )
 
-        stream = self.create_completion(options=options, messages=messages, stream=True)
+        kwargs = _completion_kwargs(self._info, messages, options, True)
+        # TODO: handle errors
+        stream = self._client.chat.completions.create(**kwargs)
 
         # Iterate the message chunks in the stream
         for chunk in stream:
@@ -304,17 +303,6 @@ class GenericApiChatModel(ChatModel):
             for m in self._client.models.list()
         ]
 
-    def create_completion(
-        self,
-        messages: list[Message],
-        options: GenerateOptions,
-        stream: bool = False,
-    ):
-        """Create a completion response from the given messages."""
-        kwargs = _completion_kwargs(self._info, messages, options, stream)
-        # TODO: handle errors
-        return self._client.chat.completions.create(**kwargs)
-
 
 class AsyncGenericApiChatModel(AsyncChatModel):
     """
@@ -322,12 +310,6 @@ class AsyncGenericApiChatModel(AsyncChatModel):
     """
 
     def __init__(self, info: ModelInfo, api_key: str, base_url: str):
-        # TODO: move or change lib
-        try:
-            from openai import AsyncOpenAI, types  # type: ignore
-        except ModuleNotFoundError as e:
-            raise ModuleNotFoundError("Python module `openai` not found.") from e
-
         self._info = info
         self._api_key = api_key
         self._base_url = base_url
@@ -337,7 +319,9 @@ class AsyncGenericApiChatModel(AsyncChatModel):
         self, messages: list[Message], options: GenerateOptions
     ) -> ModelResponse:
         """Generate a model response from the given messages."""
-        res = await self.create_completion(options=options, messages=messages)
+        kwargs = _completion_kwargs(self._info, messages, options, False)
+        # TODO: handle errors
+        res = await self._client.chat.completions.create(**kwargs)
         return _parse_completion_response(res)
 
     def generate_stream(
@@ -354,9 +338,9 @@ class AsyncGenericApiChatModel(AsyncChatModel):
                     f"Streaming is not supported with model: {self._info.model_id}"
                 )
 
-            stream = await self.create_completion(
-                options=options, messages=messages, stream=True
-            )
+            kwargs = _completion_kwargs(self._info, messages, options, True)
+            # TODO: handle errors
+            stream = await self._client.chat.completions.create(**kwargs)
 
             async for chunk in stream:
                 yield _parse_stream_chunk(chunk)
@@ -369,21 +353,10 @@ class AsyncGenericApiChatModel(AsyncChatModel):
 
     async def get_models(self) -> list[ModelInfo]:
         """Get all the available models from the Model API."""
+        models = await self._client.models.list()
         return [
-            ModelInfo(model_id=m.id, provider=self._info.provider)
-            for m in await self._client.models.list()
+            ModelInfo(model_id=m.id, provider=self._info.provider) async for m in models
         ]
-
-    async def create_completion(
-        self,
-        messages: list[Message],
-        options: GenerateOptions,
-        stream: bool = False,
-    ):
-        """Create a completion response from the given messages."""
-        kwargs = _completion_kwargs(self._info, messages, options, stream)
-        # TODO: handle errors
-        return await self._client.chat.completions.create(**kwargs)
 
 
 class OpenAiChatModel(GenericApiChatModel):
@@ -453,7 +426,6 @@ class DummyAsyncChatModel(AsyncChatModel):
     def generate_stream(
         self, messages: list[Message], options: GenerateOptions
     ) -> AsyncIterator[ModelResponseChunk]:
-
         async def gen() -> AsyncIterator[ModelResponseChunk]:
             for part in _split_keep_left(self.response, " "):
                 yield ModelResponseChunk(delta=part)
@@ -553,8 +525,22 @@ SUPPORTED_MODELS: dict[Provider, list[ModelInfo]] = {
     "openai": [
         ModelInfo(
             provider="openai",
+            model_id="gpt-4.1-nano",
+            label="GPT-4.1 Nano",
+            supports_temperature=True,
+            supports_streaming=True,
+        ),
+        ModelInfo(
+            provider="openai",
             model_id="gpt-4.1-mini",
             label="GPT-4.1 Mini",
+            supports_temperature=True,
+            supports_streaming=True,
+        ),
+        ModelInfo(
+            provider="openai",
+            model_id="gpt-4o-mini",
+            label="GPT-4o Mini",
             supports_temperature=True,
             supports_streaming=True,
         ),
@@ -562,9 +548,9 @@ SUPPORTED_MODELS: dict[Provider, list[ModelInfo]] = {
 }
 
 
-def get_dummy_model() -> AsyncChatModel:
+def get_dummy_model() -> ChatModel:
     """Create a dummy model for testing."""
-    return DummyAsyncChatModel(
+    return DummyChatModel(
         ModelInfo(
             provider="dummy",
             model_id="dummy-model-1",
