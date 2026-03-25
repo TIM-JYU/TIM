@@ -849,6 +849,17 @@ def _handle_item_right_actions(
 
         item_actions[item.block.id].append(action)
 
+        # Apply the actions also to translations of the item, so that they don't end up with different
+        # access rights than the original item.
+        if isinstance(item, DocInfo) and item.translations:
+            for t in item.translations:
+                if t.id == item.id:  # This was already added above
+                    continue
+                if t.block.id not in item_actions:
+                    item_actions[t.block.id] = []
+                    items[t.block.id] = t.block
+                item_actions[t.block.id].append(action)
+
     # Apply actions as we go
     for item_id, actions in item_actions.items():
         itm = items[item_id]

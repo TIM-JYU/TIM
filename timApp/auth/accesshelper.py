@@ -346,6 +346,19 @@ def abort_if_not_access_and_required(
                 # need to add it
                 if inspect(ba).transient:
                     db.session.add(ba)
+
+                # Unlock the right in the translations too if present
+                if isinstance(block, DocInfo):
+                    for t in block.translations:
+                        if t.id == block.id:
+                            continue
+                        other_block_access = t.block.accesses.get(
+                            (ba.usergroup_id, ba.type), None
+                        )
+                        if other_block_access and other_block_access.unlockable:
+                            other_block_access.accessible_from = ba.accessible_from
+                            other_block_access.accessible_to = ba.accessible_to
+
                 db.session.commit()  # TODO ensure nothing else gets committed than the above
                 if isinstance(block, Item):
                     targets = current_app.config["DIST_RIGHTS_UNLOCK_TARGETS"]
