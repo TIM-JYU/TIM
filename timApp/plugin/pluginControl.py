@@ -503,9 +503,8 @@ def pluginify(
 
     if load_states and custom_answer is None and user_ctx.user.logged_in:
         # TODO: could this return also the plugins, then there is no need for other iteration
-        if doc.plugin_task_ids and doc.is_doc_pars(pars):
-            task_ids = doc.plugin_task_ids
-        else:
+        task_ids = doc.get_plugin_task_ids()
+        if not task_ids or not doc.is_doc_pars(pars):
             task_ids, _, _ = find_task_ids(
                 pars, view_ctx, user_ctx, check_access=user_ctx.is_different
             )

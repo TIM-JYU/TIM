@@ -512,8 +512,9 @@ def preview_paragraphs(doc_id):
             proofread = False
             edit_request = None
         edit_result = DocumentEditResult(just_preview=True)
-        if doc.vr:
-            edit_result.warnings = doc.vr.get_as_html()
+        vr_html = doc.get_validation_result_as_html()
+        if vr_html:
+            edit_result.warnings = vr_html
         return par_response(
             blocks,
             docinfo,
