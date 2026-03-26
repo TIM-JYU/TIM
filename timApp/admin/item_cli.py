@@ -173,16 +173,14 @@ def verify_io() -> None:
         exit(1)
 
     click.echo("Adding some paragraphs")
-    d.document.add_text(
-        """
+    d.document.add_text("""
 # Test
 
 This is a test
 
 #-
 Second paragraph
-"""
-    )
+""")
 
     db.session.commit()
 
@@ -190,8 +188,7 @@ Second paragraph
     db.session.refresh(d)
     click.echo("Reading added paragraphs back")
 
-    d.document.par_cache = None
-    d.document.load_pars()
+    d.document.force_load_pars()
     res = d.document.export_markdown(export_ids=False)
     expected = """# Test
 

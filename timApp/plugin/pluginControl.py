@@ -503,7 +503,7 @@ def pluginify(
 
     if load_states and custom_answer is None and user_ctx.user.logged_in:
         # TODO: could this return also the plugins, then there is no need for other iteration
-        if doc.plugin_task_ids and pars == doc.par_cache:
+        if doc.plugin_task_ids and doc.is_doc_pars(pars):
             task_ids = doc.plugin_task_ids
         else:
             task_ids, _, _ = find_task_ids(
@@ -530,9 +530,9 @@ def pluginify(
                 # TODO: Gamification map should be its own plugin
                 gd = YamlBlock.from_markdown(md).values
                 runner = "gamification-map"
-                html_pars[
-                    idx
-                ].output = f"<{runner} data={quoteattr(json.dumps(gd))}></{runner}>"
+                html_pars[idx].output = (
+                    f"<{runner} data={quoteattr(json.dumps(gd))}></{runner}>"
+                )
             except yaml.YAMLError as e:
                 has_errors = True
                 html_pars[idx].output = (
