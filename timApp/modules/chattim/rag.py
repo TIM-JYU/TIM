@@ -2,29 +2,22 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from typing import Iterable
-from model import (
+from timApp.modules.chattim.model import (
     ChatModel,
     GenerateOptions,
     Message,
     ModelResponse,
     ModelResponseChunk,
     ModelRegistry,
+    ModelInfo,
+    ModelSpec,
     SUPPORTED_MODELS,
-    get_dummy_model,
 )
 from enum import Enum
 
-_DEFAULT_SYSTEM_PROMPT_RETRIEVE = ""
-_DEFAULT_SYSTEM_PROMPT_CREATIVE = ""
 
-# TODO: remove
-registry = ModelRegistry(SUPPORTED_MODELS)
-
-
-@dataclass
-class UserPrompt:
-    user_id: str
-    content: str
+_DEFAULT_SYSTEM_PROMPT_RETRIEVE = ""  # TODO: define
+_DEFAULT_SYSTEM_PROMPT_CREATIVE = ""  # TODO: define
 
 
 class RagMode(Enum):
@@ -33,42 +26,70 @@ class RagMode(Enum):
 
 
 @dataclass
-class RagOptions:
-    top_k: int = 5
-    """Number of best matches to fetch from the index material."""
-    max_history_len: int = 10
-    """Maximum amount of previous messages to include in the prompt."""
-    # max_context_tokens: int = 200_000
+class MessageData:
+    user_prompt: str
+    context: str
+    chat_history: list[Message]
+    mode: RagMode
+    max_tokens: int
 
 
 class Rag:
-    model: ChatModel
-    options: RagOptions
-    mode: RagMode
-    # TODO:
-    # Need reference to PluginCore/indexer/database
-    # or callbacks to functions to get context, user chat history
+    registry: ModelRegistry = ModelRegistry(SUPPORTED_MODELS)
+    models: dict[int, ChatModel] = {}
 
-    def __init__(
-        self,
-        options: RagOptions = RagOptions(),
-        mode: RagMode = RagMode.RETRIEVE,
-        model_spec: ModelRegistry.ModelSpec | None = None,
-    ):
-        self.options = options
-        self.mode = mode
-        # TODO: modify model creation
-        self.model = registry.create(model_spec) if model_spec else get_dummy_model()
+    def add_model(self, spec: ModelSpec, identifier: int):
+        """
+        Model spec need not specify the base_url.
+        Note that if model with identifier exists it is overwritten.
+        :param spec: Model is built according to this spec
+        :param identifier: identifier of the model, used for answer calls etc
+        Raises:
+            ValueError: If the provider or model is unknown
+        """
 
-    def answer(self, user_prompt: UserPrompt) -> Iterable[ModelResponseChunk]:
-        """Give an answer to the user using the model."""
-        # TODO: append chat history here or in the caller?
-        messages = self.build_prompt(user_prompt)
+        model = self.registry.create(spec)
+        self.models[identifier] = model
+
+    def remove_model(self, identifier: int):
+        """
+        Model spec need not specify the base_url.
+        Nothing is done if model with identifier doesn't exist.
+        :param identifier: identifier of the model
+        Raises:
+            ValueError: If the provider or model is unknown
+        """
+        if identifier in self.models:
+            del self.models[identifier]
+
+    def model_exists(self, identifier: int) -> bool:
+        if identifier in self.models:
+            return True
+        return False
+
+    def answer(
+        self, request_data: MessageData, identifier: int
+    ) -> Iterable[ModelResponseChunk]:
+        """
+        Give an answer to the user using the model.
+        :param request_data: Information for the prompt
+        :param identifier: identifier of the model to be used
+
+        Raises:
+            ValueError: If the model isn't created
+        """
+
+        if identifier not in self.models:
+            raise KeyError(f"Key '{identifier}' not found in the dictionary")
+
+        model = self.models[identifier]
+        messages = self.build_prompt(request_data)
+
         # TODO: simplify?
         try:
-            if self.model.get_info().supports_streaming:
-                return self.model.generate_stream(messages, GenerateOptions())
-            res: ModelResponse = self.model.generate(messages, GenerateOptions())
+            if model.get_info().supports_streaming:
+                return model.generate_stream(messages, GenerateOptions())
+            res: ModelResponse = model.generate(messages, GenerateOptions())
         except Exception as e:
             # TODO: better error handling
             print("error(RAG): ", str(e))
@@ -77,50 +98,48 @@ class Rag:
         # Include the urls/document ids?
         return [ModelResponseChunk(delta=res.content, usage=res.usage, done=True)]
 
-    def build_prompt(self, user_prompt: UserPrompt) -> list[Message]:
+    def get_supported_models(self) -> dict[str, ModelInfo]:
+        """
+        Get all supported models. Example:
+        "openai": [
+            ModelInfo(
+                provider="openai",
+                model_id="gpt-4.1-mini",
+                label="GPT-4.1 Mini",
+                supports_temperature=True,
+                supports_streaming=True,
+            ),
+        ],
+        :return:
+        """
+        return self.registry.get_models(None)
+
+    def build_prompt(self, message_data: MessageData) -> list[Message]:
         """Build the message list to send to the model."""
-        system_msg: Message = self.system_message()
-        history: list[Message] = self.get_history(user_prompt.user_id)
-        context: str = self.build_context(user_prompt.content)
+        mode: RagMode = message_data.mode
+        system_msg: Message = self.system_message(mode)
+        content: str = message_data.user_prompt
+        history: list[Message] = message_data.chat_history
+        context: str = message_data.context
         context_msg: Message = Message(
             # TODO: change role?
             role="user",
             content=f"<CONTEXT> {context} </CONTEXT>",
         )
-        user_msg: Message = Message(role="user", content=user_prompt.content)
+        user_msg: Message = Message(role="user", content=content)
         prompt: list[Message] = [system_msg]
         prompt.extend(history)
         prompt.append(context_msg)
         prompt.append(user_msg)
         return prompt
 
-    def system_message(self) -> Message:
+    def system_message(self, mode: RagMode) -> Message:
         """Initialize the system message."""
         # TODO: optimize
-        if self.mode == RagMode.RETRIEVE:
+        if mode == RagMode.RETRIEVE:
             msg = _DEFAULT_SYSTEM_PROMPT_RETRIEVE
-        elif self.mode == RagMode.CREATIVE:
+        elif mode == RagMode.CREATIVE:
             msg = _DEFAULT_SYSTEM_PROMPT_CREATIVE
         else:
             msg = ""
         return Message(role="system", content=msg)
-
-    def get_history(self, user_id: str) -> list[Message]:
-        """Fetch the current chat history of the user."""
-        # TODO: get history with callback or somehow else
-        # Trim history
-        # Include only user messages or also the assistant responses?
-        # Summarize earlier history? Configurable option for summarizing?
-        return []
-
-    def build_context(self, msg: str) -> str:
-        """Build the context to add to the message."""
-        # TODO: format the context
-        context = self.find_similar_context(msg)
-        return context
-
-    def find_similar_context(self, msg: str) -> str:
-        """Find similar context from the vector index."""
-        # TODO: callback to use embeddings
-        # Change return type to include more info like urls
-        return ""
