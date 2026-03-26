@@ -159,7 +159,7 @@ class Document:
 
         self.preload_option = preload_option
         # Used to cache paragraphs in memory on request so the pars don't have to be read from disk in every for loop
-        self.par_cache: list[DocParagraph] | None = None
+        self.__par_cache: list[DocParagraph] | None = None
         # List of par ids - it is much faster to load only ids and sometimes full pars are not needed
         self.par_ids: list[str] | None = None
         # List of corresponding hashes
@@ -199,7 +199,7 @@ class Document:
 
         self.vr: ValidationResult | None = None
 
-        self.plugin_task_ids = None  # cache for naemd plugin task ids
+        self.plugin_task_ids = None  # cache for named plugin task ids
         self.plugin_count = 0  # cache for number of all plugins in the document
 
         # cache for parId/attributes-name maps for pars
@@ -233,10 +233,10 @@ class Document:
     def __iter__(
         self,
     ) -> DocParagraphIter | CacheIterator | ParallelParagraphIter:
-        if self.par_cache is None:
+        if self.__par_cache is None:
             return get_par_iterator(self)
         else:
-            return CacheIterator(self.par_cache.__iter__())
+            return CacheIterator(self.__par_cache.__iter__())
 
     @classmethod
     def __get_largest_file_number(cls, path: Path, default=None) -> int:
@@ -272,11 +272,11 @@ class Document:
         self.par_hashes = []
         self.par_id_attrs_map = {}
         settings_allowed = True
-        for i in range(0, len(self.par_cache)):
-            curr_p = self.par_cache[i]
+        for i in range(0, len(self.__par_cache)):
+            curr_p = self.__par_cache[i]
             par_id = curr_p.get_id()
-            prev_p = self.par_cache[i - 1] if i > 0 else None
-            next_p = self.par_cache[i + 1] if i + 1 < len(self.par_cache) else None
+            prev_p = self.__par_cache[i - 1] if i > 0 else None
+            next_p = self.__par_cache[i + 1] if i + 1 < len(self.__par_cache) else None
             self.par_map[par_id] = {"p": prev_p, "n": next_p, "c": curr_p}
             self.par_ids.append(par_id)
             self.par_hashes.append(curr_p.get_hash())
@@ -288,15 +288,29 @@ class Document:
             self.par_attrs.append(attrs)
             self.par_id_attrs_map[par_id] = attrs
         if not self.is_incomplete_cache:
-            self.single_par_cache.update({p.get_id(): p for p in self.par_cache})
+            self.single_par_cache.update({p.get_id(): p for p in self.__par_cache})
+
+    def is_doc_pars(self, pars: list[DocParagraph]) -> bool:
+        """
+        Checks if the given pars are the same as the
+        cached pars of this document.
+        This is used to check if pars that were read to memory
+        from disk are the same as the pars that are currently in memory.
+        :param pars: List of paragraphs to check.
+        """
+        return pars == self.__par_cache
+
+    def force_load_pars(self):
+        self.__par_cache = None
+        self.load_pars()
 
     def load_pars(self):
         """Loads the paragraphs from disk to memory so that subsequent iterations for the Document are faster."""
         # self.par_cache = list(self.preamble_pars) if self.preamble_pars else []
-        self.par_cache = [par for par in self]
+        self.__par_cache = [par for par in self]
         # is preamble loaded but not included yet? if so, include it now
         if self.preamble_should_include and self.preamble_pars:
-            self.par_cache = list(self.preamble_pars) + self.par_cache
+            self.__par_cache = list(self.preamble_pars) + self.__par_cache
             self.preamble_included = True
             self.preamble_should_include = False
         self.__update_par_map()
@@ -338,7 +352,7 @@ class Document:
         if prev:
             result = prev["p"]
         if get_last_if_no_prev:
-            result = self.par_cache[-1] if self.par_cache else None
+            result = self.__par_cache[-1] if self.__par_cache else None
         return result
 
     def get_pars_till(self, par):
@@ -1489,7 +1503,7 @@ class Document:
             self.get_settings()
 
             self.insert_preamble_pars()
-        return self.par_cache
+        return self.__par_cache
 
     def get_dereferenced_paragraphs(self, view_ctx: ViewContext) -> list[DocParagraph]:
         return dereference_pars(
@@ -1605,7 +1619,7 @@ class Document:
 
     def _save_doc_lines(self):
         with self.get_version_path().open("w", encoding="UTF-8") as f:
-            for par in self.par_cache:
+            for par in self.__par_cache:
                 line = get_p_as_docline(par)
                 f.write(line)
 
@@ -1645,8 +1659,8 @@ class Document:
             p.preamble_doc = p.doc.get_docinfo()
             p.doc = self
         self.preamble_pars = pars
-        if pars and self.par_cache is not None:
-            self.par_cache = pars + self.par_cache
+        if pars and self.__par_cache is not None:
+            self.__par_cache = pars + self.__par_cache
             self.__update_par_map()
         elif pars:  # no full cache, add to single par cache for dereferencing
             for p in pars:
@@ -1660,20 +1674,20 @@ class Document:
         if self.preload_option == PreloadOption.all:
             self.ensure_pars_loaded()
             if context_par is None:
-                self.par_cache = pars + self.par_cache
+                self.__par_cache = pars + self.__par_cache
             else:
                 i = 0
-                for i, par in enumerate(self.par_cache):
+                for i, par in enumerate(self.__par_cache):
                     if par.get_id() == context_par.get_id():
                         break
-                self.par_cache = (
-                    self.par_cache[: i + 1] + pars + self.par_cache[i + 1 :]
+                self.__par_cache = (
+                    self.__par_cache[: i + 1] + pars + self.__par_cache[i + 1 :]
                 )
         else:
             if context_par is None:
-                self.par_cache = pars
+                self.__par_cache = pars
             else:
-                self.par_cache = [context_par] + pars
+                self.__par_cache = [context_par] + pars
             self.is_incomplete_cache = True
         self.__update_par_map()
 
@@ -1691,7 +1705,7 @@ class Document:
         self.settings_cache = None
         self.ref_doc_cache = {}
         self.single_par_cache = {}
-        self.par_cache = None
+        self.__par_cache = None
         self.attrs_name_par_id_maps = None
         self.par_id_attrs_name_maps = None
         self.attrs_name_lists = None

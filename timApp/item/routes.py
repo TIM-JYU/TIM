@@ -806,7 +806,7 @@ def render_doc_view(
     hide_total_tasks = False
     user_list = []
     teacher_or_see_answers = view_ctx.route.teacher_or_see_answers
-    if doc.plugin_task_ids and xs == doc.par_cache:
+    if doc.plugin_task_ids and doc.is_doc_pars(xs):
         task_ids = doc.plugin_task_ids
         plugin_count = doc.plugin_count
         no_accesses = []
@@ -817,7 +817,7 @@ def render_doc_view(
             UserContext.from_one_user(current_user),
             check_access=teacher_or_see_answers,
         )
-        if xs == doc.par_cache:
+        if doc.is_doc_pars(xs):
             doc.plugin_task_ids = task_ids
             doc.plugin_count = plugin_count
     if teacher_or_see_answers and no_accesses:
