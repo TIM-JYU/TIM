@@ -288,6 +288,9 @@ RUN $PIP_INSTALL git+https://github.com/industrial-optimization-group/DESDEO.git
 # sktime
 RUN bash -c "$PIP_INSTALL sktime[all_extras] && ${APT_CLEANUP}"
 
+# gplearn
+RUN $PIP_INSTALL gplearn && bash -c "${APT_CLEANUP}"
+
 # R packages
 RUN bash -c "${APT_INSTALL} gcc g++ liblapack-dev liblapack3 libopenblas-dev gfortran && ${APT_CLEANUP}"
 
@@ -381,7 +384,7 @@ ENV PATH=$PATH:/usr/local/go/bin
 
 # NodeJS and TypeScript
 RUN bash -c "(wget -qO- https://deb.nodesource.com/setup_22.x | bash -) && ${APT_INSTALL} nodejs && ${APT_CLEANUP}"
-RUN npm i npm@latest -g && bash -c "${APT_CLEANUP}"
+RUN npm i npm@10 -g && bash -c "${APT_CLEANUP}"
 RUN npm i ts-node -g && bash -c "${APT_CLEANUP}"
 
 # Install NUnit runner for .NET
