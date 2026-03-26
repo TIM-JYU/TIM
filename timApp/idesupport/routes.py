@@ -2,6 +2,7 @@ import re
 
 from authlib.integrations.flask_oauth2 import current_token
 from flask import Response, request
+from jinja2.utils import missing
 
 from timApp.auth.oauth2.models import Scope
 from timApp.auth.oauth2.oauth2 import require_oauth
@@ -144,12 +145,9 @@ def submit_ide_task() -> Response:
 
     # TODO: poista seuraavat sitten kun tidecli osaa käsitellä pisteitä
     points = answer.extra.get("points")
-    show_points = answer.plugin.known.show_points()
-    allow_user_max = (
-        answer.plugin.known.pointsRule.allowUserMax  # type: ignore
-        if answer.plugin.known.pointsRule
-        else None
-    )
+    known = answer.plugin.known
+    show_points = known.show_points() if known else False
+    allow_user_max = answer.plugin.user_max_points()
     if answer_comtest:
         points = answer_comtest.extra.get("points")
         comtest_result = answer_comtest.result.get("web", {}).get("console", "")
