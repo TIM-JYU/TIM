@@ -165,11 +165,11 @@ class Document:
         # List of corresponding hashes
         self.__par_hashes: list[str] | None = None
         # List of attributes read from disk for pars
-        self.par_attrs: list[dict] | None = None
+        self.__par_attrs: list[dict] | None = None
         # List of settings pars
-        self.par_settings: list[str] | None = None
+        self.__par_settings: list[str] | None = None
         # List of lines in the document file
-        self.doc_lines: list[str] | None = None
+        self.__doc_lines: list[str] | None = None
         # Whether par_cache is incomplete -
         # this is the case when insert_temporary_pars
         # is called with PreloadOption.none
@@ -267,8 +267,8 @@ class Document:
     def __update_par_map(self):
         self.par_map = {}
         self.__par_ids = []
-        self.par_settings = []
-        self.par_attrs = []
+        self.__par_settings = []
+        self.__par_attrs = []
         self.__par_hashes = []
         self.par_id_attrs_map = {}
         settings_allowed = True
@@ -281,11 +281,11 @@ class Document:
             self.__par_ids.append(par_id)
             self.__par_hashes.append(curr_p.get_hash())
             if curr_p.is_setting() and settings_allowed:
-                self.par_settings.append(curr_p.get_id())
+                self.__par_settings.append(curr_p.get_id())
             else:
                 settings_allowed = False
             attrs = curr_p.attrs if curr_p.attrs else {}
-            self.par_attrs.append(attrs)
+            self.__par_attrs.append(attrs)
             self.par_id_attrs_map[par_id] = attrs
         if not self.is_incomplete_cache:
             self.single_par_cache.update({p.get_id(): p for p in self.__par_cache})
@@ -303,6 +303,15 @@ class Document:
     def force_load_pars(self):
         self.__par_cache = None
         self.load_pars()
+
+    def load_pars_by_ids(self, par_ids: list[str]):
+        """Loads the paragraphs with the given ids from disk to memory."""
+        self.__par_cache = []
+        for par_id in par_ids:
+            par = self.get_paragraph(par_id)
+            if par:
+                self.__par_cache.append(par)
+        self.__update_par_map()
 
     def load_pars(self):
         """Loads the paragraphs from disk to memory so that subsequent iterations for the Document are faster."""
@@ -376,14 +385,14 @@ class Document:
         return pars
 
     def get_last_settings_par_id(self) -> str | None:
-        if not self.par_settings:
+        if not self.__par_settings:
             return None
-        return self.par_settings[-1]
+        return self.__par_settings[-1]
 
     def get_last_settings_par(self) -> DocParagraph | None:
-        if not self.par_settings:
+        if not self.__par_settings:
             return None
-        return self.get_paragraph(self.par_settings[-1])
+        return self.get_paragraph(self.__par_settings[-1])
 
     def add_setting(self, key: str, value) -> None:
         last = self.get_last_settings_par()
@@ -447,7 +456,7 @@ class Document:
         """Returns the settings for this document excluding any preamble documents."""
         if self.own_settings is None:
             self.ensure_par_ids_loaded()
-            self.own_settings = resolve_settings_for_par_ids(self, self.par_settings)
+            self.own_settings = resolve_settings_for_par_ids(self, self.__par_settings)
         return self.own_settings
 
     def get_settings(self) -> DocSettings:
@@ -916,7 +925,7 @@ class Document:
         last_settings_par_id = self.get_last_settings_par_id()
         if first_par_id is None:
             return self.add_paragraph_obj(p)
-        for par in self.par_settings:
+        for par in self.__par_settings:
             if par.id == insert_before_id:
                 return self.insert_paragraph_obj(p, insert_before_id)
         if last_settings_par_id:
@@ -1285,7 +1294,7 @@ class Document:
                                 ),
                             )
                             result.added.append(inserted)
-        self.doc_lines = (
+        self.__doc_lines = (
             None  # Clear doc lines cache because they are not valid anymore
         )
         if not new_ids:
@@ -1543,9 +1552,9 @@ class Document:
                 # We can't call get_settings method here because of potential infinite recursion.
                 # We therefore require that the source_document is always in the first settings paragraph of the
                 # document. This should be true for citation docs.
-                if not self.par_settings:
+                if not self.__par_settings:
                     return None
-                first_setting_par = self.get_paragraph(self.par_settings[0])
+                first_setting_par = self.get_paragraph(self.__par_settings[0])
                 if not first_setting_par:
                     return None
                 try:
@@ -1577,30 +1586,43 @@ class Document:
         else:
             return self.__par_ids
 
+    def get_cache_doc_lines(self) -> list[str]:
+        self.ensure_par_ids_loaded()
+        return self.__doc_lines if self.__doc_lines is not None else []
+
     def ensure_par_ids_loaded(self) -> None:
-        if self.__par_ids is None or self.doc_lines is None or self.is_incomplete_cache:
+        if (
+            self.__par_ids is None
+            or self.__doc_lines is None
+            or self.is_incomplete_cache
+        ):
             self._load_par_ids()
 
     def _load_par_ids(self):
-        ids, hashes, attrs, settings = self._get_par_ids_impl()
+        ids, hashes, attrs, settings, need_to_save_attrs = self._get_par_ids_impl()
         self.__par_ids = ids
         self.__par_hashes = hashes
-        self.par_attrs = attrs
-        self.par_settings = settings
+        self.__par_attrs = attrs
+        self.__par_settings = settings
+        if need_to_save_attrs:  # refresh old documents with missing attrs
+            self.load_pars_by_ids(ids)
+            self._save_doc_lines()
 
-    def _get_par_ids_impl(self) -> tuple[list[str], list[str], list[dict], list[str]]:
+    def _get_par_ids_impl(
+        self,
+    ) -> tuple[list[str], list[str], list[dict], list[str], bool]:
         par_ids = []
         par_hashes = []
         par_attrs = []
         par_settings = []
         if not self.get_version_path().exists():
-            return [], [], [], []
+            return [], [], [], [], False
         with self.get_version_path().open("r", encoding="UTF-8") as f:
-            self.doc_lines = f.readlines()
+            self.__doc_lines = f.readlines()
 
         need_to_save_attrs = False
         settings_allowed = True
-        for line in self.doc_lines:
+        for line in self.__doc_lines:
             par_id, t, attrs = parse_docline(line)
             par_ids.append(par_id)
             par_hashes.append(t)
@@ -1612,10 +1634,7 @@ class Document:
                     par_settings.append(par_id)
                 else:
                     settings_allowed = False
-        if need_to_save_attrs:
-            self.load_pars()
-            self._save_doc_lines()
-        return par_ids, par_hashes, par_attrs, par_settings
+        return par_ids, par_hashes, par_attrs, par_settings, need_to_save_attrs
 
     def _save_doc_lines(self):
         with self.get_version_path().open("w", encoding="UTF-8") as f:
@@ -1692,7 +1711,7 @@ class Document:
         self.__update_par_map()
 
     def clear_doc_lines_cache(self):
-        self.doc_lines = None
+        self.__doc_lines = None
 
     def clear_mem_cache(self, ver=None) -> None:
         self.version = ver
@@ -1780,7 +1799,7 @@ class Document:
             self.attrs_name_lists[attr_name] = []
         for i in range(len(self.__par_ids)):
             par_id = self.__par_ids[i]
-            attrs = self.par_attrs[i]
+            attrs = self.__par_attrs[i]
             self.par_id_attrs_map[par_id] = attrs
             for attr_name in CACHED_ATTR_NAMES:
                 attr_value = attrs.get(attr_name, None)
@@ -1917,14 +1936,13 @@ class DocParagraphIter:
         self.next_index = 0
         # name = doc.get_version_path(doc.get_version())
         # self.f = name.open("r") if name.is_file() else None
-        if self.doc.doc_lines is None:
-            self.doc.ensure_par_ids_loaded()
+        self.doc.ensure_par_ids_loaded()
         # Use same set of lines for the whole iteration
         # to avoid issues with concurrent modifications.
         # This also allows to avoid loading lines multiple
         # times if they have already been loaded.
-        self.doc_lines = self.doc.doc_lines
-        if not self.doc_lines:
+        self.__doc_lines = self.doc.get_cache_doc_lines()
+        if not self.__doc_lines:
             self.next_index = -1
 
     def __enter__(self):
@@ -1942,9 +1960,9 @@ class DocParagraphIter:
         while True:
             if self.next_index < 0:
                 raise StopIteration
-            line = self.doc_lines[self.next_index]
+            line = self.__doc_lines[self.next_index]
             self.next_index += 1
-            if self.next_index >= len(self.doc_lines):
+            if self.next_index >= len(self.__doc_lines):
                 self.next_index = -1
             if line != "\n":
                 par_id, t, attrs = parse_docline(line)
