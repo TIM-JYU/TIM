@@ -1,4 +1,5 @@
 """Server tests for preamble."""
+
 from unittest.mock import patch, Mock
 
 from lxml import html
@@ -132,14 +133,12 @@ class PreambleTest2(PreambleTestBase):
         self.login_test2()
         folder = self.current_user.get_personal_folder().path
         d, p1, p2, p3 = self.create_doc_and_preamble(folder)
-        p1.document.add_text(
-            """
+        p1.document.add_text("""
 #- {area=a settings=""}
 a: b
 
 #- {area_end=a}
-"""
-        )
+""")
         resp = self.get(d.url, as_tree=True)
 
         # There should not be warnings about missing areas.
@@ -375,7 +374,7 @@ class PreambleTest4(TimRouteTest):
         preamble = self.create_doc(
             f"{folder}/{PREAMBLE_FOLDER_NAME}/{DEFAULT_PREAMBLE_DOC}"
         )
-        preamble.document.add_text("test")[0]
+        preamble.document.add_text("test")
         self.assertNotIn(
             "The paragraphs in the main document must "
             "have distinct ids from the preamble documents. "
