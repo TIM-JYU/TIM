@@ -115,7 +115,9 @@ class DocParagraph:
         self.attrs: dict[str, str] | None = None
         self.nomacros = None
         self.ref_chain = None
-        self.answer_nr: int | None = None  # needed if variable tasks, None = not task at all or not variable task
+        self.answer_nr: int | None = (
+            None  # needed if variable tasks, None = not task at all or not variable task
+        )
         self.md = ""
         self.id = None
         self.ask_new: bool | None = None  # to send for plugins to force new question
@@ -605,10 +607,11 @@ class DocParagraph:
             persist=not no_persist,
         )
 
-        # This DocParagraph instance is not necessarily the same as what self.doc contains. In that case, we copy the
+        # This DocParagraph instance is not necessarily
+        # the same as what self.doc contains. In that case, we copy the
         # HTML from the doc's equivalent paragraph.
         if self.html is None:
-            self.html = self.doc.par_map[self.get_id()]["c"].html
+            self.html = self.doc.get_html(self.get_id())
             assert self.html is not None
         return self.html
 

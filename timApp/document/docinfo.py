@@ -455,8 +455,9 @@ class DocInfo(Item):
                     ),
                 }
             )
-            if (self.document.vr is not None) and add_errors:
-                errors = self.document.vr.get_as_html()
+            vr_html = self.document.get_validation_result_as_html()
+            if (vr_html is not None) and add_errors:
+                errors = vr_html
                 if errors and errors != "":
                     if errors.find("Duplicate paragraph id") != -1:
                         errors += "<br><br>Fix by removing duplicate paragraph ids or delete the extra paragraphs."

@@ -156,8 +156,16 @@ class Document:
         self.modifier_group_id = modifier_group_id
         self.version = None
         self.user = None
-
         self.preload_option = preload_option
+        # The corresponding DocInfo object.
+        self.docinfo: Optional["DocInfo"] = None
+        # Cache for single paragraphs
+        self.single_par_cache: dict[str, DocParagraph] = {}
+        # Cache for document settings.
+        self.settings_cache: DocSettings | None = None
+        # Cache for documents that are referenced by this document
+        self.ref_doc_cache: dict[str, Document] = {}
+
         # Used to cache paragraphs in memory on request so the pars don't have to be read from disk in every for loop
         self.__par_cache: list[DocParagraph] | None = None
         # List of par ids - it is much faster to load only ids and sometimes full pars are not needed
@@ -173,46 +181,38 @@ class Document:
         # Whether par_cache is incomplete -
         # this is the case when insert_temporary_pars
         # is called with PreloadOption.none
-        self.is_incomplete_cache: bool = False
+        self.__is_incomplete_cache: bool = False
         # Whether the document exists on disk.
         self.__exists: bool | None = None
         # Cache for the original document.
-        self.source_doc: Document | None = None
-        # Cache for document settings.
-        self.settings_cache: DocSettings | None = None
-        # The corresponding DocInfo object.
-        self.docinfo: Optional["DocInfo"] = None
+        self.__source_doc: Document | None = None
         # Cache for own settings; see get_own_settings
-        self.own_settings = None
+        self.__own_settings = None
         # Whether preamble has been loaded
         self.preamble_included = False
         # If preamble loaded, but not included yet
-        self.preamble_should_include = False
-        # Cache for documents that are referenced by this document
-        self.ref_doc_cache: dict[str, Document] = {}
-        # Cache for single paragraphs
-        self.single_par_cache: dict[str, DocParagraph] = {}
+        self.__preamble_should_include = False
         # Used for accessing previous/next paragraphs quickly based on id
-        self.par_map = None
+        self.__par_map = None
         # List of preamble pars if they have been inserted
-        self.preamble_pars = None
+        self.__preamble_pars = None
 
-        self.vr: ValidationResult | None = None
+        self.__vr: ValidationResult | None = None
 
-        self.plugin_task_ids = None  # cache for named plugin task ids
-        self.plugin_count = 0  # cache for number of all plugins in the document
+        self.__plugin_task_ids = None  # cache for named plugin task ids
+        self.__plugin_count = 0  # cache for number of all plugins in the document
 
         # cache for parId/attributes-name maps for pars
-        self.par_id_attrs_name_maps: dict[str, dict[str, str]] | None = None
+        self.__par_id_attrs_name_maps: dict[str, dict[str, str]] | None = None
 
         # cache for attributes-name/parId maps for pars
-        self.attrs_name_par_id_maps: dict[str, dict[str, str]] | None = None
+        self.__attrs_name_par_id_maps: dict[str, dict[str, str]] | None = None
 
         # cache for id-attributes-name lists
-        self.attrs_name_lists: dict[str, list[str]] | None = None
+        self.__attrs_name_lists: dict[str, list[str]] | None = None
 
         # cache for id-attrs maps for pars
-        self.par_id_attrs_map: dict[str, dict] | None = None
+        self.__par_id_attrs_map: dict[str, dict] | None = None
 
     @property
     def id(self):
@@ -265,19 +265,19 @@ class Document:
         ).is_file()
 
     def __update_par_map(self):
-        self.par_map = {}
+        self.__par_map = {}
         self.__par_ids = []
         self.__par_settings = []
         self.__par_attrs = []
         self.__par_hashes = []
-        self.par_id_attrs_map = {}
+        self.__par_id_attrs_map = {}
         settings_allowed = True
         for i in range(0, len(self.__par_cache)):
             curr_p = self.__par_cache[i]
             par_id = curr_p.get_id()
             prev_p = self.__par_cache[i - 1] if i > 0 else None
             next_p = self.__par_cache[i + 1] if i + 1 < len(self.__par_cache) else None
-            self.par_map[par_id] = {"p": prev_p, "n": next_p, "c": curr_p}
+            self.__par_map[par_id] = {"p": prev_p, "n": next_p, "c": curr_p}
             self.__par_ids.append(par_id)
             self.__par_hashes.append(curr_p.get_hash())
             if curr_p.is_setting() and settings_allowed:
@@ -286,8 +286,8 @@ class Document:
                 settings_allowed = False
             attrs = curr_p.attrs if curr_p.attrs else {}
             self.__par_attrs.append(attrs)
-            self.par_id_attrs_map[par_id] = attrs
-        if not self.is_incomplete_cache:
+            self.__par_id_attrs_map[par_id] = attrs
+        if not self.__is_incomplete_cache:
             self.single_par_cache.update({p.get_id(): p for p in self.__par_cache})
 
     def is_doc_pars(self, pars: list[DocParagraph]) -> bool:
@@ -299,6 +299,25 @@ class Document:
         :param pars: List of paragraphs to check.
         """
         return pars == self.__par_cache
+
+    def get_html(self, par_id: str) -> str:
+        return self.__par_map[par_id]["c"].html
+
+    def get_validation_result_as_html(self) -> str | None:
+        vr = self.__vr
+        if vr is None:
+            return None
+        return vr.get_as_html()
+
+    def get_plugin_task_ids(self) -> dict[str, str]:
+        return self.__plugin_task_ids
+
+    def get_plugin_count(self) -> int:
+        return self.__plugin_count
+
+    def set_plugin_task_ids(self, plugin_task_ids: dict[str, str], plugin_count: int):
+        self.__plugin_task_ids = plugin_task_ids
+        self.__plugin_count = plugin_count
 
     def force_load_pars(self):
         self.__par_cache = None
@@ -318,14 +337,14 @@ class Document:
         # self.par_cache = list(self.preamble_pars) if self.preamble_pars else []
         self.__par_cache = [par for par in self]
         # is preamble loaded but not included yet? if so, include it now
-        if self.preamble_should_include and self.preamble_pars:
-            self.__par_cache = list(self.preamble_pars) + self.__par_cache
+        if self.__preamble_should_include and self.__preamble_pars:
+            self.__par_cache = list(self.__preamble_pars) + self.__par_cache
             self.preamble_included = True
-            self.preamble_should_include = False
+            self.__preamble_should_include = False
         self.__update_par_map()
 
     def ensure_pars_loaded(self):
-        if self.par_map is None:
+        if self.__par_map is None:
             self.load_pars()
 
     def get_previous_par(
@@ -339,7 +358,7 @@ class Document:
         if self.preload_option == PreloadOption.all:
             self.ensure_pars_loaded()
         else:
-            if self.par_map is not None:
+            if self.__par_map is not None:
                 pass
             else:
                 self.ensure_par_ids_loaded()
@@ -356,7 +375,7 @@ class Document:
                     if i >= 0 or get_last_if_no_prev
                     else None
                 )
-        prev = self.par_map.get(par_id)
+        prev = self.__par_map.get(par_id)
         result = None
         if prev:
             result = prev["p"]
@@ -413,9 +432,9 @@ class Document:
                 break
 
     def is_reference(self, par_id: str) -> bool:
-        if self.par_id_attrs_map is None:
+        if self.__par_id_attrs_map is None:
             self.generate_name_maps()
-        attrs = self.par_id_attrs_map.get(par_id)
+        attrs = self.__par_id_attrs_map.get(par_id)
         if not attrs:
             return False
         return DocParagraph.is_reference_attrs(attrs)
@@ -454,10 +473,12 @@ class Document:
 
     def get_own_settings(self) -> YamlBlock:
         """Returns the settings for this document excluding any preamble documents."""
-        if self.own_settings is None:
+        if self.__own_settings is None:
             self.ensure_par_ids_loaded()
-            self.own_settings = resolve_settings_for_par_ids(self, self.__par_settings)
-        return self.own_settings
+            self.__own_settings = resolve_settings_for_par_ids(
+                self, self.__par_settings
+            )
+        return self.__own_settings
 
     def get_settings(self) -> DocSettings:
         cached = self.settings_cache
@@ -502,7 +523,7 @@ class Document:
             vr = DocumentParser.do_validate_structure(dicts)
             err = vr.get_as_html()
             if err:
-                self.vr = vr
+                self.__vr = vr
                 log_error(str(self.doc_id) + ": " + err)
         if with_tl:
             return "\n".join(
@@ -575,7 +596,7 @@ class Document:
             else:
                 vr = dp.validate_structure()
                 # vr.raise_if_has_critical_issues()
-                self.vr = vr
+                self.__vr = vr
                 if do_validation == DoValidation.EXCEPTION:
                     vr.raise_if_has_any_issues()
         blocks = [
@@ -713,7 +734,7 @@ class Document:
             with self.get_version_path(ver).open("w"):
                 pass
         self.__write_changelog(ver, op, par_id, op_params)
-        self.own_settings = None  # TODO: this on not cleared in clear_mem_cache?
+        self.__own_settings = None  # TODO: this on not cleared in clear_mem_cache?
         self.clear_mem_cache(ver)
         return ver
 
@@ -764,7 +785,7 @@ class Document:
         if self.preload_option == PreloadOption.all:
             self.ensure_pars_loaded()
             try:
-                return self.par_map[par_id]["c"]
+                return self.__par_map[par_id]["c"]
             except KeyError:
                 return self._raise_not_found(par_id)
         cached = self.single_par_cache.get(par_id)
@@ -1546,7 +1567,7 @@ class Document:
         return self.docinfo
 
     def get_source_document(self) -> Document | None:
-        if self.source_doc is None:
+        if self.__source_doc is None:
             docinfo = self.get_docinfo()
             if docinfo.is_original_translation:
                 # We can't call get_settings method here because of potential infinite recursion.
@@ -1562,15 +1583,15 @@ class Document:
                 except TimDbException:
                     return None
                 src_docid = settings.get_source_document()
-                self.source_doc = (
+                self.__source_doc = (
                     Document(src_docid, preload_option=self.preload_option)
                     if src_docid is not None
                     else None
                 )
             else:
-                self.source_doc = docinfo.src_doc.document
-                self.ref_doc_cache[str(self.source_doc.doc_id)] = self.source_doc
-        return self.source_doc
+                self.__source_doc = docinfo.src_doc.document
+                self.ref_doc_cache[str(self.__source_doc.doc_id)] = self.__source_doc
+        return self.__source_doc
 
     def get_last_par(self):
         self.ensure_par_ids_loaded()
@@ -1582,7 +1603,7 @@ class Document:
     def get_par_ids(self, no_preamble=False) -> list[str]:
         self.ensure_par_ids_loaded()
         if self.preamble_included and no_preamble:
-            return self.__par_ids[len(self.preamble_pars) :]
+            return self.__par_ids[len(self.__preamble_pars) :]
         else:
             return self.__par_ids
 
@@ -1594,7 +1615,7 @@ class Document:
         if (
             self.__par_ids is None
             or self.__doc_lines is None
-            or self.is_incomplete_cache
+            or self.__is_incomplete_cache
         ):
             self._load_par_ids()
 
@@ -1649,7 +1670,7 @@ class Document:
         :return: Preamble pars.
         """
         if self.preamble_included:
-            return self.preamble_pars
+            return self.__preamble_pars
         self.ensure_par_ids_loaded()
 
         # We must clone the preamble pars because they may be used in the context of multiple documents.
@@ -1677,7 +1698,7 @@ class Document:
         for p in pars:
             p.preamble_doc = p.doc.get_docinfo()
             p.doc = self
-        self.preamble_pars = pars
+        self.__preamble_pars = pars
         if pars and self.__par_cache is not None:
             self.__par_cache = pars + self.__par_cache
             self.__update_par_map()
@@ -1685,7 +1706,7 @@ class Document:
             for p in pars:
                 self.single_par_cache[p.get_id()] = p
                 self.add_name_par_id_map("taskId", p.get_attr("taskId"), p.get_id())
-                self.preamble_should_include = True
+                self.__preamble_should_include = True
         self.preamble_included = True
         return pars
 
@@ -1707,7 +1728,7 @@ class Document:
                 self.__par_cache = pars
             else:
                 self.__par_cache = [context_par] + pars
-            self.is_incomplete_cache = True
+            self.__is_incomplete_cache = True
         self.__update_par_map()
 
     def clear_doc_lines_cache(self):
@@ -1716,18 +1737,18 @@ class Document:
     def clear_mem_cache(self, ver=None) -> None:
         self.version = ver
         self.settings_cache = None
-        self.par_map = None
+        self.__par_map = None
         self.__par_ids = None
         self.__par_hashes = None
-        self.par_id_attrs_map = None
-        self.source_doc = None
+        self.__par_id_attrs_map = None
+        self.__source_doc = None
         self.settings_cache = None
         self.ref_doc_cache = {}
         self.single_par_cache = {}
         self.__par_cache = None
-        self.attrs_name_par_id_maps = None
-        self.par_id_attrs_name_maps = None
-        self.attrs_name_lists = None
+        self.__attrs_name_par_id_maps = None
+        self.__par_id_attrs_name_maps = None
+        self.__attrs_name_lists = None
         self.clear_doc_lines_cache()
 
     def get_ref_doc(
@@ -1789,18 +1810,18 @@ class Document:
 
     def generate_name_maps(self):
         self.ensure_par_ids_loaded()
-        self.par_id_attrs_name_maps = {}
-        self.attrs_name_par_id_maps = {}
-        self.attrs_name_lists = {}
-        self.par_id_attrs_map = {}
+        self.__par_id_attrs_name_maps = {}
+        self.__attrs_name_par_id_maps = {}
+        self.__attrs_name_lists = {}
+        self.__par_id_attrs_map = {}
         for attr_name in CACHED_ATTR_NAMES:
-            self.par_id_attrs_name_maps[attr_name] = {}
-            self.attrs_name_par_id_maps[attr_name] = {}
-            self.attrs_name_lists[attr_name] = []
+            self.__par_id_attrs_name_maps[attr_name] = {}
+            self.__attrs_name_par_id_maps[attr_name] = {}
+            self.__attrs_name_lists[attr_name] = []
         for i in range(len(self.__par_ids)):
             par_id = self.__par_ids[i]
             attrs = self.__par_attrs[i]
-            self.par_id_attrs_map[par_id] = attrs
+            self.__par_id_attrs_map[par_id] = attrs
             for attr_name in CACHED_ATTR_NAMES:
                 attr_value = attrs.get(attr_name, None)
                 if attr_value is not None:
@@ -1815,34 +1836,34 @@ class Document:
                             attr_value = tid.task_name
                         except PluginException:
                             pass
-                    self.attrs_name_lists[attr_name].append(attr_value)
-                    self.par_id_attrs_name_maps[attr_name][par_id] = attr_value
-                    self.attrs_name_par_id_maps[attr_name][attr_value] = par_id
+                    self.__attrs_name_lists[attr_name].append(attr_value)
+                    self.__par_id_attrs_name_maps[attr_name][par_id] = attr_value
+                    self.__attrs_name_par_id_maps[attr_name][attr_value] = par_id
 
     def get_par_id_name_map(self, attr_name: str) -> dict[str, str]:
-        if self.par_id_attrs_name_maps is None:
+        if self.__par_id_attrs_name_maps is None:
             self.generate_name_maps()
-        return self.par_id_attrs_name_maps.get(attr_name, {})
+        return self.__par_id_attrs_name_maps.get(attr_name, {})
 
     def get_name_par_id_map(self, attr_name: str) -> dict[str, str]:
-        if self.attrs_name_par_id_maps is None:
+        if self.__attrs_name_par_id_maps is None:
             self.generate_name_maps()
-        return self.attrs_name_par_id_maps.get(attr_name, {})
+        return self.__attrs_name_par_id_maps.get(attr_name, {})
 
     def add_name_par_id_map(self, attr_name: str, value_name: str, par_id: str):
-        if self.attrs_name_par_id_maps is None:
+        if self.__attrs_name_par_id_maps is None:
             self.generate_name_maps()
-        self.attrs_name_par_id_maps[attr_name][value_name] = par_id
+        self.__attrs_name_par_id_maps[attr_name][value_name] = par_id
 
     def get_name_list(self, attr_name: str) -> list[str]:
-        if self.attrs_name_lists is None:
+        if self.__attrs_name_lists is None:
             self.generate_name_maps()
-        return self.attrs_name_lists.get(attr_name, [])
+        return self.__attrs_name_lists.get(attr_name, [])
 
     def get_attrs(self, par_id: str) -> dict:
-        if self.par_id_attrs_map is None:
+        if self.__par_id_attrs_map is None:
             self.generate_name_maps()
-        return self.par_id_attrs_map.get(par_id, {})
+        return self.__par_id_attrs_map.get(par_id, {})
 
     def get_par_id(
         self, attr_name: str, value_name: str, def_value: str | None
