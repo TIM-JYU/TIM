@@ -1,8 +1,9 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, asdict
-from typing import Literal, Protocol, Callable, Iterable, Any, cast
+from typing import Literal, Protocol, Callable, Iterable, Any, cast, AsyncIterator
 from enum import StrEnum
+from openai import OpenAI, AsyncOpenAI
 
 
 class ModelErrorKind(StrEnum):
@@ -15,7 +16,9 @@ class ModelErrorKind(StrEnum):
 @dataclass(frozen=True)
 class ChatModelError(Exception):
     kind: ModelErrorKind
+    """Error kind."""
     description: str | None = None
+    """Error description."""
     cause: BaseException | None = None
     """Original exception cause."""
 
@@ -24,12 +27,21 @@ class ChatModelError(Exception):
 
 
 class ChatModel(Protocol):
-    """An abstract model class for generating responses."""
+    """
+    An abstract model class for generating responses.
+    Any new chat model must implement this protocol.
+    """
 
     def generate(
         self, messages: list[Message], options: GenerateOptions
     ) -> ModelResponse:
-        """Generate a model response from the given messages."""
+        """
+        Generate a model response from the given messages.
+
+        :param messages: The messages to send to the model.
+        :param options: Options for controlling the model response.
+        :return: Response from the model.
+        """
         ...
 
     def generate_stream(
@@ -38,14 +50,67 @@ class ChatModel(Protocol):
         """
         Generate a model response from the given messages.
         Uses streaming and returns the response in chunks.
+
+        :param messages: The messages to send to the model.
+        :param options: Options for controlling the model response.
+        :return: Response from the model.
         """
         ...
 
     def get_info(self) -> ModelInfo:
-        """Return info about the model."""
+        """
+        Return info about the model.
+
+        :return: `ModelInfo` of the chat model.
+        """
         ...
 
+    # TODO: needed?
     def get_models(self) -> list[ModelInfo]:
+        """Get all the available models from the Model API."""
+        ...
+
+
+class AsyncChatModel(Protocol):
+    """
+    An abstract async model class for generating responses.
+    Any new async chat model must implement this protocol.
+    """
+
+    async def generate(
+        self, messages: list[Message], options: GenerateOptions
+    ) -> ModelResponse:
+        """
+        Generate a model response from the given messages.
+
+        :param messages: The messages to send to the model.
+        :param options: Options for controlling the model response.
+        :return: Response from the model.
+        """
+        ...
+
+    def generate_stream(
+        self, messages: list[Message], options: GenerateOptions
+    ) -> AsyncIterator[ModelResponseChunk]:
+        """
+        Generate a model response from the given messages.
+        Uses streaming and returns the response in chunks.
+
+        :param messages: The messages to send to the model.
+        :param options: Options for controlling the model response.
+        :return: Response from the model.
+        """
+        ...
+
+    def get_info(self) -> ModelInfo:
+        """
+        Return info about the model.
+
+        :return: `ModelInfo` of the chat model.
+        """
+        ...
+
+    async def get_models(self) -> list[ModelInfo]:
         """Get all the available models from the Model API."""
         ...
 
@@ -76,10 +141,8 @@ class Usage:
 
     completion_tokens: int
     """Number of tokens in the generated completion."""
-
     prompt_tokens: int
     """Number of tokens in the prompt."""
-
     total_tokens: int
     """Total number of tokens used in the request (prompt + completion)."""
 
@@ -117,18 +180,84 @@ class ModelInfo:
     supports_streaming: bool = False
 
 
+def _convert_usage(usage: Any) -> Usage | None:
+    """
+    Convert completion usage from the API response to `Usage`
+
+    :param usage: The usage dictionary received from the model API.
+    :return: `Usage` or None if no usage was in the model response.
+    """
+    if not usage:
+        return None
+    return Usage(
+        completion_tokens=usage.completion_tokens,
+        prompt_tokens=usage.prompt_tokens,
+        total_tokens=usage.total_tokens,
+    )
+
+
+def _completion_kwargs(
+    info: ModelInfo,
+    messages: list[Message],
+    options: GenerateOptions,
+    stream: bool,
+) -> dict[str, Any]:
+    """
+    Prepare the keyword arguments for a completion request.
+
+    :param info: Information about the model being used.
+    :param messages: A list of messages to be sent to the model.
+    :param options: Options for generating the completion.
+    :param stream: Whether to use streaming for the response.
+    :return: A dictionary of keyword arguments for the completion request.
+    """
+    msgs: list[dict[str, str]] = [asdict(m) for m in messages]
+    temperature = options.temperature if info.supports_temperature else None
+    stream_options = (
+        {"stream": True, "stream_options": {"include_usage": True}} if stream else {}
+    )
+    return dict(
+        model=info.model_id,
+        messages=cast(Any, msgs),
+        temperature=temperature,
+        max_completion_tokens=options.max_tokens,
+        **stream_options,
+    )
+
+
+def _parse_completion_response(res: Any) -> ModelResponse:
+    """
+    Parse the API response from the LLM to `ModelResponse`.
+
+    :param res: The response from the model API.
+    :return: Response in `ModelResponse`.
+    """
+    message_content = res.choices[0].message.content or ""
+    usage = _convert_usage(res.usage)
+    return ModelResponse(content=message_content, usage=usage)
+
+
+def _parse_stream_chunk(chunk: Any) -> ModelResponseChunk:
+    """
+    Parse the streaming API response from the LLM to `ModelResponseChunk`.
+
+    :param chunk: The response chunk from the model API.
+    :return: Response in `ModelResponseChunk`.
+    """
+    usage = _convert_usage(chunk.usage)
+    if len(chunk.choices) == 0:
+        # No more messages
+        return ModelResponseChunk(usage=usage, done=True)
+    msg = chunk.choices[0]
+    return ModelResponseChunk(delta=msg.delta.content, usage=usage)
+
+
 class GenericApiChatModel(ChatModel):
     """
     `ChatModel` implementation for providers that are OpenAI SDK compatible.
     """
 
     def __init__(self, info: ModelInfo, api_key: str, base_url: str):
-        # TODO: move or change lib
-        try:
-            from openai import OpenAI, types, AsyncOpenAI  # type: ignore
-        except ModuleNotFoundError as e:
-            raise ModuleNotFoundError("Python module `openai` not found.") from e
-
         self._info = info
         self._api_key = api_key
         self._base_url = base_url
@@ -138,10 +267,10 @@ class GenericApiChatModel(ChatModel):
         self, messages: list[Message], options: GenerateOptions
     ) -> ModelResponse:
         """Generate a model response from the given messages."""
-        res = self.create_completion(options=options, messages=messages)
-        message_content = res.choices[0].message.content or ""
-        usage = OpenAiChatModel.get_usage(res.usage)
-        return ModelResponse(content=message_content, usage=usage)
+        kwargs = _completion_kwargs(self._info, messages, options, False)
+        # TODO: handle errors
+        res = self._client.chat.completions.create(**kwargs)
+        return _parse_completion_response(res)
 
     def generate_stream(
         self, messages: list[Message], options: GenerateOptions
@@ -155,19 +284,13 @@ class GenericApiChatModel(ChatModel):
                 f"Streaming is not supported with model: {self._info.model_id}"
             )
 
-        stream = self.create_completion(options=options, messages=messages, stream=True)
+        kwargs = _completion_kwargs(self._info, messages, options, True)
+        # TODO: handle errors
+        stream = self._client.chat.completions.create(**kwargs)
 
         # Iterate the message chunks in the stream
         for chunk in stream:
-            usage = OpenAiChatModel.get_usage(chunk.usage)
-            if len(chunk.choices) == 0:
-                # No more messages
-                yield ModelResponseChunk(usage=usage, done=True)
-                continue
-            msg = chunk.choices[0]
-            message_delta = msg.delta.content
-            # Return the partial message
-            yield ModelResponseChunk(delta=message_delta, usage=usage)
+            yield _parse_stream_chunk(chunk)
 
     def get_info(self) -> ModelInfo:
         """Return info about the model."""
@@ -175,47 +298,65 @@ class GenericApiChatModel(ChatModel):
 
     def get_models(self) -> list[ModelInfo]:
         """Get all the available models from the Model API."""
-        client = self._client
         return [
-            ModelInfo(model_id=m.id, provider="openai") for m in client.models.list()
+            ModelInfo(model_id=m.id, provider=self._info.provider)
+            for m in self._client.models.list()
         ]
 
-    @staticmethod
-    def get_usage(
-        usage: Any,
-    ) -> Usage | None:
-        """Convert completion usage to `Usage`"""
-        if not usage:
-            return None
-        return Usage(
-            completion_tokens=usage.completion_tokens,
-            prompt_tokens=usage.prompt_tokens,
-            total_tokens=usage.total_tokens,
-        )
 
-    def create_completion(
-        self,
-        messages: list[Message],
-        options: GenerateOptions,
-        stream: bool = False,
-    ):
-        """Create a completion response from the given messages."""
-        client = self._client
-        msgs: list[dict[str, str]] = [asdict(m) for m in messages]
-        temperature = options.temperature if self._info.supports_temperature else None
-        stream_options = (
-            {"stream": True, "stream_options": {"include_usage": True}}
-            if stream
-            else {}
-        )
+class AsyncGenericApiChatModel(AsyncChatModel):
+    """
+    `AsyncChatModel` implementation for providers that are OpenAI SDK compatible.
+    """
+
+    def __init__(self, info: ModelInfo, api_key: str, base_url: str):
+        self._info = info
+        self._api_key = api_key
+        self._base_url = base_url
+        self._client = AsyncOpenAI(api_key=self._api_key, base_url=self._base_url)
+
+    async def generate(
+        self, messages: list[Message], options: GenerateOptions
+    ) -> ModelResponse:
+        """Generate a model response from the given messages."""
+        kwargs = _completion_kwargs(self._info, messages, options, False)
         # TODO: handle errors
-        return client.chat.completions.create(
-            model=self._info.model_id,
-            messages=cast(Any, msgs),
-            temperature=temperature,
-            max_completion_tokens=options.max_tokens,
-            **stream_options,
-        )
+        res = await self._client.chat.completions.create(**kwargs)
+        return _parse_completion_response(res)
+
+    def generate_stream(
+        self, messages: list[Message], options: GenerateOptions
+    ) -> AsyncIterator[ModelResponseChunk]:
+        """
+        Generate a model response from the given messages.
+        Uses streaming and returns the response in chunks.
+        """
+
+        async def gen() -> AsyncIterator[ModelResponseChunk]:
+            if not self._info.supports_streaming:
+                raise ValueError(
+                    f"Streaming is not supported with model: {self._info.model_id}"
+                )
+
+            kwargs = _completion_kwargs(self._info, messages, options, True)
+            # TODO: handle errors
+            stream = await self._client.chat.completions.create(**kwargs)
+
+            async for chunk in stream:
+                yield _parse_stream_chunk(chunk)
+
+        return gen()
+
+    def get_info(self) -> ModelInfo:
+        """Return info about the model."""
+        return self._info
+
+    async def get_models(self) -> list[ModelInfo]:
+        """Get all the available models from the Model API."""
+        models = await self._client.models.list()
+        return [
+            ModelInfo(model_id=m.id, provider=self._info.provider) async for m in models
+        ]
 
 
 class OpenAiChatModel(GenericApiChatModel):
@@ -223,7 +364,25 @@ class OpenAiChatModel(GenericApiChatModel):
 
     def __init__(self, info: ModelInfo, api_key: str, base_url: str | None = None):
         _base_url = (base_url or "https://api.openai.com/v1").rstrip("/")
-        super().__init__(info, api_key, base_url)
+        super().__init__(info, api_key, _base_url)
+
+
+class AnthropicChatModel(GenericApiChatModel):
+    """`ChatModel` implementation for Anthropic models."""
+
+    def __init__(self, info: ModelInfo, api_key: str, base_url: str | None = None):
+        _base_url = (base_url or "https://api.anthropic.com/v1").rstrip("/")
+        super().__init__(info, api_key, _base_url)
+
+
+class GoogleChatModel(GenericApiChatModel):
+    """`ChatModel` implementation for Google Gemini models."""
+
+    def __init__(self, info: ModelInfo, api_key: str, base_url: str | None = None):
+        _base_url = (
+            base_url or "https://generativelanguage.googleapis.com/v1beta/openai"
+        ).rstrip("/")
+        super().__init__(info, api_key, _base_url)
 
 
 class DummyChatModel(ChatModel):
@@ -231,36 +390,69 @@ class DummyChatModel(ChatModel):
 
     def __init__(self, info: ModelInfo):
         self._info = info
+        self.response = "This is a dummy response"
 
     def generate(
         self, messages: list[Message], options: GenerateOptions
     ) -> ModelResponse:
-        return ModelResponse(
-            content="This is a dummy response",
-            usage=Usage(completion_tokens=0, prompt_tokens=0, total_tokens=0),
-        )
+        return ModelResponse(content=self.response, usage=Usage(0, 0, 0))
 
     def generate_stream(
         self, messages: list[Message], options: GenerateOptions
     ) -> Iterable[ModelResponseChunk]:
-        return [
-            ModelResponseChunk(delta="This", usage=None, done=False),
-            ModelResponseChunk(delta=" is", usage=None, done=False),
-            ModelResponseChunk(delta=" a", usage=None, done=False),
-            ModelResponseChunk(delta=" dummy", usage=None, done=False),
-            ModelResponseChunk(delta=" response", usage=None, done=False),
-            ModelResponseChunk(
-                delta=None,
-                usage=Usage(completion_tokens=0, prompt_tokens=0, total_tokens=0),
-                done=True,
-            ),
-        ]
+        for part in _split_keep_left(self.response, " "):
+            yield ModelResponseChunk(delta=part)
+        yield ModelResponseChunk(delta=None, usage=Usage(0, 0, 0), done=True)
 
     def get_info(self) -> ModelInfo:
         return self._info
 
     def get_models(self) -> list[ModelInfo]:
         return []
+
+
+class DummyAsyncChatModel(AsyncChatModel):
+    """A dummy async chat model for testing."""
+
+    def __init__(self, info: ModelInfo):
+        self._info = info
+        self.response = "This is a dummy response"
+
+    async def generate(
+        self, messages: list[Message], options: GenerateOptions
+    ) -> ModelResponse:
+        return ModelResponse(content=self.response, usage=Usage(0, 0, 0))
+
+    def generate_stream(
+        self, messages: list[Message], options: GenerateOptions
+    ) -> AsyncIterator[ModelResponseChunk]:
+        async def gen() -> AsyncIterator[ModelResponseChunk]:
+            for part in _split_keep_left(self.response, " "):
+                yield ModelResponseChunk(delta=part)
+            yield ModelResponseChunk(delta=None, usage=Usage(0, 0, 0), done=True)
+
+        return gen()
+
+    def get_info(self) -> ModelInfo:
+        return self._info
+
+    async def get_models(self) -> list[ModelInfo]:
+        return []
+
+
+def _split_keep_left(data: str, d: str) -> list[str]:
+    """
+    Split the string based on the specified delimiter.
+    Keep the delimiter on the left side of each split segment.
+
+    :param data: String to split.
+    :param d: The split delimiter.
+    :return: Split string in a list.
+    """
+    parts = [p + d for p in data.split(d) if p]
+    if data.endswith(d):
+        return parts
+    return parts[:-1] + [parts[-1][: -len(d)]] if parts else []
 
 
 # TODO: Let database handle the supported models and retrieving model info.
@@ -316,14 +508,15 @@ class ModelRegistry:
         return init_fn(info, spec.api_key, spec.base_url)
 
 
-# TODO: add more providers
-Provider = Literal["openai", "dummy"]
+Provider = Literal["openai", "anthropic", "google", "dummy"]
 
 ProviderInitFn = Callable[[ModelInfo, str, str | None], ChatModel]
 """Function type for initializing `Model` instances from different providers."""
 
 PROVIDERS: dict[Provider, ProviderInitFn] = {
     "openai": lambda info, key, url: OpenAiChatModel(info, key, url),
+    "anthropic": lambda info, key, url: AnthropicChatModel(info, key, url),
+    "google": lambda info, key, url: GoogleChatModel(info, key, url),
 }
 """All the supported providers."""
 
@@ -332,8 +525,22 @@ SUPPORTED_MODELS: dict[Provider, list[ModelInfo]] = {
     "openai": [
         ModelInfo(
             provider="openai",
+            model_id="gpt-4.1-nano",
+            label="GPT-4.1 Nano",
+            supports_temperature=True,
+            supports_streaming=True,
+        ),
+        ModelInfo(
+            provider="openai",
             model_id="gpt-4.1-mini",
             label="GPT-4.1 Mini",
+            supports_temperature=True,
+            supports_streaming=True,
+        ),
+        ModelInfo(
+            provider="openai",
+            model_id="gpt-4o-mini",
+            label="GPT-4o Mini",
             supports_temperature=True,
             supports_streaming=True,
         ),
