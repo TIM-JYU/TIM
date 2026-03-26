@@ -347,7 +347,7 @@ class Plugin:
             return self.known.pointsRule.allowUserMin
         return default
 
-    def user_max_points(self, default=None):
+    def user_max_points(self, default: str | None = None) -> str | None:
         if self.known.pointsRule and self.known.pointsRule.allowUserMax is not missing:
             return self.known.pointsRule.allowUserMax
         return default

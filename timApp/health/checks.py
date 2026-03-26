@@ -24,6 +24,13 @@ ENABLE_REDIS_REPLICATION_CHECK = False
 # Expected string in page to verify it's loaded correctly
 PAGE_EXPECTED_STRING = b"TIM"
 
+SLOW_QUERY_THRESHOLD = timedelta(seconds=1)  # A silly number, adjust as needed
+HIGH_MEMORY_THRESHOLD = 0.9  # 90% of max memory
+REPLICATION_LAG_THRESHOLD = 1024 * 1024 * 10  # 10MB replication lag in bytes
+CELERY_PING_TIMEOUT = timedelta(seconds=2)
+MAX_RAM_USAGE_RATIO = 0.80  # Warn if workers use 80%+ of total system RAM
+DISK_SPACE_THRESHOLD = 0.2  # 20% free space
+
 psutil: Any = None
 try:
     import psutil  # type: ignore[import,no-redef]
@@ -54,7 +61,6 @@ def check_pgsql() -> CheckStatus:
 
     Returns DEGRADED if database is slow or connection pool is nearly exhausted.
     """
-    SLOW_QUERY_THRESHOLD = timedelta(seconds=1)
 
     try:
         start_time = time.time()
@@ -106,14 +112,11 @@ def check_redis() -> CheckStatus:
     - :object:`CheckStatus.ERROR`: Redis is unreachable or returns errors.
 
     """
-    SLOW_QUERY_THRESHOLD = timedelta(seconds=1)  # A silly number, adjust as needed
-    HIGH_MEMORY_THRESHOLD = 0.9  # 90% of max memory
-    REPLICATION_LAG_THRESHOLD = 1024 * 1024 * 10  # 10MB replication lag in bytes
 
-    def _replication_check(rclient: redis.Redis = rclient) -> CheckStatus:
+    def _replication_check(r_client: redis.Redis = rclient) -> CheckStatus:
         try:
             # Notice: the default redis-py type hints are incomplete/wrong – we're using synchronous client
-            replication: Dict[str, Any] = rclient.info("replication")  # type: ignore[assignment]
+            replication: Dict[str, Any] = r_client.info("replication")  # type: ignore[assignment]
             role = replication.get("role", "unknown")
 
             # Only check replication metrics if this is a replica
@@ -146,9 +149,9 @@ def check_redis() -> CheckStatus:
                 logger.debug("Redis replication - role: %s", role)
 
             return CheckStatus.ok
-        except (KeyError, RedisError) as e:
+        except (KeyError, RedisError) as _e:
             # Replication info not critical, log but don't fail
-            logger.debug("Could not retrieve Redis replication info: %s", e)
+            logger.debug("Could not retrieve Redis replication info: %s", _e)
             return CheckStatus.skipped
 
     try:
@@ -220,7 +223,6 @@ def check_celery() -> CheckStatus:
 
     Returns ERROR if no workers are available or they don't respond.
     """
-    CELERY_PING_TIMEOUT = timedelta(seconds=2)
 
     try:
         # Create a minimal Celery instance for inspection only
@@ -301,8 +303,6 @@ def check_gunicorn() -> CheckStatus:
     - Workers are not using excessive memory
     """
 
-    MAX_RAM_USAGE_RATIO = 0.80  # Warn if workers use 80%+ of total system RAM
-
     if not HAS_PSUTIL:
         logger.debug("psutil not available, skipping gunicorn health check")
         return CheckStatus.skipped
@@ -361,7 +361,7 @@ def check_gunicorn() -> CheckStatus:
         logger.error("Gunicorn health check failed: %s", e)
         return CheckStatus.error
 
-    return CheckStatus.ok
+    # return CheckStatus.ok
 
 
 def _get_writable_paths() -> Set[str]:
@@ -371,14 +371,12 @@ def _get_writable_paths() -> Set[str]:
     from timApp.util.utils import cache_folder_path
     from timApp.util.utils import temp_folder_path
 
-    paths = set(
-        [
-            current_app.config.get("FILES_PATH", None),
-            current_app.config.get("LOG_DIR", None),
-            cache_folder_path,
-            temp_folder_path,
-        ]
-    )
+    paths = {
+        current_app.config.get("FILES_PATH", None),
+        current_app.config.get("LOG_DIR", None),
+        cache_folder_path,
+        temp_folder_path,
+    }
     return {str(p) for p in paths if p is not None}
 
 
@@ -420,8 +418,6 @@ def check_disk_space() -> CheckStatus:
     """
     import shutil
 
-    DISK_SPACE_THRESHOLD = 0.2  # 20% free space
-
     paths = _get_writable_paths()
     for path in paths:
         try:
@@ -451,6 +447,7 @@ def check_page(route: str) -> bool:
 
     Expects HTTP 200 and presence of "TIM" in the response.
     """
+    # noinspection PyBroadException
     try:
         with current_app.test_client() as client:
             response = client.get(route)
