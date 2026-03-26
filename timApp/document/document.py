@@ -30,7 +30,7 @@ from difflib import SequenceMatcher
 from pathlib import Path
 from tempfile import mkstemp
 from time import time
-from typing import Iterable, Generator, Optional
+from typing import Iterable, Generator, Optional, Iterator
 from typing import TYPE_CHECKING
 
 from filelock import FileLock, BaseFileLock
@@ -161,9 +161,9 @@ class Document:
         # Used to cache paragraphs in memory on request so the pars don't have to be read from disk in every for loop
         self.__par_cache: list[DocParagraph] | None = None
         # List of par ids - it is much faster to load only ids and sometimes full pars are not needed
-        self.par_ids: list[str] | None = None
+        self.__par_ids: list[str] | None = None
         # List of corresponding hashes
-        self.par_hashes: list[str] | None = None
+        self.__par_hashes: list[str] | None = None
         # List of attributes read from disk for pars
         self.par_attrs: list[dict] | None = None
         # List of settings pars
@@ -266,10 +266,10 @@ class Document:
 
     def __update_par_map(self):
         self.par_map = {}
-        self.par_ids = []
+        self.__par_ids = []
         self.par_settings = []
         self.par_attrs = []
-        self.par_hashes = []
+        self.__par_hashes = []
         self.par_id_attrs_map = {}
         settings_allowed = True
         for i in range(0, len(self.__par_cache)):
@@ -278,8 +278,8 @@ class Document:
             prev_p = self.__par_cache[i - 1] if i > 0 else None
             next_p = self.__par_cache[i + 1] if i + 1 < len(self.__par_cache) else None
             self.par_map[par_id] = {"p": prev_p, "n": next_p, "c": curr_p}
-            self.par_ids.append(par_id)
-            self.par_hashes.append(curr_p.get_hash())
+            self.__par_ids.append(par_id)
+            self.__par_hashes.append(curr_p.get_hash())
             if curr_p.is_setting() and settings_allowed:
                 self.par_settings.append(curr_p.get_id())
             else:
@@ -335,15 +335,15 @@ class Document:
             else:
                 self.ensure_par_ids_loaded()
                 try:
-                    i = self.par_ids.index(par_id) - 1
+                    i = self.__par_ids.index(par_id) - 1
                 except ValueError:
                     return (
-                        self.get_paragraph(self.par_ids[-1])
-                        if self.par_ids and get_last_if_no_prev
+                        self.get_paragraph(self.__par_ids[-1])
+                        if self.__par_ids and get_last_if_no_prev
                         else None
                     )
                 return (
-                    self.get_paragraph(self.par_ids[i])
+                    self.get_paragraph(self.__par_ids[i])
                     if i >= 0 or get_last_if_no_prev
                     else None
                 )
@@ -414,8 +414,8 @@ class Document:
     def set_settings(self, settings: dict | YamlBlock, force_new_par: bool = False):
         first_par_id = None
         self.ensure_par_ids_loaded()
-        if self.par_ids:
-            first_par_id = self.par_ids[0]
+        if self.__par_ids:
+            first_par_id = self.__par_ids[0]
         # last_settings_par = self.get_last_settings_par()
         last_settings_par_id = self.get_last_settings_par_id()
         if not isinstance(settings, YamlBlock):
@@ -749,7 +749,7 @@ class Document:
         if self.single_par_cache.get(par_id):
             return True
         self.ensure_par_ids_loaded()
-        return par_id in self.par_ids
+        return par_id in self.__par_ids
 
     def get_paragraph(self, par_id: str) -> DocParagraph:
         if self.preload_option == PreloadOption.all:
@@ -763,10 +763,10 @@ class Document:
             return cached
         self.ensure_par_ids_loaded()
         try:
-            idx = self.par_ids.index(par_id)
+            idx = self.__par_ids.index(par_id)
         except ValueError:
             return self._raise_not_found(par_id)
-        fetched = DocParagraph.get(self, self.par_ids[idx], self.par_hashes[idx])
+        fetched = DocParagraph.get(self, self.__par_ids[idx], self.__par_hashes[idx])
         self.single_par_cache[par_id] = fetched
         return fetched
 
@@ -910,7 +910,7 @@ class Document:
         # so we need to load the original par list to find the first par in the original document
         # TODO: It may be better to load paragraphs in an iterator and filter out preamble pars
         self.ensure_par_ids_loaded()
-        par_ids = self.par_ids
+        par_ids = self.__par_ids
         if par_ids:
             first_par_id = par_ids[0]
         last_settings_par_id = self.get_last_settings_par_id()
@@ -1565,7 +1565,7 @@ class Document:
 
     def get_last_par(self):
         self.ensure_par_ids_loaded()
-        last_par_id = self.par_ids[-1] if self.par_ids else None
+        last_par_id = self.__par_ids[-1] if self.__par_ids else None
         if last_par_id is None:
             return None
         return self.get_paragraph(last_par_id)
@@ -1573,18 +1573,18 @@ class Document:
     def get_par_ids(self, no_preamble=False) -> list[str]:
         self.ensure_par_ids_loaded()
         if self.preamble_included and no_preamble:
-            return self.par_ids[len(self.preamble_pars) :]
+            return self.__par_ids[len(self.preamble_pars) :]
         else:
-            return self.par_ids
+            return self.__par_ids
 
     def ensure_par_ids_loaded(self) -> None:
-        if self.par_ids is None or self.doc_lines is None or self.is_incomplete_cache:
+        if self.__par_ids is None or self.doc_lines is None or self.is_incomplete_cache:
             self._load_par_ids()
 
     def _load_par_ids(self):
         ids, hashes, attrs, settings = self._get_par_ids_impl()
-        self.par_ids = ids
-        self.par_hashes = hashes
+        self.__par_ids = ids
+        self.__par_hashes = hashes
         self.par_attrs = attrs
         self.par_settings = settings
 
@@ -1643,7 +1643,7 @@ class Document:
                 p.clone()
                 for p in self.get_docinfo().get_preamble_pars_with_class(class_names)
             ]
-        current_ids = set(self.par_ids)
+        current_ids = set(self.__par_ids)
         preamble_ids = {p.get_id() for p in pars}
         if len(pars) != len(preamble_ids):
             raise PreambleException(
@@ -1698,8 +1698,8 @@ class Document:
         self.version = ver
         self.settings_cache = None
         self.par_map = None
-        self.par_ids = None
-        self.par_hashes = None
+        self.__par_ids = None
+        self.__par_hashes = None
         self.par_id_attrs_map = None
         self.source_doc = None
         self.settings_cache = None
@@ -1778,8 +1778,8 @@ class Document:
             self.par_id_attrs_name_maps[attr_name] = {}
             self.attrs_name_par_id_maps[attr_name] = {}
             self.attrs_name_lists[attr_name] = []
-        for i in range(len(self.par_ids)):
-            par_id = self.par_ids[i]
+        for i in range(len(self.__par_ids)):
+            par_id = self.__par_ids[i]
             attrs = self.par_attrs[i]
             self.par_id_attrs_map[par_id] = attrs
             for attr_name in CACHED_ATTR_NAMES:
@@ -1829,6 +1829,11 @@ class Document:
         self, attr_name: str, value_name: str, def_value: str | None
     ) -> str | None:
         return self.get_name_par_id_map(attr_name).get(value_name, def_value)
+
+    def iter_paragraphs_with_list_hashes(self) -> Iterator[tuple[DocParagraph, str]]:
+        self.ensure_par_ids_loaded()
+        assert self.__par_hashes is not None
+        return zip(self.get_paragraphs(), self.__par_hashes)
 
 
 def add_index_entry(index_table, current_headers, header):
