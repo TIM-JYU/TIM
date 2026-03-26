@@ -371,8 +371,9 @@ def save_fields(
                 view_ctx,
             )
             plugin: PluginType | Plugin = vr.plugin
+            known = plugin.known
             task_override_permission_map[t_id.doc_task] = bool(
-                plugin.known.saveSingleAnswer
+                known.saveSingleAnswer if known else False
             )
         except TaskNotFoundException as e:
             if not allow_missing:
@@ -493,7 +494,9 @@ def save_fields(
                         if points != c_value:
                             points_changed = True
                         points = c_value
-                    case "JSSTRING":  # TODO check if this should be ALL!  No this is for settings using string
+                    case (
+                        "JSSTRING"
+                    ):  # TODO check if this should be ALL!  No this is for settings using string
                         if not an or json.dumps(content) != c_value:
                             new_answer = True
                         content = json.loads(c_value)  # TODO: should this be inside if
@@ -878,9 +881,11 @@ def _handle_item_right_actions(
                         accessible_to=action.accessibleTo,
                         duration_from=action.durationFrom,
                         duration_to=action.durationTo,
-                        duration=timedelta(seconds=action.durationSeconds)
-                        if action.durationSeconds
-                        else None,
+                        duration=(
+                            timedelta(seconds=action.durationSeconds)
+                            if action.durationSeconds
+                            else None
+                        ),
                     )
                 case "expire":
                     expire_access(group, itm, access_type)

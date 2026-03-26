@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import re
+from typing import Any
 from heapq import heappush, heappop
 from itertools import accumulate
 from typing import Iterable, Generator, TYPE_CHECKING, Optional
@@ -41,9 +42,9 @@ GROUP_PREAMBLE_PATTERN = re.compile(
 class DocInfo(Item):
     """A base class for DocEntry and Translation."""
 
-    def __init__(self):
-        self._preamble_docs = None
-        self._doc = None
+    def __init__(self, **kwargs: Any) -> None:
+        self._preamble_docs: list[DocInfo] | None = None
+        self._doc: Document | None = None
 
     @property
     def path(self) -> str:

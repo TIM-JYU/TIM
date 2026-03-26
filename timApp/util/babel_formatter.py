@@ -1,7 +1,7 @@
 import string
 from typing import Any
 
-from babel.numbers import format_decimal
+from babel.numbers import format_decimal  # type: ignore[misc]
 
 from timApp.util.locale import get_locale
 
