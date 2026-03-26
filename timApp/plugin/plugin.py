@@ -1126,7 +1126,7 @@ def find_plugin_from_document(
     # those pars for inline plugins
     # with d.__iter__() as it:
     #    for p in it:
-    for par_id in d.par_ids:
+    for par_id in d.get_par_ids():
         attrs = d.get_attrs(par_id)
         if DocParagraph.has_plugins_attrs(attrs):
             p = d.get_paragraph(par_id)

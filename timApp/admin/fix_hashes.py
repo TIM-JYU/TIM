@@ -17,9 +17,9 @@ def fix_hashes(doc: DocInfo, args: DryrunnableArguments) -> int:
     d = doc.document
     d.ensure_par_ids_loaded()
     errors = 0
-    assert d.par_hashes is not None
-    for p, list_hash in zip(d.get_paragraphs(), d.par_hashes):
+    for p, list_hash in d.iter_paragraphs_with_list_hashes():
         old_hash = p.get_hash()
+        # noinspection PyProtectedMember
         p._compute_hash()
         new_hash = p.get_hash()
         if old_hash != new_hash:
