@@ -251,6 +251,7 @@ export class EditingHandler {
                 console.log("editchat");
                 this.viewctrl.closePopupIfOpen();
                 const [par, options] = prepareOptions($this[0], "addBelow");
+                options.forcedClasses?.push("chat");
                 const selection = UnbrokenSelection.explicit(par);
                 return this.toggleParEditor(
                     {type: EditType.Edit, pars: selection},
@@ -261,7 +262,7 @@ export class EditingHandler {
             onClick(".deleteChat", ($this, e) => {
                 console.log("delete chat");
                 this.viewctrl.closePopupIfOpen();
-                const [par, options] = prepareOptions($this[0], "addBelow");
+                const [par, _] = prepareOptions($this[0], "addBelow");
                 const selection = UnbrokenSelection.explicit(par);
                 // console.log(par.par.htmlElement);
 
@@ -269,7 +270,7 @@ export class EditingHandler {
                 console.log("delete docId", docId);
                 const parId = par.par.id;
                 console.log("delete parId", parId);
-                return this.deleteChatMessage(docId, parId, selection);
+                return this.deleteChatMessage(docId, parId, selection, par);
                 /*
                 const div = document.createElement("div");
                 div.textContent = "poistettu";
@@ -326,23 +327,81 @@ export class EditingHandler {
     async deleteChatMessage(
         docId: number,
         parId: string,
-        selection: UnbrokenSelection
+        selection: UnbrokenSelection,
+        par: ParContext
     ) {
         const confirmDi = window.confirm(
             "Are you sure you want to delete this message"
         );
-        if (confirmDi) {
-            const response = await to(
-                $http.post<IParResponse>(`/deleteParagraph/${docId}`, {
-                    par: parId,
-                })
-            );
-            if (!response.ok) {
-                throw Error("deleteChat failed");
+        let parClassesString = "";
+        for (const c of par.getClasses()) {
+            parClassesString += "." + c + " ";
+        }
+        const text = "#- {" + parClassesString + "}" + "\n" + "Deleted";
+        if (!confirmDi) {
+            return;
+        }
+        const extraData = {
+            docId: docId,
+            id: parId,
+            tags: {},
+        };
+        const params: EditPosition = {
+            type: EditType.Edit,
+            pars: selection,
+        };
+        const r = await to(
+            $http.post<IParResponse>("/postParagraph/", {
+                text: text,
+                par: parId,
+                docId: docId,
+                tags: {},
+                view: getViewName(),
+            })
+        );
+        if (!r.ok) {
+            throw Error("deleteChat failed");
+            // return {error: r.result.data.error};
+        } else {
+            const saveData = r.result.data;
+            if (
+                saveData.duplicates &&
+                saveData.duplicates.length > 0 &&
+                saveData.new_par_ids != null
+            ) {
+                const res = await to2(
+                    showRenameDialog({
+                        duplicates: saveData.duplicates,
+                        extraData,
+                        new_par_ids: saveData.new_par_ids,
+                        original_par: saveData.original_par,
+                    })
+                );
+                if (res.ok && !isManageResponse(res.result)) {
+                    this.addSavedParToDom(res.result, params);
+                } else {
+                    this.addSavedParToDom(saveData, params);
+                }
             } else {
-                this.handleDelete({type: EditType.Edit, pars: selection});
+                this.addSavedParToDom(saveData, params);
+            }
+            if (saveData.warnings && saveData.warnings.length > 0) {
+                const chs = "Changes made:<br>\n" + saveData.warnings;
+                await showMessageDialog(chs);
             }
         }
+        /*
+        const response = await to(
+            $http.post<IParResponse>(`/deleteParagraph/${docId}`, {
+                par: parId,
+            })
+        );
+        if (!response.ok) {
+            throw Error("deleteChat failed");
+        } else {
+            this.handleDelete({type: EditType.Edit, pars: selection});
+        }
+        */
     }
 
     getEditButtonsText() {
@@ -446,21 +505,19 @@ export class EditingHandler {
         let firstChatLine = "";
         let isChatMessage = false;
         if (documentglobals().docSettings.edit_buttons) {
-            // remove first line when editing chat message
-            // #- {.chat forceclass="chat"}
-            const chatRegex = /#- \{.*\.chat.*}/;
-            console.log(initialText);
-            const firstLineEnd = initialText.indexOf("\n");
-            if (firstLineEnd !== -1) {
-                firstChatLine = initialText.substring(0, firstLineEnd + 1);
-                isChatMessage = chatRegex.test(firstChatLine);
-                if (isChatMessage) {
+            console.log(options.forcedClasses);
+
+            if (options.forcedClasses?.includes("chat")) {
+                isChatMessage = true;
+                // remove first line while editing chat message
+                // #- {.chat forceclass="chat"}
+                const firstLineEnd = initialText.indexOf("\n");
+                if (firstLineEnd !== -1) {
+                    firstChatLine = initialText.substring(0, firstLineEnd + 1);
                     initialText = initialText.substring(firstLineEnd + 1);
                 }
-            }
 
-            if (isChatMessage) {
-                // remove buttons when editing chat message
+                // remove buttons while editing chat message
                 initialText = initialText.replace(
                     this.getEditButtonsText(),
                     ""
