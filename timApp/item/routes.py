@@ -324,6 +324,7 @@ def doc_access_info(doc_name: str, require_valid_session: bool = True):
         can_access = view_access is not None
     except ItemLockedException as ile:
         view_access = ile.access
+        can_access = ile.access.unlockable
 
     return json_response(
         {
