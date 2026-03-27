@@ -455,19 +455,20 @@ def _split_keep_left(data: str, d: str) -> list[str]:
     return parts[:-1] + [parts[-1][: -len(d)]] if parts else []
 
 
+@dataclass(frozen=True)
+class ModelSpec:
+    """Data needed for creating a new `ChatModel` instance."""
+
+    provider: Provider
+    model_id: str
+    api_key: str
+    base_url: str | None = None
+
+
 # TODO: Let database handle the supported models and retrieving model info.
 # Here we should just create the correct model instance from the given spec.
 class ModelRegistry:
     """Registry for all the supported models."""
-
-    @dataclass(frozen=True)
-    class ModelSpec:
-        """Data needed for creating a new `ChatModel` instance."""
-
-        provider: Provider
-        model_id: str
-        api_key: str
-        base_url: str | None = None
 
     def __init__(self, models: dict[Provider, list[ModelInfo]]):
         self._models: dict[Provider, dict[str, ModelInfo]] = {
