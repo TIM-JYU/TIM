@@ -138,8 +138,9 @@ def print_document(
         metadata={"data_key": "removeOldImages"}, default=False
     ),
     force: bool = False,
-    url_macros: dict[str, str]
-    | None = field(metadata={"data_key": "urlMacros"}, default=None),
+    url_macros: dict[str, str] | None = field(
+        metadata={"data_key": "urlMacros"}, default=None
+    ),
 ) -> Response:
     _ = doc_path  # use for linter, actual doc is fetched in before_request
     if not file_type:
@@ -273,15 +274,19 @@ def get_printed_document(
     doc: DocInfo = g.doc_entry
     doc_settings = doc.document.get_settings()
     def_file_type = "pdf"
+    textplain = None
     urlparams: DocPrintParams = PrintModelSchema.load(request.args, unknown=EXCLUDE)
     if urlparams.textplain is not None:
-        if urlparams.textplain:
-            def_file_type = "plain"
+        textplain = urlparams.textplain
     elif doc_settings.is_textplain():
-        def_file_type = "plain"
-    suffix = Path(doc_path).suffix
-    if suffix:
-        def_file_type = suffix[1:].lower()
+        textplain = doc_settings.is_textplain()
+    if textplain:
+        if textplain is True:
+            suffix = Path(doc_path).suffix
+            if suffix:
+                def_file_type = suffix[1:].lower()
+        elif isinstance(textplain, str):
+            def_file_type = textplain.strip().lower()
 
     file_type = file_type or def_file_type
     # if doc_path != doc.name and doc_path.rfind('.') >= 0:  # name have been changed because . in name
@@ -818,10 +823,10 @@ def svg_document(
     pid: str | None = field(metadata={"data_key": "id"}, default=None),
     ftype: str | None = field(metadata={"data_key": "fileType"}, default=None),
     _force: bool = False,
-    _url_macros: dict[str, str]
-    | None = field(metadata={"data_key": "urlMacros"}, default=None),
-    r: list[str]
-    | None = field(
+    _url_macros: dict[str, str] | None = field(
+        metadata={"data_key": "urlMacros"}, default=None
+    ),
+    r: list[str] | None = field(
         metadata={
             "data_key": "r",
             "marshmallow_field": mm_fields.List(mm_fields.String()),
