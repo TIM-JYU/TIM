@@ -16,7 +16,7 @@ class DocCommonParams:
 class DocPrintParams(DocCommonParams):
     """Print route parameters"""
 
-    textplain: bool | None = None
+    textplain: bool | str | None = None
 
 
 @dataclass(frozen=True, eq=True)
