@@ -431,14 +431,22 @@ def get_printed_document(
 
     if not line:
         if original_print_type == PrintFormat.HTML:
-            with open(cached, "r", encoding="utf-8") as f:
-                result = f.read()
             # TODO: This sanitizes the HTML, including PDF iframes.
             #       Those should be added back by rendering plugins as HTML.
-            result = sanitize_html(result, allow_styles=True)
-            response = make_response(
-                render_template("html_print.jinja2", content=result, title=doc.path)
-            )
+            if not any(
+                doc.path.startswith(f"{folder}/")
+                for folder in current_app.config[
+                    "PRINT_UNSANITIZED_HTML_FOLDERS_ALLOWLIST"
+                ]
+            ):
+                with open(cached, "r", encoding="utf-8") as f:
+                    result = f.read()
+                result = sanitize_html(result, allow_styles=True)
+                response = make_response(
+                    render_template("html_print.jinja2", content=result, title=doc.path)
+                )
+            else:
+                response = make_response(send_file(path_or_file=cached, mimetype=mime))
         elif original_print_type == PrintFormat.SVG:
             with open(cached, "r", encoding="utf-8") as f:
                 result = f.read()

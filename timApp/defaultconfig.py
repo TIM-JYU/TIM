@@ -677,3 +677,17 @@ ADMIN_ACCESS_WARNING = None
 A warning message shown to admins when they use the platform.
 This can be used to remind admins to use the platform responsibly.
 """
+
+PRINT_UNSANITIZED_HTML_FOLDERS_ALLOWLIST = []
+"""
+Allowlist of folders for which unsanitized HTML can be printed. 
+
+By default, TIM document printer allows printing documents as sanitized HTML.
+However, in some cases it may be beneficial to allow raw unsanitized HTML (e.g., for instance-wide custom components).
+This server setting allows specifying a list of folders within TIM in which HTML printing produces unsanitized HTML. 
+
+The setting is applied to all documents within the specified folders and their subfolders.
+
+NOTE: It is up to the instance administrator to ensure that the permissions in the allowlisted folders
+are set up in a way that only trusted users can produce content in those folders, as allowing unsanitized HTML can lead to security vulnerabilities if used improperly.
+"""
