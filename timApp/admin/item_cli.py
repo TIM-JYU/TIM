@@ -173,14 +173,16 @@ def verify_io() -> None:
         exit(1)
 
     click.echo("Adding some paragraphs")
-    d.document.add_text("""
+    d.document.add_text(
+        """
 # Test
 
 This is a test
 
 #-
 Second paragraph
-""")
+"""
+    )
 
     db.session.commit()
 
