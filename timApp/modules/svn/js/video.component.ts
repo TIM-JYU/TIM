@@ -544,8 +544,7 @@ export class VideoComponent extends AngularPluginBase<
                                 s.file === this.markup.defaultSubtitles
                         );
                         this.selectedTranscriptName =
-                            (defaultMatch?.name || defaultMatch?.file) ??
-                            label;
+                            defaultMatch?.name ?? defaultMatch?.file ?? label;
                         this.transcriptLoaded = true;
                     }
                 });
