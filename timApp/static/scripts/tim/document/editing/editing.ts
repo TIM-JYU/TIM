@@ -324,7 +324,7 @@ export class EditingHandler {
         });
     }
 
-    async deleteChatMessage(
+    private async deleteChatMessage(
         docId: number,
         parId: string,
         selection: UnbrokenSelection,
@@ -337,7 +337,8 @@ export class EditingHandler {
         for (const c of par.getClasses()) {
             parClassesString += "." + c + " ";
         }
-        const text = "#- {" + parClassesString + "}" + "\n" + "Deleted";
+        const text =
+            "#- {" + parClassesString + "}" + "\n" + this.getDeleteButtonText();
         if (!confirmDi) {
             return;
         }
@@ -404,13 +405,36 @@ export class EditingHandler {
         */
     }
 
-    getEditButtonsText() {
-        return (
-            "    \\\n" +
-            "        [vastaa]{.timButton .addBelow}\n" +
-            "        [muokkaa]{.timButton .editChat}\n" +
-            "        [poista]{.timButton .deleteChat}\n"
-        );
+    private getEditButtonsText() {
+        console.log(documentglobals().docSettings.edit_buttons);
+        const buttons = documentglobals().docSettings.edit_buttons;
+        if (buttons === undefined) {
+            return "";
+        }
+        let buttonsText = "";
+        for (const button of buttons) {
+            if (button.action === "add_below") {
+                buttonsText += `[${button.text}]{.timButton .addBelow}\n`;
+            } else if (button.action === "edit_chat") {
+                buttonsText += `[${button.text}]{.timButton .editChat}\n`;
+            } else if (button.action === "delete_chat") {
+                buttonsText += `[${button.text}]{.timButton .deleteChat}\n`;
+            }
+        }
+        return "    \\\n" + buttonsText;
+    }
+
+    private getDeleteButtonText() {
+        const buttons = documentglobals().docSettings.edit_buttons;
+        if (buttons === undefined) {
+            return "";
+        }
+        for (const button of buttons) {
+            if (button.action === "delete_chat") {
+                return button.deleteText === undefined ? "" : button.deleteText;
+            }
+        }
+        return "";
     }
 
     setSelection(s: UserSelection | undefined) {

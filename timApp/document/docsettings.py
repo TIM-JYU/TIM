@@ -124,6 +124,7 @@ class DocSettingTypes:
     showSettingsTypes: list[str]
     macro_lstrip_blocks: bool
     macro_trim_blocks: bool
+    edit_buttons: list[dict[str, str]]
 
 
 doc_setting_field_map: dict[str, Field] = {
@@ -756,8 +757,8 @@ class DocSettings:
     def macro_trim_blocks(self) -> bool:
         return self.get_setting_or_default("macro_trim_blocks", True)
 
-    def get_edit_buttons(self, default=None) -> bool | None:
-        return self.__dict.get(self.edit_buttons_key, default)
+    def get_edit_buttons(self, default=None) -> list[dict[str, str]] | None:
+        return self.get_setting_or_default("edit_buttons", [])
 
 
 def resolve_settings_for_pars(pars: Iterable[DocParagraph]) -> YamlBlock:
