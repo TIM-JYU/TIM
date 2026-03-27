@@ -28,6 +28,8 @@ import {Users} from "tim/user/userService";
 import type {IUser} from "tim/user/IUser";
 import type {Iframesettings} from "../../cs/js/jsframe";
 import {VideoLinkComponent} from "./video-link.component";
+import type {VttCue} from "./vtt-parser";
+import {parseVtt} from "./vtt-parser";
 
 function toSeconds(value: string | number | undefined): number | undefined {
     if (value === null || value === undefined) {
@@ -120,6 +122,9 @@ const ShowFileMarkup = t.intersection([
         endJSRunner: t.string,
         audio: t.boolean,
         nolimits: t.boolean,
+        transcriptSearch: t.boolean,
+        transcriptPlaceholder: nullable(t.string),
+        transcriptMaxResults: nullable(t.number),
     }),
     GenericPluginMarkup,
     t.type({
@@ -321,6 +326,43 @@ const ShowFileAll = t.type({
                 <a (click)="copyStartEnd()" title="Copy start/end to clipboard (c)">Copy</a>
             </div>
             <p class="plgfooter" *ngIf="footer" [innerHtml]="footer | purify"></p>
+            <div *ngIf="transcriptLoaded" class="transcript-search">
+                <a class="transcript-toggle" (click)="transcriptOpen = !transcriptOpen">
+                    <i class="glyphicon"
+                       [class.glyphicon-chevron-right]="!transcriptOpen"
+                       [class.glyphicon-chevron-down]="transcriptOpen"></i>
+                    Transcript Search
+                </a>
+                <div *ngIf="transcriptOpen" class="transcript-search-panel">
+                    <div class="transcript-search-row">
+                        <input type="text"
+                               class="form-control transcript-search-input"
+                               [(ngModel)]="transcriptQuery"
+                               (ngModelChange)="onTranscriptSearch()"
+                               (keydown)="$event.stopPropagation()"
+                               [attr.placeholder]="markup.transcriptPlaceholder ?? 'Search transcript...'"
+                        >
+                        <select *ngIf="transcriptSubtitleMap.size > 1"
+                                class="form-control transcript-subtitle-select"
+                                [(ngModel)]="selectedTranscriptName"
+                                (ngModelChange)="onTranscriptSubtitleChange()"
+                                (keydown)="$event.stopPropagation()">
+                            <option *ngFor="let name of transcriptSubtitleMap.keys()" [value]="name">{{name}}</option>
+                        </select>
+                    </div>
+                    <div class="transcript-search-results" *ngIf="filteredCues.length > 0">
+                        <div class="transcript-result-item"
+                             *ngFor="let cue of filteredCues"
+                             (click)="seekTo(cue.startSeconds)">
+                            <span class="timestamp">{{cue.startTime}}</span>
+                            <span [innerHTML]="cue.highlightedText | purify"></span>
+                        </div>
+                    </div>
+                    <div *ngIf="transcriptQuery && filteredCues.length === 0" class="transcript-no-results">
+                        No results found.
+                    </div>
+                </div>
+            </div>
         </div>
     `,
     styleUrls: ["./video.component.scss"],
@@ -404,6 +446,12 @@ export class VideoComponent extends AngularPluginBase<
     hidetext: string = "Hide file";
     srcUrl!: URL;
     src: string = "";
+    transcriptSubtitleMap = new Map<string, VttCue[]>();
+    selectedTranscriptName = "";
+    transcriptQuery = "";
+    filteredCues: VttCue[] = [];
+    transcriptOpen = false;
+    transcriptLoaded = false;
 
     onAdvVideoStateChange(newValue: boolean) {
         this.advVideoState.set(newValue);
@@ -475,6 +523,32 @@ export class VideoComponent extends AngularPluginBase<
             this.toggleVideo();
         } else if (!this.videoName && !this.doctext) {
             this.videoName = $localize`Open embedded content`;
+        }
+
+        if (this.markup.transcriptSearch === false) {
+            return;
+        }
+        for (const subtitle of this.markup.subtitles) {
+            if (!subtitle.file) {
+                continue;
+            }
+            this.http
+                .get(subtitle.file, {responseType: "text"})
+                .subscribe((content) => {
+                    const label = subtitle.name || subtitle.file;
+                    this.transcriptSubtitleMap.set(label, parseVtt(content));
+                    if (!this.transcriptLoaded) {
+                        const defaultMatch = this.markup.subtitles.find(
+                            (s) =>
+                                s.name === this.markup.defaultSubtitles ||
+                                s.file === this.markup.defaultSubtitles
+                        );
+                        this.selectedTranscriptName =
+                            (defaultMatch?.name ?? defaultMatch?.file) ??
+                            label;
+                        this.transcriptLoaded = true;
+                    }
+                });
         }
     }
 
@@ -840,6 +914,53 @@ export class VideoComponent extends AngularPluginBase<
             );
         }
         // this.vctrl.runJsRunner();
+    }
+
+    onTranscriptSearch() {
+        const query = this.transcriptQuery.trim().toLowerCase();
+        if (!query) {
+            this.filteredCues = [];
+            return;
+        }
+        const cues =
+            this.transcriptSubtitleMap.get(this.selectedTranscriptName) ?? [];
+        const maxResults = this.markup.transcriptMaxResults ?? 50;
+        const escaped = query.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+        const re = new RegExp(escaped, "gi");
+        const results: VttCue[] = [];
+        for (const cue of cues) {
+            if (results.length >= maxResults) {
+                break;
+            }
+            if (cue.text.toLowerCase().includes(query)) {
+                results.push({
+                    ...cue,
+                    highlightedText: cue.text.replace(
+                        re,
+                        (match) => `<mark>${match}</mark>`
+                    ),
+                });
+            }
+        }
+        this.filteredCues = results;
+    }
+
+    onTranscriptSubtitleChange() {
+        this.transcriptQuery = "";
+        this.filteredCues = [];
+    }
+
+    seekTo(seconds: number) {
+        if (!this.videoOn) {
+            this.toggleVideo();
+            setTimeout(() => {
+                if (this.video) {
+                    this.video.nativeElement.currentTime = seconds;
+                }
+            }, 200);
+        } else if (this.video) {
+            this.video.nativeElement.currentTime = seconds;
+        }
     }
 
     getDefaultMarkup() {
