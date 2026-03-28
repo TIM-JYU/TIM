@@ -17,6 +17,7 @@ TODO: copy paragraphs seems to load them to memory, check if this can be avoided
 TODO: iterating single_par_cache fails if new par added (plugin.py)
 TODO: get_settings par is unefficient if there are many settings pars,
       as it loads all of them to memory, check if this can be optimized
+Done: optimize get_named_section, as it currently loads all pars to memory
 """
 
 from __future__ import annotations
@@ -131,15 +132,14 @@ def find_par_id_from_doc_lines(lines: list[str], par_id: str, start: int = 0) ->
 
 def parse_docline(line: str) -> tuple[str, str | None, dict[str, str] | None]:
     parts = line.rstrip("\n").split("/", 2)
-    parts += [None, None]
     par_id = parts[0]
-    t = parts[1]
-    astr = parts[2]
-    if astr is not None:
-        if astr == "":
+    t = parts[1] if len(parts) > 1 else None
+    attr_str = parts[2] if len(parts) > 2 else None
+    if attr_str is not None:
+        if attr_str == "":
             attrs = {}
         else:
-            attrs = json.loads(astr) if astr else None
+            attrs = json.loads(attr_str) if attr_str else None
     else:
         attrs = None
     return par_id, t, attrs
@@ -214,6 +214,9 @@ class Document:
         # cache for id-attrs maps for pars
         self.__par_id_attrs_map: dict[str, dict] | None = None
 
+        # cache for id-index maps
+        self.__par_id_index_map: dict[str, int] | None = None
+
     @property
     def id(self):
         return self.doc_id
@@ -271,6 +274,7 @@ class Document:
         self.__par_attrs = []
         self.__par_hashes = []
         self.__par_id_attrs_map = {}
+        self.__par_id_index_map = {}
         settings_allowed = True
         for i in range(0, len(self.__par_cache)):
             curr_p = self.__par_cache[i]
@@ -278,6 +282,7 @@ class Document:
             prev_p = self.__par_cache[i - 1] if i > 0 else None
             next_p = self.__par_cache[i + 1] if i + 1 < len(self.__par_cache) else None
             self.__par_map[par_id] = {"p": prev_p, "n": next_p, "c": curr_p}
+            self.__par_id_index_map[par_id] = i
             self.__par_ids.append(par_id)
             self.__par_hashes.append(curr_p.get_hash())
             if curr_p.is_setting() and settings_allowed:
@@ -1438,8 +1443,28 @@ class Document:
         if self.preload_option == PreloadOption.all:
             self.ensure_pars_loaded()
         get_all = section_name == AREA_NAME_FOR_WHOLE_DOCUMENT
-        start_found = False
-        end_found = False
+        start_id = self.get_par_id("area", section_name, None)
+        par_ids = self.get_par_ids()
+        if start_id is None:
+            if not get_all:
+                raise InvalidReferenceException("Area start not found: " + section_name)
+            start_index = 0
+            end_index = len(par_ids) - 1
+        else:
+            get_all = False
+            start_index = self.get_par_index(start_id)
+            end_id = self.get_par_id("area_end", section_name, None)
+            if not end_id:
+                raise InvalidReferenceException("Area end not found: " + section_name)
+            end_index = self.get_par_index(end_id)
+        pars = []
+        for i in range(start_index, end_index + 1):
+            par = self.get_paragraph(par_ids[i])
+            if get_all and par.is_settings():
+                continue
+            pars.append(par)
+
+        """         
         pars = []
         all_start = -1
         with self.__iter__() as i:
@@ -1465,6 +1490,7 @@ class Document:
             end_found = True
         if not start_found or not end_found:
             raise InvalidReferenceException("Area not found: " + section_name)
+        """
         return pars
 
     def named_section_exists(self, section_name: str) -> bool:
@@ -1741,6 +1767,7 @@ class Document:
         self.__par_ids = None
         self.__par_hashes = None
         self.__par_id_attrs_map = None
+        self.__par_id_index_map = None
         self.__source_doc = None
         self.settings_cache = None
         self.ref_doc_cache = {}
@@ -1814,6 +1841,7 @@ class Document:
         self.__attrs_name_par_id_maps = {}
         self.__attrs_name_lists = {}
         self.__par_id_attrs_map = {}
+        self.__par_id_index_map = {}
         for attr_name in CACHED_ATTR_NAMES:
             self.__par_id_attrs_name_maps[attr_name] = {}
             self.__attrs_name_par_id_maps[attr_name] = {}
@@ -1822,6 +1850,7 @@ class Document:
             par_id = self.__par_ids[i]
             attrs = self.__par_attrs[i]
             self.__par_id_attrs_map[par_id] = attrs
+            self.__par_id_index_map[par_id] = i
             for attr_name in CACHED_ATTR_NAMES:
                 attr_value = attrs.get(attr_name, None)
                 if attr_value is not None:
@@ -1864,6 +1893,11 @@ class Document:
         if self.__par_id_attrs_map is None:
             self.generate_name_maps()
         return self.__par_id_attrs_map.get(par_id, {})
+
+    def get_par_index(self, par_id: str) -> int:
+        if self.__par_id_index_map is None:
+            self.generate_name_maps()
+        return self.__par_id_index_map.get(par_id, -1)
 
     def get_par_id(
         self, attr_name: str, value_name: str, def_value: str | None
