@@ -83,7 +83,7 @@ chattim = create_nontask_blueprint(
 )
 
 
-def read_into_ReqContext(data: Any) -> Union[ReqContext, str]:
+def read_into_reqcontext(data: Any) -> Union[ReqContext, str]:
     """
     Expects { user_input, user_id, document_id }
     :param data:
@@ -107,13 +107,13 @@ def define_ask_route():
     result: PluginAnswerResp = {"web": web}
 
     context = request.get_json().get("context")
-    ReqContext_or = read_into_ReqContext(context)
+    reqcontext_or = read_into_reqcontext(context)
 
-    if not isinstance(ReqContext_or, ReqContext):
-        web["error"] = ReqContext_or
+    if not isinstance(reqcontext_or, ReqContext):
+        web["error"] = reqcontext_or
         return json_response(result)
 
-    val_or_err: Result[str, str] = plugincore.chat_request(ReqContext_or)
+    val_or_err: Result[str, str] = plugincore.chat_request(reqcontext_or)
     if not val_or_err.ok:
         web["error"] = val_or_err.error
         return json_response(result)
@@ -138,10 +138,10 @@ def define_save_instance():
 
     data = request.get_json()
     context = data.get("context")
-    ReqContext_or = read_into_ReqContext(context)
+    req_context_or = read_into_reqcontext(context)
 
-    if not isinstance(ReqContext_or, ReqContext):
-        web = {"error": ReqContext_or}
+    if not isinstance(req_context_or, ReqContext):
+        web = {"error": req_context_or}
         return json_response(result)
 
     # TODO: kytke plugincoreen
