@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, TypedDict, Union
 from flask import request
 
 from timApp.tim_app import csrf
@@ -13,6 +13,13 @@ from tim_common.pluginserver_flask import (
     PluginAnswerWeb,
     create_nontask_blueprint,
 )
+from timApp.modules.chattim.plugincore import (
+    PluginCore,
+    Result,
+    ReqContext,
+)
+
+plugincore = PluginCore()
 
 
 @dataclass
@@ -76,16 +83,66 @@ chattim = create_nontask_blueprint(
 )
 
 
+def read_into_ReqContext(data: Any) -> Union[ReqContext, str]:
+    """
+    Expects { user_input, user_id, document_id }
+    :param data:
+    :return: Either reponse or error message
+    """
+    if data is None:
+        return "Missing json body"
+
+    try:
+        resp = ReqContext(**data)
+        return resp
+    except TypeError as e:
+        return f"Invalid data: {e}"
+    except Exception as e:
+        return f"Unexpected error: {e}"
+
+
 @chattim.post("/ask")
 def define_ask_route():
-    web: PluginAnswerWeb = {"result": "hello from server"}
+    web: PluginAnswerWeb = {}
     result: PluginAnswerResp = {"web": web}
 
-    # TODO: pitäisi varmaan muuttaa jotenkin tyyliin: define_ask_route(input: SomeDataClass) jne
+    context = request.get_json().get("context")
+    ReqContext_or = read_into_ReqContext(context)
+
+    if not isinstance(ReqContext_or, ReqContext):
+        web["error"] = ReqContext_or
+        return json_response(result)
+
+    val_or_err: Result[str, str] = plugincore.chat_request(ReqContext_or)
+    if not val_or_err.ok:
+        web["error"] = val_or_err.error
+        return json_response(result)
+
+    web["result"] = val_or_err.value
+    return json_response(result)
+
+
+@dataclass()
+class InstanceAttributes(TypedDict):
+    model_name: str
+    llm_mode: str
+    max_tokens: str
+    tim_documents: list[str]
+
+
+@chattim.post("/save_instance")
+def define_save_instance():
+    web: PluginAnswerWeb = {}
+    result: PluginAnswerResp = {"web": web}
+    instance_attr: InstanceAttributes
+
     data = request.get_json()
-    user_input = data.get("input")
-    user_id = data.get("user_id")
-    document_id = data.get("document_id")
+    context = data.get("context")
+    ReqContext_or = read_into_ReqContext(context)
+
+    if not isinstance(ReqContext_or, ReqContext):
+        web = {"error": ReqContext_or}
+        return json_response(result)
 
     # TODO: kytke plugincoreen
 

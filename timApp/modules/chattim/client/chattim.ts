@@ -54,38 +54,38 @@ export interface ChatEntry {
     template: `
         <tim-dialog-frame>
             <ng-container body>
-                    <div class="scroll-box">
-                        <div *ngFor="let entry of conversation">
-                            <div class="chat-user">{{ entry.user }}</div>
-                            <pre class="chat-bot" [innerHTML]="entry.agent | purify"></pre>
-                        </div>
+                <div class="scroll-box">
+                    <div *ngFor="let entry of conversation">
+                        <div class="chat-user">{{ entry.user }}</div>
+                        <pre class="chat-bot" [innerHTML]="entry.agent | purify"></pre>
                     </div>
-                
+                </div>
 
-                
-                    <div class="form-inline">
-                        <label>{{inputstem}}
-                            <input type="text"
-                                   class="form-control"
-                                   [(ngModel)]="userinput"
-                                   (keyup.enter)="onEnter()"    
-                            >
-                        </label>
-                        <button class="timButton"
-                                *ngIf="buttonText()"
-                                [disabled]="isRunning || !userinput"
-                                (click)="sendUserInput()"
-                                [innerHTML]="buttonText() | purify">
-                        </button>
-                            <chattim-control-panel
-                    [(selectedModel)]="selectedModel"
-                    [(temperature)]="temperature"
-                    [(maxTokens)]="maxTokens">
-                </chattim-control-panel>
-                    </div>
 
-                    <tim-loading *ngIf="isRunning"></tim-loading>
-                    <div *ngIf="error" [innerHTML]="error | purify"></div>
+
+                <div class="form-inline">
+                    <label>{{inputstem}}
+                        <input type="text"
+                               class="form-control"
+                               [(ngModel)]="userinput"
+                               (keyup.enter)="onEnter()"
+                        >
+                    </label>
+                    <button class="timButton"
+                            *ngIf="buttonText()"
+                            [disabled]="isRunning || !userinput"
+                            (click)="sendUserInput()"
+                            [innerHTML]="buttonText() | purify">
+                    </button>
+                    <chattim-control-panel
+                        [(selectedModel)]="selectedModel"
+                        [(temperature)]="temperature"
+                        [(maxTokens)]="maxTokens">
+                    </chattim-control-panel>
+                </div>
+
+                <tim-loading *ngIf="isRunning"></tim-loading>
+                <div *ngIf="error" [innerHTML]="error | purify"></div>
             </ng-container>
         </tim-dialog-frame>
     `,
@@ -174,16 +174,16 @@ export class ChatTIMComponent
         this.answer = undefined;
 
         const input: string = this.userinput;
-        const user_id: string = String(Users.getCurrent().id);
+        const user_id: number = Users.getCurrent().id;
         const document_id: number = this.document_id;
+
+        const payload = {
+            context: {input, user_id, document_id},
+        };
 
         const response = await this.httpPost<{
             web: {result: string; error?: string};
-        }>("/chattim/ask", {
-            input,
-            user_id,
-            document_id,
-        });
+        }>("/chattim/ask", payload);
 
         this.isRunning = false;
         if (response.ok) {
