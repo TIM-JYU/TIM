@@ -115,7 +115,9 @@ class DocParagraph:
         self.attrs: dict[str, str] | None = None
         self.nomacros = None
         self.ref_chain = None
-        self.answer_nr: int | None = None  # needed if variable tasks, None = not task at all or not variable task
+        self.answer_nr: int | None = (
+            None  # needed if variable tasks, None = not task at all or not variable task
+        )
         self.md = ""
         self.id = None
         self.ask_new: bool | None = None  # to send for plugins to force new question
@@ -134,6 +136,47 @@ class DocParagraph:
         return NotImplemented
 
     @staticmethod
+    def is_par_reference_attrs(attrs: dict | None) -> bool:
+        """Returns whether the given attributes indicate that this paragraph is a reference to a single paragraph."""
+        if not attrs:
+            return False
+        if attrs.get("rtask", None) is not None:
+            return True
+        return attrs.get("rp", None) is not None
+
+    @staticmethod
+    def is_reference_attrs(attrs: dict | None) -> bool:
+        """Returns whether this paragraph is a reference to some other paragraph."""
+        if not attrs:
+            return False
+        return (
+            DocParagraph.is_par_reference_attrs(attrs)
+            or DocParagraph.is_area_reference_attrs(attrs)
+            or attrs.get("rd", None) is not None
+        )
+
+    @staticmethod
+    def is_area_reference_attrs(attrs: dict | None) -> bool:
+        """Returns whether this paragraph is a reference to an area."""
+        if not attrs:
+            return False
+        return attrs.get("ra") is not None
+
+    @staticmethod
+    def has_plugins_attrs(attrs: dict | None) -> bool:
+        """Returns whether this paragraph has inline plugins."""
+        if not attrs:
+            return False
+        return attrs.get("defaultplugin", None) is not None
+
+    @staticmethod
+    def is_setting_attrs(attrs: dict | None) -> bool:
+        """Returns whether this paragraph is a settings paragraph."""
+        if not attrs:
+            return False
+        return attrs.get("settings", None) is not None
+
+    @staticmethod
     def help_par():
         """Returns a dummy paragraph with id 'HELP_PAR' that is used as a placeholder for an empty document."""
         return DocParagraph.create(doc=None, par_id="HELP_PAR")
@@ -146,7 +189,7 @@ class DocParagraph:
         md: str = "",
         par_hash: str | None = None,
         html: str | None = None,
-        attrs: dict | None = None,
+        attrs: dict[str, str] | None = None,
     ) -> DocParagraph:
         """Creates a DocParagraph from the given parameters.
 
@@ -282,7 +325,7 @@ class DocParagraph:
             t = os.readlink(cls._get_path(doc, par_id, "current"))
             return cls.get(doc, par_id, t)
         except FileNotFoundError:
-            doc._raise_not_found(par_id)
+            doc.raise_not_found(par_id)
 
     @classmethod
     def get(cls, doc, par_id: str, t: str) -> DocParagraph:
@@ -316,7 +359,7 @@ class DocParagraph:
                             time.sleep(0.01)
             return cls.from_dict(doc, doc_dict)
         except FileNotFoundError:
-            doc._raise_not_found(par_id)
+            doc.raise_not_found(par_id)
 
     @classmethod
     def _get_path(cls, doc, par_id: str, t: str) -> str:
@@ -513,9 +556,10 @@ class DocParagraph:
         if counters:
             counters.task_id = self.get_auto_id()
             counters.is_plugin = self.is_plugin()
+        # noinspection PyBroadException
         try:
             if self.insert_rnds(
-                md + macros.get("username", "")
+                md + str(macros.get("username", ""))
             ):  # TODO: RND_SEED: check what seed should be used, is this used to plugins?
                 macros = {**macros, **self.__rands}
         except Exception as _err:
@@ -698,6 +742,7 @@ class DocParagraph:
                     return p.get_referenced_pars()[0]
                 except (InvalidReferenceException, IndexError) as e:
                     p.was_invalid = True
+                    # noinspection PyProtectedMember
                     p._set_html(get_error_html(e))
                     return p
 
@@ -724,6 +769,7 @@ class DocParagraph:
                         if not par.from_preamble():
                             changed_pars.append(par)
                 par.html_cache[auto_macro_hash] = h
+                # noinspection PyProtectedMember
                 par._set_html(h, sanitized=True)
                 if persist and not par.from_preamble():
                     par.__write()
@@ -738,7 +784,8 @@ class DocParagraph:
         :param pars: The list of paragraphs to be processed.
         :param settings: The settings for the document.
         :param auto_macro_cache: The cache object from which to retrieve and store the auto macro data.
-        :param heading_cache: A cache object to store headings into. The key is paragraph id and value is a list of headings
+        :param heading_cache: A cache object to store headings into.
+               The key is paragraph id and value is a list of headings
          in that paragraph.
         :param clear_cache: Whether all caches should be refreshed.
         :return: A 5-tuple of the form:
@@ -779,6 +826,7 @@ class DocParagraph:
             if cumulative_headings:
                 # Performance optimization: copy only if the set of headings changes
                 if par_headings:
+                    # noinspection PyTestUnpassedFixture,PyUnresolvedReferences
                     all_headings_so_far = cumulative_headings[-1].copy()
                 else:
                     all_headings_so_far = cumulative_headings[-1]
@@ -841,7 +889,8 @@ class DocParagraph:
         :param macros: Macros to apply for the paragraph.
         :param env: Environment for macros.
         :param auto_macro_cache: The cache object from which to retrieve and store the auto macro data.
-        :param heading_cache: A cache object to store headings into. The key is paragraph id and value is a list of headings
+        :param heading_cache: A cache object to store headings into.
+               The key is paragraph id and value is a list of headings
          in that paragraph.
         :param auto_number_start: Object of heading start numbers.
         :param checked_pars: to follow recursion and avoid infinite loops
@@ -1106,34 +1155,13 @@ class DocParagraph:
         # Clear cached referenced paragraphs because this was modified
         self.ref_pars = {}
 
-    @staticmethod
-    def is_reference_attrs(attrs: dict) -> bool:
-        """Returns whether this paragraph is a reference to some other paragraph."""
-        return (
-            DocParagraph.is_par_reference_attrs(attrs)
-            or DocParagraph.is_area_reference_attrs(attrs)
-            or attrs.get("rd", None) is not None
-        )
-
     def is_reference(self) -> bool:
         """Returns whether this paragraph is a reference to some other paragraph."""
         return self.__is_ref
 
-    @staticmethod
-    def is_par_reference_attrs(attrs: dict) -> bool:
-        """Returns whether the given attributes indicate that this paragraph is a reference to a single paragraph."""
-        if attrs.get("rtask", None) is not None:
-            return True
-        return attrs.get("rp", None) is not None
-
     def is_par_reference(self) -> bool:
         """Returns whether this paragraph is a reference to a single paragraph."""
         return DocParagraph.is_par_reference_attrs(self.attrs)
-
-    @staticmethod
-    def is_area_reference_attrs(attrs: dict) -> bool:
-        """Returns whether this paragraph is a reference to an area."""
-        return attrs.get("ra") is not None
 
     def is_area_reference(self) -> bool:
         """Returns whether this paragraph is a reference to an area."""
@@ -1308,11 +1336,6 @@ class DocParagraph:
         """Returns whether this paragraph is a plugin."""
         return "plugin" in self.attrs
 
-    @staticmethod
-    def has_plugins_attrs(attrs: dict) -> bool:
-        """Returns whether this paragraph has inline plugins."""
-        return attrs.get("defaultplugin", None) is not None
-
     def has_plugins(self) -> bool:
         """Returns whether this paragraph has inline plugins."""
         return DocParagraph.has_plugins_attrs(self.attrs)
@@ -1327,11 +1350,6 @@ class DocParagraph:
     def is_question(self) -> bool:
         """Returns whether this paragraph is a question paragraph."""
         return self.is_plugin() and str(self.get_attr("question")).lower() == "true"
-
-    @staticmethod
-    def is_setting_attrs(attrs) -> bool:
-        """Returns whether this paragraph is a settings paragraph."""
-        return attrs.get("settings", None) is not None
 
     def is_setting(self) -> bool:
         """Returns whether this paragraph is a settings paragraph."""
@@ -1447,6 +1465,7 @@ def create_reference(
     par.set_attr("ra", None)
     par.set_attr("mt", translator)
 
+    # noinspection PyProtectedMember
     par._cache_props()
     return par
 
@@ -1501,6 +1520,7 @@ def create_final_par(
     #  2. what document id to put in HTML's ref-doc-id (might not be same as settings): "ref_doc" attribute
     final_par.original = first_ref
     final_par.ref_doc = reached_par.doc
+    # noinspection PyProtectedMember
     final_par._cache_props()
     final_par.prepared_par = None
     if first_ref.from_preamble():
@@ -1528,6 +1548,7 @@ def create_final_par(
         # if html is empty, use the source
         if html == "":
             html = reached_par.get_html(view_ctx, no_persist=False)
+        # noinspection PyProtectedMember
         final_par._set_html(html)
     return final_par
 

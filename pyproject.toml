@@ -116,7 +116,7 @@ vendor
 '''
 
 [tool.mypy]
-python_version = "3.10"
+python_version = "3.12"
 ignore_missing_imports = false
 mypy_path = "timApp/modules/fields"
 disallow_untyped_calls = true

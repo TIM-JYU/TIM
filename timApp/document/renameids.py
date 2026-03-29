@@ -193,6 +193,7 @@ def check_and_rename_attribute(
     """
     Rename plugins selected attribute if duplicate found in document.
     :param attr_name:  attribute name to check and rename
+                       (currently only "taskId" and "area" supported)
     :param new_pars:  new blocks to check and rename
     :param doc: document where the blocks are being compared to
     :param on_rename: optional callback function called when a rename occurs
