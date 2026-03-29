@@ -31,7 +31,7 @@ from difflib import SequenceMatcher
 from pathlib import Path
 from tempfile import mkstemp
 from time import time
-from typing import Iterable, Generator, Optional, Iterator
+from typing import Iterable, Generator, Optional, Iterator, NamedTuple
 from typing import TYPE_CHECKING
 
 from filelock import FileLock, BaseFileLock
@@ -145,6 +145,14 @@ def parse_docline(line: str) -> tuple[str, str | None, dict[str, str] | None]:
     return par_id, t, attrs
 
 
+class ParCacheEntry(NamedTuple):
+    attrs: dict | None
+    index: int
+
+
+DEFAULT_ENTRY = ParCacheEntry(None, -1)
+
+
 class Document:
     def __init__(
         self,
@@ -202,20 +210,17 @@ class Document:
         self.__plugin_task_ids = None  # cache for named plugin task ids
         self.__plugin_count = 0  # cache for number of all plugins in the document
 
-        # cache for parId/attributes-name maps for pars
-        self.__par_id_attrs_name_maps: dict[str, dict[str, str]] | None = None
-
         # cache for attributes-name/parId maps for pars
         self.__attrs_name_par_id_maps: dict[str, dict[str, str]] | None = None
 
         # cache for id-attributes-name lists
         self.__attrs_name_lists: dict[str, list[str]] | None = None
 
-        # cache for id-attrs maps for pars
-        self.__par_id_attrs_map: dict[str, dict] | None = None
+        # cache for parId/attributes-name maps for pars
+        self.__par_id_attrs_name_maps: dict[str, dict[str, str]] | None = None
 
-        # cache for id-index maps
-        self.__par_id_index_map: dict[str, int] | None = None
+        # cache for (id-attrs, index) maps for pars
+        self.__par_id_cache_entry_map: dict[str, ParCacheEntry] | None = None
 
     @property
     def id(self):
@@ -273,8 +278,7 @@ class Document:
         self.__par_settings = []
         self.__par_attrs = []
         self.__par_hashes = []
-        self.__par_id_attrs_map = {}
-        self.__par_id_index_map = {}
+        self.__par_id_cache_entry_map = {}
         settings_allowed = True
         for i in range(0, len(self.__par_cache)):
             curr_p = self.__par_cache[i]
@@ -282,7 +286,6 @@ class Document:
             prev_p = self.__par_cache[i - 1] if i > 0 else None
             next_p = self.__par_cache[i + 1] if i + 1 < len(self.__par_cache) else None
             self.__par_map[par_id] = {"p": prev_p, "n": next_p, "c": curr_p}
-            self.__par_id_index_map[par_id] = i
             self.__par_ids.append(par_id)
             self.__par_hashes.append(curr_p.get_hash())
             if curr_p.is_setting() and settings_allowed:
@@ -291,7 +294,7 @@ class Document:
                 settings_allowed = False
             attrs = curr_p.attrs if curr_p.attrs else {}
             self.__par_attrs.append(attrs)
-            self.__par_id_attrs_map[par_id] = attrs
+            self.__par_id_cache_entry_map[par_id] = ParCacheEntry(attrs, i)
         if not self.__is_incomplete_cache:
             self.single_par_cache.update({p.get_id(): p for p in self.__par_cache})
 
@@ -437,9 +440,9 @@ class Document:
                 break
 
     def is_reference(self, par_id: str) -> bool:
-        if self.__par_id_attrs_map is None:
+        if self.__par_id_cache_entry_map is None:
             self.generate_name_maps()
-        attrs = self.__par_id_attrs_map.get(par_id)
+        attrs = self.__par_id_cache_entry_map.get(par_id).attrs
         if not attrs:
             return False
         return DocParagraph.is_reference_attrs(attrs)
@@ -562,14 +565,14 @@ class Document:
         try:
             start_index = all_par_ids.index(par_id_start)
         except ValueError:
-            return self._raise_not_found(par_id_start)
+            return self.raise_not_found(par_id_start)
         if par_id_end == MISSING_AREA_END_PAR_ID:
             # par_id_end = par_id_start  # TODO: would it be better the last par?
             par_id_end = all_par_ids[-1]
         try:
             end_index = all_par_ids.index(par_id_end)
         except ValueError:
-            return self._raise_not_found(par_id_end)
+            return self.raise_not_found(par_id_end)
         if end_index < start_index:
             start_index, end_index = end_index, start_index
         section_pars = []
@@ -766,9 +769,9 @@ class Document:
 
     def raise_if_not_exist(self, par_id: str):
         if not self.has_paragraph(par_id):
-            self._raise_not_found(par_id)
+            self.raise_not_found(par_id)
 
-    def _raise_not_found(self, par_id: str):
+    def raise_not_found(self, par_id: str):
         raise TimDbException(self.get_par_not_found_msg(par_id))
 
     def get_par_not_found_msg(self, par_id: str):
@@ -792,7 +795,7 @@ class Document:
             try:
                 return self.__par_map[par_id]["c"]
             except KeyError:
-                return self._raise_not_found(par_id)
+                return self.raise_not_found(par_id)
         cached = self.single_par_cache.get(par_id)
         if cached:
             return cached
@@ -800,7 +803,7 @@ class Document:
         try:
             idx = self.__par_ids.index(par_id)
         except ValueError:
-            return self._raise_not_found(par_id)
+            return self.raise_not_found(par_id)
         fetched = DocParagraph.get(self, self.__par_ids[idx], self.__par_hashes[idx])
         self.single_par_cache[par_id] = fetched
         return fetched
@@ -1766,15 +1769,13 @@ class Document:
         self.__par_map = None
         self.__par_ids = None
         self.__par_hashes = None
-        self.__par_id_attrs_map = None
-        self.__par_id_index_map = None
+        self.__par_id_cache_entry_map = None
         self.__source_doc = None
         self.settings_cache = None
         self.ref_doc_cache = {}
         self.single_par_cache = {}
         self.__par_cache = None
         self.__attrs_name_par_id_maps = None
-        self.__par_id_attrs_name_maps = None
         self.__attrs_name_lists = None
         self.clear_doc_lines_cache()
 
@@ -1837,11 +1838,10 @@ class Document:
 
     def generate_name_maps(self):
         self.ensure_par_ids_loaded()
-        self.__par_id_attrs_name_maps = {}
+        self.__par_id_cache_entry_map = {}
         self.__attrs_name_par_id_maps = {}
         self.__attrs_name_lists = {}
-        self.__par_id_attrs_map = {}
-        self.__par_id_index_map = {}
+        self.__par_id_attrs_name_maps = {}
         for attr_name in CACHED_ATTR_NAMES:
             self.__par_id_attrs_name_maps[attr_name] = {}
             self.__attrs_name_par_id_maps[attr_name] = {}
@@ -1849,8 +1849,6 @@ class Document:
         for i in range(len(self.__par_ids)):
             par_id = self.__par_ids[i]
             attrs = self.__par_attrs[i]
-            self.__par_id_attrs_map[par_id] = attrs
-            self.__par_id_index_map[par_id] = i
             for attr_name in CACHED_ATTR_NAMES:
                 attr_value = attrs.get(attr_name, None)
                 if attr_value is not None:
@@ -1868,6 +1866,7 @@ class Document:
                     self.__attrs_name_lists[attr_name].append(attr_value)
                     self.__par_id_attrs_name_maps[attr_name][par_id] = attr_value
                     self.__attrs_name_par_id_maps[attr_name][attr_value] = par_id
+            self.__par_id_cache_entry_map[par_id] = ParCacheEntry(attrs=attrs, index=i)
 
     def get_par_id_name_map(self, attr_name: str) -> dict[str, str]:
         if self.__par_id_attrs_name_maps is None:
@@ -1890,14 +1889,14 @@ class Document:
         return self.__attrs_name_lists.get(attr_name, [])
 
     def get_attrs(self, par_id: str) -> dict:
-        if self.__par_id_attrs_map is None:
+        if self.__par_id_cache_entry_map is None:
             self.generate_name_maps()
-        return self.__par_id_attrs_map.get(par_id, {})
+        return self.__par_id_cache_entry_map.get(par_id, DEFAULT_ENTRY).attrs
 
     def get_par_index(self, par_id: str) -> int:
-        if self.__par_id_index_map is None:
+        if self.__par_id_cache_entry_map is None:
             self.generate_name_maps()
-        return self.__par_id_index_map.get(par_id, -1)
+        return self.__par_id_cache_entry_map.get(par_id, DEFAULT_ENTRY).index
 
     def get_par_id(
         self, attr_name: str, value_name: str, def_value: str | None
