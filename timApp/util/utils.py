@@ -157,7 +157,15 @@ def get_error_tex(title: str, message: str | Exception) -> str:
 
 
 def del_content(
-    directory: Path, onerror: Callable[[Any, str, Any], Any] | None = None
+    directory: Path,
+    onerror: Callable[
+        [
+            Callable[..., Any],
+            str,
+            tuple[type[BaseException], BaseException, TracebackType],
+        ],
+        object,
+    ],
 ) -> None:
     for f in os.listdir(directory):
         f_path = os.path.join(directory, f)

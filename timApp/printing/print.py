@@ -54,6 +54,7 @@ from timApp.util.flask.responsehelper import (
 )
 from timApp.util.flask.typedblueprint import TypedBlueprint
 from tim_common.html_sanitize import sanitize_html, sanitize_svg
+from util.timtiming import taketime
 
 TEXPRINTTEMPLATE_KEY = "texprinttemplate"
 DEFAULT_PRINT_TEMPLATE_NAME = "templates/printing/runko"
@@ -79,7 +80,7 @@ def pull_doc_path(endpoint: str | None, values: dict[str, str] | None) -> None:
         if doc_path is None:
             raise RouteException()
         g.doc_path = doc_path
-        g.doc_entry = DocEntry.find_by_path(doc_path)
+        g.doc_entry = DocEntry.find_by_path(doc_path, fallback_to_id=True)
         if not g.doc_entry:
             raise NotExist("Document not found")
         verify_view_access(g.doc_entry)
@@ -138,8 +139,9 @@ def print_document(
         metadata={"data_key": "removeOldImages"}, default=False
     ),
     force: bool = False,
-    url_macros: dict[str, str]
-    | None = field(metadata={"data_key": "urlMacros"}, default=None),
+    url_macros: dict[str, str] | None = field(
+        metadata={"data_key": "urlMacros"}, default=None
+    ),
 ) -> Response:
     _ = doc_path  # use for linter, actual doc is fetched in before_request
     if not file_type:
@@ -802,6 +804,7 @@ def do_before_requests() -> None:
 
 @svg_blueprint.url_value_preprocessor
 def pull_doc_path_svg(endpoint: str | None, values: dict[str, str] | None) -> None:
+    taketime("pull_doc_path_svg")
     if not endpoint or not values:
         return
     if current_app.url_map.is_endpoint_expecting(endpoint, "doc_path"):
@@ -810,7 +813,10 @@ def pull_doc_path_svg(endpoint: str | None, values: dict[str, str] | None) -> No
             g.setdefault("error", "Docname is missing")
             return
         g.doc_path = doc_path
-        g.doc_entry = DocEntry.find_by_path(doc_path)
+        if doc_path.isnumeric():
+            g.doc_entry = DocEntry.find_by_id(int(doc_path))
+        else:
+            g.doc_entry = DocEntry.find_by_path(doc_path, fallback_to_id=True)
         if not g.doc_entry:
             g.setdefault("error", "Doc not found")
             return
@@ -824,10 +830,10 @@ def svg_document(
     pid: str | None = field(metadata={"data_key": "id"}, default=None),
     ftype: str | None = field(metadata={"data_key": "fileType"}, default=None),
     _force: bool = False,
-    _url_macros: dict[str, str]
-    | None = field(metadata={"data_key": "urlMacros"}, default=None),
-    r: list[str]
-    | None = field(
+    _url_macros: dict[str, str] | None = field(
+        metadata={"data_key": "urlMacros"}, default=None
+    ),
+    r: list[str] | None = field(
         metadata={
             "data_key": "r",
             "marshmallow_field": mm_fields.List(mm_fields.String()),
@@ -835,11 +841,13 @@ def svg_document(
         default=None,
     ),
 ) -> Response:
+    taketime("svg_document")
     file_type = ftype
     if not file_type:
         file_type = "svg"
 
     def get_data() -> tuple[str, str | None]:
+        taketime("get_data")
         nonlocal file_type
         # nonlocal url_macros
 
@@ -861,12 +869,14 @@ def svg_document(
         """
         task = None
         tid = "taskid"
+        taketime("data fetched")
         if pid:
             task = doc.document.get_paragraph(pid)
             tid = pid
         elif task_id:
             task = doc.document.get_paragraph_by_task_id(task_id)
             tid = task_id
+        taketime("task fetched")
 
         if not task:
             return "", f"{tid} not found"
@@ -878,10 +888,12 @@ def svg_document(
             return "", f"{task_id} not csPlugin"
 
         js = YamlBlock.from_markdown(task.md).values
+        taketime("yaml parsed")
         if js.get("type", "") != "drawio":
             return "", f"{task_id} is not drawio"
 
         data = js.get("data", "")
+        taketime("data extracted")
         if not data:
             return "", f"No data in {task_id}"
         if r:
@@ -889,6 +901,7 @@ def svg_document(
                 parts = rep.split("|", 1)
                 if len(parts) == 2:
                     data = data.replace(parts[0], parts[1])
+        taketime("data ready")
         return data, None
 
     result, error = get_data()
@@ -897,12 +910,14 @@ def svg_document(
         result = NOT_FOUND_SVG.replace("NOTFOUNDFILE", error)
 
     db.session.commit()
-
+    taketime("data processed")
     print_type = PrintFormat(file_type)
     mime = get_mimetype_for_format(print_type)
     result = sanitize_svg(result)
+    taketime("data sanitized")
     response = make_response(result)
+    taketime("response created")
     response.headers["Content-Type"] = mime
     add_csp_if_not_script_safe(response, mime, "sandbox")
-
+    taketime("headers added")
     return response

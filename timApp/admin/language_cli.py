@@ -95,7 +95,7 @@ def update() -> None:
 def add_all_supported_languages(log: bool = False) -> None:
     """
     Add all supported languages to the database. Supported languages are
-    defined in the configuration variable LANGUAGES in timApp\defaultconfig.py.
+    defined in the configuration variable LANGUAGES in timApp/defaultconfig.py.
 
     This separate function allows adding all the languages at the
     db-initialization.
