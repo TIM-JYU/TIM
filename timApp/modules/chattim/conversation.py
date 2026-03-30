@@ -13,10 +13,10 @@ class ChatMessage:
 
     content: str
     """Content of the message."""
-    timestamp: int
-    """Timestamp of when the message was sent in seconds."""
     role: Message.Role
     """Role of the message sender."""
+    timestamp: int
+    """Timestamp of when the message was sent in seconds."""
     usage: Usage | None = None
     """Tokens used for generating the message."""
 
@@ -45,16 +45,13 @@ class ChatMessage:
 class ConversationManager:
     """Manages conversation histories."""
 
-    store: ConversationStore
-
-    # TODO: convo history in mem
+    # TODO: keep a cache for recent conversations?
     def __init__(self, root_dir: str):
         # NOTE: use FILES_PATH as the root_dir:
         # from timApp.timdb.dbaccess import get_files_path
         # TODO: change root path naming
         root_path = os.path.join(root_dir, "history", "chattim")
-        # TODO: keep a cache for recent conversations?
-        self.store = ConversationStore(root_path)
+        self._store = ConversationStore(root_path)
 
     def append_messages(
         self, plugin_id: str, user_id: str, messages: list[ChatMessage]
@@ -66,8 +63,8 @@ class ConversationManager:
         :param user_id: The ID of the user.
         :param messages: A list of messages to append to the file.
         """
-        # TODO: update cache we have one
-        self.store.append_messages(plugin_id, user_id, messages)
+        # TODO: update cache if we have one
+        self._store.append_messages(plugin_id, user_id, messages)
 
     def get_history_n(
         self, plugin_id: str, user_id: str, last_n: int | None = None
@@ -80,12 +77,17 @@ class ConversationManager:
         :param last_n: Last N messages to return or all if None.
         :return: List of `ChatMessage` objects in the conversation.
         """
-        # TODO: check if in memory
-        messages = self.store.load_messages_n(plugin_id, user_id, last_n)
+        # TODO: check if in cache
+        messages = self._store.load_messages_n(plugin_id, user_id, last_n)
         return messages or []
 
     def get_history_time_window(
-        self, plugin_id: str, user_id: str, ts_begin: int, ts_end: int
+        self,
+        plugin_id: str,
+        user_id: str,
+        ts_begin: int,
+        ts_end: int,
+        max_messages: int = 128,
     ) -> list[ChatMessage] | None:
         """
         Return the message from the history of the specified conversation.
@@ -95,19 +97,18 @@ class ConversationManager:
         :param user_id: User ID.
         :param ts_begin: Timestamp of the beginning of the time window in seconds.
         :param ts_end: Timestamp of the end of the time window in seconds.
+        :param max_messages: Maximum amount of messages to return in the time window.
         :return: List of `ChatMessage` objects or None if no history.
         """
-        # TODO: check if in memory
-        messages = self.store.load_messages_time_window(
-            plugin_id, user_id, ts_begin, ts_end
+        # TODO: check if in cache
+        messages = self._store.load_messages_time_window(
+            plugin_id, user_id, ts_begin, ts_end, max_messages
         )
         return messages or []
 
 
 class ConversationStore:
     """Handles disk IO for storing the conversations."""
-
-    root_path: str
 
     def __init__(self, root_path: str):
         self.root_path = root_path
@@ -175,7 +176,12 @@ class ConversationStore:
             return None
 
     def load_messages_time_window(
-        self, plugin_id: str, user_id: str, ts_begin: int, ts_end: int
+        self,
+        plugin_id: str,
+        user_id: str,
+        ts_begin: int,
+        ts_end: int,
+        max_messages: int,
     ) -> list[ChatMessage] | None:
         """
         Loads messages from disk if the conversation exists.
@@ -184,6 +190,7 @@ class ConversationStore:
         :param user_id: User ID.
         :param ts_begin: Timestamp of the beginning of the time window in seconds.
         :param ts_end: Timestamp of the end of the time window in seconds.
+        :param max_messages: Maximum amount of messages to return in the time window.
         :return: List of `ChatMessage` objects or None if no history.
         """
         if ts_end <= ts_begin:
@@ -197,6 +204,9 @@ class ConversationStore:
 
             with open(file_path, "rb") as f:
                 for line in self._iter_lines_reverse(f):
+                    if len(out_rev) >= max_messages:
+                        break
+
                     msg = self._parse_message_line(line)
                     if msg is None:
                         continue
@@ -244,7 +254,7 @@ class ConversationStore:
     def _iter_lines_reverse(file: BinaryIO, chunk_size: int = 8192) -> Iterator[str]:
         """
         Iterate a UTF-8 text file line-by-line from the end.
-        The file must be opened in binary mode. The file is read in chunks.
+        The file must be opened in binary mode, and it is read in chunks.
 
         :param file: The file to iterate.
         :param chunk_size: Size of the chunks to read.
