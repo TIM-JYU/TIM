@@ -3,7 +3,7 @@ from __future__ import annotations
 import os
 import json
 from dataclasses import dataclass, asdict
-from typing import Callable
+from typing import BinaryIO, Iterator
 from .model import Message, Usage
 
 
@@ -33,14 +33,13 @@ class ChatMessage:
         :return: `ChatMessage` instance.
         """
         usage = d.get("usage")
+        msg_dict = dict(d)
         if isinstance(usage, dict):
             try:
-                d = dict(d)
-                d["usage"] = Usage(**usage)
+                msg_dict["usage"] = Usage(**usage)
             except TypeError:
-                d = dict(d)
-                d["usage"] = None
-        return ChatMessage(**d)
+                msg_dict["usage"] = None
+        return ChatMessage(**msg_dict)
 
 
 class ConversationManager:
@@ -149,10 +148,28 @@ class ConversationStore:
             return []
         file_path = self.resolve_conversation_path(plugin_id, user_id)
         try:
-            with open(file_path, "r", encoding="utf-8") as f:
-                # TODO: last_n read can be optimized for large files
-                lines = f.readlines()[-last_n:] if last_n is not None else f.readlines()
-                return self.parse_messages(lines)
+            if last_n is None:
+                # Read all the lines in order from the beginning of the file.
+                with open(file_path, "r", encoding="utf-8") as f:
+                    out: list[ChatMessage] = []
+                    for line in f:
+                        msg = self._parse_message_line(line)
+                        if msg is not None:
+                            out.append(msg)
+                    return out
+
+            # Read from the end without reading the whole file.
+            out_rev: list[ChatMessage] = []
+            with open(file_path, "rb") as f:
+                for line in self._iter_lines_reverse(f):
+                    msg = self._parse_message_line(line)
+                    if msg is None:
+                        continue
+                    out_rev.append(msg)
+                    if len(out_rev) >= last_n:
+                        break
+            out_rev.reverse()
+            return out_rev
 
         except FileNotFoundError:
             return None
@@ -173,45 +190,94 @@ class ConversationStore:
             return []
         file_path = self.resolve_conversation_path(plugin_id, user_id)
         try:
-            with open(file_path, "r", encoding="utf-8") as f:
-                # TODO: Can be optimized for large files. Start reading from the end.
-                # Don't read all the lines before parsing
-                lines = f.readlines()
-                ts_filter: Callable[[ChatMessage], bool] = (
-                    lambda msg: ts_begin >= msg.timestamp >= ts_begin
-                )
-                return self.parse_messages(lines, ts_filter)
+            # Read from the end and stop early if the file appears chronological.
+            out_rev: list[ChatMessage] = []
+            chronological = True
+            last_ts: int | None = None
+
+            with open(file_path, "rb") as f:
+                for line in self._iter_lines_reverse(f):
+                    msg = self._parse_message_line(line)
+                    if msg is None:
+                        continue
+
+                    if last_ts is not None and msg.timestamp > last_ts:
+                        # Messages are not in chronological order.
+                        chronological = False
+                    last_ts = msg.timestamp
+
+                    if msg.timestamp > ts_end:
+                        continue
+                    if msg.timestamp < ts_begin:
+                        if chronological:
+                            break
+                        continue
+
+                    out_rev.append(msg)
+
+            out_rev.reverse()
+            return out_rev
 
         except FileNotFoundError:
             return None
 
     @staticmethod
-    def parse_messages(
-        lines: list[str], filter_f: Callable[[ChatMessage], bool] | None = None
-    ) -> list[ChatMessage]:
-        """
-        Parse the messages from JSONL to `ChatMessage` objects.
+    def _parse_message_line(line: str) -> ChatMessage | None:
+        """Parse a message line from JSONL to `ChatMessage`.
 
-        :param lines: Lines from the JSONL file.
-        :param filter_f: Filter function to validate the chat message.
-        :return: List of `ChatMessage` objects.
+        :param line: Line from the JSONL file.
+        :return: The parsed `ChatMessage` object or `None` if invalid.
         """
-        out: list[ChatMessage] = []
-        for line in lines:
-            line = line.strip()
-            if not line:
-                continue
-            try:
-                d = json.loads(line)
-                if not isinstance(d, dict):
+
+        line = line.strip()
+        if not line:
+            return None
+        try:
+            d = json.loads(line)
+            if not isinstance(d, dict):
+                return None
+            return ChatMessage.from_dict(d)
+        except (json.JSONDecodeError, TypeError, ValueError):
+            return None
+
+    @staticmethod
+    def _iter_lines_reverse(file: BinaryIO, chunk_size: int = 8192) -> Iterator[str]:
+        """
+        Iterate a UTF-8 text file line-by-line from the end.
+        The file must be opened in binary mode. The file is read in chunks.
+
+        :param file: The file to iterate.
+        :param chunk_size: Size of the chunks to read.
+        :return: An iterator over the lines in the file in reverse order.
+        """
+        # Set the read position to file end.
+        file.seek(0, os.SEEK_END)
+        pos = file.tell()
+        buf = b""
+
+        while pos > 0:
+            read_size = chunk_size if pos >= chunk_size else pos
+            pos -= read_size
+            file.seek(pos, os.SEEK_SET)
+            chunk = file.read(read_size)
+            if not chunk:
+                break
+            buf = chunk + buf
+
+            parts = buf.split(b"\n")
+            # The first line in the chunk can be incomplete.
+            buf = parts[0]
+            for raw in reversed(parts[1:]):
+                if not raw:
                     continue
-                chat_message = ChatMessage.from_dict(d)
+                if raw.endswith(b"\r"):
+                    raw = raw[:-1]
+                yield raw.decode("utf-8", errors="replace")
 
-                if filter_f is not None and filter_f(chat_message):
-                    out.append(chat_message)
-            except (json.JSONDecodeError, TypeError, ValueError):
-                continue
-        return out
+        if buf:
+            if buf.endswith(b"\r"):
+                buf = buf[:-1]
+            yield buf.decode("utf-8", errors="replace")
 
     def resolve_conversation_path(self, plugin_id: str, user_id: str) -> str:
         """
