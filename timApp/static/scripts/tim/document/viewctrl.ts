@@ -918,6 +918,9 @@ export class ViewCtrl implements IController {
                 ev.preventDefault(); // Prevent Chrome/ium from shifting focus to the address bar
                 this.openEditor();
                 break;
+            case "CTRL+S":
+                ev.preventDefault(); // Prevent Chrome/ium from shifting focus to the address bar
+                break;
             default:
                 return;
         }

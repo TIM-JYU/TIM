@@ -76,6 +76,7 @@ from timApp.util.utils import (
     add_g_error,
 )
 from tim_common.html_sanitize import presanitize_html_body
+from util.timtiming import taketime
 
 if TYPE_CHECKING:
     from timApp.document.docinfo import DocInfo
@@ -211,13 +212,13 @@ class Document:
         self.__plugin_count = 0  # cache for number of all plugins in the document
 
         # cache for attributes-name/parId maps for pars
-        self.__attrs_name_par_id_maps: dict[str, dict[str, str]] | None = None
+        self.__attrs_value_par_id_maps: dict[str, dict[str, str]] | None = None
 
         # cache for id-attributes-name lists
         self.__attrs_name_lists: dict[str, list[str]] | None = None
 
         # cache for parId/attributes-name maps for pars
-        self.__par_id_attrs_name_maps: dict[str, dict[str, str]] | None = None
+        self.__par_id_attrs_value_maps: dict[str, dict[str, str]] | None = None
 
         # cache for (id-attrs, index) maps for pars
         self.__par_id_cache_entry_map: dict[str, ParCacheEntry] | None = None
@@ -790,6 +791,7 @@ class Document:
         return par_id in self.__par_ids
 
     def get_paragraph(self, par_id: str) -> DocParagraph:
+        taketime("get_paragraph")
         if self.preload_option == PreloadOption.all:
             self.ensure_pars_loaded()
             try:
@@ -797,14 +799,20 @@ class Document:
             except KeyError:
                 return self.raise_not_found(par_id)
         cached = self.single_par_cache.get(par_id)
+        taketime("get_paragraph_cache_check")
         if cached:
             return cached
         self.ensure_par_ids_loaded()
+        taketime("get_paragraph_ensure_ids")
         try:
-            idx = self.__par_ids.index(par_id)
+            idx = self.get_par_index(par_id)
+            if idx < 0:
+                return self.raise_not_found(par_id)
         except ValueError:
             return self.raise_not_found(par_id)
+        taketime("get_paragraph_find_index")
         fetched = DocParagraph.get(self, self.__par_ids[idx], self.__par_hashes[idx])
+        taketime("get_paragraph_fetch")
         self.single_par_cache[par_id] = fetched
         return fetched
 
@@ -1775,7 +1783,7 @@ class Document:
         self.ref_doc_cache = {}
         self.single_par_cache = {}
         self.__par_cache = None
-        self.__attrs_name_par_id_maps = None
+        self.__attrs_value_par_id_maps = None
         self.__attrs_name_lists = None
         self.clear_doc_lines_cache()
 
@@ -1839,12 +1847,12 @@ class Document:
     def generate_name_maps(self):
         self.ensure_par_ids_loaded()
         self.__par_id_cache_entry_map = {}
-        self.__attrs_name_par_id_maps = {}
+        self.__attrs_value_par_id_maps = {}
+        self.__par_id_attrs_value_maps = {}
         self.__attrs_name_lists = {}
-        self.__par_id_attrs_name_maps = {}
         for attr_name in CACHED_ATTR_NAMES:
-            self.__par_id_attrs_name_maps[attr_name] = {}
-            self.__attrs_name_par_id_maps[attr_name] = {}
+            self.__par_id_attrs_value_maps[attr_name] = {}
+            self.__attrs_value_par_id_maps[attr_name] = {}
             self.__attrs_name_lists[attr_name] = []
         for i in range(len(self.__par_ids)):
             par_id = self.__par_ids[i]
@@ -1864,24 +1872,24 @@ class Document:
                         except PluginException:
                             pass
                     self.__attrs_name_lists[attr_name].append(attr_value)
-                    self.__par_id_attrs_name_maps[attr_name][par_id] = attr_value
-                    self.__attrs_name_par_id_maps[attr_name][attr_value] = par_id
+                    self.__par_id_attrs_value_maps[attr_name][par_id] = attr_value
+                    self.__attrs_value_par_id_maps[attr_name][attr_value] = par_id
             self.__par_id_cache_entry_map[par_id] = ParCacheEntry(attrs=attrs, index=i)
 
     def get_par_id_name_map(self, attr_name: str) -> dict[str, str]:
-        if self.__par_id_attrs_name_maps is None:
+        if self.__par_id_attrs_value_maps is None:
             self.generate_name_maps()
-        return self.__par_id_attrs_name_maps.get(attr_name, {})
+        return self.__par_id_attrs_value_maps.get(attr_name, {})
 
     def get_name_par_id_map(self, attr_name: str) -> dict[str, str]:
-        if self.__attrs_name_par_id_maps is None:
+        if self.__attrs_value_par_id_maps is None:
             self.generate_name_maps()
-        return self.__attrs_name_par_id_maps.get(attr_name, {})
+        return self.__attrs_value_par_id_maps.get(attr_name, {})
 
     def add_name_par_id_map(self, attr_name: str, value_name: str, par_id: str):
-        if self.__attrs_name_par_id_maps is None:
+        if self.__attrs_value_par_id_maps is None:
             self.generate_name_maps()
-        self.__attrs_name_par_id_maps[attr_name][value_name] = par_id
+        self.__attrs_value_par_id_maps[attr_name][value_name] = par_id
 
     def get_name_list(self, attr_name: str) -> list[str]:
         if self.__attrs_name_lists is None:
