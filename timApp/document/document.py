@@ -31,7 +31,7 @@ from difflib import SequenceMatcher
 from pathlib import Path
 from tempfile import mkstemp
 from time import time
-from typing import Iterable, Generator, Optional, Iterator, NamedTuple
+from typing import Iterable, Generator, Optional, NamedTuple
 from typing import TYPE_CHECKING
 
 from filelock import FileLock, BaseFileLock
@@ -76,7 +76,7 @@ from timApp.util.utils import (
     add_g_error,
 )
 from tim_common.html_sanitize import presanitize_html_body
-from util.timtiming import taketime
+from timApp.util.timtiming import taketime
 
 if TYPE_CHECKING:
     from timApp.document.docinfo import DocInfo
@@ -147,11 +147,13 @@ def parse_docline(line: str) -> tuple[str, str | None, dict[str, str] | None]:
 
 
 class ParCacheEntry(NamedTuple):
-    attrs: dict | None
     index: int
+    par_id: str
+    t: str | None
+    attrs: dict | None
 
 
-DEFAULT_ENTRY = ParCacheEntry(None, -1)
+DEFAULT_ENTRY = ParCacheEntry(-1, "", None, None)
 
 
 class Document:
@@ -179,10 +181,8 @@ class Document:
         self.__par_cache: list[DocParagraph] | None = None
         # List of par ids - it is much faster to load only ids and sometimes full pars are not needed
         self.__par_ids: list[str] | None = None
-        # List of corresponding hashes
-        self.__par_hashes: list[str] | None = None
-        # List of attributes read from disk for pars
-        self.__par_attrs: list[dict] | None = None
+        # List of corresponding cache entrys
+        self.__par_cache_entrys: list[ParCacheEntry] | None = None
         # List of settings pars
         self.__par_settings: list[str] | None = None
         # List of lines in the document file
@@ -277,9 +277,8 @@ class Document:
         self.__par_map = {}
         self.__par_ids = []
         self.__par_settings = []
-        self.__par_attrs = []
-        self.__par_hashes = []
         self.__par_id_cache_entry_map = {}
+        self.__par_cache_entrys = []
         settings_allowed = True
         for i in range(0, len(self.__par_cache)):
             curr_p = self.__par_cache[i]
@@ -288,14 +287,15 @@ class Document:
             next_p = self.__par_cache[i + 1] if i + 1 < len(self.__par_cache) else None
             self.__par_map[par_id] = {"p": prev_p, "n": next_p, "c": curr_p}
             self.__par_ids.append(par_id)
-            self.__par_hashes.append(curr_p.get_hash())
+            # self.__par_hashes.append(curr_p.get_hash())
             if curr_p.is_setting() and settings_allowed:
                 self.__par_settings.append(curr_p.get_id())
             else:
                 settings_allowed = False
             attrs = curr_p.attrs if curr_p.attrs else {}
-            self.__par_attrs.append(attrs)
-            self.__par_id_cache_entry_map[par_id] = ParCacheEntry(attrs, i)
+            entry = ParCacheEntry(i, par_id, curr_p.get_hash(), attrs)
+            self.__par_id_cache_entry_map[par_id] = entry
+            self.__par_cache_entrys.append(entry)
         if not self.__is_incomplete_cache:
             self.single_par_cache.update({p.get_id(): p for p in self.__par_cache})
 
@@ -802,16 +802,13 @@ class Document:
         taketime("get_paragraph_cache_check")
         if cached:
             return cached
-        self.ensure_par_ids_loaded()
+        self.ensure_par_ids_loaded(get_maps=True)
         taketime("get_paragraph_ensure_ids")
-        try:
-            idx = self.get_par_index(par_id)
-            if idx < 0:
-                return self.raise_not_found(par_id)
-        except ValueError:
+        entry = self.__par_id_cache_entry_map.get(par_id, None)
+        if not entry:
             return self.raise_not_found(par_id)
-        taketime("get_paragraph_find_index")
-        fetched = DocParagraph.get(self, self.__par_ids[idx], self.__par_hashes[idx])
+        taketime("get_paragraph_find_t")
+        fetched = DocParagraph.get(self, par_id, entry.t)
         taketime("get_paragraph_fetch")
         self.single_par_cache[par_id] = fetched
         return fetched
@@ -1648,19 +1645,22 @@ class Document:
         self.ensure_par_ids_loaded()
         return self.__doc_lines if self.__doc_lines is not None else []
 
-    def ensure_par_ids_loaded(self) -> None:
+    def ensure_par_ids_loaded(self, get_maps: bool = False) -> None:
         if (
             self.__par_ids is None
             or self.__doc_lines is None
             or self.__is_incomplete_cache
         ):
             self._load_par_ids()
+        if get_maps:
+            if self.__par_id_cache_entry_map is None:
+                self.generate_name_maps()
 
     def _load_par_ids(self):
-        ids, hashes, attrs, settings, need_to_save_attrs = self._get_par_ids_impl()
+        self.__par_id_cache_entry_map = None
+        ids, cache_entrys, settings, need_to_save_attrs = self._get_par_ids_impl()
         self.__par_ids = ids
-        self.__par_hashes = hashes
-        self.__par_attrs = attrs
+        self.__par_cache_entrys = cache_entrys
         self.__par_settings = settings
         if need_to_save_attrs:  # refresh old documents with missing attrs
             self.load_pars_by_ids(ids)
@@ -1668,23 +1668,22 @@ class Document:
 
     def _get_par_ids_impl(
         self,
-    ) -> tuple[list[str], list[str], list[dict], list[str], bool]:
+    ) -> tuple[list[str], list[ParCacheEntry], list[str], bool]:
         par_ids = []
-        par_hashes = []
-        par_attrs = []
+        par_cache_entrys = []
         par_settings = []
         if not self.get_version_path().exists():
-            return [], [], [], [], False
+            return [], [], [], False
         with self.get_version_path().open("r", encoding="UTF-8") as f:
             self.__doc_lines = f.readlines()
 
         need_to_save_attrs = False
         settings_allowed = True
-        for line in self.__doc_lines:
+        for i in range(len(self.__doc_lines)):
+            line = self.__doc_lines[i]
             par_id, t, attrs = parse_docline(line)
             par_ids.append(par_id)
-            par_hashes.append(t)
-            par_attrs.append(attrs)
+            par_cache_entrys.append(ParCacheEntry(i, par_id, t, attrs))
             if attrs is None:
                 need_to_save_attrs = True
             else:
@@ -1692,7 +1691,7 @@ class Document:
                     par_settings.append(par_id)
                 else:
                     settings_allowed = False
-        return par_ids, par_hashes, par_attrs, par_settings, need_to_save_attrs
+        return par_ids, par_cache_entrys, par_settings, need_to_save_attrs
 
     def _save_doc_lines(self):
         with self.get_version_path().open("w", encoding="UTF-8") as f:
@@ -1776,7 +1775,7 @@ class Document:
         self.settings_cache = None
         self.__par_map = None
         self.__par_ids = None
-        self.__par_hashes = None
+        # self.__par_hashes = None
         self.__par_id_cache_entry_map = None
         self.__source_doc = None
         self.settings_cache = None
@@ -1854,27 +1853,31 @@ class Document:
             self.__par_id_attrs_value_maps[attr_name] = {}
             self.__attrs_value_par_id_maps[attr_name] = {}
             self.__attrs_name_lists[attr_name] = []
-        for i in range(len(self.__par_ids)):
-            par_id = self.__par_ids[i]
-            attrs = self.__par_attrs[i]
-            for attr_name in CACHED_ATTR_NAMES:
-                attr_value = attrs.get(attr_name, None)
-                if attr_value is not None:
-                    if attr_name == "taskId":
-                        from timApp.plugin.taskid import TaskId
+        for i in range(len(self.__par_cache_entrys)):
+            par_cache_entry: ParCacheEntry = self.__par_cache_entrys[i]
+            par_id = par_cache_entry.par_id
+            attrs = par_cache_entry.attrs
+            self.__par_id_cache_entry_map[par_id] = par_cache_entry
+            if attrs:
+                for attr_name in CACHED_ATTR_NAMES:
+                    attr_value = attrs.get(attr_name, None)
+                    if attr_value is not None:
+                        if attr_name == "taskId":
+                            from timApp.plugin.taskid import TaskId
 
-                        try:
-                            # noinspection PyTypeChecker
-                            tid = TaskId.parse(
-                                attr_value, allow_block_hint=False, require_doc_id=False
-                            )
-                            attr_value = tid.task_name
-                        except PluginException:
-                            pass
-                    self.__attrs_name_lists[attr_name].append(attr_value)
-                    self.__par_id_attrs_value_maps[attr_name][par_id] = attr_value
-                    self.__attrs_value_par_id_maps[attr_name][attr_value] = par_id
-            self.__par_id_cache_entry_map[par_id] = ParCacheEntry(attrs=attrs, index=i)
+                            try:
+                                # noinspection PyTypeChecker
+                                tid = TaskId.parse(
+                                    attr_value,
+                                    allow_block_hint=False,
+                                    require_doc_id=False,
+                                )
+                                attr_value = tid.task_name
+                            except PluginException:
+                                pass
+                        self.__attrs_name_lists[attr_name].append(attr_value)
+                        self.__par_id_attrs_value_maps[attr_name][par_id] = attr_value
+                        self.__attrs_value_par_id_maps[attr_name][attr_value] = par_id
 
     def get_par_id_name_map(self, attr_name: str) -> dict[str, str]:
         if self.__par_id_attrs_value_maps is None:
@@ -1911,10 +1914,12 @@ class Document:
     ) -> str | None:
         return self.get_name_par_id_map(attr_name).get(value_name, def_value)
 
+    """ TODO: Not used
     def iter_paragraphs_with_list_hashes(self) -> Iterator[tuple[DocParagraph, str]]:
         self.ensure_par_ids_loaded()
         assert self.__par_hashes is not None
         return zip(self.get_paragraphs(), self.__par_hashes)
+    """
 
 
 def add_index_entry(index_table, current_headers, header):
@@ -2027,15 +2032,11 @@ class DocParagraphIter:
             if self.next_index >= len(self.__doc_lines):
                 self.next_index = -1
             if line != "\n":
-                par_id, t, attrs = parse_docline(line)
+                par_id, t, _attrs = parse_docline(line)
                 cached = self.doc.single_par_cache.get(par_id)
                 if cached:
                     return cached
-                if t:
-                    fetched = DocParagraph.get(self.doc, par_id, t)
-                else:
-                    # Line contains just par_id (old docs), use the latest t
-                    fetched = DocParagraph.get_latest(self.doc, line.rstrip("\n"))
+                fetched = DocParagraph.get(self.doc, par_id, t)
                 self.doc.single_par_cache[par_id] = fetched
                 return fetched
 

@@ -16,8 +16,13 @@ timing_last_t_z = time.time()
 # print(timing_last, timing_last_t)
 
 
+# noinspection PyUnusedLocal
 def taketime(s1: str = "", s2: str = "", n: int = 0, zero: bool = False) -> None:
-    # return  # comment this to take times, uncomment for production and tests
+    return  # comment this to take times, uncomment for production and tests
+    # _taketime(s1, s2, n, zero)
+
+
+def _taketime(s1: str = "", s2: str = "", n: int = 0, zero: bool = False) -> None:
     global timing_last
     global timing_last_t
     global timing_last_z
