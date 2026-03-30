@@ -92,6 +92,7 @@ class DocParagraph:
         "md",
         "plugin_ref",
         "attrs_handled",
+        "error",
     }
 
     def __init__(self, doc: Document):
@@ -124,6 +125,8 @@ class DocParagraph:
         self.html_cache = None
         self.plugin_ref = None
         self.attrs_handled = False
+        # place for any error found for this paragraph
+        self.error: str | None = None
 
     def __eq__(self, other):
         if isinstance(other, self.__class__):
@@ -321,14 +324,19 @@ class DocParagraph:
         :return: The retrieved DocParagraph.
 
         """
+        t = ""
         try:
             t = os.readlink(cls._get_path(doc, par_id, "current"))
-            return cls.get(doc, par_id, t)
+            par = cls._get(doc, par_id, t)
+            if par is not None:
+                return par
         except FileNotFoundError:
-            doc.raise_not_found(par_id)
+            pass
+
+        doc.raise_not_found(f"{par_id}/{t}")
 
     @classmethod
-    def get(cls, doc, par_id: str, t: str) -> DocParagraph:
+    def _get(cls, doc, par_id: str, t: str | None) -> DocParagraph | None:
         """Retrieves a specific paragraph version from the data store.
 
         :param doc: The Document object for which to retrieve the paragraph.
@@ -359,7 +367,37 @@ class DocParagraph:
                             time.sleep(0.01)
             return cls.from_dict(doc, doc_dict)
         except FileNotFoundError:
-            doc.raise_not_found(par_id)
+            return None
+
+    @classmethod
+    def get(cls, doc, par_id: str, t: str | None) -> DocParagraph:
+        """Retrieves a specific paragraph version from the data store.
+
+        :param doc: The Document object for which to retrieve the paragraph.
+        :param par_id: The paragraph id.
+        :param t: The paragraph hash.
+        :return: The retrieved DocParagraph.
+
+        """
+        if not t:
+            par = cls.get_latest(doc, par_id)
+            par.error = "HM: Paragraph hash was missing."
+            return par
+        try:
+            par = cls._get(doc, par_id, t)
+            if par is not None:
+                return par
+        except FileNotFoundError:
+            pass
+
+        try:
+            par = cls.get_latest(doc, par_id)
+            par.error = (
+                f"VN: Version with hash {t} was not found. Get latest version instead."
+            )
+            return par
+        except FileNotFoundError:
+            doc.raise_not_found(f"{par_id}/{t}")
 
     @classmethod
     def _get_path(cls, doc, par_id: str, t: str) -> str:
