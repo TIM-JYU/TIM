@@ -182,7 +182,7 @@ class Document:
         # List of par ids - it is much faster to load only ids and sometimes full pars are not needed
         self.__par_ids: list[str] | None = None
         # List of corresponding cache entrys
-        self.__par_cache_entrys: list[ParCacheEntry] | None = None
+        self.__par_cache_entries: list[ParCacheEntry] | None = None
         # List of settings pars
         self.__par_settings: list[str] | None = None
         # List of lines in the document file
@@ -278,7 +278,7 @@ class Document:
         self.__par_ids = []
         self.__par_settings = []
         self.__par_id_cache_entry_map = {}
-        self.__par_cache_entrys = []
+        self.__par_cache_entries = []
         settings_allowed = True
         for i in range(0, len(self.__par_cache)):
             curr_p = self.__par_cache[i]
@@ -295,7 +295,7 @@ class Document:
             attrs = curr_p.attrs if curr_p.attrs else {}
             entry = ParCacheEntry(i, par_id, curr_p.get_hash(), attrs)
             self.__par_id_cache_entry_map[par_id] = entry
-            self.__par_cache_entrys.append(entry)
+            self.__par_cache_entries.append(entry)
         if not self.__is_incomplete_cache:
             self.single_par_cache.update({p.get_id(): p for p in self.__par_cache})
 
@@ -1660,7 +1660,7 @@ class Document:
         self.__par_id_cache_entry_map = None
         ids, cache_entrys, settings, need_to_save_attrs = self._get_par_ids_impl()
         self.__par_ids = ids
-        self.__par_cache_entrys = cache_entrys
+        self.__par_cache_entries = cache_entrys
         self.__par_settings = settings
         if need_to_save_attrs:  # refresh old documents with missing attrs
             self.load_pars_by_ids(ids)
@@ -1853,8 +1853,8 @@ class Document:
             self.__par_id_attrs_value_maps[attr_name] = {}
             self.__attrs_value_par_id_maps[attr_name] = {}
             self.__attrs_name_lists[attr_name] = []
-        for i in range(len(self.__par_cache_entrys)):
-            par_cache_entry: ParCacheEntry = self.__par_cache_entrys[i]
+        for i in range(len(self.__par_cache_entries)):
+            par_cache_entry: ParCacheEntry = self.__par_cache_entries[i]
             par_id = par_cache_entry.par_id
             attrs = par_cache_entry.attrs
             self.__par_id_cache_entry_map[par_id] = par_cache_entry
