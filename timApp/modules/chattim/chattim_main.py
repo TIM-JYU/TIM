@@ -2,6 +2,7 @@ from dataclasses import dataclass
 from typing import Any, TypedDict, Union
 from flask import request
 
+from timApp.auth.sessioninfo import get_current_user_id
 from timApp.tim_app import csrf
 from timApp.util.flask.responsehelper import json_response
 from tim_common.markupmodels import GenericMarkupModel
@@ -111,6 +112,11 @@ def define_ask_route():
 
     if not isinstance(reqcontext_or, ReqContext):
         web["error"] = reqcontext_or
+        return json_response(result)
+
+    session_user_id = get_current_user_id()
+    if session_user_id != reqcontext_or.user_id:  # TODO: hyödytön?
+        web["error"] = "session user id does not match with user id"
         return json_response(result)
 
     val_or_err: Result[str, str] = plugincore.chat_request(reqcontext_or)
