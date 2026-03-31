@@ -3,6 +3,7 @@ import time
 import uuid
 from dataclasses import dataclass
 
+from timApp.timdb.dbaccess import get_files_path
 from timApp.auth.get_user_rights_for_item import UserItemRights
 from timApp.modules.chattim.database_handler import TimDatabase
 from timApp.modules.chattim.rag import (
@@ -56,8 +57,13 @@ class StudentPolicy:
 
 class PluginCore:
     rag: Rag = Rag()
-    history_manager: ConversationManager = ConversationManager()
+    history_manager: ConversationManager
     tim_database: TimDatabase = TimDatabase()
+
+    def __init__(self):
+        # TODO: tämä ok?
+        file_path = get_files_path()
+        history_manager = ConversationManager(file_path)
 
     # TODO: palautetaan token usage tätä kautta tai muualta?
     def chat_request(
