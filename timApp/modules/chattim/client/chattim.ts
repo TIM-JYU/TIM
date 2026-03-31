@@ -7,25 +7,25 @@ import {
     getTopLevelFields,
     nullable,
 } from "tim/plugin/attributes";
-import type {AfterViewInit, ApplicationRef, DoBootstrap} from "@angular/core";
+import type { AfterViewInit, ApplicationRef, DoBootstrap } from "@angular/core";
 import {
     Component,
     ElementRef,
     NgModule,
     ViewEncapsulation,
 } from "@angular/core";
-import {HttpClient, HttpClientModule} from "@angular/common/http";
-import {FormsModule} from "@angular/forms";
-import {TimUtilityModule} from "tim/ui/tim-utility.module";
-import {AngularPluginBase} from "tim/plugin/angular-plugin-base.directive";
-import {DialogModule} from "tim/ui/angulardialog/dialog.module";
-import {PurifyModule} from "tim/util/purify.module";
-import {registerPlugin} from "tim/plugin/pluginRegistry";
-import {CommonModule} from "@angular/common";
-import {DomSanitizer} from "@angular/platform-browser";
-import {Users} from "tim/user/userService";
-import type {CtrlPanelData} from "./controlpanel";
-import {ChatControlPanelComponent} from "./controlpanel";
+import { HttpClient, HttpClientModule, HttpEvent } from "@angular/common/http";
+import { FormsModule } from "@angular/forms";
+import { TimUtilityModule } from "tim/ui/tim-utility.module";
+import { AngularPluginBase } from "tim/plugin/angular-plugin-base.directive";
+import { DialogModule } from "tim/ui/angulardialog/dialog.module";
+import { PurifyModule } from "tim/util/purify.module";
+import { registerPlugin } from "tim/plugin/pluginRegistry";
+import { CommonModule } from "@angular/common";
+import { DomSanitizer } from "@angular/platform-browser";
+import { Users } from "tim/user/userService";
+import type { CtrlPanelData } from "./controlpanel";
+import { ChatControlPanelComponent } from "./controlpanel";
 
 const PluginMarkupFields = t.intersection([
     t.partial({
@@ -39,13 +39,24 @@ const PluginMarkupFields = t.intersection([
 const PluginFields = t.intersection([
     getTopLevelFields(PluginMarkupFields),
     t.type({
-        state: nullable(t.type({userinput: t.string})),
+        state: nullable(t.type({ userinput: t.string })),
     }),
 ]);
 
 export interface ChatEntry {
     user: string;
     agent: string;
+}
+
+export interface AskResponse {
+    data?: string;
+    usage?: number;
+}
+
+export interface AskParams {
+    input: string;
+    user_id: string;
+    document_id: number;
 }
 
 // Huom: <tim-dialog-frame ei sisällä markupError attribuuttia
@@ -102,8 +113,7 @@ export class ChatTIMComponent
         t.TypeOf<typeof PluginFields>,
         typeof PluginFields
     >
-    implements AfterViewInit
-{
+    implements AfterViewInit {
     answer?: string;
     error?: string;
     isRunning = false;
@@ -117,6 +127,7 @@ export class ChatTIMComponent
     maxTokens = 1000;
     controlpanelError?: string;
     controlpanelResponse?: string;
+    useStreaming: boolean = false;
 
     conversation: ChatEntry[] = [];
 
@@ -185,18 +196,21 @@ export class ChatTIMComponent
         // TODO: ei tarvita user id?
         const user_id: number = Users.getCurrent().id;
         const document_id: number = this.document_id;
+        const body: AskParams = { input, user_id, document_id };
 
-        const payload = {
-            input,
-            user_id,
-            document_id,
-        };
-
-        const response = await this.httpPost<{
-            web: {result: string; error?: string};
-        }>("/chattim/ask", payload);
-
+        if (this.useStreaming) {
+            await this.askPostStream(body);
+        } else {
+            await this.askPost(body);
+        }
         this.isRunning = false;
+    }
+
+    async askPost(body: any) {
+        const response = await this.httpPost<{
+            web: { result: string; error?: string };
+        }>("/chattim/ask", body);
+
         if (response.ok) {
             const data = response.result;
             this.error = data.web.error;
@@ -223,7 +237,7 @@ export class ChatTIMComponent
         };
 
         const response = await this.httpPost<{
-            web: {result: string; error?: string};
+            web: { result: string; error?: string };
         }>("/chattim/settings_save", save_request);
 
         this.isRunning = false;
@@ -234,6 +248,20 @@ export class ChatTIMComponent
         } else {
             this.controlpanelError = response.result.error.error;
         }
+    }
+
+    async askPostStream(body: AskParams) {
+        const observable = this.http.post("/chattim/askStream", body, {
+            observe: "events",
+            responseType: "text",
+            reportProgress: true,
+        });
+        // TODO: handle events
+        observable.subscribe({
+            next: (value: HttpEvent<string>) => { },
+            error: (error) => console.error(error),
+            complete: () => console.log("Answer completed"),
+        });
     }
 }
 
@@ -249,7 +277,7 @@ export class ChatTIMComponent
     ],
 })
 export class ChatTIMModule implements DoBootstrap {
-    ngDoBootstrap(appRef: ApplicationRef) {}
+    ngDoBootstrap(appRef: ApplicationRef) { }
 }
 
 registerPlugin("chattim-runner", ChatTIMModule, ChatTIMComponent);
