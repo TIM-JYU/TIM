@@ -1,6 +1,8 @@
+import os
+import json
 from dataclasses import dataclass
 from typing import Any, TypedDict, Union
-from flask import request
+from flask import request, Response, stream_with_context
 
 from timApp.auth.sessioninfo import get_current_user_id
 from timApp.tim_app import csrf
@@ -143,3 +145,49 @@ def define_save_settings():
     web["result"] = "Settings saved!"
 
     return json_response(result)
+
+
+class ChatTimAskResponse(TypedDict):
+    data: str | None
+    usage: int | None
+
+
+from .model import ModelRegistry, SUPPORTED_MODELS, ModelSpec, Message, GenerateOptions
+
+# TODO: temporary
+reg = ModelRegistry(SUPPORTED_MODELS)
+model = reg.create(
+    ModelSpec(
+        provider="openai",
+        model_id="gpt-4.1-nano",
+        api_key=os.getenv("OPENAI_API_KEY", ""),
+    )
+)
+
+
+@chattim.post("/askStream")
+def define_ask_stream_route():
+    data = request.get_json()
+    user_input = data.get("input")
+    user_id = data.get("user_id")
+    document_id = data.get("document_id")
+
+    def generate():
+        # TODO: temporary, use the plugincore
+        stream = model.generate_stream(
+            [Message(role="user", content=user_input)], GenerateOptions()
+        )
+        for msg in stream:
+            print(msg)
+            if msg.delta:
+                yield json.dumps(ChatTimAskResponse(data=msg.delta, usage=None)) + "\n"
+            if msg.usage:
+                yield json.dumps(
+                    ChatTimAskResponse(data=None, usage=msg.usage.total_tokens)
+                ) + "\n"
+
+    return Response(
+        stream_with_context(generate()),
+        mimetype="application/x-ndjson",
+        headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
+    )
