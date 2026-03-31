@@ -3,116 +3,118 @@ from __future__ import annotations
 import os
 import json
 from dataclasses import dataclass, asdict
-from timApp.modules.chattim.model import Message, Usage
-from timApp.defaultconfig import FILES_PATH
+from typing import BinaryIO, Iterator
+from .model import Message, Usage
 
 
 @dataclass
 class ChatMessage:
+    """Conversation message saved on the disk."""
+
     content: str
     """Content of the message."""
-    timestamp: int
-    """Timestamp of when the message was sent."""
     role: Message.Role
     """Role of the message sender."""
+    timestamp: int
+    """Timestamp of when the message was sent in seconds."""
     usage: Usage | None = None
     """Tokens used for generating the message."""
 
     def to_dict(self) -> dict:
-         return asdict(self)
+        """Convert `ChatMessage` object to a `dict`.
+        :return: Dictionary of `ChatMessage` data.
+        """
+        return asdict(self)
 
     @staticmethod
     def from_dict(d: dict) -> ChatMessage:
-        """Parse `ChatMessage` from `dict`.`"""
+        """Parse `ChatMessage` from `dict`.
+        :param d: Dictionary of `ChatMessage` data.
+        :return: `ChatMessage` instance.
+        """
         usage = d.get("usage")
+        msg_dict = dict(d)
         if isinstance(usage, dict):
             try:
-                d = dict(d)
-                d["usage"] = Usage(**usage)
+                msg_dict["usage"] = Usage(**usage)
             except TypeError:
-                d = dict(d)
-                d["usage"] = None
-        return ChatMessage(**d)
+                msg_dict["usage"] = None
+        return ChatMessage(**msg_dict)
 
 
 class ConversationManager:
     """Manages conversation histories."""
 
-    store: ConversationStore
-
-    # TODO: convo history in mem
-    def __init__(self):
+    # TODO: keep a cache for recent conversations?
+    def __init__(self, root_dir: str):
+        # NOTE: use FILES_PATH as the root_dir:
+        # from timApp.timdb.dbaccess import get_files_path
         # TODO: change root path naming
-        # TODO: get the `FILES_PATH` as an argument
-        root_path = os.path.join(FILES_PATH, "history", "chattim")
-        # TODO: keep a cache for recent conversations?
-        self.store = ConversationStore(root_path)
+        root_path = os.path.join(root_dir, "history", "chattim")
+        self._store = ConversationStore(root_path)
 
     def append_messages(
-        self,
-        plugin_id: str,
-        user_id: str,
-        conversation_id: str,
-        messages: list[ChatMessage],
+        self, plugin_id: str, user_id: str, messages: list[ChatMessage]
     ):
         """
-        Append messages to the history of the specified conversation.
+        Append messages to the conversation history of the user.
 
         :param plugin_id: The ID of the plugin instance.
         :param user_id: The ID of the user.
-        :param conversation_id: The ID of the conversation.
         :param messages: A list of messages to append to the file.
-        :return: None
         """
+        # TODO: update cache if we have one
+        self._store.append_messages(plugin_id, user_id, messages)
 
-        # TODO: update cache we have one
-        self.store.append_messages(plugin_id, user_id, conversation_id, messages)
-
-    def get_history(
-        self,
-        plugin_id: str,
-        user_id: str,
-        conversation_id: str,
-        last_n: int | None = None,
+    def get_history_n(
+        self, plugin_id: str, user_id: str, last_n: int | None = None
     ) -> list[ChatMessage]:
         """
-        Return the history of the specified conversation.
+        Return the last N messages from the history of the specified conversation.
 
         :param plugin_id: The ID of the plugin instance.
         :param user_id: The ID of the user.
-        :param conversation_id: The ID of the conversation.
         :param last_n: Last N messages to return or all if None.
         :return: List of `ChatMessage` objects in the conversation.
         """
-        # TODO: check if in memory
-        messages = self.store.load_messages(plugin_id, user_id, conversation_id, last_n)
+        # TODO: check if in cache
+        messages = self._store.load_messages_n(plugin_id, user_id, last_n)
         return messages or []
 
-    def user_conversations(self, plugin_id: str, user_id: str) -> list[str]:
+    def get_history_time_window(
+        self,
+        plugin_id: str,
+        user_id: str,
+        ts_begin: int,
+        ts_end: int,
+        max_messages: int = 128,
+    ) -> list[ChatMessage] | None:
         """
-        Get all the conversations of the specified user with the plugin.
+        Return the message from the history of the specified conversation.
+        Only includes the messages inside the time window.
 
-        :param plugin_id: The ID of the plugin instance.
-        :param user_id: The ID of the user.
-        :return: List of conversation IDs.
+        :param plugin_id: Plugin instance ID.
+        :param user_id: User ID.
+        :param ts_begin: Timestamp of the beginning of the time window in seconds.
+        :param ts_end: Timestamp of the end of the time window in seconds.
+        :param max_messages: Maximum amount of messages to return in the time window.
+        :return: List of `ChatMessage` objects or None if no history.
         """
-        return self.store.user_conversations(plugin_id, user_id)
+        # TODO: check if in cache
+        messages = self._store.load_messages_time_window(
+            plugin_id, user_id, ts_begin, ts_end, max_messages
+        )
+        return messages or []
 
 
 class ConversationStore:
     """Handles disk IO for storing the conversations."""
 
-    root_path: str
-
     def __init__(self, root_path: str):
         self.root_path = root_path
 
     def append_messages(
-        self,
-        plugin_id: str,
-        user_id: str,
-        conversation_id: str,
-        messages: list[ChatMessage],
+        self, plugin_id: str, user_id: str, messages: list[ChatMessage]
     ):
         """
         Append a list of `ChatMessage` objects to the conversation file in order.
@@ -120,11 +122,9 @@ class ConversationStore:
 
         :param plugin_id: The ID of the plugin instance.
         :param user_id: The ID of the user.
-        :param conversation_id: The ID of the conversation.
         :param messages: A list of messages to append to the file.
-        :return: None
         """
-        file_path = self.resolve_conversation_path(plugin_id, user_id, conversation_id)
+        file_path = self.resolve_conversation_path(plugin_id, user_id)
         os.makedirs(os.path.dirname(file_path), exist_ok=True)
         with open(file_path, "a", encoding="utf-8") as f:
             for message in messages:
@@ -134,88 +134,169 @@ class ConversationStore:
                 except TypeError:
                     continue
 
-    def load_messages(
-        self,
-        plugin_id: str,
-        user_id: str,
-        conversation_id: str,
-        last_n: int | None = None,
+    def load_messages_n(
+        self, plugin_id: str, user_id: str, last_n: int | None = None
     ) -> list[ChatMessage] | None:
         """
         Loads messages from disk if the conversation exists.
 
         :param plugin_id: Plugin instance ID.
         :param user_id: User ID.
-        :param conversation_id: Conversation ID.
         :param last_n: Last N messages to return or all if None.
         :return: List of `ChatMessage` objects or None if no history.
         """
         if last_n is not None and last_n <= 0:
             return []
-        file_path = self.resolve_conversation_path(plugin_id, user_id, conversation_id)
+        file_path = self.resolve_conversation_path(plugin_id, user_id)
         try:
-            out: list[ChatMessage] = []
+            if last_n is None:
+                # Read all the lines in order from the beginning of the file.
+                with open(file_path, "r", encoding="utf-8") as f:
+                    out: list[ChatMessage] = []
+                    for line in f:
+                        msg = self._parse_message_line(line)
+                        if msg is not None:
+                            out.append(msg)
+                    return out
 
-            with open(file_path, "r", encoding="utf-8") as f:
-                # TODO: last_n read can be optimized for large files
-                lines = f.readlines()[-last_n:] if last_n is not None else f.readlines()
-                for line in lines:
-                    line = line.strip()
-                    if not line:
+            # Read from the end without reading the whole file.
+            out_rev: list[ChatMessage] = []
+            with open(file_path, "rb") as f:
+                for line in self._iter_lines_reverse(f):
+                    msg = self._parse_message_line(line)
+                    if msg is None:
                         continue
-                    try:
-                        d = json.loads(line)
-                        if not isinstance(d, dict):
-                            continue
-                        out.append(ChatMessage.from_dict(d))
-                    except (json.JSONDecodeError, TypeError, ValueError):
-                        continue
-            return out
+                    out_rev.append(msg)
+                    if len(out_rev) >= last_n:
+                        break
+            out_rev.reverse()
+            return out_rev
 
         except FileNotFoundError:
             return None
 
-    def user_conversations(
+    def load_messages_time_window(
         self,
         plugin_id: str,
         user_id: str,
-    ) -> list[str]:
+        ts_begin: int,
+        ts_end: int,
+        max_messages: int,
+    ) -> list[ChatMessage] | None:
         """
-        Return the conversation IDs of the user.
+        Loads messages from disk if the conversation exists.
 
         :param plugin_id: Plugin instance ID.
         :param user_id: User ID.
-        :return: List of conversation IDs.
+        :param ts_begin: Timestamp of the beginning of the time window in seconds.
+        :param ts_end: Timestamp of the end of the time window in seconds.
+        :param max_messages: Maximum amount of messages to return in the time window.
+        :return: List of `ChatMessage` objects or None if no history.
         """
-        conversations_path = self.resolve_conversation_path(plugin_id, user_id)
-        out: list[str] = []
-        try:
-            for e in os.scandir(conversations_path):
-                if not e.is_file():
-                    continue
-                if not e.name.endswith(".jsonl"):
-                    continue
-                out.append(os.path.splitext(e.name)[0])
-        except FileNotFoundError:
+        if ts_end <= ts_begin:
             return []
-        return out
+        file_path = self.resolve_conversation_path(plugin_id, user_id)
+        try:
+            # Read from the end and stop early if the file appears chronological.
+            out_rev: list[ChatMessage] = []
+            chronological = True
+            last_ts: int | None = None
 
-    def resolve_conversation_path(
-        self,
-        plugin_id: str,
-        user_id: str,
-        conversation_id: str | None = None,
-    ) -> str:
+            with open(file_path, "rb") as f:
+                for line in self._iter_lines_reverse(f):
+                    if len(out_rev) >= max_messages:
+                        break
+
+                    msg = self._parse_message_line(line)
+                    if msg is None:
+                        continue
+
+                    if last_ts is not None and msg.timestamp > last_ts:
+                        # Messages are not in chronological order.
+                        chronological = False
+                    last_ts = msg.timestamp
+
+                    if msg.timestamp > ts_end:
+                        continue
+                    if msg.timestamp < ts_begin:
+                        if chronological:
+                            break
+                        continue
+
+                    out_rev.append(msg)
+
+            out_rev.reverse()
+            return out_rev
+
+        except FileNotFoundError:
+            return None
+
+    @staticmethod
+    def _parse_message_line(line: str) -> ChatMessage | None:
+        """Parse a message line from JSONL to `ChatMessage`.
+
+        :param line: Line from the JSONL file.
+        :return: The parsed `ChatMessage` object or `None` if invalid.
+        """
+
+        line = line.strip()
+        if not line:
+            return None
+        try:
+            d = json.loads(line)
+            if not isinstance(d, dict):
+                return None
+            return ChatMessage.from_dict(d)
+        except (json.JSONDecodeError, TypeError, ValueError):
+            return None
+
+    @staticmethod
+    def _iter_lines_reverse(file: BinaryIO, chunk_size: int = 8192) -> Iterator[str]:
+        """
+        Iterate a UTF-8 text file line-by-line from the end.
+        The file must be opened in binary mode, and it is read in chunks.
+
+        :param file: The file to iterate.
+        :param chunk_size: Size of the chunks to read.
+        :return: An iterator over the lines in the file in reverse order.
+        """
+        # Set the read position to file end.
+        file.seek(0, os.SEEK_END)
+        pos = file.tell()
+        buf = b""
+
+        while pos > 0:
+            read_size = chunk_size if pos >= chunk_size else pos
+            pos -= read_size
+            file.seek(pos, os.SEEK_SET)
+            chunk = file.read(read_size)
+            if not chunk:
+                break
+            buf = chunk + buf
+
+            parts = buf.split(b"\n")
+            # The first line in the chunk can be incomplete.
+            buf = parts[0]
+            for raw in reversed(parts[1:]):
+                if not raw:
+                    continue
+                if raw.endswith(b"\r"):
+                    raw = raw[:-1]
+                yield raw.decode("utf-8", errors="replace")
+
+        if buf:
+            if buf.endswith(b"\r"):
+                buf = buf[:-1]
+            yield buf.decode("utf-8", errors="replace")
+
+    def resolve_conversation_path(self, plugin_id: str, user_id: str) -> str:
         """
         Resolve the path to the conversation JSONL file.
         Does not verify if the path exists on the disk.
 
         :param plugin_id: Plugin instance ID.
         :param user_id: User ID.
-        :param conversation_id: Conversation ID.
         :return: The file system path to the conversation JSONL file.
         """
-        if conversation_id is None:
-            return os.path.join(self.root_path, plugin_id, user_id)
-        file_name = f"{conversation_id}.jsonl"
+        file_name = "messages.jsonl"
         return os.path.join(self.root_path, plugin_id, user_id, file_name)
