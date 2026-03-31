@@ -104,28 +104,21 @@ def read_into_reqcontext(data: Any) -> Union[ReqContext, str]:
 
 @chattim.post("/ask")
 def define_ask_route():
-    web: PluginAnswerWeb = {}
-    result: PluginAnswerResp = {"web": web}
-
-    context = request.get_json().get("context")
-    reqcontext_or = read_into_reqcontext(context)
-
-    if not isinstance(reqcontext_or, ReqContext):
-        web["error"] = reqcontext_or
-        return json_response(result)
-
+    # TODO: pitäisi varmaan muuttaa jotenkin tyyliin: define_ask_route(input: SomeDataClass) jne
+    data = request.get_json()
+    user_input = data.get("input")
+    user_id = data.get("user_id")
+    document_id = data.get("document_id")
     session_user_id = get_current_user_id()
-    if session_user_id != reqcontext_or.user_id:  # TODO: hyödytön?
-        web["error"] = "session user id does not match with user id"
-        return json_response(result)
 
-    val_or_err: Result[str, str] = plugincore.chat_request(reqcontext_or)
-    if not val_or_err.ok:
-        web["error"] = val_or_err.error
-        return json_response(result)
+    if user_id != session_user_id:
+        pass
+        # TODO onko tarkistus tarpeellinen, vai käytetäänkö vain session_user_id?
 
-    web["result"] = val_or_err.value
-    return json_response(result)
+    resp = plugincore.chat_request(session_user_id, document_id, user_input)
+    returnable = {"web": {"result": resp.value, "error": resp.error}}
+
+    return json_response(returnable)
 
 
 @dataclass()

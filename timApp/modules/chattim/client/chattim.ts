@@ -178,7 +178,9 @@ export class ChatTIMComponent
         const document_id: number = this.document_id;
 
         const payload = {
-            context: {input, user_id, document_id},
+            input,
+            user_id,
+            document_id,
         };
 
         const response = await this.httpPost<{

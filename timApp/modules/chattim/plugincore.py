@@ -60,11 +60,12 @@ class PluginCore:
     tim_database: TimDatabase = TimDatabase()
 
     # TODO: palautetaan token usage tätä kautta tai muualta?
-    def chat_request(self, req_context: ReqContext) -> Result[str | None, str | None]:
-        document_id = req_context.document_id
-        caller_id = req_context.user_id
-        user_input = req_context.input
-
+    def chat_request(
+        self,
+        caller_id: int,
+        document_id: int,
+        user_input: str,
+    ) -> Result[str | None, str | None]:
         if not self._instance_exists(document_id):
             return Result(error=f"No instance with id {document_id} exists")
 
@@ -142,23 +143,9 @@ class PluginCore:
         # TODO: tarkista tässä oikeudet
 
         # TODO: tälle joku helpompi tapa vetää spec infosta tai jotain (tämä muutenkin väliaikainen)
-        supp_models_openai = self.rag.get_supported_models("openai")
-        supp_models_dummy = self.rag.get_supported_models("dummy")
-        openai_api_key = None
-        if openai_api_key is not None:
-            model = supp_models_openai.get("gpt-4.1-nano")
-            spec = ModelSpec(
-                provider=model.provider,
-                model_id=model.model_id,
-                api_key=openai_api_key,
-            )
-        else:
-            model = supp_models_dummy.get("dummy")
-            spec = ModelSpec(
-                provider=model.provider,
-                model_id=model.model_id,
-                api_key="dummy_api_key",
-            )
+
+        api_key = os.getenv("OPENAI_API_KEY")
+        spec = ModelSpec(provider="openai", model_id="gpt-4.1-nano", api_key=api_key)
         self.rag.add_model(spec, identifier=document_id)
         # TODO: lisää tietokantaan policyineen
         # TODO: indeksoinnit pyörimään
