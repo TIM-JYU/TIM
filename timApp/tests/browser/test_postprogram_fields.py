@@ -33,7 +33,8 @@ class PostProgramFieldsTest(BrowserTest):
     def test_postprogram_fields(self):
         self.login_test1()
 
-        d = self.create_doc(initial_par="""
+        d = self.create_doc(
+            initial_par="""
 ``` {#qst1 question="false" plugin="qst"}
 answerFieldType: radio
 expl: {}
@@ -75,7 +76,8 @@ postprogram: |!!
   return data;
 !!
 ```
-""")
+"""
+        )
 
         self.login_browser_quick_test1()
         self.goto_document(d)
