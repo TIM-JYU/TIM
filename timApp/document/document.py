@@ -74,6 +74,7 @@ from timApp.util.utils import (
     trim_markdown,
     cache_folder_path,
     add_g_error,
+    resolve_doc_path,
 )
 from tim_common.html_sanitize import presanitize_html_body
 from timApp.util.timtiming import taketime
@@ -1808,9 +1809,15 @@ class Document:
                     self.docinfo.location if self.docinfo else path,
                 )
                 if ref_docid == 0:
-                    raise InvalidReferenceException(
-                        f'Invalid reference document: "{ref_docid_str}"'
+                    abs_path = resolve_doc_path(request.referrer, ref_docid_str)
+                    ref_docid = DocEntry.find_id_by_path(
+                        abs_path,
+                        self.docinfo.location if self.docinfo else path,
                     )
+                    if ref_docid == 0:
+                        raise InvalidReferenceException(
+                            f'Invalid reference document: "{ref_docid_str}"'
+                        )
 
             cached = Document(ref_docid, preload_option=preload_option)
             if not cached.exists():

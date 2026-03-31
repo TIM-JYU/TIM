@@ -23,6 +23,7 @@ from timApp.auth.accesshelper import (
     verify_edit_access,
     has_edit_access,
 )
+from util.utils import resolve_doc_path
 from timApp.document.docentry import DocEntry
 from timApp.document.docinfo import DocInfo
 from timApp.document.docparagraph import DocParagraph
@@ -76,7 +77,7 @@ def pull_doc_path(endpoint: str | None, values: dict[str, str] | None) -> None:
     if not endpoint or not values:
         return
     if current_app.url_map.is_endpoint_expecting(endpoint, "doc_path"):
-        doc_path = values["doc_path"]
+        doc_path = resolve_doc_path(request.referrer, values["doc_path"])
         if doc_path is None:
             raise RouteException()
         g.doc_path = doc_path
@@ -803,7 +804,7 @@ def do_before_requests() -> None:
 
 @svg_blueprint.url_value_preprocessor
 def pull_doc_path_svg(endpoint: str | None, values: dict[str, str] | None) -> None:
-    taketime("pull_doc_path_svg")
+    taketime("pull_doc_path_svg", zero=True)
     if not endpoint or not values:
         return
     if current_app.url_map.is_endpoint_expecting(endpoint, "doc_path"):
@@ -815,9 +816,14 @@ def pull_doc_path_svg(endpoint: str | None, values: dict[str, str] | None) -> No
         if doc_path.isnumeric():
             g.doc_entry = DocEntry.find_by_id(int(doc_path))
         else:
+            doc_path = resolve_doc_path(request.referrer, doc_path)
+            if doc_path is None:
+                g.setdefault("error", f"Doc not found for path: {g.doc_path}")
+                return
+            g.doc_path = doc_path
             g.doc_entry = DocEntry.find_by_path(doc_path, fallback_to_id=True)
         if not g.doc_entry:
-            g.setdefault("error", "Doc not found")
+            g.setdefault("error", f"Doc not found {g.doc_path}")
             return
         verify_view_access(g.doc_entry)
 
@@ -840,13 +846,11 @@ def svg_document(
         default=None,
     ),
 ) -> Response:
-    taketime("svg_document")
     file_type = ftype
     if not file_type:
         file_type = "svg"
 
     def get_data() -> tuple[str, str | None]:
-        taketime("get_data")
         nonlocal file_type
         # nonlocal url_macros
 
@@ -887,12 +891,10 @@ def svg_document(
             return "", f"{task_id} not csPlugin"
 
         js = YamlBlock.from_markdown(task.md).values
-        taketime("yaml parsed")
         if js.get("type", "") != "drawio":
             return "", f"{task_id} is not drawio"
 
         data = js.get("data", "")
-        taketime("data extracted")
         if not data:
             return "", f"No data in {task_id}"
         if r:
@@ -900,7 +902,6 @@ def svg_document(
                 parts = rep.split("|", 1)
                 if len(parts) == 2:
                     data = data.replace(parts[0], parts[1])
-        taketime("data ready")
         return data, None
 
     result, error = get_data()
@@ -909,13 +910,10 @@ def svg_document(
         result = NOT_FOUND_SVG.replace("NOTFOUNDFILE", error)
 
     db.session.commit()
-    taketime("data processed")
     print_type = PrintFormat(file_type)
     mime = get_mimetype_for_format(print_type)
     result = sanitize_svg(result)
-    taketime("data sanitized")
     response = make_response(result)
-    taketime("response created")
     response.headers["Content-Type"] = mime
     add_csp_if_not_script_safe(response, mime, "sandbox")
     taketime("headers added")

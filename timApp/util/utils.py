@@ -25,6 +25,9 @@ from lxml.html import HtmlElement
 
 from tim_common.html_sanitize import sanitize_html
 
+from urllib.parse import urlparse
+from pathlib import PurePosixPath
+
 NORM_NEWLINES = ["\r\n", "\r", "\n", "\u0085", "\u2028", "\u2029"]
 NORM_NEWLINES_PATTERN = "|".join(NORM_NEWLINES)
 NORM_NEWLINES_COMPILED = re.compile(NORM_NEWLINES_PATTERN)
@@ -610,3 +613,113 @@ def get_g_errors(sep: str = "<br>") -> str:
     if not errors:
         return ""
     return sep.join(errors)
+
+
+def normalize_path(p: PurePosixPath) -> PurePosixPath:
+    """
+    Normalize a PurePosixPath by resolving "." and ".." parts manually.
+    This does not access the filesystem.
+
+    :param p: The PurePosixPath to normalize.
+    :return: A new PurePosixPath with "." and ".." resolved.
+    """
+    parts: list[str] = []
+    for part in p.parts:
+        if part == "..":
+            if parts:
+                parts.pop()
+        elif part != ".":
+            parts.append(part)
+    return PurePosixPath(*parts)
+
+
+def resolve_doc_path(referrer: str | None, doc_path: str) -> str | None:
+    """
+    Resolve a document path that may be relative to the referrer.
+
+    Relative paths must start with "_" prefix:
+        "_/file"       → same directory
+        "_/../file"    → parent directory
+        "_/."          → current document (keep filename)
+
+    Rules:
+    - If doc_path does not start with "_/", return it as-is (absolute path).
+    - If doc_path is relative but referrer is None, return None.
+    - The referrer path is expected to be like:
+        https://host/view/users/.../docname
+      → the first segment ("view") is removed.
+    - If doc_path refers to a file, it replaces the filename.
+    - If doc_path refers to a directory (e.g. "_/." or ends with "/"),
+      the original filename from referrer is preserved.
+    - Supports "." and ".." semantics similar to filesystem paths.
+
+    Examples:
+
+    ref = "https://localhost/view/users/vesa/koe/lainaus/lainaa"
+
+    resolve_doc_path(ref, "_/toinen")
+    -> "users/vesa/koe/lainaus/toinen"
+
+    resolve_doc_path(ref, "_/.")
+    -> "users/vesa/koe/lainaus/lainaa"
+
+    resolve_doc_path(ref, "_/../toinen")
+    -> "users/vesa/koe/toinen"
+
+    resolve_doc_path(ref, "_/../../x")
+    -> "users/vesa/x"
+
+    resolve_doc_path(None, "_/test")
+    -> None
+
+    resolve_doc_path(ref, "kurssit/tie/ohj1/moniste/ohj-1")
+    -> "kurssit/tie/ohj1/moniste/ohj-1"  (unchanged, absolute path)
+
+    :param referrer: The URL of the referring document, or None if not available.
+    :param doc_path: The document path to resolve, which may be relative.
+    :return: The resolved document path, or None if it cannot be resolved.
+    """
+
+    # If not relative (no "_/" prefix), return as-is
+    if not doc_path.startswith("_/") and doc_path != "_":
+        return doc_path
+
+    # Cannot resolve relative path without referrer
+    if not referrer:
+        return None
+
+    # Remove "_/" prefix
+    rel_path = doc_path[2:]
+
+    # Parse referrer URL
+    parsed = urlparse(referrer)
+    path = parsed.path  # e.g. "/view/users/.../lainaa"
+
+    # Remove first segment (route), e.g. "view"
+    parts = path.strip("/").split("/", 1)
+    if len(parts) < 2:
+        return None
+
+    base_path = parts[1]  # e.g. "users/.../lainaa"
+
+    base = PurePosixPath(base_path)
+    rel = PurePosixPath(rel_path)
+
+    # Determine whether to keep filename or replace it
+    # If rel points to "." or ".." or ends with "/", treat as directory
+    # Empty path or "." means current directory
+    if not rel.parts:
+        is_dir = True
+    else:
+        last = rel.parts[-1]
+        is_dir = rel_path.endswith("/") or last in (".", "..")
+
+    if is_dir:
+        combined = base.joinpath(rel)
+    else:
+        combined = base.parent.joinpath(rel)
+
+    # Normalize path (resolve "." and "..")
+    normalized = normalize_path(combined)
+
+    return str(normalized)
