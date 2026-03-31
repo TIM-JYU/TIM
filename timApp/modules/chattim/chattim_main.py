@@ -84,24 +84,6 @@ chattim = create_nontask_blueprint(
 )
 
 
-def read_into_reqcontext(data: Any) -> Union[ReqContext, str]:
-    """
-    Expects { user_input, user_id, document_id }
-    :param data:
-    :return: Either reponse or error message
-    """
-    if data is None:
-        return "Missing json body"
-
-    try:
-        resp = ReqContext(**data)
-        return resp
-    except TypeError as e:
-        return f"Invalid data: {e}"
-    except Exception as e:
-        return f"Unexpected error: {e}"
-
-
 @chattim.post("/ask")
 def define_ask_route():
     # TODO: pitäisi varmaan muuttaa jotenkin tyyliin: define_ask_route(input: SomeDataClass) jne
@@ -137,11 +119,6 @@ def define_save_instance():
 
     data = request.get_json()
     context = data.get("context")
-    req_context_or = read_into_reqcontext(context)
-
-    if not isinstance(req_context_or, ReqContext):
-        web = {"error": req_context_or}
-        return json_response(result)
 
     # TODO: kytke plugincoreen
 
