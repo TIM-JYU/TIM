@@ -943,6 +943,11 @@ ${backTicks}
                         name: "\\",
                     },
                     {
+                        title: "En dash (Alt -)",
+                        func: ($event) => this.editor!.charClicked($event),
+                        name: "–",
+                    },
+                    {
                         title: "",
                         func: ($event) => this.editor!.insertTemplate("&shy;"),
                         name: "Soft hyphen",
