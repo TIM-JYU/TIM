@@ -42,7 +42,7 @@ GROUP_PREAMBLE_PATTERN = re.compile(
 class DocInfo(Item):
     """A base class for DocEntry and Translation."""
 
-    def __init__(self, **kwargs: Any) -> None:
+    def __init__(self, **_kwargs: Any) -> None:
         self._preamble_docs: list[DocInfo] | None = None
         self._doc: Document | None = None
 
