@@ -14,7 +14,6 @@ import {
     NgModule,
     ViewEncapsulation,
 } from "@angular/core";
-import { HttpClient, HttpClientModule, HttpEvent } from "@angular/common/http";
 import { FormsModule } from "@angular/forms";
 import { TimUtilityModule } from "tim/ui/tim-utility.module";
 import { AngularPluginBase } from "tim/plugin/angular-plugin-base.directive";
@@ -26,6 +25,13 @@ import { DomSanitizer } from "@angular/platform-browser";
 import { Users } from "tim/user/userService";
 import type { CtrlPanelData } from "./controlpanel";
 import { ChatControlPanelComponent } from "./controlpanel";
+import {
+    HttpClient,
+    HttpClientModule,
+    HttpDownloadProgressEvent,
+    HttpEvent,
+    HttpEventType,
+} from "@angular/common/http";
 
 const PluginMarkupFields = t.intersection([
     t.partial({
@@ -49,7 +55,7 @@ export interface ChatEntry {
 }
 
 export interface AskResponse {
-    data?: string;
+    answer?: string;
     usage?: number;
 }
 
@@ -198,27 +204,33 @@ export class ChatTIMComponent
         const document_id: number = this.document_id;
         const body: AskParams = { input, user_id, document_id };
 
+        const entry: ChatEntry = { user: this.userinput, agent: "" };
+        const len: number = this.conversation.push(entry);
+        const index: number = len - 1;
+
         if (this.useStreaming) {
-            await this.askPostStream(body);
+            await this.askPostStream(body, index);
         } else {
-            await this.askPost(body);
+            await this.askPost(body, index);
         }
         this.isRunning = false;
     }
 
-    async askPost(body: any) {
+    /**
+     * Fetch an answer for the user input from the plugin server.
+     * @param body The body to send with the post request.
+     * @param entry_index The index of the chat entry.
+     */
+    async askPost(body: any, entry_index: number) {
         const response = await this.httpPost<{
             web: { result: string; error?: string };
-        }>("/chattim/ask", body);
+        }>(this.route("ask"), body);
 
         if (response.ok) {
             const data = response.result;
             this.error = data.web.error;
             this.answer = data.web.result;
-            this.conversation.push({
-                user: this.userinput,
-                agent: this.answer,
-            });
+            this.conversation[entry_index].agent = this.answer;
         } else {
             this.error = response.result.error.error;
         }
@@ -250,18 +262,81 @@ export class ChatTIMComponent
         }
     }
 
-    async askPostStream(body: AskParams) {
-        const observable = this.http.post("/chattim/askStream", body, {
+    /**
+     * Fetch an answer for the user input from the plugin server. Uses streaming.
+     * @param body The body to send with the post request.
+     * @param entry_index The index of the chat entry.
+     */
+    async askPostStream(body: AskParams, entry_index: number) {
+        const url: string = this.route("askStream");
+        const observable = this.http.post(url, body, {
             observe: "events",
             responseType: "text",
             reportProgress: true,
         });
-        // TODO: handle events
+
+        let entry: ChatEntry = this.conversation[entry_index];
+        let buffer: string = "";
+        let processedIdx: number = 0; // Index in the buffer
         observable.subscribe({
-            next: (value: HttpEvent<string>) => { },
-            error: (error) => console.error(error),
+            next: (event: HttpEvent<string>) => {
+                if (event.type != HttpEventType.DownloadProgress) return;
+                const partial: string =
+                    (event as HttpDownloadProgressEvent).partialText ?? "";
+
+                const chunk = partial.slice(buffer.length);
+                buffer += chunk;
+                console.log(chunk);
+
+                // Drain the response
+                while (true) {
+                    const remaining: string = buffer.slice(processedIdx);
+                    const idx: number = remaining.indexOf("\n");
+                    if (idx < 0) break;
+                    const nd_json: string = remaining.slice(0, idx);
+
+                    const res = this.tryParseAskResponse(nd_json);
+                    if (!res) break;
+                    entry.agent += res.answer ?? "";
+                    processedIdx += idx + 1;
+                    // TODO: For dev purposes. Handle tokens somehow else
+                    if (res.usage) {
+                        entry.agent += "\nTokens used: " + res.usage;
+                    }
+                }
+            },
+            error: (error) => this.handleError(error),
             complete: () => console.log("Answer completed"),
         });
+    }
+
+    /**
+     * Try to parse a `AskResponse` from a string.
+     * @param data The string to parse.
+     * @returns AskResponse if valid or undefined.
+     */
+    tryParseAskResponse(data: string): AskResponse | undefined {
+        const trimmed = data.trim();
+        if (!trimmed) return undefined;
+        try {
+            return JSON.parse(trimmed);
+        } catch {
+            return undefined;
+        }
+    }
+
+    /**
+     * Create a full URL.
+     * @param endpoint The endpoint to append to the base URL.
+     * @returns The full URL for the given endpoint.
+     */
+    route(endpoint: string): string {
+        return "/chattim/" + endpoint;
+    }
+
+    handleError(err: any) {
+        this.error = err;
+        console.error(err);
     }
 }
 
