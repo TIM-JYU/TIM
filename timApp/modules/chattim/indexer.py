@@ -118,7 +118,7 @@ class Indexer:
                 current_chunk = overlapping_text + ". " + sentence
         if (len(current_chunk)) > 0:
             chunks.append(current_chunk)
-        return TextChunks(chunks=chunks[0:20])
+        return TextChunks(chunks=chunks)
 # TODO ei haeta mahdollisia plugin lohkoja
     def get_tim_blocks(self, doc_id) ->TextChunks:
         try:
@@ -132,10 +132,10 @@ class Indexer:
 
         return TextChunks(chunks=text)
 
-    def create_embeddings(self,file_name:str):
+    def create_embeddings(self,file_name:str,doc_id:int):
         """generates the data object containing embeddings and corresponding text chunks"""
 
-        chunks = self.get_tim_blocks(doc_id=39)
+        chunks = self.get_tim_blocks(doc_id=doc_id)
 
 
         embeddings = self.embedding_model.generate(chunks)
