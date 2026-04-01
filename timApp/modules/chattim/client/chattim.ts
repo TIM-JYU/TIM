@@ -7,24 +7,24 @@ import {
     getTopLevelFields,
     nullable,
 } from "tim/plugin/attributes";
-import type { AfterViewInit, ApplicationRef, DoBootstrap } from "@angular/core";
+import type {AfterViewInit, ApplicationRef, DoBootstrap} from "@angular/core";
 import {
     Component,
     ElementRef,
     NgModule,
     ViewEncapsulation,
 } from "@angular/core";
-import { FormsModule } from "@angular/forms";
-import { TimUtilityModule } from "tim/ui/tim-utility.module";
-import { AngularPluginBase } from "tim/plugin/angular-plugin-base.directive";
-import { DialogModule } from "tim/ui/angulardialog/dialog.module";
-import { PurifyModule } from "tim/util/purify.module";
-import { registerPlugin } from "tim/plugin/pluginRegistry";
-import { CommonModule } from "@angular/common";
-import { DomSanitizer } from "@angular/platform-browser";
-import { Users } from "tim/user/userService";
-import type { CtrlPanelData } from "./controlpanel";
-import { ChatControlPanelComponent } from "./controlpanel";
+import {FormsModule} from "@angular/forms";
+import {TimUtilityModule} from "tim/ui/tim-utility.module";
+import {AngularPluginBase} from "tim/plugin/angular-plugin-base.directive";
+import {DialogModule} from "tim/ui/angulardialog/dialog.module";
+import {PurifyModule} from "tim/util/purify.module";
+import {registerPlugin} from "tim/plugin/pluginRegistry";
+import {CommonModule} from "@angular/common";
+import {DomSanitizer} from "@angular/platform-browser";
+import {Users} from "tim/user/userService";
+import type {CtrlPanelData} from "./controlpanel";
+import {ChatControlPanelComponent} from "./controlpanel";
 import {
     HttpClient,
     HttpClientModule,
@@ -45,7 +45,7 @@ const PluginMarkupFields = t.intersection([
 const PluginFields = t.intersection([
     getTopLevelFields(PluginMarkupFields),
     t.type({
-        state: nullable(t.type({ userinput: t.string })),
+        state: nullable(t.type({userinput: t.string})),
     }),
 ]);
 
@@ -57,11 +57,12 @@ export interface ChatEntry {
 export interface AskResponse {
     answer?: string;
     usage?: number;
+    error?: string;
 }
 
 export interface AskParams {
     input: string;
-    user_id: string;
+    user_id: number;
     document_id: number;
 }
 
@@ -83,16 +84,16 @@ export interface AskParams {
 
 
                 <div class="form-inline">
-                    <label>{{inputstem}}
+                    <label>{{inputStem}}
                         <input type="text"
                                class="form-control"
-                               [(ngModel)]="userinput"
+                               [(ngModel)]="userInput"
                                (keyup.enter)="onEnter()"
                         >
                     </label>
                     <button class="timButton"
                             *ngIf="buttonText()"
-                            [disabled]="isRunning || !userinput"
+                            [disabled]="!canSendInput()"
                             (click)="sendUserInput()"
                             [innerHTML]="buttonText() | purify">
                     </button>
@@ -119,12 +120,13 @@ export class ChatTIMComponent
         t.TypeOf<typeof PluginFields>,
         typeof PluginFields
     >
-    implements AfterViewInit {
+    implements AfterViewInit
+{
     answer?: string;
     error?: string;
-    isRunning = false;
-    userinput = "";
-    inputstem = "";
+    isRunning: boolean = false;
+    userInput = "";
+    inputStem = "";
     document_id = -1;
 
     // TODO: fetch default values from server?
@@ -151,8 +153,8 @@ export class ChatTIMComponent
         this.initDocId();
     }
 
-    onEnter() {
-        this.sendUserInput();
+    async onEnter() {
+        await this.sendUserInput();
     }
 
     buttonText() {
@@ -164,11 +166,11 @@ export class ChatTIMComponent
     }
 
     async sendUserInput() {
-        if (!this.userinput?.trim() || this.isRunning) {
+        if (!this.canSendInput()) {
             return;
         }
         await this.doSendUserInput();
-        this.userinput = "";
+        this.userInput = "";
     }
 
     getAttributeType() {
@@ -194,17 +196,22 @@ export class ChatTIMComponent
         }
     }
 
-    async doSendUserInput() {
+    canSendInput(): boolean {
+        const trimmed: string = this.userInput.trim();
+        return !this.isRunning && trimmed != "";
+    }
+
+    async doSendUserInput(): Promise<void> {
         this.isRunning = true;
         this.answer = undefined;
 
-        const input: string = this.userinput;
+        const input: string = this.userInput;
         // TODO: ei tarvita user id?
         const user_id: number = Users.getCurrent().id;
         const document_id: number = this.document_id;
-        const body: AskParams = { input, user_id, document_id };
+        const body: AskParams = {input, user_id, document_id};
 
-        const entry: ChatEntry = { user: this.userinput, agent: "" };
+        const entry: ChatEntry = {user: input, agent: ""};
         const len: number = this.conversation.push(entry);
         const index: number = len - 1;
 
@@ -221,18 +228,24 @@ export class ChatTIMComponent
      * @param body The body to send with the post request.
      * @param entry_index The index of the chat entry.
      */
-    async askPost(body: any, entry_index: number) {
-        const response = await this.httpPost<{
-            web: { result: string; error?: string };
-        }>(this.route("ask"), body);
+    async askPost(body: any, entry_index: number): Promise<void> {
+        const response = await this.httpPost<AskResponse>(
+            this.route("ask"),
+            body
+        );
 
         if (response.ok) {
             const data = response.result;
-            this.error = data.web.error;
-            this.answer = data.web.result;
-            this.conversation[entry_index].agent = this.answer;
+            this.handleError(data.error, "server");
+            this.answer = data.answer;
+            this.conversation[entry_index].agent = this.answer ?? "";
+            // TODO: For testing purposes
+            if (data.usage != undefined) {
+                this.conversation[entry_index].agent +=
+                    "\nTokens used: " + data.usage ?? "";
+            }
         } else {
-            this.error = response.result.error.error;
+            this.handleError(response.result.error.error, "http");
         }
     }
 
@@ -249,7 +262,7 @@ export class ChatTIMComponent
         };
 
         const response = await this.httpPost<{
-            web: { result: string; error?: string };
+            web: {result: string; error?: string};
         }>("/chattim/settings_save", save_request);
 
         this.isRunning = false;
@@ -267,7 +280,7 @@ export class ChatTIMComponent
      * @param body The body to send with the post request.
      * @param entry_index The index of the chat entry.
      */
-    async askPostStream(body: AskParams, entry_index: number) {
+    async askPostStream(body: AskParams, entry_index: number): Promise<void> {
         const url: string = this.route("askStream");
         const observable = this.http.post(url, body, {
             observe: "events",
@@ -278,35 +291,49 @@ export class ChatTIMComponent
         let entry: ChatEntry = this.conversation[entry_index];
         let buffer: string = "";
         let processedIdx: number = 0; // Index in the buffer
-        observable.subscribe({
-            next: (event: HttpEvent<string>) => {
-                if (event.type != HttpEventType.DownloadProgress) return;
-                const partial: string =
-                    (event as HttpDownloadProgressEvent).partialText ?? "";
 
-                const chunk = partial.slice(buffer.length);
-                buffer += chunk;
-                console.log(chunk);
+        // Function to handle the stream events
+        const handleNextEvent = (event: HttpEvent<string>): void => {
+            if (event.type != HttpEventType.DownloadProgress) return;
+            const partial: string =
+                (event as HttpDownloadProgressEvent).partialText ?? "";
 
-                // Drain the response
-                while (true) {
-                    const remaining: string = buffer.slice(processedIdx);
-                    const idx: number = remaining.indexOf("\n");
-                    if (idx < 0) break;
-                    const nd_json: string = remaining.slice(0, idx);
+            const chunk: string = partial.slice(buffer.length);
+            buffer += chunk;
 
-                    const res = this.tryParseAskResponse(nd_json);
-                    if (!res) break;
-                    entry.agent += res.answer ?? "";
-                    processedIdx += idx + 1;
-                    // TODO: For dev purposes. Handle tokens somehow else
-                    if (res.usage) {
-                        entry.agent += "\nTokens used: " + res.usage;
-                    }
+            // Drain the response
+            while (true) {
+                const remaining: string = buffer.slice(processedIdx);
+                const idx: number = remaining.indexOf("\n");
+                if (idx < 0) break;
+                const nd_json: string = remaining.slice(0, idx);
+
+                const res = this.tryParseAskResponse(nd_json);
+                if (!res) break;
+                entry.agent += res.answer ?? "";
+                processedIdx += idx + 1;
+                // TODO: For dev purposes. Handle tokens somehow else
+                if (res.usage) {
+                    entry.agent += "\nTokens used: " + res.usage;
                 }
-            },
-            error: (error) => this.handleError(error),
-            complete: () => console.log("Answer completed"),
+                this.handleError(res.error, "server");
+            }
+        };
+
+        return new Promise((resolve, reject): void => {
+            let sub = observable.subscribe({
+                next: (event: HttpEvent<string>) => handleNextEvent(event),
+                error: (err) => {
+                    this.handleError(err, "stream");
+                    sub.unsubscribe();
+                    reject();
+                },
+                complete: () => {
+                    console.log("Answer completed");
+                    sub.unsubscribe();
+                    resolve();
+                },
+            });
         });
     }
 
@@ -334,9 +361,16 @@ export class ChatTIMComponent
         return "/chattim/" + endpoint;
     }
 
-    handleError(err: any) {
+    /**
+     * Handle the error if needed.
+     * @param err The error.
+     * @param scope Optional scope of the error.
+     */
+    handleError(err: any, scope?: string) {
+        if (!err) return;
         this.error = err;
-        console.error(err);
+        if (scope) console.error(`error(${scope}):`, err);
+        else console.error(err);
     }
 }
 
@@ -352,7 +386,7 @@ export class ChatTIMComponent
     ],
 })
 export class ChatTIMModule implements DoBootstrap {
-    ngDoBootstrap(appRef: ApplicationRef) { }
+    ngDoBootstrap(appRef: ApplicationRef) {}
 }
 
 registerPlugin("chattim-runner", ChatTIMModule, ChatTIMComponent);

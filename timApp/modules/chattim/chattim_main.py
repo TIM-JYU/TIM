@@ -1,16 +1,13 @@
 import os
-import json
 from dataclasses import dataclass
-from typing import Any, TypedDict, Union
 from flask import request, Response, stream_with_context
-from typing import Any, TypedDict
-from flask import Response, stream_with_context
+from typing import Any, TypedDict, Union
 from webargs.flaskparser import use_args
 from tim_common.marshmallow_dataclass import class_schema
 
 from timApp.auth.sessioninfo import get_current_user_id
 from timApp.tim_app import csrf
-from timApp.util.flask.responsehelper import json_response
+from timApp.util.flask.responsehelper import json_response, to_json_str
 from tim_common.markupmodels import GenericMarkupModel
 from tim_common.pluginserver_flask import (
     GenericHtmlModel,
@@ -38,12 +35,13 @@ ChatTimStateModel = dict[str, Any]
 class ChatTimAskResponse(TypedDict, total=False):
     answer: str | None
     usage: int | None
+    error: str | None
 
 
 @dataclass
 class ChatTimAskParams:
     input: str
-    user_id: str
+    user_id: int
     document_id: int
 
 
@@ -111,9 +109,49 @@ def define_ask_route(params: ChatTimAskParams):
         pass
 
     resp = plugincore.chat_request(session_user_id, document_id, user_input)
-    returnable = {"web": {"result": resp.value, "error": resp.error}}
 
-    return json_response(returnable)
+    response = ChatTimAskResponse(
+        answer=resp.value,
+        error=resp.error,
+    )
+
+    return json_response(response)
+
+
+from .model import ModelRegistry, SUPPORTED_MODELS, ModelSpec, Message, GenerateOptions
+
+# TODO: temporary
+reg = ModelRegistry(SUPPORTED_MODELS)
+model = reg.create(
+    ModelSpec(
+        provider="openai",
+        model_id="gpt-4.1-nano",
+        api_key=os.getenv("OPENAI_API_KEY", ""),
+    )
+)
+
+
+@chattim.post("/askStream")
+@use_args(class_schema(ChatTimAskParams)(), locations=("json",))
+def define_ask_stream_route(params: ChatTimAskParams):
+    user_input = params.input
+
+    def generate():
+        # TODO: temporary, use the plugincore
+        stream = model.generate_stream(
+            [Message(role="user", content=user_input)], GenerateOptions()
+        )
+        for msg in stream:
+            if msg.delta:
+                yield to_ndjson_str(ChatTimAskResponse(answer=msg.delta))
+            if msg.usage:
+                yield to_ndjson_str(ChatTimAskResponse(usage=msg.usage.total_tokens))
+
+    return Response(
+        stream_with_context(generate()),
+        mimetype="application/x-ndjson",
+        headers={"X-Accel-Buffering": "no"},
+    )
 
 
 @chattim.post("/settings_save")
@@ -162,40 +200,10 @@ def define_save_settings():
     return json_response(result)
 
 
-from .model import ModelRegistry, SUPPORTED_MODELS, ModelSpec, Message, GenerateOptions
+def to_ndjson_str(json_data: Any) -> str:
+    """Return a newline delimited JSON string.
 
-# TODO: temporary
-reg = ModelRegistry(SUPPORTED_MODELS)
-model = reg.create(
-    ModelSpec(
-        provider="openai",
-        model_id="gpt-4.1-nano",
-        api_key=os.getenv("OPENAI_API_KEY", ""),
-    )
-)
-
-
-@chattim.post("/askStream")
-@use_args(class_schema(ChatTimAskParams)(), locations=("json",))
-def define_ask_stream_route(params: ChatTimAskParams):
-    user_input = params.input
-
-    def generate():
-        # TODO: temporary, use the plugincore
-        stream = model.generate_stream(
-            [Message(role="user", content=user_input)], GenerateOptions()
-        )
-        for msg in stream:
-            print(msg)
-            if msg.delta:
-                yield json.dumps(ChatTimAskResponse(answer=msg.delta)) + "\n"
-            if msg.usage:
-                yield json.dumps(
-                    ChatTimAskResponse(usage=msg.usage.total_tokens)
-                ) + "\n"
-
-    return Response(
-        stream_with_context(generate()),
-        mimetype="application/x-ndjson",
-        headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
-    )
+    :param json_data: The data to be converted.
+    :return: A string representation of the JSON data ending in a newline.
+    """
+    return to_json_str(json_data) + "\n"
