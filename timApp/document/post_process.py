@@ -441,7 +441,8 @@ def process_areas(
                             )
                 else:
                     # Hide output of the area paragraph if it's there (e.g. collapse title)
-                    html_par.areainfo.is_collapsed = None
+                    if html_par.areainfo:
+                        html_par.areainfo.is_collapsed = None
                     html_par.output = ""
 
         else:
