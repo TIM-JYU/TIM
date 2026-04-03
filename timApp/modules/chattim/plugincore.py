@@ -37,7 +37,7 @@ class ReqContext:
 class InstanceAttributes:
     model_name: str
     llm_mode: str
-    max_tokens: str
+    max_tokens: int
     tim_documents: str
 
 
@@ -166,7 +166,7 @@ class PluginCore:
         """
         model_name: str = instance_settings.model_name
         llm_mode: str = instance_settings.llm_mode
-        max_tokens: str = instance_settings.max_tokens
+        max_tokens: int = instance_settings.max_tokens
         tim_documents: str = instance_settings.tim_documents
 
         # check that user owns the doc where plugin is being inserted
@@ -199,8 +199,11 @@ class PluginCore:
         else:
             Result(False, "Internal error")  # TODO: mieti vielä
 
+        # validating max tokens
+        if max_tokens < 0:
+            return Result(False, "Give non-negative max tokens value")
+
         # TODO: kun policy saatu niin tässä check niille
-        # TODO: validate max_tokens
         # TODO: if instance exists -> update OTHERIWISE create
 
         api_key = os.getenv("OPENAI_API_KEY")
