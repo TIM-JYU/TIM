@@ -14,11 +14,7 @@ from tim_common.pluginserver_flask import (
     PluginAnswerWeb,
     create_nontask_blueprint,
 )
-from timApp.modules.chattim.plugincore import (
-    PluginCore,
-    Result,
-    ReqContext,
-)
+from timApp.modules.chattim.plugincore import PluginCore, InstanceAttributes
 
 plugincore = PluginCore()
 
@@ -93,9 +89,9 @@ def define_ask_route():
     document_id = data.get("document_id")
     session_user_id = get_current_user_id()
 
+    # TODO onko tarkistus tarpeellinen, vai käytetäänkö vain session_user_id?
     if user_id != session_user_id:
         pass
-        # TODO onko tarkistus tarpeellinen, vai käytetäänkö vain session_user_id?
 
     resp = plugincore.chat_request(session_user_id, document_id, user_input)
     returnable = {"web": {"result": resp.value, "error": resp.error}}
@@ -103,23 +99,38 @@ def define_ask_route():
     return json_response(returnable)
 
 
-@dataclass()
-class InstanceAttributes(TypedDict):
-    model_name: str
-    llm_mode: str
-    max_tokens: str
-    tim_documents: list[str]
-
-
-@chattim.post("/save_instance")
-def define_save_instance():
+@chattim.post("/settings_save")
+def define_save_settings():
+    """
+    Saves settings sent from control panel. Received json should be:
+    { user_id: int,
+      document_id: int,
+      cpanel_data: {
+                    model_id: string,
+                    mode: string,
+                    max_tokens: int,
+                    tim_paths: string,
+                    }
+    }
+    tim_paths is list of paths separated by newline
+    :return: The usual with web.error if something went wrong
+    """
     web: PluginAnswerWeb = {}
     result: PluginAnswerResp = {"web": web}
     instance_attr: InstanceAttributes
 
     data = request.get_json()
-    context = data.get("context")
+    cpanel_data = data.get("cpanel_data")
+    user_id = data.get("user_id")
+    document_id = data.get("document_id")
 
-    # TODO: kytke plugincoreen
+    instance_attr = InstanceAttributes(**cpanel_data)
+    session_user_id = get_current_user_id()
+
+    # TODO onko tarkistus tarpeellinen, vai käytetäänkö vain session_user_id?
+    if user_id != session_user_id:
+        pass
+
+    plugincore.save_instance(session_user_id, document_id, instance_attr)
 
     return json_response(result)

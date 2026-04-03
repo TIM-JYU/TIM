@@ -1,4 +1,13 @@
-import {Component, EventEmitter, Input, Output} from "@angular/core";
+import {
+    Component,
+    ElementRef,
+    EventEmitter,
+    Input,
+    Output,
+} from "@angular/core";
+import {HttpClient, HttpClientModule} from "@angular/common/http";
+import {DomSanitizer} from "@angular/platform-browser";
+import type {JsonValue} from "tim/util/jsonvalue";
 
 export interface ChatModel {
     label: string;
@@ -46,17 +55,17 @@ export interface ChatModel {
               [class.glyphicon-chevron-right]="!modeOpen"
               [class.glyphicon-chevron-down]="modeOpen">
         </span>
-                    Mode: <strong>{{ modeLabelFor(temperature) }}</strong>
+                    Mode: <strong>{{ selectedMode }}</strong>
                 </button>
                 <div *ngIf="modeOpen" class="settings-section-body">
                     <div class="radio" *ngFor="let mode of modes">
                         <label>
                             <input type="radio"
                                    name="modeRadio"
-                                   [value]="mode.value"
-                                   [ngModel]="temperature"
-                                   (ngModelChange)="temperatureChange.emit($event)">
-                            {{ mode.label }}
+                                   [value]="mode"
+                                   [ngModel]="selectedMode"
+                                   (ngModelChange)="selectedModeChange.emit($event)">
+                            {{ mode }}
                         </label>
                     </div>
                 </div>
@@ -104,6 +113,15 @@ export interface ChatModel {
                     </button>
                 </div>
             </div>
+            
+            <!-- Save button that sends the chosen stuff -->
+            <div class="settings-row">
+                <button class="btn btn-primary" style="margin: 2px;"
+                        (click)="saveSettingsClicked()">
+                    Save
+                </button>
+            </div>
+            <div *ngIf="error" [innerHTML]="error | purify"></div>
 
         </div>
     `,
@@ -116,11 +134,13 @@ export class ChatControlPanelComponent {
     filesOpen = false;
     localFilePaths: string = "";
 
+    @Input() error?: string;
+
     @Input() selectedModel: string = "gpt-4o";
     @Output() selectedModelChange = new EventEmitter<string>();
 
-    @Input() temperature: number = 0.7;
-    @Output() temperatureChange = new EventEmitter<number>();
+    @Input() selectedMode: string = "Summarizing";
+    @Output() selectedModeChange = new EventEmitter<number>();
 
     @Input() maxTokens: number = 1000;
     @Output() maxTokensChange = new EventEmitter<number>();
@@ -128,20 +148,14 @@ export class ChatControlPanelComponent {
     @Input() filePaths: string = "";
     @Output() filePathsChange = new EventEmitter<string>();
 
+    @Output() saveSettingsClick = new EventEmitter<CtrlPanelData>();
+
     availableModels: ChatModel[] = [
         {label: "GPT-4o", value: "gpt-4o"},
         {label: "Dummy", value: "Dummy"},
     ];
 
-    modes = [
-        {label: "Summarizing", value: 0.2},
-        {label: "Balanced", value: 0.7},
-        {label: "Creative", value: 1.5},
-    ];
-
-    modeLabelFor(temp: number): string {
-        return this.modes.find((m) => m.value === temp)?.label ?? "Balanced";
-    }
+    modes = ["Summarizing", "Creative"];
 
     filePathCount(): number {
         return this.filePaths.split("\n").filter((l) => l.trim().length > 0)
@@ -153,4 +167,21 @@ export class ChatControlPanelComponent {
         this.filePathsChange.emit(this.localFilePaths);
         this.localFilePaths = "";
     }
+
+    saveSettingsClicked() {
+        const data: CtrlPanelData = {
+            model_id: this.selectedModel,
+            mode: this.selectedMode,
+            max_tokens: this.maxTokens,
+            tim_paths: this.filePaths,
+        };
+        this.saveSettingsClick.emit(data);
+    }
+}
+
+export interface CtrlPanelData extends Record<string, JsonValue> {
+    model_id: string;
+    mode: string;
+    max_tokens: number;
+    tim_paths: string;
 }

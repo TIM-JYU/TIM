@@ -5,6 +5,7 @@ from dataclasses import dataclass
 
 from timApp.timdb.dbaccess import get_files_path
 from timApp.auth.get_user_rights_for_item import UserItemRights
+from timApp.item.item import Item
 from timApp.modules.chattim.database_handler import TimDatabase
 from timApp.modules.chattim.rag import (
     Rag,
@@ -14,6 +15,7 @@ from timApp.modules.chattim.rag import (
     Message,
     Iterable,
     sum_chunks,
+    ModelInfo,
 )
 from typing import Generic, TypeVar, TypedDict
 
@@ -29,6 +31,14 @@ class ReqContext:
     input: str
     user_id: int
     document_id: int
+
+
+@dataclass()
+class InstanceAttributes:
+    model_name: str
+    llm_mode: str
+    max_tokens: str
+    tim_documents: str
 
 
 class Result(Generic[T, E]):
@@ -144,16 +154,58 @@ class PluginCore:
 
         return Result(value=whole_msg, error=None)
 
-    def create_instance(self, caller_id, document_id: int):
-        # TODO: tarkista onko teacher jo tietokanssa, jos ei niin lisää
-        # TODO: tarkista tässä oikeudet
+    def save_instance(
+        self, caller_id, document_id: int, instance_settings: InstanceAttributes
+    ) -> Result[bool, str]:
+        """
+        Create instance if it doesn't exist. New settings are saved if valid
+        Adds a new model instance to RAG and a new llmrule table to database
+        :param caller_id:
+        :param document_id:
+        :return: On error: Result(false, error_reason) On success (true, "")
+        """
+        model_name: str = instance_settings.model_name
+        llm_mode: str = instance_settings.llm_mode
+        max_tokens: str = instance_settings.max_tokens
+        tim_documents: str = instance_settings.tim_documents
 
-        # TODO: tälle joku helpompi tapa vetää spec infosta tai jotain (tämä muutenkin väliaikainen)
+        # check that user owns the doc where plugin is being inserted
+        if not self._owns_document(caller_id, document_id):
+            return Result(False, "Insufficient rights")
+
+        # validate mode
+        rag_mode: RagMode | None = self._parse_rag_mode(llm_mode)
+
+        # validate requested model
+        supported_models: dict[str, ModelInfo] = self.rag.get_supported_models()
+        if model_name not in supported_models:
+            return Result(False, f"Given model [{model_name}] not supported")
+
+        # parse and validate TIM_PATHS
+        paths_for_indexing: list[str] = tim_documents.split("\n")
+        if not paths_for_indexing and rag_mode.RETRIEVE:
+            return Result(False, "Give at least one path when using summarizing mode")
+
+        # katotaan oikeudet ja haetaan samalla kaikki doc/folderit indeksointiin myöhemmin (kutsujen minimoimiseksi)
+        items = self._fetch_items_by_paths(paths_for_indexing)
+        if not items.ok():
+            return Result(False, items.error)
+        items = items.value
+
+        owns_all = self._owns_all_items(caller_id, items)
+        if owns_all.ok():
+            if not owns_all.value:
+                return Result(False, owns_all.error)
+        else:
+            Result(False, "Internal error")  # TODO: mieti vielä
+
+        # TODO: kun policy saatu niin tässä check niille
+        # TODO: validate max_tokens
+        # TODO: if instance exists -> update OTHERIWISE create
 
         api_key = os.getenv("OPENAI_API_KEY")
         spec = ModelSpec(provider="openai", model_id="gpt-4.1-nano", api_key=api_key)
         self.rag.add_model(spec, identifier=document_id)
-        # TODO: lisää tietokantaan policyineen
         # TODO: indeksoinnit pyörimään
 
     def remove_instance(self, caller_id: str, document_id: int):
@@ -202,6 +254,17 @@ class PluginCore:
 
         return True
 
+    @staticmethod
+    def _owns_item(rights: list[UserItemRights]) -> bool:
+        """Expects that you have checked already that doc and user exist, throws otherwise"""
+
+        for right in rights:
+            if not right:
+                # TODO: proper errors?
+                raise Exception(f"(_owns_items) given UserItemRight does not exist")
+
+        return True
+
     def _student_policy_check(
         self, caller_id: int, document_id: int
     ) -> Result[str | None, str | None]:
@@ -217,5 +280,61 @@ class PluginCore:
         # TODO: impl
         return Result(value="ok", error=None)
 
-    def _generate_id(self) -> str:
+    def _fetch_items_by_paths(
+        self, paths: list[str]
+    ) -> Result[list[Item] | None, str | None]:
+        """
+        Get Items (doc or folder) that correspond with given paths.
+        :param paths:
+        :return: list[Item] | None
+        """
+        found_items: list[Item] = []
+        for path in paths:
+            item = self.tim_database.fetch_item_by_path(path)
+            if not item:
+                return Result(error=f"Given path [{path}] does not exist")
+            found_items.append(item)
+
+        return Result(value=found_items)
+
+    def _owns_all_items(
+        self, user_id: int, items: list[Item]
+    ) -> Result[bool | None, str | None]:
+        """
+        Checks for all items that the given user owns them
+        :param user_id: User for which the right is checked
+        :param items: Item for which the user has or has no right
+        :return: If all items are owned [True, None]
+                 If not all items are owned [False, msg on item not owned]
+                 if error happens [None, error_msg]
+        """
+        for item in items:
+            right = self.tim_database.check_rights_per_item(user_id, item)
+            if not right:
+                return Result(
+                    # TODO: check this, do we really want to pass this to UI
+                    error=f"Could not get rights for item [{item}] for user [{user_id}]"
+                )
+
+            item_path = item.path
+            is_owner: bool = right.get("owner")
+            if not is_owner:
+                return Result(False, f"No owner rights for [{item.path}]")
+
+        return Result(value=True)
+
+    @staticmethod
+    def _generate_id() -> str:
         return uuid.uuid4().hex
+
+    @staticmethod
+    def _parse_tim_paths(paths: str):
+        pass
+
+    @staticmethod
+    def _parse_rag_mode(mode: str) -> RagMode | None:
+        try:
+            return RagMode(mode)
+        except ValueError:
+            print(f"Invalid rag mode given: {mode}")
+            return None

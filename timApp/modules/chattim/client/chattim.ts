@@ -1,5 +1,5 @@
 /**
- * Defines the client-side implementation of an example plugin (a chattimndrome checker).
+ * Defines the client-side implementation chattim-plugin.
  */
 import * as t from "io-ts";
 import {
@@ -25,6 +25,7 @@ import {CommonModule} from "@angular/common";
 import {DomSanitizer} from "@angular/platform-browser";
 import {Users} from "tim/user/userService";
 import {ChatControlPanelComponent} from "./controlpanel";
+import type {CtrlPanelData} from "./controlpanel";
 
 const PluginMarkupFields = t.intersection([
     t.partial({
@@ -78,9 +79,11 @@ export interface ChatEntry {
                             [innerHTML]="buttonText() | purify">
                     </button>
                     <chattim-control-panel
+                        (saveSettingsClick)="onSaveSettings($event)">
                         [(selectedModel)]="selectedModel"
-                        [(temperature)]="temperature"
+                        [(selectedMode)]="selectedMode"
                         [(maxTokens)]="maxTokens">
+                        [error]="controlpanel_error"
                     </chattim-control-panel>
                 </div>
 
@@ -106,9 +109,11 @@ export class ChatTIMComponent
     inputstem = "";
     document_id = -1;
 
+    // TODO: fetch default values from server?
     selectedModel = "gpt-4o";
-    temperature = 0.7;
+    selectedMode = "Summarizing";
     maxTokens = 1000;
+    controlpanel_error?: string;
 
     conversation: ChatEntry[] = [];
 
@@ -174,6 +179,7 @@ export class ChatTIMComponent
         this.answer = undefined;
 
         const input: string = this.userinput;
+        // TODO: ei tarvita user id?
         const user_id: number = Users.getCurrent().id;
         const document_id: number = this.document_id;
 
@@ -198,6 +204,31 @@ export class ChatTIMComponent
             });
         } else {
             this.error = response.result.error.error;
+        }
+    }
+
+    async onSaveSettings(ctrlpanel_data: CtrlPanelData) {
+        this.isRunning = true;
+
+        // TODO: ei tarvita user id?
+        const user_id: number = Users.getCurrent().id;
+
+        const save_request = {
+            user_id: user_id,
+            document_id: this.document_id,
+            cpanel_data: ctrlpanel_data,
+        };
+
+        const response = await this.httpPost<{
+            web: {result: string; error?: string};
+        }>("/chattim/settings_save", save_request);
+
+        this.isRunning = false;
+        if (response.ok) {
+            const data = response.result;
+            this.controlpanel_error = data.web.error;
+        } else {
+            this.controlpanel_error = response.result.error.error;
         }
     }
 }
