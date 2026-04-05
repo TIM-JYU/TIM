@@ -162,7 +162,8 @@ class PluginCore:
         Adds a new model instance to RAG and a new llmrule table to database
         :param caller_id:
         :param document_id:
-        :return: On error: Result(false, error_reason) On success (true, "")
+        :param instance_settings:
+        :return: On error: Result(false, error_reason) On success (true, None)
         """
         model_name: str = instance_settings.model_name
         llm_mode: str = instance_settings.llm_mode
@@ -197,7 +198,7 @@ class PluginCore:
             if not owns_all.value:
                 return Result(False, owns_all.error)
         else:
-            Result(False, "Internal error")  # TODO: mieti vielä
+            return Result(False, "Internal error")  # TODO: mieti vielä
 
         # validating max tokens
         if max_tokens < 0:
