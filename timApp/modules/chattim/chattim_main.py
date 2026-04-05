@@ -124,7 +124,12 @@ def define_save_settings():
     user_id = data.get("user_id")
     document_id = data.get("document_id")
 
-    instance_attr = InstanceAttributes(**cpanel_data)
+    try:
+        instance_attr = InstanceAttributes(**cpanel_data)
+    except ValueError:
+        web["error"] = "Malformed save_settings data received"
+        return json_response(result)
+
     session_user_id = get_current_user_id()
 
     # TODO onko tarkistus tarpeellinen, vai käytetäänkö vain session_user_id?
