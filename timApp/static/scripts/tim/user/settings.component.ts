@@ -592,6 +592,8 @@ type StyleSelectionType =
                             </div>
                         </div>
                     </ng-container>
+                    </div>
+                <div>
                     <ng-container>
                         <span class="form-label">
                             <ng-container i18n>Machine translator API Keys</ng-container>
@@ -624,12 +626,50 @@ type StyleSelectionType =
                             </div>
                         </div>
                     </ng-container>
-                </div>
+                
                 <settings-button-panel [saved]="saveUserAccountInfo">
                     <button class="timButton" (click)="openContactInfoDialog()" i18n>Add new contact</button>
                     <button class="timButton" (click)="openAPIKeyDialog()" i18n>Add new API key</button>
                 </settings-button-panel>
-            </bootstrap-form-panel>
+                </div>
+                <div>
+                <ng-container>
+                        <span class="form-label">
+                            <ng-container i18n>Chattim API Keys</ng-container>
+                            <a href="https://tim.jyu.fi/view/tim/ohjeita/dokumenttien-konekaantaminen/en-GB#adding-a-translator-authentication-key">
+                                <span class="glyphicon glyphicon-question-sign" style="margin-left: 0.2em;"
+                                      title="Help with machine translation setup" i18n-title></span>
+                            </a>
+                        </span>
+                        <div class="contact-collection">
+                            <div class="contact-info" *ngFor="let APIkey of userAPIKeys">
+                                <input type="text" class="form-control" [value]="APIkey.APIkey" disabled>
+                                <input type="text" class="form-control buttonBorder" [value]="APIkey.translator"
+                                       disabled>
+                                <div *ngIf="APIkey.quotaChecked" class="stacked quotaProgressBar">
+                                    <progressbar tooltip="{{APIkey.usedQuota}} / {{APIkey.availableQuota}}"
+                                                 [value]="APIkey.usedQuota" [max]="APIkey.availableQuota"></progressbar>
+                                </div>
+                                <button *ngIf="!APIkey.quotaChecked" class="btn" type="button"
+                                        (click)="checkQuota(APIkey)" i18n>
+                                    Check key's quota
+                                </button>
+                                <button *ngIf="APIkey.quotaChecked" class="btn" type="button"
+                                        (click)="checkQuota(APIkey)">
+                                    <i class="glyphicon glyphicon-refresh"></i>
+                                </button>
+                                <button class="btn btn-danger" type="button"
+                                        (click)="deleteKey(APIkey)">
+                                    <i class="glyphicon glyphicon-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </ng-container>
+                <settings-button-panel [saved]="saveUserAccountInfo">
+                    <button class="timButton" (click)="openContactInfoDialog()" i18n>Add new contact</button>
+                    <button class="timButton" (click)="openAPIKeyDialog()" i18n>Add new API key</button>
+                </settings-button-panel>
+            </div>
             <bootstrap-form-panel [disabled]="saving" title="Delete your account" i18n-title anchorId="prefs_delAcc"
                                   [showHeadingAnchors]="true">
                 <button class="timButton btn-danger"
@@ -654,7 +694,7 @@ type StyleSelectionType =
                     </div>
                 </div>
             </bootstrap-form-panel>
-        </div>
+        
     `,
     styleUrls: ["settings.component.scss"],
 })
