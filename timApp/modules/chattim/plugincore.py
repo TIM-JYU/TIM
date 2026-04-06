@@ -337,7 +337,6 @@ class PluginCore:
                     error=f"Could not get rights for item [{item}] for user [{user_id}]"
                 )
 
-            item_path = item.path
             is_owner: bool = right.get("owner")
             if not is_owner:
                 return Result(False, f"No owner rights for [{item.path}]")
