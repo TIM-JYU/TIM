@@ -7,12 +7,7 @@ import {
     getTopLevelFields,
     nullable,
 } from "tim/plugin/attributes";
-import type {
-    AfterViewInit,
-    ApplicationRef,
-    DoBootstrap,
-    OnInit,
-} from "@angular/core";
+import type {AfterViewInit, ApplicationRef, DoBootstrap} from "@angular/core";
 import {Component, NgModule, ElementRef} from "@angular/core";
 import {HttpClient, HttpClientModule} from "@angular/common/http";
 import {FormsModule} from "@angular/forms";
@@ -79,11 +74,12 @@ export interface ChatEntry {
                             [innerHTML]="buttonText() | purify">
                     </button>
                     <chattim-control-panel
-                        (saveSettingsClick)="onSaveSettings($event)">
-                        [(selectedModel)]="selectedModel"
-                        [(selectedMode)]="selectedMode"
-                        [(maxTokens)]="maxTokens">
-                        [error]="controlpanel_error"
+                        (saveSettingsClick)="onSaveSettings($event)"
+                        [selectedModel]="selectedModel"
+                        [selectedMode]="selectedMode"
+                        [maxTokens]="maxTokens"
+                        [response]="controlpanelResponse"
+                        [error]="controlpanelError">
                     </chattim-control-panel>
                 </div>
 
@@ -113,7 +109,8 @@ export class ChatTIMComponent
     selectedModel = "gpt-4o";
     selectedMode = "Summarizing";
     maxTokens = 1000;
-    controlpanel_error?: string;
+    controlpanelError?: string;
+    controlpanelResponse?: string;
 
     conversation: ChatEntry[] = [];
 
@@ -226,9 +223,10 @@ export class ChatTIMComponent
         this.isRunning = false;
         if (response.ok) {
             const data = response.result;
-            this.controlpanel_error = data.web.error;
+            this.controlpanelError = data.web.error;
+            this.controlpanelResponse = data.web.result;
         } else {
-            this.controlpanel_error = response.result.error.error;
+            this.controlpanelError = response.result.error.error;
         }
     }
 }

@@ -1,12 +1,4 @@
-import {
-    Component,
-    ElementRef,
-    EventEmitter,
-    Input,
-    Output,
-} from "@angular/core";
-import {HttpClient, HttpClientModule} from "@angular/common/http";
-import {DomSanitizer} from "@angular/platform-browser";
+import {Component, EventEmitter, Input, Output} from "@angular/core";
 import type {JsonValue} from "tim/util/jsonvalue";
 
 export interface ChatModel {
@@ -40,8 +32,7 @@ export interface ChatModel {
                 </button>
                 <div *ngIf="modelOpen" class="settings-section-body">
                     <select class="form-control"
-                            [ngModel]="selectedModel"
-                            (ngModelChange)="selectedModelChange.emit($event)">
+                            [(ngModel)]="selectedModel">
                         <option *ngFor="let m of availableModels" [value]="m.value">{{ m.label }}</option>
                     </select>
                 </div>
@@ -63,8 +54,7 @@ export interface ChatModel {
                             <input type="radio"
                                    name="modeRadio"
                                    [value]="mode"
-                                   [ngModel]="selectedMode"
-                                   (ngModelChange)="selectedModeChange.emit($event)">
+                                   [(ngModel)]="selectedMode">
                             {{ mode }}
                         </label>
                     </div>
@@ -85,8 +75,7 @@ export interface ChatModel {
                     <input type="range"
                            class="form-control"
                            min="100" max="10000" step="100"
-                           [ngModel]="maxTokens"
-                           (ngModelChange)="maxTokensChange.emit($event)">
+                           [(ngModel)]="maxTokens" >
                 </div>
             </div>
 
@@ -99,7 +88,6 @@ export interface ChatModel {
                           [class.glyphicon-chevron-down]="filesOpen">
                     </span>
                     Add TIM-documents:
-                    <strong *ngIf="filePaths">{{ filePathCount() }} path(s)</strong>
                 </button>
                 <div *ngIf="filesOpen" class="settings-section-body">
                     <textarea class="form-control"
@@ -107,10 +95,6 @@ export interface ChatModel {
                               placeholder="kurssit/tie/proj/2026/chattim"
                               [(ngModel)]="localFilePaths">
                     </textarea>
-                    <button class="btn btn-primary" style="margin: 2px;"
-                            (click)="submitFilePaths()">
-                        Add file
-                    </button>
                 </div>
             </div>
             
@@ -121,7 +105,8 @@ export interface ChatModel {
                     Save
                 </button>
             </div>
-            <div *ngIf="error" [innerHTML]="error | purify"></div>
+            <div *ngIf="error && !response" [innerHTML]="error | purify"></div>
+            <div *ngIf="response && !error" [innerHTML]="response | purify"></div>
 
         </div>
     `,
@@ -135,53 +120,35 @@ export class ChatControlPanelComponent {
     localFilePaths: string = "";
 
     @Input() error?: string;
-
+    @Input() response?: string;
     @Input() selectedModel: string = "gpt-4o";
-    @Output() selectedModelChange = new EventEmitter<string>();
-
     @Input() selectedMode: string = "Summarizing";
-    @Output() selectedModeChange = new EventEmitter<number>();
-
     @Input() maxTokens: number = 1000;
-    @Output() maxTokensChange = new EventEmitter<number>();
-
-    @Input() filePaths: string = "";
-    @Output() filePathsChange = new EventEmitter<string>();
 
     @Output() saveSettingsClick = new EventEmitter<CtrlPanelData>();
 
     availableModels: ChatModel[] = [
-        {label: "GPT-4o", value: "gpt-4o"},
-        {label: "Dummy", value: "Dummy"},
+        {label: "GPT-4o", value: "gpt-4o-mini"},
+        {label: "Dummy", value: "dummy"},
     ];
 
     modes = ["Summarizing", "Creative"];
 
-    filePathCount(): number {
-        return this.filePaths.split("\n").filter((l) => l.trim().length > 0)
-            .length;
-    }
-
-    submitFilePaths() {
-        console.log("Tried to add :", this.localFilePaths);
-        this.filePathsChange.emit(this.localFilePaths);
-        this.localFilePaths = "";
-    }
-
     saveSettingsClicked() {
         const data: CtrlPanelData = {
             model_id: this.selectedModel,
-            mode: this.selectedMode,
+            llm_mode: this.selectedMode,
             max_tokens: this.maxTokens,
-            tim_paths: this.filePaths,
+            tim_paths: this.localFilePaths,
         };
+        console.log("sending: ", data);
         this.saveSettingsClick.emit(data);
     }
 }
 
 export interface CtrlPanelData extends Record<string, JsonValue> {
     model_id: string;
-    mode: string;
+    llm_mode: string;
     max_tokens: number;
     tim_paths: string;
 }

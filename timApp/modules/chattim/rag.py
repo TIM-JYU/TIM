@@ -23,8 +23,8 @@ _DEFAULT_SYSTEM_PROMPT_CREATIVE = ""  # TODO: define
 
 
 class RagMode(Enum):
-    RETRIEVE = "RETRIEVE"
-    CREATIVE = "CREATIVE"
+    RETRIEVE = "Summarizing"
+    CREATIVE = "Creative"
 
 
 @dataclass

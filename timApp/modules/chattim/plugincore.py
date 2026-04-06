@@ -35,10 +35,10 @@ class ReqContext:
 
 @dataclass()
 class InstanceAttributes:
-    model_name: str
+    model_id: str
     llm_mode: str
     max_tokens: int
-    tim_documents: str
+    tim_paths: str
 
 
 class Result(Generic[T, E]):
@@ -69,11 +69,12 @@ class PluginCore:
     rag: Rag = Rag()
     history_manager: ConversationManager
     tim_database: TimDatabase = TimDatabase()
+    list_of_instance_ids: list[int] = []  # TODO: poista kun db:ssa rulet
 
     def __init__(self):
         # TODO: tämä ok?
         file_path = get_files_path()
-        history_manager = ConversationManager(file_path)
+        self.history_manager = ConversationManager(file_path)
 
     # TODO: palautetaan token usage tätä kautta tai muualta?
     def chat_request(
@@ -83,9 +84,7 @@ class PluginCore:
         user_input: str,
     ) -> Result[str | None, str | None]:
         if not self._instance_exists(document_id):
-            return Result(error=f"No instance with id {document_id} exists")
-
-        self.create_instance(caller_id, document_id)  # TODO: remove
+            return Result(error=f"Instance has not been created yet")
 
         # policy check
         result: Result[str | None, str | None] = self._student_policy_check(
@@ -100,9 +99,7 @@ class PluginCore:
 
         timestamp_before = time.time_ns()
         plugin_id = str(document_id)
-        history = self.history_manager.get_history(
-            plugin_id, str(caller_id), conversation_id, 10
-        )
+        history = self.history_manager.get_history_n(plugin_id, str(caller_id), 10)
 
         # TODO: remember to fetch with timestamps when the time comes
         chat_history: list[Message] = [
@@ -135,7 +132,6 @@ class PluginCore:
         self.history_manager.append_messages(
             plugin_id,
             str(caller_id),
-            conversation_id,
             [
                 ChatMessage(
                     role="user",
@@ -156,53 +152,55 @@ class PluginCore:
 
     def save_instance(
         self, caller_id, document_id: int, instance_settings: InstanceAttributes
-    ) -> Result[bool, str]:
+    ) -> Result[bool | None, str | None]:
         """
         Create instance if it doesn't exist. New settings are saved if valid
         Adds a new model instance to RAG and a new llmrule table to database
         :param caller_id:
         :param document_id:
         :param instance_settings:
-        :return: On error: Result(false, error_reason) On success (true, None)
+        :return: On error: Result(None, error_reason) On success (True, None)
         """
-        model_name: str = instance_settings.model_name
+        model_id: str = instance_settings.model_id
         llm_mode: str = instance_settings.llm_mode
         max_tokens: int = instance_settings.max_tokens
-        tim_documents: str = instance_settings.tim_documents
+        tim_paths: str = instance_settings.tim_paths
 
         # check that user owns the doc where plugin is being inserted
         if not self._owns_document(caller_id, document_id):
-            return Result(False, "Insufficient rights")
+            return Result(None, "Insufficient rights")
 
         # validate mode
         rag_mode: RagMode | None = self._parse_rag_mode(llm_mode)
+        if rag_mode is None:
+            return Result(None, f"Invalid rag mode [{llm_mode}] given")
 
         # validate requested model
         supported_models: dict[str, ModelInfo] = self.rag.get_supported_models()
-        if model_name not in supported_models:
-            return Result(False, f"Given model [{model_name}] not supported")
+        if model_id not in supported_models:
+            return Result(None, f"Given model [{model_id}] not supported")
 
         # parse and validate TIM_PATHS
-        paths_for_indexing: list[str] = tim_documents.split("\n")
-        if not paths_for_indexing and rag_mode.RETRIEVE:
-            return Result(False, "Give at least one path when using summarizing mode")
+        paths_for_indexing: list[str] = self._parse_paths(tim_paths)
+        if not paths_for_indexing and rag_mode == RagMode.RETRIEVE:
+            return Result(None, "Give at least one path when using summarizing mode")
 
         # katotaan oikeudet ja haetaan samalla kaikki doc/folderit indeksointiin myöhemmin (kutsujen minimoimiseksi)
         items = self._fetch_items_by_paths(paths_for_indexing)
         if not items.ok():
-            return Result(False, items.error)
+            return Result(None, items.error)
         items = items.value
 
         owns_all = self._owns_all_items(caller_id, items)
         if owns_all.ok():
             if not owns_all.value:
-                return Result(False, owns_all.error)
+                return Result(None, owns_all.error)
         else:
-            return Result(False, "Internal error")  # TODO: mieti vielä
+            return Result(None, "Internal error")
 
         # validating max tokens
         if max_tokens < 0:
-            return Result(False, "Give non-negative max tokens value")
+            return Result(None, "Give non-negative max tokens value")
 
         # TODO: kun policy saatu niin tässä check niille
         # TODO: if instance exists -> update OTHERIWISE create
@@ -211,6 +209,10 @@ class PluginCore:
         spec = ModelSpec(provider="openai", model_id="gpt-4.1-nano", api_key=api_key)
         self.rag.add_model(spec, identifier=document_id)
         # TODO: indeksoinnit pyörimään
+
+        self.list_of_instance_ids.append(document_id)  # TODO: remove when db ok
+
+        return Result(True, None)
 
     def remove_instance(self, caller_id: str, document_id: int):
         pass
@@ -235,9 +237,11 @@ class PluginCore:
         pass
 
     def _instance_exists(self, document_id) -> bool:
-        # ideana todnäk pitää muistissa tiedetyt instanssi-idt jottei haeta aina tietokannalta turhaan
-        # TODO: impl
-        return True
+        # TODO: todnäk pitää muistissa tiedetyt instanssi-idt jottei haeta aina tietokannalta turhaan
+        # TODO: korvaa db haulla
+        if document_id in self.list_of_instance_ids:
+            return True
+        return False
 
     def _owns_document(self, caller_id: int, document_id: int) -> bool:
         """Expects that you have checked already that doc and user exist, throws otherwise"""
@@ -268,6 +272,17 @@ class PluginCore:
                 raise Exception(f"(_owns_items) given UserItemRight does not exist")
 
         return True
+
+    @staticmethod
+    def _parse_paths(paths: str) -> list[str]:
+        """
+        Gets a string, splits it with separator as ",", removes empty entries and trims each entry
+        :param paths:
+        :return: list of paths or an empty list
+        """
+        parts = [x.strip() for x in paths.split(",") if x.strip()]
+
+        return parts
 
     def _student_policy_check(
         self, caller_id: int, document_id: int

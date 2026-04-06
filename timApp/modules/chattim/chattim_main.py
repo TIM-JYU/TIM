@@ -107,12 +107,11 @@ def define_save_settings():
       document_id: int,
       cpanel_data: {
                     model_id: string,
-                    mode: string,
+                    llm_mode: string,
                     max_tokens: int,
                     tim_paths: string,
                     }
     }
-    tim_paths is list of paths separated by newline
     :return: The usual with web.error if something went wrong
     """
     web: PluginAnswerWeb = {}
@@ -126,8 +125,8 @@ def define_save_settings():
 
     try:
         instance_attr = InstanceAttributes(**cpanel_data)
-    except ValueError:
-        web["error"] = "Malformed save_settings data received"
+    except (ValueError, TypeError):
+        web["error"] = f"Server received malformed data: {data}"
         return json_response(result)
 
     session_user_id = get_current_user_id()
@@ -136,6 +135,11 @@ def define_save_settings():
     if user_id != session_user_id:
         pass
 
-    plugincore.save_instance(session_user_id, document_id, instance_attr)
+    error_or_ok = plugincore.save_instance(session_user_id, document_id, instance_attr)
+    if not error_or_ok.ok():
+        web["error"] = error_or_ok.error
+        return json_response(result)
+
+    web["result"] = "Settings saved!"
 
     return json_response(result)
