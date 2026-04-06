@@ -106,7 +106,7 @@ export class ChatTIMComponent
     document_id = -1;
 
     // TODO: fetch default values from server?
-    selectedModel = "gpt-4o";
+    selectedModel = "gpt-4.1-mini";
     selectedMode = "Summarizing";
     maxTokens = 1000;
     controlpanelError?: string;

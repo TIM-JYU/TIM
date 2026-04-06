@@ -28,7 +28,7 @@ export interface ChatModel {
                           [class.glyphicon-chevron-right]="!modelOpen"
                           [class.glyphicon-chevron-down]="modelOpen">
                     </span>
-                    Model: <strong>{{ selectedModel }}</strong>
+                    Model: <strong>{{ selectedModelLabel }}</strong>
                 </button>
                 <div *ngIf="modelOpen" class="settings-section-body">
                     <select class="form-control"
@@ -121,15 +121,15 @@ export class ChatControlPanelComponent {
 
     @Input() error?: string;
     @Input() response?: string;
-    @Input() selectedModel: string = "gpt-4o";
+    @Input() selectedModel: string = "gpt-4.1-mini";
     @Input() selectedMode: string = "Summarizing";
     @Input() maxTokens: number = 1000;
 
     @Output() saveSettingsClick = new EventEmitter<CtrlPanelData>();
 
     availableModels: ChatModel[] = [
-        {label: "GPT-4o", value: "gpt-4o-mini"},
-        {label: "Dummy", value: "dummy"},
+        {label: "GPT-4o-Mini", value: "gpt-4.1-mini"},
+        {label: "Dummy", value: "dummy-model-1"},
     ];
 
     modes = ["Summarizing", "Creative"];
@@ -143,6 +143,13 @@ export class ChatControlPanelComponent {
         };
         console.log("sending: ", data);
         this.saveSettingsClick.emit(data);
+    }
+
+    get selectedModelLabel(): string {
+        const model = this.availableModels.find(
+            (m) => m.value === this.selectedModel
+        );
+        return model ? model.label : "";
     }
 }
 
