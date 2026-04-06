@@ -63,7 +63,7 @@ class TimDatabase:
     @staticmethod
     def fetch_item_by_path(item_path: str) -> Item | None:
         """
-        Gets item id per path.
+        Gets item by path.
         """
         return Item.find_by_path(item_path)
 

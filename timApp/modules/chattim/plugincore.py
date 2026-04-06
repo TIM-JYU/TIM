@@ -210,7 +210,9 @@ class PluginCore:
         self.rag.add_model(spec, identifier=document_id)
         # TODO: indeksoinnit pyörimään
 
-        self.list_of_instance_ids.append(document_id)  # TODO: remove when db ok
+        self.list_of_instance_ids.append(
+            document_id
+        )  # TODO: for testing purposes remove when db ok or cache
 
         return Result(True, None)
 
