@@ -332,7 +332,7 @@ class PluginCore:
         """
 
         for item in items:
-            right = self.tim_database.check_rights_per_item(user_id, item)
+            right = self.tim_database.get_rights_per_item(user_id, item)
             if not right:
                 return Result(
                     error=f"Could not get rights for item [{item}] for user [{user_id}]"

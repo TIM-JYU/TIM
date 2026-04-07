@@ -68,7 +68,10 @@ class TimDatabase:
         return Item.find_by_path(item_path)
 
     @staticmethod
-    def check_rights_per_item(user_id: int, item: Item) -> UserItemRights | None:
+    def get_rights_per_item(user_id: int, item: Item) -> UserItemRights | None:
+        """
+        Gets the rights for the given item. None is returned if user doesn't exist.
+        """
         user = User.get_by_id(user_id)
 
         if not user:
