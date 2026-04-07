@@ -370,8 +370,11 @@ export class ChatTIMComponent
     handleError(err: any, scope?: string) {
         if (!err) return;
         this.error = err;
-        if (scope) console.error(`error(${scope}):`, err);
-        else console.error(err);
+        if (scope) {
+            console.error(`error(${scope}):`, err);
+            return;
+        }
+        console.error(err);
     }
 }
 

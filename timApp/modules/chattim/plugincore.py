@@ -1,5 +1,4 @@
 import os
-import time
 import uuid
 from dataclasses import dataclass
 
@@ -189,19 +188,19 @@ class PluginCore:
         document_id: int,
         user_input: str,
     ) -> Result[str | None, str | None]:
-        timestamp_user = time.time_ns()
+        timestamp_user = ChatMessage.ts_ms()
         prep = self._prepare_chat_request(caller_id, document_id, user_input)
         if not prep.ok() or not prep.value:
             return Result(error=prep.error)
         p = prep.value
 
         chunk: ModelResponseChunk = sum_chunks(p.iterable)
-        whole_msg = chunk.delta
+        whole_msg = chunk.delta or ""
         usage = chunk.usage
 
         # TODO: viestit arkistoidaan
 
-        timestamp_answer = time.time_ns()
+        timestamp_answer = ChatMessage.ts_ms()
         self._save_messages(
             plugin_id=p.plugin_id,
             caller_id=p.caller_id,
@@ -220,7 +219,7 @@ class PluginCore:
         document_id: int,
         user_input: str,
     ) -> Result[Iterable[ModelResponseChunk], str]:
-        timestamp_user = time.time_ns()
+        timestamp_user = ChatMessage.ts_ms()
         prep = self._prepare_chat_request(caller_id, document_id, user_input)
         if not prep.ok() or not prep.value:
             return Result(error=prep.error)
@@ -228,18 +227,27 @@ class PluginCore:
 
         # TODO: return only the string chunks or the usage as well?
         def gen() -> Iterable[ModelResponseChunk]:
-            whole_msg = ""
+            whole_msg: str = ""
             usage: Usage | None = None
+
+            # Collect the chunk message and usage
+            def apply_chunk(c: ModelResponseChunk) -> None:
+                nonlocal whole_msg, usage
+                if c.delta:
+                    whole_msg += c.delta
+                if c.usage:
+                    usage = c.usage
+
             try:
+                # Yield chunks to the caller
                 for chunk in p.iterable:
-                    if chunk.delta:
-                        whole_msg += chunk.delta
-                    if chunk.usage:
-                        usage = chunk.usage
+                    apply_chunk(chunk)
                     yield chunk
             finally:
-                # Appends the history even if client disconnects mid-stream
-                timestamp_answer = time.time_ns()
+                # Drain the remaining chunks if the client disconnected mid-stream
+                for chunk in p.iterable:
+                    apply_chunk(chunk)
+                timestamp_answer = ChatMessage.ts_ms()
                 self._save_messages(
                     plugin_id=p.plugin_id,
                     caller_id=p.caller_id,

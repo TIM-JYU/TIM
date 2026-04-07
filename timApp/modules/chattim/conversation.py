@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import os
 import json
+import time
 from dataclasses import dataclass, asdict
 from typing import BinaryIO, Iterator
 from .model import Message, Usage
@@ -16,7 +17,7 @@ class ChatMessage:
     role: Message.Role
     """Role of the message sender."""
     timestamp: int
-    """Timestamp of when the message was sent in seconds."""
+    """Timestamp of when the message was sent in milliseconds."""
     usage: Usage | None = None
     """Tokens used for generating the message."""
 
@@ -41,6 +42,11 @@ class ChatMessage:
                 msg_dict["usage"] = None
         return ChatMessage(**msg_dict)
 
+    @staticmethod
+    def ts_ms() -> int:
+        """Timestamp in milliseconds."""
+        return time.time_ns() // 1_000_000
+
 
 class ConversationManager:
     """Manages conversation histories."""
@@ -53,7 +59,7 @@ class ConversationManager:
 
     def append_messages(
         self, plugin_id: str, user_id: str, messages: list[ChatMessage]
-    ):
+    ) -> None:
         """
         Append messages to the conversation history of the user.
 
@@ -93,8 +99,8 @@ class ConversationManager:
 
         :param plugin_id: Plugin instance ID.
         :param user_id: User ID.
-        :param ts_begin: Timestamp of the beginning of the time window in seconds.
-        :param ts_end: Timestamp of the end of the time window in seconds.
+        :param ts_begin: Timestamp of the beginning of the time window in milliseconds.
+        :param ts_end: Timestamp of the end of the time window in milliseconds.
         :param max_messages: Maximum amount of messages to return in the time window.
         :return: List of `ChatMessage` objects or None if no history.
         """
@@ -113,7 +119,7 @@ class ConversationStore:
 
     def append_messages(
         self, plugin_id: str, user_id: str, messages: list[ChatMessage]
-    ):
+    ) -> None:
         """
         Append a list of `ChatMessage` objects to the conversation file in order.
         If the conversation file path does not exist, it will be created.
@@ -186,8 +192,8 @@ class ConversationStore:
 
         :param plugin_id: Plugin instance ID.
         :param user_id: User ID.
-        :param ts_begin: Timestamp of the beginning of the time window in seconds.
-        :param ts_end: Timestamp of the end of the time window in seconds.
+        :param ts_begin: Timestamp of the beginning of the time window in milliseconds.
+        :param ts_end: Timestamp of the end of the time window in milliseconds.
         :param max_messages: Maximum amount of messages to return in the time window.
         :return: List of `ChatMessage` objects or None if no history.
         """
