@@ -21,17 +21,16 @@ import {DialogModule} from "tim/ui/angulardialog/dialog.module";
 import {PurifyModule} from "tim/util/purify.module";
 import {registerPlugin} from "tim/plugin/pluginRegistry";
 import {CommonModule} from "@angular/common";
+import type {HttpDownloadProgressEvent, HttpEvent} from "@angular/common/http";
+import {
+    HttpClient,
+    HttpClientModule,
+    HttpEventType,
+} from "@angular/common/http";
 import {DomSanitizer} from "@angular/platform-browser";
 import {Users} from "tim/user/userService";
 import type {CtrlPanelData} from "./controlpanel";
 import {ChatControlPanelComponent} from "./controlpanel";
-import {
-    HttpClient,
-    HttpClientModule,
-    HttpDownloadProgressEvent,
-    HttpEvent,
-    HttpEventType,
-} from "@angular/common/http";
 
 const PluginMarkupFields = t.intersection([
     t.partial({
@@ -229,10 +228,10 @@ export class ChatTIMComponent
      * @param body The body to send with the post request.
      * @param entry_index The index of the chat entry.
      */
-    async askPost(body: any, entry_index: number): Promise<void> {
+    async askPost(body: AskParams, entry_index: number): Promise<void> {
         const response = await this.httpPost<AskResponse>(
             this.route("ask"),
-            body
+            Object.values(body)
         );
 
         if (response.ok) {
@@ -248,6 +247,74 @@ export class ChatTIMComponent
         } else {
             this.handleError(response.result.error.error, "http");
         }
+    }
+
+    /**
+     * Fetch an answer for the user input from the plugin server. Uses streaming.
+     * @param body The body to send with the post request.
+     * @param entry_index The index of the chat entry.
+     */
+    async askPostStream(body: AskParams, entry_index: number): Promise<void> {
+        const url: string = this.route("askStream");
+        const observable = this.http.post(url, body, {
+            observe: "events",
+            responseType: "text",
+            reportProgress: true,
+        });
+
+        const entry: ChatEntry = this.conversation[entry_index];
+        let buffer: string = "";
+        let processedIdx: number = 0; // Index in the buffer
+
+        // Function to handle the stream events
+        const handleNextEvent = (event: HttpEvent<string>): void => {
+            if (event.type != HttpEventType.DownloadProgress) {
+                return;
+            }
+            const partial: string =
+                (event as HttpDownloadProgressEvent).partialText ?? "";
+
+            const chunk: string = partial.slice(buffer.length);
+            buffer += chunk;
+
+            // Drain the response
+            while (true) {
+                const remaining: string = buffer.slice(processedIdx);
+                const idx: number = remaining.indexOf("\n");
+                if (idx < 0) {
+                    break;
+                }
+                const nd_json: string = remaining.slice(0, idx);
+
+                const res = this.tryParseAskResponse(nd_json);
+                if (!res) {
+                    break;
+                }
+                entry.agent += res.answer ?? "";
+                processedIdx += idx + 1;
+                // TODO: For dev purposes. Handle tokens somehow else
+                if (res.usage) {
+                    entry.agent += "\nTokens used: " + res.usage;
+                }
+                this.handleError(res.error, "server");
+            }
+        };
+
+        return new Promise((resolve, reject): void => {
+            const sub = observable.subscribe({
+                next: (event: HttpEvent<string>) => handleNextEvent(event),
+                error: (err) => {
+                    this.handleError(err, "stream");
+                    sub.unsubscribe();
+                    reject();
+                },
+                complete: () => {
+                    console.log("Answer completed");
+                    sub.unsubscribe();
+                    resolve();
+                },
+            });
+        });
     }
 
     async onSaveSettings(ctrlpanel_data: CtrlPanelData) {
@@ -277,75 +344,15 @@ export class ChatTIMComponent
     }
 
     /**
-     * Fetch an answer for the user input from the plugin server. Uses streaming.
-     * @param body The body to send with the post request.
-     * @param entry_index The index of the chat entry.
-     */
-    async askPostStream(body: AskParams, entry_index: number): Promise<void> {
-        const url: string = this.route("askStream");
-        const observable = this.http.post(url, body, {
-            observe: "events",
-            responseType: "text",
-            reportProgress: true,
-        });
-
-        let entry: ChatEntry = this.conversation[entry_index];
-        let buffer: string = "";
-        let processedIdx: number = 0; // Index in the buffer
-
-        // Function to handle the stream events
-        const handleNextEvent = (event: HttpEvent<string>): void => {
-            if (event.type != HttpEventType.DownloadProgress) return;
-            const partial: string =
-                (event as HttpDownloadProgressEvent).partialText ?? "";
-
-            const chunk: string = partial.slice(buffer.length);
-            buffer += chunk;
-
-            // Drain the response
-            while (true) {
-                const remaining: string = buffer.slice(processedIdx);
-                const idx: number = remaining.indexOf("\n");
-                if (idx < 0) break;
-                const nd_json: string = remaining.slice(0, idx);
-
-                const res = this.tryParseAskResponse(nd_json);
-                if (!res) break;
-                entry.agent += res.answer ?? "";
-                processedIdx += idx + 1;
-                // TODO: For dev purposes. Handle tokens somehow else
-                if (res.usage) {
-                    entry.agent += "\nTokens used: " + res.usage;
-                }
-                this.handleError(res.error, "server");
-            }
-        };
-
-        return new Promise((resolve, reject): void => {
-            let sub = observable.subscribe({
-                next: (event: HttpEvent<string>) => handleNextEvent(event),
-                error: (err) => {
-                    this.handleError(err, "stream");
-                    sub.unsubscribe();
-                    reject();
-                },
-                complete: () => {
-                    console.log("Answer completed");
-                    sub.unsubscribe();
-                    resolve();
-                },
-            });
-        });
-    }
-
-    /**
      * Try to parse a `AskResponse` from a string.
      * @param data The string to parse.
      * @returns AskResponse if valid or undefined.
      */
     tryParseAskResponse(data: string): AskResponse | undefined {
         const trimmed = data.trim();
-        if (!trimmed) return undefined;
+        if (!trimmed) {
+            return undefined;
+        }
         try {
             return JSON.parse(trimmed);
         } catch {
@@ -367,8 +374,10 @@ export class ChatTIMComponent
      * @param err The error.
      * @param scope Optional scope of the error.
      */
-    handleError(err: any, scope?: string) {
-        if (!err) return;
+    handleError(err: string | undefined, scope?: string) {
+        if (!err) {
+            return;
+        }
         this.error = err;
         if (scope) {
             console.error(`error(${scope}):`, err);
