@@ -326,14 +326,15 @@ class PluginCore:
         :param user_id: User for which the right is checked
         :param items: Item for which the user has or has no right
         :return: If all items are owned [True, None]
+                 If no items are provided [True, None]
                  If not all items are owned [False, msg on item not owned]
                  if error happens [None, error_msg]
         """
+
         for item in items:
             right = self.tim_database.check_rights_per_item(user_id, item)
             if not right:
                 return Result(
-                    # TODO: check this, do we really want to pass this to UI
                     error=f"Could not get rights for item [{item}] for user [{user_id}]"
                 )
 
