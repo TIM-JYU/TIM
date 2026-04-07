@@ -1,7 +1,8 @@
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, TypedDict, Union
 from flask import request
 
+from timApp.auth.sessioninfo import get_current_user_id
 from timApp.tim_app import csrf
 from timApp.util.flask.responsehelper import json_response
 from tim_common.markupmodels import GenericMarkupModel
@@ -13,6 +14,9 @@ from tim_common.pluginserver_flask import (
     PluginAnswerWeb,
     create_nontask_blueprint,
 )
+from timApp.modules.chattim.plugincore import PluginCore, InstanceAttributes
+
+plugincore = PluginCore()
 
 
 @dataclass
@@ -78,15 +82,64 @@ chattim = create_nontask_blueprint(
 
 @chattim.post("/ask")
 def define_ask_route():
-    web: PluginAnswerWeb = {"result": "hello from server"}
-    result: PluginAnswerResp = {"web": web}
-
     # TODO: pitäisi varmaan muuttaa jotenkin tyyliin: define_ask_route(input: SomeDataClass) jne
     data = request.get_json()
     user_input = data.get("input")
     user_id = data.get("user_id")
     document_id = data.get("document_id")
+    session_user_id = get_current_user_id()
 
-    # TODO: kytke plugincoreen
+    # TODO onko tarkistus tarpeellinen, vai käytetäänkö vain session_user_id?
+    if user_id != session_user_id:
+        pass
+
+    resp = plugincore.chat_request(session_user_id, document_id, user_input)
+    returnable = {"web": {"result": resp.value, "error": resp.error}}
+
+    return json_response(returnable)
+
+
+@chattim.post("/settings_save")
+def define_save_settings():
+    """
+    Saves settings sent from control panel. Received json should be:
+    { user_id: int,
+      document_id: int,
+      cpanel_data: {
+                    model_id: string,
+                    llm_mode: string,
+                    max_tokens: int,
+                    tim_paths: string,
+                    }
+    }
+    :return: The usual with web.error if something went wrong
+    """
+    web: PluginAnswerWeb = {}
+    result: PluginAnswerResp = {"web": web}
+    instance_attr: InstanceAttributes
+
+    data = request.get_json()
+    cpanel_data = data.get("cpanel_data")
+    user_id = data.get("user_id")
+    document_id = data.get("document_id")
+
+    try:
+        instance_attr = InstanceAttributes(**cpanel_data)
+    except (ValueError, TypeError):
+        web["error"] = f"Server received malformed data: {data}"
+        return json_response(result)
+
+    session_user_id = get_current_user_id()
+
+    # TODO onko tarkistus tarpeellinen, vai käytetäänkö vain session_user_id?
+    if user_id != session_user_id:
+        pass
+
+    error_or_ok = plugincore.save_instance(session_user_id, document_id, instance_attr)
+    if not error_or_ok.ok():
+        web["error"] = error_or_ok.error
+        return json_response(result)
+
+    web["result"] = "Settings saved!"
 
     return json_response(result)

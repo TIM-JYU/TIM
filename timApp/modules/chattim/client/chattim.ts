@@ -1,5 +1,5 @@
 /**
- * Defines the client-side implementation of an example plugin (a chattimndrome checker).
+ * Defines the client-side implementation chattim-plugin.
  */
 import * as t from "io-ts";
 import {
@@ -7,16 +7,11 @@ import {
     getTopLevelFields,
     nullable,
 } from "tim/plugin/attributes";
-import type {
-    AfterViewInit,
-    ApplicationRef,
-    DoBootstrap,
-    OnInit,
-} from "@angular/core";
+import type {AfterViewInit, ApplicationRef, DoBootstrap} from "@angular/core";
 import {
     Component,
-    NgModule,
     ElementRef,
+    NgModule,
     ViewEncapsulation,
 } from "@angular/core";
 import {HttpClient, HttpClientModule} from "@angular/common/http";
@@ -29,6 +24,7 @@ import {registerPlugin} from "tim/plugin/pluginRegistry";
 import {CommonModule} from "@angular/common";
 import {DomSanitizer} from "@angular/platform-browser";
 import {Users} from "tim/user/userService";
+import type {CtrlPanelData} from "./controlpanel";
 import {ChatControlPanelComponent} from "./controlpanel";
 
 const PluginMarkupFields = t.intersection([
@@ -60,38 +56,41 @@ export interface ChatEntry {
     template: `
         <tim-dialog-frame class="chattim-dialog-frame" [size]="'md'">
             <ng-container body>
-                    <div class="scroll-box">
-                        <div *ngFor="let entry of conversation">
-                            <div class="chat-user" >{{ entry.user }}</div>
-                            <div class="chat-bot"  [innerHTML]="entry.agent | purify"></div>
-                        </div>  
+                <div class="scroll-box">
+                    <div *ngFor="let entry of conversation">
+                        <div class="chat-user">{{ entry.user }}</div>
+                        <div class="chat-bot" [innerHTML]="entry.agent | purify"></div>
                     </div>
-                
+                </div>
 
-                
-                    <div class="form-inline">
-                        <label>{{inputstem}}
-                            <input type="text"
-                                   class="form-control"
-                                   [(ngModel)]="userinput"
-                                   (keyup.enter)="onEnter()"    
-                            >
-                        </label>
-                        <button class="timButton"
-                                *ngIf="buttonText()"
-                                [disabled]="isRunning || !userinput"
-                                (click)="sendUserInput()"
-                                [innerHTML]="buttonText() | purify">
-                        </button>
-                            <chattim-control-panel
-                    [(selectedModel)]="selectedModel"
-                    [(temperature)]="temperature"
-                    [(maxTokens)]="maxTokens">
-                </chattim-control-panel>
-                    </div>
 
-                    <tim-loading *ngIf="isRunning"></tim-loading>
-                    <div *ngIf="error" [innerHTML]="error | purify"></div>
+
+                <div class="form-inline">
+                    <label>{{inputstem}}
+                        <input type="text"
+                               class="form-control"
+                               [(ngModel)]="userinput"
+                               (keyup.enter)="onEnter()"
+                        >
+                    </label>
+                    <button class="timButton"
+                            *ngIf="buttonText()"
+                            [disabled]="isRunning || !userinput"
+                            (click)="sendUserInput()"
+                            [innerHTML]="buttonText() | purify">
+                    </button>
+                    <chattim-control-panel
+                        (saveSettingsClick)="onSaveSettings($event)"
+                        [selectedModel]="selectedModel"
+                        [selectedMode]="selectedMode"
+                        [maxTokens]="maxTokens"
+                        [response]="controlpanelResponse"
+                        [error]="controlpanelError">
+                    </chattim-control-panel>
+                </div>
+
+                <tim-loading *ngIf="isRunning"></tim-loading>
+                <div *ngIf="error" [innerHTML]="error | purify"></div>
             </ng-container>
         </tim-dialog-frame>
     `,
@@ -112,9 +111,12 @@ export class ChatTIMComponent
     inputstem = "";
     document_id = -1;
 
-    selectedModel = "gpt-4o";
-    temperature = 0.7;
+    // TODO: fetch default values from server?
+    selectedModel = "gpt-4.1-mini";
+    selectedMode = "Summarizing";
     maxTokens = 1000;
+    controlpanelError?: string;
+    controlpanelResponse?: string;
 
     conversation: ChatEntry[] = [];
 
@@ -180,16 +182,19 @@ export class ChatTIMComponent
         this.answer = undefined;
 
         const input: string = this.userinput;
-        const user_id: string = String(Users.getCurrent().id);
+        // TODO: ei tarvita user id?
+        const user_id: number = Users.getCurrent().id;
         const document_id: number = this.document_id;
 
-        const response = await this.httpPost<{
-            web: {result: string; error?: string};
-        }>("/chattim/ask", {
+        const payload = {
             input,
             user_id,
             document_id,
-        });
+        };
+
+        const response = await this.httpPost<{
+            web: {result: string; error?: string};
+        }>("/chattim/ask", payload);
 
         this.isRunning = false;
         if (response.ok) {
@@ -202,6 +207,32 @@ export class ChatTIMComponent
             });
         } else {
             this.error = response.result.error.error;
+        }
+    }
+
+    async onSaveSettings(ctrlpanel_data: CtrlPanelData) {
+        this.isRunning = true;
+
+        // TODO: ei tarvita user id?
+        const user_id: number = Users.getCurrent().id;
+
+        const save_request = {
+            user_id: user_id,
+            document_id: this.document_id,
+            cpanel_data: ctrlpanel_data,
+        };
+
+        const response = await this.httpPost<{
+            web: {result: string; error?: string};
+        }>("/chattim/settings_save", save_request);
+
+        this.isRunning = false;
+        if (response.ok) {
+            const data = response.result;
+            this.controlpanelError = data.web.error;
+            this.controlpanelResponse = data.web.result;
+        } else {
+            this.controlpanelError = response.result.error.error;
         }
     }
 }

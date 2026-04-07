@@ -1,4 +1,5 @@
 import {Component, EventEmitter, Input, Output} from "@angular/core";
+import type {JsonValue} from "tim/util/jsonvalue";
 
 export interface ChatModel {
     label: string;
@@ -27,12 +28,11 @@ export interface ChatModel {
                           [class.glyphicon-chevron-right]="!modelOpen"
                           [class.glyphicon-chevron-down]="modelOpen">
                     </span>
-                    Model: <strong>{{ selectedModel }}</strong>
+                    Model: <strong>{{ selectedModelLabel }}</strong>
                 </button>
                 <div *ngIf="modelOpen" class="settings-section-body">
                     <select class="form-control"
-                            [ngModel]="selectedModel"
-                            (ngModelChange)="selectedModelChange.emit($event)">
+                            [(ngModel)]="selectedModel">
                         <option *ngFor="let m of availableModels" [value]="m.value">{{ m.label }}</option>
                     </select>
                 </div>
@@ -46,17 +46,16 @@ export interface ChatModel {
               [class.glyphicon-chevron-right]="!modeOpen"
               [class.glyphicon-chevron-down]="modeOpen">
         </span>
-                    Mode: <strong>{{ modeLabelFor(temperature) }}</strong>
+                    Mode: <strong>{{ selectedMode }}</strong>
                 </button>
                 <div *ngIf="modeOpen" class="settings-section-body">
                     <div class="radio" *ngFor="let mode of modes">
                         <label>
                             <input type="radio"
                                    name="modeRadio"
-                                   [value]="mode.value"
-                                   [ngModel]="temperature"
-                                   (ngModelChange)="temperatureChange.emit($event)">
-                            {{ mode.label }}
+                                   [value]="mode"
+                                   [(ngModel)]="selectedMode">
+                            {{ mode }}
                         </label>
                     </div>
                 </div>
@@ -76,8 +75,7 @@ export interface ChatModel {
                     <input type="range"
                            class="form-control"
                            min="100" max="10000" step="100"
-                           [ngModel]="maxTokens"
-                           (ngModelChange)="maxTokensChange.emit($event)">
+                           [(ngModel)]="maxTokens" >
                 </div>
             </div>
 
@@ -90,7 +88,6 @@ export interface ChatModel {
                           [class.glyphicon-chevron-down]="filesOpen">
                     </span>
                     Add TIM-documents:
-                    <strong *ngIf="filePaths">{{ filePathCount() }} path(s)</strong>
                 </button>
                 <div *ngIf="filesOpen" class="settings-section-body">
                     <textarea class="form-control"
@@ -98,12 +95,18 @@ export interface ChatModel {
                               placeholder="kurssit/tie/proj/2026/chattim"
                               [(ngModel)]="localFilePaths">
                     </textarea>
-                    <button class="btn btn-primary" style="margin: 2px;"
-                            (click)="submitFilePaths()">
-                        Add file
-                    </button>
                 </div>
             </div>
+            
+            <!-- Save button that sends the chosen stuff -->
+            <div class="settings-row">
+                <button class="btn btn-primary" style="margin: 2px;"
+                        (click)="saveSettingsClicked()">
+                    Save
+                </button>
+            </div>
+            <div *ngIf="error && !response" [innerHTML]="error | purify"></div>
+            <div *ngIf="response && !error" [innerHTML]="response | purify"></div>
 
         </div>
     `,
@@ -116,41 +119,43 @@ export class ChatControlPanelComponent {
     filesOpen = false;
     localFilePaths: string = "";
 
-    @Input() selectedModel: string = "gpt-4o";
-    @Output() selectedModelChange = new EventEmitter<string>();
-
-    @Input() temperature: number = 0.7;
-    @Output() temperatureChange = new EventEmitter<number>();
-
+    @Input() error?: string;
+    @Input() response?: string;
+    @Input() selectedModel: string = "gpt-4.1-mini";
+    @Input() selectedMode: string = "Summarizing";
     @Input() maxTokens: number = 1000;
-    @Output() maxTokensChange = new EventEmitter<number>();
 
-    @Input() filePaths: string = "";
-    @Output() filePathsChange = new EventEmitter<string>();
+    @Output() saveSettingsClick = new EventEmitter<CtrlPanelData>();
 
     availableModels: ChatModel[] = [
-        {label: "GPT-4o", value: "gpt-4o"},
-        {label: "Dummy", value: "Dummy"},
+        {label: "GPT-4o-Mini", value: "gpt-4.1-mini"},
+        {label: "Dummy", value: "dummy-model-1"},
     ];
 
-    modes = [
-        {label: "Summarizing", value: 0.2},
-        {label: "Balanced", value: 0.7},
-        {label: "Creative", value: 1.5},
-    ];
+    modes = ["Summarizing", "Creative"];
 
-    modeLabelFor(temp: number): string {
-        return this.modes.find((m) => m.value === temp)?.label ?? "Balanced";
+    saveSettingsClicked() {
+        const data: CtrlPanelData = {
+            model_id: this.selectedModel,
+            llm_mode: this.selectedMode,
+            max_tokens: this.maxTokens,
+            tim_paths: this.localFilePaths,
+        };
+        console.log("sending: ", data);
+        this.saveSettingsClick.emit(data);
     }
 
-    filePathCount(): number {
-        return this.filePaths.split("\n").filter((l) => l.trim().length > 0)
-            .length;
+    get selectedModelLabel(): string {
+        const model = this.availableModels.find(
+            (m) => m.value === this.selectedModel
+        );
+        return model ? model.label : "";
     }
+}
 
-    submitFilePaths() {
-        console.log("Tried to add :", this.localFilePaths);
-        this.filePathsChange.emit(this.localFilePaths);
-        this.localFilePaths = "";
-    }
+export interface CtrlPanelData extends Record<string, JsonValue> {
+    model_id: string;
+    llm_mode: string;
+    max_tokens: number;
+    tim_paths: string;
 }

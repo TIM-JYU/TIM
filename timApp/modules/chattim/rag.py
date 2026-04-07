@@ -11,7 +11,9 @@ from timApp.modules.chattim.model import (
     ModelRegistry,
     ModelInfo,
     ModelSpec,
+    Usage,
     SUPPORTED_MODELS,
+    Provider,
 )
 from enum import Enum
 
@@ -21,8 +23,8 @@ _DEFAULT_SYSTEM_PROMPT_CREATIVE = ""  # TODO: define
 
 
 class RagMode(Enum):
-    RETRIEVE = 1
-    CREATIVE = 2
+    RETRIEVE = "Summarizing"
+    CREATIVE = "Creative"
 
 
 @dataclass
@@ -32,6 +34,18 @@ class MessageData:
     chat_history: list[Message]
     mode: RagMode
     max_tokens: int
+
+
+def sum_chunks(iterable: Iterable[ModelResponseChunk]) -> ModelResponseChunk:
+    whole_msg: str = ""
+    usage: Usage | None = None
+    for chunk in iterable:
+        if chunk.delta:
+            whole_msg += chunk.delta
+        if chunk.usage:
+            usage = chunk.usage
+
+    return ModelResponseChunk(delta=whole_msg, usage=usage, done=True)
 
 
 class Rag:
@@ -98,10 +112,12 @@ class Rag:
         # Include the urls/document ids?
         return [ModelResponseChunk(delta=res.content, usage=res.usage, done=True)]
 
-    def get_supported_models(self) -> dict[str, ModelInfo]:
+    def get_supported_models(
+        self, provider: Provider | None = None
+    ) -> dict[str, ModelInfo]:
         """
         Get all supported models. Example:
-        "openai": [
+        "gpt-4.1-mini": [
             ModelInfo(
                 provider="openai",
                 model_id="gpt-4.1-mini",
@@ -112,7 +128,7 @@ class Rag:
         ],
         :return:
         """
-        return self.registry.get_models(None)
+        return self.registry.get_models(provider)
 
     def build_prompt(self, message_data: MessageData) -> list[Message]:
         """Build the message list to send to the model."""

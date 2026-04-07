@@ -50,7 +50,7 @@ class TimDatabase:
     @staticmethod
     def check_rights(user_id: int, doc_id: int) -> UserItemRights | None:
         """
-        Checks which rights the given user has for the given document.
+        Checks which rights the given user has for the given document or folder.
         """
         user = User.get_by_id(user_id)
         doc = Item.find_by_id(doc_id)
@@ -59,3 +59,23 @@ class TimDatabase:
             return rights
         else:
             return None
+
+    @staticmethod
+    def fetch_item_by_path(item_path: str) -> Item | None:
+        """
+        Gets item by path.
+        """
+        return Item.find_by_path(item_path)
+
+    @staticmethod
+    def get_rights_per_item(user_id: int, item: Item) -> UserItemRights | None:
+        """
+        Gets the rights for the given item. None is returned if user doesn't exist.
+        """
+        user = User.get_by_id(user_id)
+
+        if not user:
+            return None
+
+        rights = get_user_rights_for_item(item, user)
+        return rights
