@@ -13,7 +13,12 @@ import type {
     DoBootstrap,
     OnInit,
 } from "@angular/core";
-import {Component, NgModule, ElementRef} from "@angular/core";
+import {
+    Component,
+    NgModule,
+    ElementRef,
+    ViewEncapsulation,
+} from "@angular/core";
 import {HttpClient, HttpClientModule} from "@angular/common/http";
 import {FormsModule} from "@angular/forms";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
@@ -51,14 +56,15 @@ export interface ChatEntry {
 // joten täytyy joka tehdä oma versio tai muuten markupErroria ei nähdä
 @Component({
     selector: "chattim-runner",
+    encapsulation: ViewEncapsulation.None,
     template: `
-        <tim-dialog-frame>
+        <tim-dialog-frame class="chattim-dialog-frame" [size]="'md'">
             <ng-container body>
                     <div class="scroll-box">
                         <div *ngFor="let entry of conversation">
-                            <div class="chat-user">{{ entry.user }}</div>
-                            <pre class="chat-bot" [innerHTML]="entry.agent | purify"></pre>
-                        </div>
+                            <div class="chat-user" >{{ entry.user }}</div>
+                            <div class="chat-bot"  [innerHTML]="entry.agent | purify"></div>
+                        </div>  
                     </div>
                 
 
