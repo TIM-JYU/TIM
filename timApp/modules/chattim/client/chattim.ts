@@ -8,7 +8,12 @@ import {
     nullable,
 } from "tim/plugin/attributes";
 import type {AfterViewInit, ApplicationRef, DoBootstrap} from "@angular/core";
-import {Component, NgModule, ElementRef} from "@angular/core";
+import {
+    Component,
+    ElementRef,
+    NgModule,
+    ViewEncapsulation,
+} from "@angular/core";
 import {HttpClient, HttpClientModule} from "@angular/common/http";
 import {FormsModule} from "@angular/forms";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
@@ -19,8 +24,8 @@ import {registerPlugin} from "tim/plugin/pluginRegistry";
 import {CommonModule} from "@angular/common";
 import {DomSanitizer} from "@angular/platform-browser";
 import {Users} from "tim/user/userService";
-import {ChatControlPanelComponent} from "./controlpanel";
 import type {CtrlPanelData} from "./controlpanel";
+import {ChatControlPanelComponent} from "./controlpanel";
 
 const PluginMarkupFields = t.intersection([
     t.partial({
@@ -47,13 +52,14 @@ export interface ChatEntry {
 // joten täytyy joka tehdä oma versio tai muuten markupErroria ei nähdä
 @Component({
     selector: "chattim-runner",
+    encapsulation: ViewEncapsulation.None,
     template: `
-        <tim-dialog-frame>
+        <tim-dialog-frame class="chattim-dialog-frame" [size]="'md'">
             <ng-container body>
                 <div class="scroll-box">
                     <div *ngFor="let entry of conversation">
                         <div class="chat-user">{{ entry.user }}</div>
-                        <pre class="chat-bot" [innerHTML]="entry.agent | purify"></pre>
+                        <div class="chat-bot" [innerHTML]="entry.agent | purify"></div>
                     </div>
                 </div>
 
