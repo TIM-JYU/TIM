@@ -5,6 +5,7 @@ from openai import OpenAI
 import numpy as np
 from timApp.modules.chattim.database_handler import TimDatabase
 
+
 # TODO mallien määrittely/valinta Indexer luokkaan?
 @dataclass
 class TextChunks:
@@ -33,17 +34,18 @@ class EmbeddingData:
     id: int
     # filename: str
 
+
 # TODO mallin valinta,
 #  mahdollisesti mallikohtaisia asetuksia?(task type,vektorin koko jne)
 class EmbeddingModel(Protocol):
-    def generate(self, text_chunks: TextChunks) -> EmbeddingResponse: ...
+    def generate(self, text_chunks: TextChunks) -> EmbeddingResponse:
+        ...
 
 
 class GeminiEmbeddingModel(EmbeddingModel):
     """gemini implementation of embedding model"""
 
     def __init__(self, api_key: str):
-
         self.api_key = api_key
         self.client = None
 
@@ -103,7 +105,7 @@ class Indexer:
         # self.text_chunker = text_chunker
         self.data = []
 
-# tätä ei ehkä tarvita enään
+    # tätä ei ehkä tarvita enään
     def chunk_text(self, text, max_chunk_size: int = 600, overlap: int = 100):
         chunks = []
         sentences = text.split(". ")
@@ -119,8 +121,9 @@ class Indexer:
         if (len(current_chunk)) > 0:
             chunks.append(current_chunk)
         return TextChunks(chunks=chunks)
-# TODO ei haeta mahdollisia plugin lohkoja
-    def get_tim_blocks(self, doc_id) ->TextChunks:
+
+    # TODO ei haeta mahdollisia plugin lohkoja
+    def get_tim_blocks(self, doc_id) -> TextChunks:
         try:
             doc = TimDatabase.get_tim_document_by_id(doc_id)
         except Exception as e:
@@ -132,14 +135,13 @@ class Indexer:
 
         return TextChunks(chunks=text)
 
-    def create_embeddings(self,file_name:str,doc_id:int):
+    def create_embeddings(self, file_name: str, doc_id: int):
         """generates the data object containing embeddings and corresponding text chunks"""
 
         chunks = self.get_tim_blocks(doc_id=doc_id)
 
-
         embeddings = self.embedding_model.generate(chunks)
-        #print(chunks)
+        # print(chunks)
         ids = list(range(len(chunks.chunks)))
 
         self.data = [
@@ -154,10 +156,10 @@ class Indexer:
         except Exception as e:
             print(f"Error saving embeddings {e}")
             return f"Error saving embeddings {e}"
+
         return self.data
 
-    def get_embeddings(self,file_name):
-
+    def get_embeddings(self, file_name):
         try:
             with open(f"modules/chattim/{file_name}", "r") as file:
                 page_embeddings = json.load(file)
@@ -166,17 +168,16 @@ class Indexer:
             return f"Error retrieving embeddings {e}"
         return page_embeddings
 
-    def get_context(self, prompt: str,file_name:str, k: int ):
+    def get_context(self, prompt: str, file_name: str, k: int):
         prompt = TextChunks(chunks=[prompt])
         try:
             prompt_embedding = self.embedding_model.generate(prompt)
             prompt_embedding = np.array(prompt_embedding.embeddings[0])
         except Exception as e:
-
             return f"Prompt embedding error: {e}"
         page_embeddings = self.get_embeddings(file_name)
 
-        embeddings:list[float] = []
+        embeddings: list[float] = []
         texts = []
         for chunk in page_embeddings:
             embeddings.append(chunk["embedding"])
