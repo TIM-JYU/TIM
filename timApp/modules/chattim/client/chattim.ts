@@ -135,7 +135,8 @@ export class ChatTIMComponent
     maxTokens = 1000;
     controlpanelError?: string;
     controlpanelResponse?: string;
-    useStreaming: boolean = false;
+    // TODO: make a configurable option for user in settings?
+    useStreaming: boolean = true;
 
     conversation: ChatEntry[] = [];
 

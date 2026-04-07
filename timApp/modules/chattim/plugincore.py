@@ -65,6 +65,15 @@ class StudentPolicy:
     pass
 
 
+@dataclass(frozen=True)
+class PreparedChatRequest:
+    plugin_id: str
+    caller_id: str
+    document_id: int
+    user_input: str
+    iterable: Iterable[ModelResponseChunk]
+
+
 class PluginCore:
     rag: Rag = Rag()
     history_manager: ConversationManager
@@ -72,39 +81,42 @@ class PluginCore:
     list_of_instance_ids: list[int] = []  # TODO: poista kun db:ssa rulet
 
     def __init__(self):
-        # TODO: tämä ok?
-        file_path = get_files_path()
+        file_path = get_files_path().as_posix()
         self.history_manager = ConversationManager(file_path)
 
-    # TODO: palautetaan token usage tätä kautta tai muualta?
-    def chat_request(
+    def _prepare_chat_request(
         self,
         caller_id: int,
         document_id: int,
         user_input: str,
-    ) -> Result[str | None, str | None]:
+    ) -> Result[PreparedChatRequest, str]:
+        """Prepare the chat request.
+
+        :param caller_id: The id of the caller.
+        :param document_id: The id of the document.
+        :param user_input: User input.
+        :return: Result of the prepared chat request.
+        """
         if not self._instance_exists(document_id):
             return Result(error=f"Instance has not been created yet")
 
         # policy check
-        result: Result[str | None, str | None] = self._student_policy_check(
+        policy_result: Result[str | None, str | None] = self._student_policy_check(
             caller_id, document_id
         )
+        if not policy_result.ok():
+            return Result(error=policy_result.error)
 
-        if not result.ok():
-            return result
-
-        # TODO: luo keskustelu jos ei olemassa, lisää conv_id
-        conversation_id = self._generate_id()
-
-        timestamp_before = time.time_ns()
         plugin_id = str(document_id)
-        history = self.history_manager.get_history_n(plugin_id, str(caller_id), 10)
+        caller_id_str = str(caller_id)
+
+        history = self.history_manager.get_history_n(plugin_id, caller_id_str, 10)
 
         # TODO: remember to fetch with timestamps when the time comes
         chat_history: list[Message] = [
             Message(role=m.role, content=m.content) for m in history
         ]
+
         # TODO: fetch mode for instance
         mode: RagMode = RagMode.RETRIEVE
         # TODO: No need for this attribute if we have character limit for input? Maybe keep as is for an option
@@ -121,34 +133,124 @@ class PluginCore:
             msg_data,
             identifier=document_id,
         )
+        prepared = PreparedChatRequest(
+            plugin_id=plugin_id,
+            caller_id=caller_id_str,
+            document_id=document_id,
+            user_input=user_input,
+            iterable=iterable,
+        )
+        return Result(value=prepared)
 
-        chunk: ModelResponseChunk = sum_chunks(iterable)
+    def _save_messages(
+        self,
+        *,
+        plugin_id: str,
+        caller_id: str,
+        user_input: str,
+        assistant_msg: str,
+        timestamp_user: int,
+        timestamp_answer: int,
+        usage: Usage | None,
+    ) -> None:
+        """Save the messages.
+
+        :param plugin_id: The id of the plugin or document.
+        :param caller_id: The id of the caller.
+        :param user_input: The input of the caller.
+        :param assistant_msg: The assistant message.
+        :param timestamp_user: The timestamp of the user message.
+        :param timestamp_answer: The timestamp of the answer.
+        :param usage: The usage of the assistant message generation.
+        """
+        self.history_manager.append_messages(
+            plugin_id,
+            caller_id,
+            messages=[
+                ChatMessage(
+                    role="user",
+                    content=user_input,
+                    usage=None,
+                    timestamp=timestamp_user,
+                ),
+                ChatMessage(
+                    role="assistant",
+                    content=assistant_msg,
+                    usage=usage,
+                    timestamp=timestamp_answer,
+                ),
+            ],
+        )
+
+    # TODO: palautetaan token usage tätä kautta tai muualta?
+    def chat_request(
+        self,
+        caller_id: int,
+        document_id: int,
+        user_input: str,
+    ) -> Result[str | None, str | None]:
+        timestamp_user = time.time_ns()
+        prep = self._prepare_chat_request(caller_id, document_id, user_input)
+        if not prep.ok() or not prep.value:
+            return Result(error=prep.error)
+        p = prep.value
+
+        chunk: ModelResponseChunk = sum_chunks(p.iterable)
         whole_msg = chunk.delta
         usage = chunk.usage
 
         # TODO: viestit arkistoidaan
 
-        timestamp_after = time.time_ns()
-        self.history_manager.append_messages(
-            plugin_id,
-            str(caller_id),
-            [
-                ChatMessage(
-                    role="user",
-                    content=user_input,
-                    usage=None,
-                    timestamp=timestamp_before,
-                ),
-                ChatMessage(
-                    role="assistant",
-                    content=whole_msg,
-                    usage=usage,
-                    timestamp=timestamp_after,
-                ),
-            ],
+        timestamp_answer = time.time_ns()
+        self._save_messages(
+            plugin_id=p.plugin_id,
+            caller_id=p.caller_id,
+            user_input=p.user_input,
+            assistant_msg=whole_msg,
+            timestamp_user=timestamp_user,
+            timestamp_answer=timestamp_answer,
+            usage=usage,
         )
 
         return Result(value=whole_msg, error=None)
+
+    def chat_request_stream(
+        self,
+        caller_id: int,
+        document_id: int,
+        user_input: str,
+    ) -> Result[Iterable[ModelResponseChunk], str]:
+        timestamp_user = time.time_ns()
+        prep = self._prepare_chat_request(caller_id, document_id, user_input)
+        if not prep.ok() or not prep.value:
+            return Result(error=prep.error)
+        p = prep.value
+
+        # TODO: return only the string chunks or the usage as well?
+        def gen() -> Iterable[ModelResponseChunk]:
+            whole_msg = ""
+            usage: Usage | None = None
+            try:
+                for chunk in p.iterable:
+                    if chunk.delta:
+                        whole_msg += chunk.delta
+                    if chunk.usage:
+                        usage = chunk.usage
+                    yield chunk
+            finally:
+                # Appends the history even if client disconnects mid-stream
+                timestamp_answer = time.time_ns()
+                self._save_messages(
+                    plugin_id=p.plugin_id,
+                    caller_id=p.caller_id,
+                    user_input=p.user_input,
+                    assistant_msg=whole_msg,
+                    timestamp_user=timestamp_user,
+                    timestamp_answer=timestamp_answer,
+                    usage=usage,
+                )
+
+        return Result(value=gen(), error=None)
 
     def save_instance(
         self, caller_id, document_id: int, instance_settings: InstanceAttributes
@@ -224,8 +326,9 @@ class PluginCore:
     ):
         pass
 
-    def get_history(self, caller_id: str, document_id: int):
-        pass
+    def get_history(self, caller_id: str, document_id: str) -> list[ChatMessage]:
+        # TODO: fetch with time window
+        return self.history_manager.get_history_n(document_id, caller_id, 10)
 
     def change_chatmode(self, caller_id: str, document_id: int, mode: RagMode):
         pass

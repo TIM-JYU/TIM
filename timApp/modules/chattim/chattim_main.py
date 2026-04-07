@@ -1,7 +1,6 @@
-import os
 from dataclasses import dataclass
 from flask import request, Response, stream_with_context
-from typing import Any, TypedDict, Union
+from typing import Any, TypedDict
 from webargs.flaskparser import use_args
 from tim_common.marshmallow_dataclass import class_schema
 
@@ -103,7 +102,6 @@ def define_ask_route(params: ChatTimAskParams):
     user_id = params.user_id
     document_id = params.document_id
     session_user_id = get_current_user_id()
-
     # TODO onko tarkistus tarpeellinen, vai käytetäänkö vain session_user_id?
     if user_id != session_user_id:
         pass
@@ -118,34 +116,29 @@ def define_ask_route(params: ChatTimAskParams):
     return json_response(response)
 
 
-from .model import ModelRegistry, SUPPORTED_MODELS, ModelSpec, Message, GenerateOptions
-
-# TODO: temporary
-reg = ModelRegistry(SUPPORTED_MODELS)
-model = reg.create(
-    ModelSpec(
-        provider="openai",
-        model_id="gpt-4.1-nano",
-        api_key=os.getenv("OPENAI_API_KEY", ""),
-    )
-)
-
-
 @chattim.post("/askStream")
 @use_args(class_schema(ChatTimAskParams)(), locations=("json",))
 def define_ask_stream_route(params: ChatTimAskParams):
     user_input = params.input
+    user_id = params.user_id
+    document_id = params.document_id
+
+    session_user_id = get_current_user_id()
+    # TODO onko tarkistus tarpeellinen, vai käytetäänkö vain session_user_id?
+    if user_id != session_user_id:
+        pass
 
     def generate():
-        # TODO: temporary, use the plugincore
-        stream = model.generate_stream(
-            [Message(role="user", content=user_input)], GenerateOptions()
-        )
-        for msg in stream:
-            if msg.delta:
-                yield to_ndjson_str(ChatTimAskResponse(answer=msg.delta))
-            if msg.usage:
-                yield to_ndjson_str(ChatTimAskResponse(usage=msg.usage.total_tokens))
+        resp = plugincore.chat_request_stream(session_user_id, document_id, user_input)
+        if not resp.ok() or not resp.value:
+            yield to_ndjson_str(ChatTimAskResponse(error=resp.error))
+            return
+
+        for chunk in resp.value:
+            if chunk.delta:
+                yield to_ndjson_str(ChatTimAskResponse(answer=chunk.delta))
+            if chunk.usage:
+                yield to_ndjson_str(ChatTimAskResponse(usage=chunk.usage.total_tokens))
 
     return Response(
         stream_with_context(generate()),
@@ -185,10 +178,6 @@ def define_save_settings():
         return json_response(result)
 
     session_user_id = get_current_user_id()
-
-    # TODO onko tarkistus tarpeellinen, vai käytetäänkö vain session_user_id?
-    if user_id != session_user_id:
-        pass
 
     error_or_ok = plugincore.save_instance(session_user_id, document_id, instance_attr)
     if not error_or_ok.ok():

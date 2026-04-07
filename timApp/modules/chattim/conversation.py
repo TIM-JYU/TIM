@@ -47,8 +47,6 @@ class ConversationManager:
 
     # TODO: keep a cache for recent conversations?
     def __init__(self, root_dir: str):
-        # NOTE: use FILES_PATH as the root_dir:
-        # from timApp.timdb.dbaccess import get_files_path
         # TODO: change root path naming
         root_path = os.path.join(root_dir, "history", "chattim")
         self._store = ConversationStore(root_path)
