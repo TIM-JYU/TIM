@@ -1,6 +1,7 @@
 import os
 import uuid
 from dataclasses import dataclass
+from unicodedata import normalize, category
 
 from timApp.timdb.dbaccess import get_files_path
 from timApp.auth.get_user_rights_for_item import UserItemRights
@@ -78,6 +79,8 @@ class PluginCore:
     history_manager: ConversationManager
     tim_database: TimDatabase = TimDatabase()
     list_of_instance_ids: list[int] = []  # TODO: poista kun db:ssa rulet
+    # TODO: a plugin instance specific variable? In global policy?
+    max_input_len: int = 1024
 
     def __init__(self):
         file_path = get_files_path().as_posix()
@@ -106,6 +109,12 @@ class PluginCore:
         if not policy_result.ok():
             return Result(error=policy_result.error)
 
+        # Validate input
+        try:
+            validated_input = self.validate_input(user_input)
+        except ValueError as e:
+            return Result(error=str(e))
+
         plugin_id = str(document_id)
         caller_id_str = str(caller_id)
 
@@ -122,7 +131,7 @@ class PluginCore:
         max_tokens_for_req = 99999
 
         msg_data = MessageData(
-            user_prompt=user_input,
+            user_prompt=validated_input,
             context="",
             chat_history=chat_history,
             mode=mode,
@@ -136,7 +145,7 @@ class PluginCore:
             plugin_id=plugin_id,
             caller_id=caller_id_str,
             document_id=document_id,
-            user_input=user_input,
+            user_input=validated_input,
             iterable=iterable,
         )
         return Result(value=prepared)
@@ -470,3 +479,30 @@ class PluginCore:
         except ValueError:
             print(f"Invalid rag mode given: {mode}")
             return None
+
+    @staticmethod
+    def _sanitize_input(user_input: str) -> str:
+        """Sanitize the user input.
+
+        :param user_input: Input prompt by the user.
+        :return: Sanitized user input.
+        """
+        # Cf = Format, Co = Private Use, Cn = Unassigned
+        drop_categories = {"Cf", "Co", "Cn"}
+        # Handle composed character sequences
+        normalized = normalize("NFKC", user_input)
+        # Strip dangerous Unicode property classes
+        return "".join(filter(lambda c: category(c) not in drop_categories, normalized))
+
+    def validate_input(self, user_input: str) -> str:
+        """Validate the user input.
+
+        :param user_input: Input prompt by the user.
+        :raises ValueError: if the user input is invalid.
+        :return: Sanitized user input.
+        """
+        sanitized_input = self._sanitize_input(user_input.strip())
+        input_len = len(sanitized_input)
+        if input_len < 2 or input_len > self.max_input_len:
+            raise ValueError(f"Invalid input length: {input_len}")
+        return sanitized_input
