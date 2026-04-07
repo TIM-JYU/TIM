@@ -1,12 +1,9 @@
 from dataclasses import dataclass, asdict
 from typing import Protocol
-from bs4 import BeautifulSoup
 import json
-import requests
-
-# from openai import OpenAI
+from openai import OpenAI
 import numpy as np
-
+from timApp.modules.chattim.database_handler import TimDatabase
 
 # TODO mallien määrittely/valinta Indexer luokkaan?
 @dataclass
@@ -35,69 +32,6 @@ class EmbeddingData:
     text: str
     id: int
     # filename: str
-
-
-class TextChunkerHTML:
-    def __init__(self, text: str):
-        self.text = text
-
-    def split_sentence(self) -> TextChunks:
-        soup = BeautifulSoup(self.text, "html.parser")
-        self.text = soup.get_text(strip=True)
-        # needs better sentence splitting
-        chunks = TextChunks(chunks=self.text.split(". "))
-        return chunks
-
-    def split_paragraph(self) -> TextChunks:
-        soup = BeautifulSoup(self.text, "html.parser")
-        paragraphs = soup.find_all("p")
-
-        paragraphs_text = []
-        for p in paragraphs:
-            text = p.get_text()
-            paragraphs_text.append(text)
-        # vain ensimmäiset 20 kappaletta ilmaisen avaimen takia
-        paragraphs = TextChunks(chunks=paragraphs_text[0:20])
-        return paragraphs
-
-
-class TextChunker:
-
-    def __init__(self, text: str):
-        self.text = text
-
-    def split_sentence(self) -> TextChunks:
-        # needs better sentence splitting
-        return TextChunks(chunks=self.text.split(". "))
-
-    # splits every 600 characters, includes 100 from last chunk
-    def split(self, chunk_size: int = 600, overlap: int = 100):
-
-        chunks = []
-        start = 0
-        while start < len(self.text):
-            end = start + chunk_size
-            chunks.append(self.text[start:end])
-            start += chunk_size - overlap
-        return TextChunks(chunks=chunks)
-
-    # splits the chunks at end of sentence and adds some overlap between chunks
-    def split2(self, max_chunk_size: int = 600, overlap: int = 100):
-        chunks = []
-        sentences = self.text.split(". ")
-        current_chunk = ""
-
-        for sentence in sentences:
-            if (len(current_chunk) + len(sentence)) < max_chunk_size:
-                current_chunk += sentence + ". "
-            else:
-                chunks.append(current_chunk)
-                overlapping_text = current_chunk[-overlap:]
-                current_chunk = overlapping_text + ". " + sentence
-        if (len(current_chunk)) > 0:
-            chunks.append(current_chunk)
-        return TextChunks(chunks=chunks[0:20])
-
 
 # TODO mallin valinta,
 #  mahdollisesti mallikohtaisia asetuksia?(task type,vektorin koko jne)
@@ -147,6 +81,7 @@ class OpenAiEmbeddingModel(EmbeddingModel):
 
     def generate(self, chunks: TextChunks):
         """generates embeddings from provided chunks"""
+
         text = chunks.chunks
 
         try:
@@ -161,60 +96,6 @@ class OpenAiEmbeddingModel(EmbeddingModel):
         return EmbeddingResponse(embeddings=embeddings)
 
 
-class GeminiEmbeddingModelREST(EmbeddingModel):
-    """gemini implementation of embedding model"""
-
-    def __init__(self, api_key: str):
-
-        self.api_key = api_key
-        self.url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-embedding-001:batchEmbedContents"
-
-    # TODO task tyypin valinta? jos tätä halutaan käyttää
-    def generate(self, chunks: TextChunks) -> EmbeddingResponse:
-        """generates embeddings from provided chunks"""
-        texts = chunks.chunks
-        headers = {"Content-Type": "application/json", "x-goog-api-key": self.api_key}
-        data = {
-            "requests": [
-                {
-                    "model": "models/gemini-embedding-001",
-                    "content": {"parts": [{"text": text}]},
-                }
-                for text in texts
-            ]
-        }
-        try:
-            response = requests.post(self.url, headers=headers, json=data)
-
-        except Exception as e:
-            print(f"Error generating embeddings {e}")
-            return f"Error generating embeddings {e}"
-
-        embeddings = [x["values"] for x in response.json()["embeddings"]]
-
-        return EmbeddingResponse(embeddings=embeddings)
-
-
-class OpenAiEmbedREST(EmbeddingModel):
-    def __init__(self, api_key: str):
-
-        self.api_key = api_key
-        self.url = "https://api.openai.com/v1/embeddings"
-
-    def generate(self, chunks):
-        headers = {
-            "Authorization": f"Bearer {self.api_key}",
-            "Content-Type": "application/json",
-        }
-        texts = chunks.chunks
-        data = {"input": texts, "model": "text-embedding-3-small"}
-        response = requests.post(self.url, headers=headers, json=data)
-        response = response.json()
-
-        embeddings = [x["embedding"] for x in response["data"]]
-        return EmbeddingResponse(embeddings=embeddings)
-
-
 # TODO tekstin paloitteluun eri vaihtoehtoja
 class Indexer:
     def __init__(self, embedding_model: EmbeddingModel):
@@ -222,6 +103,7 @@ class Indexer:
         # self.text_chunker = text_chunker
         self.data = []
 
+# tätä ei ehkä tarvita enään
     def chunk_text(self, text, max_chunk_size: int = 600, overlap: int = 100):
         chunks = []
         sentences = text.split(". ")
@@ -236,21 +118,28 @@ class Indexer:
                 current_chunk = overlapping_text + ". " + sentence
         if (len(current_chunk)) > 0:
             chunks.append(current_chunk)
-        return TextChunks(chunks=chunks[0:20])
+        return TextChunks(chunks=chunks)
+# TODO ei haeta mahdollisia plugin lohkoja
+    def get_tim_blocks(self, doc_id) ->TextChunks:
+        try:
+            doc = TimDatabase.get_tim_document_by_id(doc_id)
+        except Exception as e:
+            print(f"Error getting document {e}")
+            return f"Error getting document {e}"
 
-    def get_page(self, doc_id=None):
-        with open("modules/chattim/testidata.txt", "r") as file:
-            page = file.read()
-        return page
+        blocks = doc.export_raw_data()
+        text = [block["md"] for block in blocks]
 
-    def create_embeddings(self):
+        return TextChunks(chunks=text)
+
+    def create_embeddings(self,file_name:str,doc_id:int):
         """generates the data object containing embeddings and corresponding text chunks"""
 
-        text = self.get_page()
-        chunks = self.chunk_text(text)
+        chunks = self.get_tim_blocks(doc_id=doc_id)
+
 
         embeddings = self.embedding_model.generate(chunks)
-
+        #print(chunks)
         ids = list(range(len(chunks.chunks)))
 
         self.data = [
@@ -260,23 +149,24 @@ class Indexer:
         data_dict = [asdict(obj) for obj in self.data]
 
         try:
-            with open("modules/chattim/embeddings2.json", "w") as f:
+            with open(f"modules/chattim/{file_name}", "w") as f:
                 json.dump(data_dict, f, indent=2)
         except Exception as e:
             print(f"Error saving embeddings {e}")
             return f"Error saving embeddings {e}"
         return self.data
 
-    def get_embeddings(self):
+    def get_embeddings(self,file_name):
+
         try:
-            with open("modules/chattim/embeddings2.json", "r") as file:
+            with open(f"modules/chattim/{file_name}", "r") as file:
                 page_embeddings = json.load(file)
         except Exception as e:
             print(f"Error retrieving embeddings {e}")
             return f"Error retrieving embeddings {e}"
         return page_embeddings
 
-    def get_context(self, prompt: str, k: int = 5, doc_id: int = None):
+    def get_context(self, prompt: str,file_name:str, k: int ):
         prompt = TextChunks(chunks=[prompt])
         try:
             prompt_embedding = self.embedding_model.generate(prompt)
@@ -284,9 +174,9 @@ class Indexer:
         except Exception as e:
 
             return f"Prompt embedding error: {e}"
-        page_embeddings = self.get_embeddings()
+        page_embeddings = self.get_embeddings(file_name)
 
-        embeddings = []
+        embeddings:list[float] = []
         texts = []
         for chunk in page_embeddings:
             embeddings.append(chunk["embedding"])
