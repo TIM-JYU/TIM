@@ -16,7 +16,10 @@ import {
 } from "@angular/core";
 import {showMessageDialog} from "tim/ui/showMessageDialog";
 import {showAddContactDialog} from "tim/user/showAddContactDialog";
-import {showAddAPIKeyDialog} from "tim/user/showAddAPIDialog";
+import {
+    showAddAPIKeyDialog,
+    showAddChattimAPIKeyDialog,
+} from "tim/user/showAddAPIDialog";
 import {Channel} from "tim/messaging/listOptionTypes";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {createDowngradedModule, doDowngrade} from "tim/downgrade";
@@ -666,8 +669,7 @@ type StyleSelectionType =
                         </div>
                     </ng-container>
                 <settings-button-panel [saved]="saveUserAccountInfo">
-                    <button class="timButton" (click)="openContactInfoDialog()" i18n>Add new contact</button>
-                    <button class="timButton" (click)="openAPIKeyDialog()" i18n>Add new API key</button>
+                    <button class="timButton" (click)="openChattimAPIKeyDialog()" i18n>Add new API key</button>
                 </settings-button-panel>
             </div>
             <bootstrap-form-panel [disabled]="saving" title="Delete your account" i18n-title anchorId="prefs_delAcc"
@@ -1220,6 +1222,14 @@ export class SettingsComponent implements DoCheck, AfterViewInit {
     openAPIKeyDialog() {
         void to2(
             showAddAPIKeyDialog((key) => {
+                this.userAPIKeys.push(key);
+                this.cdr.detectChanges();
+            })
+        );
+    }
+    openChattimAPIKeyDialog() {
+        void to2(
+            showAddChattimAPIKeyDialog((key) => {
                 this.userAPIKeys.push(key);
                 this.cdr.detectChanges();
             })

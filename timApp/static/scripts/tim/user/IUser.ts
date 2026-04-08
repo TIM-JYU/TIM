@@ -44,6 +44,14 @@ export interface IUserApiKey {
     quotaChecked: boolean;
 }
 
+export interface IUserLLMApiKey {
+    llm_provider: string;
+    APIkey: string;
+    usedQuota: number;
+    availableQuota: number;
+    quotaChecked: boolean;
+}
+
 export interface IFullUser extends IUser {
     groups: IGroup[];
     consent: ConsentType | undefined;

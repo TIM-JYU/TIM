@@ -27,3 +27,21 @@ export async function showAddAPIKeyDialog(onAdd: (key: IUserApiKey) => void) {
         )
     ).result;
 }
+
+export async function showAddChattimAPIKeyDialog(
+    onAdd: (key: IUserApiKey) => void
+) {
+    const {AddAPIKeyDialogComponent} = await import(
+        "./add-chattim-api-key-dialog.component"
+    );
+
+    return (
+        await angularDialog.open(
+            AddAPIKeyDialogComponent,
+            {onAdd},
+            {
+                resetSize: true,
+            }
+        )
+    ).result;
+}
