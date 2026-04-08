@@ -185,7 +185,7 @@ def post_process_pars(
         # TODO: UserContext should support multiple users like in group login.
         usergroup_ids = [user_ctx.logged_user.get_personal_group().id]
 
-        # If we're in exam mode and we're visiting the page for the first time, mark everything read
+        # If we're in exam mode, and we're visiting the page for the first time, mark everything read
         if should_auto_read(
             doc, usergroup_ids, user_ctx.logged_user, view_ctx.for_cache
         ):
@@ -363,7 +363,7 @@ def process_areas(
                 )
             if current_areas:
                 # Insert a closing paragraph for the current area.
-                # We do this regardless of whether the area_end name matches because it's reasonable and we
+                # We do this regardless of whether the area_end name matches because it's reasonable, and we
                 # cannot guess what the user is trying to do.
                 if not is_single:
                     html_par.areainfo = AreaEnd(area_end)

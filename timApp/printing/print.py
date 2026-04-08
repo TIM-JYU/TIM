@@ -55,7 +55,7 @@ from timApp.util.flask.responsehelper import (
 )
 from timApp.util.flask.typedblueprint import TypedBlueprint
 from tim_common.html_sanitize import sanitize_html, sanitize_svg
-from util.timtiming import taketime
+from timApp.util.timtiming import taketime
 
 TEXPRINTTEMPLATE_KEY = "texprinttemplate"
 DEFAULT_PRINT_TEMPLATE_NAME = "templates/printing/runko"
@@ -140,8 +140,9 @@ def print_document(
         metadata={"data_key": "removeOldImages"}, default=False
     ),
     force: bool = False,
-    url_macros: dict[str, str]
-    | None = field(metadata={"data_key": "urlMacros"}, default=None),
+    url_macros: dict[str, str] | None = field(
+        metadata={"data_key": "urlMacros"}, default=None
+    ),
 ) -> Response:
     _ = doc_path  # use for linter, actual doc is fetched in before_request
     if not file_type:
@@ -835,10 +836,10 @@ def svg_document(
     pid: str | None = field(metadata={"data_key": "id"}, default=None),
     ftype: str | None = field(metadata={"data_key": "fileType"}, default=None),
     _force: bool = False,
-    _url_macros: dict[str, str]
-    | None = field(metadata={"data_key": "urlMacros"}, default=None),
-    r: list[str]
-    | None = field(
+    _url_macros: dict[str, str] | None = field(
+        metadata={"data_key": "urlMacros"}, default=None
+    ),
+    r: list[str] | None = field(
         metadata={
             "data_key": "r",
             "marshmallow_field": mm_fields.List(mm_fields.String()),

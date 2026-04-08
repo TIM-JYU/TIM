@@ -67,18 +67,20 @@ class DocEntry(db.Model, DocInfo):
 
     @property
     def path(self) -> str:
-        return self.name
+        return str(self.name)
 
     @property
     def path_without_lang(self) -> str:
-        return self.name
+        return str(self.name)
 
     @property
     def lang_id(self) -> str | None:
         if not self.tr:
             return None
+        # noinspection PyUnresolvedReferences
         setattr(self, "lang_id", self.tr.lang_id)
-        return self.tr.lang_id if self.tr else None
+        # noinspection PyUnresolvedReferences
+        return str(self.tr.lang_id) if self.tr else None
 
     @lang_id.setter
     def lang_id(self, value: str) -> None:
@@ -165,9 +167,11 @@ class DocEntry(db.Model, DocInfo):
     def find_id_by_path(name: str, path: str = "") -> int:
         """Finds a document id by path.
         :param name: The path of the document.
-        :param path: If not faoud, add this path prefix to the name and try again.
+        :param path: If not found, add this path prefix to the name and try again.
         :returns: The document id or 0 if not found.
         """
+        if name.startswith("_/"):
+            name = path + name[1:]
         doc_entry = DocEntry.find_by_path(
             name, docentry_load_opts=[load_only(DocEntry.id), lazyload(DocEntry._block)]
         )
@@ -329,9 +333,9 @@ def get_documents(
         filter_folder = filter_folder.strip("/") + "/"
         if filter_folder == "/":
             filter_folder = ""
-        stmt = stmt.filter(DocEntry.name.like(filter_folder + "%"))
+        stmt = stmt.filter(DocEntry.name.like(filter_folder or "" + "%"))
         if not search_recursively:
-            stmt = stmt.filter(DocEntry.name.notlike(filter_folder + "%/%"))
+            stmt = stmt.filter(DocEntry.name.notlike(filter_folder or "" + "%/%"))
     if custom_filter is not None:
         stmt = stmt.filter(custom_filter)
     if query_options is not None:

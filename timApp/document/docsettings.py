@@ -213,9 +213,14 @@ class DocSettings:
         except ValidationError:
             return default
 
-    def __init__(self, doc: "Document", settings_dict: YamlBlock | None = None):
+    def __init__(self, doc: "Document", settings_dict: YamlBlock | dict | None = None):
         self.doc = doc
-        self.__dict = settings_dict if settings_dict else YamlBlock()
+        yb: YamlBlock = (
+            settings_dict
+            if isinstance(settings_dict, YamlBlock)
+            else YamlBlock(settings_dict or {})
+        )
+        self.__dict: YamlBlock = yb
         self.macroinfo_cache = {}
 
     def to_paragraph(self) -> DocParagraph:
@@ -471,7 +476,7 @@ class DocSettings:
 
     def point_sum_rule(self, default=None) -> PointSumRule | None:
         psr_dict = self.__dict.get(self.point_sum_rule_key, default)
-        if not psr_dict:
+        if not psr_dict or not isinstance(psr_dict, dict):
             return None
         # noinspection PyBroadException
         try:

@@ -69,7 +69,7 @@ class DocInfo(Item):
         return self.id
 
     @property
-    def src_doc(self) -> DocInfo:
+    def src_doc(self) -> DocInfo | None:
         """Returns the source document in case of a translation or the document itself otherwise."""
         if self.is_original_translation:
             return self
@@ -89,6 +89,8 @@ class DocInfo(Item):
         if getattr(self, "_doc", None) is None:
             self._doc = Document(self.id)
             self._doc.docinfo = self
+        # noinspection PyTypeChecker
+        # this is always Document
         return self._doc
 
     @property
@@ -98,6 +100,8 @@ class DocInfo(Item):
 
             self._doc = Document(self.id, modifier_group_id=get_current_user_group())
             self._doc.docinfo = self
+        # noinspection PyTypeChecker
+        # this is always Document
         return self._doc
 
     @property
@@ -129,6 +133,8 @@ class DocInfo(Item):
                 if isinstance(preamble_setting, str)
                 else []
             )
+        # noinspection PyTypeChecker
+        # this is always list, maybe empty
         return self._preamble_docs
 
     def get_preamble_pars_with_class(self, class_names: list[str]):
@@ -422,7 +428,7 @@ class DocInfo(Item):
             .filter(Notification.block_id.in_([f.id for f in items]))
         )
         stmt = stmt.filter(condition)
-        return run_sql(stmt).scalars().all()
+        return list(run_sql(stmt).scalars().all())
 
     def has_translation(self, lang_id):
         for t in self.translations:
@@ -443,7 +449,7 @@ class DocInfo(Item):
             metadata_info = {}
         add_errors = metadata_info.get("route") == "manage" and serialize_content
 
-        result = {**super().to_json(**kwargs), "isFolder": False}
+        result: dict[str, Any] = {**super().to_json(**kwargs), "isFolder": False}
 
         if serialize_content:
             do_validation = DoValidation.CHECK if add_errors else DoValidation.NONE

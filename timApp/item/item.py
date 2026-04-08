@@ -28,7 +28,7 @@ class ItemVisibility(Enum):
     Represents the visibility level of an item.
     Visibility level is determined by view access,
     such that it always represents the least restrictive access level:
-    if both 'Anonymous users' and say a Haka group (= organisation) have view access,
+    if both 'Anonymous users' and say a Haka group (= organization) have view access,
     the visibility level would be 'PUBLIC' (corresponding to 'Anonymous users').
     """
 
@@ -89,7 +89,7 @@ class Item(ItemBase):
         raise NotImplementedError
 
     @property
-    def path_without_lang(self):
+    def path_without_lang(self) -> str:
         """Returns the Document path without the language part in case of a translation."""
         raise NotImplementedError
 
@@ -108,7 +108,7 @@ class Item(ItemBase):
         return "/view/" + self.path
 
     @property
-    def location(self):
+    def location(self) -> str:
         folder, _ = split_location(self.path_without_lang)
         return folder
 
@@ -223,9 +223,9 @@ class Item(ItemBase):
             "title": self.title,
             "location": self.location,
             "id": self.id,
-            "modified": date_to_relative(self.last_modified)
-            if self.last_modified
-            else None,
+            "modified": (
+                date_to_relative(self.last_modified) if self.last_modified else None
+            ),
             "owners": self.owners,
             "rights": get_user_rights_for_item(self, curr_user),
             "unpublished": self.block.is_unpublished() if self.block else False,
