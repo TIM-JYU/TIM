@@ -210,9 +210,9 @@ class Language:
         self.check_extensions(extensions)
 
         for i in range(len(self.filenames)):
-            self.sourcefiles[
-                i
-            ].path = f"/tmp/{self.basename}/{self.filenames[i]}{self.sourcefiles[i].filedext}"
+            self.sourcefiles[i].path = (
+                f"/tmp/{self.basename}/{self.filenames[i]}{self.sourcefiles[i].filedext}"
+            )
 
         self.ifilename = get_param(query, "inputfilename", "/input.txt")
         self.exename = f"/tmp/{self.basename}/{self.filename}.exe"
@@ -412,6 +412,7 @@ class Language:
         save_run_cmd = None
         save_test_run_cmd = None
         ttype = self.ttype
+
         if isinstance(ttype, str) and ttype.find("test") >= 0:  # not for tests
             save_test_run_cmd = self.query.jso.get("markup", {}).get(
                 "saveTestRunCmd", None

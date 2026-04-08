@@ -1,4 +1,5 @@
 """Server tests for printing."""
+
 import json
 import urllib.parse
 
@@ -9,6 +10,7 @@ from timApp.util.flask.responsehelper import to_json_str
 from timApp.util.utils import exclude_keys
 
 
+# noinspection PyUnresolvedReferences
 class PrintingTest(TimRouteTest):
     create_docs = True
 
@@ -62,7 +64,8 @@ class PrintingTest(TimRouteTest):
         self.login_test1()
         content = "Hello 1\n\n#-\nHello 2"
         d = self.create_doc(initial_par=content)
-        folder = self.current_user.get_personal_folder().path
+        personal_folder = self.current_user.get_personal_folder()
+        folder = personal_folder.path
         t = self.create_empty_print_template()
         tj = json.loads(to_json_str(t))
 
@@ -298,8 +301,7 @@ The end.
 
     def test_multiple_subtitles(self):
         self.login_test1()
-        doc = self.create_doc(
-            initial_par="""
+        doc = self.create_doc(initial_par="""
 #-
 filler content
 #- {area="en"}
@@ -322,8 +324,7 @@ Tervetuloa!
 #- {area_end="fi"}
 #-
 more fillers
-"""
-        )
+""")
         self.get(
             f"/print/{doc.path}",
             query_string={"area": "fi", "textplain": True},

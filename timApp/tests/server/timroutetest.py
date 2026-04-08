@@ -1,4 +1,5 @@
 """Defines the TimRouteTest class."""
+
 import base64
 import io
 import json
@@ -84,7 +85,7 @@ BasicAuthParams = tuple[str, str]
 
 @lru_cache(maxsize=100)
 def fast_getaddrinfo(host, port, family=0, addrtype=0, proto=0, flags=0):
-    """On Windows/Boot2docker, the getaddrinfo function is really slow, so we wrap the function and cache the result."""
+    """On Windows/Boot docker, the getaddrinfo function is really slow, so we wrap the function and cache the result."""
     return orig_getaddrinfo(host, port, family, addrtype, proto, flags)
 
 
@@ -301,8 +302,10 @@ class TimRouteTestBase(TimDbTest):
     ) -> Response | str | dict:
         """Performs a request.
 
-        For JSON POST/PUT requests, use the shortcut json_* methods.
+        For JSON POST/PUT requests, use the shortcut JSON_* methods.
 
+        :param as_response:
+        :param expect_mimetype:
         :param url: The request URL.
         :param method: The request method (e.g. GET, POST, PUT, DELETE).
         :param as_tree: Whether to return the response as an HTML tree.
@@ -315,7 +318,7 @@ class TimRouteTestBase(TimDbTest):
          * Otherwise, this parameter is interpreted as a string that must match the response content.
         :param expect_contains: The expected subset(s) of the response content. This can be a string or a list of strings.
         :param expect_xpath: The expected XPath expression that must match at least one element in the response tree.
-           This parameter can also be used for JSON responses as long as json_key is provided and the data in that key
+           This parameter can also be used for JSON responses as long as JSON_key is provided and the data in that key
            is HTML.
         :param expect_cookie: Cookie key and value as a tuple. The value can be None to check if cookie doesn't exist.
         :param json_key: The expected key that is found in the returned JSON data. Any other data is discarded.
@@ -451,6 +454,13 @@ class TimRouteTestBase(TimDbTest):
     ):
         """Performs a JSON PUT request.
 
+        :param expect_contains:
+        :param expect_xpath:
+        :param json_key:
+        :param headers:
+        :param expect_content:
+        :param as_tree:
+        :param expect_status:
         :param url: The request URL.
         :param json_data: The JSON data to be submitted.
         :param kwargs: Any custom parameters that are accepted by the 'request' method.
@@ -487,6 +497,14 @@ class TimRouteTestBase(TimDbTest):
     ):
         """Performs a JSON DELETE request.
 
+        :param as_tree:
+        :param expect_status:
+        :param expect_content:
+        :param expect_contains:
+        :param expect_xpath:
+        :param json_key:
+        :param headers:
+        :param auth:
         :param url: The request URL.
         :param json_data: The JSON data to be submitted.
         :param kwargs: Any custom parameters that are accepted by the 'request' method.
@@ -525,6 +543,15 @@ class TimRouteTestBase(TimDbTest):
     ):
         """Performs a JSON POST request.
 
+        :param as_tree:
+        :param expect_status:
+        :param expect_content:
+        :param expect_contains:
+        :param expect_xpath:
+        :param expect_cookie:
+        :param json_key:
+        :param headers:
+        :param auth:
         :param url: The request URL.
         :param json_data: The JSON data to be submitted.
         :param kwargs: Any custom parameters that are accepted by the 'request' method.
@@ -566,6 +593,16 @@ class TimRouteTestBase(TimDbTest):
     ):
         """Performs a JSON request.
 
+        :param as_tree:
+        :param expect_status:
+        :param expect_content:
+        :param expect_contains:
+        :param expect_xpath:
+        :param expect_cookie:
+        :param json_key:
+        :param headers:
+        :param auth:
+        :param content_type:
         :param url: The request URL.
         :param method: The request method.
         :param json_data: The JSON data to be submitted.
@@ -595,6 +632,7 @@ class TimRouteTestBase(TimDbTest):
     ):
         """Edits a paragraph in a document.
 
+        :param extra_data:
         :param doc: The document to be edited.
         :param text: The new text for the paragraph.
         :param par_id: The id of the paragraph to be edited.
@@ -621,6 +659,8 @@ class TimRouteTestBase(TimDbTest):
     ):
         """Edits an area in a document.
 
+        :param area_start:
+        :param area_end:
         :param doc: The document to be edited.
         :param text: The new text for the paragraph.
         :return: The response object.
@@ -717,9 +757,9 @@ class TimRouteTestBase(TimDbTest):
                 f"/{plugin_type}/{task_id}/answer",
                 {
                     "input": user_input,
-                    "ref_from": {"docId": ref_from[0], "par": ref_from[1]}
-                    if ref_from
-                    else None,
+                    "ref_from": (
+                        {"docId": ref_from[0], "par": ref_from[1]} if ref_from else None
+                    ),
                     "abData": {
                         "saveTeacher": save_teacher,
                         "teacher": teacher,
@@ -740,9 +780,9 @@ class TimRouteTestBase(TimDbTest):
             f"/{plugin_type}/{task_id}/answer",
             {
                 "input": user_input,
-                "ref_from": {"docId": ref_from[0], "par": ref_from[1]}
-                if ref_from
-                else None,
+                "ref_from": (
+                    {"docId": ref_from[0], "par": ref_from[1]} if ref_from else None
+                ),
             },
             **kwargs,
         )
@@ -852,6 +892,7 @@ class TimRouteTestBase(TimDbTest):
     ):
         """Logs a user in.
 
+        :param clear_last_doc:
         :param username: The username of the user.
         :param email: The email of the user.
         :param passw: The password of the user.
@@ -912,6 +953,9 @@ class TimRouteTestBase(TimDbTest):
     ) -> DocEntry | None:
         """Creates a new document.
 
+        :param template:
+        :param title:
+        :param expect_status:
         :param copy_from: The id of an existing document if creating a copy.
         :param cite: The id of an existing document if citing another document.
         :param path: The path of the document.
@@ -1194,9 +1238,11 @@ class TimRouteTestBase(TimDbTest):
                 "doc_id": doc_id,
                 "points": points,
                 "velp_id": velp_id,
-                "visible_to": visible_to.value
-                if isinstance(visible_to, AnnotationVisibility)
-                else visible_to,
+                "visible_to": (
+                    visible_to.value
+                    if isinstance(visible_to, AnnotationVisibility)
+                    else visible_to
+                ),
                 "color": color,
                 "answer_id": answer_id,
                 "draw_data": draw_data,
@@ -1243,9 +1289,11 @@ class TimRouteTestBase(TimDbTest):
             "/update_annotation",
             {
                 "id": annotation_id,
-                "visible_to": visible_to.value
-                if isinstance(visible_to, AnnotationVisibility)
-                else visible_to,
+                "visible_to": (
+                    visible_to.value
+                    if isinstance(visible_to, AnnotationVisibility)
+                    else visible_to
+                ),
                 "points": points,
                 "color": color,
                 "coord": coord,
@@ -1388,9 +1436,11 @@ class TimRouteTestBase(TimDbTest):
         a = Answer(
             users_all=[user],
             task_id=f"{d.id}.{task_name}",
-            content=json.dumps({content_key: content})
-            if content_key is not None
-            else json.dumps(content),
+            content=(
+                json.dumps({content_key: content})
+                if content_key is not None
+                else json.dumps(content)
+            ),
             points=points,
             valid=valid,
             last_points_modifier=last_points_modifier,
