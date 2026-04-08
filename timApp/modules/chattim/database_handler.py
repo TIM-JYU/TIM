@@ -1,8 +1,13 @@
 from dataclasses import dataclass
+
+from sqlalchemy import select, delete
+
 from timApp.document.document import Document
 from timApp.document import docentry
 from timApp.document.docentry import DocEntry
 from timApp.item.item import Item
+from timApp.modules.chattim.dbmodels import LLMRule, Policy, Usage
+from timApp.timdb.sqa import db
 from timApp.user.user import User
 from timApp.auth.get_user_rights_for_item import (
     get_user_rights_for_item,
@@ -69,3 +74,189 @@ class TimDatabase:
             return rights
         else:
             return None
+
+    @staticmethod
+    def create_llm_rule(
+            document_id: int,
+            owner: int,  # UserGroup,
+            apikey_provider: str,
+            apikey: list[str],
+            chosen_key: str,
+            teachers: list[int],  # list[UserGroup],
+            current_mode: str,
+            total_tokens_spent: int,
+            indexed_chunk_ids: list[int],
+            agent: str,
+            conv_time_window: int,
+            policy: list[Policy],
+            usage: list[Usage],
+    ) -> LLMRule:
+        """
+        Creates a new LLM rule.
+        :param document_id: The id of the document.
+        :param owner: The id of the owner.
+        :param apikey_provider: The provider for the apikey.
+        :param apikey: List of the api keys and public keys of the owner.
+        :param chosen_key: The chosen api key and public key for the instance.
+        :param teachers: The ids of the teachers allowed to use the plugin instance.
+        :param current_mode: Mode of the plugin instance: summarizing, creative or balanced.
+        :param total_tokens_spent: The total number of tokens spent.
+        :param indexed_chunk_ids:
+        :param agent: LLm agent.
+        :param conv_time_window: Time window for the conversation in minutes.
+        :param policy: List of policies related to the LLMRule instance.
+        :param usage: List of usages related to the LLMRule instance.
+        :return: created LLMRule instance
+        """
+        rule = LLMRule(
+            id=1, # TODO
+            document_id=document_id,
+            owner=owner,
+            apikey_provider=apikey_provider,
+            apikey=apikey,
+            chosen_key=chosen_key,
+            teachers=teachers,
+            current_mode=current_mode,
+            total_tokens_spent=total_tokens_spent,
+            indexed_chunk_ids=indexed_chunk_ids,
+            agent=agent,
+            conv_time_window=conv_time_window,
+            policy=policy,
+            usage=usage
+        )
+        db.session.add(rule)
+        db.session.commit()
+        db.session.refresh(rule)
+        return rule
+
+    @staticmethod
+    def delete_llm_rule(rule_id: int) -> None:
+        """
+        Deletes the given LLM rule.
+        """
+        stmt = delete(LLMRule).where(LLMRule.id == rule_id)
+        db.execute(stmt)
+        db.commit()
+
+    @staticmethod
+    def get_llm_rule(rule_id: int) -> LLMRule:
+        """
+        Gets the given LLM rule.
+        """
+        stmt = select(LLMRule).where(LLMRule.id == rule_id)
+        return db.scalar(stmt)
+
+    @staticmethod
+    def set_policy(
+            user: int,
+            llm_rule_id: int,
+            llm_rule: LLMRule,
+            token_time_window_type: str,
+            token_time_window_num: int,
+            time_window_tokens: int,
+            max_tokens: int,
+            policy_type: str  # global or user
+    ) -> Policy:
+        """
+        Sets a new policy for the LLM rule. Policy can be a global policy for the whole LLM rule or a student policy
+        for the given user.
+        """
+        policy = Policy(
+            id=1,  # TODO
+            for_user=user or None,
+            llm_rule_id=llm_rule_id,
+            llm_rule=llm_rule,
+            token_time_window_type=token_time_window_type,
+            token_time_window_num=token_time_window_num,
+            time_window_tokens=time_window_tokens,
+            max_tokens=max_tokens,
+            policy_type=policy_type
+        )
+
+        db.session.add(policy)
+        db.session.commit()
+        db.session.refresh(policy)
+        return policy
+
+    @staticmethod
+    def delete_policy(policy_id: int) -> None:
+        """
+        Deletes the given Policy.
+        """
+        stmt = delete(Policy).where(Policy.id == policy_id)
+        db.execute(stmt)
+        db.commit()
+
+    @staticmethod
+    def delete_global_policy(llm_rule_id: int) -> None:
+        """
+        Deletes the given Policy.
+        """
+        stmt = delete(Policy).where(Policy.llm_rule_id == llm_rule_id, Policy.for_user.is_(None))
+        db.execute(stmt)
+        db.commit()
+
+    @staticmethod
+    def delete_student_policy(llm_rule_id: int, user_id: int) -> None:
+        """
+        Deletes the given Policy.
+        """
+        stmt = delete(Policy).where(Policy.llm_rule_id == llm_rule_id, Policy.for_user == user_id)
+        db.execute(stmt)
+        db.commit()
+
+    @staticmethod
+    def get_policy(policy_id: int) -> Policy:
+        """
+        Gets the given Policy.
+        """
+        stmt = select(Policy).where(Policy.id == policy_id)
+        return db.scalar(stmt)
+
+
+    @staticmethod
+    def get_global_policy(llm_rule_id: int) -> Policy:
+        """
+        Gets the given Policy.
+        """
+        stmt = select(Policy).where(Policy.llm_rule_id == llm_rule_id, Policy.for_user.is_(None))
+        return db.scalar(stmt)
+
+
+    @staticmethod
+    def get_user_policy(llm_rule_id: int, user_id: int) -> Policy:
+        """
+        Gets the given Policy.
+        """
+        stmt = select(Policy).where(Policy.llm_rule_id == llm_rule_id, Policy.for_user == user_id)
+        return db.scalar(stmt)
+
+    @staticmethod
+    def set_usage(
+            user: int,
+            conv_id: int,
+            llm_rule_id: int,
+            llm_rule: LLMRule,
+            used_tokens: int
+    ) -> Usage:
+        usage = Usage(
+            id=1,  # TODO
+            user=user,
+            conversation_id=conv_id,
+            llm_rule_id=llm_rule_id,
+            llm_rule=llm_rule,
+            used_tokens=used_tokens
+        )
+
+        db.session.add(usage)
+        db.session.commit()
+        db.session.refresh(usage)
+        return usage
+
+    @staticmethod
+    def get_usage(user_id: int) -> None:
+        """
+        Gets the Usage of the given user.
+        """
+        stmt = select(Usage).where(Usage.user == user_id)
+        return db.scalar(stmt)
