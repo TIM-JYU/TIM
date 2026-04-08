@@ -222,6 +222,6 @@ class Rag:
         prompt = self._default_system_prompt(mode)
         system_prompt = [Message(role="system", content=prompt)]
         if extension is not None:
-            extension_content = "\n\nADDITIONAL INSTRUCTION:\n" + extension
+            extension_content = "ADDITIONAL INSTRUCTION:\n" + extension
             system_prompt.append(Message(role="system", content=extension_content))
         return system_prompt

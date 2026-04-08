@@ -67,9 +67,8 @@ class StudentPolicy:
 
 @dataclass(frozen=True)
 class PreparedChatRequest:
-    plugin_id: str
     caller_id: str
-    document_id: int
+    document_id: str
     user_input: str
     iterable: Iterable[ModelResponseChunk]
 
@@ -115,10 +114,10 @@ class PluginCore:
         except ValueError as e:
             return Result(error=str(e))
 
-        plugin_id = str(document_id)
+        document_id_str = str(document_id)
         caller_id_str = str(caller_id)
 
-        history = self.history_manager.get_history_n(plugin_id, caller_id_str, 10)
+        history = self.get_history(caller_id_str, document_id_str)
 
         # TODO: remember to fetch with timestamps when the time comes
         chat_history: list[Message] = [
@@ -142,9 +141,8 @@ class PluginCore:
             identifier=document_id,
         )
         prepared = PreparedChatRequest(
-            plugin_id=plugin_id,
             caller_id=caller_id_str,
-            document_id=document_id,
+            document_id=document_id_str,
             user_input=validated_input,
             iterable=iterable,
         )
@@ -211,7 +209,7 @@ class PluginCore:
 
         timestamp_answer = ChatMessage.ts_ms()
         self._save_messages(
-            plugin_id=p.plugin_id,
+            plugin_id=p.document_id,
             caller_id=p.caller_id,
             user_input=p.user_input,
             assistant_msg=whole_msg,
@@ -258,7 +256,7 @@ class PluginCore:
                     apply_chunk(chunk)
                 timestamp_answer = ChatMessage.ts_ms()
                 self._save_messages(
-                    plugin_id=p.plugin_id,
+                    plugin_id=p.document_id,
                     caller_id=p.caller_id,
                     user_input=p.user_input,
                     assistant_msg=whole_msg,
