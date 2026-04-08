@@ -1,5 +1,5 @@
 from sqlalchemy import Integer, String, ForeignKey
-from sqlalchemy import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column
 from timApp.timdb.sqa import db
 from timApp.user.usergroup import UserGroup
 
@@ -14,7 +14,7 @@ class LLMRule(db.Model):
     apikey: Mapped[str] = mapped_column(String)
     publickey: Mapped[str] = mapped_column(String)
     teachers: Mapped[list[UserGroup]] = mapped_column(ForeignKey("user_group.id"))
-    current_mode: Mapped[str] = mapped_column(String, default="summary") # freeform or summary
+    current_mode: Mapped[str] = mapped_column(String, default="summarizing") # summarizing, creative or balanced
     total_tokens_spent: Mapped[int] = mapped_column(Integer, default=0)
     indexed_chunk_ids: Mapped[list[int]] = mapped_column(Integer)
     agent: Mapped[str] = mapped_column(String)

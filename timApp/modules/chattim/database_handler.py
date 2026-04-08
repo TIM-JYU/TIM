@@ -1,9 +1,12 @@
 from dataclasses import dataclass
+
+from sqlalchemy import select, delete
+
 from timApp.document.document import Document
 from timApp.document import docentry
 from timApp.document.docentry import DocEntry
 from timApp.item.item import Item
-from timApp.modules.chattim.dbmodels import LLMRule
+from timApp.modules.chattim.dbmodels import LLMRule, Policy
 from timApp.timdb.sqa import db
 from timApp.user.user import User
 from timApp.auth.get_user_rights_for_item import (
