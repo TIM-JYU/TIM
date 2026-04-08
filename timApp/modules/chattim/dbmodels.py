@@ -16,7 +16,7 @@ class LLMRule(db.Model):
     teachers: Mapped[list[UserGroup]] = mapped_column(ForeignKey("user_group.id"))
     current_mode: Mapped[str] = mapped_column(String, default="summary") # freeform or summary
     total_tokens_spent: Mapped[int] = mapped_column(Integer, default=0)
-    indexed_chunk_ids: Mapped[int] = mapped_column(Integer)
+    indexed_chunk_ids: Mapped[list[int]] = mapped_column(Integer)
     agent: Mapped[str] = mapped_column(String)
 
     conv_time_window: Mapped[int] = mapped_column(Integer)
