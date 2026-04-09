@@ -26,24 +26,24 @@ import {listTranslators} from "tim/document/languages";
 import type {IUserLLMApiKey} from "tim/user/IUser";
 
 /**
- * User can add translator API keys to be stored in TIM. (code source: add-contact-dialog.component.ts)
+ * User can add LLM model API keys to be stored in TIM. (code source: add-api-key-dialog.component.ts)
  */
 @Component({
-    selector: "tim-add-api-key-dialog",
+    selector: "tim-add-chattim-api-key-dialog",
     template: `
         <tim-dialog-frame [minimizable]="false">
             <ng-container header i18n>
-                Add new llm model API key
+                Add new LLM model API key
             </ng-container>
             <ng-container body>
                 <form>
                     <fieldset [disabled]="saving || saved">
                         <div class="form-group">
                             <label class="control-label" for="name-select" i18n>LLM model provider</label>
-                            <select class="form-control" name="channel-select" [(ngModel)]="chosenTranslator">
-                                <option *ngFor="let translator of this.translators"
-                                        value="{{translator.name}}"
-                                >{{translator.name}}</option>
+                            <select class="form-control" name="channel-select" [(ngModel)]="chosenModel">
+                                <option *ngFor="let model of this.llm_models"
+                                        value="{{model.name}}"
+                                >{{model.name}}</option>
                             </select>
                         </div>
                         <div class="form-group">
@@ -70,7 +70,7 @@ import type {IUserLLMApiKey} from "tim/user/IUser";
                 </a>
                 <button class="timButton"
                         (click)="addNewAPIKey()"
-                        [disabled]="!(chosenTranslator && apiKey) || saved" i18n>
+                        [disabled]="!(chosenModel && apiKey) || saved" i18n>
                     Add
                 </button>
                 <button class="timButton" (click)="dismiss()">Close</button>
@@ -82,24 +82,27 @@ export class AddAPIKeyDialogComponent extends AngularDialogComponent<
     {onAdd: (key: IUserLLMApiKey) => void},
     void
 > {
-    translators: ITranslator[] = [];
+    llm_models = [{name: "openai"}, {name: "copilot"}];
 
     async ngOnInit() {
+        // TODO LLM listauksen haku ja päivitys
+        /*
         const r = await listTranslators(false);
         if (r.ok) {
             this.translators = r.result;
-        }
+        }*/
     }
 
     dialogName: string = "AddAPIKey";
 
-    chosenTranslator: string = "";
+    chosenModel: string = "";
     apiKey?: string;
 
     saved = false;
     saving = false;
     addError?: string;
     added = false;
+    message: string = "";
 
     // Used only to get HttpClient initialized.
     constructor(private http: HttpClient) {
@@ -111,6 +114,36 @@ export class AddAPIKeyDialogComponent extends AngularDialogComponent<
      */
     async addNewAPIKey() {
         const validateResponse = await this.validateAPIKey();
+
+        if (validateResponse.ok) {
+            this.saving = true;
+
+            const result = await toPromise(
+                this.http.put("/chattim/save_api", {
+                    model: this.chosenModel,
+                    apikey: this.apiKey,
+                })
+            );
+
+            this.saving = false;
+            this.added = true;
+
+            if (result.ok) {
+                this.saved = true;
+                this.data.onAdd({
+                    model: this.chosenModel,
+                    APIkey: this.apiKey!,
+                    availableQuota: 0,
+                    usedQuota: 0,
+                    quotaChecked: false,
+                });
+                this.dismiss();
+                this.added = false;
+            }
+        } else {
+            this.addError = validateResponse.result.error.error;
+        }
+
         /*
 
         if (validateResponse.ok) {
@@ -151,10 +184,12 @@ export class AddAPIKeyDialogComponent extends AngularDialogComponent<
      * @return Response from server, if anything else than 200 OK we know the key was not valid.
      */
     async validateAPIKey() {
-        return {
-            character_count: 0,
-            character_limit: 1000,
-        } as ITranslatorUsage;
+        return await toPromise(
+            this.http.post<Response>("/chattim/validate_api", {
+                model: this.chosenModel,
+                apikey: this.apiKey,
+            })
+        );
     }
 }
 

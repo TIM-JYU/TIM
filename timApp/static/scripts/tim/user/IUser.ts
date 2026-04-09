@@ -45,7 +45,7 @@ export interface IUserApiKey {
 }
 
 export interface IUserLLMApiKey {
-    llm_provider: string;
+    model: string;
     APIkey: string;
     usedQuota: number;
     availableQuota: number;

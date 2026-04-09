@@ -7,7 +7,7 @@
  */
 
 import {angularDialog} from "tim/ui/angulardialog/dialog.service";
-import type {IUserApiKey} from "tim/user/IUser";
+import type {IUserApiKey, IUserLLMApiKey} from "tim/user/IUser";
 
 /*
 Code source: showAddContactDialog.ts
@@ -29,7 +29,7 @@ export async function showAddAPIKeyDialog(onAdd: (key: IUserApiKey) => void) {
 }
 
 export async function showAddChattimAPIKeyDialog(
-    onAdd: (key: IUserApiKey) => void
+    onAdd: (key: IUserLLMApiKey) => void
 ) {
     const {AddAPIKeyDialogComponent} = await import(
         "./add-chattim-api-key-dialog.component"

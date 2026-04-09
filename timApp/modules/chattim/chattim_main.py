@@ -2,11 +2,15 @@ from dataclasses import dataclass
 from flask import request, Response, stream_with_context
 from typing import Any, TypedDict
 from webargs.flaskparser import use_args
+
+import requests
+from timApp.auth.accesshelper import verify_logged_in
+from timApp.util.flask.requesthelper import RouteException
 from tim_common.marshmallow_dataclass import class_schema
 
 from timApp.auth.sessioninfo import get_current_user_id
 from timApp.tim_app import csrf
-from timApp.util.flask.responsehelper import json_response, to_json_str
+from timApp.util.flask.responsehelper import json_response, to_json_str, ok_response
 from tim_common.markupmodels import GenericMarkupModel
 from tim_common.pluginserver_flask import (
     GenericHtmlModel,
@@ -179,6 +183,37 @@ def define_save_settings(params: ChatTimSaveSettingsParams):
     web["result"] = "Settings saved!"
 
     return json_response(result)
+
+
+@chattim.post("/save_api")
+def define_save_api():
+    return json_response({"ok": True})
+    pass
+
+
+@chattim.post("/validate_api")
+def define_validate_api():
+    verify_logged_in()
+
+    req_data = request.get_json()
+    model = req_data.get("model", "")
+    key = req_data.get("apikey", "")
+
+    # TODO modelin mukaan oikea reitti validoinnille
+
+    if model == "openai":
+        response = requests.get(
+            "https://api.openai.com/v1/models",
+            headers={"Authorization": f"Bearer {key}"},
+        )
+        print(response.json())
+        if response.status_code == 200:
+            return ok_response()
+        else:
+            raise RouteException(description="API Key is invalid.")
+
+    print(model)
+    raise RouteException(description="Selected model not supported.")
 
 
 def to_ndjson_str(json_data: Any) -> str:

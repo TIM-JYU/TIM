@@ -1230,8 +1230,9 @@ export class SettingsComponent implements DoCheck, AfterViewInit {
     openChattimAPIKeyDialog() {
         void to2(
             showAddChattimAPIKeyDialog((key) => {
+                /*
                 this.userAPIKeys.push(key);
-                this.cdr.detectChanges();
+                this.cdr.detectChanges();*/
             })
         );
     }
