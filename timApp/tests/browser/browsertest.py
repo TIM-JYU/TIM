@@ -182,6 +182,10 @@ class BrowserTest(LiveServerTestCase, TimRouteTestBase):
         url_ = f"{self.get_browser_url()}{url}"
         # raise Exception(url_)
         self.drv.get(url_)
+        try:
+            self.wait.until(ec.invisibility_of_element_located((By.CSS_SELECTOR, "tim-loading")))
+        except Exception:
+            pass
 
     def print_console(self):
         logs = self.drv.get_log("browser")
@@ -358,8 +362,12 @@ class BrowserTest(LiveServerTestCase, TimRouteTestBase):
 
     def wait_until_hidden(self, selector):
         self.drv.implicitly_wait(0.1)
-        self.wait.until(ec.invisibility_of_element_located((By.CSS_SELECTOR, selector)))
-        self.drv.implicitly_wait(10)
+        try:
+            self.wait.until(
+                ec.invisibility_of_element_located((By.CSS_SELECTOR, selector))
+            )
+        finally:
+            self.drv.implicitly_wait(10)
 
     def wait_until_present_and_vis(self, selector):
         self.wait_until_present(selector)
@@ -380,13 +388,16 @@ class BrowserTest(LiveServerTestCase, TimRouteTestBase):
 
     def select_text(self, selector: str, start_offset: int, end_offset: int):
         self.drv.execute_script(
-            f"""
-        var range = document.createRange();
-        var element = document.querySelector('{selector}').childNodes[0];
-        range.setStart(element, {start_offset});
-        range.setEnd(element, {end_offset});
-        window.getSelection().addRange(range);
-        """
+            """
+            var range = document.createRange();
+            var element = document.querySelector(arguments[0]).childNodes[0];
+            range.setStart(element, arguments[1]);
+            range.setEnd(element, arguments[2]);
+            window.getSelection().addRange(range);
+            """,
+            selector,
+            start_offset,
+            end_offset,
         )
 
     def find_element_and_move_to(
@@ -423,6 +434,12 @@ class BrowserTest(LiveServerTestCase, TimRouteTestBase):
         parent=None,
         poll_rate=0.5,
     ) -> WebElement:
+        # Wait until element is present in DOM before attempting interaction
+        root = parent or self.drv
+        by, value = (By.XPATH, xpath) if xpath else (By.CSS_SELECTOR, selector)
+        WebDriverWait(self.drv, timeout=tries * poll_rate, poll_frequency=poll_rate).until(
+            ec.presence_of_element_located((by, value))
+        )
         while True:
             try:
                 e = self.find_element(selector=selector, xpath=xpath, parent=parent)
@@ -447,8 +464,8 @@ class BrowserTest(LiveServerTestCase, TimRouteTestBase):
         self,
         text: str,
         element: str = "*",
-        staleness_attempts=1,
         parent: WebElement | None = None,
+        staleness_attempts=1,
     ) -> WebElement:
         node_scope = "." if parent else ""
         return self.find_element_avoid_staleness(

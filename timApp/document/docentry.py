@@ -333,9 +333,10 @@ def get_documents(
         filter_folder = filter_folder.strip("/") + "/"
         if filter_folder == "/":
             filter_folder = ""
-        stmt = stmt.filter(DocEntry.name.like(filter_folder or "" + "%"))
+        assert filter_folder is not None
+        stmt = stmt.filter(DocEntry.name.like(filter_folder + "%"))
         if not search_recursively:
-            stmt = stmt.filter(DocEntry.name.notlike(filter_folder or "" + "%/%"))
+            stmt = stmt.filter(DocEntry.name.notlike(filter_folder + "%/%"))
     if custom_filter is not None:
         stmt = stmt.filter(custom_filter)
     if query_options is not None:
