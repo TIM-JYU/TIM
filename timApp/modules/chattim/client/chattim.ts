@@ -326,7 +326,7 @@ export class ChatTIMComponent
         const save_request = {
             user_id: user_id,
             document_id: this.document_id,
-            cpanel_data: ctrlpanel_data,
+            control_panel_data: ctrlpanel_data,
         };
 
         const response = await this.httpPost<{
