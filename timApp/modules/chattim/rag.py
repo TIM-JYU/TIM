@@ -126,6 +126,7 @@ class Rag:
             ValueError: If the provider or model is unknown
         """
         if identifier in self.models:
+            self.models[identifier].close()
             del self.models[identifier]
 
     def model_exists(self, identifier: int) -> bool:
