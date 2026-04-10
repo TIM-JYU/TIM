@@ -658,11 +658,10 @@ export class BadgeCreatorComponent implements OnInit {
         ) {
             if (this.editingBadge) {
                 const response = await toPromise(
-                    this.http.post<{ok: boolean}>(
-                        `/badges/deactivate_badge/${this.editingBadge.id}/${this
-                            .selectedContextGroup!}`,
-                        {}
-                    )
+                    this.http.post<{ok: boolean}>(`/badges/deactivate_badge`, {
+                        badge_id: this.editingBadge.id,
+                        context_group: this.selectedContextGroup!,
+                    })
                 );
 
                 if (response.ok) {
