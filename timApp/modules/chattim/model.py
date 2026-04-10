@@ -3,7 +3,18 @@ from __future__ import annotations
 from dataclasses import dataclass, asdict
 from typing import Literal, Protocol, Callable, Iterable, Any, cast, AsyncIterator
 from enum import Enum
-import openai
+from openai import (
+    OpenAI,
+    AsyncOpenAI,
+    AuthenticationError,
+    PermissionDeniedError,
+    RateLimitError,
+    APITimeoutError,
+    APIConnectionError,
+    NotFoundError,
+    BadRequestError,
+    APIStatusError,
+)
 
 
 class ModelErrorKind(Enum):
@@ -121,7 +132,7 @@ class AsyncChatModel(Protocol):
         """
         ...
 
-    def close(self) -> None:
+    async def close(self) -> None:
         """Close the underlying HTTPX client."""
         ...
 
@@ -272,7 +283,7 @@ class GenericApiChatModel(ChatModel):
         self._info = info
         self._api_key = api_key
         self._base_url = base_url
-        self._client = openai.OpenAI(api_key=self._api_key, base_url=self._base_url)
+        self._client = OpenAI(api_key=self._api_key, base_url=self._base_url)
 
     def generate(
         self, messages: list[Message], options: GenerateOptions
@@ -323,9 +334,7 @@ class AsyncGenericApiChatModel(AsyncChatModel):
         self._info = info
         self._api_key = api_key
         self._base_url = base_url
-        self._client = openai.AsyncOpenAI(
-            api_key=self._api_key, base_url=self._base_url
-        )
+        self._client = AsyncOpenAI(api_key=self._api_key, base_url=self._base_url)
 
     async def generate(
         self, messages: list[Message], options: GenerateOptions
@@ -366,8 +375,8 @@ class AsyncGenericApiChatModel(AsyncChatModel):
     def get_info(self) -> ModelInfo:
         return self._info
 
-    def close(self) -> None:
-        self._client.close()
+    async def close(self) -> None:
+        await self._client.close()
 
 
 class OpenAiChatModel(GenericApiChatModel):
@@ -442,7 +451,7 @@ class DummyAsyncChatModel(AsyncChatModel):
     def get_info(self) -> ModelInfo:
         return self._info
 
-    def close(self) -> None:
+    async def close(self) -> None:
         pass
 
 
@@ -453,7 +462,7 @@ class GenericApiClient:
         self._provider = provider
         self._api_key = api_key
         self._base_url = _resolve_base_url(provider, base_url)
-        self._client = openai.OpenAI(api_key=self._api_key, base_url=self._base_url)
+        self._client = OpenAI(api_key=self._api_key, base_url=self._base_url)
 
     def list_models(self) -> list[ModelInfo]:
         """Get all the available models from the Model API.
@@ -596,23 +605,17 @@ def _resolve_base_url(provider: Provider, base_url: str | None = None) -> str:
 
 def _openai_to_model_error(e: BaseException) -> ModelError:
     """Map OpenAI SDK errors into ModelError."""
-    if isinstance(
-        e,
-        (
-            openai.AuthenticationError,
-            openai.PermissionDeniedError,
-        ),
-    ):
+    if isinstance(e, (AuthenticationError, PermissionDeniedError)):
         return ModelError(ModelErrorKind.Auth, description=str(e), cause=e)
-    if isinstance(e, openai.RateLimitError):
+    if isinstance(e, RateLimitError):
         return ModelError(ModelErrorKind.RateLimit, description=str(e), cause=e)
-    if isinstance(e, (openai.APITimeoutError, openai.APIConnectionError)):
+    if isinstance(e, (APITimeoutError, APIConnectionError)):
         return ModelError(ModelErrorKind.Timeout, description=str(e), cause=e)
-    if isinstance(e, (openai.NotFoundError, openai.APIConnectionError)):
+    if isinstance(e, (NotFoundError, APIConnectionError)):
         return ModelError(ModelErrorKind.NotFound, description=str(e), cause=e)
-    if isinstance(e, (openai.BadRequestError, openai.APIConnectionError)):
+    if isinstance(e, (BadRequestError, APIConnectionError)):
         return ModelError(ModelErrorKind.BadRequest, description=str(e), cause=e)
-    if isinstance(e, openai.APIStatusError):
+    if isinstance(e, APIStatusError):
         status = getattr(e, "status_code", None)
         return ModelError(
             kind=ModelErrorKind.Unknown, description=str(e), cause=e, status=status
