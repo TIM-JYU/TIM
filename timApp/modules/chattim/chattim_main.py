@@ -45,6 +45,13 @@ class ChatTimAskParams:
 
 
 @dataclass
+class ChatTimSaveSettingsParams:
+    user_id: int
+    document_id: int
+    control_panel_data: InstanceAttributes
+
+
+@dataclass
 class ChatTimHtmlModel(
     GenericHtmlModel[ChatTimInputModel, ChatTimMarkupModel, ChatTimStateModel]
 ):
@@ -148,38 +155,23 @@ def define_ask_stream_route(params: ChatTimAskParams):
 
 
 @chattim.post("/settings_save")
-def define_save_settings():
-    """
-    Saves settings sent from control panel. Received json should be:
-    { user_id: int,
-      document_id: int,
-      cpanel_data: {
-                    model_id: string,
-                    llm_mode: string,
-                    max_tokens: int,
-                    tim_paths: string,
-                    }
-    }
-    :return: The usual with web.error if something went wrong
-    """
+@use_args(class_schema(ChatTimSaveSettingsParams)(), locations=("json",))
+def define_save_settings(params: ChatTimSaveSettingsParams):
     web: PluginAnswerWeb = {}
     result: PluginAnswerResp = {"web": web}
-    instance_attr: InstanceAttributes
 
-    data = request.get_json()
-    cpanel_data = data.get("cpanel_data")
-    user_id = data.get("user_id")
-    document_id = data.get("document_id")
+    user_id = params.user_id
+    document_id = params.document_id
+    panel_data = params.control_panel_data
 
-    try:
-        instance_attr = InstanceAttributes(**cpanel_data)
-    except (ValueError, TypeError):
-        web["error"] = f"Server received malformed data: {data}"
-        return json_response(result)
+    session_user_id = get_current_user_id()
+    # TODO onko tarkistus tarpeellinen, vai käytetäänkö vain session_user_id?
+    if user_id != session_user_id:
+        pass
 
     session_user_id = get_current_user_id()
 
-    error_or_ok = plugincore.save_instance(session_user_id, document_id, instance_attr)
+    error_or_ok = plugincore.save_instance(session_user_id, document_id, panel_data)
     if not error_or_ok.ok():
         web["error"] = error_or_ok.error
         return json_response(result)

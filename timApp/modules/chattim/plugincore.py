@@ -6,7 +6,11 @@ from unicodedata import normalize, category
 from timApp.timdb.dbaccess import get_files_path
 from timApp.auth.get_user_rights_for_item import UserItemRights
 from timApp.item.item import Item
-from timApp.modules.chattim.database_handler import TimDatabase
+from timApp.document.docinfo import DocInfo
+from timApp.modules.chattim.database_handler import (
+    TimDatabase,
+    Document,
+)
 from timApp.modules.chattim.rag import (
     Rag,
     MessageData,
@@ -24,13 +28,6 @@ from timApp.modules.chattim.conversation import ConversationManager, ChatMessage
 
 T = TypeVar("T")
 E = TypeVar("E")
-
-
-@dataclass
-class ReqContext:
-    input: str
-    user_id: int
-    document_id: int
 
 
 @dataclass()
@@ -271,7 +268,7 @@ class PluginCore:
         self, caller_id, document_id: int, instance_settings: InstanceAttributes
     ) -> Result[bool | None, str | None]:
         """
-        Create instance if it doesn't exist. New settings are saved if valid
+        Create instance if it doesn't exist. New settings are saved if valid.
         Adds a new model instance to RAG and a new llmrule table to database
         :param caller_id:
         :param document_id:
@@ -283,32 +280,27 @@ class PluginCore:
         max_tokens: int = instance_settings.max_tokens
         tim_paths: str = instance_settings.tim_paths
 
-        # check that user owns the doc where plugin is being inserted
         if not self._owns_document(caller_id, document_id):
             return Result(None, "Insufficient rights")
 
-        # validate mode
-        rag_mode: RagMode | None = self._parse_rag_mode(llm_mode)
+        rag_mode = self._parse_rag_mode(llm_mode)
         if rag_mode is None:
             return Result(None, f"Invalid rag mode [{llm_mode}] given")
 
-        # validate requested model
-        supported_models: dict[str, ModelInfo] = self.rag.get_supported_models()
+        supported_models = self.rag.get_supported_models()
         if model_id not in supported_models:
             return Result(None, f"Given model [{model_id}] not supported")
 
-        # parse and validate TIM_PATHS
-        paths_for_indexing: list[str] = self._parse_paths(tim_paths)
+        paths_for_indexing = self._parse_paths(tim_paths)
         if not paths_for_indexing and rag_mode == RagMode.RETRIEVE:
             return Result(None, "Give at least one path when using summarizing mode")
 
-        # katotaan oikeudet ja haetaan samalla kaikki doc/folderit indeksointiin myöhemmin (kutsujen minimoimiseksi)
-        items = self._fetch_items_by_paths(paths_for_indexing)
-        if not items.ok():
-            return Result(None, items.error)
-        items = items.value
+        docs = self._fetch_docs_by_paths(paths_for_indexing)
+        if not docs.ok():
+            return Result(None, docs.error)
+        docs = docs.value
 
-        owns_all = self._owns_all_items(caller_id, items)
+        owns_all = self._owns_all_items(caller_id, docs)
         if owns_all.ok():
             if not owns_all.value:
                 return Result(None, owns_all.error)
@@ -366,9 +358,7 @@ class PluginCore:
     def _owns_document(self, caller_id: int, document_id: int) -> bool:
         """Expects that you have checked already that doc and user exist, throws otherwise"""
 
-        tim_rights: UserItemRights | None = self.tim_database.check_rights(
-            caller_id, document_id
-        )
+        tim_rights = self.tim_database.check_rights(caller_id, document_id)
 
         if tim_rights is None:
             # TODO: proper error?
@@ -376,7 +366,7 @@ class PluginCore:
                 f"(_owns_document) given user {caller_id} or document {document_id} does not exist"
             )
 
-        is_owner: bool = tim_rights.get("owner")
+        is_owner = tim_rights.get("owner")
         if not is_owner:
             return False
 
@@ -396,11 +386,11 @@ class PluginCore:
     @staticmethod
     def _parse_paths(paths: str) -> list[str]:
         """
-        Gets a string, splits it with separator as ",", removes empty entries and trims each entry
+        Gets a string, splits it with separator as "\n", removes empty entries and trims each entry
         :param paths:
         :return: list of paths or an empty list
         """
-        parts = [x.strip() for x in paths.split(",") if x.strip()]
+        parts = [x.strip() for x in paths.split("\n") if x.strip()]
 
         return parts
 
@@ -419,56 +409,57 @@ class PluginCore:
         # TODO: impl
         return Result(value="ok", error=None)
 
-    def _fetch_items_by_paths(
+    def _fetch_docs_by_paths(
         self, paths: list[str]
-    ) -> Result[list[Item] | None, str | None]:
+    ) -> Result[list[Document] | None, str | None]:
         """
-        Get Items (doc or folder) that correspond with given paths.
+        Get docs that correspond with given paths.
+        If one of paths is a Folder, all the documents within its subfolders are added.
+        All Documents within returned list are unique by id.
         :param paths:
         :return: list[Item] | None
         """
-        found_items: list[Item] = []
+        documents = []
         for path in paths:
-            item = self.tim_database.fetch_item_by_path(path)
-            if not item:
+            found_documents = self.tim_database.get_tim_documents_by_path(path)
+            if not found_documents:
                 return Result(error=f"Given path [{path}] does not exist")
-            found_items.append(item)
+            documents.extend(found_documents)
 
-        return Result(value=found_items)
+        doc_set = list(set(documents))
+
+        return Result(value=doc_set)
 
     def _owns_all_items(
-        self, user_id: int, items: list[Item]
+        self, user_id: int, documents: list[Document]
     ) -> Result[bool | None, str | None]:
         """
-        Checks for all items that the given user owns them
+        Checks for all documents that the given user owns them
         :param user_id: User for which the right is checked
-        :param items: Item for which the user has or has no right
-        :return: If all items are owned [True, None]
-                 If no items are provided [True, None]
-                 If not all items are owned [False, msg on item not owned]
+        :param documents: Document for which the user has or has no right
+        :return: If all documents are owned [True, None]
+                 If no documents are provided [True, None]
+                 If not all documents are owned [False, msg on item not owned]
                  if error happens [None, error_msg]
         """
 
-        for item in items:
-            right = self.tim_database.get_rights_per_item(user_id, item)
+        for document in documents:
+            doc_id = document.id
+            right = self.tim_database.check_rights(user_id, doc_id)
             if not right:
                 return Result(
-                    error=f"Could not get rights for item [{item}] for user [{user_id}]"
+                    error=f"Could not get rights for document [{document}] for user [{user_id}]"
                 )
 
             is_owner: bool = right.get("owner")
             if not is_owner:
-                return Result(False, f"No owner rights for [{item.path}]")
+                return Result(False, f"No owner rights for [{document.docinfo.path}]")
 
         return Result(value=True)
 
     @staticmethod
     def _generate_id() -> str:
         return uuid.uuid4().hex
-
-    @staticmethod
-    def _parse_tim_paths(paths: str):
-        pass
 
     @staticmethod
     def _parse_rag_mode(mode: str) -> RagMode | None:

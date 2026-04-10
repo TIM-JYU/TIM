@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 from timApp.document.document import Document
 from timApp.document import docentry
+from timApp.document.docentry import DocEntry
 from timApp.item.item import Item
 from timApp.user.user import User
 from timApp.auth.get_user_rights_for_item import (
@@ -39,10 +40,19 @@ class TimDatabase:
     @staticmethod
     def get_tim_documents_by_path(path: str) -> list[Document]:
         """
-        Returns a list of documents corresponding to the given path.
+        Returns all documents in the given path recursively.
+        If no documents are found, returns empty list.
+        If path is a document the document is returned.
+        If path is a folder all the documents in the folder and it's subfolders are returned recursively.
+        If path is neither a folder nor a document, returns empty list.
         """
-        doc_entries = docentry.get_documents(filter_folder=path)
         documents = []
+        doc = DocEntry.find_by_path(path)
+        if doc:
+            documents.append(doc.document)
+            return documents
+
+        doc_entries = docentry.get_documents(filter_folder=path)
         for d in doc_entries if doc_entries else []:
             documents.append(d.document)  # paragraphs -> .get_paragraphs()
         return documents
@@ -59,23 +69,3 @@ class TimDatabase:
             return rights
         else:
             return None
-
-    @staticmethod
-    def fetch_item_by_path(item_path: str) -> Item | None:
-        """
-        Gets item by path.
-        """
-        return Item.find_by_path(item_path)
-
-    @staticmethod
-    def get_rights_per_item(user_id: int, item: Item) -> UserItemRights | None:
-        """
-        Gets the rights for the given item. None is returned if user doesn't exist.
-        """
-        user = User.get_by_id(user_id)
-
-        if not user:
-            return None
-
-        rights = get_user_rights_for_item(item, user)
-        return rights
