@@ -65,11 +65,6 @@ class ChatModel(Protocol):
         """
         ...
 
-    # TODO: needed?
-    def get_models(self) -> list[ModelInfo]:
-        """Get all the available models from the Model API."""
-        ...
-
 
 class AsyncChatModel(Protocol):
     """
@@ -108,10 +103,6 @@ class AsyncChatModel(Protocol):
 
         :return: `ModelInfo` of the chat model.
         """
-        ...
-
-    async def get_models(self) -> list[ModelInfo]:
-        """Get all the available models from the Model API."""
         ...
 
 
@@ -296,13 +287,6 @@ class GenericApiChatModel(ChatModel):
         """Return info about the model."""
         return self._info
 
-    def get_models(self) -> list[ModelInfo]:
-        """Get all the available models from the Model API."""
-        return [
-            ModelInfo(model_id=m.id, provider=self._info.provider)
-            for m in self._client.models.list()
-        ]
-
 
 class AsyncGenericApiChatModel(AsyncChatModel):
     """
@@ -350,13 +334,6 @@ class AsyncGenericApiChatModel(AsyncChatModel):
     def get_info(self) -> ModelInfo:
         """Return info about the model."""
         return self._info
-
-    async def get_models(self) -> list[ModelInfo]:
-        """Get all the available models from the Model API."""
-        models = await self._client.models.list()
-        return [
-            ModelInfo(model_id=m.id, provider=self._info.provider) async for m in models
-        ]
 
 
 class OpenAiChatModel(GenericApiChatModel):
@@ -407,9 +384,6 @@ class DummyChatModel(ChatModel):
     def get_info(self) -> ModelInfo:
         return self._info
 
-    def get_models(self) -> list[ModelInfo]:
-        return []
-
 
 class DummyAsyncChatModel(AsyncChatModel):
     """A dummy async chat model for testing."""
@@ -436,9 +410,6 @@ class DummyAsyncChatModel(AsyncChatModel):
     def get_info(self) -> ModelInfo:
         return self._info
 
-    async def get_models(self) -> list[ModelInfo]:
-        return []
-
 
 def _split_keep_left(data: str, d: str) -> list[str]:
     """
@@ -453,6 +424,62 @@ def _split_keep_left(data: str, d: str) -> list[str]:
     if data.endswith(d):
         return parts
     return parts[:-1] + [parts[-1][: -len(d)]] if parts else []
+
+
+def _resolve_base_url(provider: Provider, base_url: str | None) -> str:
+    """Resolve provider base URL for OpenAI-compatible APIs."""
+    if base_url is not None:
+        return base_url.rstrip("/")
+    if provider == "openai":
+        return "https://api.openai.com/v1"
+    if provider == "anthropic":
+        return "https://api.anthropic.com/v1"
+    if provider == "google":
+        return "https://generativelanguage.googleapis.com/v1beta/openai"
+    raise ValueError(f"Unknown provider: {provider}")
+
+
+class GenericApiClient:
+    """API client for account level information."""
+
+    def __init__(self, provider: Provider, api_key: str, base_url: str | None = None):
+        self._provider = provider
+        self._api_key = api_key
+        self._base_url = _resolve_base_url(provider, base_url)
+        self._client = OpenAI(api_key=self._api_key, base_url=self._base_url)
+
+    def list_models(self) -> list[ModelInfo]:
+        """Get all the available models from the Model API.
+
+        :raises ChatModelError: If an error occurred.
+        :return: List of all models from the provider API.
+        """
+        try:
+            models = self._client.models.list()
+            return [ModelInfo(model_id=m.id, provider=self._provider) for m in models]
+        except Exception as e:
+            raise ChatModelError(
+                kind=ModelErrorKind.unknown, description=str(e), cause=e
+            )
+
+    def verify_api_key(self) -> bool:
+        """Return True if the key can access the provider API."""
+        try:
+            self._client.models.list()
+            return True
+        except Any:
+            return False
+
+    def check_model_access(self, model_id: str) -> bool:
+        """Check if the API key has access to the given model id.
+
+        :param model_id: The model id to check.
+        :return: True if the model is accessible, False otherwise.
+        """
+        try:
+            return any(m.model_id == model_id for m in self.list_models())
+        except ChatModelError:
+            return False
 
 
 @dataclass(frozen=True)
@@ -493,6 +520,11 @@ class ModelRegistry:
         """Get model info for a specific model."""
         models = self._models.get(provider, {})
         return models.get(model_id)
+
+    @staticmethod
+    def get_supported_providers() -> list[Provider]:
+        """Get the list of supported API providers."""
+        return list(PROVIDERS.keys())
 
     def create(self, spec: ModelSpec) -> ChatModel:
         """
