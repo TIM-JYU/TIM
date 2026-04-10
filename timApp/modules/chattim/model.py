@@ -7,10 +7,12 @@ import openai
 
 
 class ModelErrorKind(Enum):
-    timeout = "timeout"
-    rate_limit = "rate_limit"
-    auth = "auth"
-    unknown = "unknown"
+    Timeout = "Timeout"
+    RateLimit = "RateLimit"
+    Auth = "Auth"
+    NotFound = "NotFound"
+    BadRequest = "BadRequest"
+    Unknown = "Unknown"
 
 
 @dataclass(frozen=True)
@@ -25,7 +27,7 @@ class ModelError(Exception):
     """Status code of the error."""
 
     def __str__(self) -> str:
-        if self.kind == ModelErrorKind.unknown and self.cause is not None:
+        if self.kind == ModelErrorKind.Unknown and self.cause is not None:
             return (
                 f"{str(self.cause)} | Status: {self.status}"
                 if self.status
@@ -48,6 +50,7 @@ class ChatModel(Protocol):
 
         :param messages: The messages to send to the model.
         :param options: Options for controlling the model response.
+        :raises ModelError: If failed to generate a response.
         :return: Response from the model.
         """
         ...
@@ -61,6 +64,7 @@ class ChatModel(Protocol):
 
         :param messages: The messages to send to the model.
         :param options: Options for controlling the model response.
+        :raises ModelError: If failed to generate a response.
         :return: Response from the model.
         """
         ...
@@ -90,6 +94,7 @@ class AsyncChatModel(Protocol):
 
         :param messages: The messages to send to the model.
         :param options: Options for controlling the model response.
+        :raises ModelError: If failed to generate a response.
         :return: Response from the model.
         """
         ...
@@ -103,6 +108,7 @@ class AsyncChatModel(Protocol):
 
         :param messages: The messages to send to the model.
         :param options: Options for controlling the model response.
+        :raises ModelError: If failed to generate a response.
         :return: Response from the model.
         """
         ...
@@ -273,8 +279,10 @@ class GenericApiChatModel(ChatModel):
     ) -> ModelResponse:
         """Generate a model response from the given messages."""
         kwargs = _completion_kwargs(self._info, messages, options, False)
-        # TODO: handle errors
-        res = self._client.chat.completions.create(**kwargs)
+        try:
+            res = self._client.chat.completions.create(**kwargs)
+        except Exception as e:
+            raise _openai_to_model_error(e) from e
         return _parse_completion_response(res)
 
     def generate_stream(
@@ -290,8 +298,10 @@ class GenericApiChatModel(ChatModel):
             )
 
         kwargs = _completion_kwargs(self._info, messages, options, True)
-        # TODO: handle errors
-        stream = self._client.chat.completions.create(**kwargs)
+        try:
+            stream = self._client.chat.completions.create(**kwargs)
+        except Exception as e:
+            raise _openai_to_model_error(e) from e
 
         # Iterate the message chunks in the stream
         for chunk in stream:
@@ -322,8 +332,10 @@ class AsyncGenericApiChatModel(AsyncChatModel):
     ) -> ModelResponse:
         """Generate a model response from the given messages."""
         kwargs = _completion_kwargs(self._info, messages, options, False)
-        # TODO: handle errors
-        res = await self._client.chat.completions.create(**kwargs)
+        try:
+            res = await self._client.chat.completions.create(**kwargs)
+        except Exception as e:
+            raise _openai_to_model_error(e) from e
         return _parse_completion_response(res)
 
     def generate_stream(
@@ -341,8 +353,10 @@ class AsyncGenericApiChatModel(AsyncChatModel):
                 )
 
             kwargs = _completion_kwargs(self._info, messages, options, True)
-            # TODO: handle errors
-            stream = await self._client.chat.completions.create(**kwargs)
+            try:
+                stream = await self._client.chat.completions.create(**kwargs)
+            except Exception as e:
+                raise _openai_to_model_error(e) from e
 
             async for chunk in stream:
                 yield _parse_stream_chunk(chunk)
@@ -589,17 +603,21 @@ def _openai_to_model_error(e: BaseException) -> ModelError:
             openai.PermissionDeniedError,
         ),
     ):
-        return ModelError(ModelErrorKind.auth, description=str(e), cause=e)
+        return ModelError(ModelErrorKind.Auth, description=str(e), cause=e)
     if isinstance(e, openai.RateLimitError):
-        return ModelError(ModelErrorKind.rate_limit, description=str(e), cause=e)
+        return ModelError(ModelErrorKind.RateLimit, description=str(e), cause=e)
     if isinstance(e, (openai.APITimeoutError, openai.APIConnectionError)):
-        return ModelError(ModelErrorKind.timeout, description=str(e), cause=e)
+        return ModelError(ModelErrorKind.Timeout, description=str(e), cause=e)
+    if isinstance(e, (openai.NotFoundError, openai.APIConnectionError)):
+        return ModelError(ModelErrorKind.NotFound, description=str(e), cause=e)
+    if isinstance(e, (openai.BadRequestError, openai.APIConnectionError)):
+        return ModelError(ModelErrorKind.BadRequest, description=str(e), cause=e)
     if isinstance(e, openai.APIStatusError):
         status = getattr(e, "status_code", None)
         return ModelError(
-            kind=ModelErrorKind.unknown, description=str(e), cause=e, status=status
+            kind=ModelErrorKind.Unknown, description=str(e), cause=e, status=status
         )
-    return ModelError(kind=ModelErrorKind.unknown, description=str(e), cause=e)
+    return ModelError(kind=ModelErrorKind.Unknown, description=str(e), cause=e)
 
 
 Provider = Literal["openai", "anthropic", "google", "dummy"]

@@ -28,6 +28,7 @@ from timApp.modules.chattim.model import (
     Usage,
     GenericApiClient,
     Provider,
+    ModelError,
 )
 from timApp.modules.chattim.conversation import ConversationManager, ChatMessage
 
@@ -138,10 +139,17 @@ class PluginCore:
             mode=mode,
             max_tokens=max_tokens_for_req,
         )
-        iterable: Iterable[ModelResponseChunk] = self.rag.answer(
-            msg_data,
-            identifier=document_id,
-        )
+
+        try:
+            iterable: Iterable[ModelResponseChunk] = self.rag.answer(
+                msg_data,
+                identifier=document_id,
+            )
+        except ModelError as e:
+            return Result(error=str(e))
+        except Exception as e:
+            return Result(error=str(e))
+
         prepared = PreparedChatRequest(
             caller_id=caller_id_str,
             document_id=document_id_str,
