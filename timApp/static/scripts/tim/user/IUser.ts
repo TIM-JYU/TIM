@@ -47,9 +47,11 @@ export interface IUserApiKey {
 export interface IUserLLMApiKey {
     model: string;
     APIkey: string;
-    usedQuota: number;
-    availableQuota: number;
-    quotaChecked: boolean;
+    alias: string;
+    // TODO needed for tokens?
+    usedTokens: number;
+    availableTokens: number;
+    tokensChecked: boolean;
 }
 
 export interface IFullUser extends IUser {

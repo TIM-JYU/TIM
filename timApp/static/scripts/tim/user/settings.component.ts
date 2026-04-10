@@ -40,7 +40,12 @@ import {NotificationType, settingsglobals} from "tim/util/globals";
 import type {IOkResponse} from "tim/util/utils";
 import {isIOS, replaceStyle, timeout, to2, toPromise} from "tim/util/utils";
 import type {DocumentOrFolder, ITranslatorUsage} from "tim/item/IItem";
-import type {IFullUser, IUserApiKey, IUserContact} from "tim/user/IUser";
+import {
+    IFullUser,
+    IUserApiKey,
+    IUserLLMApiKey,
+    IUserContact,
+} from "tim/user/IUser";
 import {ContactOrigin} from "tim/user/IUser";
 import type {TimTable} from "tim/plugin/timTable/tim-table.component";
 import {
@@ -636,7 +641,7 @@ type StyleSelectionType =
                 </settings-button-panel>
                 </div>
                 <div>
-                <ng-container>
+                    <ng-container>
                         <span class="form-label">
                             <ng-container i18n>Chattim API Keys</ng-container>
                             <a href="https://tim.jyu.fi/view/tim/ohjeita/dokumenttien-konekaantaminen/en-GB#adding-a-translator-authentication-key">
@@ -645,33 +650,35 @@ type StyleSelectionType =
                             </a>
                         </span>
                         <div class="contact-collection">
-                            <div class="contact-info" *ngFor="let APIkey of userAPIKeys">
+                            <div class="contact-info" *ngFor="let APIkey of userLLMAPIKeys">
+                                <input type="text" class="form-control" [value]="APIkey.alias" disabled>
                                 <input type="text" class="form-control" [value]="APIkey.APIkey" disabled>
-                                <input type="text" class="form-control buttonBorder" [value]="APIkey.translator"
+                                <input type="text" class="form-control buttonBorder" [value]="APIkey.model"
                                        disabled>
-                                <div *ngIf="APIkey.quotaChecked" class="stacked quotaProgressBar">
-                                    <progressbar tooltip="{{APIkey.usedQuota}} / {{APIkey.availableQuota}}"
-                                                 [value]="APIkey.usedQuota" [max]="APIkey.availableQuota"></progressbar>
+                                <div *ngIf="APIkey.tokensChecked" class="stacked quotaProgressBar">
+                                    <progressbar tooltip="{{APIkey.usedTokens}} / {{APIkey.availableTokens}}"
+                                                 [value]="APIkey.usedTokens" [max]="APIkey.availableTokens"></progressbar>
                                 </div>
-                                <button *ngIf="!APIkey.quotaChecked" class="btn" type="button"
-                                        (click)="checkQuota(APIkey)" i18n>
+                                <button *ngIf="!APIkey.tokensChecked" class="btn" type="button"
+                                        (click)="checkTokens(APIkey)" i18n>
                                     Check key's quota
                                 </button>
-                                <button *ngIf="APIkey.quotaChecked" class="btn" type="button"
-                                        (click)="checkQuota(APIkey)">
+                                <button *ngIf="APIkey.tokensChecked" class="btn" type="button"
+                                        (click)="checkTokens(APIkey)">
                                     <i class="glyphicon glyphicon-refresh"></i>
                                 </button>
                                 <button class="btn btn-danger" type="button"
-                                        (click)="deleteKey(APIkey)">
+                                        (click)="deleteLLMKey(APIkey)">
                                     <i class="glyphicon glyphicon-trash"></i>
                                 </button>
                             </div>
                         </div>
                     </ng-container>
-                <settings-button-panel [saved]="saveUserAccountInfo">
+                    <settings-button-panel [saved]="saveUserAccountInfo">
                     <button class="timButton" (click)="openChattimAPIKeyDialog()" i18n>Add new API key</button>
-                </settings-button-panel>
-            </div>
+                    </settings-button-panel>
+                </div>
+            </bootstrap-form-panel>
             <bootstrap-form-panel [disabled]="saving" title="Delete your account" i18n-title anchorId="prefs_delAcc"
                                   [showHeadingAnchors]="true">
                 <button class="timButton btn-danger"
@@ -696,7 +703,7 @@ type StyleSelectionType =
                     </div>
                 </div>
             </bootstrap-form-panel>
-        
+        </div>  
     `,
     styleUrls: ["settings.component.scss"],
 })
@@ -711,6 +718,7 @@ export class SettingsComponent implements DoCheck, AfterViewInit {
     contacts: IUserContact[];
     userContacts = new Map<Channel, IUserContact[]>();
     userAPIKeys: IUserApiKey[] = [];
+    userLLMAPIKeys: IUserLLMApiKey[] = [];
     userEmailContacts: IUserContact[] = [];
     canRemoveCustomContacts = true;
     primaryEmail!: IUserContact;
@@ -747,6 +755,7 @@ export class SettingsComponent implements DoCheck, AfterViewInit {
 
     constructor(private http: HttpClient, private cdr: ChangeDetectorRef) {
         this.getKeys();
+        this.getLLMKeys();
         this.user = settingsglobals().current_user;
         this.consent = this.user.consent;
         this.settings = settingsglobals().userPrefs;
@@ -785,6 +794,12 @@ export class SettingsComponent implements DoCheck, AfterViewInit {
         if (r.ok) {
             this.userAPIKeys = r.result;
         }
+    }
+
+    async getLLMKeys() {
+        // TODO Add fetching users existing LLM keys
+        const result: IUserLLMApiKey[] = [];
+        this.userLLMAPIKeys = result;
     }
 
     async deleteSelectedStyle(
@@ -1230,9 +1245,8 @@ export class SettingsComponent implements DoCheck, AfterViewInit {
     openChattimAPIKeyDialog() {
         void to2(
             showAddChattimAPIKeyDialog((key) => {
-                /*
-                this.userAPIKeys.push(key);
-                this.cdr.detectChanges();*/
+                this.userLLMAPIKeys.push(key);
+                this.cdr.detectChanges();
             })
         );
     }
@@ -1339,6 +1353,10 @@ export class SettingsComponent implements DoCheck, AfterViewInit {
         this.cdr.detectChanges();
     }
 
+    async deleteLLMKey(key: IUserLLMApiKey) {
+        // TODO give option to remove given API key
+    }
+
     /**
      * Checks the quota left for the chosen key and updates it to the progress bar.
      * @param key the key the quota of which is checked
@@ -1360,6 +1378,10 @@ export class SettingsComponent implements DoCheck, AfterViewInit {
         } else {
             await showMessageDialog(r.result.error.error);
         }
+    }
+
+    async checkTokens(key: IUserLLMApiKey) {
+        //TODO Check used tokens for LLM API key
     }
 
     saveUserAccountInfo = async () => {

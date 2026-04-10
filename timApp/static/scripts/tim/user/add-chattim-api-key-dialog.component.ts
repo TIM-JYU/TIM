@@ -39,12 +39,16 @@ import type {IUserLLMApiKey} from "tim/user/IUser";
                 <form>
                     <fieldset [disabled]="saving || saved">
                         <div class="form-group">
-                            <label class="control-label" for="name-select" i18n>LLM model provider</label>
+                            <label class="control-label" for="model-select" i18n>LLM model provider</label>
                             <select class="form-control" name="channel-select" [(ngModel)]="chosenModel">
                                 <option *ngFor="let model of this.llm_models"
                                         value="{{model.name}}"
                                 >{{model.name}}</option>
-                            </select>
+                            </select> 
+                        </div>
+                        <div class="form-group">
+                            <label class="control-label" for="name-select" i18n>Alias</label>
+                            <input class="form-control" type="text" name="name-select" [(ngModel)]="LLMKeyAlias">
                         </div>
                         <div class="form-group">
                             <label class="control-label" for="api-key-text" i18n>API key</label>
@@ -70,7 +74,7 @@ import type {IUserLLMApiKey} from "tim/user/IUser";
                 </a>
                 <button class="timButton"
                         (click)="addNewAPIKey()"
-                        [disabled]="!(chosenModel && apiKey) || saved" i18n>
+                        [disabled]="!(chosenModel && apiKey && LLMKeyAlias) || saved" i18n>
                     Add
                 </button>
                 <button class="timButton" (click)="dismiss()">Close</button>
@@ -86,18 +90,13 @@ export class AddAPIKeyDialogComponent extends AngularDialogComponent<
 
     async ngOnInit() {
         // TODO LLM listauksen haku ja päivitys
-        /*
-        const r = await listTranslators(false);
-        if (r.ok) {
-            this.translators = r.result;
-        }*/
     }
 
     dialogName: string = "AddAPIKey";
 
     chosenModel: string = "";
     apiKey?: string;
-
+    LLMKeyAlias?: string = "";
     saved = false;
     saving = false;
     addError?: string;
@@ -119,9 +118,10 @@ export class AddAPIKeyDialogComponent extends AngularDialogComponent<
             this.saving = true;
 
             const result = await toPromise(
-                this.http.put("/chattim/save_api", {
+                this.http.post("/chattim/save_api", {
                     model: this.chosenModel,
                     apikey: this.apiKey,
+                    alias: this.LLMKeyAlias,
                 })
             );
 
@@ -133,9 +133,10 @@ export class AddAPIKeyDialogComponent extends AngularDialogComponent<
                 this.data.onAdd({
                     model: this.chosenModel,
                     APIkey: this.apiKey!,
-                    availableQuota: 0,
-                    usedQuota: 0,
-                    quotaChecked: false,
+                    alias: this.LLMKeyAlias!,
+                    availableTokens: 0,
+                    usedTokens: 0,
+                    tokensChecked: false,
                 });
                 this.dismiss();
                 this.added = false;
