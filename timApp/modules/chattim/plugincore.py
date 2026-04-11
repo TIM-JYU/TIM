@@ -23,7 +23,13 @@ from timApp.modules.chattim.rag import (
 )
 from typing import Generic, TypeVar, TypedDict
 
-from timApp.modules.chattim.model import ModelResponseChunk, Usage
+from timApp.modules.chattim.model import (
+    ModelResponseChunk,
+    Usage,
+    GenericApiClient,
+    Provider,
+    ModelError,
+)
 from timApp.modules.chattim.conversation import ConversationManager, ChatMessage
 
 T = TypeVar("T")
@@ -133,10 +139,17 @@ class PluginCore:
             mode=mode,
             max_tokens=max_tokens_for_req,
         )
-        iterable: Iterable[ModelResponseChunk] = self.rag.answer(
-            msg_data,
-            identifier=document_id,
-        )
+
+        try:
+            iterable: Iterable[ModelResponseChunk] = self.rag.answer(
+                msg_data,
+                identifier=document_id,
+            )
+        except ModelError as e:
+            return Result(error=str(e))
+        except Exception as e:
+            return Result(error=str(e))
+
         prepared = PreparedChatRequest(
             caller_id=caller_id_str,
             document_id=document_id_str,
@@ -314,9 +327,14 @@ class PluginCore:
         # TODO: kun policy saatu niin tässä check niille
         # TODO: if instance exists -> update OTHERIWISE create
 
+        # TODO: remove hard coded api key and model
         api_key = os.getenv("OPENAI_API_KEY")
         spec = ModelSpec(provider="openai", model_id="gpt-4.1-nano", api_key=api_key)
-        self.rag.add_model(spec, identifier=document_id)
+        try:
+            self.rag.add_model(spec, identifier=document_id)
+        except ValueError as e:
+            return Result(None, str(e))
+
         # TODO: indeksoinnit pyörimään
 
         self.list_of_instance_ids.append(
@@ -468,6 +486,14 @@ class PluginCore:
         except ValueError:
             print(f"Invalid rag mode given: {mode}")
             return None
+
+    @staticmethod
+    def validate_api_key(provider: Provider, api_key: str) -> bool:
+        """Check if the api key is valid."""
+        client = GenericApiClient(provider, api_key)
+        valid = client.verify_api_key()
+        client.close()
+        return valid
 
     @staticmethod
     def _sanitize_input(user_input: str) -> str:
