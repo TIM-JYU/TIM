@@ -80,7 +80,7 @@ export interface AskParams {
     template: `
         <tim-dialog-frame class="chattim-dialog-frame" [size]="'md'">
             <ng-container body>
-                <div class="scroll-box" #chatScroll (scroll)="onScroll()">
+                <div class="scroll-box" #conversationScroll>
                     <div *ngFor="let entry of conversation" #chatEntry>
                         <div class="chat-user">{{ entry.user.content }}</div>
                         <div class="chat-bot" [innerHTML]="entry.agent.content | purify"></div>
@@ -126,7 +126,7 @@ export class ChatTIMComponent
     >
     implements AfterViewInit
 {
-    @ViewChild("chatScroll", {static: false}) scrollFrame!: ElementRef;
+    @ViewChild("conversationScroll", {static: false}) scrollFrame!: ElementRef;
     @ViewChildren("chatEntry") chatEntries!: QueryList<ChatEntry>;
     private scrollContainer?: HTMLElement;
     private scrollScheduled = false;
@@ -137,6 +137,7 @@ export class ChatTIMComponent
     private loadingOlder = false;
     private hasMoreHistory = true;
     private readonly historyPageSize = 20;
+    private readonly scrollUpThreshold = 50;
 
     conversation: ChatEntry[] = [];
 
@@ -168,31 +169,22 @@ export class ChatTIMComponent
         /* calling this.pluginMeta.getTaskIdUrl() too
          early crashes thus we call in ngAfterViewInit */
         this.initDocId();
-        this.scrollContainer = this.scrollFrame.nativeElement as HTMLElement;
-        this.chatEntries.changes.subscribe(() => {
-            // Prevent auto-scrolling to the bottom when prepending older messages
-            if (this.suppressAutoScroll) {
-                this.suppressAutoScroll = false;
-                return;
-            }
-            this.scheduleAutoScroll(true);
-        });
-        await this.initConversation();
+        await this.initScrollContainer();
     }
 
     async onEnter() {
         await this.sendUserInput();
     }
 
-    onScroll() {
+    onScroll = () => {
         const el = this.scrollContainer;
         if (!el) {
             return;
         }
-        if (el.scrollTop <= 10) {
+        if (el.scrollTop <= this.scrollUpThreshold) {
             void this.loadOlderHistory();
         }
-    }
+    };
 
     buttonText() {
         return super.buttonText() ?? "Send";
@@ -207,7 +199,6 @@ export class ChatTIMComponent
             return;
         }
         await this.doSendUserInput();
-        this.userInput = "";
     }
 
     getAttributeType() {
@@ -233,7 +224,36 @@ export class ChatTIMComponent
         }
     }
 
-    async initConversation() {
+    /* Initialize the scrollable chat box. */
+    async initScrollContainer(): Promise<void> {
+        this.scrollContainer = this.scrollFrame.nativeElement as HTMLElement;
+        this.scrollContainer.addEventListener("scroll", this.onScroll, {
+            passive: true,
+        });
+
+        this.chatEntries.changes.subscribe(() => {
+            // Prevent auto-scrolling to the bottom when prepending older messages
+            if (this.suppressAutoScroll) {
+                this.suppressAutoScroll = false;
+                return;
+            }
+            this.scheduleAutoScroll(true);
+        });
+
+        await this.initConversation();
+
+        // Start pinned to bottom on reload
+        requestAnimationFrame(() => {
+            const el = this.scrollContainer;
+            if (!el) {
+                return;
+            }
+            el.scrollTo({top: el.scrollHeight, left: 0, behavior: "auto"});
+        });
+    }
+
+    /* Fetch and initialize the last messages from the conversation. */
+    async initConversation(): Promise<void> {
         if (this.document_id <= 0) {
             return;
         }
@@ -316,7 +336,6 @@ export class ChatTIMComponent
         ) {
             return;
         }
-        console.log("fetchin");
 
         this.loadingOlder = true;
         const prevScrollHeight = el.scrollHeight;
@@ -375,6 +394,7 @@ export class ChatTIMComponent
         this.answer = undefined;
 
         const input: string = this.userInput;
+        this.userInput = "";
         // TODO: ei tarvita user id?
         const user_id: number = Users.getCurrent().id;
         const document_id: number = this.document_id;
@@ -408,8 +428,16 @@ export class ChatTIMComponent
 
         if (response.ok) {
             const pinned = this.isNearBottom();
-            const data = response.result;
-            this.handleError(data.error, "server");
+            const data: AskResponse = response.result;
+
+            // Don't add new chat entry if no answer
+            if (data.error) {
+                this.error = data.error;
+                this.conversation.splice(entry_index, 1);
+                return;
+            }
+
+            this.loadedMessageCount += 2;
             this.answer = data.answer;
             const message: Message = this.conversation[entry_index].agent;
             message.content = this.answer ?? "";
@@ -468,6 +496,13 @@ export class ChatTIMComponent
                 if (!res) {
                     break;
                 }
+                // Don't add new chat entry if no answer
+                if (res.error) {
+                    this.error = res.error;
+                    this.conversation.splice(entry_index, 1);
+                    return;
+                }
+
                 entry.agent.content += res.answer ?? "";
                 didAppend = true;
                 processedIdx += idx + 1;
@@ -493,6 +528,7 @@ export class ChatTIMComponent
                 complete: () => {
                     console.log("Answer completed");
                     entry.agent.timestamp_ms = Date.now();
+                    this.loadedMessageCount += 2;
                     sub.unsubscribe();
                     resolve();
                 },

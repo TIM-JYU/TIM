@@ -206,6 +206,7 @@ class PluginCore:
         user_input: str,
     ) -> Result[str | None, str | None]:
         timestamp_user = ChatMessage.ts_ms()
+        # TODO: Do we save user messages to disk if error occurred from some of the checks or just discard?
         prep = self._prepare_chat_request(caller_id, document_id, user_input)
         if not prep.ok() or not prep.value:
             return Result(error=prep.error)
