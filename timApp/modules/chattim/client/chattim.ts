@@ -7,7 +7,14 @@ import {
     getTopLevelFields,
     nullable,
 } from "tim/plugin/attributes";
-import type {AfterViewInit, ApplicationRef, DoBootstrap} from "@angular/core";
+import {
+    AfterViewInit,
+    ApplicationRef,
+    DoBootstrap,
+    QueryList,
+    ViewChild,
+    ViewChildren,
+} from "@angular/core";
 import {
     Component,
     ElementRef,
@@ -31,6 +38,7 @@ import {DomSanitizer} from "@angular/platform-browser";
 import {Users} from "tim/user/userService";
 import type {CtrlPanelData} from "./controlpanel";
 import {ChatControlPanelComponent} from "./controlpanel";
+import {JsonValue} from "tim/util/jsonvalue";
 
 const PluginMarkupFields = t.intersection([
     t.partial({
@@ -48,9 +56,14 @@ const PluginFields = t.intersection([
     }),
 ]);
 
+export interface Message {
+    content: string;
+    timestamp_ms?: number;
+}
+
 export interface ChatEntry {
-    user: string;
-    agent: string;
+    user: Message;
+    agent: Message;
 }
 
 export interface AskResponse {
@@ -73,17 +86,15 @@ export interface AskParams {
     template: `
         <tim-dialog-frame class="chattim-dialog-frame" [size]="'md'">
             <ng-container body>
-                <div class="scroll-box">
-                    <div *ngFor="let entry of conversation">
-                        <div class="chat-user">{{ entry.user }}</div>
-                        <div class="chat-bot" [innerHTML]="entry.agent | purify"></div>
+                <div class="scroll-box" #chatScroll>
+                    <div *ngFor="let entry of conversation" #chatEntry>
+                        <div class="chat-user">{{ entry.user.content }}</div>
+                        <div class="chat-bot" [innerHTML]="entry.agent.content | purify"></div>
                     </div>
-                </div>
-
-
+                </div> 
 
                 <div class="form-inline">
-                    <label>{{inputStem}}
+                    <label>{{ inputStem }}
                         <input type="text"
                                class="form-control"
                                [(ngModel)]="userInput"
@@ -121,6 +132,14 @@ export class ChatTIMComponent
     >
     implements AfterViewInit
 {
+    @ViewChild("chatScroll", {static: false}) scrollFrame!: ElementRef;
+    @ViewChildren("chatEntry") chatEntries!: QueryList<any>;
+    private scrollContainer?: HTMLElement;
+    private scrollScheduled = false;
+    private scrollWanted = false;
+
+    conversation: ChatEntry[] = [];
+
     answer?: string;
     error?: string;
     isRunning: boolean = false;
@@ -137,8 +156,6 @@ export class ChatTIMComponent
     // TODO: make a configurable option for user in settings?
     useStreaming: boolean = true;
 
-    conversation: ChatEntry[] = [];
-
     constructor(
         el: ElementRef<HTMLElement>,
         http: HttpClient,
@@ -151,6 +168,8 @@ export class ChatTIMComponent
         /* calling this.pluginMeta.getTaskIdUrl() too
          early crashes thus we call in ngAfterViewInit */
         this.initDocId();
+        this.scrollContainer = this.scrollFrame.nativeElement as HTMLElement;
+        this.chatEntries.changes.subscribe(() => this.scheduleAutoScroll(true));
     }
 
     async onEnter() {
@@ -211,7 +230,10 @@ export class ChatTIMComponent
         const document_id: number = this.document_id;
         const body: AskParams = {input, user_id, document_id};
 
-        const entry: ChatEntry = {user: input, agent: ""};
+        const entry: ChatEntry = {
+            user: {content: input, timestamp_ms: Date.now()},
+            agent: {content: ""},
+        };
         const len: number = this.conversation.push(entry);
         const index: number = len - 1;
 
@@ -235,15 +257,20 @@ export class ChatTIMComponent
         );
 
         if (response.ok) {
+            const pinned = this.isNearBottom();
             const data = response.result;
             this.handleError(data.error, "server");
             this.answer = data.answer;
-            this.conversation[entry_index].agent = this.answer ?? "";
+            this.conversation[entry_index].agent = {
+                content: this.answer ?? "",
+                timestamp_ms: Date.now(),
+            };
             // TODO: For testing purposes
             if (data.usage != undefined) {
-                this.conversation[entry_index].agent +=
+                this.conversation[entry_index].agent.content +=
                     "\nTokens used: " + data.usage ?? "";
             }
+            this.scheduleAutoScroll(false, pinned);
         } else {
             this.handleError(response.result.error.error, "http");
         }
@@ -271,6 +298,8 @@ export class ChatTIMComponent
             if (event.type != HttpEventType.DownloadProgress) {
                 return;
             }
+            let didAppend = false;
+            const pinned = this.isNearBottom();
             const partial: string =
                 (event as HttpDownloadProgressEvent).partialText ?? "";
 
@@ -290,13 +319,17 @@ export class ChatTIMComponent
                 if (!res) {
                     break;
                 }
-                entry.agent += res.answer ?? "";
+                entry.agent.content += res.answer ?? "";
+                didAppend = true;
                 processedIdx += idx + 1;
                 // TODO: For dev purposes. Handle tokens somehow else
                 if (res.usage) {
-                    entry.agent += "\nTokens used: " + res.usage;
+                    entry.agent.content += "\nTokens used: " + res.usage;
                 }
                 this.handleError(res.error, "server");
+            }
+            if (didAppend) {
+                this.scheduleAutoScroll(false, pinned);
             }
         };
 
@@ -310,6 +343,7 @@ export class ChatTIMComponent
                 },
                 complete: () => {
                     console.log("Answer completed");
+                    entry.agent.timestamp_ms = Date.now();
                     sub.unsubscribe();
                     resolve();
                 },
@@ -384,6 +418,70 @@ export class ChatTIMComponent
             return;
         }
         console.error(err);
+    }
+
+    /**
+     * Determine if the chat box scroll position is near the end.
+     * @param threshold Threshold for being near the end.
+     */
+    private isNearBottom(threshold = 150): boolean {
+        const el = this.scrollContainer;
+        if (!el) {
+            return false;
+        }
+        const position: number = el.scrollTop + el.clientHeight;
+        return position >= el.scrollHeight - threshold;
+    }
+
+    /**
+     * Auto scroll the chat box when new content is appended.
+     * @param forceNewEntry Force scroll to the bottom.
+     * @param pinnedBeforeUpdate Is the scroll position at the end already.
+     */
+    private scheduleAutoScroll(
+        forceNewEntry = false,
+        pinnedBeforeUpdate?: boolean
+    ) {
+        const el = this.scrollContainer;
+        if (!el) {
+            return;
+        }
+
+        const shouldScroll = forceNewEntry
+            ? true
+            : pinnedBeforeUpdate ?? this.isNearBottom();
+        if (!shouldScroll) {
+            return;
+        }
+
+        this.scrollWanted = true;
+        if (this.scrollScheduled) {
+            return;
+        }
+        this.scrollScheduled = true;
+
+        const behavior = forceNewEntry ? "smooth" : "auto";
+        requestAnimationFrame(() => {
+            this.scrollScheduled = false;
+            if (!this.scrollWanted || !this.scrollContainer) {
+                this.scrollWanted = false;
+                return;
+            }
+            this.scrollWanted = false;
+            this.scrollContainer.scrollTo({
+                top: this.scrollContainer.scrollHeight,
+                left: 0,
+                behavior,
+            });
+        });
+    }
+
+    /**
+     * Return the date string of the timestamp or empty string if undefined.
+     * @param ts Timestamp in milliseconds.
+     */
+    dateString(ts: number | undefined): string {
+        return ts ? new Date(ts).toLocaleString() : "";
     }
 }
 
