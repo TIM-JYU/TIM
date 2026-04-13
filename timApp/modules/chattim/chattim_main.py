@@ -34,6 +34,12 @@ ChatTimInputModel = dict[str, Any]
 ChatTimStateModel = dict[str, Any]
 
 
+@dataclass
+class GenericParams:
+    user_id: int
+    document_id: int
+
+
 class ChatTimAskResponse(TypedDict, total=False):
     answer: str | None
     usage: int | None
@@ -41,17 +47,19 @@ class ChatTimAskResponse(TypedDict, total=False):
 
 
 @dataclass
-class ChatTimAskParams:
+class ChatTimAskParams(GenericParams):
     input: str
-    user_id: int
-    document_id: int
 
 
 @dataclass
-class ChatTimSaveSettingsParams:
-    user_id: int
-    document_id: int
+class ChatTimSaveSettingsParams(GenericParams):
     control_panel_data: InstanceAttributes
+
+
+@dataclass
+class GetMessagesParams(GenericParams):
+    amount: int
+    offset: int
 
 
 def register_route(
@@ -186,6 +194,18 @@ def define_save_settings(params: ChatTimSaveSettingsParams) -> PluginAnswerResp:
     return result
 
 
+def define_get_messages(params: GetMessagesParams) -> list[dict]:
+    user_id = str(params.user_id)
+    document_id = str(params.document_id)
+    amount = params.amount
+    offset = params.offset
+    messages = plugincore.get_messages(user_id, document_id, amount, offset)
+    return [
+        {"content": m.content, "role": m.role, "timestamp_ms": m.timestamp}
+        for m in messages
+    ]
+
+
 def to_ndjson_str(json_data: Any) -> str:
     """Return a newline delimited JSON string.
 
@@ -208,3 +228,4 @@ register_route(chattim, "post", "askStream", ChatTimAskParams, define_ask_stream
 register_route(
     chattim, "post", "settings_save", ChatTimSaveSettingsParams, define_save_settings
 )
+register_route(chattim, "post", "getMessages", GetMessagesParams, define_get_messages)

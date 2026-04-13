@@ -51,6 +51,7 @@ const PluginFields = t.intersection([
 
 export interface Message {
     content: string;
+    role: string;
     timestamp_ms?: number;
 }
 
@@ -157,12 +158,13 @@ export class ChatTIMComponent
         super(el, http, domSanitizer);
     }
 
-    ngAfterViewInit() {
+    async ngAfterViewInit() {
         /* calling this.pluginMeta.getTaskIdUrl() too
          early crashes thus we call in ngAfterViewInit */
         this.initDocId();
         this.scrollContainer = this.scrollFrame.nativeElement as HTMLElement;
         this.chatEntries.changes.subscribe(() => this.scheduleAutoScroll(true));
+        await this.initConversation();
     }
 
     async onEnter() {
@@ -208,6 +210,59 @@ export class ChatTIMComponent
         }
     }
 
+    async initConversation() {
+        if (this.document_id <= 0) {
+            return;
+        }
+        const messages: Message[] = await this.fetchMessages(20);
+
+        if (messages.length == 0) {
+            return;
+        }
+        if (this.conversation.length == 0) {
+            this.conversation.push({
+                user: {role: "user", content: ""},
+                agent: {role: "assistant", content: ""},
+            });
+        }
+        messages.forEach((m) => {
+            if (m.role == "user") {
+                this.conversation.push({
+                    user: m,
+                    agent: {role: "assistant", content: ""},
+                });
+                return;
+            }
+            if (this.conversation.length == 0) {
+                return;
+            }
+            this.conversation[this.conversation.length - 1].agent = m;
+        });
+    }
+
+    /**
+     * Fetch earlier conversation messages from the plugin server.
+     * @param n Amount of messages to fetch.
+     */
+    async fetchMessages(n: number = 10): Promise<Message[]> {
+        const url = this.route("getMessages");
+        const user_id: number = Users.getCurrent().id;
+        const document_id: number = this.document_id;
+
+        const response = await this.httpPost<Message[]>(url, {
+            user_id: user_id,
+            document_id: document_id,
+            amount: n,
+            offset: 0,
+        });
+
+        if (response.ok) {
+            return response.result;
+        }
+        this.handleError(response.result.error.error, "http");
+        return [];
+    }
+
     canSendInput(): boolean {
         const trimmed: string = this.userInput.trim();
         return !this.isRunning && trimmed != "";
@@ -224,8 +279,8 @@ export class ChatTIMComponent
         const body: AskParams = {input, user_id, document_id};
 
         const entry: ChatEntry = {
-            user: {content: input, timestamp_ms: Date.now()},
-            agent: {content: ""},
+            user: {content: input, role: "user", timestamp_ms: Date.now()},
+            agent: {content: "", role: "assistant"},
         };
         const len: number = this.conversation.push(entry);
         const index: number = len - 1;
@@ -254,10 +309,9 @@ export class ChatTIMComponent
             const data = response.result;
             this.handleError(data.error, "server");
             this.answer = data.answer;
-            this.conversation[entry_index].agent = {
-                content: this.answer ?? "",
-                timestamp_ms: Date.now(),
-            };
+            const message: Message = this.conversation[entry_index].agent;
+            message.content = this.answer ?? "";
+            message.timestamp_ms = Date.now();
             // TODO: For testing purposes
             if (data.usage != undefined) {
                 this.conversation[entry_index].agent.content +=

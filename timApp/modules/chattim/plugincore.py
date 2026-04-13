@@ -355,6 +355,11 @@ class PluginCore:
         # TODO: fetch with time window
         return self.history_manager.get_history_n(document_id, caller_id, 10)
 
+    def get_messages(
+        self, caller_id: str, document_id: str, n: int = 10, offset: int = 0
+    ) -> list[ChatMessage]:
+        return self.history_manager.get_history_n(document_id, caller_id, n, offset)
+
     def change_chatmode(self, caller_id: str, document_id: int, mode: RagMode):
         pass
 
