@@ -7,14 +7,8 @@ import {
     getTopLevelFields,
     nullable,
 } from "tim/plugin/attributes";
-import {
-    AfterViewInit,
-    ApplicationRef,
-    DoBootstrap,
-    QueryList,
-    ViewChild,
-    ViewChildren,
-} from "@angular/core";
+import type {AfterViewInit, ApplicationRef, DoBootstrap} from "@angular/core";
+import {QueryList, ViewChild, ViewChildren} from "@angular/core";
 import {
     Component,
     ElementRef,
@@ -38,7 +32,6 @@ import {DomSanitizer} from "@angular/platform-browser";
 import {Users} from "tim/user/userService";
 import type {CtrlPanelData} from "./controlpanel";
 import {ChatControlPanelComponent} from "./controlpanel";
-import {JsonValue} from "tim/util/jsonvalue";
 
 const PluginMarkupFields = t.intersection([
     t.partial({
@@ -133,7 +126,7 @@ export class ChatTIMComponent
     implements AfterViewInit
 {
     @ViewChild("chatScroll", {static: false}) scrollFrame!: ElementRef;
-    @ViewChildren("chatEntry") chatEntries!: QueryList<any>;
+    @ViewChildren("chatEntry") chatEntries!: QueryList<ChatEntry>;
     private scrollContainer?: HTMLElement;
     private scrollScheduled = false;
     private scrollWanted = false;
@@ -253,7 +246,7 @@ export class ChatTIMComponent
     async askPost(body: AskParams, entry_index: number): Promise<void> {
         const response = await this.httpPost<AskResponse>(
             this.route("ask"),
-            Object.values(body)
+            Object.fromEntries(Object.entries(body))
         );
 
         if (response.ok) {
