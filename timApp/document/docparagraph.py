@@ -4,6 +4,7 @@ import json
 import os
 import shelve
 import time
+import traceback
 from collections import defaultdict
 from copy import copy
 from typing import TYPE_CHECKING, Optional
@@ -31,7 +32,7 @@ from timApp.markdown.markdownconverter import (
     AutoCounters,
 )
 from timApp.timdb.exceptions import TimDbException, InvalidReferenceException
-from timApp.util.logger import log_error
+from timApp.util.logger import log_error, log_info
 from timApp.util.rndutils import get_rands_as_dict, SeedType
 from timApp.util.utils import (
     count_chars_from_beginning,
@@ -1192,7 +1193,23 @@ class DocParagraph:
         """Returns the filesystem path for this paragraph."""
         return self._get_path(self.doc, self.id, self.hash)
 
+    @staticmethod
+    def get_stack_str(limit: int = 6) -> str:
+        stack = traceback.extract_stack()
+
+        # Poista tämä funktio itse stackista
+        stack = stack[:-1]
+
+        # Ota viimeiset `limit` framea ja käännä (uusin ensin)
+        last = stack[-limit:]
+        last.reverse()
+
+        return "|".join(f"{s.name}, {s.filename}:{s.lineno}" for s in last)
+
     def __write(self):
+        log_info(
+            f"W: {self.get_id()}/{self.get_hash()}  {DocParagraph.get_stack_str(6)}"
+        )
         file_name = self.get_path()
         does_exist = os.path.isfile(file_name)
 
