@@ -80,7 +80,7 @@ export interface AskParams {
     template: `
         <tim-dialog-frame class="chattim-dialog-frame" [size]="'md'">
             <ng-container body>
-                <div class="scroll-box" #chatScroll>
+                <div class="scroll-box" #chatScroll (scroll)="onScroll()">
                     <div *ngFor="let entry of conversation" #chatEntry>
                         <div class="chat-user">{{ entry.user.content }}</div>
                         <div class="chat-bot" [innerHTML]="entry.agent.content | purify"></div>
@@ -131,6 +131,12 @@ export class ChatTIMComponent
     private scrollContainer?: HTMLElement;
     private scrollScheduled = false;
     private scrollWanted = false;
+    private suppressAutoScroll = false;
+
+    private loadedMessageCount = 0;
+    private loadingOlder = false;
+    private hasMoreHistory = true;
+    private readonly historyPageSize = 20;
 
     conversation: ChatEntry[] = [];
 
@@ -163,12 +169,29 @@ export class ChatTIMComponent
          early crashes thus we call in ngAfterViewInit */
         this.initDocId();
         this.scrollContainer = this.scrollFrame.nativeElement as HTMLElement;
-        this.chatEntries.changes.subscribe(() => this.scheduleAutoScroll(true));
+        this.chatEntries.changes.subscribe(() => {
+            // Prevent auto-scrolling to the bottom when prepending older messages
+            if (this.suppressAutoScroll) {
+                this.suppressAutoScroll = false;
+                return;
+            }
+            this.scheduleAutoScroll(true);
+        });
         await this.initConversation();
     }
 
     async onEnter() {
         await this.sendUserInput();
+    }
+
+    onScroll() {
+        const el = this.scrollContainer;
+        if (!el) {
+            return;
+        }
+        if (el.scrollTop <= 10) {
+            void this.loadOlderHistory();
+        }
     }
 
     buttonText() {
@@ -214,37 +237,25 @@ export class ChatTIMComponent
         if (this.document_id <= 0) {
             return;
         }
-        const messages: Message[] = await this.fetchMessages(20);
 
-        if (messages.length == 0) {
-            return;
-        }
-        if (this.conversation.length == 0) {
-            this.conversation.push({
-                user: {role: "user", content: ""},
-                agent: {role: "assistant", content: ""},
-            });
-        }
-        messages.forEach((m) => {
-            if (m.role == "user") {
-                this.conversation.push({
-                    user: m,
-                    agent: {role: "assistant", content: ""},
-                });
-                return;
-            }
-            if (this.conversation.length == 0) {
-                return;
-            }
-            this.conversation[this.conversation.length - 1].agent = m;
-        });
+        const messages: Message[] = await this.fetchMessages(
+            this.historyPageSize,
+            0
+        );
+        this.loadedMessageCount = messages.length;
+        this.hasMoreHistory = messages.length >= this.historyPageSize;
+        this.conversation = this.messagesToEntries(messages);
     }
 
     /**
      * Fetch earlier conversation messages from the plugin server.
      * @param n Amount of messages to fetch.
+     * @param offset Amount of messages to skip from the end.
      */
-    async fetchMessages(n: number = 10): Promise<Message[]> {
+    async fetchMessages(
+        n: number = 10,
+        offset: number = 0
+    ): Promise<Message[]> {
         const url = this.route("getMessages");
         const user_id: number = Users.getCurrent().id;
         const document_id: number = this.document_id;
@@ -253,7 +264,7 @@ export class ChatTIMComponent
             user_id: user_id,
             document_id: document_id,
             amount: n,
-            offset: 0,
+            offset: offset,
         });
 
         if (response.ok) {
@@ -261,6 +272,97 @@ export class ChatTIMComponent
         }
         this.handleError(response.result.error.error, "http");
         return [];
+    }
+
+    /**
+     * Convert the message list to the conversation chat entries.
+     * @param messages Message list to convert.
+     */
+    messagesToEntries(messages: Message[]): ChatEntry[] {
+        const out: ChatEntry[] = [];
+        let current: ChatEntry | undefined;
+        for (const m of messages) {
+            if (m.role === "user") {
+                current = {
+                    user: m,
+                    agent: {role: "assistant", content: ""},
+                };
+                out.push(current);
+                continue;
+            }
+
+            if (!current) {
+                current = {
+                    user: {role: "user", content: ""},
+                    agent: m,
+                };
+                out.push(current);
+                continue;
+            }
+            current.agent = m;
+            current = undefined;
+        }
+        return out;
+    }
+
+    /** Load older messages in the conversation and prepend them. */
+    async loadOlderHistory(): Promise<void> {
+        const el = this.scrollContainer;
+        if (
+            !el ||
+            this.document_id <= 0 ||
+            this.loadingOlder ||
+            !this.hasMoreHistory
+        ) {
+            return;
+        }
+        console.log("fetchin");
+
+        this.loadingOlder = true;
+        const prevScrollHeight = el.scrollHeight;
+        const prevScrollTop = el.scrollTop;
+
+        const messages: Message[] = await this.fetchMessages(
+            this.historyPageSize,
+            this.loadedMessageCount
+        );
+        this.loadedMessageCount += messages.length;
+        if (messages.length < this.historyPageSize) {
+            this.hasMoreHistory = false;
+        }
+        if (messages.length === 0) {
+            this.loadingOlder = false;
+            return;
+        }
+
+        const olderEntries: ChatEntry[] = this.messagesToEntries(messages);
+        const existing: ChatEntry[] = this.conversation;
+        this.suppressAutoScroll = true;
+
+        // Prepend the entries
+        if (existing.length && olderEntries.length) {
+            const lastOlder: ChatEntry = olderEntries[olderEntries.length - 1];
+            const firstExisting: ChatEntry = existing[0];
+            // Merge the user and assistant messages if boundary is split
+            if (
+                lastOlder.agent.content === "" &&
+                firstExisting.user.content === "" &&
+                firstExisting.agent.content !== ""
+            ) {
+                lastOlder.agent = firstExisting.agent;
+                this.conversation = olderEntries.concat(existing.slice(1));
+            } else {
+                this.conversation = olderEntries.concat(existing);
+            }
+        } else {
+            this.conversation = olderEntries.concat(existing);
+        }
+
+        requestAnimationFrame(() => {
+            const delta = el.scrollHeight - prevScrollHeight;
+            el.scrollTop = prevScrollTop + delta;
+            this.loadingOlder = false;
+        });
     }
 
     canSendInput(): boolean {
