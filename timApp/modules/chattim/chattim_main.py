@@ -226,6 +226,15 @@ def define_validate_api():
         else:
             raise RouteException(description="API Key is invalid.")
 
+    if model == "google":
+        response = requests.get(
+            f"https://generativelanguage.googleapis.com/v1/models?key={key}"
+        )
+        if response.status_code == 200:
+            return ok_response()
+        else:
+            raise RouteException(description="API Key is invalid.")
+
     print(model)
     raise RouteException(description="Selected model not supported.")
 
