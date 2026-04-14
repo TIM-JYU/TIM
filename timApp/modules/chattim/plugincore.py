@@ -293,6 +293,9 @@ class PluginCore:
         max_tokens: int = instance_settings.max_tokens
         tim_paths: str = instance_settings.tim_paths
 
+        if not self._document_exists(document_id):
+            return Result(None, f"Document [{document_id}] does not exist")
+
         if not self._owns_document(caller_id, document_id):
             return Result(None, "Insufficient rights")
 
@@ -396,7 +399,6 @@ class PluginCore:
 
         for right in rights:
             if not right:
-                # TODO: proper errors?
                 raise Exception(f"(_owns_items) given UserItemRight does not exist")
 
         return True
@@ -447,6 +449,12 @@ class PluginCore:
         doc_set = list(set(documents))
 
         return Result(value=doc_set)
+
+    def _document_exists(self, document_id: int) -> bool:
+        if not self.tim_database.get_tim_document_by_id(document_id):
+            return False
+
+        return True
 
     def _owns_all_items(
         self, user_id: int, documents: list[Document]
