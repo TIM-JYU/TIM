@@ -106,7 +106,7 @@ export class AddAPIKeyDialogComponent extends AngularDialogComponent<
     async addNewAPIKey() {
         const validateResponse = await this.validateAPIKey();
 
-        if (validateResponse) {
+        if (validateResponse.ok) {
             this.saving = true;
             // Call the server.
             const result = await toPromise(
@@ -133,9 +133,9 @@ export class AddAPIKeyDialogComponent extends AngularDialogComponent<
                 this.added = false;
                 this.addError = result.result.error.error;
             }
-        } /*else {
+        } else {
             this.addError = validateResponse.result.error.error;
-        }*/
+        }
     }
 
     /**
