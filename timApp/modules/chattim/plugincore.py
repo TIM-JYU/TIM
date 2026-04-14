@@ -120,12 +120,8 @@ class PluginCore:
         document_id_str = str(document_id)
         caller_id_str = str(caller_id)
 
-        history = self.get_history(caller_id_str, document_id_str)
-
         # TODO: remember to fetch with timestamps when the time comes
-        chat_history: list[Message] = [
-            Message(role=m.role, content=m.content) for m in history
-        ]
+        chat_history = self.get_history(caller_id_str, document_id_str)
 
         # TODO: fetch mode for instance
         mode: RagMode = RagMode.RETRIEVE
@@ -352,14 +348,22 @@ class PluginCore:
     ):
         pass
 
-    def get_history(self, caller_id: str, document_id: str) -> list[ChatMessage]:
+    def get_history(self, caller_id: str, document_id: str) -> list[Message]:
         # TODO: fetch with time window
-        return self.history_manager.get_history_n(document_id, caller_id, 10)
+        history = self.history_manager.get_history_n(document_id, caller_id, 10)
+        return [Message(role=m.role, content=m.content) for m in history]
 
-    def get_messages(
-        self, caller_id: str, document_id: str, n: int = 10, offset: int = 0
+    def get_messages_tw(
+        self,
+        caller_id: str,
+        document_id: str,
+        ts_begin: int,
+        ts_end: int,
+        max_count: int = 128,
     ) -> list[ChatMessage]:
-        return self.history_manager.get_history_n(document_id, caller_id, n, offset)
+        return self.history_manager.get_history_time_window(
+            document_id, caller_id, ts_begin, ts_end, max_count
+        )
 
     def change_chatmode(self, caller_id: str, document_id: int, mode: RagMode):
         pass

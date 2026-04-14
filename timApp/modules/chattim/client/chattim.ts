@@ -8,7 +8,7 @@ import {
     nullable,
 } from "tim/plugin/attributes";
 import type {AfterViewInit, ApplicationRef, DoBootstrap} from "@angular/core";
-import {QueryList, ViewChild, ViewChildren} from "@angular/core";
+import {ViewChild} from "@angular/core";
 import {
     Component,
     ElementRef,
@@ -77,11 +77,12 @@ export interface AskParams {
 @Component({
     selector: "chattim-runner",
     encapsulation: ViewEncapsulation.None,
+    // TODO: Display message datetime from the timestamp with `dateString()`
     template: `
         <tim-dialog-frame class="chattim-dialog-frame" [size]="'md'">
             <ng-container body>
                 <div class="scroll-box" #conversationScroll>
-                    <div *ngFor="let entry of conversation" #chatEntry>
+                    <div *ngFor="let entry of conversation">
                         <div class="chat-user">{{ entry.user.content }}</div>
                         <div class="chat-bot" [innerHTML]="entry.agent.content | purify"></div>
                     </div>
@@ -127,17 +128,14 @@ export class ChatTIMComponent
     implements AfterViewInit
 {
     @ViewChild("conversationScroll", {static: false}) scrollFrame!: ElementRef;
-    @ViewChildren("chatEntry") chatEntries!: QueryList<ChatEntry>;
     private scrollContainer?: HTMLElement;
-    private scrollScheduled = false;
-    private scrollWanted = false;
-    private suppressAutoScroll = false;
+    private scrollScheduled: boolean = false;
+    private scrollWanted: boolean = false;
 
-    private loadedMessageCount = 0;
-    private loadingOlder = false;
-    private hasMoreHistory = true;
-    private readonly historyPageSize = 20;
-    private readonly scrollUpThreshold = 50;
+    private loadingOlder: boolean = false;
+    private hasMoreHistory: boolean = true;
+    private readonly historyPageSize: number = 20;
+    private readonly scrollUpThreshold: number = 50;
 
     conversation: ChatEntry[] = [];
 
@@ -154,6 +152,7 @@ export class ChatTIMComponent
     maxTokens = 1000;
     controlpanelError?: string;
     controlpanelResponse?: string;
+
     // TODO: make a configurable option for user in settings?
     useStreaming: boolean = true;
 
@@ -231,15 +230,6 @@ export class ChatTIMComponent
             passive: true,
         });
 
-        this.chatEntries.changes.subscribe(() => {
-            // Prevent auto-scrolling to the bottom when prepending older messages
-            if (this.suppressAutoScroll) {
-                this.suppressAutoScroll = false;
-                return;
-            }
-            this.scheduleAutoScroll(true);
-        });
-
         await this.initConversation();
 
         // Start pinned to bottom on reload
@@ -259,10 +249,8 @@ export class ChatTIMComponent
         }
 
         const messages: Message[] = await this.fetchMessages(
-            this.historyPageSize,
-            0
+            this.historyPageSize
         );
-        this.loadedMessageCount = messages.length;
         this.hasMoreHistory = messages.length >= this.historyPageSize;
         this.conversation = this.messagesToEntries(messages);
     }
@@ -270,27 +258,22 @@ export class ChatTIMComponent
     /**
      * Fetch earlier conversation messages from the plugin server.
      * @param n Amount of messages to fetch.
-     * @param offset Amount of messages to skip from the end.
+     * @param ts_end Timestamp in milliseconds to fetch older messages from.
      */
-    async fetchMessages(
-        n: number = 10,
-        offset: number = 0
-    ): Promise<Message[]> {
+    async fetchMessages(n: number, ts_end?: number): Promise<Message[]> {
         const url = this.route("getMessages");
         const user_id: number = Users.getCurrent().id;
         const document_id: number = this.document_id;
 
-        const response = await this.httpPost<Message[]>(url, {
+        const response = await this.httpPost<{messages: Message[]}>(url, {
             user_id: user_id,
             document_id: document_id,
             amount: n,
-            offset: offset,
+            timestamp_end_ms: ts_end,
         });
-
-        if (response.ok) {
-            return response.result;
+        if (response.ok && Array.isArray(response.result.messages)) {
+            return response.result.messages;
         }
-        this.handleError(response.result.error.error, "http");
         return [];
     }
 
@@ -340,12 +323,12 @@ export class ChatTIMComponent
         this.loadingOlder = true;
         const prevScrollHeight = el.scrollHeight;
         const prevScrollTop = el.scrollTop;
+        const oldestTs = this.getOldestMessageTs();
 
         const messages: Message[] = await this.fetchMessages(
             this.historyPageSize,
-            this.loadedMessageCount
+            oldestTs - 1 // Don't include the one we have
         );
-        this.loadedMessageCount += messages.length;
         if (messages.length < this.historyPageSize) {
             this.hasMoreHistory = false;
         }
@@ -356,7 +339,6 @@ export class ChatTIMComponent
 
         const olderEntries: ChatEntry[] = this.messagesToEntries(messages);
         const existing: ChatEntry[] = this.conversation;
-        this.suppressAutoScroll = true;
 
         // Prepend the entries
         if (existing.length && olderEntries.length) {
@@ -406,6 +388,7 @@ export class ChatTIMComponent
         };
         const len: number = this.conversation.push(entry);
         const index: number = len - 1;
+        this.scheduleAutoScroll(true);
 
         if (this.useStreaming) {
             await this.askPostStream(body, index);
@@ -437,7 +420,6 @@ export class ChatTIMComponent
                 return;
             }
 
-            this.loadedMessageCount += 2;
             this.answer = data.answer;
             const message: Message = this.conversation[entry_index].agent;
             message.content = this.answer ?? "";
@@ -490,9 +472,9 @@ export class ChatTIMComponent
                 if (idx < 0) {
                     break;
                 }
-                const nd_json: string = remaining.slice(0, idx);
+                const json_str: string = remaining.slice(0, idx);
 
-                const res = this.tryParseAskResponse(nd_json);
+                const res = this.tryParseAskResponse(json_str);
                 if (!res) {
                     break;
                 }
@@ -500,12 +482,12 @@ export class ChatTIMComponent
                 if (res.error) {
                     this.error = res.error;
                     this.conversation.splice(entry_index, 1);
-                    return;
+                    break;
                 }
 
                 entry.agent.content += res.answer ?? "";
-                didAppend = true;
                 processedIdx += idx + 1;
+                didAppend = true;
                 // TODO: For dev purposes. Handle tokens somehow else
                 if (res.usage) {
                     entry.agent.content += "\nTokens used: " + res.usage;
@@ -528,7 +510,6 @@ export class ChatTIMComponent
                 complete: () => {
                     console.log("Answer completed");
                     entry.agent.timestamp_ms = Date.now();
-                    this.loadedMessageCount += 2;
                     sub.unsubscribe();
                     resolve();
                 },
@@ -616,6 +597,14 @@ export class ChatTIMComponent
         }
         const position: number = el.scrollTop + el.clientHeight;
         return position >= el.scrollHeight - threshold;
+    }
+
+    private getOldestMessageTs(): number {
+        if (this.conversation.length === 0) {
+            return Date.now();
+        }
+        const oldest: ChatEntry = this.conversation[0];
+        return oldest.user.timestamp_ms ?? oldest.agent.timestamp_ms ?? 0;
     }
 
     /**

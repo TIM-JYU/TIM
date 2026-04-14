@@ -19,7 +19,11 @@ from tim_common.pluginserver_flask import (
     jsonify,
     create_nontask_blueprint,
 )
-from timApp.modules.chattim.plugincore import PluginCore, InstanceAttributes
+from timApp.modules.chattim.plugincore import (
+    PluginCore,
+    InstanceAttributes,
+    ChatMessage,
+)
 
 plugincore = PluginCore()
 
@@ -59,7 +63,7 @@ class ChatTimSaveSettingsParams(GenericParams):
 @dataclass
 class GetMessagesParams(GenericParams):
     amount: int
-    offset: int
+    timestamp_end_ms: int | None = None
 
 
 def register_route(
@@ -194,16 +198,18 @@ def define_save_settings(params: ChatTimSaveSettingsParams) -> PluginAnswerResp:
     return result
 
 
-def define_get_messages(params: GetMessagesParams) -> list[dict]:
+def define_get_messages(params: GetMessagesParams) -> dict:
     user_id = str(params.user_id)
     document_id = str(params.document_id)
     amount = params.amount
-    offset = params.offset
-    messages = plugincore.get_messages(user_id, document_id, amount, offset)
-    return [
+    ts_end = params.timestamp_end_ms or ChatMessage.ts_ms()
+
+    chat_messages = plugincore.get_messages_tw(user_id, document_id, 0, ts_end, amount)
+    messages = [
         {"content": m.content, "role": m.role, "timestamp_ms": m.timestamp}
-        for m in messages
+        for m in chat_messages
     ]
+    return {"messages": messages}
 
 
 def to_ndjson_str(json_data: Any) -> str:

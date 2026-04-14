@@ -96,7 +96,7 @@ class ConversationManager:
         user_id: str,
         ts_begin: int,
         ts_end: int,
-        max_messages: int = 128,
+        max_messages: int,
     ) -> list[ChatMessage] | None:
         """
         Return the message from the history of the specified conversation.
