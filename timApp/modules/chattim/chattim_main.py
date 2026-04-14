@@ -208,6 +208,7 @@ def define_get_messages(params: GetMessagesParams) -> dict:
     messages = [
         {"content": m.content, "role": m.role, "timestamp_ms": m.timestamp}
         for m in chat_messages
+        if m.role in ("user", "assistant")
     ]
     return {"messages": messages}
 

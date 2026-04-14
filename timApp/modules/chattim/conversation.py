@@ -160,7 +160,7 @@ class ConversationStore:
         file_path = self.resolve_conversation_path(plugin_id, user_id)
         to_skip = max(offset, 0)
         try:
-            if last_n is None and to_skip == 0:
+            if last_n is None:
                 # Read all the lines in order from the beginning of the file.
                 with open(file_path, "r", encoding="utf-8") as f:
                     out: list[ChatMessage] = []
@@ -168,7 +168,7 @@ class ConversationStore:
                         msg = self._parse_message_line(line)
                         if msg is not None:
                             out.append(msg)
-                    return out
+                    return out[:-to_skip]
 
             # Read from the end without reading the whole file.
             out_rev: list[ChatMessage] = []
