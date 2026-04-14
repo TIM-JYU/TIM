@@ -1,9 +1,10 @@
+import urllib.request, urllib.error, requests
+
 from dataclasses import dataclass
 from flask import request, Response, stream_with_context
 from typing import Any, TypedDict
 from webargs.flaskparser import use_args
 
-import requests
 from timApp.auth.accesshelper import verify_logged_in
 from timApp.util.flask.requesthelper import RouteException
 from tim_common.marshmallow_dataclass import class_schema
@@ -207,6 +208,19 @@ def define_validate_api():
             headers={"Authorization": f"Bearer {key}"},
         )
         print(response.json())
+        if response.status_code == 200:
+            return ok_response()
+        else:
+            raise RouteException(description="API Key is invalid.")
+
+    if model == "anthropic":
+        response = requests.get(
+            "https://api.anthropic.com/v1/models",
+            headers={
+                "x-api-key": key,
+                "anthropic-version": "2023-06-01",
+            },
+        )
         if response.status_code == 200:
             return ok_response()
         else:
