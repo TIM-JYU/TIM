@@ -1,8 +1,6 @@
 """Routes for document view."""
-
 import dataclasses
 import html
-import logging
 import time
 from difflib import context_diff
 from typing import Union, Any, ValuesView, Generator
@@ -115,6 +113,7 @@ from timApp.item.partitioning import (
 )
 from timApp.item.scoreboard import get_score_infos_if_enabled
 from timApp.item.tag import GROUP_TAG_PREFIX
+from timApp.item.task_summary import TaskInfo, compute_task_info
 from timApp.item.validation import has_special_chars
 from timApp.messaging.messagelist.messagelist_utils import (
     MESSAGE_LIST_DOC_PREFIX,
@@ -797,13 +796,6 @@ def render_doc_view(
     )
     # We need to deference paragraphs at this point already to get the correct task ids
     xs = dereference_pars(xs, context_doc=doc, view_ctx=view_ctx)
-    total_points = None
-    tasks_done = None
-    task_groups = None
-    show_task_info = False
-    breaklines = False
-    hide_total_points = False
-    hide_total_tasks = False
     user_list = []
     teacher_or_see_answers = view_ctx.route.teacher_or_see_answers
     task_ids, plugin_count, no_accesses = find_task_ids(
@@ -842,6 +834,7 @@ def render_doc_view(
         else AnswerCountRule.ValidThenInvalid
     )
     url_groups = usergroups
+    task_summary = TaskInfo(total_tasks=total_tasks)
     if teacher_or_see_answers:
         user_list = None
         ugs = None
@@ -887,24 +880,12 @@ def render_doc_view(
                 user_list, list(set(ugs) - set(ugs_without_access))
             )
     elif doc_settings.show_task_summary() and current_user.logged_in:
-        info = get_points_by_rule(
-            points_sum_rule,
-            task_ids,
-            [current_user.id],
-            force_user=current_user,
-            count_rule=answer_count_rule,
+        task_summary = compute_task_info(
+            doc_info,
+            current_user,
+            task_ids=task_ids,
+            valid_answers_only=show_valid_only,
         )
-        if info:
-            total_points = info[0]["total_points"]
-            tasks_done = info[0]["task_count"]
-            task_groups = info[0].get("groups")
-            breaklines = False
-            show_task_info = tasks_done > 0 or total_points != 0
-            if points_sum_rule:
-                breaklines = points_sum_rule.breaklines
-                show_task_info = show_task_info or points_sum_rule.force
-                hide_total_points = points_sum_rule.hide_total_points
-                hide_total_tasks = points_sum_rule.hide_total_tasks
 
     no_question_auto_numbering = None
 
@@ -1187,16 +1168,7 @@ def render_doc_view(
         slide_background_color=slide_background_color,
         score_infos=score_infos,
         # TODO: Unify "task summary" and "scoreboard" features somehow.
-        task_info={
-            "total_points": total_points,
-            "tasks_done": tasks_done,
-            "total_tasks": total_tasks,
-            "show": show_task_info,
-            "groups": task_groups,
-            "breaklines": breaklines,
-            "hide_total_points": hide_total_points,
-            "hide_total_tasks": hide_total_tasks,
-        },
+        task_info=task_summary,
         peer_review_start=peer_review_start,
         peer_review_stop=peer_review_stop,
         doc_settings=doc_settings,
@@ -1395,6 +1367,21 @@ def create_item_route(
             use_template,
             source,
         )
+    )
+
+
+@view_page.get("/taskSummary/<int:doc_id>")
+def get_task_summary_html(doc_id: int) -> Response:
+    doc = get_doc_or_abort(doc_id)
+    verify_view_access(doc)
+    settings = doc.document.get_settings()
+    if not settings.show_task_summary():
+        raise RouteException("Task summary is not enabled for this document.")
+    current_user = get_current_user_object()
+    task_info = compute_task_info(doc, current_user)
+    return render_template(
+        "partials/task_summary.jinja2",
+        task_info=task_info,
     )
 
 

@@ -484,6 +484,14 @@ export class ViewCtrl implements IController {
             }
         }
 
+        // If we are supposed to show task summary, and we have caching,
+        // there is a chance that the tasks summary is not updated
+        // (e.g. teacher updates points etc.)
+        // As such, we need to fetch the latest tasks summary when we load the page.
+        if (dg.docSettings?.cache && dg.docSettings.show_task_summary) {
+            this.pullLatestTaskSummary();
+        }
+
         this.defaultAction =
             this.defaultActionStorage.get() ?? "Show options window";
         this.reviewCtrl = new ReviewController(this);
@@ -496,6 +504,30 @@ export class ViewCtrl implements IController {
         timLogTime("ViewCtrl end", "view");
 
         this.editingHandler.updateEditBarState();
+    }
+
+    private async pullLatestTaskSummary() {
+        const r = await to($http.get<string>(`/taskSummary/${this.docId}`));
+        if (r.ok) {
+            const data = r.result.data;
+            const parsed = new DOMParser().parseFromString(data, "text/html");
+
+            const newSummary = parsed.querySelector("#task-point-summary");
+            const oldSummary = document.querySelector("#task-point-summary");
+            if (newSummary && oldSummary) {
+                oldSummary.replaceWith(newSummary);
+            }
+
+            const newSmallSummary = parsed.querySelector(
+                "#task-point-summary-small"
+            );
+            const oldSmallSummary = document.querySelector(
+                "#task-point-summary-small"
+            );
+            if (newSmallSummary && oldSmallSummary) {
+                oldSmallSummary.replaceWith(newSmallSummary);
+            }
+        }
     }
 
     private async startDocumentStatePolling() {
