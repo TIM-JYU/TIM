@@ -1,23 +1,33 @@
 .scroll-box {
-  height: 20vh;
-  overflow-y: auto;
+  flex: auto;
+  overflow-y: scroll;
   overflow-x: hidden;
-  padding-right: 3vh
+  padding-right: 15px;
 }
 
 .chat-bot {
   white-space: pre-wrap;
   word-break: break-word;
-  overflow-x: hidden;
-  overflow-y: auto;
-  color: #EB541C
+  color: #EB541C;
 }
 
-.chat-user{
- color: #3DBDB5
+.chat-user {
+  color: #3DBDB5;
 }
 
 .chattim-dialog-frame .modal-dialog {
-    min-width: 35vh;
-    min-height: 32vh;
+  min-width: 35vh;
+  min-height: 32vh;
+  max-height: 90vh;
+  height: 50vh;
+}
+
+.chattim-dialog-frame .modal-body {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.form-inline {
+  margin-top: auto;
 }

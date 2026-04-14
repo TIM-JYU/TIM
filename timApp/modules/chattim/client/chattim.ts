@@ -86,7 +86,12 @@ export interface AskParams {
                         <div class="chat-user">{{ entry.user.content }}</div>
                         <div class="chat-bot" [innerHTML]="entry.agent.content | purify"></div>
                     </div>
-                </div> 
+                </div>
+
+                <div>
+                    <tim-loading *ngIf="isRunning"></tim-loading>
+                    <div *ngIf="error" [innerHTML]="error | purify"></div>
+                </div>
 
                 <div class="form-inline">
                     <label>{{ inputStem }}
@@ -111,9 +116,6 @@ export interface AskParams {
                         [error]="controlpanelError">
                     </chattim-control-panel>
                 </div>
-
-                <tim-loading *ngIf="isRunning"></tim-loading>
-                <div *ngIf="error" [innerHTML]="error | purify"></div>
             </ng-container>
         </tim-dialog-frame>
     `,
@@ -139,7 +141,7 @@ export class ChatTIMComponent
 
     conversation: ChatEntry[] = [];
 
-    answer?: string;
+    answer?: string; // TODO: needed?
     error?: string;
     isRunning: boolean = false;
     userInput = "";
