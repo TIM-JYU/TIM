@@ -521,3 +521,6 @@ class PluginCore:
         if input_len < 2 or input_len > self.max_input_len:
             raise ValueError(f"Invalid input length: {input_len}")
         return sanitized_input
+
+    def get_supported_providers(self):
+        return self.rag.registry.get_supported_providers()

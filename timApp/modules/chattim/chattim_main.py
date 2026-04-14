@@ -216,6 +216,13 @@ def define_validate_api():
     raise RouteException(description="Selected model not supported.")
 
 
+@chattim.get("/get_providers")
+def define_get_providers():
+    response = plugincore.get_supported_providers()
+    print(response)
+    return response
+
+
 def to_ndjson_str(json_data: Any) -> str:
     """Return a newline delimited JSON string.
 

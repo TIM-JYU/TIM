@@ -798,8 +798,6 @@ export class SettingsComponent implements DoCheck, AfterViewInit {
 
     async getLLMKeys() {
         // TODO Add fetching users existing LLM keys
-        const result: IUserLLMApiKey[] = [];
-        this.userLLMAPIKeys = result;
     }
 
     async deleteSelectedStyle(

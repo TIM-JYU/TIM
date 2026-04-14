@@ -41,9 +41,9 @@ import type {IUserLLMApiKey} from "tim/user/IUser";
                         <div class="form-group">
                             <label class="control-label" for="model-select" i18n>LLM model provider</label>
                             <select class="form-control" name="channel-select" [(ngModel)]="chosenModel">
-                                <option *ngFor="let model of this.llm_models"
-                                        value="{{model.name}}"
-                                >{{model.name}}</option>
+                                <option *ngFor="let provider of this.LLMProviders"
+                                        value="{{provider}}"
+                                >{{provider}}</option>
                             </select> 
                         </div>
                         <div class="form-group">
@@ -86,10 +86,8 @@ export class AddAPIKeyDialogComponent extends AngularDialogComponent<
     {onAdd: (key: IUserLLMApiKey) => void},
     void
 > {
-    llm_models = [{name: "openai"}, {name: "copilot"}];
-
     async ngOnInit() {
-        // TODO LLM listauksen haku ja päivitys
+        void this.getLLMProviders();
     }
 
     dialogName: string = "AddAPIKey";
@@ -97,6 +95,7 @@ export class AddAPIKeyDialogComponent extends AngularDialogComponent<
     chosenModel: string = "";
     apiKey?: string;
     LLMKeyAlias?: string = "";
+    LLMProviders: [] = [];
     saved = false;
     saving = false;
     addError?: string;
@@ -191,6 +190,16 @@ export class AddAPIKeyDialogComponent extends AngularDialogComponent<
                 apikey: this.apiKey,
             })
         );
+    }
+
+    async getLLMProviders() {
+        const result = await toPromise(
+            this.http.get<[]>("/chattim/get_providers")
+        );
+        if (result.ok) {
+            this.LLMProviders = result.result;
+            console.log(result);
+        }
     }
 }
 
