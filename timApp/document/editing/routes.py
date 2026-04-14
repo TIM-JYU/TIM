@@ -36,7 +36,6 @@ from timApp.document.docentry import DocEntry, create_document_and_block
 from timApp.document.docinfo import DocInfo
 from timApp.document.docparagraph import DocParagraph
 from timApp.document.docsettings import DocSettings
-from timApp.document.document import Document
 from timApp.document.editing.documenteditresult import DocumentEditResult
 from timApp.document.editing.editrequest import get_pars_from_editor_text, EditRequest
 from timApp.document.editing.globalparid import GlobalParId
@@ -869,66 +868,9 @@ def add_paragraph():
     :return: A JSON object containing the paragraphs in HTML form along with JS, CSS and Angular module dependencies.
 
     """
-    # print("newparagraph")
     md, doc_id = verify_json_params("text", "docId")
     (par_next_id,) = verify_json_params("par_next", require=False)
     return add_paragraph_common(md, doc_id, par_next_id)
-
-
-def add_edit_buttons(p: DocParagraph, md: str, doc: Document):
-    """Adds buttons under chat messages base on edit_buttons document settings
-
-    :param p: paragraph of this chat message
-    :param md: markdown text of this chat message
-    :param doc: document of this chat message
-    :return:
-    """
-    edit_buttons = doc.get_settings().get_edit_buttons()
-    if not edit_buttons:
-        return
-
-    attrs = p.get_attrs()
-    print(p.classes)
-    print(attrs)
-    if "classes" not in attrs or "chat" not in attrs["classes"]:
-        return
-
-    # indentation = 1
-    # p.add_class("chat")
-    # p.add_class("removePre")
-    # p.add_class("chat-indent" + str(indentation))
-
-    md += """
-    \\
-        [vastaa]{.timButton .addBelow}
-        [muokkaa]{.timButton .editChat}
-        [poista]{.timButton .deleteChat}
-    """
-
-    """
-    indent = ""
-    for c in attrs["classes"]:
-        if c.startswith("chatReply"):
-            indent = int(c[len("chatReply") :]) + 1
-
-    if "chatReply" in attrs["classes"]:
-        p.set_attr(
-            "classes",
-            "removePre " + "chatReply" + str(indent),
-        )
-    else:
-        p.set_attr(
-            "classes",
-            "removePre",
-        )
-    """
-    # macroinfo = doc.get_settings().get_macroinfo(view_ctx, user_ctx=user_ctx)
-    # p.get_expanded_markdown(macroinfo)
-
-    p.set_attr("forceclass", "chat")
-    p.set_markdown(md)
-
-    return
 
 
 def add_paragraph_common(md: str, doc_id: int, par_next_id: str | None):
@@ -954,8 +896,6 @@ def add_paragraph_common(md: str, doc_id: int, par_next_id: str | None):
     pars = []
 
     for p in editor_pars:
-        # add_edit_buttons(p, md, doc)
-
         if p.is_setting():
             par = doc.insert_setting_paragraph_obj(p, insert_before_id=par_next_id)
         else:

@@ -11524,6 +11524,14 @@ Separate multiple addresses with commas or write each address on a new line.</so
           <context context-type="linenumber">618,620</context>
         </context-group>
       </trans-unit>
+      <trans-unit id="2533739546599263955" datatype="html">
+        <source>Are you sure you want to delete this message?</source>
+        <target state="new">Are you sure you want to delete this message?</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/document/editing/editing.ts</context>
+          <context context-type="linenumber">313,312</context>
+        </context-group>
+      </trans-unit>
     </body>
   </file>
 </xliff>

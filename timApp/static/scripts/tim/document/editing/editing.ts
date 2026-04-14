@@ -209,7 +209,6 @@ export class EditingHandler {
             });
 
             onClick(".addBelow", ($this, e) => {
-                console.log("add below");
                 this.viewctrl.closePopupIfOpen();
                 const [par, options] = prepareOptions($this[0], "addBelow");
 
@@ -217,7 +216,6 @@ export class EditingHandler {
                     let indent = 0;
 
                     const chatClasses = par.getClasses();
-                    console.log(chatClasses);
                     for (const c of chatClasses) {
                         if (
                             c.startsWith("chatReply") &&
@@ -227,7 +225,6 @@ export class EditingHandler {
                                 c.substring("chatReply".length),
                                 10
                             );
-                            console.log(c);
                         }
                     }
                     if (indent === 0) {
@@ -235,9 +232,8 @@ export class EditingHandler {
                     } else {
                         options.forcedClasses?.push("chatReply" + (indent + 1));
                     }
+                    options.forcedClasses?.push("chatReply");
                     options.forcedClasses?.push("chat");
-
-                    console.log(options.forcedClasses);
                 }
 
                 return this.showAddParagraphBelow(
@@ -248,7 +244,6 @@ export class EditingHandler {
             });
 
             onClick(".editChat", ($this, e) => {
-                console.log("editchat");
                 this.viewctrl.closePopupIfOpen();
                 const [par, options] = prepareOptions($this[0], "addBelow");
                 options.forcedClasses?.push("chat");
@@ -260,29 +255,13 @@ export class EditingHandler {
             });
 
             onClick(".deleteChat", ($this, e) => {
-                console.log("delete chat");
                 this.viewctrl.closePopupIfOpen();
                 const [par, _] = prepareOptions($this[0], "addBelow");
                 const selection = UnbrokenSelection.explicit(par);
-                // console.log(par.par.htmlElement);
 
                 const docId = this.viewctrl.docId;
-                console.log("delete docId", docId);
                 const parId = par.par.id;
-                console.log("delete parId", parId);
                 return this.deleteChatMessage(docId, parId, selection, par);
-                /*
-                const div = document.createElement("div");
-                div.textContent = "poistettu";
-                const [par2, options2] = prepareOptions(div, "addAbove");
-                void this.addParagraph(
-                    e.originalEvent,
-                    EditType.AddAbove,
-                    par2,
-                    options2
-                );
-
-                 */
             });
 
             onClick(".pasteBottom", (_$this, e) => {
@@ -331,17 +310,19 @@ export class EditingHandler {
         par: ParContext
     ) {
         const confirmDi = window.confirm(
-            "Are you sure you want to delete this message"
+            $localize`Are you sure you want to delete this message?`
         );
         let parClassesString = "";
         for (const c of par.getClasses()) {
             parClassesString += "." + c + " ";
         }
-        const text =
-            "#- {" + parClassesString + "}" + "\n" + this.getDeleteButtonText();
+        parClassesString += ".deletedChat";
+        const text = `#- {${parClassesString}}\n${this.getDeleteReplaceText()}`;
+
         if (!confirmDi) {
             return;
         }
+
         const extraData = {
             docId: docId,
             id: parId,
@@ -391,22 +372,13 @@ export class EditingHandler {
                 await showMessageDialog(chs);
             }
         }
-        /*
-        const response = await to(
-            $http.post<IParResponse>(`/deleteParagraph/${docId}`, {
-                par: parId,
-            })
-        );
-        if (!response.ok) {
-            throw Error("deleteChat failed");
-        } else {
-            this.handleDelete({type: EditType.Edit, pars: selection});
-        }
-        */
     }
 
+    /**
+     * Markdown of edit_buttons.
+     * @private
+     */
     private getEditButtonsText() {
-        console.log(documentglobals().docSettings.edit_buttons);
         const buttons = documentglobals().docSettings.edit_buttons;
         if (buttons === undefined) {
             return "";
@@ -424,17 +396,24 @@ export class EditingHandler {
         return "    \\\n" + buttonsText;
     }
 
-    private getDeleteButtonText() {
+    /**
+     * Get text to replace paragraph content when chat message is deleted.
+     * @private
+     */
+    private getDeleteReplaceText() {
         const buttons = documentglobals().docSettings.edit_buttons;
+        const defaultText = $localize`Deleted`;
         if (buttons === undefined) {
-            return "";
+            return defaultText;
         }
         for (const button of buttons) {
             if (button.action === "delete_chat") {
-                return button.deleteText === undefined ? "" : button.deleteText;
+                return button.deleteText === undefined
+                    ? defaultText
+                    : button.deleteText;
             }
         }
-        return "";
+        return defaultText;
     }
 
     setSelection(s: UserSelection | undefined) {
@@ -529,8 +508,6 @@ export class EditingHandler {
         let firstChatLine = "";
         let isChatMessage = false;
         if (documentglobals().docSettings.edit_buttons) {
-            console.log(options.forcedClasses);
-
             if (options.forcedClasses?.includes("chat")) {
                 isChatMessage = true;
                 // remove first line while editing chat message
@@ -868,14 +845,6 @@ auto_number_headings: 0${CURSOR}
                     par = $(".addBottomContainer").prev();
                     break;
                 case EditType.AddAbove:
-                    /*
-                    if (documentglobals().docSettings.edit_buttons) {
-                        console.log("hello");
-                    } else {
-                        console.log("nope");
-                    }
-                    */
-
                     par = $(
                         position.par.getElementForInsert(EditType.AddAbove)
                     );

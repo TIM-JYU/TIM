@@ -1,6 +1,5 @@
 import type {IAnswerBrowserSettings} from "tim/plugin/attributes";
 import * as t from "io-ts";
-import {TemplateParam} from "tim/ui/showTemplateReplaceDialog";
 import type {ITemplateButton} from "../../../../modules/cs/js/csPlugin";
 
 export type MeetingDateEntry = [string, string, string];
@@ -26,6 +25,12 @@ export interface ILoginSettings {
     hide?: ILoginHideSettings;
 }
 
+/**
+ * Edit button definitions for chat functionality
+ * text: text for button
+ * action: button handler name
+ * deleteText: text to replace chat paragraph content for delete button
+ */
 export const EditButton = t.intersection([
     t.type({
         text: t.string,
