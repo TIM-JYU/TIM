@@ -143,40 +143,6 @@ export class AddAPIKeyDialogComponent extends AngularDialogComponent<
         } else {
             this.addError = validateResponse.result.error.error;
         }
-
-        /*
-
-        if (validateResponse.ok) {
-            this.saving = true;
-            // Call the server.
-            const result = await toPromise(
-                this.http.put("/translations/apiKeys", {
-                    translator: this.chosenTranslator,
-                    apikey: this.apiKey,
-                })
-            );
-            this.saving = false;
-            this.added = true;
-
-            if (result.ok) {
-                this.saved = true;
-                this.data.onAdd({
-                    translator: this.chosenTranslator,
-                    APIkey: this.apiKey!,
-                    availableQuota: 0,
-                    usedQuota: 0,
-                    quotaChecked: false,
-                });
-                this.dismiss();
-                this.added = false;
-            } else {
-                this.added = false;
-                this.addError = result.result.error.error;
-            }
-        } else {
-            this.addError = validateResponse.result.error.error;
-        }
-        */
     }
 
     /**
