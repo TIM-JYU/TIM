@@ -117,6 +117,11 @@ $menuTab-border: 1px solid lighten($gray-base, 88%);
             }
         }
     }
+
+    a.chosen-heading {
+        background-color: #004494;
+        color: white;
+    }
 }
 
 // TODO: Figure out a way to get theme variables into Angular easily. Potential solution is to use CSS variables.
