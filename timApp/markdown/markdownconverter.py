@@ -7,6 +7,8 @@ import re
 from dataclasses import dataclass, field
 from datetime import date, datetime, timedelta
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
+
+import isodate.duration
 from dateutil import parser
 from re import Pattern
 from typing import TYPE_CHECKING, Iterable, Any
@@ -377,6 +379,19 @@ def str_to_date(s, input_fmt=None):
         raise ValueError(f"time data '{s}' does not match any known format") from e
 
 
+def str_to_duration(s: str) -> timedelta | isodate.Duration:
+    """
+    Convert string to timedelta object
+
+    :param s: ISO duration string
+    :return: timedelta object
+    """
+    s = s.strip()
+    if not s:
+        return timedelta(0)
+    return isodate.parse_duration(s)
+
+
 def week_to_text(
     week_nr, year=None, frmt=" %d1.%m1|", days="ma|ti|ke|to|pe|", first_day=1
 ):
@@ -734,6 +749,7 @@ tim_filters = {
     "slugify": slugify_str,
     "fmtdate": fmt_date,
     "str2date": str_to_date,
+    "str2duration": str_to_duration,
     "preinc": preinc,
     "postinc": postinc,
     "belongs": placeholder_filter("belongs"),
