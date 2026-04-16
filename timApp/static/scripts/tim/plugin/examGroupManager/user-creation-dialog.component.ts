@@ -65,7 +65,7 @@ export interface UserCreationDialogParams {
                         <label for="surname" class="col-sm-2 control-label"><ng-container i18n>Surname</ng-container> <span class="mandatory-asterisk">(<i class="glyphicon glyphicon-asterisk mandatory"></i>)</span></label>
                         <div class="col-sm-10">
                             <input i18n-placeholder type="text"
-                                   [(ngModel)]="surname" #surName="ngModel"
+                                   [(ngModel)]="surname" #surnameInput="ngModel"
                                    required
                                    pattern="[^/]*"
                                    (ngModelChange)="setMessage()"
@@ -111,11 +111,11 @@ export interface UserCreationDialogParams {
                     </ng-container>
                 </tim-alert>
                 
-                <tim-alert *ngIf="surName.invalid && surName.dirty" severity="danger">
-                    <ng-container i18n *ngIf="surName.errors?.['required']">
+                <tim-alert *ngIf="surnameInput.invalid && surnameInput.dirty" severity="danger">
+                    <ng-container i18n *ngIf="surnameInput.errors?.['required']">
                         Surname is required.
                     </ng-container>
-                    <ng-container i18n *ngIf="surName.errors?.['pattern']">
+                    <ng-container i18n *ngIf="surnameInput.errors?.['pattern']">
                         Surname should not contain the slash character.
                     </ng-container>
                 </tim-alert>

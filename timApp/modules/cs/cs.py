@@ -159,7 +159,7 @@ from ttype import TType
 # Kun komento on ajettu, docker-kontti häviää.  Ajon lopuksi tuohotaan
 # ./run/URNDFILE.sh
 # ja kun tämä on hävinnyt, luetaan stdin ja stderr ja tiedot lähetetään
-# selaimelle (Timin kautta)
+# selaimelle (TIMin kautta)
 #
 
 PORT = 5000

@@ -404,7 +404,7 @@ def week_to_text(
     :param frmt: extended Python  date format
     :param days: pipe separated list of day names
     :param first_day: from what weekday to start
-    :return: string suitable for calandar header
+    :return: string suitable for calendar header
     """
     if week_nr <= 0:
         week_nr = date.today().isocalendar()[1]

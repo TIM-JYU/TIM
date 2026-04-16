@@ -13,7 +13,7 @@ dll_file_name=$(basename "$dll_file_path")
 dll_file_name_no_ext="${dll_file_name%.*}"
 dll_deps_path="$dll_file_dir/$dll_file_name_no_ext.deps.json"
 
-# Symlink deps file so that .NET will automatically pick the dependendencies
+# Symlink deps file so that .NET will automatically pick the dependencies
 # Seems like additional-deps no longer is enough on .NET 7
 ln -sf /cs_data/dotnet/configs/nunit_test.deps.json "$dll_deps_path"
 
