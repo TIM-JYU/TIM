@@ -792,15 +792,15 @@ def check_access_from_previous_task(
     current_doc: Document,
 ) -> tuple[bool, str | None]:
     prerequisite_taskid = TaskId.parse(prerequisite_info.taskid, require_doc_id=False)
-    prequisite_taskid_doc = current_doc
+    prerequisite_taskid_doc = current_doc
     if not prerequisite_taskid.doc_id:
         prerequisite_taskid = TaskId.parse(
             str(current_doc.doc_id) + "." + prerequisite_info.taskid
         )
-        prequisite_taskid_doc = get_doc_or_abort(prerequisite_taskid.doc_id).document
+        prerequisite_taskid_doc = get_doc_or_abort(prerequisite_taskid.doc_id).document
     if prerequisite_info.requireLock:
         _, prerequisite_plugin = get_plugin_from_request(
-            prequisite_taskid_doc, prerequisite_taskid, context_user, view_ctx
+            prerequisite_taskid_doc, prerequisite_taskid, context_user, view_ctx
         )
         prerequisite_plugin.set_access_end_for_user(user=context_user.logged_user)
         if (

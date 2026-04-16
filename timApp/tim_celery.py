@@ -255,7 +255,7 @@ def cleanup_verifications():
     Verification expiration is defined by two variables:
 
     VERIFICATION_UNREACTED_CLEANUP_INTERVAL - cleanup interval for unverified verifications.
-    VERIFICATION_REACTED_CLEANUP_INTERVAL - cleanup internval for reacted verifications.
+    VERIFICATION_REACTED_CLEANUP_INTERVAL - cleanup interval for reacted verifications.
     """
     max_unreacted_interval = app.config["VERIFICATION_UNREACTED_CLEANUP_INTERVAL"]
     max_reacted_interval = app.config["VERIFICATION_REACTED_CLEANUP_INTERVAL"]

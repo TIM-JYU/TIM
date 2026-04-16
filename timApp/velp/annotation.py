@@ -1,4 +1,4 @@
-"""The module handles the main logic related to annotations. This includes adding, modifiying and deleting annotations
+"""The module handles the main logic related to annotations. This includes adding, modifying and deleting annotations
 as well as adding comments to the annotations. The module also retrieves the annotations to the document.
 
 :authors: Joonas Lattu, Petteri Palojärvi

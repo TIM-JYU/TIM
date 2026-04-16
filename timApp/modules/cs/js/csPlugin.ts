@@ -2755,7 +2755,7 @@ ${fhtml}
         this.error = undefined;
         if (this.isRunning) {
             return;
-        } // do not run if previuos is still running
+        } // do not run if previous is still running
         let noErrorClear = false;
         this.closeDocument();
         if (this.isSage) {

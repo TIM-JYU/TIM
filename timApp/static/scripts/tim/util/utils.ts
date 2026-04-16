@@ -143,8 +143,8 @@ export function scrollToElement(element?: Element) {
  * Scroll element in to view inside parent.
  * See https://stackoverflow.com/questions/6215779/scroll-if-element-is-not-visible
  * @param helement html element to scroll
- * @param hparent html parent wehre to scroll
- * @param marginleft margins for each direction, these are tried to keep front of scroll dircetion
+ * @param hparent html parent where to scroll
+ * @param marginleft margins for each direction, these are tried to keep front of scroll direction
  * @param margintop
  * @param marginright
  * @param marginbottom

@@ -15,7 +15,7 @@ if TYPE_CHECKING:
 Class for autocounters to be used as Jinja2 filters
 """
 
-LABEL_PRFIX = "c:"
+LABEL_PREFIX = "c:"
 
 REMOTE_REFS_KEY = "remoteRefs"
 AUTOCNTS_KEY = "autocnts"
@@ -490,7 +490,7 @@ class AutoCounters:
                 ref = self.get_type_text(ctype, sname, value, "ref", pure)
                 text = self.get_type_text(ctype, sname, value, "text", pure)
                 long = self.get_type_text(ctype, sname, value, "long", show)
-                prefix = self.get_type_text(ctype, sname, value, "prefix", LABEL_PRFIX)
+                prefix = self.get_type_text(ctype, sname, value, "prefix", LABEL_PREFIX)
                 hname = sname
                 if self.doing_latex_environment and not self.auto_labels:
                     # in case of latex env we use the base name
@@ -672,7 +672,7 @@ class AutoCounters:
         self.counter_stack.append(what)
         if self.renumbering:
             if sname:
-                prefix = self.get_type_text(ctype, sname, 0, "prefix", LABEL_PRFIX)
+                prefix = self.get_type_text(ctype, sname, 0, "prefix", LABEL_PREFIX)
                 anchor = prefix + sname
                 self.new_autonames[sname] = anchor
             else:
@@ -716,7 +716,7 @@ class AutoCounters:
     ) -> str:
         """
         For filter c_begin
-        Cretes placfeholder for labels and LaTeX environment begin
+        Creates a placeholder for labels and LaTeX environment begin
 
         :param name: base name for autoname
         :param what: what LaTeX environment to start

@@ -9,7 +9,7 @@ the images location according to the set of following rules:
 - If an image has a relative path, e.g. "/images/1239854102", then....
 - If an image points to a resource that resides at another host, simply convert the image
   to a simple link at the output. This is due to possible copyright infringements, as the images
-  would othewrise be unrightly copied to the output document.
+  would otherwise be unrightly copied to the output document.
 
 TODO: BETTER DOCUMENTATION
 
