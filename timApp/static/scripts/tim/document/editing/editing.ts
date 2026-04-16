@@ -12,7 +12,7 @@ import {
 } from "tim/editor/parCompiler";
 import type {PareditorController} from "tim/editor/pareditor";
 import type {IModalInstance} from "tim/ui/dialog";
-import {documentglobals} from "tim/util/globals";
+import {documentglobals, genericglobals} from "tim/util/globals";
 import {$http, $timeout} from "tim/util/ngimport";
 import {
     empty,
@@ -77,6 +77,7 @@ import type {
 import {EditType, extraDataForServer} from "tim/document/editing/edittypes";
 import type {ICreateItemDialogParams} from "tim/item/showCreateItemDialog";
 import {showCreateItem} from "tim/item/showCreateItemDialog";
+import {Users} from "tim/user/userService";
 
 export interface IParEditorOptions {
     forcedClasses?: string[];
@@ -246,6 +247,13 @@ export class EditingHandler {
             onClick(".editChat", ($this, e) => {
                 this.viewctrl.closePopupIfOpen();
                 const [par, options] = prepareOptions($this[0], "addBelow");
+
+                console.log(this.checkOwnPar(par), this.isTeacher());
+
+                if (!this.checkOwnPar(par) && !this.isTeacher()) {
+                    return;
+                }
+
                 options.forcedClasses?.push("chat");
                 const selection = UnbrokenSelection.explicit(par);
                 return this.toggleParEditor(
@@ -257,6 +265,11 @@ export class EditingHandler {
             onClick(".deleteChat", ($this, e) => {
                 this.viewctrl.closePopupIfOpen();
                 const [par, _] = prepareOptions($this[0], "addBelow");
+
+                if (!this.checkOwnPar(par) && !this.isTeacher()) {
+                    return;
+                }
+
                 const selection = UnbrokenSelection.explicit(par);
 
                 const docId = this.viewctrl.docId;
@@ -301,6 +314,35 @@ export class EditingHandler {
                 this.createItemVisible = false;
             });
         });
+    }
+
+    /**
+     * Check that paragraph is created by current user.
+     * @param par
+     * @private
+     */
+    private checkOwnPar(par: ParContext) {
+        const user = Users.getCurrent();
+        const parCreators = par.getAuthorInfo()?.usernames;
+
+        if (!parCreators) {
+            return false;
+        }
+        for (const creator of parCreators) {
+            if (creator === user.name) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private isTeacher() {
+        const item = genericglobals().curr_item;
+        if (!item) {
+            return false;
+        }
+
+        return item.rights.teacher;
     }
 
     private async deleteChatMessage(
