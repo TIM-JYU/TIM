@@ -17,18 +17,18 @@
  *           starting with a symbol less than "2" in ASCII order,
  *           for example "1a", "0.5", "1:2" etc.
  * <=2    => find all numbers less or equal than 2
- * >2     => find all numbers greter than 2 also all
-             non empty strings starting with a number greter than 2,
+ * >2     => find all numbers greater than 2 also all
+             non empty strings starting with a number greater than 2,
              for example "2a", "3.5", "4:5" etc.
              And also "cat" because it starts with "c"
-             that is greter than "2" in string comparison.
+             that is greater than "2" in string comparison.
  * \D     => only numeric values (like 3.2 5 0.5 -1 etc.) but not strings
  * \N     => only integer values (like 3 5 -1 etc.) but not strings and not decimal numbers
  * \N>2   => only integer values greater than 2, but not strings and not decimal numbers
  * \N!    => only non-integer string (like 3.2 0.5 cat etc.)
  * \D!    => only no number string (like 3% 0€ cat etc.)
- * !\d+>2 => find all numbers not greter than 2 and all strings,
- * >=2    => find all numbers greter or equal than 2
+ * !\d+>2 => find all numbers not greater than 2 and all strings,
+ * >=2    => find all numbers greater or equal than 2
  * =2     => find all numbers equal to 2
  * >2<4   => find all numbers in range ]2,4[
  * >=2<=4 => find all numbers in range [2,4]

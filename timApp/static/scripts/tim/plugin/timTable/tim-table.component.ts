@@ -1472,7 +1472,7 @@ export class TimTableComponent
             }
             if (tt.run && tt.filters) {
                 await this.applyFilters(tt.filters);
-                // there is no other usefull comd in templates
+                // there is no other useful comd in templates
                 // so do it directly here
                 // toolbar?.applyTemplate(tt);
             }

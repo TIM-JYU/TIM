@@ -26,7 +26,7 @@ modifiers = populated(Modifier)
 
 def all_js_files():
     """
-    :return: list of needed js-files (maybe copiled from ts-files)
+    :return: list of needed js-files (maybe compiled from ts-files)
     """
     files = set()
 
@@ -47,7 +47,7 @@ def all_js_files():
 
 def all_css_files():
     """
-    :return: list of needed css-files (maybe copiled from scss-files)
+    :return: list of needed css-files (maybe compiled from scss-files)
     """
     files = set()
 

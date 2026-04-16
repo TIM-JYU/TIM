@@ -13,6 +13,7 @@ import filelock
 from commonmark.node import Node
 from jinja2.sandbox import SandboxedEnvironment
 
+from timApp.document.viewcontext import ViewRoute
 from timApp.document.documentparser import DocumentParser
 from timApp.document.documentparseroptions import DocumentParserOptions
 from timApp.document.documentwriter import DocumentWriter
@@ -692,6 +693,7 @@ class DocParagraph:
                     return p.get_referenced_pars()[0]
                 except (InvalidReferenceException, IndexError) as e:
                     p.was_invalid = True
+                    # noinspection PyProtectedMember
                     p._set_html(get_error_html(e))
                     return p
 
@@ -718,6 +720,7 @@ class DocParagraph:
                         if not par.from_preamble():
                             changed_pars.append(par)
                 par.html_cache[auto_macro_hash] = h
+                # noinspection PyProtectedMember
                 par._set_html(h, sanitized=True)
                 if persist and not par.from_preamble():
                     par.__write()
@@ -1038,8 +1041,30 @@ class DocParagraph:
         """Returns the filesystem path for this paragraph."""
         return self._get_path(self.doc, self.id, self.hash)
 
+    @staticmethod
+    def get_stack_str(limit: int = 6, remove_level=0) -> str:
+        import traceback
+
+        stack = traceback.extract_stack()
+
+        # Poista tämä funktio itse stackista
+        stack = stack[: -1 - remove_level]
+
+        # Ota viimeiset `limit` framea ja käännä (uusin ensin)
+        last = stack[-limit:]
+        last.reverse()
+
+        return "|".join(f"{s.name}, {s.filename}:{s.lineno}" for s in last)
+
+    @staticmethod
+    def log_filename(file_name: str):
+        from timApp.util.logger import log_error, log_info
+
+        log_info(f"W: {file_name}  {DocParagraph.get_stack_str(15, 1)}")
+
     def __write(self):
         file_name = self.get_path()
+        DocParagraph.log_filename(file_name)
         does_exist = os.path.isfile(file_name)
 
         if not does_exist:
@@ -1412,7 +1437,7 @@ def create_reference(
     par.set_attr("rp", par_id)
     par.set_attr("ra", None)
     par.set_attr("mt", translator)
-
+    # noinspection PyProtectedMember
     par._cache_props()
     return par
 
@@ -1422,12 +1447,12 @@ def create_final_par(
 ) -> DocParagraph:
     """Creates the finalized dereferenced paragraph based on a chain of references."""
     last_ref = reached_par.prev_deref
-    if last_ref.is_translation() and last_ref.get_markdown():
+    if last_ref and last_ref.is_translation() and last_ref.get_markdown():
         md = last_ref.get_markdown()
     else:
         md = reached_par.get_markdown()
 
-    first_ref = reached_par
+    first_ref: DocParagraph = reached_par
     is_any_norm_reference = False
     ref_list = []
     while True:
@@ -1467,6 +1492,7 @@ def create_final_par(
     #  2. what document id to put in HTML's ref-doc-id (might not be same as settings): "ref_doc" attribute
     final_par.original = first_ref
     final_par.ref_doc = reached_par.doc
+    # noinspection PyProtectedMember
     final_par._cache_props()
     final_par.prepared_par = None
     if first_ref.from_preamble():
@@ -1478,23 +1504,26 @@ def create_final_par(
                 src_doc = first_ref.doc.get_source_document()
                 if src_doc:
                     final_par.ref_doc = src_doc
-    elif last_ref.is_translation():
+    elif last_ref and last_ref.is_translation():
         final_par.doc = last_ref.doc
         final_par.ref_doc = last_ref.doc.get_source_document()
 
     final_par.ref_chain = reached_par
 
-    if view_ctx:
+    # If from postanswer-route, no need for html
+    if view_ctx and view_ctx.route != ViewRoute.PostAnswer:
         html = (
             last_ref.get_html(view_ctx, no_persist=False)
-            if last_ref.is_translation()
+            if last_ref and last_ref.is_translation()
             else reached_par.get_html(view_ctx, no_persist=False)
         )
 
         # if html is empty, use the source
         if html == "":
             html = reached_par.get_html(view_ctx, no_persist=False)
+        # noinspection PyProtectedMember
         final_par._set_html(html)
+
     return final_par
 
 

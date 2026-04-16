@@ -912,7 +912,7 @@ def get_question_data_from_document(
     :return: markup for question
     """
     # pick up question from document, for saving question see edit.py question_convert_js_to_yam
-    # par_id might be like 100.Ruksit.SpQA0NX2itOd  and one must cut the beginin
+    # par_id might be like 100.Ruksit.SpQA0NX2itOd  and one must cut the beginning
     i = par_id.rfind(".")
     if i >= 0:
         par_id = par_id[i + 1 :]

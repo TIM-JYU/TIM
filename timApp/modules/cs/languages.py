@@ -344,14 +344,14 @@ class Language:
     @staticmethod
     def js_files():
         """
-        :return: list of needed js-files (maybe copiled from ts-files)
+        :return: list of needed js-files (maybe compiled from ts-files)
         """
         return ["/cs/js/build/csModule.js"]
 
     @staticmethod
     def css_files():
         """
-        :return: list of needed css-files (maybe copiled from scss-files)
+        :return: list of needed css-files (maybe compiled from scss-files)
         """
         return ["/csstatic/css/cs.css"]
 

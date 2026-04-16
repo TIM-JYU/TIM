@@ -23,6 +23,13 @@ extend-exclude = [
     "processing.js",
     "codeHighlight.scss",
     "timApp/migrations/versions/*.py",
+    "timApp/tests/server/expected/printing/*.tex",
+    "timApp/static/tim_docs/initial/*.md",
+    "timApp/modules/cs/static/mindsim/",
+    "timApp/modules/cs/gethtml/",
+    "timApp/modules/cs/static/dfa/",
+    "timApp/modules/cs/java/RunAll.java",
+    "timApp/i18n/*.json",
 ]
 
 [type.po]
@@ -97,3 +104,16 @@ requrie = "require"
 rexexp = "regexp"
 sthe = "the"
 whinch = "which"
+ffrom = "ffrom"
+iy = "iy"
+pn = "pn"
+Braket = "Braket"
+formattings = "formattings"
+password_quess = "password_quess"
+vai = "vai"
+esource = "esource"
+ein = "ein"
+appar = "appar"
+iin = "iin"
+quess = "quess"
+alis = "alis"

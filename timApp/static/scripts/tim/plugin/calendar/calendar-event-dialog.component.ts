@@ -283,7 +283,7 @@ import {PurifyModule} from "tim/util/purify.module";
             </ng-container>
             <ng-container class="col-sm-12" footer>
                 <div class="col-sm-12 row">
-                <span [hidden]="hideEventFulLSpan()" style="float: left; margin-left: 10px">
+                <span [hidden]="hideEventFullSpan()" style="float: left; margin-left: 10px">
                     <span i18n>The event is full</span>
                     <span *ngIf="data.meta?.isExtra" i18n> (you can still book as extra)</span>
                 </span>
@@ -869,7 +869,7 @@ export class CalendarEventDialogComponent extends AngularDialogComponent<
     /**
      * True if editing is enabled. If not: true if event is not full or user has booked the event. Otherwise, false.
      */
-    hideEventFulLSpan() {
+    hideEventFullSpan() {
         if (this.isEditEnabled()) {
             return true;
         }
