@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from flask import request, Response, stream_with_context
-from typing import Any, TypedDict
+from typing import Any, TypedDict, Callable
 from webargs.flaskparser import use_args
 from tim_common.marshmallow_dataclass import class_schema
 
@@ -14,9 +14,16 @@ from tim_common.pluginserver_flask import (
     PluginReqs,
     EditorTab,
     PluginAnswerWeb,
+    Flask,
+    Blueprint,
+    jsonify,
     create_nontask_blueprint,
 )
-from timApp.modules.chattim.plugincore import PluginCore, InstanceAttributes
+from timApp.modules.chattim.plugincore import (
+    PluginCore,
+    InstanceAttributes,
+    ChatMessage,
+)
 
 plugincore = PluginCore()
 
@@ -31,6 +38,12 @@ ChatTimInputModel = dict[str, Any]
 ChatTimStateModel = dict[str, Any]
 
 
+@dataclass
+class GenericParams:
+    user_id: int
+    document_id: int
+
+
 class ChatTimAskResponse(TypedDict, total=False):
     answer: str | None
     usage: int | None
@@ -38,17 +51,38 @@ class ChatTimAskResponse(TypedDict, total=False):
 
 
 @dataclass
-class ChatTimAskParams:
+class ChatTimAskParams(GenericParams):
     input: str
-    user_id: int
-    document_id: int
 
 
 @dataclass
-class ChatTimSaveSettingsParams:
-    user_id: int
-    document_id: int
+class ChatTimSaveSettingsParams(GenericParams):
     control_panel_data: InstanceAttributes
+
+
+@dataclass
+class GetMessagesParams(GenericParams):
+    amount: int
+    timestamp_end_ms: int | None = None
+
+
+def register_route(
+    app: Flask | Blueprint,
+    method: str,
+    route: str,
+    route_model: type,
+    route_handler: Callable[[Any], Any],
+) -> None:
+    @app.route(f"/{route}", methods=[method])
+    @use_args(class_schema(route_model)(), locations=("json",))
+    def define(m: Any) -> Response:
+        r = route_handler(m)
+        # Allow handlers to define their own Flask Response
+        if isinstance(r, Response):
+            return r
+        return jsonify(r)
+
+    setattr(define, "__name__", route)
 
 
 @dataclass
@@ -93,18 +127,7 @@ header: ChatTIM
     return result
 
 
-chattim = create_nontask_blueprint(
-    name=__name__,
-    plugin_name="chattim",
-    html_model=ChatTimHtmlModel,
-    reqs_handler=reqs,
-    csrf=csrf,
-)
-
-
-@chattim.post("/ask")
-@use_args(class_schema(ChatTimAskParams)(), locations=("json",))
-def define_ask_route(params: ChatTimAskParams):
+def define_ask_route(params: ChatTimAskParams) -> ChatTimAskResponse:
     user_input = params.input
     user_id = params.user_id
     document_id = params.document_id
@@ -119,13 +142,10 @@ def define_ask_route(params: ChatTimAskParams):
         answer=resp.value,
         error=resp.error,
     )
+    return response
 
-    return json_response(response)
 
-
-@chattim.post("/askStream")
-@use_args(class_schema(ChatTimAskParams)(), locations=("json",))
-def define_ask_stream_route(params: ChatTimAskParams):
+def define_ask_stream_route(params: ChatTimAskParams) -> Response:
     user_input = params.input
     user_id = params.user_id
     document_id = params.document_id
@@ -154,9 +174,7 @@ def define_ask_stream_route(params: ChatTimAskParams):
     )
 
 
-@chattim.post("/settings_save")
-@use_args(class_schema(ChatTimSaveSettingsParams)(), locations=("json",))
-def define_save_settings(params: ChatTimSaveSettingsParams):
+def define_save_settings(params: ChatTimSaveSettingsParams) -> PluginAnswerResp:
     web: PluginAnswerWeb = {}
     result: PluginAnswerResp = {"web": web}
 
@@ -174,11 +192,25 @@ def define_save_settings(params: ChatTimSaveSettingsParams):
     error_or_ok = plugincore.save_instance(session_user_id, document_id, panel_data)
     if not error_or_ok.ok():
         web["error"] = error_or_ok.error
-        return json_response(result)
+        return result
 
     web["result"] = "Settings saved!"
+    return result
 
-    return json_response(result)
+
+def define_get_messages(params: GetMessagesParams) -> dict:
+    user_id = str(params.user_id)
+    document_id = str(params.document_id)
+    amount = params.amount
+    ts_end = params.timestamp_end_ms or ChatMessage.ts_ms()
+
+    chat_messages = plugincore.get_messages_tw(user_id, document_id, 0, ts_end, amount)
+    messages = [
+        {"content": m.content, "role": m.role, "timestamp_ms": m.timestamp}
+        for m in chat_messages
+        if m.role in ("user", "assistant")
+    ]
+    return {"messages": messages}
 
 
 def to_ndjson_str(json_data: Any) -> str:
@@ -188,3 +220,19 @@ def to_ndjson_str(json_data: Any) -> str:
     :return: A string representation of the JSON data ending in a newline.
     """
     return to_json_str(json_data) + "\n"
+
+
+chattim = create_nontask_blueprint(
+    name=__name__,
+    plugin_name="chattim",
+    html_model=ChatTimHtmlModel,
+    reqs_handler=reqs,
+    csrf=csrf,
+)
+
+register_route(chattim, "post", "ask", ChatTimAskParams, define_ask_route)
+register_route(chattim, "post", "askStream", ChatTimAskParams, define_ask_stream_route)
+register_route(
+    chattim, "post", "settings_save", ChatTimSaveSettingsParams, define_save_settings
+)
+register_route(chattim, "post", "getMessages", GetMessagesParams, define_get_messages)

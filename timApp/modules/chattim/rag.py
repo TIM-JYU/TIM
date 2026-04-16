@@ -185,7 +185,6 @@ class Rag:
         """Build the message list to send to the model."""
         mode: RagMode = message_data.mode
         system_prompt: list[Message] = self.system_message(mode)
-        print(system_prompt)
         content: str = message_data.user_prompt
         history: list[Message] = message_data.chat_history
         context: str = message_data.context
