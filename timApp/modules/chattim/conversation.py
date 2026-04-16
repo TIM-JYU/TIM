@@ -71,7 +71,11 @@ class ConversationManager:
         self._store.append_messages(plugin_id, user_id, messages)
 
     def get_history_n(
-        self, plugin_id: str, user_id: str, last_n: int | None = None
+        self,
+        plugin_id: str,
+        user_id: str,
+        last_n: int | None = None,
+        offset: int = 0,
     ) -> list[ChatMessage]:
         """
         Return the last N messages from the history of the specified conversation.
@@ -79,10 +83,11 @@ class ConversationManager:
         :param plugin_id: The ID of the plugin instance.
         :param user_id: The ID of the user.
         :param last_n: Last N messages to return or all if None.
+        :param offset: Amount of messages to skip from the end.
         :return: List of `ChatMessage` objects in the conversation.
         """
         # TODO: check if in cache
-        messages = self._store.load_messages_n(plugin_id, user_id, last_n)
+        messages = self._store.load_messages_n(plugin_id, user_id, last_n, offset)
         return messages or []
 
     def get_history_time_window(
@@ -91,7 +96,7 @@ class ConversationManager:
         user_id: str,
         ts_begin: int,
         ts_end: int,
-        max_messages: int = 128,
+        max_messages: int,
     ) -> list[ChatMessage] | None:
         """
         Return the message from the history of the specified conversation.
@@ -139,7 +144,7 @@ class ConversationStore:
                     continue
 
     def load_messages_n(
-        self, plugin_id: str, user_id: str, last_n: int | None = None
+        self, plugin_id: str, user_id: str, last_n: int | None = None, offset: int = 0
     ) -> list[ChatMessage] | None:
         """
         Loads messages from disk if the conversation exists.
@@ -147,11 +152,13 @@ class ConversationStore:
         :param plugin_id: Plugin instance ID.
         :param user_id: User ID.
         :param last_n: Last N messages to return or all if None.
+        :param offset: Amount of messages to skip from the end.
         :return: List of `ChatMessage` objects or None if no history.
         """
         if last_n is not None and last_n <= 0:
             return []
         file_path = self.resolve_conversation_path(plugin_id, user_id)
+        to_skip = max(offset, 0)
         try:
             if last_n is None:
                 # Read all the lines in order from the beginning of the file.
@@ -161,12 +168,15 @@ class ConversationStore:
                         msg = self._parse_message_line(line)
                         if msg is not None:
                             out.append(msg)
-                    return out
+                    return out[:-to_skip]
 
             # Read from the end without reading the whole file.
             out_rev: list[ChatMessage] = []
             with open(file_path, "rb") as f:
                 for line in self._iter_lines_reverse(f):
+                    if to_skip > 0:
+                        to_skip -= 1
+                        continue
                     msg = self._parse_message_line(line)
                     if msg is None:
                         continue
