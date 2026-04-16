@@ -2,6 +2,7 @@
 Contains initialization of Celery distributed task queue and task functions.
 Note: Add new tasks here. For scheduling add parameters to defaultconfig as well.
 """
+
 import contextlib
 import json
 import logging
@@ -36,6 +37,19 @@ from timApp.util.utils import get_current_time, collect_errors_from_hosts
 from tim_common.vendor.requests_futures import FuturesSession
 
 logger: Logger = get_task_logger(__name__)
+
+FORCELOG_PREFIX = "forcelog:"
+
+
+def fix_celery_output(output: str) -> str:
+    forcelog_lines = [
+        line[len(FORCELOG_PREFIX) :]
+        for line in output.splitlines()
+        if line.startswith(FORCELOG_PREFIX)
+    ]
+    if not forcelog_lines:
+        return f"output len = {len(output)}"
+    return "\n".join(forcelog_lines)
 
 
 def make_celery(appl):
@@ -122,6 +136,7 @@ def do_run_user_function(user_id: int, task_id: str, plugin_input: dict[str, Any
                 handle_exportdata(result, u, wod)
 
             if output := result.result.get("web", {}).get("output"):
+                output = fix_celery_output(output)
                 logger.info(f"Plugin run: {u.name}, result: {output}")
 
             # The user-provided parameters go only to the first plugin. Others will get no parameters.
