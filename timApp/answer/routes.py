@@ -856,7 +856,9 @@ def post_answer_impl(
                 raise PluginException(f"User {user_id} not found")
             users = [ctx_user]  # TODO: Vesa's hack to save answer to student
 
-    view_ctx = ViewContext(ViewRoute.View, False, urlmacros=urlmacros, origin=origin)
+    view_ctx = ViewContext(
+        ViewRoute.PostAnswer, False, urlmacros=urlmacros, origin=origin
+    )
     (
         vr,
         answerinfo,
@@ -1444,9 +1446,9 @@ def preprocess_jsrunner_answer(
         runner_req.input.paramComps
     ):  # TODO: add paramComps to the interface, so no need to manipulate source code
         preprg = runnermarkup.preprogram or ""
-        plugin.values[
-            "preprogram"
-        ] = f"gtools.params = {json.dumps(runner_req.input.paramComps)};\n{preprg}"
+        plugin.values["preprogram"] = (
+            f"gtools.params = {json.dumps(runner_req.input.paramComps)};\n{preprg}"
+        )
     siw = runnermarkup.showInView
     markup_include_opt = value_or_default(
         runnermarkup.includeUsers, MembershipFilter.Current
