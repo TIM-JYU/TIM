@@ -301,7 +301,8 @@ The end.
 
     def test_multiple_subtitles(self):
         self.login_test1()
-        doc = self.create_doc(initial_par="""
+        doc = self.create_doc(
+            initial_par="""
 #-
 filler content
 #- {area="en"}
@@ -324,7 +325,8 @@ Tervetuloa!
 #- {area_end="fi"}
 #-
 more fillers
-""")
+"""
+        )
         self.get(
             f"/print/{doc.path}",
             query_string={"area": "fi", "textplain": True},

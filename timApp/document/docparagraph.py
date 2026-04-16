@@ -4,7 +4,6 @@ import json
 import os
 import shelve
 import time
-import traceback
 from collections import defaultdict
 from copy import copy
 from typing import TYPE_CHECKING, Optional
@@ -32,7 +31,7 @@ from timApp.markdown.markdownconverter import (
     AutoCounters,
 )
 from timApp.timdb.exceptions import TimDbException, InvalidReferenceException
-from timApp.util.logger import log_error, log_info
+from timApp.util.logger import log_error
 from timApp.util.rndutils import get_rands_as_dict, SeedType
 from timApp.util.utils import (
     count_chars_from_beginning,
@@ -153,9 +152,7 @@ class DocParagraph:
         self.attrs: dict[str, str] | None = None
         self.nomacros = None
         self.ref_chain = None
-        self.answer_nr: int | None = (
-            None  # needed if variable tasks, None = not task at all or not variable task
-        )
+        self.answer_nr: int | None = None  # needed if variable tasks, None = not task at all or not variable task
         self.md = ""
         self.id = None
         self.ask_new: bool | None = None  # to send for plugins to force new question
@@ -1195,6 +1192,8 @@ class DocParagraph:
 
     @staticmethod
     def get_stack_str(limit: int = 6) -> str:
+        import traceback
+
         stack = traceback.extract_stack()
 
         # Poista tämä funktio itse stackista
@@ -1207,10 +1206,11 @@ class DocParagraph:
         return "|".join(f"{s.name}, {s.filename}:{s.lineno}" for s in last)
 
     def __write(self):
-        log_info(
-            f"W: {self.get_id()}/{self.get_hash()}  {DocParagraph.get_stack_str(6)}"
-        )
         file_name = self.get_path()
+
+        from timApp.util.logger import log_error, log_info
+
+        log_info(f"W: {file_name}  {DocParagraph.get_stack_str(15)}")
         does_exist = os.path.isfile(file_name)
 
         if not does_exist:

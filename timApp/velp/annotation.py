@@ -6,6 +6,7 @@ as well as adding comments to the annotations. The module also retrieves the ann
 :version: 1.0.0
 
 """
+
 import re
 from dataclasses import field
 
@@ -199,7 +200,7 @@ def check_annotation_edit_access_and_maybe_get_doc(
 
 @annotations.post("/update_annotation")
 def update_annotation(
-    id: int,
+    aid: int,
     visible_to: AnnotationVisibility = field(metadata={"by_value": True}),
     points: float | None = None,
     color: str | None = None,
@@ -210,7 +211,7 @@ def update_annotation(
     """Updates the information of an annotation."""
     verify_logged_in()
     user = get_current_user_object()
-    ann = get_annotation_or_abort(id)
+    ann = get_annotation_or_abort(aid)
     can_edit, d = check_annotation_edit_access_and_maybe_get_doc(user, ann)
     if not can_edit:
         raise AccessDenied("Sorry, you don't have permission to edit this annotation.")
@@ -258,12 +259,12 @@ def is_color_hex_string(s: str) -> bool:
 
 
 @annotations.post("/invalidate_annotation")
-def invalidate_annotation(id: int) -> Response:
+def invalidate_annotation(aid: int) -> Response:
     """Invalidates an annotation by setting its valid_until to current moment."""
 
     verify_logged_in()
     user = get_current_user_object()
-    annotation = get_annotation_or_abort(id)
+    annotation = get_annotation_or_abort(aid)
     can_edit, d = check_annotation_edit_access_and_maybe_get_doc(user, annotation)
     if not can_edit:
         raise AccessDenied(
@@ -290,11 +291,11 @@ def get_annotation_or_abort(ann_id: int) -> Annotation:
 
 
 @annotations.post("/add_annotation_comment")
-def add_comment_route(id: int, content: str) -> Response:
+def add_comment_route(aid: int, content: str) -> Response:
     """Adds a new comment to the annotation."""
     verify_logged_in()
     commenter = get_current_user_object()
-    a = get_annotation_or_abort(id)
+    a = get_annotation_or_abort(aid)
     vis, d = check_visibility_and_maybe_get_doc(commenter, a)
     if not vis:
         raise AccessDenied(
@@ -342,7 +343,8 @@ def get_annotations(doc_id: int, only_own: bool = False) -> Response:
     Also returns all PeerReview rows user can see
 
     :param doc_id: ID of the document
-    :param only_own: If True, only returns annotations made by this user and peer_reviews where this user is the reviewer.
+    :param only_own: If True, only returns annotations made by this user
+                     and peer_reviews where this user is the reviewer.
     """
     d = get_doc_or_abort(doc_id)
     verify_view_access(d)
@@ -350,6 +352,8 @@ def get_annotations(doc_id: int, only_own: bool = False) -> Response:
     current_user = get_current_user_object()
     results = get_annotations_with_comments_in_document(current_user, d, only_own)
     orig_doc_info = d if d.is_original_translation else d.src_doc
+    if orig_doc_info is None:
+        raise RouteException("No original doc")
     if not only_own:
         # TODO: check use cases (only_own == not in view tab)
         #  teachermode should be able to browse all prs when changing user in ab

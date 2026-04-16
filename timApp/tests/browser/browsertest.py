@@ -183,7 +183,9 @@ class BrowserTest(LiveServerTestCase, TimRouteTestBase):
         # raise Exception(url_)
         self.drv.get(url_)
         try:
-            self.wait.until(ec.invisibility_of_element_located((By.CSS_SELECTOR, "tim-loading")))
+            self.wait.until(
+                ec.invisibility_of_element_located((By.CSS_SELECTOR, "tim-loading"))
+            )
         except Exception:
             pass
 
@@ -437,9 +439,9 @@ class BrowserTest(LiveServerTestCase, TimRouteTestBase):
         # Wait until element is present in DOM before attempting interaction
         root = parent or self.drv
         by, value = (By.XPATH, xpath) if xpath else (By.CSS_SELECTOR, selector)
-        WebDriverWait(self.drv, timeout=tries * poll_rate, poll_frequency=poll_rate).until(
-            ec.presence_of_element_located((by, value))
-        )
+        WebDriverWait(
+            self.drv, timeout=tries * poll_rate, poll_frequency=poll_rate
+        ).until(ec.presence_of_element_located((by, value)))
         while True:
             try:
                 e = self.find_element(selector=selector, xpath=xpath, parent=parent)

@@ -289,7 +289,9 @@ def get_md(ttype: TType, query):
 {}
 </pre>
 <p>{}</p>
-""".format(header, stem, usercode, footer)
+""".format(
+            header, stem, usercode, footer
+        )
         return s
 
     if target_format == "md":
@@ -300,7 +302,9 @@ def get_md(ttype: TType, query):
 {}
 ```
 {}
-""".format(header, stem, usercode, footer)
+""".format(
+            header, stem, usercode, footer
+        )
         return s
 
     if target_format == "latex":
@@ -340,7 +344,9 @@ def get_md(ttype: TType, query):
 {}
 
 {}
-""".format(header, stem, usercode, footer)
+""".format(
+        header, stem, usercode, footer
+    )
     return s
 
 

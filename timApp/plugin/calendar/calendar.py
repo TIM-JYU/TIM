@@ -493,7 +493,7 @@ def events_of_user(u: User, filter_opts: FilterOptions | None = None) -> list[Ev
             # Resolve translation, because we want to add events for the original document
             if not doc.is_original_translation:
                 doc = doc.src_doc
-            if verify_view_access(doc, require=False):
+            if doc and verify_view_access(doc, require=False):
                 event_filter |= Event.origin_doc_id == doc.id
 
     # 2. Events that the user is either a booker or setter for
@@ -791,9 +791,11 @@ def save_events(
             signup_before=cal_event.signup_before,
             send_notifications=cal_event.send_notifications,
             important=cal_event.important,
-            tags=[event_tags_dict[tag] for tag in cal_event.tags]
-            if cal_event.tags is not None
-            else [],
+            tags=(
+                [event_tags_dict[tag] for tag in cal_event.tags]
+                if cal_event.tags is not None
+                else []
+            ),
             event_groups=event_groups,
             origin_doc_id=save_origin.id if save_origin else None,
         )
