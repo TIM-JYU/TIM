@@ -1,9 +1,17 @@
+import type {OnInit} from "@angular/core";
 import {Component, EventEmitter, Input, Output} from "@angular/core";
 import type {JsonValue} from "tim/util/jsonvalue";
 
 export interface ChatModel {
     label: string;
     value: string;
+}
+
+export interface ControlPanelData extends Record<string, JsonValue> {
+    model_id: string;
+    llm_mode: string;
+    max_tokens: number;
+    tim_paths: string;
 }
 
 @Component({
@@ -111,21 +119,22 @@ export interface ChatModel {
         </div>
     `,
 })
-export class ChatControlPanelComponent {
+export class ChatControlPanelComponent implements OnInit {
     settingsOpen = false;
     modelOpen = false;
     modeOpen = false;
     tokensOpen = false;
     filesOpen = false;
-    localFilePaths: string = "";
 
+    @Input() localFilePaths!: string;
     @Input() error?: string;
     @Input() response?: string;
-    @Input() selectedModel: string = "gpt-4.1-mini";
-    @Input() selectedMode: string = "Summarizing";
-    @Input() maxTokens: number = 1000;
+    @Input() selectedModel!: string;
+    @Input() selectedMode!: string;
+    @Input() maxTokens!: number;
 
-    @Output() saveSettingsClick = new EventEmitter<CtrlPanelData>();
+    @Output() saveSettingsClick = new EventEmitter<ControlPanelData>();
+    @Output() initControlPanelDataFetch = new EventEmitter<void>();
 
     availableModels: ChatModel[] = [
         {label: "GPT-4o-Mini", value: "gpt-4.1-mini"},
@@ -134,8 +143,12 @@ export class ChatControlPanelComponent {
 
     modes = ["Summarizing", "Creative"];
 
+    ngOnInit(): void {
+        this.initControlPanelDataFetch.emit();
+    }
+
     saveSettingsClicked() {
-        const data: CtrlPanelData = {
+        const data: ControlPanelData = {
             model_id: this.selectedModel,
             llm_mode: this.selectedMode,
             max_tokens: this.maxTokens,
@@ -151,11 +164,4 @@ export class ChatControlPanelComponent {
         );
         return model ? model.label : "";
     }
-}
-
-export interface CtrlPanelData extends Record<string, JsonValue> {
-    model_id: string;
-    llm_mode: string;
-    max_tokens: number;
-    tim_paths: string;
 }

@@ -29,7 +29,7 @@ import {
 } from "@angular/common/http";
 import {DomSanitizer} from "@angular/platform-browser";
 import {Users} from "tim/user/userService";
-import type {CtrlPanelData} from "./controlpanel";
+import type {ControlPanelData} from "./controlpanel";
 import {ChatControlPanelComponent} from "./controlpanel";
 
 const PluginMarkupFields = t.intersection([
@@ -98,11 +98,13 @@ export interface AskParams {
                     </button>
                     <chattim-control-panel
                         (saveSettingsClick)="onSaveSettings($event)"
+                        (initControlPanelDataFetch)="getControlPanelData()"
                         [selectedModel]="selectedModel"
                         [selectedMode]="selectedMode"
                         [maxTokens]="maxTokens"
                         [response]="controlpanelResponse"
-                        [error]="controlpanelError">
+                        [error]="controlpanelError"
+                        [localFilePaths]="localFilePaths">
                     </chattim-control-panel>
                 </div>
 
@@ -125,12 +127,12 @@ export class ChatTIMComponent
     error?: string;
     isRunning: boolean = false;
     userInput = "";
-    inputStem = "";
+    inputStem = ""; // TODO: do something with this or remove?
     document_id = -1;
 
-    // TODO: fetch default values from server?
+    localFilePaths = "";
+    selectedMode = "Creative";
     selectedModel = "gpt-4.1-mini";
-    selectedMode = "Summarizing";
     maxTokens = 1000;
     controlpanelError?: string;
     controlpanelResponse?: string;
@@ -317,16 +319,39 @@ export class ChatTIMComponent
         });
     }
 
-    async onSaveSettings(ctrlpanel_data: CtrlPanelData) {
+    async getControlPanelData() {
         this.isRunning = true;
 
-        // TODO: ei tarvita user id?
-        const user_id: number = Users.getCurrent().id;
+        const getRequest = {
+            document_id: this.document_id,
+        };
+
+        const response = await this.httpPost<{
+            web: {result: ControlPanelData; error?: string};
+        }>("/chattim/get_controlpanel_data", getRequest);
+
+        this.isRunning = false;
+        if (response.ok) {
+            const data = response.result;
+            this.controlpanelError = data.web.error;
+            const result = data.web.result;
+            if (this.controlpanelError === "") {
+                this.selectedModel = result.model_id;
+                this.selectedMode = result.llm_mode;
+                this.maxTokens = result.max_tokens;
+                this.localFilePaths = result.tim_paths;
+            }
+        } else {
+            this.controlpanelError = response.result.error.error;
+        }
+    }
+
+    async onSaveSettings(controlPanelData: ControlPanelData) {
+        this.isRunning = true;
 
         const save_request = {
-            user_id: user_id,
             document_id: this.document_id,
-            control_panel_data: ctrlpanel_data,
+            control_panel_data: controlPanelData,
         };
 
         const response = await this.httpPost<{
