@@ -686,7 +686,7 @@ class DocParagraph:
                     for k, v in heading_cache.items():
                         heading_cache[k] = v
         DocParagraph.log_for_person(
-            lambda: f"preload_htmls {doc_id}/{pars[0].get_id()}, ch: {clear_cache}, persist: {persist}, unloaded pars: {[p.get_id() for p in unloaded_pars]}"
+            lambda: f"preload_htmls {doc_id}/{pars[0].get_id()}, ch: {clear_cache}, persist: {persist}, unloaded pars: {unloaded_pars}"
         )
         changed_pars = []
         if len(unloaded_pars) > 0:
@@ -735,9 +735,7 @@ class DocParagraph:
                 par._set_html(h, sanitized=True)
                 if persist and not par.from_preamble():
                     par.__write()
-        DocParagraph.log_for_person(
-            lambda: f"changed pars: {[p.get_id() for p in changed_pars]}"
-        )
+        DocParagraph.log_for_person(lambda: f"changed pars: {changed_pars}")
         return changed_pars
 
     @classmethod
@@ -805,6 +803,9 @@ class DocParagraph:
                     all_headings_so_far[h] += 1
 
             if not clear_cache and cached is not None:
+                DocParagraph.log_for_person(
+                    lambda: f"check cache: auto_macro_hash: {auto_macro_hash} cache: {cached} of type {type(cached)} auto_macros: {str(auto_macros)}"
+                )
                 if type(cached) is str:  # Compatibility
                     old_html = cached
                     DocParagraph.log_for_person(
@@ -1087,7 +1088,8 @@ class DocParagraph:
     def log_filename(file_name: str):
         from timApp.util.logger import log_error, log_info
 
-        log_info(f"W: {file_name}  {DocParagraph.get_stack_str(15, 1)}")
+        # log_info(f"W: {file_name}  {DocParagraph.get_stack_str(15, 1)}")
+        log_info(f"W: {file_name} __write_")
 
     @staticmethod
     def log_filename_for_person(file_name: str):
@@ -1113,7 +1115,8 @@ class DocParagraph:
 
         tag = flask.request.args.get("debug_writes")
 
-        log_info(f"DZW ({tag}): {msg_func()}  {DocParagraph.get_stack_str(15, 1)}")
+        # log_info(f"DZW ({tag}): {msg_func()}  {DocParagraph.get_stack_str(15, 1)}")
+        log_info(f"DZW ({tag}): {msg_func()}")
 
     def __write(self):
         file_name = self.get_path()

@@ -351,7 +351,7 @@ def preprocess_request():
             return redirect(fixed_url)
 
         # Also, capture the referrer to the session if it is different from the current URL domain.
-        if request.referrer:
+        if request.referrer and False:
             # Check if referrer is different from the request domain.
             try:
                 referrer_domain = urlparse(request.referrer).netloc
