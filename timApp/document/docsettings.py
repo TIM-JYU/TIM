@@ -623,7 +623,7 @@ class DocSettings:
     def hide_browser(self) -> bool:
         return self.get_setting_or_default("hideBrowser", False)
 
-    def acrosurlmacros(self) -> UrlMacroMap:
+    def urlmacros(self) -> UrlMacroMap:
         return self.get_setting_or_default("urlmacros", {})
 
     def rndmacros(self) -> dict[str, str]:
