@@ -49,6 +49,9 @@ if TYPE_CHECKING:
     from timApp.document.document import Document
     from timApp.document.docinfo import DocInfo
 
+# Enable user personal logs with url param ?userlogs=TAG
+ENABLE_LOG_FOR_PERSON = 1
+
 SKIPPED_ATTRS = {"r", "rd", "rp", "ra", "rt", "rtask", "mt", "settings"}
 
 BLINDED_SETTINGS_TEXT = """```
@@ -58,6 +61,46 @@ BLINDED_SETTINGS_TEXT = """```
 
 # TODO: a bit short name for global variable
 se = SandboxedEnvironment(autoescape=True)
+
+
+def log_filename(file_name: str):
+    from timApp.util.logger import log_info
+
+    # log_info(f"W: {file_name}  {DocParagraph.get_stack_str(15, 1)}")
+    log_info(f"W: {file_name} __write_")
+
+
+def _log_filename_for_person(file_name: str):
+    if not flask.has_request_context():
+        return
+    # If url_param "debug_writes", log the filename and stack trace for debugging purposes
+    tag = flask.request.args.get("debug_writes")
+    if tag is None:
+        return
+
+    from timApp.util.logger import log_info
+
+    log_info(f"DZW ({tag}): {file_name}  {DocParagraph.get_stack_str(15, 1)}")
+
+
+def _log_for_person(msg_func):
+    if not flask.has_request_context():
+        return
+    # If url_param "debug_writes", log the filename and stack trace for debugging purposes
+    tag = flask.request.args.get("debug_writes")
+    if tag is None:
+        return
+
+    from timApp.util.logger import log_info
+
+    # log_info(f"DZW ({tag}): {msg_func()}  {DocParagraph.get_stack_str(15, 1)}")
+    log_info(f"DZW ({tag}): {msg_func()}")
+
+
+log_filename_for_person = (
+    _log_filename_for_person if ENABLE_LOG_FOR_PERSON else lambda *a, **k: None
+)
+log_for_person = _log_for_person if ENABLE_LOG_FOR_PERSON else lambda *a, **k: None
 
 
 # TODO: Make this a dataclass as soon as __slots__ is supported for dataclasses (coming in Python 3.10 maybe).
@@ -230,7 +273,7 @@ class DocParagraph:
         par.md = d["md"]
         par.attrs = d.get("attrs", {})
         par.html_cache = d.get("h")
-        DocParagraph.log_for_person(
+        log_for_person(
             lambda: f"Creating par from dict {par.get_doc_id()}/{par.get_id()} from dict with html cache {par.html_cache}"
         )
         par._cache_props()
@@ -683,7 +726,7 @@ class DocParagraph:
                     )
                     for k, v in heading_cache.items():
                         heading_cache[k] = v
-        DocParagraph.log_for_person(
+        log_for_person(
             lambda: f"preload_htmls {doc_id}/{pars[0].get_id()}, ch: {clear_cache}, persist: {persist}, unloaded pars: {unloaded_pars}"
         )
         changed_pars = []
@@ -726,14 +769,14 @@ class DocParagraph:
                         if not par.from_preamble():
                             changed_pars.append(par)
                 par.html_cache[auto_macro_hash] = h
-                DocParagraph.log_for_person(
+                log_for_person(
                     lambda: f"Updating par {par.get_doc_id()}/{par.get_id()} with auto macro hash {auto_macro_hash}, old html: {old_html}, new html: {h}, new cache: {par.html_cache}, persist: {persist}"
                 )
                 # noinspection PyProtectedMember
                 par._set_html(h, sanitized=True)
                 if persist and not par.from_preamble():
                     par.__write()
-        DocParagraph.log_for_person(lambda: f"changed pars: {changed_pars}")
+        log_for_person(lambda: f"changed pars: {changed_pars}")
         return changed_pars
 
     @classmethod
@@ -759,7 +802,7 @@ class DocParagraph:
         macros = macroinfo.get_macros()
         env = macroinfo.jinja_env
         settings_hash = settings.get_hash()
-        DocParagraph.log_for_person(
+        log_for_person(
             lambda: f"Preloading {len(pars)} paragraphs ({', '.join(f'{p.get_doc_id()}/{p.get_id()}' for p in pars)}) with settings hash {settings_hash} and macros {macros}, clear cache: {clear_cache}"
         )
         for par in pars:
@@ -801,12 +844,12 @@ class DocParagraph:
                     all_headings_so_far[h] += 1
 
             if not clear_cache and cached is not None:
-                DocParagraph.log_for_person(
+                log_for_person(
                     lambda: f"check cache: auto_macro_hash: {auto_macro_hash} cache: {cached} of type {type(cached)} auto_macros: {str(auto_macros)}"
                 )
                 if type(cached) is str:  # Compatibility
                     old_html = cached
-                    DocParagraph.log_for_person(
+                    log_for_person(
                         lambda: f"CACHE MISS: par {par.get_doc_id()}/{par.get_id()} with cache: {cached} of type {type(cached)}"
                     )
                 else:
@@ -819,12 +862,12 @@ class DocParagraph:
                             old_html = next(iter(cached.values()))
                         except StopIteration:
                             old_html = None
-                        DocParagraph.log_for_person(
+                        log_for_person(
                             lambda: f"CACHE MISS: par {par.get_doc_id()}/{par.get_id()} with auto macro hash {auto_macro_hash}, auto macros: {auto_macros}, and cache: {cached} of type {type(cached)}"
                         )
             else:
                 old_html = None
-                DocParagraph.log_for_person(
+                log_for_person(
                     lambda: f"CACHE SKIP: par {par.get_doc_id()}/{par.get_id()} with cache: {cached} of type {type(cached)}; clear_cache: {clear_cache}"
                 )
 
@@ -1082,44 +1125,10 @@ class DocParagraph:
 
         return "|".join(f"{s.name}, {s.filename}:{s.lineno}" for s in last)
 
-    @staticmethod
-    def log_filename(file_name: str):
-        from timApp.util.logger import log_error, log_info
-
-        # log_info(f"W: {file_name}  {DocParagraph.get_stack_str(15, 1)}")
-        log_info(f"W: {file_name} __write_")
-
-    @staticmethod
-    def log_filename_for_person(file_name: str):
-        if flask.has_request_context():
-            # If has url_param "debug_writes", log the filename and stack trace for debugging purposes
-            if flask.request.args.get("debug_writes") is None:
-                return
-
-        from timApp.util.logger import log_error, log_info
-
-        tag = flask.request.args.get("debug_writes")
-
-        log_info(f"DZW ({tag}): {file_name}  {DocParagraph.get_stack_str(15, 1)}")
-
-    @staticmethod
-    def log_for_person(msg_func):
-        if flask.has_request_context():
-            # If has url_param "debug_writes", log the filename and stack trace for debugging purposes
-            if flask.request.args.get("debug_writes") is None:
-                return
-
-        from timApp.util.logger import log_error, log_info
-
-        tag = flask.request.args.get("debug_writes")
-
-        # log_info(f"DZW ({tag}): {msg_func()}  {DocParagraph.get_stack_str(15, 1)}")
-        log_info(f"DZW ({tag}): {msg_func()}")
-
     def __write(self):
         file_name = self.get_path()
-        DocParagraph.log_filename(file_name)
-        DocParagraph.log_filename_for_person(file_name)
+        log_filename(file_name)
+        log_filename_for_person(file_name)
         does_exist = os.path.isfile(file_name)
 
         if not does_exist:
@@ -1129,7 +1138,7 @@ class DocParagraph:
 
         with open(file_name, "w") as f:
             d = self.dict(include_html_cache=True)
-            DocParagraph.log_for_person(
+            log_for_person(
                 lambda: f"Writing par {self.get_doc_id()}/{self.get_id()}: {d}"
             )
             f.write(json.dumps(d))
@@ -1161,7 +1170,7 @@ class DocParagraph:
 
     def clear_cache(self) -> None:
         """Clears the HTML cache of this paragraph."""
-        DocParagraph.log_for_person(
+        log_for_person(
             lambda: f"Clearing cache for par {self.get_doc_id()}/{self.get_id()}"
         )
         self.html_cache = None
