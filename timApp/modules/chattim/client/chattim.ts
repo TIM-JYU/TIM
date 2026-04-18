@@ -80,8 +80,12 @@ export interface AskParams {
     // TODO: Display message datetime from the timestamp with `dateString()`
     template: `
         <tim-dialog-frame class="chattim-dialog-frame" [size]="'md'">
+            <ng-container header> {{ header }}</ng-container>
             <ng-container body>
                 <div class="scroll-box" #conversationScroll>
+                    <div *ngIf="conversation.length === 0" class="chat-welcome">
+                        Tervetuloa käyttämään TIM:in tekoälyavustajaa!
+                    </div>
                     <div *ngFor="let entry of conversation">
                         <div class="chat-user">{{ entry.user.content }}</div>
                         <div class="chat-bot" [innerHTML]="entry.agent.content | purify"></div>
@@ -92,30 +96,33 @@ export interface AskParams {
                     <tim-loading *ngIf="isRunning"></tim-loading>
                     <div *ngIf="error" [innerHTML]="error | purify"></div>
                 </div>
+                <label class="justify-center w-100">{{ inputStem }} </label>
+                <div class="d-flex flex-row w-100 justify-content-center chat-row">
+                    <textarea class="form-control chat-textarea"
+                              rows="2"
+                              placeholder="Kysy minulta TIM asioista"
+                              style="resize: none; overflow: hidden; min-width: 0;"
+                              [(ngModel)]="userInput"
+                              (keyup.enter)="onEnter()"
+                              oninput="this.style.height='auto'; this.style.height=this.scrollHeight+'px'">
+                    </textarea>
 
-                <div class="form-inline">
-                    <label>{{ inputStem }}
-                        <input type="text"
-                               class="form-control"
-                               [(ngModel)]="userInput"
-                               (keyup.enter)="onEnter()"
-                        >
-                    </label>
-                    <button class="timButton"
+                    <button class="timButton flex-shrink-0 ms-2"
                             *ngIf="buttonText()"
                             [disabled]="!canSendInput()"
                             (click)="sendUserInput()"
                             [innerHTML]="buttonText() | purify">
                     </button>
-                    <chattim-control-panel
-                        (saveSettingsClick)="onSaveSettings($event)"
-                        [selectedModel]="selectedModel"
-                        [selectedMode]="selectedMode"
-                        [maxTokens]="maxTokens"
-                        [response]="controlpanelResponse"
-                        [error]="controlpanelError">
-                    </chattim-control-panel>
+
                 </div>
+                <chattim-control-panel
+                    (saveSettingsClick)="onSaveSettings($event)"
+                    [selectedModel]="selectedModel"
+                    [selectedMode]="selectedMode"
+                    [maxTokens]="maxTokens"
+                    [response]="controlpanelResponse"
+                    [error]="controlpanelError">
+                </chattim-control-panel>
             </ng-container>
         </tim-dialog-frame>
     `,
