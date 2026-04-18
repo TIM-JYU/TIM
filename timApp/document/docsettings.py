@@ -537,6 +537,7 @@ class DocSettings:
     def get_hash(self):
         macroinfo = self.get_macroinfo(default_view_ctx)
         macros = macroinfo.get_macros()
+        macros = {**macros, "last_referrers": []}
         charmacros = self.get_charmacros() or ""
         macro_delim = macroinfo.get_macro_delimiter()
         autocounters = self.autocounters()
