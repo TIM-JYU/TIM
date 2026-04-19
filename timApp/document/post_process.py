@@ -171,9 +171,6 @@ def post_process_pars(
 
         key = d.data.id, d.data.doc_id
         pars_dict[key].append(d)
-
-    for p in final_pars:
-        d = p.prepare(view_ctx)
         d.status = ReadMarkCollection()
         d.notes = []
     # taketime("pars done")

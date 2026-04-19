@@ -885,7 +885,9 @@ def par_list_to_html_list(
     # Edit html after dumbo
     raw = edit_html_with_own_syntax(raw)
 
-    if auto_macros:
+    # Note: we can not check auto_number_headings yet, because
+    # we need to handle also normal Html headings to get id's for them
+    if auto_macros:  # and settings.auto_number_headings() > 0:
         processed = []
         for pre_html, m, attrs in zip(raw, auto_macros, (p.get_attrs() for p in pars)):
             if "nonumber" in attrs.get("classes", []):
