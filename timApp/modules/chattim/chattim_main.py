@@ -200,19 +200,6 @@ def define_validate_api():
     model = req_data.get("model", "")
     key = req_data.get("apikey", "")
 
-    # TODO modelin mukaan oikea reitti validoinnille
-
-    if model == "openai":
-        response = requests.get(
-            "https://api.openai.com/v1/models",
-            headers={"Authorization": f"Bearer {key}"},
-        )
-        print(response.json())
-        if response.status_code == 200:
-            return ok_response()
-        else:
-            raise RouteException(description="API Key is invalid.")
-
     if model == "anthropic":
         response = requests.get(
             "https://api.anthropic.com/v1/models",
@@ -226,17 +213,14 @@ def define_validate_api():
         else:
             raise RouteException(description="API Key is invalid.")
 
-    if model == "google":
-        response = requests.get(
-            f"https://generativelanguage.googleapis.com/v1/models?key={key}"
-        )
-        if response.status_code == 200:
-            return ok_response()
-        else:
-            raise RouteException(description="API Key is invalid.")
+    valid = plugincore.validate_api_key(model, key)
 
-    print(model)
-    raise RouteException(description="Selected model not supported.")
+    if valid:
+        return ok_response()
+    else:
+        raise RouteException(description="API Key is invalid.")
+
+    # TODO modelin mukaan oikea reitti validoinnille
 
 
 @chattim.get("/get_providers")
