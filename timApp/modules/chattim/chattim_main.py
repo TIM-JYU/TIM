@@ -186,12 +186,6 @@ def define_save_settings(params: ChatTimSaveSettingsParams):
     return json_response(result)
 
 
-@chattim.post("/save_api")
-def define_save_api():
-    return json_response({"ok": True})
-    pass
-
-
 @chattim.post("/validate_api")
 def define_validate_api():
     verify_logged_in()
@@ -199,6 +193,7 @@ def define_validate_api():
     req_data = request.get_json()
     model = req_data.get("model", "")
     key = req_data.get("apikey", "")
+    alias = req_data.get("alias", "")
 
     if model == "anthropic":
         response = requests.get(
@@ -220,7 +215,7 @@ def define_validate_api():
     else:
         raise RouteException(description="API Key is invalid.")
 
-    # TODO modelin mukaan oikea reitti validoinnille
+    # TODO avaimen tallennus validoimisen jälkeen
 
 
 @chattim.get("/get_providers")

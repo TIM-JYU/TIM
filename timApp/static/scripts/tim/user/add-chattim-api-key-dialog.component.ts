@@ -111,35 +111,22 @@ export class AddAPIKeyDialogComponent extends AngularDialogComponent<
      * Sends a new API key for a user to server.
      */
     async addNewAPIKey() {
+        this.saving = true;
+
         const validateResponse = await this.validateAPIKey();
 
         if (validateResponse.ok) {
-            this.saving = true;
-
-            const result = await toPromise(
-                this.http.post("/chattim/save_api", {
-                    model: this.chosenModel,
-                    apikey: this.apiKey,
-                    alias: this.LLMKeyAlias,
-                })
-            );
-
             this.saving = false;
+            this.data.onAdd({
+                model: this.chosenModel,
+                APIkey: this.apiKey!,
+                alias: this.LLMKeyAlias!,
+                availableTokens: 0,
+                usedTokens: 0,
+                tokensChecked: false,
+            });
             this.added = true;
-
-            if (result.ok) {
-                this.saved = true;
-                this.data.onAdd({
-                    model: this.chosenModel,
-                    APIkey: this.apiKey!,
-                    alias: this.LLMKeyAlias!,
-                    availableTokens: 0,
-                    usedTokens: 0,
-                    tokensChecked: false,
-                });
-                this.dismiss();
-                this.added = false;
-            }
+            this.dismiss();
         } else {
             this.addError = validateResponse.result.error.error;
         }
@@ -154,6 +141,7 @@ export class AddAPIKeyDialogComponent extends AngularDialogComponent<
             this.http.post<Response>("/chattim/validate_api", {
                 model: this.chosenModel,
                 apikey: this.apiKey,
+                alias: this.LLMKeyAlias,
             })
         );
     }
