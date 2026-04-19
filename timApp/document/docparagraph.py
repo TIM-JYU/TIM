@@ -54,6 +54,8 @@ ENABLE_LOG_FOR_PERSON = 1
 
 SKIPPED_ATTRS = {"r", "rd", "rp", "ra", "rt", "rtask", "mt", "settings"}
 
+WITHOUT_MACROS_CACHED = "womacros"
+
 BLINDED_SETTINGS_TEXT = """```
 # Setting paragraphs cannot be shown via references
 ```
@@ -134,6 +136,7 @@ class DocParagraph:
         "html_cache",  # stored as 'h'
         "id",
         "md",
+        "depends_on_macros",
     }
 
     def __init__(self, doc: Document):
@@ -157,11 +160,14 @@ class DocParagraph:
         self.attrs: dict[str, str] | None = None
         self.nomacros = None
         self.ref_chain = None
-        self.answer_nr: int | None = None  # needed if variable tasks, None = not task at all or not variable task
+        self.answer_nr: int | None = (
+            None  # needed if variable tasks, None = not task at all or not variable task
+        )
         self.md = ""
         self.id = None
         self.ask_new: bool | None = None  # to send for plugins to force new question
         self.html_cache = None
+        self.depends_on_macros = False
 
     def __eq__(self, other):
         if isinstance(other, self.__class__):
@@ -565,13 +571,17 @@ class DocParagraph:
             # raise Exception('Error in rnd: ' + str(err)) from err
             pass  # TODO: show exception to user!
 
-        return expand_macros(
+        expanded_md = expand_macros(
             md,
             macros,
             settings,
             ignore_errors=ignore_errors,
             env=env,
         )
+
+        if expanded_md != md:
+            self.depends_on_macros = True
+        return expanded_md
 
     def get_title(self) -> str | None:
         """Attempts heuristically to return a title for this paragraph.
@@ -758,6 +768,7 @@ class DocParagraph:
             for (par, auto_macro_hash, _, _, old_html), h in zip(unloaded_pars, htmls):
                 # h is not sanitized but old_html is, but HTML stays unchanged after sanitization most of the time
                 # so they are comparable after stripping div. We want to avoid calling sanitize_html unnecessarily.
+                need_write = False
                 if getattr(par, "was_invalid", False):
                     continue
                 if isinstance(h, bytes):
@@ -768,13 +779,21 @@ class DocParagraph:
                     if h != old_html:
                         if not par.from_preamble():
                             changed_pars.append(par)
+                            need_write = True
+                if not par.depends_on_macros:
+                    auto_macro_hash = WITHOUT_MACROS_CACHED
                 par.html_cache[auto_macro_hash] = h
                 log_for_person(
                     lambda: f"Updating par {par.get_doc_id()}/{par.get_id()} with auto macro hash {auto_macro_hash}, old html: {old_html}, new html: {h}, new cache: {par.html_cache}, persist: {persist}"
                 )
                 # noinspection PyProtectedMember
                 par._set_html(h, sanitized=True)
-                if persist and not par.from_preamble():
+                if (
+                    persist
+                    and not par.from_preamble()
+                    and need_write
+                    and not par.depends_on_macros
+                ):
                     par.__write()
         log_for_person(lambda: f"changed pars: {changed_pars}")
         return changed_pars
@@ -857,14 +876,19 @@ class DocParagraph:
                     if cached_html is not None:
                         par.html = cached_html
                         continue
-                    else:
-                        try:
-                            old_html = next(iter(cached.values()))
-                        except StopIteration:
-                            old_html = None
-                        log_for_person(
-                            lambda: f"CACHE MISS: par {par.get_doc_id()}/{par.get_id()} with auto macro hash {auto_macro_hash}, auto macros: {auto_macros}, and cache: {cached} of type {type(cached)}"
-                        )
+
+                    cached_html = cached.get(WITHOUT_MACROS_CACHED)
+                    if cached_html is not None:
+                        par.html = cached_html
+                        continue
+
+                    try:
+                        old_html = next(iter(cached.values()))
+                    except StopIteration:
+                        old_html = None
+                    log_for_person(
+                        lambda: f"CACHE MISS: par {par.get_doc_id()}/{par.get_id()} with auto macro hash {auto_macro_hash}, auto macros: {auto_macros}, and cache: {cached} of type {type(cached)}"
+                    )
             else:
                 old_html = None
                 log_for_person(
