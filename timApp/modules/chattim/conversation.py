@@ -4,6 +4,7 @@ import os
 import json
 import time
 from dataclasses import dataclass, asdict
+from collections import deque
 from typing import BinaryIO, Iterator
 from .model import Message, Usage
 
@@ -272,36 +273,61 @@ class ConversationStore:
 
         :param file: The file to iterate.
         :param chunk_size: Size of the chunks to read.
+        :raises ValueError: If chunk size is negative.
         :return: An iterator over the lines in the file in reverse order.
         """
-        # Set the read position to file end.
+        if chunk_size <= 0:
+            raise ValueError("chunk_size must be positive")
+
         file.seek(0, os.SEEK_END)
         pos = file.tell()
-        buf = b""
+
+        buffer: deque[bytes] = deque()  # Contains a part of a line
+
+        # Return the pending line and clear buffer
+        def emit_pending() -> str | None:
+            if not buffer:
+                return None
+            b = b"".join(buffer)
+            buffer.clear()
+            if b.endswith(b"\r"):
+                b = b[:-1]
+            if not b:
+                return None
+            return b.decode("utf-8", errors="replace")
 
         while pos > 0:
+            # Read a chunk
             read_size = chunk_size if pos >= chunk_size else pos
             pos -= read_size
             file.seek(pos, os.SEEK_SET)
             chunk = file.read(read_size)
             if not chunk:
                 break
-            buf = chunk + buf
 
-            parts = buf.split(b"\n")
-            # The first line in the chunk can be incomplete.
-            buf = parts[0]
-            for raw in reversed(parts[1:]):
-                if not raw:
-                    continue
-                if raw.endswith(b"\r"):
-                    raw = raw[:-1]
-                yield raw.decode("utf-8", errors="replace")
+            # Process the chunk and yield lines if there are any
+            nl_rfind_pos: int = len(chunk)
+            while nl_rfind_pos > 0:
+                nl = chunk.rfind(b"\n", 0, nl_rfind_pos)
+                if nl == -1:
+                    # The line is either too big for one chunk or cut
+                    buffer.appendleft(chunk[:nl_rfind_pos])
+                    break
 
-        if buf:
-            if buf.endswith(b"\r"):
-                buf = buf[:-1]
-            yield buf.decode("utf-8", errors="replace")
+                # Combine the start of the line with possible pending line end
+                line_start = chunk[nl + 1 : nl_rfind_pos]
+                if line_start:
+                    buffer.appendleft(line_start)
+                line = emit_pending()
+                if line is not None:
+                    yield line
+
+                nl_rfind_pos = nl
+
+        if buffer:
+            line = emit_pending()
+            if line is not None:
+                yield line
 
     def resolve_conversation_path(self, plugin_id: str, user_id: str) -> str:
         """
