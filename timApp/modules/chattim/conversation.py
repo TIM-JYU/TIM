@@ -136,13 +136,19 @@ class ConversationStore:
         """
         file_path = self.resolve_conversation_path(plugin_id, user_id)
         os.makedirs(os.path.dirname(file_path), exist_ok=True)
+
+        json_lines: list[str] = []
+        for message in messages:
+            try:
+                msg_dict = message.to_dict()
+                json_lines.append(json.dumps(msg_dict) + "\n")
+            except TypeError:
+                continue
+
+        data = "".join(json_lines)
+
         with open(file_path, "a", encoding="utf-8") as f:
-            for message in messages:
-                try:
-                    msg_dict = message.to_dict()
-                    f.write(json.dumps(msg_dict) + "\n")
-                except TypeError:
-                    continue
+            f.write(data)
 
     def load_messages_n(
         self, plugin_id: str, user_id: str, last_n: int | None = None, offset: int = 0
