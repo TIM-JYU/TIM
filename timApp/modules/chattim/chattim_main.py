@@ -1,5 +1,3 @@
-import urllib.request, urllib.error, requests
-
 from dataclasses import dataclass
 from flask import request, Response, stream_with_context
 from typing import Any, TypedDict, Callable
@@ -71,23 +69,38 @@ class GetMessagesParams(GenericParams):
     timestamp_end_ms: int | None = None
 
 
+@dataclass
+class SaveAPIKeyParams:
+    model: str  # TODO: rename to provider
+    apikey: str
+    alias: str
+
+
 def register_route(
     app: Flask | Blueprint,
     method: str,
     route: str,
-    route_model: type,
-    route_handler: Callable[[Any], Any],
+    route_model: type | None,
+    route_handler: Callable[..., Any],
 ) -> None:
-    @app.route(f"/{route}", methods=[method])
-    @use_args(class_schema(route_model)(), locations=("json",))
-    def define(m: Any) -> Response:
-        r = route_handler(m)
+    def to_response(r: Any) -> Response:
         # Allow handlers to define their own Flask Response
         if isinstance(r, Response):
             return r
         return jsonify(r)
 
-    setattr(define, "__name__", route)
+    if route_model is None:
+
+        @app.route(f"/{route}", methods=[method], endpoint=route)
+        def define() -> Response:
+            return to_response(route_handler())
+
+        return
+
+    @app.route(f"/{route}", methods=[method], endpoint=route)
+    @use_args(class_schema(route_model)(), locations=("json",))
+    def define(m: Any) -> Response:
+        return to_response(route_handler(m))
 
 
 @dataclass
@@ -218,16 +231,14 @@ def define_get_messages(params: GetMessagesParams) -> dict:
     return {"messages": messages}
 
 
-@chattim.post("/validate_api")
-def define_validate_api():
+def define_save_api_key(params: SaveAPIKeyParams) -> Response:
     verify_logged_in()
 
-    req_data = request.get_json()
-    model = req_data.get("model", "")
-    key = req_data.get("apikey", "")
-    alias = req_data.get("alias", "")
+    provider = params.model
+    key = params.apikey
+    alias = params.alias
 
-    valid = plugincore.validate_api_key(model, key)
+    valid = plugincore.validate_api_key(provider, key)
 
     if valid:
         return ok_response()
@@ -237,8 +248,7 @@ def define_validate_api():
     # TODO avaimen tallennus validoimisen jälkeen, jos avain jo niin palautetaan tieto siitä
 
 
-@chattim.get("/get_providers")
-def define_get_providers():
+def define_get_providers() -> list[str]:
     response = plugincore.get_supported_providers()
     return response
 
@@ -266,3 +276,5 @@ register_route(
     chattim, "post", "settings_save", ChatTimSaveSettingsParams, define_save_settings
 )
 register_route(chattim, "post", "getMessages", GetMessagesParams, define_get_messages)
+register_route(chattim, "post", "validate_api", SaveAPIKeyParams, define_save_api_key)
+register_route(chattim, "get", "get_providers", None, define_get_providers)
