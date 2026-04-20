@@ -4,10 +4,14 @@
  * @date 21.3.2022
  * @licence MIT
  * @copyright 2022 TIMTra project authors
+ *
+ * modified to add Another API key dialog for LLM
+ * @author Lauri Malmström
+ *
  */
 
 import {angularDialog} from "tim/ui/angulardialog/dialog.service";
-import type {IUserApiKey} from "tim/user/IUser";
+import type {IUserApiKey, IUserLLMApiKey} from "tim/user/IUser";
 
 /*
 Code source: showAddContactDialog.ts
@@ -15,6 +19,24 @@ Code source: showAddContactDialog.ts
 export async function showAddAPIKeyDialog(onAdd: (key: IUserApiKey) => void) {
     const {AddAPIKeyDialogComponent} = await import(
         "./add-api-key-dialog.component"
+    );
+
+    return (
+        await angularDialog.open(
+            AddAPIKeyDialogComponent,
+            {onAdd},
+            {
+                resetSize: true,
+            }
+        )
+    ).result;
+}
+
+export async function showAddChattimAPIKeyDialog(
+    onAdd: (key: IUserLLMApiKey) => void
+) {
+    const {AddAPIKeyDialogComponent} = await import(
+        "./add-chattim-api-key-dialog.component"
     );
 
     return (
