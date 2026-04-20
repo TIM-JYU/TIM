@@ -491,7 +491,10 @@ class PluginCore:
     def validate_api_key(provider: Provider, api_key: str) -> bool:
         """Check if the api key is valid."""
         client = GenericApiClient(provider, api_key)
-        valid = client.verify_api_key()
+        try:
+            valid = client.verify_api_key()
+        except ModelError:
+            valid = False
         client.close()
         return valid
 
