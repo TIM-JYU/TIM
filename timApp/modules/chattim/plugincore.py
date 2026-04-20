@@ -21,7 +21,7 @@ from timApp.modules.chattim.rag import (
     sum_chunks,
     ModelInfo,
 )
-from typing import Generic, TypeVar, TypedDict
+from typing import Generic, TypeVar, TypedDict, cast
 
 from timApp.modules.chattim.model import (
     ModelResponseChunk,
@@ -498,15 +498,18 @@ class PluginCore:
             return None
 
     @staticmethod
-    def validate_api_key(provider: Provider, api_key: str) -> bool:
+    def validate_api_key(provider_str: str, api_key: str) -> bool:
         """Check if the api key is valid."""
+        if provider_str not in Provider.__args__:
+            return False
+        provider = cast(Provider, provider_str)
         client = GenericApiClient(provider, api_key)
         try:
-            valid = client.verify_api_key()
+            return client.verify_api_key()
         except ModelError:
-            valid = False
-        client.close()
-        return valid
+            return False
+        finally:
+            client.close()
 
     @staticmethod
     def _sanitize_input(user_input: str) -> str:
