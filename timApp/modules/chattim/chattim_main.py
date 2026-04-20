@@ -195,19 +195,6 @@ def define_validate_api():
     key = req_data.get("apikey", "")
     alias = req_data.get("alias", "")
 
-    if model == "anthropic":
-        response = requests.get(
-            "https://api.anthropic.com/v1/models",
-            headers={
-                "x-api-key": key,
-                "anthropic-version": "2023-06-01",
-            },
-        )
-        if response.status_code == 200:
-            return ok_response()
-        else:
-            raise RouteException(description="API Key is invalid.")
-
     valid = plugincore.validate_api_key(model, key)
 
     if valid:
@@ -215,13 +202,12 @@ def define_validate_api():
     else:
         raise RouteException(description="API Key is invalid.")
 
-    # TODO avaimen tallennus validoimisen jälkeen
+    # TODO avaimen tallennus validoimisen jälkeen, jos avain jo niin palautetaan tieto siitä
 
 
 @chattim.get("/get_providers")
 def define_get_providers():
     response = plugincore.get_supported_providers()
-    print(response)
     return response
 
 
