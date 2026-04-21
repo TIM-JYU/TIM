@@ -283,7 +283,11 @@ class GenericApiChatModel(ChatModel):
         self._info = info
         self._api_key = api_key
         self._base_url = base_url
-        self._client = OpenAI(api_key=self._api_key, base_url=self._base_url)
+        self._client = OpenAI(
+            api_key=_sdk_api_key(info.provider, api_key),
+            base_url=self._base_url,
+            default_headers=_default_headers(info.provider, api_key),
+        )
 
     def generate(
         self, messages: list[Message], options: GenerateOptions
@@ -334,7 +338,11 @@ class AsyncGenericApiChatModel(AsyncChatModel):
         self._info = info
         self._api_key = api_key
         self._base_url = base_url
-        self._client = AsyncOpenAI(api_key=self._api_key, base_url=self._base_url)
+        self._client = AsyncOpenAI(
+            api_key=_sdk_api_key(info.provider, api_key),
+            base_url=self._base_url,
+            default_headers=_default_headers(info.provider, api_key),
+        )
 
     async def generate(
         self, messages: list[Message], options: GenerateOptions
@@ -462,7 +470,11 @@ class GenericApiClient:
         self._provider = provider
         self._api_key = api_key
         self._base_url = _resolve_base_url(provider, base_url)
-        self._client = OpenAI(api_key=self._api_key, base_url=self._base_url)
+        self._client = OpenAI(
+            api_key=_sdk_api_key(provider, api_key),
+            base_url=self._base_url,
+            default_headers=_default_headers(provider, api_key),
+        )
 
     def list_models(self) -> list[ModelInfo]:
         """Get all the available models from the Model API.
@@ -481,8 +493,10 @@ class GenericApiClient:
         try:
             self.list_models()
             return True
-        except ModelError:
-            return False
+        except ModelError as e:
+            if e.kind == ModelErrorKind.Auth:
+                return False
+            raise e
 
     def check_model_access(self, model_id: str) -> bool:
         """Check if the API key has access to the given model id.
@@ -621,6 +635,31 @@ def _openai_to_model_error(e: BaseException) -> ModelError:
             kind=ModelErrorKind.Unknown, description=str(e), cause=e, status=status
         )
     return ModelError(kind=ModelErrorKind.Unknown, description=str(e), cause=e)
+
+
+class AuthScheme(str, Enum):
+    """Expected API authentication scheme."""
+
+    Bearer = "bearer"
+    XApiKey = "x-api-key"
+
+
+def _auth_scheme(provider: Provider) -> AuthScheme:
+    """Return the auth scheme for the given provider."""
+    if provider == "anthropic":
+        return AuthScheme.XApiKey
+    return AuthScheme.Bearer
+
+
+def _sdk_api_key(provider: Provider, api_key: str) -> str | None:
+    return api_key if _auth_scheme(provider) == AuthScheme.Bearer else None
+
+
+def _default_headers(provider: Provider, api_key: str) -> dict[str, str]:
+    """Provider-specific default headers for OpenAI-compatible APIs."""
+    if provider == "anthropic":
+        return {"X-Api-Key": api_key, "anthropic-version": "2023-06-01"}
+    return {}
 
 
 Provider = Literal["openai", "anthropic", "google", "dummy"]

@@ -2,11 +2,14 @@ from dataclasses import dataclass
 from flask import request, Response, stream_with_context
 from typing import Any, TypedDict, Callable
 from webargs.flaskparser import use_args
+
+from timApp.auth.accesshelper import verify_logged_in
+from timApp.util.flask.requesthelper import RouteException
 from tim_common.marshmallow_dataclass import class_schema
 
 from timApp.auth.sessioninfo import get_current_user_id
 from timApp.tim_app import csrf
-from timApp.util.flask.responsehelper import json_response, to_json_str
+from timApp.util.flask.responsehelper import json_response, to_json_str, ok_response
 from tim_common.markupmodels import GenericMarkupModel
 from tim_common.pluginserver_flask import (
     GenericHtmlModel,
@@ -65,6 +68,15 @@ class GetMessagesParams(GenericParams):
     timestamp_end_ms: int | None = None
 
 
+
+
+@dataclass
+class SaveAPIKeyParams:
+    model: str  # TODO: rename to provider
+    apikey: str
+    alias: str
+
+
 @dataclass
 class ChatTIMGetSettingsResponse(TypedDict, total=False):
     result: InstanceAttributes
@@ -75,19 +87,27 @@ def register_route(
     app: Flask | Blueprint,
     method: str,
     route: str,
-    route_model: type,
-    route_handler: Callable[[Any], Any],
+    route_model: type | None,
+    route_handler: Callable[..., Any],
 ) -> None:
-    @app.route(f"/{route}", methods=[method])
-    @use_args(class_schema(route_model)(), locations=("json",))
-    def define(m: Any) -> Response:
-        r = route_handler(m)
+    def to_response(r: Any) -> Response:
         # Allow handlers to define their own Flask Response
         if isinstance(r, Response):
             return r
         return jsonify(r)
 
-    setattr(define, "__name__", route)
+    if route_model is None:
+
+        @app.route(f"/{route}", methods=[method], endpoint=route)
+        def define() -> Response:
+            return to_response(route_handler())
+
+        return
+
+    @app.route(f"/{route}", methods=[method], endpoint=route)
+    @use_args(class_schema(route_model)(), locations=("json",))
+    def define(m: Any) -> Response:
+        return to_response(route_handler(m))
 
 
 @dataclass
@@ -217,6 +237,28 @@ def define_get_messages(params: GetMessagesParams) -> dict:
     return {"messages": messages}
 
 
+def define_save_api_key(params: SaveAPIKeyParams) -> Response:
+    verify_logged_in()
+
+    provider = params.model
+    key = params.apikey
+    alias = params.alias
+
+    valid = plugincore.validate_api_key(provider, key)
+
+    if valid:
+        return ok_response()
+    else:
+        raise RouteException(description="API Key is invalid.")
+
+    # TODO avaimen tallennus validoimisen jälkeen, jos avain jo niin palautetaan tieto siitä
+
+
+def define_get_providers() -> list[str]:
+    response = plugincore.get_supported_providers()
+    return response
+
+
 def to_ndjson_str(json_data: Any) -> str:
     """Return a newline delimited JSON string.
 
@@ -241,3 +283,5 @@ register_route(
     chattim, "post", "saveSettings", ChatTimSaveSettingsParams, define_save_settings
 )
 register_route(chattim, "post", "getMessages", GetMessagesParams, define_get_messages)
+register_route(chattim, "post", "validate_api", SaveAPIKeyParams, define_save_api_key)
+register_route(chattim, "get", "get_providers", None, define_get_providers)
