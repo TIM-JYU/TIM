@@ -143,12 +143,16 @@ class ConversationManager:
         )
 
         cached = self._get_from_cache(**kwargs_id) or self._update_cache(**kwargs_id)
-        # cached = None
         if cached is not None:
             # Check if the time window is in the cached tail
-            oldest_idx, newest_idx = self._time_window_edges_idx(cached, ts_b, ts_e)
+            oldest_idx, newest_idx = self._time_window_edges_idx(
+                cached, ts_b, ts_e, ts_begin is not None, ts_end is not None
+            )
             end = newest_idx + 1 if newest_idx >= 0 else 0
-            oldest_idx = 0 if len(cached[:end]) >= max_messages else oldest_idx
+            if ts_begin is None and len(cached[:end]) < max_messages:
+                # Cache doesn't have enough older messages
+                oldest_idx = -1
+
             if oldest_idx >= 0 and newest_idx >= 0:
                 cached_slice = cached[oldest_idx:end]
                 start = None if len(cached_slice) < max_messages else -max_messages
@@ -246,19 +250,31 @@ class ConversationManager:
 
     @staticmethod
     def _time_window_edges_idx(
-        messages: list[dict], ts_b: int, ts_e: int
+        messages: list[dict],
+        ts_b: int,
+        ts_e: int,
+        find_border_b: bool = False,
+        find_border_e: bool = False,
     ) -> tuple[int, int]:
-        """Find the edges of the time window from the message list.
+        """
+        Find the edges of the time window from the message list.
+        Returns valid indexes only if the whole time window is included.
+        Assumes that the messages are in chronological order.
 
         :param messages: List of messages to find from.
         :param ts_b: Beginning of the time window in milliseconds.
         :param ts_e: Ending of the time window in milliseconds.
+        :param find_border_b: Whether to find the start border of the time window.
+        :param find_border_e: Whether to find the end border of the time window.
         :return: Tuple containing the start and end index in the list.
         """
         oldest_idx: int = -1
         newest_idx: int = -1
         oldest_found: bool = False
         newest_found: bool = False
+
+        if ts_b > ts_e:
+            return oldest_idx, newest_idx
 
         def get_ts(dict_maybe: dict) -> int | None:
             if not isinstance(dict_maybe, dict):
@@ -270,30 +286,43 @@ class ConversationManager:
 
         for i in range(len(messages)):
             idx_end = len(messages) - i - 1
+            # TODO: optimize
+            # only get if not found yet
             ts = get_ts(messages[i])
             ts_end = get_ts(messages[idx_end])
 
             # Check start border
             if not oldest_found and ts is not None:
+                if ts > ts_e:
+                    break
                 if ts <= ts_b:
                     oldest_idx = i
                 if ts_b <= ts <= ts_e:
-                    if oldest_idx >= 0:
+                    if not find_border_b or oldest_idx >= 0:
                         oldest_idx = i
-                    # Else there could exist an older message that is not included
-                    oldest_found = True
+                        oldest_found = True
+                    else:
+                        # There could exist an older message that is not included
+                        break
 
             # Check end border
             if not newest_found and ts_end is not None:
-                if ts_b <= ts_end <= ts_e:
+                if ts_end < ts_b:
+                    break
+                if ts_end >= ts_e:
                     newest_idx = idx_end
-                    newest_found = True
-                elif ts_end < ts_b:
-                    newest_found = True
+                if ts_b <= ts_end <= ts_e:
+                    if not find_border_e or newest_idx >= 0:
+                        newest_idx = idx_end
+                        newest_found = True
+                    else:
+                        # There could exist a newer message that is not included
+                        break
 
             if newest_found and oldest_found:
-                break
-        return oldest_idx if oldest_found else -1, newest_idx
+                return oldest_idx, newest_idx  # Time window exists
+
+        return -1, -1
 
 
 class ConversationStore:
