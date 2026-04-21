@@ -78,6 +78,10 @@ class RagMode(Enum):
     RETRIEVE = "Summarizing"
     CREATIVE = "Creative"
 
+    @classmethod
+    def supported_modes(cls) -> list[str]:
+        return [mode.value for mode in cls]
+
 
 @dataclass
 class MessageData:

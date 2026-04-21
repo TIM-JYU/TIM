@@ -1,12 +1,12 @@
 import {Component, EventEmitter, Input, Output} from "@angular/core";
 import type {JsonValue} from "tim/util/jsonvalue";
 
-export interface ChatModel {
+export interface ChatModel extends Record<string, JsonValue> {
     label: string;
     value: string;
 }
 
-export interface ControlPanelData extends Record<string, JsonValue> {
+export interface ControlPanelSettings extends Record<string, JsonValue> {
     model_id: string;
     llm_mode: string;
     max_tokens: number;
@@ -40,7 +40,7 @@ export interface ControlPanelData extends Record<string, JsonValue> {
                 <div *ngIf="modelOpen" class="settings-section-body">
                     <select class="form-control"
                             [(ngModel)]="selectedModel">
-                        <option *ngFor="let m of availableModels" [value]="m.value">{{ m.label }}</option>
+                        <option *ngFor="let m of availableModels" [ngValue]="m.value">{{ m.label }}</option>
                     </select>
                 </div>
             </div>
@@ -132,17 +132,15 @@ export class ChatControlPanelComponent {
     @Input() selectedMode!: string;
     @Input() maxTokens!: number;
 
-    @Output() saveSettingsClick = new EventEmitter<ControlPanelData>();
+    @Input() availableModels?: ChatModel[];
+    @Input() availableModes?: string[];
 
-    availableModels: ChatModel[] = [
-        {label: "GPT-4o-Mini", value: "gpt-4.1-mini"},
-        {label: "Dummy", value: "dummy-model-1"},
-    ];
+    @Output() saveSettingsClick = new EventEmitter<ControlPanelSettings>();
 
     modes = ["Summarizing", "Creative"];
 
     saveSettingsClicked() {
-        const data: ControlPanelData = {
+        const data: ControlPanelSettings = {
             model_id: this.selectedModel,
             llm_mode: this.selectedMode,
             max_tokens: this.maxTokens,
@@ -153,7 +151,7 @@ export class ChatControlPanelComponent {
     }
 
     get selectedModelLabel(): string {
-        const model = this.availableModels.find(
+        const model = this.availableModels?.find(
             (m) => m.value === this.selectedModel
         );
         return model ? model.label : "";

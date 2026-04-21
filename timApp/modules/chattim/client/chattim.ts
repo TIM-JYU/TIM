@@ -29,7 +29,7 @@ import {
     HttpEventType,
 } from "@angular/common/http";
 import {DomSanitizer} from "@angular/platform-browser";
-import type {ControlPanelData} from "./controlpanel";
+import type {ChatModel, ControlPanelSettings} from "./controlpanel";
 import {ChatControlPanelComponent} from "./controlpanel";
 
 const PluginMarkupFields = t.intersection([
@@ -68,6 +68,11 @@ export interface AskResponse {
 export interface AskParams {
     input: string;
     document_id: number;
+}
+
+export interface ControlPanelData extends ControlPanelSettings {
+    availableModels: ChatModel[];
+    availableModes: string[];
 }
 
 // Huom: <tim-dialog-frame ei sisällä markupError attribuuttia
@@ -118,7 +123,9 @@ export interface AskParams {
                         [maxTokens]="maxTokens"
                         [response]="controlpanelResponse"
                         [error]="controlpanelError"
-                        [localFilePaths]="localFilePaths">
+                        [localFilePaths]="localFilePaths"
+                        [availableModels]="availableModels"
+                        [availableModes]="availableModes" >
                     </chattim-control-panel>
                 </div>
             </ng-container>
@@ -159,6 +166,8 @@ export class ChatTIMComponent
     maxTokens = 1000;
     controlpanelError?: string;
     controlpanelResponse?: string;
+    availableModels?: ChatModel[];
+    availableModes?: string[];
 
     // TODO: make a configurable option for user in settings?
     useStreaming: boolean = true;
@@ -521,6 +530,10 @@ export class ChatTIMComponent
         });
     }
 
+    /**
+     * To get the stored/default instance values for control panel. Gets also
+     * supported models and modes
+     */
     async getControlPanelData() {
         this.isRunning = true;
 
@@ -531,7 +544,7 @@ export class ChatTIMComponent
         const response = await this.httpPost<{
             result: ControlPanelData;
             error?: string;
-        }>("/chattim/getSettings", getRequest);
+        }>(this.route("getSettings"), getRequest);
 
         this.isRunning = false;
         if (response.ok) {
@@ -546,29 +559,36 @@ export class ChatTIMComponent
                 this.selectedMode = result.llm_mode;
                 this.maxTokens = result.max_tokens;
                 this.localFilePaths = result.tim_paths;
+                this.availableModels = result.availableModels;
+                this.availableModes = result.availableModes;
             }
         } else {
             this.controlpanelError = response.result.error.error;
         }
     }
 
-    async onSaveSettings(controlPanelData: ControlPanelData) {
+    /**
+     * To save the settings given by user
+     * @param controlPanelSettings holds the values set by user
+     */
+    async onSaveSettings(controlPanelSettings: ControlPanelSettings) {
         this.isRunning = true;
 
         const save_request = {
             document_id: this.document_id,
-            control_panel_data: controlPanelData,
+            control_panel_settings: controlPanelSettings,
         };
 
         const response = await this.httpPost<{
             web: {result: string; error?: string};
-        }>("/chattim/saveSettings", save_request);
+        }>(this.route("saveSettings"), save_request);
 
         this.isRunning = false;
         if (response.ok) {
             const data = response.result;
             this.controlpanelError = data.web.error;
             this.controlpanelResponse = data.web.result;
+            this.error = undefined; // on successful save we clear chattim-error, maybe not great
         } else {
             this.controlpanelError = response.result.error.error;
         }

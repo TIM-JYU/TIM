@@ -1,7 +1,9 @@
 import os
 import uuid
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from unicodedata import normalize, category
+
+from openai import models
 
 from timApp.timdb.dbaccess import get_files_path
 from timApp.auth.get_user_rights_for_item import UserItemRights
@@ -32,13 +34,16 @@ from timApp.modules.chattim.model import (
 )
 from timApp.modules.chattim.conversation import ConversationManager, ChatMessage
 
-T = TypeVar("T")
-E = TypeVar("E")
+
+@dataclass(frozen=True)
+class ChatModel(TypedDict):
+    label: str
+    value: str
 
 
 @dataclass()
 class InstanceAttributes:
-    model_id: str = "gpt-4o-mini"
+    model_id: str = "gpt-4.1-mini"
     llm_mode: str = "Creative"
     max_tokens: int = 2000
     tim_paths: str = ""
@@ -46,6 +51,16 @@ class InstanceAttributes:
     @classmethod
     def default(cls) -> "InstanceAttributes":
         return cls()
+
+
+@dataclass
+class InstanceSettingsData(InstanceAttributes):
+    availableModels: list[ChatModel] = field(kw_only=True)
+    availableModes: list[str] = field(kw_only=True)
+
+
+T = TypeVar("T")
+E = TypeVar("E")
 
 
 class Result(Generic[T, E]):
@@ -295,8 +310,12 @@ class PluginCore:
             # TODO: get settings from db
             pass
 
-        # if exists fetch from db
-        return Result(value=InstanceAttributes.default())
+        data = InstanceSettingsData(
+            availableModes=RagMode.supported_modes(),
+            availableModels=self._get_supported_chat_models(),
+        )
+
+        return Result(value=data)
 
     def save_instance(
         self, caller_id, document_id: int, instance_settings: InstanceAttributes
@@ -391,6 +410,15 @@ class PluginCore:
         return self.history_manager.get_history_time_window(
             document_id, caller_id, ts_begin, ts_end, max_count
         )
+
+    def _get_supported_chat_models(self) -> list[ChatModel]:
+        chat_models: list[ChatModel] = []
+        for model_spec in self.rag.get_supported_models().values():
+            chat_models.append(
+                ChatModel(label=model_spec.label, value=model_spec.model_id)
+            )
+
+        return chat_models
 
     def change_chatmode(self, caller_id: str, document_id: int, mode: RagMode):
         pass

@@ -59,7 +59,7 @@ class ChatTimAskParams(GenericParams):
 
 @dataclass
 class ChatTimSaveSettingsParams(GenericParams):
-    control_panel_data: InstanceAttributes
+    control_panel_settings: InstanceAttributes
 
 
 @dataclass
@@ -207,7 +207,7 @@ def define_save_settings(params: ChatTimSaveSettingsParams) -> PluginAnswerResp:
     web: PluginAnswerWeb = {}
     result: PluginAnswerResp = {"web": web}
 
-    panel_data = params.control_panel_data
+    panel_data = params.control_panel_settings
     document_id = params.document_id
     session_user_id = get_current_user_id()
 
