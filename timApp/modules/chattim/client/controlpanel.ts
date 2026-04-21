@@ -56,7 +56,7 @@ export interface ControlPanelSettings extends Record<string, JsonValue> {
                     Mode: <strong>{{ selectedMode }}</strong>
                 </button>
                 <div *ngIf="modeOpen" class="settings-section-body">
-                    <div class="radio" *ngFor="let mode of modes">
+                    <div class="radio" *ngFor="let mode of availableModes">
                         <label>
                             <input type="radio"
                                    name="modeRadio"
@@ -136,8 +136,6 @@ export class ChatControlPanelComponent {
     @Input() availableModes?: string[];
 
     @Output() saveSettingsClick = new EventEmitter<ControlPanelSettings>();
-
-    modes = ["Summarizing", "Creative"];
 
     saveSettingsClicked() {
         const data: ControlPanelSettings = {
