@@ -1,4 +1,4 @@
-import type {OnInit} from "@angular/core";
+import type {AfterViewInit, OnInit} from "@angular/core";
 import {Component, EventEmitter, Input, Output} from "@angular/core";
 import type {JsonValue} from "tim/util/jsonvalue";
 
@@ -119,7 +119,7 @@ export interface ControlPanelData extends Record<string, JsonValue> {
         </div>
     `,
 })
-export class ChatControlPanelComponent implements OnInit {
+export class ChatControlPanelComponent {
     settingsOpen = false;
     modelOpen = false;
     modeOpen = false;
@@ -134,7 +134,6 @@ export class ChatControlPanelComponent implements OnInit {
     @Input() maxTokens!: number;
 
     @Output() saveSettingsClick = new EventEmitter<ControlPanelData>();
-    @Output() initControlPanelDataFetch = new EventEmitter<void>();
 
     availableModels: ChatModel[] = [
         {label: "GPT-4o-Mini", value: "gpt-4.1-mini"},
@@ -142,10 +141,6 @@ export class ChatControlPanelComponent implements OnInit {
     ];
 
     modes = ["Summarizing", "Creative"];
-
-    ngOnInit(): void {
-        this.initControlPanelDataFetch.emit();
-    }
 
     saveSettingsClicked() {
         const data: ControlPanelData = {

@@ -38,10 +38,14 @@ E = TypeVar("E")
 
 @dataclass()
 class InstanceAttributes:
-    model_id: str
-    llm_mode: str
-    max_tokens: int
-    tim_paths: str
+    model_id: str = "gpt-4o-mini"
+    llm_mode: str = "Creative"
+    max_tokens: int = 2000
+    tim_paths: str = ""
+
+    @classmethod
+    def default(cls) -> "InstanceAttributes":
+        return cls()
 
 
 class Result(Generic[T, E]):
@@ -274,6 +278,26 @@ class PluginCore:
 
         return Result(value=gen(), error=None)
 
+    def get_plugin_settings(
+        self, user_id: int, document_id: int
+    ) -> Result[InstanceAttributes | None, str | None]:
+        """
+        Get the settings for the plugin.
+        """
+        # if no such plugin exists return defaults
+        if not self._document_exists(document_id):
+            return Result(None, f"Document [{document_id}] does not exist")
+
+        if not self._owns_document(user_id, document_id):
+            return Result(None, "Insufficient rights")
+
+        if not self._instance_exists(document_id):
+            # TODO: get settings from db
+            pass
+
+        # if exists fetch from db
+        return Result(value=InstanceAttributes.default())
+
     def save_instance(
         self, caller_id, document_id: int, instance_settings: InstanceAttributes
     ) -> Result[bool | None, str | None]:
@@ -461,6 +485,7 @@ class PluginCore:
         return Result(value=doc_set)
 
     def _document_exists(self, document_id: int) -> bool:
+        """Checks if document with given id exists in tim database"""
         if not self.tim_database.get_tim_document_by_id(document_id):
             return False
 

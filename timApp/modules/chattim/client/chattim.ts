@@ -30,6 +30,7 @@ import {
 } from "@angular/common/http";
 import {DomSanitizer} from "@angular/platform-browser";
 import {Users} from "tim/user/userService";
+import {toPromise} from "tim/util/utils";
 import type {ControlPanelData} from "./controlpanel";
 import {ChatControlPanelComponent} from "./controlpanel";
 
@@ -68,7 +69,6 @@ export interface AskResponse {
 
 export interface AskParams {
     input: string;
-    user_id: number;
     document_id: number;
 }
 
@@ -109,7 +109,6 @@ export interface AskParams {
                     </button>
                     <chattim-control-panel
                         (saveSettingsClick)="onSaveSettings($event)"
-                        (initControlPanelDataFetch)="getControlPanelData()"
                         [selectedModel]="selectedModel"
                         [selectedMode]="selectedMode"
                         [maxTokens]="maxTokens"
@@ -173,6 +172,7 @@ export class ChatTIMComponent
          early crashes thus we call in ngAfterViewInit */
         this.initDocId();
         await this.initScrollContainer();
+        await this.getControlPanelData();
     }
 
     async onEnter() {
@@ -266,11 +266,9 @@ export class ChatTIMComponent
      */
     async fetchMessages(n: number, ts_end?: number): Promise<Message[]> {
         const url = this.route("getMessages");
-        const user_id: number = Users.getCurrent().id;
         const document_id: number = this.document_id;
 
         const response = await this.httpPost<{messages: Message[]}>(url, {
-            user_id: user_id,
             document_id: document_id,
             amount: n,
             timestamp_end_ms: ts_end,
@@ -381,10 +379,8 @@ export class ChatTIMComponent
 
         const input: string = this.userInput;
         this.userInput = "";
-        // TODO: ei tarvita user id?
-        const user_id: number = Users.getCurrent().id;
         const document_id: number = this.document_id;
-        const body: AskParams = {input, user_id, document_id};
+        const body: AskParams = {input, document_id};
 
         const entry: ChatEntry = {
             user: {content: input, role: "user", timestamp_ms: Date.now()},
@@ -527,17 +523,21 @@ export class ChatTIMComponent
         const getRequest = {
             document_id: this.document_id,
         };
-
+        // Note: this is POST due to GET not being able to transfer int
         const response = await this.httpPost<{
-            web: {result: ControlPanelData; error?: string};
-        }>("/chattim/get_controlpanel_data", getRequest);
+            result: ControlPanelData;
+            error?: string;
+        }>("/chattim/getSettings", getRequest);
 
         this.isRunning = false;
         if (response.ok) {
             const data = response.result;
-            this.controlpanelError = data.web.error;
-            const result = data.web.result;
-            if (this.controlpanelError === "") {
+            const result = data.result;
+            this.controlpanelError = data.error;
+            if (
+                this.controlpanelError === undefined ||
+                this.controlpanelError === ""
+            ) {
                 this.selectedModel = result.model_id;
                 this.selectedMode = result.llm_mode;
                 this.maxTokens = result.max_tokens;
@@ -558,7 +558,7 @@ export class ChatTIMComponent
 
         const response = await this.httpPost<{
             web: {result: string; error?: string};
-        }>("/chattim/settings_save", save_request);
+        }>("/chattim/saveSettings", save_request);
 
         this.isRunning = false;
         if (response.ok) {
