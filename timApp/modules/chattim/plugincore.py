@@ -357,8 +357,8 @@ class PluginCore:
         self,
         caller_id: str,
         document_id: str,
-        ts_begin: int,
-        ts_end: int,
+        ts_begin: int | None = None,
+        ts_end: int | None = None,
         max_count: int = 128,
     ) -> list[ChatMessage]:
         return self.history_manager.get_history_time_window(
