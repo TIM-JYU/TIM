@@ -6,7 +6,7 @@ import time
 from dataclasses import dataclass, asdict
 from collections import deque
 from timApp.util.flask.cache import cache
-from typing import BinaryIO, Iterator
+from typing import BinaryIO, Iterator, Any
 from .model import Message, Usage
 
 
@@ -57,8 +57,8 @@ class ConversationManager:
         self,
         root_dir: str,
         *,
-        cache_ttl_s: int = 3600,  # 1h
-        cache_tail_len: int = 100,
+        cache_ttl_s: int = 60 * 15,  # 15 min
+        cache_tail_len: int = 64,
     ):
         # TODO: change root path naming
         root_path = os.path.join(root_dir, "history", "chattim")
@@ -79,7 +79,7 @@ class ConversationManager:
         json_messages = self._store.append_messages(plugin_id, user_id, messages)
         if not json_messages:
             return
-        self.append_to_cache(plugin_id, user_id, json_messages)
+        self._append_to_cache(plugin_id, user_id, json_messages)
 
     def get_history_n(
         self,
@@ -98,11 +98,11 @@ class ConversationManager:
         :return: List of `ChatMessage` objects in the conversation.
         """
         off = max(offset, 0)
-        try_tail_cache = last_n is not None and last_n + off <= self.tail_len
 
-        if try_tail_cache:
+        # Check if the needed messages could be in the cache
+        if last_n is not None and last_n + off <= self.tail_len:
             tail_needed_n = last_n + off
-            cached = self.get_from_cache(plugin_id, user_id) or self.update_cache(
+            cached = self._get_from_cache(plugin_id, user_id) or self._update_cache(
                 plugin_id, user_id
             )
             start = -tail_needed_n
@@ -111,7 +111,7 @@ class ConversationManager:
                 raw_slice = cached[start:end]
                 return self._parse_raw_messages(raw_slice)
 
-        return self._store.load_messages_n(plugin_id, user_id, last_n, offset) or []
+        return self._store.load_messages_n(plugin_id, user_id, last_n, off) or []
 
     def get_history_time_window(
         self,
@@ -135,29 +135,29 @@ class ConversationManager:
         ts_b = ts_begin or 0
         ts_e = ts_end or ChatMessage.ts_ms()
         kwargs_id = dict(plugin_id=plugin_id, user_id=user_id)
-        kwargs = dict(
+        kwargs: dict[str, Any] = dict(
             **kwargs_id,
             ts_begin=ts_b,
             ts_end=ts_e,
             max_messages=max_messages,
         )
 
-        # Not the tail
-        if ts_end is not None:  # TODO: check if in cache
-            return self._store.load_messages_time_window(**kwargs) or []
-
-        cached = self.get_from_cache(**kwargs_id) or self.update_cache(**kwargs_id)
+        cached = self._get_from_cache(**kwargs_id) or self._update_cache(**kwargs_id)
+        # cached = None
         if cached is not None:
-            oldest_idx: int = self._oldest_in_time_window(cached, ts_b, ts_e)
-            oldest_idx = 0 if len(cached) >= max_messages else oldest_idx
-            if oldest_idx >= 0:
-                filtered_raw = cached[oldest_idx:]
-                start = None if len(filtered_raw) < max_messages else -max_messages
-                return self._parse_raw_messages(filtered_raw[start:])
+            # Check if the time window is in the cached tail
+            oldest_idx, newest_idx = self._time_window_edges_idx(cached, ts_b, ts_e)
+            end = newest_idx + 1 if newest_idx >= 0 else 0
+            oldest_idx = 0 if len(cached[:end]) >= max_messages else oldest_idx
+            if oldest_idx >= 0 and newest_idx >= 0:
+                cached_slice = cached[oldest_idx:end]
+                start = None if len(cached_slice) < max_messages else -max_messages
+                return self._parse_raw_messages(cached_slice[start:])
 
         return self._store.load_messages_time_window(**kwargs) or []
 
-    def get_from_cache(self, plugin_id: str, user_id: str) -> list[dict] | None:
+    def _get_from_cache(self, plugin_id: str, user_id: str) -> list[dict] | None:
+        """Get the message list tail from the cache if it exists and is up to date."""
         key = self._cache_key_tail(plugin_id, user_id)
         cache_res = cache.get(key)
         if not isinstance(cache_res, dict):
@@ -168,7 +168,7 @@ class ConversationManager:
         if not isinstance(cache_modify, int) or not isinstance(cache_size, int):
             return None
         try:
-            modify_time, size = self.file_stat(plugin_id, user_id)
+            modify_time, size = self._file_stat(plugin_id, user_id)
         except FileNotFoundError:
             return None
         if cache_modify != modify_time or cache_size != size:
@@ -180,26 +180,27 @@ class ConversationManager:
 
         return messages
 
-    def update_cache(self, plugin_id: str, user_id: str) -> list[dict]:
-        msgs = self._store.load_messages_n(plugin_id, user_id, self.tail_len, 0) or []
+    def _update_cache(self, plugin_id: str, user_id: str) -> list[dict] | None:
+        """Update the cache with the new conversation tail."""
         try:
-            modify_time, size = self.file_stat(plugin_id, user_id)
+            modify_time, size = self._file_stat(plugin_id, user_id)
         except FileNotFoundError:
-            return msgs
+            return None
 
         key = self._cache_key_tail(plugin_id, user_id)
+        msgs = self._store.load_messages_n(plugin_id, user_id, self.tail_len, 0) or []
         messages_dict = [m.to_dict() for m in msgs]
-        payload = {"mtime_ns": modify_time, "size": size, "messages": messages_dict}
-        # TODO: handle error?
-        cache.set(key, payload, timeout=self.ttl)
+        payload = self._cache_payload_tail(modify_time, size, messages_dict)
+        self._set_cache(key, payload)
         return messages_dict
 
-    def append_to_cache(
+    def _append_to_cache(
         self, plugin_id: str, user_id: str, messages: list[dict]
     ) -> None:
+        """Update the cache by appending new messages to the end."""
         key = self._cache_key_tail(plugin_id, user_id)
         try:
-            modify_time, size = self.file_stat(plugin_id, user_id)
+            modify_time, size = self._file_stat(plugin_id, user_id)
         except FileNotFoundError:
             cache.delete(key)
             return
@@ -211,21 +212,25 @@ class ConversationManager:
             if isinstance(m, list):
                 cached_tail = m
         new_messages = (cached_tail + messages)[-self.tail_len :]
-        payload = {"mtime_ns": modify_time, "size": size, "messages": new_messages}
+        payload = self._cache_payload_tail(modify_time, size, new_messages)
+        self._set_cache(key, payload)
 
-        # TODO: handle error?
-        cache.set(key, payload, timeout=self.ttl)
-
-    def file_stat(self, plugin_id: str, user_id: str) -> tuple[int, int]:
+    def _file_stat(self, plugin_id: str, user_id: str) -> tuple[int, int]:
+        """Get the modification time and size of the conversation file."""
         path = self._store.resolve_conversation_path(plugin_id, user_id)
         res = os.stat(path)
-        modify_time = res.st_mtime_ns
-        size = res.st_size
-        return modify_time, size
+        return res.st_mtime_ns, res.st_size
+
+    def _set_cache(self, key: str, value: Any) -> None:
+        cache.set(key, value, timeout=self.ttl)
 
     @staticmethod
     def _cache_key_tail(plugin_id: str, user_id: str) -> str:
         return f"chattim:tail:{plugin_id}:{user_id}"
+
+    @staticmethod
+    def _cache_payload_tail(mtime_ns: int, size: int, messages: list[dict]) -> dict:
+        return {"mtime_ns": mtime_ns, "size": size, "messages": messages}
 
     @staticmethod
     def _parse_raw_messages(raw_messages: list[dict]) -> list[ChatMessage]:
@@ -240,28 +245,55 @@ class ConversationManager:
         return out
 
     @staticmethod
-    def _oldest_in_time_window(messages: list[dict], ts_b: int, ts_e: int) -> int:
-        """
-        Find the oldest message index in the given time window.
-        The message timestamp must border the time window start.
-        """
-        older_idx: int = -1
-        for i in range(len(messages)):
-            d = messages[i]
-            if not isinstance(d, dict):
-                continue
-            ts = d.get("timestamp")
-            if not isinstance(ts, int):
-                continue
+    def _time_window_edges_idx(
+        messages: list[dict], ts_b: int, ts_e: int
+    ) -> tuple[int, int]:
+        """Find the edges of the time window from the message list.
 
-            if ts <= ts_b:
-                older_idx = i
-            if ts_b <= ts <= ts_e:
-                if older_idx >= 0:
-                    return i
-                # There could exist an older message that is not included here
+        :param messages: List of messages to find from.
+        :param ts_b: Beginning of the time window in milliseconds.
+        :param ts_e: Ending of the time window in milliseconds.
+        :return: Tuple containing the start and end index in the list.
+        """
+        oldest_idx: int = -1
+        newest_idx: int = -1
+        oldest_found: bool = False
+        newest_found: bool = False
+
+        def get_ts(dict_maybe: dict) -> int | None:
+            if not isinstance(dict_maybe, dict):
+                return None
+            ts_any = dict_maybe.get("timestamp")
+            if not isinstance(ts_any, int):
+                return None
+            return ts_any
+
+        for i in range(len(messages)):
+            idx_end = len(messages) - i - 1
+            ts = get_ts(messages[i])
+            ts_end = get_ts(messages[idx_end])
+
+            # Check start border
+            if not oldest_found and ts is not None:
+                if ts <= ts_b:
+                    oldest_idx = i
+                if ts_b <= ts <= ts_e:
+                    if oldest_idx >= 0:
+                        oldest_idx = i
+                    # Else there could exist an older message that is not included
+                    oldest_found = True
+
+            # Check end border
+            if not newest_found and ts_end is not None:
+                if ts_b <= ts_end <= ts_e:
+                    newest_idx = idx_end
+                    newest_found = True
+                elif ts_end < ts_b:
+                    newest_found = True
+
+            if newest_found and oldest_found:
                 break
-        return -1
+        return oldest_idx if oldest_found else -1, newest_idx
 
 
 class ConversationStore:

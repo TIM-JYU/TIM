@@ -86,7 +86,11 @@ class PluginCore:
 
     def __init__(self):
         file_path = get_files_path().as_posix()
-        self.history_manager = ConversationManager(file_path)
+        self.history_manager = ConversationManager(
+            file_path,
+            cache_ttl_s=60 * 15,
+            cache_tail_len=64,
+        )
 
     def _prepare_chat_request(
         self,
