@@ -68,8 +68,6 @@ class GetMessagesParams(GenericParams):
     timestamp_end_ms: int | None = None
 
 
-
-
 @dataclass
 class SaveAPIKeyParams:
     model: str  # TODO: rename to provider

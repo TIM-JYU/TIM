@@ -29,8 +29,7 @@ import {
     HttpEventType,
 } from "@angular/common/http";
 import {DomSanitizer} from "@angular/platform-browser";
-import {Users} from "tim/user/userService";
-import type {CtrlPanelData} from "./controlpanel";
+import type {ControlPanelData} from "./controlpanel";
 import {ChatControlPanelComponent} from "./controlpanel";
 
 const PluginMarkupFields = t.intersection([
