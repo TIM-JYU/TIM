@@ -1,9 +1,16 @@
 import {Component, EventEmitter, Input, Output} from "@angular/core";
 import type {JsonValue} from "tim/util/jsonvalue";
 
-export interface ChatModel {
+export interface ChatModel extends Record<string, JsonValue> {
     label: string;
     value: string;
+}
+
+export interface ControlPanelSettings extends Record<string, JsonValue> {
+    model_id: string;
+    llm_mode: string;
+    max_tokens: number;
+    tim_paths: string;
 }
 
 @Component({
@@ -33,7 +40,7 @@ export interface ChatModel {
                 <div *ngIf="modelOpen" class="settings-section-body">
                     <select class="form-control"
                             [(ngModel)]="selectedModel">
-                        <option *ngFor="let m of availableModels" [value]="m.value">{{ m.label }}</option>
+                        <option *ngFor="let m of availableModels" [ngValue]="m.value">{{ m.label }}</option>
                     </select>
                 </div>
             </div>
@@ -49,7 +56,7 @@ export interface ChatModel {
                     Mode: <strong>{{ selectedMode }}</strong>
                 </button>
                 <div *ngIf="modeOpen" class="settings-section-body">
-                    <div class="radio" *ngFor="let mode of modes">
+                    <div class="radio" *ngFor="let mode of availableModes">
                         <label>
                             <input type="radio"
                                    name="modeRadio"
@@ -117,25 +124,21 @@ export class ChatControlPanelComponent {
     modeOpen = false;
     tokensOpen = false;
     filesOpen = false;
-    localFilePaths: string = "";
 
+    @Input() localFilePaths!: string;
     @Input() error?: string;
     @Input() response?: string;
-    @Input() selectedModel: string = "gpt-4.1-mini";
-    @Input() selectedMode: string = "Summarizing";
-    @Input() maxTokens: number = 1000;
+    @Input() selectedModel!: string;
+    @Input() selectedMode!: string;
+    @Input() maxTokens!: number;
 
-    @Output() saveSettingsClick = new EventEmitter<CtrlPanelData>();
+    @Input() availableModels?: ChatModel[];
+    @Input() availableModes?: string[];
 
-    availableModels: ChatModel[] = [
-        {label: "GPT-4o-Mini", value: "gpt-4.1-mini"},
-        {label: "Dummy", value: "dummy-model-1"},
-    ];
-
-    modes = ["Summarizing", "Creative"];
+    @Output() saveSettingsClick = new EventEmitter<ControlPanelSettings>();
 
     saveSettingsClicked() {
-        const data: CtrlPanelData = {
+        const data: ControlPanelSettings = {
             model_id: this.selectedModel,
             llm_mode: this.selectedMode,
             max_tokens: this.maxTokens,
@@ -146,16 +149,9 @@ export class ChatControlPanelComponent {
     }
 
     get selectedModelLabel(): string {
-        const model = this.availableModels.find(
+        const model = this.availableModels?.find(
             (m) => m.value === this.selectedModel
         );
         return model ? model.label : "";
     }
-}
-
-export interface CtrlPanelData extends Record<string, JsonValue> {
-    model_id: string;
-    llm_mode: string;
-    max_tokens: number;
-    tim_paths: string;
 }

@@ -43,7 +43,6 @@ ChatTimStateModel = dict[str, Any]
 
 @dataclass
 class GenericParams:
-    user_id: int
     document_id: int
 
 
@@ -60,7 +59,7 @@ class ChatTimAskParams(GenericParams):
 
 @dataclass
 class ChatTimSaveSettingsParams(GenericParams):
-    control_panel_data: InstanceAttributes
+    control_panel_settings: InstanceAttributes
 
 
 @dataclass
@@ -74,6 +73,12 @@ class SaveAPIKeyParams:
     model: str  # TODO: rename to provider
     apikey: str
     alias: str
+
+
+@dataclass
+class ChatTIMGetSettingsResponse(TypedDict, total=False):
+    result: InstanceAttributes
+    error: str | None
 
 
 def register_route(
@@ -147,12 +152,8 @@ header: ChatTIM
 
 def define_ask_route(params: ChatTimAskParams) -> ChatTimAskResponse:
     user_input = params.input
-    user_id = params.user_id
     document_id = params.document_id
     session_user_id = get_current_user_id()
-    # TODO onko tarkistus tarpeellinen, vai käytetäänkö vain session_user_id?
-    if user_id != session_user_id:
-        pass
 
     resp = plugincore.chat_request(session_user_id, document_id, user_input)
 
@@ -165,13 +166,9 @@ def define_ask_route(params: ChatTimAskParams) -> ChatTimAskResponse:
 
 def define_ask_stream_route(params: ChatTimAskParams) -> Response:
     user_input = params.input
-    user_id = params.user_id
     document_id = params.document_id
 
     session_user_id = get_current_user_id()
-    # TODO onko tarkistus tarpeellinen, vai käytetäänkö vain session_user_id?
-    if user_id != session_user_id:
-        pass
 
     def generate():
         resp = plugincore.chat_request_stream(session_user_id, document_id, user_input)
@@ -192,19 +189,26 @@ def define_ask_stream_route(params: ChatTimAskParams) -> Response:
     )
 
 
+def define_get_settings(params: GenericParams) -> ChatTIMGetSettingsResponse:
+    ret: ChatTIMGetSettingsResponse = {}
+    document_id = params.document_id
+    session_user_id = get_current_user_id()
+
+    error_or_ok = plugincore.get_plugin_settings(session_user_id, document_id)
+    if not error_or_ok.ok():
+        ret["error"] = error_or_ok.error
+        return ret
+
+    ret["result"] = error_or_ok.value
+    return ret
+
+
 def define_save_settings(params: ChatTimSaveSettingsParams) -> PluginAnswerResp:
     web: PluginAnswerWeb = {}
     result: PluginAnswerResp = {"web": web}
 
-    user_id = params.user_id
+    panel_data = params.control_panel_settings
     document_id = params.document_id
-    panel_data = params.control_panel_data
-
-    session_user_id = get_current_user_id()
-    # TODO onko tarkistus tarpeellinen, vai käytetäänkö vain session_user_id?
-    if user_id != session_user_id:
-        pass
-
     session_user_id = get_current_user_id()
 
     error_or_ok = plugincore.save_instance(session_user_id, document_id, panel_data)
@@ -217,7 +221,7 @@ def define_save_settings(params: ChatTimSaveSettingsParams) -> PluginAnswerResp:
 
 
 def define_get_messages(params: GetMessagesParams) -> dict:
-    user_id = str(params.user_id)
+    user_id = str(get_current_user_id())
     document_id = str(params.document_id)
     amount = params.amount
     ts_end = params.timestamp_end_ms or ChatMessage.ts_ms()
@@ -272,8 +276,9 @@ chattim = create_nontask_blueprint(
 
 register_route(chattim, "post", "ask", ChatTimAskParams, define_ask_route)
 register_route(chattim, "post", "askStream", ChatTimAskParams, define_ask_stream_route)
+register_route(chattim, "post", "getSettings", GenericParams, define_get_settings)
 register_route(
-    chattim, "post", "settings_save", ChatTimSaveSettingsParams, define_save_settings
+    chattim, "post", "saveSettings", ChatTimSaveSettingsParams, define_save_settings
 )
 register_route(chattim, "post", "getMessages", GetMessagesParams, define_get_messages)
 register_route(chattim, "post", "validate_api", SaveAPIKeyParams, define_save_api_key)
