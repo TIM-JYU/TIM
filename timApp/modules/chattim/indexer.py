@@ -180,7 +180,7 @@ class Indexer:
         tokens_used = 0
         for document in documents:
             chunks = self.get_tim_blocks(doc=document)
-
+            # TODO split long chunks into smaller chunks
             embeddings = self.embedding_model.generate(chunks)
             tokens_used += embeddings.used_tokens
             block_ids = list(range(len(chunks.chunks)))
@@ -243,6 +243,7 @@ class Indexer:
 
         embeddings: list[float] = []
         texts = []
+
         for page in page_embeddings:
             for chunk in page:
                 print(chunk["embedding"])
