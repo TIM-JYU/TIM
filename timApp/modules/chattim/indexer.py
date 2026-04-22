@@ -173,7 +173,7 @@ class Indexer:
 
         return TextChunks(chunks=text)
 
-    def create_embeddings(self, documents: list[Document]) -> int:
+    def create_embeddings(self, documents: list[Document]) -> int | None:
         """generates the data object containing embeddings and corresponding text chunks
         :param documents: list of tim documents
         :return: number of tokens used"""
@@ -193,6 +193,8 @@ class Indexer:
                     embeddings.embeddings, chunks.chunks, block_ids
                 )
             ]
+            if len(data) == 0:
+                return None
             data_dict = [asdict(obj) for obj in data]
             file_name = document.doc_id
             os.makedirs(self.root_path, exist_ok=True)
@@ -243,6 +245,7 @@ class Indexer:
 
         embeddings: list[float] = []
         texts = []
+
         for page in page_embeddings:
             for chunk in page:
                 print(chunk["embedding"])
