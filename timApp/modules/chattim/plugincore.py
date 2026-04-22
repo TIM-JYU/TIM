@@ -9,6 +9,7 @@ from timApp.timdb.dbaccess import get_files_path
 from timApp.auth.get_user_rights_for_item import UserItemRights
 from timApp.item.item import Item
 from timApp.document.docinfo import DocInfo
+from timApp.modules.chattim.indexer import OpenAiEmbeddingModel, Indexer
 from timApp.modules.chattim.database_handler import (
     TimDatabase,
     Document,
@@ -146,10 +147,12 @@ class PluginCore:
         mode: RagMode = RagMode.RETRIEVE
         # TODO: No need for this attribute if we have character limit for input? Maybe keep as is for an option
         max_tokens_for_req = 99999
+        response = self.rag.get_context(prompt=validated_input, identifier=document_id)
+        context = response.context
 
         msg_data = MessageData(
             user_prompt=validated_input,
-            context="",
+            context=context,
             chat_history=chat_history,
             mode=mode,
             max_tokens=max_tokens_for_req,
@@ -380,6 +383,16 @@ class PluginCore:
 
         # TODO: indeksoinnit pyörimään
 
+        # TODO:implementation for choosing embedding model provider
+
+        emb_model = OpenAiEmbeddingModel(api_key=api_key)
+
+        file_path = get_files_path().as_posix()
+        indexer = Indexer(emb_model, file_path)
+
+        self.rag.add_indexer(indexer, identifier=document_id)
+        tokens_used = indexer.create_embeddings(documents=docs)
+        print(f"Tokens used for indexing: {tokens_used}")
         self.list_of_instance_ids.append(
             document_id
         )  # TODO: for testing purposes remove when db ok or cache
@@ -434,6 +447,9 @@ class PluginCore:
     def _instance_exists(self, document_id) -> bool:
         # TODO: todnäk pitää muistissa tiedetyt instanssi-idt jottei haeta aina tietokannalta turhaan
         # TODO: korvaa db haulla
+        print(
+            f"Checking if instance {document_id} exists, list of instances:{self.list_of_instance_ids}"
+        )
         if document_id in self.list_of_instance_ids:
             return True
         return False
