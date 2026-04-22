@@ -311,6 +311,17 @@ export class ChatTIMComponent
         });
 
         await this.initConversation();
+        await this.nextAnimationFrame();
+
+        while (!this.isScrollable() && this.hasMoreHistory) {
+            const beforeLen: number = this.conversation.length;
+            await this.loadOlderHistory();
+            await this.nextAnimationFrame();
+
+            if (this.conversation.length === beforeLen) {
+                break; // Fallback
+            }
+        }
 
         // Start pinned to bottom on reload
         requestAnimationFrame(() => {
@@ -437,8 +448,8 @@ export class ChatTIMComponent
             this.conversation = olderEntries.concat(existing);
         }
 
-        requestAnimationFrame(() => {
-            const delta = el.scrollHeight - prevScrollHeight;
+        await this.nextAnimationFrame(() => {
+            const delta: number = el.scrollHeight - prevScrollHeight;
             el.scrollTop = prevScrollTop + delta;
             this.loadingOlder = false;
         });
@@ -719,6 +730,28 @@ export class ChatTIMComponent
         }
         const oldest: ChatEntry = this.conversation[0];
         return oldest.user.timestamp_ms ?? oldest.agent.timestamp_ms ?? 0;
+    }
+
+    private isScrollable(): boolean {
+        const el = this.scrollContainer;
+        return el ? el.scrollHeight > el.clientHeight + 1 : false;
+    }
+
+    /**
+     * Wait for the next animation frame.
+     * @param callback Optional function to call when it's time to update.
+     */
+    private nextAnimationFrame(callback?: FrameRequestCallback): Promise<void> {
+        return new Promise((resolve, reject) => {
+            requestAnimationFrame((ts) => {
+                try {
+                    callback?.(ts);
+                    resolve();
+                } catch (e) {
+                    reject(e);
+                }
+            });
+        });
     }
 
     /**

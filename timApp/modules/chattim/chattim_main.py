@@ -29,7 +29,6 @@ from tim_common.pluginserver_flask import (
 from timApp.modules.chattim.plugincore import (
     PluginCore,
     InstanceAttributes,
-    ChatMessage,
 )
 
 plugincore = PluginCore()
@@ -244,9 +243,11 @@ def define_get_messages(params: GetMessagesParams) -> dict:
     user_id = str(get_current_user_id())
     document_id = str(params.document_id)
     amount = params.amount
-    ts_end = params.timestamp_end_ms or ChatMessage.ts_ms()
+    ts_end = params.timestamp_end_ms
 
-    chat_messages = plugincore.get_messages_tw(user_id, document_id, 0, ts_end, amount)
+    chat_messages = plugincore.get_messages_tw(
+        user_id, document_id, None, ts_end, amount
+    )
     messages = [
         {"content": m.content, "role": m.role, "timestamp_ms": m.timestamp}
         for m in chat_messages

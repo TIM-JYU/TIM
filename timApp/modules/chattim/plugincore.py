@@ -106,7 +106,11 @@ class PluginCore:
 
     def __init__(self):
         file_path = get_files_path().as_posix()
-        self.history_manager = ConversationManager(file_path)
+        self.history_manager = ConversationManager(
+            file_path,
+            cache_ttl_s=60 * 15,
+            cache_tail_len=64,
+        )
 
     def _prepare_chat_request(
         self,
@@ -416,8 +420,8 @@ class PluginCore:
         self,
         caller_id: str,
         document_id: str,
-        ts_begin: int,
-        ts_end: int,
+        ts_begin: int | None = None,
+        ts_end: int | None = None,
         max_count: int = 128,
     ) -> list[ChatMessage]:
         return self.history_manager.get_history_time_window(
