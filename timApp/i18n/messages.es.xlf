@@ -11524,6 +11524,38 @@ Separate multiple addresses with commas or write each address on a new line.</so
           <context context-type="linenumber">618,620</context>
         </context-group>
       </trans-unit>
+      <trans-unit id="2826207906526690644" datatype="html">
+        <source> Add new LLM model API key </source>
+        <target state="new"> Add new LLM model API key </target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/user/add-chattim-api-key-dialog.component.ts</context>
+          <context context-type="linenumber">36</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="1447970220734495682" datatype="html">
+        <source>LLM model provider</source>
+        <target state="new">LLM model provider</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/user/add-chattim-api-key-dialog.component.ts</context>
+          <context context-type="linenumber">42,43</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="1965206604774400" datatype="html">
+        <source>Alias</source>
+        <target state="new">Alias</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/user/add-chattim-api-key-dialog.component.ts</context>
+          <context context-type="linenumber">50,51</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="7991621302184166089" datatype="html">
+        <source>Chattim API Keys</source>
+        <target state="new">Chattim API Keys</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
+          <context context-type="linenumber">646</context>
+        </context-group>
+      </trans-unit>
     </body>
   </file>
 </xliff>
