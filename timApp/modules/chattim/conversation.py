@@ -6,7 +6,7 @@ import time
 from dataclasses import dataclass, asdict
 from collections import deque
 from timApp.util.flask.cache import cache
-from typing import BinaryIO, Iterator, Any
+from typing import BinaryIO, Iterator, Any, Callable
 from .model import Message, Usage
 
 
@@ -276,7 +276,9 @@ class ConversationManager:
         if ts_b > ts_e:
             return oldest_idx, newest_idx
 
-        def get_ts(dict_maybe: dict) -> int | None:
+        def get_ts(dict_maybe: dict, found: bool) -> int | None:
+            if found:
+                return None
             if not isinstance(dict_maybe, dict):
                 return None
             ts_any = dict_maybe.get("timestamp")
@@ -284,40 +286,51 @@ class ConversationManager:
                 return None
             return ts_any
 
-        for i in range(len(messages)):
-            idx_end = len(messages) - i - 1
-            # TODO: optimize
-            # only get if not found yet
-            ts = get_ts(messages[i])
-            ts_end = get_ts(messages[idx_end])
+        def check_edge(
+            _ts: int,
+            find_border: bool,
+            idx: int,
+            latest_idx: int,
+            correct_side: Callable[[int], bool],
+        ) -> tuple[bool, int]:
+            """Check if the timestamp is the edge of the time window."""
+            if correct_side(_ts):
+                latest_idx = idx
+            if ts_b <= _ts <= ts_e:
+                if not find_border or latest_idx >= 0:
+                    return True, idx  # Found the desired edge
+                else:
+                    # There could exist a message that is not included
+                    raise ValueError
+            elif latest_idx == idx:
+                return False, idx
+            else:
+                raise ValueError  # Message on wrong side of time window
 
+        # Find edges
+        for i in range(len(messages)):
             # Check start border
-            if not oldest_found and ts is not None:
-                if ts > ts_e:
+            ts = get_ts(messages[i], oldest_found)
+            if ts is not None:
+                check_side = lambda _ts: _ts <= ts_b
+                try:
+                    oldest_found, oldest_idx = check_edge(
+                        ts, find_border_b, i, oldest_idx, check_side
+                    )
+                except ValueError:
                     break
-                if ts <= ts_b:
-                    oldest_idx = i
-                if ts_b <= ts <= ts_e:
-                    if not find_border_b or oldest_idx >= 0:
-                        oldest_idx = i
-                        oldest_found = True
-                    else:
-                        # There could exist an older message that is not included
-                        break
 
             # Check end border
-            if not newest_found and ts_end is not None:
-                if ts_end < ts_b:
+            idx_end = len(messages) - i - 1
+            ts_end = get_ts(messages[idx_end], newest_found)
+            if ts_end is not None:
+                check_side = lambda _ts: _ts >= ts_e
+                try:
+                    newest_found, newest_idx = check_edge(
+                        ts_end, find_border_e, idx_end, newest_idx, check_side
+                    )
+                except ValueError:
                     break
-                if ts_end >= ts_e:
-                    newest_idx = idx_end
-                if ts_b <= ts_end <= ts_e:
-                    if not find_border_e or newest_idx >= 0:
-                        newest_idx = idx_end
-                        newest_found = True
-                    else:
-                        # There could exist a newer message that is not included
-                        break
 
             if newest_found and oldest_found:
                 return oldest_idx, newest_idx  # Time window exists
