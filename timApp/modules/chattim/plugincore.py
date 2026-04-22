@@ -392,7 +392,7 @@ class PluginCore:
 
         self.rag.add_indexer(indexer, identifier=document_id)
         tokens_used = indexer.create_embeddings(documents=docs)
-        if not tokens_used:
+        if tokens_used == 0:
             return Result(None, "Could not create embeddings for given documents")
         print(f"Tokens used for indexing: {tokens_used}")
         self.list_of_instance_ids.append(
