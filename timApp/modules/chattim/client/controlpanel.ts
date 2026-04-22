@@ -17,104 +17,116 @@ export interface ControlPanelSettings extends Record<string, JsonValue> {
     selector: "chattim-control-panel",
     template: `
         <button class="btn btn-link settings-btn"
-                (click)="settingsOpen = !settingsOpen"
+                (click)="togglePanel()"
                 [attr.aria-expanded]="settingsOpen"
-                title="Open control panel"
-                style="float: right">
-            <span class="glyphicon glyphicon-cog" style="font-size: 1.5em;"></span>
+                title="Avaa asetukset">
+            <span class="glyphicon glyphicon-cog" style="font-size: 1.8em;"></span>
         </button>
 
 
-        <div class="settings-panel" *ngIf="settingsOpen">
+        <div class="settings-panel" [style.display]="settingsOpen ? 'block' : 'none'">
 
-            <!-- Choose the LLM -->
-            <div class="settings-row">
-                <button class="btn btn-link settings-section-btn"
-                        (click)="modelOpen = !modelOpen">
+
+            <ng-container *ngIf="!isTeacher">
+                <div class="settings-row">
+                    <p>Tämä näkymä on opiskelijalle</p>
+                    <span>Käytetyt tokenit: <strong>TODO!</strong></span>
+                </div>
+                <div class="settings-row">
+                    <button class="btn btn-warning">
+                        TODO: Tyhjennä keskustelu
+                    </button>
+                </div>
+            </ng-container>
+            <ng-container *ngIf="isTeacher">
+                <!-- Choose the LLM -->
+                <div class="settings-row">
+                    <button class="btn btn-link settings-section-btn"
+                            (click)="modelOpen = !modelOpen">
                     <span class="glyphicon"
                           [class.glyphicon-chevron-right]="!modelOpen"
                           [class.glyphicon-chevron-down]="modelOpen">
                     </span>
-                    Model: <strong>{{ selectedModelLabel }}</strong>
-                </button>
-                <div *ngIf="modelOpen" class="settings-section-body">
-                    <select class="form-control"
-                            [(ngModel)]="selectedModel">
-                        <option *ngFor="let m of availableModels" [ngValue]="m.value">{{ m.label }}</option>
-                    </select>
+                        Model: <strong>{{ selectedModelLabel }}</strong>
+                    </button>
+                    <div *ngIf="modelOpen" class="settings-section-body">
+                        <select class="form-control"
+                                [(ngModel)]="selectedModel">
+                            <option *ngFor="let m of availableModels" [ngValue]="m.value">{{ m.label }}</option>
+                        </select>
+                    </div>
                 </div>
-            </div>
 
-            <!-- Switch between summarizing, (balanced) and creative -->
-            <div class="settings-row">
-                <button class="btn btn-link settings-section-btn"
-                        (click)="modeOpen = !modeOpen">
+                <!-- Switch between summarizing, (balanced) and creative -->
+                <div class="settings-row">
+                    <button class="btn btn-link settings-section-btn"
+                            (click)="modeOpen = !modeOpen">
         <span class="glyphicon"
               [class.glyphicon-chevron-right]="!modeOpen"
               [class.glyphicon-chevron-down]="modeOpen">
         </span>
-                    Mode: <strong>{{ selectedMode }}</strong>
-                </button>
-                <div *ngIf="modeOpen" class="settings-section-body">
-                    <div class="radio" *ngFor="let mode of availableModes">
-                        <label>
-                            <input type="radio"
-                                   name="modeRadio"
-                                   [value]="mode"
-                                   [(ngModel)]="selectedMode">
-                            {{ mode }}
-                        </label>
+                        Mode: <strong>{{ selectedMode }}</strong>
+                    </button>
+                    <div *ngIf="modeOpen" class="settings-section-body">
+                        <div class="radio" *ngFor="let mode of availableModes">
+                            <label>
+                                <input type="radio"
+                                       name="modeRadio"
+                                       [value]="mode"
+                                       [(ngModel)]="selectedMode">
+                                {{ mode }}
+                            </label>
+                        </div>
                     </div>
                 </div>
-            </div>
 
-            <!-- Set max tokens per user -->
-            <div class="settings-row">
-                <button class="btn btn-link settings-section-btn"
-                        (click)="tokensOpen = !tokensOpen">
+                <!-- Set max tokens per user -->
+                <div class="settings-row">
+                    <button class="btn btn-link settings-section-btn"
+                            (click)="tokensOpen = !tokensOpen">
                     <span class="glyphicon"
                           [class.glyphicon-chevron-right]="!tokensOpen"
                           [class.glyphicon-chevron-down]="tokensOpen">
                     </span>
-                    Max tokens: <strong>{{ maxTokens }}</strong>
-                </button>
-                <div *ngIf="tokensOpen" class="settings-section-body">
-                    <input type="range"
-                           class="form-control"
-                           min="100" max="10000" step="100"
-                           [(ngModel)]="maxTokens" >
+                        Max tokens: <strong>{{ maxTokens }}</strong>
+                    </button>
+                    <div *ngIf="tokensOpen" class="settings-section-body">
+                        <input type="range"
+                               class="form-control"
+                               min="100" max="10000" step="100"
+                               [(ngModel)]="maxTokens">
+                    </div>
                 </div>
-            </div>
 
-            <!-- Add more documents to the model (TIM - filepath) -->
-            <div class="settings-row">
-                <button class="btn btn-link settings-section-btn"
-                        (click)="filesOpen = !filesOpen">
+                <!-- Add more documents to the model (TIM - filepath) -->
+                <div class="settings-row">
+                    <button class="btn btn-link settings-section-btn"
+                            (click)="filesOpen = !filesOpen">
                     <span class="glyphicon"
                           [class.glyphicon-chevron-right]="!filesOpen"
                           [class.glyphicon-chevron-down]="filesOpen">
                     </span>
-                    Add TIM-documents:
-                </button>
-                <div *ngIf="filesOpen" class="settings-section-body">
+                        Add TIM-documents:
+                    </button>
+                    <div *ngIf="filesOpen" class="settings-section-body">
                     <textarea class="form-control"
                               style="width: 100%"
                               placeholder="kurssit/tie/proj/2026/chattim"
                               [(ngModel)]="localFilePaths">
                     </textarea>
+                    </div>
                 </div>
-            </div>
-            
-            <!-- Save button that sends the chosen stuff -->
-            <div class="settings-row">
-                <button class="btn btn-primary" style="margin: 2px;"
-                        (click)="saveSettingsClicked()">
-                    Save
-                </button>
-            </div>
-            <div *ngIf="error && !response" [innerHTML]="error | purify"></div>
-            <div *ngIf="response && !error" [innerHTML]="response | purify"></div>
 
+                <!-- Save button that sends the chosen stuff -->
+                <div class="settings-row">
+                    <button class="btn btn-primary" style="margin: 2px;"
+                            (click)="saveSettingsClicked()">
+                        Save
+                    </button>
+                </div>
+                <div *ngIf="error && !response" [innerHTML]="error | purify"></div>
+                <div *ngIf="response && !error" [innerHTML]="response | purify"></div>
+            </ng-container>
         </div>
     `,
 })
@@ -131,11 +143,18 @@ export class ChatControlPanelComponent {
     @Input() selectedModel!: string;
     @Input() selectedMode!: string;
     @Input() maxTokens!: number;
+    @Input() isTeacher: boolean = false;
 
     @Input() availableModels?: ChatModel[];
     @Input() availableModes?: string[];
 
     @Output() saveSettingsClick = new EventEmitter<ControlPanelSettings>();
+    @Output() panelToggled = new EventEmitter<boolean>();
+
+    togglePanel() {
+        this.settingsOpen = !this.settingsOpen;
+        this.panelToggled.emit(this.settingsOpen);
+    }
 
     saveSettingsClicked() {
         const data: ControlPanelSettings = {

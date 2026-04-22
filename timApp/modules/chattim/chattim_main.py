@@ -3,7 +3,11 @@ from flask import request, Response, stream_with_context
 from typing import Any, TypedDict, Callable
 from webargs.flaskparser import use_args
 
-from timApp.auth.accesshelper import verify_logged_in
+from timApp.auth.accesshelper import (
+    verify_logged_in,
+    verify_teacher_access,
+    get_doc_or_abort,
+)
 from timApp.util.flask.requesthelper import RouteException
 from tim_common.marshmallow_dataclass import class_schema
 
@@ -44,6 +48,22 @@ ChatTimStateModel = dict[str, Any]
 @dataclass
 class GenericParams:
     document_id: int
+
+
+@dataclass
+class GetRightsParams(GenericParams):
+    pass
+
+
+def define_get_rights(params: GetRightsParams) -> dict:
+    doc = get_doc_or_abort(params.document_id)
+    print(doc)
+    # verify_teacher_access returns the access object if teacher, None if not
+    teacher_access = verify_teacher_access(doc, require=False)
+
+    return {
+        "is_teacher": teacher_access is not None,
+    }
 
 
 class ChatTimAskResponse(TypedDict, total=False):
@@ -283,3 +303,4 @@ register_route(
 register_route(chattim, "post", "getMessages", GetMessagesParams, define_get_messages)
 register_route(chattim, "post", "validate_api", SaveAPIKeyParams, define_save_api_key)
 register_route(chattim, "get", "get_providers", None, define_get_providers)
+register_route(chattim, "post", "getRights", GetRightsParams, define_get_rights)
