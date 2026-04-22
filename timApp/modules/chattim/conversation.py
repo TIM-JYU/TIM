@@ -359,19 +359,18 @@ class ConversationStore:
         file_path = self.resolve_conversation_path(plugin_id, user_id)
         os.makedirs(os.path.dirname(file_path), exist_ok=True)
 
-        json_lines: list[str] = []
         json_messages: list[dict] = []
+        data: list[str] = []
         for message in messages:
             try:
                 msg_dict = message.to_dict()
-                json_lines.append(json.dumps(msg_dict) + "\n")
+                data.append(json.dumps(msg_dict) + "\n")
                 json_messages.append(msg_dict)
             except TypeError:
                 continue
 
-        data = "".join(json_lines)
         with open(file_path, "a", encoding="utf-8") as f:
-            f.write(data)
+            f.writelines(data)
 
         return json_messages
 
@@ -540,7 +539,7 @@ class ConversationStore:
             nl_rfind_pos: int = len(chunk)
             while nl_rfind_pos > 0:
                 nl = chunk.rfind(b"\n", 0, nl_rfind_pos)
-                if nl == -1:
+                if nl < 0:
                     # The line is either too big for one chunk or cut
                     buffer.appendleft(chunk[:nl_rfind_pos])
                     break
