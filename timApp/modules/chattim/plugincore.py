@@ -416,7 +416,7 @@ class PluginCore:
 
     def get_history(self, caller_id: str, document_id: str) -> list[Message]:
         # TODO: fetch with time window
-        history = self.history_manager.get_history_n(document_id, caller_id, 10)
+        history = self.history_manager.get_history(document_id, caller_id, 10)
         return [Message(role=m.role, content=m.content) for m in history]
 
     def get_messages_tw(

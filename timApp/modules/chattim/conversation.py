@@ -36,13 +36,13 @@ class ChatMessage:
         :return: `ChatMessage` instance.
         """
         usage = d.get("usage")
-        msg_dict = dict(d)
+        message_dict = dict(d)
         if isinstance(usage, dict):
             try:
-                msg_dict["usage"] = Usage(**usage)
+                message_dict["usage"] = Usage(**usage)
             except TypeError:
-                msg_dict["usage"] = None
-        return ChatMessage(**msg_dict)
+                message_dict["usage"] = None
+        return ChatMessage(**message_dict)
 
     @staticmethod
     def ts_ms() -> int:
@@ -81,7 +81,7 @@ class ConversationManager:
             return
         self._append_to_cache(plugin_id, user_id, json_messages)
 
-    def get_history_n(
+    def get_history(
         self,
         plugin_id: str,
         user_id: str,
@@ -97,21 +97,21 @@ class ConversationManager:
         :param offset: Amount of messages to skip from the end.
         :return: List of `ChatMessage` objects in the conversation.
         """
-        off = max(offset, 0)
+        to_skip = max(offset, 0)
 
         # Check if the needed messages could be in the cache
-        if last_n is not None and last_n + off <= self.tail_len:
-            tail_needed_n = last_n + off
+        if last_n is not None and last_n + to_skip <= self.tail_len:
+            tail_needed = last_n + to_skip
             cached = self._get_from_cache(plugin_id, user_id) or self._update_cache(
                 plugin_id, user_id
             )
-            start = -tail_needed_n
-            end = None if off == 0 else -off
-            if cached is not None and len(cached) >= tail_needed_n:
+            start = -tail_needed
+            end = None if to_skip == 0 else -to_skip
+            if cached is not None and len(cached) >= tail_needed:
                 raw_slice = cached[start:end]
                 return self._parse_raw_messages(raw_slice)
 
-        return self._store.load_messages_n(plugin_id, user_id, last_n, off) or []
+        return self._store.load_messages(plugin_id, user_id, last_n, to_skip) or []
 
     def get_history_time_window(
         self,
@@ -145,16 +145,16 @@ class ConversationManager:
         cached = self._get_from_cache(**kwargs_id) or self._update_cache(**kwargs_id)
         if cached is not None:
             # Check if the time window is in the cached tail
-            oldest_idx, newest_idx = self._time_window_edges_idx(
+            oldest_index, newest_index = self._find_time_window_edges(
                 cached, ts_b, ts_e, ts_begin is not None, ts_end is not None
             )
-            end = newest_idx + 1 if newest_idx >= 0 else 0
+            end = newest_index + 1 if newest_index >= 0 else 0
             if ts_begin is None and len(cached[:end]) < max_messages:
                 # Cache doesn't have enough older messages
-                oldest_idx = -1
+                oldest_index = -1
 
-            if oldest_idx >= 0 and newest_idx >= 0:
-                cached_slice = cached[oldest_idx:end]
+            if oldest_index >= 0 and newest_index >= 0:
+                cached_slice = cached[oldest_index:end]
                 start = None if len(cached_slice) < max_messages else -max_messages
                 return self._parse_raw_messages(cached_slice[start:])
 
@@ -163,12 +163,12 @@ class ConversationManager:
     def _get_from_cache(self, plugin_id: str, user_id: str) -> list[dict] | None:
         """Get the message list tail from the cache if it exists and is up to date."""
         key = self._cache_key_tail(plugin_id, user_id)
-        cache_res = cache.get(key)
-        if not isinstance(cache_res, dict):
+        cache_result = cache.get(key)
+        if not isinstance(cache_result, dict):
             return None
 
-        cache_modify = cache_res.get("mtime_ns")
-        cache_size = cache_res.get("size")
+        cache_modify = cache_result.get("modify_time_ns")
+        cache_size = cache_result.get("size")
         if not isinstance(cache_modify, int) or not isinstance(cache_size, int):
             return None
         try:
@@ -178,7 +178,7 @@ class ConversationManager:
         if cache_modify != modify_time or cache_size != size:
             return None
 
-        messages = cache_res.get("messages")
+        messages = cache_result.get("messages")
         if not isinstance(messages, list):
             return None
 
@@ -191,10 +191,10 @@ class ConversationManager:
         except FileNotFoundError:
             return None
 
-        key = self._cache_key_tail(plugin_id, user_id)
-        msgs = self._store.load_messages_n(plugin_id, user_id, self.tail_len, 0) or []
-        messages_dict = [m.to_dict() for m in msgs]
+        messages = self._store.load_messages(plugin_id, user_id, self.tail_len, 0) or []
+        messages_dict = [m.to_dict() for m in messages]
         payload = self._cache_payload_tail(modify_time, size, messages_dict)
+        key = self._cache_key_tail(plugin_id, user_id)
         self._set_cache(key, payload)
         return messages_dict
 
@@ -209,12 +209,11 @@ class ConversationManager:
             cache.delete(key)
             return
 
-        res = cache.get(key)
+        cache_result = cache.get(key)
         cached_tail: list[dict] = []
-        if isinstance(res, dict):
-            m = res.get("messages")
-            if isinstance(m, list):
-                cached_tail = m
+        if isinstance(cache_result, dict):
+            cached_messages = cache_result.get("messages")
+            cached_tail = cached_messages if isinstance(cached_messages, list) else []
         new_messages = (cached_tail + messages)[-self.tail_len :]
         payload = self._cache_payload_tail(modify_time, size, new_messages)
         self._set_cache(key, payload)
@@ -222,8 +221,8 @@ class ConversationManager:
     def _file_stat(self, plugin_id: str, user_id: str) -> tuple[int, int]:
         """Get the modification time and size of the conversation file."""
         path = self._store.resolve_conversation_path(plugin_id, user_id)
-        res = os.stat(path)
-        return res.st_mtime_ns, res.st_size
+        result = os.stat(path)
+        return result.st_mtime_ns, result.st_size
 
     def _set_cache(self, key: str, value: Any) -> None:
         cache.set(key, value, timeout=self.ttl)
@@ -233,28 +232,30 @@ class ConversationManager:
         return f"chattim:tail:{plugin_id}:{user_id}"
 
     @staticmethod
-    def _cache_payload_tail(mtime_ns: int, size: int, messages: list[dict]) -> dict:
-        return {"mtime_ns": mtime_ns, "size": size, "messages": messages}
+    def _cache_payload_tail(
+        modify_time_ns: int, size: int, messages: list[dict]
+    ) -> dict:
+        return {"modify_time_ns": modify_time_ns, "size": size, "messages": messages}
 
     @staticmethod
     def _parse_raw_messages(raw_messages: list[dict]) -> list[ChatMessage]:
         out: list[ChatMessage] = []
-        for d in raw_messages:
-            if not isinstance(d, dict):
+        for message in raw_messages:
+            if not isinstance(message, dict):
                 continue
             try:
-                out.append(ChatMessage.from_dict(d))
+                out.append(ChatMessage.from_dict(message))
             except TypeError:
                 continue
         return out
 
     @staticmethod
-    def _time_window_edges_idx(
+    def _find_time_window_edges(
         messages: list[dict],
-        ts_b: int,
-        ts_e: int,
-        find_border_b: bool = False,
-        find_border_e: bool = False,
+        ts_begin: int,
+        ts_end: int,
+        find_border_begin: bool = False,
+        find_border_end: bool = False,
     ) -> tuple[int, int]:
         """
         Find the edges of the time window from the message list.
@@ -262,19 +263,19 @@ class ConversationManager:
         Assumes that the messages are in chronological order.
 
         :param messages: List of messages to find from.
-        :param ts_b: Beginning of the time window in milliseconds.
-        :param ts_e: Ending of the time window in milliseconds.
-        :param find_border_b: Whether to find the start border of the time window.
-        :param find_border_e: Whether to find the end border of the time window.
+        :param ts_begin: Beginning of the time window in milliseconds.
+        :param ts_end: Ending of the time window in milliseconds.
+        :param find_border_begin: Whether to find the start border of the time window.
+        :param find_border_end: Whether to find the end border of the time window.
         :return: Tuple containing the start and end index in the list.
         """
-        oldest_idx: int = -1
-        newest_idx: int = -1
+        oldest_index: int = -1
+        newest_index: int = -1
         oldest_found: bool = False
         newest_found: bool = False
 
-        if ts_b > ts_e:
-            return oldest_idx, newest_idx
+        if ts_begin > ts_end:
+            return oldest_index, newest_index
 
         def get_ts(dict_maybe: dict, found: bool) -> int | None:
             if found:
@@ -284,56 +285,61 @@ class ConversationManager:
             ts_any = dict_maybe.get("timestamp")
             if not isinstance(ts_any, int):
                 return None
-            return ts_any
+            return int(ts_any)
 
         def check_edge(
-            _ts: int,
+            message_ts: int,
             find_border: bool,
-            idx: int,
-            latest_idx: int,
-            correct_side: Callable[[int], bool],
+            current_index: int,
+            latest_index: int,
+            is_correct_side: Callable[[int], bool],
         ) -> tuple[bool, int]:
-            """Check if the timestamp is the edge of the time window."""
-            if correct_side(_ts):
-                latest_idx = idx
-            if ts_b <= _ts <= ts_e:
-                if not find_border or latest_idx >= 0:
-                    return True, idx  # Found the desired edge
+            """Check if the message timestamp is the edge of the time window."""
+            if is_correct_side(message_ts):
+                latest_index = current_index
+            if ts_begin <= message_ts <= ts_end:
+                if not find_border or latest_index >= 0:
+                    return True, current_index  # Found the desired edge
                 else:
                     # There could exist a message that is not included
                     raise ValueError
-            elif latest_idx == idx:
-                return False, idx
+            elif latest_index == current_index:
+                return False, current_index
             else:
                 raise ValueError  # Message on wrong side of time window
 
         # Find edges
         for i in range(len(messages)):
             # Check start border
-            ts = get_ts(messages[i], oldest_found)
-            if ts is not None:
-                check_side = lambda _ts: _ts <= ts_b
+            ts_begin_message = get_ts(messages[i], oldest_found)
+            if ts_begin_message is not None:
+                check_side = lambda _ts: _ts <= ts_begin
                 try:
-                    oldest_found, oldest_idx = check_edge(
-                        ts, find_border_b, i, oldest_idx, check_side
+                    oldest_found, oldest_index = check_edge(
+                        ts_begin_message, find_border_begin, i, oldest_index, check_side
                     )
                 except ValueError:
                     break
 
             # Check end border
-            idx_end = len(messages) - i - 1
-            ts_end = get_ts(messages[idx_end], newest_found)
-            if ts_end is not None:
-                check_side = lambda _ts: _ts >= ts_e
+            index_end = len(messages) - i - 1
+            ts_end_message = get_ts(messages[index_end], newest_found)
+            if ts_end_message is not None:
+                check_side = lambda _ts: _ts >= ts_end
                 try:
-                    newest_found, newest_idx = check_edge(
-                        ts_end, find_border_e, idx_end, newest_idx, check_side
+                    newest_found, newest_index = check_edge(
+                        ts_end_message,
+                        find_border_end,
+                        index_end,
+                        newest_index,
+                        check_side,
                     )
                 except ValueError:
                     break
 
             if newest_found and oldest_found:
-                return oldest_idx, newest_idx  # Time window exists
+                # Time window exists in the messages list
+                return oldest_index, newest_index
 
         return -1, -1
 
@@ -363,9 +369,9 @@ class ConversationStore:
         data: list[str] = []
         for message in messages:
             try:
-                msg_dict = message.to_dict()
-                data.append(json.dumps(msg_dict) + "\n")
-                json_messages.append(msg_dict)
+                message_dict = message.to_dict()
+                data.append(json.dumps(message_dict) + "\n")
+                json_messages.append(message_dict)
             except TypeError:
                 continue
 
@@ -374,7 +380,7 @@ class ConversationStore:
 
         return json_messages
 
-    def load_messages_n(
+    def load_messages(
         self, plugin_id: str, user_id: str, last_n: int | None = None, offset: int = 0
     ) -> list[ChatMessage] | None:
         """
@@ -396,26 +402,26 @@ class ConversationStore:
                 with open(file_path, "r", encoding="utf-8") as f:
                     out: list[ChatMessage] = []
                     for line in f:
-                        msg = self._parse_message_line(line)
-                        if msg is not None:
-                            out.append(msg)
+                        message = self._parse_message_line(line)
+                        if message is not None:
+                            out.append(message)
                     return out[:-to_skip]
 
             # Read from the end without reading the whole file.
-            out_rev: list[ChatMessage] = []
+            out_reversed: list[ChatMessage] = []
             with open(file_path, "rb") as f:
                 for line in self._iter_lines_reverse(f):
                     if to_skip > 0:
                         to_skip -= 1
                         continue
-                    msg = self._parse_message_line(line)
-                    if msg is None:
+                    message = self._parse_message_line(line)
+                    if message is None:
                         continue
-                    out_rev.append(msg)
-                    if len(out_rev) >= last_n:
+                    out_reversed.append(message)
+                    if len(out_reversed) >= last_n:
                         break
-            out_rev.reverse()
-            return out_rev
+            out_reversed.reverse()
+            return out_reversed
 
         except FileNotFoundError:
             return None
@@ -443,13 +449,13 @@ class ConversationStore:
         file_path = self.resolve_conversation_path(plugin_id, user_id)
         try:
             # Read from the end and stop early if the file appears chronological.
-            out_rev: list[ChatMessage] = []
+            out_reversed: list[ChatMessage] = []
             chronological = True
             last_ts: int | None = None
 
             with open(file_path, "rb") as f:
                 for line in self._iter_lines_reverse(f):
-                    if len(out_rev) >= max_messages:
+                    if len(out_reversed) >= max_messages:
                         break
 
                     msg = self._parse_message_line(line)
@@ -468,10 +474,10 @@ class ConversationStore:
                             break
                         continue
 
-                    out_rev.append(msg)
+                    out_reversed.append(msg)
 
-            out_rev.reverse()
-            return out_rev
+            out_reversed.reverse()
+            return out_reversed
 
         except FileNotFoundError:
             return None
@@ -488,10 +494,10 @@ class ConversationStore:
         if not line:
             return None
         try:
-            d = json.loads(line)
-            if not isinstance(d, dict):
+            message_json = json.loads(line)
+            if not isinstance(message_json, dict):
                 return None
-            return ChatMessage.from_dict(d)
+            return ChatMessage.from_dict(message_json)
         except (json.JSONDecodeError, TypeError, ValueError):
             return None
 
@@ -518,13 +524,13 @@ class ConversationStore:
         def emit_pending() -> str | None:
             if not buffer:
                 return None
-            b = b"".join(buffer)
+            buffer_bytes = b"".join(buffer)
             buffer.clear()
-            if b.endswith(b"\r"):
-                b = b[:-1]
-            if not b:
+            if buffer_bytes.endswith(b"\r"):
+                buffer_bytes = buffer_bytes[:-1]
+            if not buffer_bytes:
                 return None
-            return b.decode("utf-8", errors="replace")
+            return buffer_bytes.decode("utf-8", errors="replace")
 
         while pos > 0:
             # Read a chunk
@@ -536,23 +542,23 @@ class ConversationStore:
                 break
 
             # Process the chunk and yield lines if there are any
-            nl_rfind_pos: int = len(chunk)
-            while nl_rfind_pos > 0:
-                nl = chunk.rfind(b"\n", 0, nl_rfind_pos)
+            chunk_pos: int = len(chunk)
+            while chunk_pos > 0:
+                nl = chunk.rfind(b"\n", 0, chunk_pos)
                 if nl < 0:
                     # The line is either too big for one chunk or cut
-                    buffer.appendleft(chunk[:nl_rfind_pos])
+                    buffer.appendleft(chunk[:chunk_pos])
                     break
 
                 # Combine the start of the line with possible pending line end
-                line_start = chunk[nl + 1 : nl_rfind_pos]
+                line_start = chunk[nl + 1 : chunk_pos]
                 if line_start:
                     buffer.appendleft(line_start)
                 line = emit_pending()
                 if line is not None:
                     yield line
 
-                nl_rfind_pos = nl
+                chunk_pos = nl
 
         if buffer:
             line = emit_pending()
