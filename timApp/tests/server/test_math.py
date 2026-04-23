@@ -70,15 +70,14 @@ class MathTest(TimRouteTest):
         d = self.impl_test_svg_math()
         d.document.set_settings({"math_type": "mathjax"})
         self.assert_same_html(
-            self.get(d.url, as_tree=True).cssselect(".parContent")[1], mathjax_html
+            self.get(d.url + "?nocache=true", as_tree=True).cssselect(".parContent")[1],
+            mathjax_html,
         )
 
     def test_math_preamble(self):
         self.login_test1()
-        d = self.create_doc(
-            initial_par=rf"""
-$${diamond_tex}$$"""
-        )
+        d = self.create_doc(initial_par=rf"""
+$${diamond_tex}$$""")
         d.document.set_settings(
             {
                 "math_type": "svg",
@@ -95,26 +94,21 @@ $${diamond_tex}$$"""
 
     def test_math_preamble_single_par(self):
         self.login_test1()
-        d = self.create_doc(
-            initial_par=r"""
+        d = self.create_doc(initial_par=r"""
 #- {math_type=svg math_preamble="\\usetikzlibrary{shapes}"}
-"""
-            f"""{diamond_tex}"""
-        )
+""" f"""{diamond_tex}""")
         t = self.get(d.url, as_tree=True)
         self.assert_same_html(t.cssselect(".parContent > span")[0], diamond_svg)
 
     def test_math_plugin(self):
         self.login_test1()
-        d = self.create_doc(
-            initial_par=r"""
+        d = self.create_doc(initial_par=r"""
 #- {math_type=svg plugin=csPlugin}
 stem: 'md: $a+b$'
 
 #- {plugin=csPlugin}
 stem: 'md: $a+b$'
-"""
-        )
+""")
         t = self.get(d.url, as_tree=True)
         plugins = t.cssselect("cs-runner")
         for plugin, e in zip(plugins, [a_plus_b_svg, a_plus_b_mathjax]):
@@ -123,11 +117,9 @@ stem: 'md: $a+b$'
 
     def test_mixed_settings(self):
         self.login_test1()
-        d = self.create_doc(
-            initial_par=r"""
+        d = self.create_doc(initial_par=r"""
 #- {math_preamble="\\newcommand{\\nothing}{}"}
-$a+b$"""
-        )
+$a+b$""")
         d.document.set_settings({"math_type": "svg"})
         t = self.get(d.url, as_tree=True)
         self.assert_same_html(t.cssselect(".parContent")[1], svg_html)

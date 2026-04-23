@@ -126,7 +126,9 @@ function isObject(item) {
  * @param target object where to merge
  * @param source object where from merge
  * @param forcechar what char to remove from beginning of key
- * @forcechar char for starting the attribute name when no deepcopy is done, instead object reference
+ * @forcechar Character used to start the attribute name.
+ *            Used when no deep copy is performed.
+ *            Replaces an object reference.
  */
 function mergeDeep(target, source, forcechar) {
   if (isObject(target) && isObject(source)) {
@@ -268,6 +270,461 @@ TIMJS.chart = null;
 TIMJS.originalData = {};
 TIMJS.initData =  {};
 TIMJS.options = TIMJS.basicoptions;
+TIMJS.selectedBorderWidth = 0;
+TIMJS.jumpURL = "";
+TIMJS.jumpTitle = "{label}";
+TIMJS.jumpText = "{dataset}: {value}";
+TIMJS.directJump = false;
+TIMJS.jumpPopup = null;
+TIMJS.jumpPopupDismissInstalled = false;
+
+function cloneBorderWidth(borderWidth) {
+    if (Array.isArray(borderWidth)) return borderWidth.slice();
+    return borderWidth;
+}
+
+
+function getDatasetBorderWidth(dataset) {
+    if (typeof dataset.borderWidth !== "undefined") return dataset.borderWidth;
+    return TIMJS.baseDataOptions.borderWidth;
+}
+
+
+function getSelectedBorderWidth() {
+    return TIMJS.selectedBorderWidth;
+}
+
+
+function hideJumpPopup() {
+    if (!TIMJS.jumpPopup) return;
+    if (TIMJS.jumpPopup.parentNode) TIMJS.jumpPopup.parentNode.removeChild(TIMJS.jumpPopup);
+    TIMJS.jumpPopup = null;
+}
+
+
+function installJumpPopupDismiss() {
+    if (TIMJS.jumpPopupDismissInstalled) return;
+    document.addEventListener('click', function(event) {
+        if (!TIMJS.jumpPopup) return;
+        if (TIMJS.jumpPopup.contains(event.target)) return;
+        let canvas = document.getElementById('canvas');
+        if (canvas && canvas.contains(event.target)) return;
+        hideJumpPopup();
+    });
+    TIMJS.jumpPopupDismissInstalled = true;
+}
+
+
+function getDataIndexFromElement(element) {
+    if (!element) return null;
+    if (typeof element.index !== "undefined") return element.index;
+    if (typeof element._index !== "undefined") return element._index;
+    if (element.element) return getDataIndexFromElement(element.element);
+    return null;
+}
+
+
+function restoreDatasetBorderWidths(chart) {
+    if (!chart || !chart._timjsBorderWidths) return;
+    let datasets = chart.config.data.datasets || [];
+    for (let i = 0; i < datasets.length; i++) {
+        if (typeof chart._timjsBorderWidths[i] !== "undefined") {
+            datasets[i].borderWidth = cloneBorderWidth(chart._timjsBorderWidths[i]);
+        }
+    }
+}
+
+
+function applySelectedDataset(chart) {
+    if (!chart) return;
+    let datasets = chart.config.data.datasets || [];
+    if (!chart._timjsBorderWidths) chart._timjsBorderWidths = [];
+    chart._timjsBorderWidths.length = datasets.length;
+
+    for (let i = 0; i < datasets.length; i++) {
+        chart._timjsBorderWidths[i] = cloneBorderWidth(getDatasetBorderWidth(datasets[i]));
+    }
+
+    let selectedIndex = chart._timjsSelectedDatasetIndex;
+    if (selectedIndex == null || !datasets[selectedIndex]) return;
+    datasets[selectedIndex].borderWidth = getSelectedBorderWidth();
+}
+
+
+function getEventPosition(chart, event) {
+    let canvas = chart.canvas || chart.ctx && chart.ctx.canvas;
+    if (!canvas) return null;
+    let rect = canvas.getBoundingClientRect();
+    return {
+        x: event.clientX - rect.left,
+        y: event.clientY - rect.top,
+    };
+}
+
+
+function getElementPosition(element) {
+    if (!element) return null;
+    if (typeof element.getProps === "function") {
+        let props = element.getProps(['x', 'y'], true);
+        if (Number.isFinite(props.x) && Number.isFinite(props.y)) return props;
+    }
+    if (Number.isFinite(element.x) && Number.isFinite(element.y)) {
+        return {x: element.x, y: element.y};
+    }
+    if (element._model && Number.isFinite(element._model.x) && Number.isFinite(element._model.y)) {
+        return {x: element._model.x, y: element._model.y};
+    }
+    return null;
+}
+
+
+function getDistanceToSegment(point, start, end) {
+    let dx = end.x - start.x;
+    let dy = end.y - start.y;
+    if (dx === 0 && dy === 0) {
+        dx = point.x - start.x;
+        dy = point.y - start.y;
+        return Math.sqrt(dx * dx + dy * dy);
+    }
+
+    let t = ((point.x - start.x) * dx + (point.y - start.y) * dy) / (dx * dx + dy * dy);
+    t = Math.max(0, Math.min(1, t));
+    let px = start.x + t * dx;
+    let py = start.y + t * dy;
+    dx = point.x - px;
+    dy = point.y - py;
+    return Math.sqrt(dx * dx + dy * dy);
+}
+
+
+function isClosedDataset(chart, datasetIndex) {
+    let dataset = chart.config && chart.config.data && chart.config.data.datasets && chart.config.data.datasets[datasetIndex];
+    let chartType = dataset && dataset.type || chart.config && chart.config.type;
+    return chartType === 'radar';
+}
+
+
+function getDatasetHitDistance(chart, datasetIndex, point) {
+    let meta = chart.getDatasetMeta(datasetIndex);
+    if (!meta || meta.hidden || !meta.data || !meta.data.length) return null;
+
+    let positions = [];
+    for (let i = 0; i < meta.data.length; i++) {
+        let position = getElementPosition(meta.data[i]);
+        if (position) positions.push(position);
+    }
+    if (!positions.length) return null;
+
+    let minDistance = Number.POSITIVE_INFINITY;
+    if (positions.length === 1) {
+        return getDistanceToSegment(point, positions[0], positions[0]);
+    }
+
+    for (let i = 1; i < positions.length; i++) {
+        let distance = getDistanceToSegment(point, positions[i - 1], positions[i]);
+        if (distance < minDistance) minDistance = distance;
+    }
+
+    if (isClosedDataset(chart, datasetIndex)) {
+        let distance = getDistanceToSegment(point, positions[positions.length - 1], positions[0]);
+        if (distance < minDistance) minDistance = distance;
+    }
+
+    return minDistance;
+}
+
+
+function getDatasetIndexFromElement(element) {
+    if (!element) return null;
+    if (typeof element.datasetIndex !== "undefined") return element.datasetIndex;
+    if (typeof element._datasetIndex !== "undefined") return element._datasetIndex;
+    if (element.element) return getDatasetIndexFromElement(element.element);
+    return null;
+}
+
+
+function getJumpPointFromElement(element) {
+    if (!element) return null;
+    let datasetIndex = getDatasetIndexFromElement(element);
+    let dataIndex = getDataIndexFromElement(element);
+    if (datasetIndex == null || dataIndex == null) return null;
+    return {
+        datasetIndex: datasetIndex,
+        dataIndex: dataIndex,
+    };
+}
+
+
+function getClickedDataPoints(chart, event) {
+    let points = [];
+
+    if (chart.getElementsAtEventForMode) {
+        let elements = chart.getElementsAtEventForMode(event, 'point', {intersect: true}, false);
+        if (elements && elements.length) {
+            for (let i = 0; i < elements.length; i++) {
+                let point = getJumpPointFromElement(elements[i]);
+                if (point) points.push(point);
+            }
+        }
+    }
+
+    if (!points.length && chart.getElementAtEvent) {
+        let elements = chart.getElementAtEvent(event);
+        if (elements && elements.length) {
+            let point = getJumpPointFromElement(elements[0]);
+            if (point) points.push(point);
+        }
+    }
+
+    let uniquePoints = [];
+    let seen = {};
+    for (let i = 0; i < points.length; i++) {
+        let point = points[i];
+        let key = point.datasetIndex + ':' + point.dataIndex;
+        if (seen[key]) continue;
+        seen[key] = true;
+        uniquePoints.push(point);
+    }
+    return uniquePoints;
+}
+
+
+function getJumpValueParts(rawValue, label) {
+    let value = rawValue;
+    let x = label;
+    let y = rawValue;
+
+    if (isObject(rawValue)) {
+        if (typeof rawValue.label !== "undefined" && !label) label = '' + rawValue.label;
+        if (typeof rawValue.x !== "undefined") x = rawValue.x;
+        if (typeof rawValue.y !== "undefined") y = rawValue.y;
+        if (typeof rawValue.x !== "undefined" && typeof rawValue.y !== "undefined") {
+            value = '(' + rawValue.x + ', ' + rawValue.y + ')';
+        } else if (typeof rawValue.y !== "undefined") {
+            value = rawValue.y;
+        } else if (typeof rawValue.r !== "undefined") {
+            value = rawValue.r;
+        } else {
+            value = JSON.stringify(rawValue);
+        }
+    }
+
+    return {
+        label: label == null ? '' : '' + label,
+        value: value == null ? '' : '' + value,
+        x: x == null ? '' : '' + x,
+        y: y == null ? '' : '' + y,
+    };
+}
+
+
+function getJumpInfo(chart, point) {
+    if (!point) return null;
+    let datasets = chart.config && chart.config.data && chart.config.data.datasets || [];
+    let dataset = datasets[point.datasetIndex];
+    if (!dataset || !dataset.data || typeof dataset.data[point.dataIndex] === "undefined") return null;
+
+    let labels = chart.config && chart.config.data && chart.config.data.labels || [];
+    let label = typeof labels[point.dataIndex] !== "undefined" ? labels[point.dataIndex] : '';
+    let valueParts = getJumpValueParts(dataset.data[point.dataIndex], label);
+    return {
+        dataset: dataset.label == null ? '' : '' + dataset.label,
+        value: valueParts.value,
+        label: valueParts.label,
+        x: valueParts.x,
+        y: valueParts.y,
+    };
+}
+
+
+function fillJumpTemplate(template, jumpInfo) {
+    if (!template || !jumpInfo) return '';
+    let result = template;
+    for (let key of Object.keys(jumpInfo)) {
+        let value = jumpInfo[key];
+        result = result.split('{' + key + 'Encoded}').join(encodeURIComponent(value));
+        result = result.split('{' + key + '}').join(value);
+    }
+    return result;
+}
+
+
+function getJumpBaseURL() {
+    let href = window.location && window.location.href;
+    if (href && href !== 'about:blank') return href;
+    try {
+        if (window.parent && window.parent.location && window.parent.location.href) {
+            return window.parent.location.href;
+        }
+    } catch (e) {
+    }
+    return document.baseURI || href || '';
+}
+
+
+function resolveJumpURL(url) {
+    if (!url) return '';
+    try {
+        return new URL(url, getJumpBaseURL()).href;
+    } catch (e) {
+        return url;
+    }
+}
+
+
+function openJumpURL(url) {
+    if (!url) return;
+    window.open(url, '_blank', 'noopener,noreferrer');
+}
+
+
+function showJumpPopup(event, jumpInfos) {
+    if (!TIMJS.jumpURL || !jumpInfos || !jumpInfos.length) return;
+
+    let popup = document.createElement('div');
+    popup.style.position = 'fixed';
+    popup.style.zIndex = '10000';
+    popup.style.backgroundColor = '#fff';
+    popup.style.border = '1px solid #999';
+    popup.style.borderRadius = '4px';
+    popup.style.padding = '0.35em 0.6em';
+    popup.style.boxShadow = '0 2px 8px rgba(0,0,0,0.2)';
+    popup.style.fontSize = '0.9em';
+    popup.style.maxWidth = '20em';
+    popup.style.display = 'flex';
+    popup.style.flexDirection = 'column';
+    popup.style.gap = '0.25em';
+
+    let title = fillJumpTemplate(TIMJS.jumpTitle, jumpInfos[0]);
+    if (title) {
+        let header = document.createElement('div');
+        header.textContent = title;
+        header.style.fontWeight = 'bold';
+        header.style.marginBottom = '0.15em';
+        popup.appendChild(header);
+    }
+
+    for (let i = 0; i < jumpInfos.length; i++) {
+        let jumpInfo = jumpInfos[i];
+        let url = resolveJumpURL(fillJumpTemplate(TIMJS.jumpURL, jumpInfo));
+        if (!url) continue;
+        let text = fillJumpTemplate(TIMJS.jumpText, jumpInfo) || url;
+
+        let link = document.createElement('a');
+        link.href = url;
+        link.target = '_blank';
+        link.rel = 'noopener noreferrer';
+        link.textContent = text;
+        link.addEventListener('click', function(clickEvent) {
+            clickEvent.preventDefault();
+            openJumpURL(url);
+        });
+        popup.appendChild(link);
+    }
+
+    if (!popup.childNodes.length) return;
+
+    document.body.appendChild(popup);
+    let left = Math.min(event.clientX + 8, window.innerWidth - popup.offsetWidth - 8);
+    let top = Math.min(event.clientY + 8, window.innerHeight - popup.offsetHeight - 8);
+    popup.style.left = Math.max(8, left) + 'px';
+    popup.style.top = Math.max(8, top) + 'px';
+    TIMJS.jumpPopup = popup;
+}
+
+
+function getClickedDatasetIndexFromElements(chart, event) {
+    if (chart.getElementsAtEventForMode) {
+        let elements = chart.getElementsAtEventForMode(event, 'nearest', {intersect: true}, false);
+        if (elements && elements.length) {
+            return getDatasetIndexFromElement(elements[0]);
+        }
+    }
+
+    if (chart.getElementAtEvent) {
+        let elements = chart.getElementAtEvent(event);
+        if (elements && elements.length) {
+            return getDatasetIndexFromElement(elements[0]);
+        }
+    }
+
+    if (chart.getDatasetAtEvent) {
+        let datasets = chart.getDatasetAtEvent(event);
+        if (datasets && datasets.length) {
+            return getDatasetIndexFromElement(datasets[0]);
+        }
+    }
+
+    return null;
+}
+
+
+function getClickedDatasetIndex(chart, event) {
+    let elementDatasetIndex = getClickedDatasetIndexFromElements(chart, event);
+    if (elementDatasetIndex != null) return elementDatasetIndex;
+
+    let point = getEventPosition(chart, event);
+    if (!point) return null;
+
+    let datasets = chart.config && chart.config.data && chart.config.data.datasets || [];
+    let bestIndex = null;
+    let bestDistance = Number.POSITIVE_INFINITY;
+    for (let i = 0; i < datasets.length; i++) {
+        if (chart.isDatasetVisible && !chart.isDatasetVisible(i)) continue;
+        let distance = getDatasetHitDistance(chart, i, point);
+        if (distance != null && distance < bestDistance) {
+            bestDistance = distance;
+            bestIndex = i;
+        }
+    }
+
+    if (bestIndex == null) return null;
+
+    let borderWidth = getDatasetBorderWidth(datasets[bestIndex]);
+    let maxDistance = Array.isArray(borderWidth) ? Math.max(...borderWidth) : Number(borderWidth);
+    if (!Number.isFinite(maxDistance)) maxDistance = TIMJS.baseDataOptions.borderWidth;
+    maxDistance = Math.max(maxDistance + 4, 6);
+    if (bestDistance <= maxDistance) {
+        return bestIndex;
+    }
+
+    return null;
+}
+
+
+function installDatasetSelection(chart) {
+    if (!chart || chart._timjsSelectionInstalled) return;
+    let canvas = chart.canvas || chart.ctx && chart.ctx.canvas;
+    if (!canvas) return;
+    installJumpPopupDismiss();
+
+    canvas.addEventListener('click', function(event) {
+        let dataPoints = getClickedDataPoints(chart, event);
+        hideJumpPopup();
+        restoreDatasetBorderWidths(chart);
+        let datasetIndex = getClickedDatasetIndex(chart, event);
+        chart._timjsSelectedDatasetIndex = null;
+        if (datasetIndex != null && getSelectedBorderWidth()) {
+            chart._timjsSelectedDatasetIndex = datasetIndex;
+            applySelectedDataset(chart);
+        }
+        chart.update();
+        if (dataPoints.length && TIMJS.jumpURL) {
+            let jumpInfos = [];
+            for (let i = 0; i < dataPoints.length; i++) {
+                let jumpInfo = getJumpInfo(chart, dataPoints[i]);
+                if (jumpInfo) jumpInfos.push(jumpInfo);
+            }
+            if (TIMJS.directJump && jumpInfos.length === 1) {
+                openJumpURL(resolveJumpURL(fillJumpTemplate(TIMJS.jumpURL, jumpInfos[0])));
+            } else {
+                showJumpPopup(event, jumpInfos);
+            }
+        }
+    });
+
+    chart._timjsSelectionInstalled = true;
+}
 
 window.onload = function() {
     if ( TIMJS.initData ) TIMJS.globaldata = TIMJS.initData; // mergeDeep(globaldata, window.initData);
@@ -322,16 +779,18 @@ TIMJS.setData = function(P, data) {
             } else {
                 P.originalData.datas = null;
             }
-        }
-        mergeDeep(newData, P.originalData, '#'); // do not loose possible !
+    }
+        mergeDeep(newData, P.originalData, '#'); // do not lose possible !
         mergeDeep(newData, data);
         data = newData;
     }
+    restoreDatasetBorderWidths(P.chart);
     if ( !P.chart ) {
         let ar = data.aspectRatio || data.options && data.options.aspectRatio;
         if ( ar ) P.options.options.aspectRatio = ar;
         let ctx = document.getElementById('canvas').getContext('2d');
         P.chart = new Chart(ctx,P.options);
+        installDatasetSelection(P.chart);
     }
     let datasets = P.chart.config.data.datasets;
     let coptions = P.chart.config.options;
@@ -434,6 +893,23 @@ TIMJS.setData = function(P, data) {
     if ( data.dataopt ) { mergeDeep(datasets[0], data.dataopt); }
     if ( data.dataopt2 ) { mergeDeep(datasets[1], data.dataopt2); }
 
+    if (typeof data.selectedBorderWidth !== "undefined") {
+        TIMJS.selectedBorderWidth = data.selectedBorderWidth;
+    }
+    if (typeof data.jumpURL !== "undefined") {
+        TIMJS.jumpURL = data.jumpURL || "";
+    }
+    if (typeof data.jumpTitle !== "undefined") {
+        TIMJS.jumpTitle = data.jumpTitle || "";
+    }
+    if (typeof data.jumpText !== "undefined") {
+        TIMJS.jumpText = data.jumpText || "{label} - {dataset}: {value}";
+    }
+    if (typeof data.directJump !== "undefined") {
+        TIMJS.directJump = !!data.directJump;
+    }
+    applySelectedDataset(P.chart);
+    hideJumpPopup();
     P.chart.update();
   } catch(err) {
      console.error(err);
