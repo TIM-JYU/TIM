@@ -92,7 +92,7 @@ class TimDatabase:
             usage: list[Usage],
     ) -> LLMRule:
         """
-        Creates a new LLM rule.
+        Creates a new LLM rule or updates the existing rule if one already exists for the given owner.
         :param document_id: The id of the document.
         :param owner: The id of the owner.
         :param apikey_provider: The provider for the apikey.
@@ -108,24 +108,36 @@ class TimDatabase:
         :param usage: List of usages related to the LLMRule instance.
         :return: created LLMRule instance
         """
-        rule = LLMRule(
-            document_id=document_id,
-            owner=owner,
-            apikey_provider=apikey_provider,
-            apikey=apikey,
-            chosen_key=chosen_key,
-            teachers=teachers,
-            current_mode=current_mode,
-            total_tokens_spent=total_tokens_spent,
-            indexed_chunk_ids=indexed_chunk_ids,
-            agent=agent,
-            conv_time_window=conv_time_window,
-        )
+        rule = TimDatabase.get_llm_rule(owner)
+        if not rule:
+            rule = LLMRule(
+                document_id=document_id,
+                owner=owner,
+                apikey_provider=apikey_provider,
+                apikey=apikey,
+                chosen_key=chosen_key,
+                teachers=teachers,
+                current_mode=current_mode,
+                total_tokens_spent=total_tokens_spent,
+                indexed_chunk_ids=indexed_chunk_ids,
+                agent=agent,
+                conv_time_window=conv_time_window,
+            )
+            db.session.add(rule)
+        else:
+            rule.document_id=document_id
+            rule.apikey_provider=apikey_provider
+            rule.apikey=rule.apikey + apikey
+            rule.chosen_key=chosen_key
+            rule.teachers=teachers
+            rule.current_mode=current_mode
+            rule.total_tokens_spent=total_tokens_spent
+            rule.indexed_chunk_ids=indexed_chunk_ids
+            rule.agent=agent
+            rule.conv_time_window=conv_time_window
         rule.policy.extend(policy)
         rule.usage.extend(usage)
-        db.session.add(rule)
         db.session.commit()
-        db.session.refresh(rule)
         return rule
 
     @staticmethod
@@ -172,7 +184,6 @@ class TimDatabase:
 
         db.session.add(policy)
         db.session.commit()
-        db.session.refresh(policy)
         return policy
 
     @staticmethod
@@ -243,7 +254,6 @@ class TimDatabase:
         )
         db.session.add(usage)
         db.session.commit()
-        db.session.refresh(usage)
         return usage
 
     @staticmethod
