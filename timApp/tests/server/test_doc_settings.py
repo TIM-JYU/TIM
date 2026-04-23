@@ -12,15 +12,13 @@ class DocSettingsTest(TimRouteTest):
 
     def test_invalid_multiline_settings(self):
         self.login_test1()
-        d = self.create_doc(
-            initial_par="""
+        d = self.create_doc(initial_par="""
 #- {settings=""}
 a: |!!
  t
 The quick brown fox jumps over the lazy dog.
 !!
-    """
-        )
+    """)
         t = self.get(d.url, as_tree=True)
         self.assert_content(
             t,
@@ -32,27 +30,23 @@ The quick brown fox jumps over the lazy dog.
 
     def test_input_format_change(self):
         self.login_test1()
-        d = self.create_doc(
-            initial_par="""
+        d = self.create_doc(initial_par="""
 .. image:: images/hi.png
-        """
-        )
+        """)
         r = self.get(d.url, as_tree=True).cssselect(".parContent img")
         self.assertFalse(r)
         d.document.set_settings({"input_format": "rst"})
-        r = self.get(d.url, as_tree=True).cssselect(".parContent img")
+        r = self.get(d.url + "?nocache=true", as_tree=True).cssselect(".parContent img")
         self.assertTrue(r)
 
     def test_no_visible_settings_on_save(self):
         self.login_test1()
-        d = self.create_doc(
-            initial_par="""
+        d = self.create_doc(initial_par="""
 #- {settings=""}
 
 #-
 test
-        """
-        )
+        """)
         pars = d.document.get_paragraphs()
         s_p = pars[0]
         t_p = pars[1]
