@@ -111,40 +111,40 @@ class TimDatabase:
         rule = TimDatabase.get_llm_rule(owner)
         if not rule:
             rule = LLMRule(
-                document_id=document_id,
-                owner=owner,
-                apikey_provider=apikey_provider,
-                apikey=apikey,
-                chosen_key=chosen_key,
-                teachers=teachers,
-                current_mode=current_mode,
-                total_tokens_spent=total_tokens_spent,
-                indexed_chunk_ids=indexed_chunk_ids,
-                agent=agent,
-                conv_time_window=conv_time_window,
+                document_id = document_id,
+                owner = owner,
+                apikey_provider = apikey_provider,
+                apikey = apikey,
+                chosen_key = chosen_key,
+                teachers = teachers,
+                current_mode = current_mode,
+                total_tokens_spent = total_tokens_spent,
+                indexed_chunk_ids = indexed_chunk_ids,
+                agent = agent,
+                conv_time_window = conv_time_window,
             )
             db.session.add(rule)
         else:
             if document_id:
-                rule.document_id=document_id
+                rule.document_id = document_id
             if apikey_provider:
-                rule.apikey_provider=apikey_provider
+                rule.apikey_provider = apikey_provider
             if apikey:
-                rule.apikey=apikey
+                rule.apikey = apikey
             if chosen_key:
-                rule.chosen_key=chosen_key
+                rule.chosen_key = chosen_key
             if teachers:
-                rule.teachers=teachers
+                rule.teachers = teachers
             if current_mode:
-                rule.current_mode=current_mode
+                rule.current_mode = current_mode
             if total_tokens_spent:
-                rule.total_tokens_spent=total_tokens_spent
+                rule.total_tokens_spent = total_tokens_spent
             if indexed_chunk_ids:
-                rule.indexed_chunk_ids=indexed_chunk_ids
+                rule.indexed_chunk_ids = indexed_chunk_ids
             if agent:
-                rule.agent=agent
+                rule.agent = agent
             if conv_time_window:
-                rule.conv_time_window=conv_time_window
+                rule.conv_time_window = conv_time_window
         rule.policy.extend(policy)
         rule.usage.extend(usage)
         db.session.commit()
@@ -187,14 +187,14 @@ class TimDatabase:
             policy = TimDatabase.get_global_policy(llm_rule)
         if not policy:
             policy = Policy(
-                for_user=user or None,
-                llm_rule_id=llm_rule.id,
-                llm_rule=llm_rule,
-                token_time_window_type=token_time_window_type,
-                token_time_window_num=token_time_window_num,
-                time_window_tokens=time_window_tokens,
-                max_tokens=max_tokens,
-                policy_type=policy_type
+                for_user = user or None,
+                llm_rule_id = llm_rule.id,
+                llm_rule = llm_rule,
+                token_time_window_type = token_time_window_type,
+                token_time_window_num = token_time_window_num,
+                time_window_tokens = time_window_tokens,
+                max_tokens = max_tokens,
+                policy_type = policy_type
             )
             db.session.add(policy)
         else:
@@ -270,11 +270,11 @@ class TimDatabase:
         usage = TimDatabase.get_usage(llm_rule, user)
         if not usage:
             usage = Usage(
-                user=user,
-                conversation_id=conv_id,
-                llm_rule_id=llm_rule.id,
-                llm_rule=llm_rule,
-                used_tokens=used_tokens
+                user = user,
+                conversation_id = conv_id,
+                llm_rule_id = llm_rule.id,
+                llm_rule = llm_rule,
+                used_tokens = used_tokens
             )
             db.session.add(usage)
         else:
