@@ -31,7 +31,7 @@ class Policy(db.Model):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     for_user: Mapped[Optional[int]] = mapped_column(ForeignKey("useraccount.id"), nullable=True)
-    llm_rule_id: Mapped[int] = mapped_column(ForeignKey("llm_rule.id"))
+    llm_rule_id: Mapped[int] = mapped_column(ForeignKey("llm_rule.id", ondelete="CASCADE"))
     llm_rule: Mapped["LLMRule"] = relationship("LLMRule", back_populates="policy")
     token_time_window_type: Mapped[str] = mapped_column(String, nullable=False)  # d,h,min,sec
     token_time_window_num: Mapped[int] = mapped_column(Integer, nullable=False)  # 5 of type
@@ -47,6 +47,6 @@ class Usage(db.Model):
     id: Mapped[int] = mapped_column(primary_key=True)
     user: Mapped[int] = mapped_column(ForeignKey("useraccount.id"))
     conversation_id: Mapped[int] = mapped_column(Integer)
-    llm_rule_id: Mapped[int] = mapped_column(ForeignKey("llm_rule.id"))
+    llm_rule_id: Mapped[int] = mapped_column(ForeignKey("llm_rule.id", ondelete="CASCADE"))
     llm_rule: Mapped[LLMRule] = relationship("LLMRule", back_populates="usage")
     used_tokens: Mapped[int] = mapped_column(Integer)
