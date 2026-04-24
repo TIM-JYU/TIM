@@ -7,6 +7,7 @@ import yaml
 from marshmallow import ValidationError, EXCLUDE
 from marshmallow.fields import Field
 
+from markdown import autocounters
 from timApp.answer.pointsumrule import PointSumRule
 from timApp.document.docparagraph import DocParagraph
 from timApp.document.macroinfo import MacroInfo
@@ -545,6 +546,20 @@ class DocSettings:
             f"{macros}{macro_delim}{charmacros}{self.auto_number_headings()}{self.heading_format()}{self.mathtype()}{self.get_globalmacros()}{self.preamble()}{self.input_format()}{self.smart_punct()}{autocounters}{self.macro_lstrip_blocks()}{self.macro_trim_blocks()}"
         )
 
+    def get_document_cache_key_hash(self):
+        """
+        Hash from important values that should be considered
+        when caching the document. If any of these values change,
+        the cache should be invalidated and recalculated.
+        :return: hash value for important values
+        """
+        return hashfunc(
+            f"{self.autocounters()}{self.input_format()}{self.mathtype()}"
+            f"{self.auto_number_headings()}{self.heading_format()}"
+            f"{self.get_globalmacros()}{self.smart_punct()}"
+            f"{self.macro_lstrip_blocks()}{self.macro_trim_blocks()}"
+        )
+
     def math_preamble(self):
         return self.__dict.get(self.math_preamble_key, "")
 
@@ -732,14 +747,8 @@ class DocSettings:
     def use_login_codes(self) -> bool:
         return self.get_setting_or_default("loginCodes", False)
 
-    def login_message(self) -> str | None:
-        return self.get_setting_or_default("loginMessage", None)
-
     def ide_course(self) -> list[IdeDocument]:
         return self.get_setting_or_default("ideCourse", [])
-
-    def use_login_codes(self) -> bool:
-        return self.get_setting_or_default("loginCodes", False)
 
     def login_message(self) -> str | None:
         return self.get_setting_or_default("loginMessage", None)
