@@ -903,7 +903,7 @@ TIMJS.setData = function(P, data) {
         TIMJS.jumpTitle = data.jumpTitle || "";
     }
     if (typeof data.jumpText !== "undefined") {
-        TIMJS.jumpText = data.jumpText || "{label} - {dataset}: {value}";
+        TIMJS.jumpText = data.jumpText || TIMJS.jumpText ;
     }
     if (typeof data.directJump !== "undefined") {
         TIMJS.directJump = !!data.directJump;
