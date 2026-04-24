@@ -76,7 +76,7 @@ class TimDatabase:
             return None
 
     @staticmethod
-    def create_llm_rule(
+    def set_llm_rule(
             document_id: int,
             owner: int,
             apikey_provider: str,
@@ -94,7 +94,7 @@ class TimDatabase:
         """
         Creates a new LLM rule or updates the existing rule if one already exists for the given owner.
         :param document_id: The id of the document.
-        :param owner: The id of the owner.
+        :param owner: The id of the owner of the LLM rule.
         :param apikey_provider: The provider for the apikey.
         :param apikey: List of the api keys and aliases of the owner.
         :param chosen_key: The chosen apikey and alias for the instance.
@@ -125,16 +125,26 @@ class TimDatabase:
             )
             db.session.add(rule)
         else:
-            rule.document_id=document_id
-            rule.apikey_provider=apikey_provider
-            rule.apikey=rule.apikey + apikey
-            rule.chosen_key=chosen_key
-            rule.teachers=teachers
-            rule.current_mode=current_mode
-            rule.total_tokens_spent=total_tokens_spent
-            rule.indexed_chunk_ids=indexed_chunk_ids
-            rule.agent=agent
-            rule.conv_time_window=conv_time_window
+            if document_id:
+                rule.document_id=document_id
+            if apikey_provider:
+                rule.apikey_provider=apikey_provider
+            if apikey:
+                rule.apikey=apikey
+            if chosen_key:
+                rule.chosen_key=chosen_key
+            if teachers:
+                rule.teachers=teachers
+            if current_mode:
+                rule.current_mode=current_mode
+            if total_tokens_spent:
+                rule.total_tokens_spent=total_tokens_spent
+            if indexed_chunk_ids:
+                rule.indexed_chunk_ids=indexed_chunk_ids
+            if agent:
+                rule.agent=agent
+            if conv_time_window:
+                rule.conv_time_window=conv_time_window
         rule.policy.extend(policy)
         rule.usage.extend(usage)
         db.session.commit()
@@ -150,7 +160,7 @@ class TimDatabase:
         db.session.commit()
 
     @staticmethod
-    def get_llm_rule(owner_id: int) -> LLMRule:
+    def get_llm_rule(owner_id: int) -> LLMRule | None:
         """
         Gets the LLM rule of the given owner.
         """
@@ -171,18 +181,31 @@ class TimDatabase:
         Sets a new policy for the LLM rule. Policy can be a global policy for the whole LLM rule or a student policy
         for the given user.
         """
-        policy = Policy(
-            for_user=user or None,
-            llm_rule_id=llm_rule.id,
-            llm_rule=llm_rule,
-            token_time_window_type=token_time_window_type,
-            token_time_window_num=token_time_window_num,
-            time_window_tokens=time_window_tokens,
-            max_tokens=max_tokens,
-            policy_type=policy_type
-        )
-
-        db.session.add(policy)
+        if user:
+            policy = TimDatabase.get_student_policy(llm_rule, user)
+        else:
+            policy = TimDatabase.get_global_policy(llm_rule)
+        if not policy:
+            policy = Policy(
+                for_user=user or None,
+                llm_rule_id=llm_rule.id,
+                llm_rule=llm_rule,
+                token_time_window_type=token_time_window_type,
+                token_time_window_num=token_time_window_num,
+                time_window_tokens=time_window_tokens,
+                max_tokens=max_tokens,
+                policy_type=policy_type
+            )
+            db.session.add(policy)
+        else:
+            if token_time_window_type:
+                policy.token_time_window_type=token_time_window_type
+            if token_time_window_num:
+                policy.token_time_window_num=token_time_window_num
+            if time_window_tokens:
+                policy.time_window_tokens=time_window_tokens
+            if max_tokens:
+                policy.max_tokens=max_tokens
         db.session.commit()
         return policy
 
@@ -214,7 +237,7 @@ class TimDatabase:
         db.session.commit()
 
     @staticmethod
-    def get_global_policy(llm_rule: LLMRule) -> Policy:
+    def get_global_policy(llm_rule: LLMRule) -> Policy | None:
         """
         Gets the given global policy.
         """
@@ -222,7 +245,7 @@ class TimDatabase:
         return db.session.scalar(stmt)
 
     @staticmethod
-    def get_student_policy(llm_rule: LLMRule, user_id: int) -> Policy:
+    def get_student_policy(llm_rule: LLMRule, user_id: int) -> Policy | None:
         """
         Gets the given user policy.
         """
@@ -237,38 +260,41 @@ class TimDatabase:
             used_tokens: int
     ) -> Usage:
         """
-        Sets the usage for the given user.
+        Sets the usage for the given user in the given LLM rule context.
         :param user: ID of the user for the usage.
         :param conv_id: ID of the conversation of the user.
         :param llm_rule: LLM rule instance.
         :param used_tokens: Number of used tokens.
         :return: Usage of the given user.
         """
-
-        usage = Usage(
-            user=user,
-            conversation_id=conv_id,
-            llm_rule_id=llm_rule.id,
-            llm_rule=llm_rule,
-            used_tokens=used_tokens
-        )
-        db.session.add(usage)
+        usage = TimDatabase.get_usage(llm_rule, user)
+        if not usage:
+            usage = Usage(
+                user=user,
+                conversation_id=conv_id,
+                llm_rule_id=llm_rule.id,
+                llm_rule=llm_rule,
+                used_tokens=used_tokens
+            )
+            db.session.add(usage)
+        else:
+            usage.used_tokens = used_tokens
         db.session.commit()
         return usage
 
     @staticmethod
-    def delete_usage(user_id: int, llm_rule: LLMRule) -> None:
+    def delete_usage(llm_rule: LLMRule, user_id: int) -> None:
         """
         Deletes the usage of the given user in the given LLM rule instance.
         """
-        stmt = delete(Usage).where(Usage.user == user_id, Usage.llm_rule == llm_rule)
+        stmt = delete(Usage).where(Usage.llm_rule == llm_rule, Usage.user == user_id)
         db.session.execute(stmt)
         db.session.commit()
 
     @staticmethod
-    def get_usage(user_id: int, llm_rule: LLMRule) -> Usage:
+    def get_usage(llm_rule: LLMRule, user_id: int) -> Usage | None:
         """
         Gets the usage of the given user in the given LLM rule instance.
         """
-        stmt = select(Usage).where(Usage.user == user_id, Usage.llm_rule == llm_rule)
+        stmt = select(Usage).where(Usage.llm_rule == llm_rule, Usage.user == user_id)
         return db.session.scalar(stmt)
