@@ -137,6 +137,7 @@ class DocParagraph:
         "id",
         "md",
         "depends_on_macros",
+        "orig_par",
     }
 
     def __init__(self, doc: Document):
@@ -160,14 +161,13 @@ class DocParagraph:
         self.attrs: dict[str, str] | None = None
         self.nomacros = None
         self.ref_chain = None
-        self.answer_nr: int | None = (
-            None  # needed if variable tasks, None = not task at all or not variable task
-        )
+        self.answer_nr: int | None = None  # needed if variable tasks, None = not task at all or not variable task
         self.md = ""
         self.id = None
         self.ask_new: bool | None = None  # to send for plugins to force new question
         self.html_cache = None
         self.depends_on_macros = False
+        self.orig_par = None  # is this is dereferd par, what was the original
 
     def __eq__(self, other):
         if isinstance(other, self.__class__):
@@ -581,6 +581,8 @@ class DocParagraph:
 
         if expanded_md != md:
             self.depends_on_macros = True
+            if self.orig_par:
+                self.orig_par.depends_on_macros = True
         return expanded_md
 
     def get_title(self) -> str | None:
@@ -698,6 +700,7 @@ class DocParagraph:
             first_pars = [context_par]
             pars = first_pars + pars
 
+        unloaded_pars = []
         if not persist:
             cache = {}
             heading_cache = {}
@@ -749,7 +752,9 @@ class DocParagraph:
                 if not p.is_translation():
                     return p
                 try:
-                    return p.get_referenced_pars()[0]
+                    trp = p.get_referenced_pars()[0]
+                    trp.orig_par = p
+                    return trp
                 except (InvalidReferenceException, IndexError) as e:
                     p.was_invalid = True
                     # noinspection PyProtectedMember
@@ -757,15 +762,17 @@ class DocParagraph:
                     return p
 
             htmls = par_list_to_html_list(
-                [deref_tr_par(par) for par, _, _, _, _ in unloaded_pars],
+                [deref_tr_par(par) for par, _, _, _, _, _ in unloaded_pars],
                 settings=settings,
                 view_ctx=view_ctx,
                 auto_macros=(
                     {"h": auto_macros["h"], "headings": hs}
-                    for _, _, auto_macros, hs, _ in unloaded_pars
+                    for _, _, _, auto_macros, hs, _ in unloaded_pars
                 ),
             )
-            for (par, auto_macro_hash, _, _, old_html), h in zip(unloaded_pars, htmls):
+            for (par, auto_macro_hash, auto_macro_hash2, _, _, old_html), h in zip(
+                unloaded_pars, htmls
+            ):
                 # h is not sanitized but old_html is, but HTML stays unchanged after sanitization most of the time
                 # so they are comparable after stripping div. We want to avoid calling sanitize_html unnecessarily.
                 need_write = False
@@ -781,7 +788,7 @@ class DocParagraph:
                             changed_pars.append(par)
                             need_write = True
                 if not par.depends_on_macros:
-                    auto_macro_hash = WITHOUT_MACROS_CACHED
+                    auto_macro_hash = auto_macro_hash2
                 par.html_cache[auto_macro_hash] = h
                 log_for_person(
                     lambda: f"Updating par {par.get_doc_id()}/{par.get_id()} with auto macro hash {auto_macro_hash}, old html: {old_html}, new html: {h}, new cache: {par.html_cache}, persist: {persist}"
@@ -821,6 +828,7 @@ class DocParagraph:
         macros = macroinfo.get_macros()
         env = macroinfo.jinja_env
         settings_hash = settings.get_hash()
+        important_hash = settings.get_document_cache_key_hash()
         log_for_person(
             lambda: f"Preloading {len(pars)} paragraphs ({', '.join(f'{p.get_doc_id()}/{p.get_id()}' for p in pars)}) with settings hash {settings_hash} and macros {macros}, clear cache: {clear_cache}"
         )
@@ -842,11 +850,20 @@ class DocParagraph:
                     auto_number_start,
                     set(),
                 )
+                auto_macros2 = par.get_auto_macro_values(
+                    {},
+                    env,
+                    auto_macro_cache,
+                    heading_cache,
+                    auto_number_start,
+                    set(),
+                )
             except RecursionError:
                 raise TimDbException(
                     "Infinite recursion detected in get_auto_macro_values; the document may be broken."
                 )
             auto_macro_hash = hashfunc(settings_hash + str(auto_macros))
+            auto_macro_hash2 = hashfunc(important_hash + str(auto_macros2))
 
             par_headings = heading_cache.get(par.get_id())
             if cumulative_headings:
@@ -877,7 +894,7 @@ class DocParagraph:
                         par.html = cached_html
                         continue
 
-                    cached_html = cached.get(WITHOUT_MACROS_CACHED)
+                    cached_html = cached.get(auto_macro_hash2)
                     if cached_html is not None:
                         par.html = cached_html
                         continue
@@ -895,7 +912,14 @@ class DocParagraph:
                     lambda: f"CACHE SKIP: par {par.get_doc_id()}/{par.get_id()} with cache: {cached} of type {type(cached)}; clear_cache: {clear_cache}"
                 )
 
-            tup = (par, auto_macro_hash, auto_macros, all_headings_so_far, old_html)
+            tup = (
+                par,
+                auto_macro_hash,
+                auto_macro_hash2,
+                auto_macros,
+                all_headings_so_far,
+                old_html,
+            )
             par.html_cache = {}
             unloaded_pars.append(tup)
         return unloaded_pars
