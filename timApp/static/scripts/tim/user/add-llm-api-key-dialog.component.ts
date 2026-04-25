@@ -82,7 +82,7 @@ import type {IUserLLMApiKey} from "tim/user/IUser";
         </tim-dialog-frame>
     `,
 })
-export class AddAPIKeyDialogComponent extends AngularDialogComponent<
+export class AddLLMAPIKeyDialogComponent extends AngularDialogComponent<
     {onAdd: (key: IUserLLMApiKey) => void},
     void
 > {
@@ -158,7 +158,7 @@ export class AddAPIKeyDialogComponent extends AngularDialogComponent<
 }
 
 @NgModule({
-    declarations: [AddAPIKeyDialogComponent],
+    declarations: [AddLLMAPIKeyDialogComponent],
     imports: [DialogModule, FormsModule, TimUtilityModule, CommonModule],
 })
 export class AddAPIKeyDialogModule {}

@@ -16,10 +16,8 @@ import {
 } from "@angular/core";
 import {showMessageDialog} from "tim/ui/showMessageDialog";
 import {showAddContactDialog} from "tim/user/showAddContactDialog";
-import {
-    showAddAPIKeyDialog,
-    showAddChattimAPIKeyDialog,
-} from "tim/user/showAddAPIDialog";
+import {showAddAPIKeyDialog} from "tim/user/showAddAPIDialog";
+import {showAddLLMAPIKeyDialog} from "tim/user/showAddLLMAPIDialog";
 import {Channel} from "tim/messaging/listOptionTypes";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {createDowngradedModule, doDowngrade} from "tim/downgrade";
@@ -1242,7 +1240,7 @@ export class SettingsComponent implements DoCheck, AfterViewInit {
     }
     openChattimAPIKeyDialog() {
         void to2(
-            showAddChattimAPIKeyDialog((key) => {
+            showAddLLMAPIKeyDialog((key) => {
                 this.userLLMAPIKeys.push(key);
                 this.cdr.detectChanges();
             })

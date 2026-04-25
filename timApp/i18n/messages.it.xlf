@@ -11542,7 +11542,7 @@ Separate multiple addresses with commas or write each address on a new line.</so
         <source> Add new LLM model API key </source>
         <target state="new"> Add new LLM model API key </target>
         <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/user/add-chattim-api-key-dialog.component.ts</context>
+          <context context-type="sourcefile">static/scripts/tim/user/add-llm-api-key-dialog.component.ts</context>
           <context context-type="linenumber">36</context>
         </context-group>
       </trans-unit>
@@ -11550,7 +11550,7 @@ Separate multiple addresses with commas or write each address on a new line.</so
         <source>LLM model provider</source>
         <target state="new">LLM model provider</target>
         <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/user/add-chattim-api-key-dialog.component.ts</context>
+          <context context-type="sourcefile">static/scripts/tim/user/add-llm-api-key-dialog.component.ts</context>
           <context context-type="linenumber">42,43</context>
         </context-group>
       </trans-unit>
@@ -11558,7 +11558,7 @@ Separate multiple addresses with commas or write each address on a new line.</so
         <source>Alias</source>
         <target state="new">Alias</target>
         <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/user/add-chattim-api-key-dialog.component.ts</context>
+          <context context-type="sourcefile">static/scripts/tim/user/add-llm-api-key-dialog.component.ts</context>
           <context context-type="linenumber">50,51</context>
         </context-group>
       </trans-unit>
