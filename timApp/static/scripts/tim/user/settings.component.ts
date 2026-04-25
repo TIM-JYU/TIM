@@ -673,7 +673,7 @@ type StyleSelectionType =
                         </div>
                     </ng-container>
                     <settings-button-panel [saved]="saveUserAccountInfo">
-                    <button class="timButton" (click)="openChattimAPIKeyDialog()" i18n>Add new API key</button>
+                    <button class="timButton" (click)="openLLMAPIKeyDialog()" i18n>Add new API key</button>
                     </settings-button-panel>
                 </div>
             </bootstrap-form-panel>
@@ -1238,7 +1238,7 @@ export class SettingsComponent implements DoCheck, AfterViewInit {
             })
         );
     }
-    openChattimAPIKeyDialog() {
+    openLLMAPIKeyDialog() {
         void to2(
             showAddLLMAPIKeyDialog((key) => {
                 this.userLLMAPIKeys.push(key);
