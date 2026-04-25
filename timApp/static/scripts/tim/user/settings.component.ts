@@ -642,9 +642,9 @@ type StyleSelectionType =
                     <ng-container>
                         <span class="form-label">
                             <ng-container i18n>Chattim API Keys</ng-container>
-                            <a href="https://tim.jyu.fi/view/tim/ohjeita/dokumenttien-konekaantaminen/en-GB#adding-a-translator-authentication-key">
+                            <a href="https://tim.jyu.fi/view/tim/ohjeita/tekoalyavustaja/adding-llm-api-keys#JkqWJDZqSJ2s">
                                 <span class="glyphicon glyphicon-question-sign" style="margin-left: 0.2em;"
-                                      title="Help with machine translation setup" i18n-title></span>
+                                      title="Help with setting up LLM-helper for document" i18n-title></span>
                             </a>
                         </span>
                         <div class="contact-collection">

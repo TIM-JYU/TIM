@@ -1,4 +1,4 @@
-<?xml version='1.0' encoding='UTF-8'?>
+<?xml version="1.0" encoding="UTF-8"?>
 <xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" version="1.2">
   <file source-language="en-US" datatype="plaintext" original="ng2.template" target-language="sv">
     <body>
@@ -11451,6 +11451,14 @@ Mata in flera användares adresser på separata rader eller åtskilda med kommat
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
           <context context-type="linenumber">646</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="5748930443215474942" datatype="html">
+        <source>Help with setting up LLM-helper for document</source>
+        <target state="new">Help with setting up LLM-helper for document</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
+          <context context-type="linenumber">647</context>
         </context-group>
       </trans-unit>
     </body>
