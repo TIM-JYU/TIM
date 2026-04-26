@@ -12,8 +12,7 @@ class LLMRule(db.Model):
     id: Mapped[int] = mapped_column(primary_key=True)
     document_id: Mapped[int] = mapped_column(Integer)
     owner: Mapped[int] = mapped_column(ForeignKey("useraccount.id"))
-    apikey_provider: Mapped[str] = mapped_column(String)
-    apikey: Mapped[list[str]] = mapped_column(ARRAY(String))  # list of apikeys and publickeys
+    apikey: Mapped[list[str]] = mapped_column(ARRAY(String))  # list of apikey providers, apikeys and aliases [apikey_provider,apikey,alias]
     chosen_key: Mapped[str] = mapped_column(String)
     teachers: Mapped[list[int]] = mapped_column(ARRAY(Integer))
     current_mode: Mapped[str] = mapped_column(String)  # summarizing or creative

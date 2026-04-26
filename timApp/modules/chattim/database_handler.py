@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 
 from sqlalchemy import select, delete
+from xxlimited_35 import Null
 
 from timApp.document.document import Document
 from timApp.document import docentry
@@ -79,7 +80,6 @@ class TimDatabase:
     def set_llm_rule(
             document_id: int,
             owner: int,
-            apikey_provider: str,
             apikey: list[str],
             chosen_key: str,
             teachers: list[int],
@@ -95,9 +95,8 @@ class TimDatabase:
         Creates a new LLM rule or updates the existing rule if one already exists for the given owner.
         :param document_id: The id of the document.
         :param owner: The id of the owner of the LLM rule.
-        :param apikey_provider: The provider for the apikey.
-        :param apikey: List of the api keys and aliases of the owner.
-        :param chosen_key: The chosen apikey and alias for the instance.
+        :param apikey: List of the API key providers, API keys and aliases of the owner. [apikey_provider,apikey,alias]
+        :param chosen_key: The chosen API key and alias for the instance.
         :param teachers: The ids of the teachers allowed to use the plugin instance.
         :param current_mode: Mode of the plugin instance: summarizing, creative or balanced.
         :param total_tokens_spent: The total number of tokens spent.
@@ -108,12 +107,11 @@ class TimDatabase:
         :param usage: List of usages related to the LLMRule instance.
         :return: created LLMRule instance
         """
-        rule = TimDatabase.get_llm_rule(owner)
+        rule = TimDatabase.get_llm_rule(owner, document_id)
         if not rule:
             rule = LLMRule(
                 document_id = document_id,
                 owner = owner,
-                apikey_provider = apikey_provider,
                 apikey = apikey,
                 chosen_key = chosen_key,
                 teachers = teachers,
@@ -125,10 +123,6 @@ class TimDatabase:
             )
             db.session.add(rule)
         else:
-            if document_id:
-                rule.document_id = document_id
-            if apikey_provider:
-                rule.apikey_provider = apikey_provider
             if apikey:
                 rule.apikey = apikey
             if chosen_key:
@@ -151,20 +145,51 @@ class TimDatabase:
         return rule
 
     @staticmethod
-    def delete_llm_rule(owner_id: int) -> None:
+    def set_api_key(
+            owner: int,
+            apikey: list[str]
+    ) -> LLMRule:
         """
-        Deletes the LLM rule of the given owner.
+        Saves a new API key, its alias and the API key provider.
+        :param owner: The id of the owner of the apikey.
+        :param apikey: List of the API key providers, API keys and aliases of the owner. [apikey_provider,apikey,alias]
+        :return: created LLMRule instance
         """
-        stmt = delete(LLMRule).where(LLMRule.owner == owner_id)
+        rule = TimDatabase.get_llm_rule(owner, 0)
+        if not rule:
+            rule = LLMRule(
+                document_id = 0,
+                owner = owner,
+                apikey = apikey,
+                chosen_key = "",
+                teachers = [],
+                current_mode = "",
+                total_tokens_spent = 0,
+                indexed_chunk_ids = [],
+                agent = "",
+                conv_time_window = 0,
+            )
+            db.session.add(rule)
+        else:
+            rule.apikey = apikey
+        db.session.commit()
+        return rule
+
+    @staticmethod
+    def delete_llm_rule(owner_id: int, document_id: int) -> None:
+        """
+        Deletes the LLM rule of the given owner in the given document.
+        """
+        stmt = delete(LLMRule).where(LLMRule.owner == owner_id, LLMRule.document_id == document_id)
         db.session.execute(stmt)
         db.session.commit()
 
     @staticmethod
-    def get_llm_rule(owner_id: int) -> LLMRule | None:
+    def get_llm_rule(owner_id: int, document_id: int) -> LLMRule | None:
         """
-        Gets the LLM rule of the given owner.
+        Gets the LLM rule of the given owner in the given document.
         """
-        stmt = select(LLMRule).where(LLMRule.owner == owner_id)
+        stmt = select(LLMRule).where(LLMRule.owner == owner_id, LLMRule.document_id == document_id)
         return db.session.scalar(stmt)
 
     @staticmethod
@@ -187,7 +212,7 @@ class TimDatabase:
             policy = TimDatabase.get_global_policy(llm_rule)
         if not policy:
             policy = Policy(
-                for_user = user or None,
+                for_user = user,
                 llm_rule_id = llm_rule.id,
                 llm_rule = llm_rule,
                 token_time_window_type = token_time_window_type,
