@@ -5,17 +5,9 @@ from openai import OpenAI
 import numpy as np
 import os
 from timApp.document.document import Document
-from timApp.modules.chattim.database_handler import TimDatabase
 
 
 # TODO mallien määrittely/valinta Indexer luokkaan?
-@dataclass
-class TextChunks:
-    """text chunks to vectorize"""
-
-    chunks: list[str]
-
-
 @dataclass
 class EmbeddingResponse:
     """list containing embeddings returned from the model"""
@@ -51,7 +43,7 @@ class EmbeddingData:
 # TODO mallin valinta,
 #  mahdollisesti mallikohtaisia asetuksia?(task type,vektorin koko jne)
 class EmbeddingModel(Protocol):
-    def generate(self, text_chunks: TextChunks) -> EmbeddingResponse:
+    def generate(self, text_chunks: list[str]) -> EmbeddingResponse:
         ...
 
 
@@ -62,7 +54,7 @@ class GeminiEmbeddingModel(EmbeddingModel):
         self.api_key = api_key
         self.client = None
 
-    def generate(self, chunks: TextChunks) -> EmbeddingResponse:
+    def generate(self, chunks: list[str]) -> EmbeddingResponse:
         """generates embeddings from provided chunks"""
         if self.client is None:
             self.client = OpenAI(
@@ -71,7 +63,7 @@ class GeminiEmbeddingModel(EmbeddingModel):
             )
             # self.client = genai.Client(api_key=self.api_key)
 
-        text = chunks.chunks
+        text = chunks
 
         try:
             result = self.client.embeddings.create(
@@ -96,10 +88,10 @@ class OpenAiEmbeddingModel(EmbeddingModel):
         self.api_key = api_key
         self.client = OpenAI(api_key=self.api_key)
 
-    def generate(self, chunks: TextChunks) -> EmbeddingResponse:
+    def generate(self, chunks: list[str]) -> EmbeddingResponse:
         """generates embeddings from provided chunks"""
 
-        text = chunks.chunks
+        text = chunks
 
         try:
             result = self.client.embeddings.create(
@@ -146,7 +138,7 @@ class Indexer:
 
     def chunk_text(
         self, text: str, max_chunk_size: int = 600, overlap: int = 100
-    ) -> TextChunks:
+    ) -> list[str]:
         chunks = []
         sentences = text.split(". ")
         current_chunk = ""
@@ -160,10 +152,10 @@ class Indexer:
                 current_chunk = overlapping_text + ". " + sentence
         if (len(current_chunk)) > 0:
             chunks.append(current_chunk)
-        return TextChunks(chunks=chunks)
+        return chunks
 
     # TODO ei haeta mahdollisia plugin lohkoja
-    def get_tim_blocks(self, doc: Document) -> TextChunks:
+    def get_tim_blocks(self, doc: Document) -> list[str]:
         """returns the text chunks from provided tim document"""
         try:
             blocks = doc.export_raw_data()
@@ -171,7 +163,7 @@ class Indexer:
         except Exception as e:
             print(f"Error getting tim blocks {e}")
 
-        return TextChunks(chunks=text)
+        return text
 
     def create_embeddings(self, documents: list[Document]) -> int:
         """generates the data object containing embeddings and corresponding text chunks
@@ -183,14 +175,14 @@ class Indexer:
             # TODO split long chunks into smaller chunks
             embeddings = self.embedding_model.generate(chunks)
             tokens_used += embeddings.used_tokens
-            block_ids = list(range(len(chunks.chunks)))
+            block_ids = list(range(len(chunks)))
             document_id = document.doc_id
             data = [
                 EmbeddingData(
                     embedding=embedding, text=text, block_id=i, document_id=document_id
                 )
                 for (embedding, text, i) in zip(
-                    embeddings.embeddings, chunks.chunks, block_ids
+                    embeddings.embeddings, chunks, block_ids
                 )
             ]
             data_dict = [asdict(obj) for obj in data]
@@ -230,9 +222,7 @@ class Indexer:
 
         tokens_used = 0
         try:
-            prompt_embedding = self.embedding_model.generate(
-                TextChunks(chunks=[prompt])
-            )
+            prompt_embedding = self.embedding_model.generate([prompt])
             tokens_used = prompt_embedding.used_tokens
             prompt_embedding = np.array(prompt_embedding.embeddings[0])
 
