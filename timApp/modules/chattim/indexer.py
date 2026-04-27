@@ -5,6 +5,7 @@ from openai import OpenAI
 import numpy as np
 import os
 from timApp.document.document import Document
+from datetime import datetime
 from timApp.modules.chattim.database_handler import TimDatabase
 
 
@@ -39,12 +40,15 @@ class EmbeddingData:
     :param text: text chunk
     :param block_id: id of the chunk in the tim document
     :param document_id: id of the tim document
+    :param date when file was last edited
     """
 
     embedding: list[float]
     text: str
     block_id: int
     document_id: int
+    # TODO better way to store date?
+    last_edited: str
     # filename: str
 
 
@@ -179,15 +183,28 @@ class Indexer:
         :return: number of tokens used"""
         tokens_used = 0
         for document in documents:
+            changelog = document.get_changelog(max_entries=1)
+
+            document_last_edited = changelog.entries[0].time
+
             chunks = self.get_tim_blocks(doc=document)
-            # TODO split long chunks into smaller chunks
+            embeddings_created = datetime.fromisoformat(chunks[0].last_edited)
+
+            if embeddings_created < document_last_edited:
+                print("Document was edited after embeddings were created")
+                continue
+                # TODO split long chunks into smaller chunks
             embeddings = self.embedding_model.generate(chunks)
             tokens_used += embeddings.used_tokens
             block_ids = list(range(len(chunks.chunks)))
             document_id = document.doc_id
             data = [
                 EmbeddingData(
-                    embedding=embedding, text=text, block_id=i, document_id=document_id
+                    embedding=embedding,
+                    text=text,
+                    block_id=i,
+                    document_id=document_id,
+                    last_edited=embeddings_created.isoformat(),
                 )
                 for (embedding, text, i) in zip(
                     embeddings.embeddings, chunks.chunks, block_ids
