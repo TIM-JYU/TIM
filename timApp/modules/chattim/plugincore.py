@@ -18,7 +18,6 @@ from timApp.modules.chattim.rag import (
     Rag,
     MessageData,
     RagMode,
-    ModelSpec,
     Message,
     Iterable,
     sum_chunks,
@@ -27,7 +26,7 @@ from timApp.modules.chattim.rag import (
 from typing import Generic, TypeVar, TypedDict, cast
 
 from timApp.modules.chattim.model import (
-    ModelResponseChunk,
+    ModelResponse,
     Usage,
     GenericApiClient,
     Provider,
@@ -93,7 +92,7 @@ class PreparedChatRequest:
     caller_id: str
     document_id: str
     user_input: str
-    iterable: Iterable[ModelResponseChunk]
+    iterable: Iterable[ModelResponse]
 
 
 class PluginCore:
@@ -163,7 +162,7 @@ class PluginCore:
         )
 
         try:
-            iterable: Iterable[ModelResponseChunk] = self.rag.answer(
+            iterable: Iterable[ModelResponse] = self.rag.answer(
                 msg_data,
                 identifier=document_id,
             )
@@ -234,9 +233,9 @@ class PluginCore:
             return Result(error=prep.error)
         p = prep.value
 
-        chunk: ModelResponseChunk = sum_chunks(p.iterable)
-        whole_msg = chunk.delta or ""
-        usage = chunk.usage
+        response: ModelResponse = sum_chunks(p.iterable)
+        whole_msg = response.content or ""
+        usage = response.usage
 
         # TODO: viestit arkistoidaan
 
@@ -258,7 +257,7 @@ class PluginCore:
         caller_id: int,
         document_id: int,
         user_input: str,
-    ) -> Result[Iterable[ModelResponseChunk], str]:
+    ) -> Result[Iterable[ModelResponse], str]:
         timestamp_user = ChatMessage.ts_ms()
         prep = self._prepare_chat_request(caller_id, document_id, user_input)
         if not prep.ok() or not prep.value:
@@ -266,12 +265,12 @@ class PluginCore:
         p = prep.value
 
         # TODO: return only the string chunks or the usage as well?
-        def gen() -> Iterable[ModelResponseChunk]:
+        def gen() -> Iterable[ModelResponse]:
             whole_msg: str = ""
             usage: Usage | None = None
 
             # Collect the chunk message and usage
-            def apply_chunk(c: ModelResponseChunk) -> None:
+            def apply_chunk(c: ModelResponse) -> None:
                 nonlocal whole_msg, usage
                 if c.delta:
                     whole_msg += c.delta
@@ -379,9 +378,9 @@ class PluginCore:
 
         # TODO: remove hard coded api key and model
         api_key = os.getenv("OPENAI_API_KEY")
-        spec = ModelSpec(provider="openai", model_id="gpt-4.1-nano", api_key=api_key)
+        kwargs_model = dict(provider="openai", model_id="gpt-4.1-nano", api_key=api_key)
         try:
-            self.rag.add_model(spec, identifier=document_id)
+            self.rag.add_model(identifier=document_id, **kwargs_model)
         except ValueError as e:
             return Result(None, str(e))
 

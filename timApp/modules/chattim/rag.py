@@ -8,10 +8,8 @@ from timApp.modules.chattim.model import (
     GenerateOptions,
     Message,
     ModelResponse,
-    ModelResponseChunk,
     ModelRegistry,
     ModelInfo,
-    ModelSpec,
     Usage,
     SUPPORTED_MODELS,
     Provider,
@@ -93,7 +91,7 @@ class MessageData:
     max_tokens: int
 
 
-def sum_chunks(iterable: Iterable[ModelResponseChunk]) -> ModelResponseChunk:
+def sum_chunks(iterable: Iterable[ModelResponse]) -> ModelResponse:
     whole_msg: str = ""
     usage: Usage | None = None
     for chunk in iterable:
@@ -102,7 +100,7 @@ def sum_chunks(iterable: Iterable[ModelResponseChunk]) -> ModelResponseChunk:
         if chunk.usage:
             usage = chunk.usage
 
-    return ModelResponseChunk(delta=whole_msg, usage=usage, done=True)
+    return ModelResponse(content=whole_msg, usage=usage)
 
 
 class Rag:
@@ -110,17 +108,28 @@ class Rag:
     models: dict[int, ChatModel] = {}
     indexers: dict[int, Indexer] = {}
 
-    def add_model(self, spec: ModelSpec, identifier: int):
+    def add_model(
+        self,
+        identifier: int,
+        *,
+        provider: Provider,
+        model_id: str,
+        api_key: str,
+        base_url: str | None = None,
+    ):
         """
         Model spec need not specify the base_url.
         Note that if model with identifier exists it is overwritten.
-        :param spec: Model is built according to this spec
         :param identifier: identifier of the model, used for answer calls etc
+        :param provider: Provider name of the model.
+        :param model_id: The model id of the model to create.
+        :param api_key: The API key matching the provider.
+        :param base_url: The base URL of the provider.
         Raises:
             ValueError: If the provider or model is unknown
         """
 
-        model = self.registry.create(spec)
+        model = self.registry.create(provider, model_id, api_key, base_url)
         self.models[identifier] = model
 
     # tätä ei varmaankaan tarvita
@@ -158,7 +167,7 @@ class Rag:
 
     def answer(
         self, request_data: MessageData, identifier: int
-    ) -> Iterable[ModelResponseChunk]:
+    ) -> Iterable[ModelResponse]:
         """
         Give an answer to the user using the model.
 
@@ -179,7 +188,7 @@ class Rag:
             stream = model.generate_stream(messages, GenerateOptions())
         else:
             res: ModelResponse = model.generate(messages, GenerateOptions())
-            stream = [ModelResponseChunk(delta=res.content, usage=res.usage, done=True)]
+            stream = [ModelResponse(delta=res.content, usage=res.usage)]
 
         # TODO: answer post processing
         # Include the urls/document ids?
