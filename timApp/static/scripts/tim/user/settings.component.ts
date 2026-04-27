@@ -16,10 +16,8 @@ import {
 } from "@angular/core";
 import {showMessageDialog} from "tim/ui/showMessageDialog";
 import {showAddContactDialog} from "tim/user/showAddContactDialog";
-import {
-    showAddAPIKeyDialog,
-    showAddChattimAPIKeyDialog,
-} from "tim/user/showAddAPIDialog";
+import {showAddAPIKeyDialog} from "tim/user/showAddAPIDialog";
+import {showAddLLMAPIKeyDialog} from "tim/user/showAddLLMAPIDialog";
 import {Channel} from "tim/messaging/listOptionTypes";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {createDowngradedModule, doDowngrade} from "tim/downgrade";
@@ -644,9 +642,9 @@ type StyleSelectionType =
                     <ng-container>
                         <span class="form-label">
                             <ng-container i18n>Chattim API Keys</ng-container>
-                            <a href="https://tim.jyu.fi/view/tim/ohjeita/dokumenttien-konekaantaminen/en-GB#adding-a-translator-authentication-key">
+                            <a href="https://tim.jyu.fi/view/tim/ohjeita/tekoalyavustaja/adding-llm-api-keys">
                                 <span class="glyphicon glyphicon-question-sign" style="margin-left: 0.2em;"
-                                      title="Help with machine translation setup" i18n-title></span>
+                                      title="Help with setting up LLM-helper for document" i18n-title></span>
                             </a>
                         </span>
                         <div class="contact-collection">
@@ -675,7 +673,7 @@ type StyleSelectionType =
                         </div>
                     </ng-container>
                     <settings-button-panel [saved]="saveUserAccountInfo">
-                    <button class="timButton" (click)="openChattimAPIKeyDialog()" i18n>Add new API key</button>
+                    <button class="timButton" (click)="openLLMAPIKeyDialog()" i18n>Add new API key</button>
                     </settings-button-panel>
                 </div>
             </bootstrap-form-panel>
@@ -1240,9 +1238,9 @@ export class SettingsComponent implements DoCheck, AfterViewInit {
             })
         );
     }
-    openChattimAPIKeyDialog() {
+    openLLMAPIKeyDialog() {
         void to2(
-            showAddChattimAPIKeyDialog((key) => {
+            showAddLLMAPIKeyDialog((key) => {
                 this.userLLMAPIKeys.push(key);
                 this.cdr.detectChanges();
             })

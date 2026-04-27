@@ -11519,7 +11519,7 @@ Syötä useiden käyttäjien osoitteet allekkain tai pilkulla erotettuina.</targ
         <source> Add new LLM model API key </source>
         <target state="translated"> Lisää uusi kielimallin API-avain </target>
         <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/user/add-chattim-api-key-dialog.component.ts</context>
+          <context context-type="sourcefile">static/scripts/tim/user/add-llm-api-key-dialog.component.ts</context>
           <context context-type="linenumber">36</context>
         </context-group>
       </trans-unit>
@@ -11527,7 +11527,7 @@ Syötä useiden käyttäjien osoitteet allekkain tai pilkulla erotettuina.</targ
         <source>LLM model provider</source>
         <target state="translated">Kielimallipalveluntarjoaja</target>
         <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/user/add-chattim-api-key-dialog.component.ts</context>
+          <context context-type="sourcefile">static/scripts/tim/user/add-llm-api-key-dialog.component.ts</context>
           <context context-type="linenumber">42,43</context>
         </context-group>
       </trans-unit>
@@ -11535,7 +11535,7 @@ Syötä useiden käyttäjien osoitteet allekkain tai pilkulla erotettuina.</targ
         <source>Alias</source>
         <target state="translated">Alias</target>
         <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/user/add-chattim-api-key-dialog.component.ts</context>
+          <context context-type="sourcefile">static/scripts/tim/user/add-llm-api-key-dialog.component.ts</context>
           <context context-type="linenumber">50,51</context>
         </context-group>
       </trans-unit>
@@ -11545,6 +11545,14 @@ Syötä useiden käyttäjien osoitteet allekkain tai pilkulla erotettuina.</targ
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
           <context context-type="linenumber">646</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="5748930443215474942" datatype="html">
+        <source>Help with setting up LLM-helper for document</source>
+        <target state="translated">Ohje tekoälyavustajan käyttöön</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
+          <context context-type="linenumber">647</context>
         </context-group>
       </trans-unit>
     </body>
