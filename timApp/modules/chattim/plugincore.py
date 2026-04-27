@@ -3,6 +3,7 @@ import uuid
 from dataclasses import dataclass, field
 from unicodedata import normalize, category
 
+from timApp.util.flask.cache import cache
 from timApp.timdb.dbaccess import get_files_path
 from timApp.auth.get_user_rights_for_item import UserItemRights
 from timApp.item.item import Item
@@ -30,6 +31,8 @@ from timApp.modules.chattim.model import (
     ModelError,
 )
 from timApp.modules.chattim.conversation import ConversationManager, ChatMessage
+
+DEFAULT_CACHE_TIMEOUT = 60 * 15  # seconds
 
 
 @dataclass(frozen=True)
@@ -154,8 +157,11 @@ class PluginCore:
         response = self.rag.get_context(prompt=validated_input, identifier=document_id)
         context = response.context
 
+        system_prompt = self.get_system_prompt(caller_id, document_id)
+
         msg_data = MessageData(
             user_prompt=validated_input,
+            system_prompt=system_prompt,
             context=context,
             chat_history=chat_history,
             mode=mode,
@@ -334,7 +340,7 @@ class PluginCore:
         return Result(value=data)
 
     def save_instance(
-        self, caller_id, document_id: int, instance_settings: InstanceAttributes
+        self, caller_id: int, document_id: int, instance_settings: InstanceAttributes
     ) -> Result[bool | None, str | None]:
         """
         Create instance if it doesn't exist. New settings are saved if valid.
@@ -383,6 +389,14 @@ class PluginCore:
         # validating max tokens
         if max_tokens < 0:
             return Result(None, "Give non-negative max tokens value")
+
+        if system_prompt_path:
+            prompt_doc = self.tim_database.get_tim_document_by_path(system_prompt_path)
+            if not prompt_doc:
+                return Result(None, "Invalid system prompt path")
+            cache.delete_memoized(PluginCore.get_system_prompt, document_id=document_id)
+
+        # TODO: update system prompt path in the db row
 
         # TODO: kun policy saatu niin tässä check niille
         # TODO: if instance exists -> update OTHERIWISE create
@@ -460,6 +474,18 @@ class PluginCore:
         self, caller_id: str, document_id: int, policy: StudentPolicy
     ):
         pass
+
+    @cache.memoize(timeout=DEFAULT_CACHE_TIMEOUT, args_to_ignore=["self", "caller_id"])
+    def get_system_prompt(self, caller_id: int, document_id: int) -> str | None:
+        # TODO: fetch from the database
+        prompt_path = ""
+        if not prompt_path:
+            return None
+        prompt_doc = self.tim_database.get_tim_document_by_path(prompt_path)
+        if not prompt_doc:
+            return None
+        content = prompt_doc.export_markdown(export_ids=False).strip()
+        return content if len(content) > 0 else None
 
     def _instance_exists(self, document_id) -> bool:
         # TODO: todnäk pitää muistissa tiedetyt instanssi-idt jottei haeta aina tietokannalta turhaan
