@@ -44,6 +44,11 @@ class TimDatabase:
         return None
 
     @staticmethod
+    def get_tim_document_by_path(path: str) -> Document | None:
+        doc = DocEntry.find_by_path(path)
+        return doc.document if doc else None
+
+    @staticmethod
     def get_tim_documents_by_path(path: str) -> list[Document]:
         """
         Returns all documents in the given path recursively.
@@ -52,10 +57,10 @@ class TimDatabase:
         If path is a folder all the documents in the folder and it's subfolders are returned recursively.
         If path is neither a folder nor a document, returns empty list.
         """
-        documents = []
-        doc = DocEntry.find_by_path(path)
-        if doc:
-            documents.append(doc.document)
+        documents: list[Document] = []
+        document = TimDatabase.get_tim_document_by_path(path)
+        if document:
+            documents.append(document)
             return documents
 
         doc_entries = docentry.get_documents(filter_folder=path)
@@ -78,18 +83,18 @@ class TimDatabase:
 
     @staticmethod
     def set_llm_rule(
-            document_id: int,
-            owner: int,
-            apikey: list[str],
-            chosen_key: str,
-            teachers: list[int],
-            current_mode: str,
-            total_tokens_spent: int,
-            indexed_chunk_ids: list[int],
-            agent: str,
-            conv_time_window: int,
-            policy: list[Policy],
-            usage: list[Usage],
+        document_id: int,
+        owner: int,
+        apikey: list[str],
+        chosen_key: str,
+        teachers: list[int],
+        current_mode: str,
+        total_tokens_spent: int,
+        indexed_chunk_ids: list[int],
+        agent: str,
+        conv_time_window: int,
+        policy: list[Policy],
+        usage: list[Usage],
     ) -> LLMRule:
         """
         Creates a new LLM rule or updates the existing rule if one already exists for the given owner.
@@ -110,16 +115,16 @@ class TimDatabase:
         rule = TimDatabase.get_llm_rule(owner, document_id)
         if not rule:
             rule = LLMRule(
-                document_id = document_id,
-                owner = owner,
-                apikey = apikey,
-                chosen_key = chosen_key,
-                teachers = teachers,
-                current_mode = current_mode,
-                total_tokens_spent = total_tokens_spent,
-                indexed_chunk_ids = indexed_chunk_ids,
-                agent = agent,
-                conv_time_window = conv_time_window,
+                document_id=document_id,
+                owner=owner,
+                apikey=apikey,
+                chosen_key=chosen_key,
+                teachers=teachers,
+                current_mode=current_mode,
+                total_tokens_spent=total_tokens_spent,
+                indexed_chunk_ids=indexed_chunk_ids,
+                agent=agent,
+                conv_time_window=conv_time_window,
             )
             db.session.add(rule)
         else:
@@ -145,10 +150,7 @@ class TimDatabase:
         return rule
 
     @staticmethod
-    def set_api_key(
-            owner: int,
-            apikey: list[str]
-    ) -> LLMRule:
+    def set_api_key(owner: int, apikey: list[str]) -> LLMRule:
         """
         Saves a new API key, its alias and the API key provider.
         :param owner: The id of the owner of the apikey.
@@ -158,16 +160,16 @@ class TimDatabase:
         rule = TimDatabase.get_llm_rule(owner, 0)
         if not rule:
             rule = LLMRule(
-                document_id = 0,
-                owner = owner,
-                apikey = apikey,
-                chosen_key = "",
-                teachers = [],
-                current_mode = "",
-                total_tokens_spent = 0,
-                indexed_chunk_ids = [],
-                agent = "",
-                conv_time_window = 0,
+                document_id=0,
+                owner=owner,
+                apikey=apikey,
+                chosen_key="",
+                teachers=[],
+                current_mode="",
+                total_tokens_spent=0,
+                indexed_chunk_ids=[],
+                agent="",
+                conv_time_window=0,
             )
             db.session.add(rule)
         else:
@@ -180,7 +182,9 @@ class TimDatabase:
         """
         Deletes the LLM rule of the given owner in the given document.
         """
-        stmt = delete(LLMRule).where(LLMRule.owner == owner_id, LLMRule.document_id == document_id)
+        stmt = delete(LLMRule).where(
+            LLMRule.owner == owner_id, LLMRule.document_id == document_id
+        )
         db.session.execute(stmt)
         db.session.commit()
 
@@ -189,18 +193,20 @@ class TimDatabase:
         """
         Gets the LLM rule of the given owner in the given document.
         """
-        stmt = select(LLMRule).where(LLMRule.owner == owner_id, LLMRule.document_id == document_id)
+        stmt = select(LLMRule).where(
+            LLMRule.owner == owner_id, LLMRule.document_id == document_id
+        )
         return db.session.scalar(stmt)
 
     @staticmethod
     def set_policy(
-            user: int,
-            llm_rule: LLMRule,
-            token_time_window_type: str,
-            token_time_window_num: int,
-            time_window_tokens: int,
-            max_tokens: int,
-            policy_type: str  # global or student
+        user: int,
+        llm_rule: LLMRule,
+        token_time_window_type: str,
+        token_time_window_num: int,
+        time_window_tokens: int,
+        max_tokens: int,
+        policy_type: str,  # global or student
     ) -> Policy:
         """
         Sets a new policy for the LLM rule. Policy can be a global policy for the whole LLM rule or a student policy
@@ -212,25 +218,25 @@ class TimDatabase:
             policy = TimDatabase.get_global_policy(llm_rule)
         if not policy:
             policy = Policy(
-                for_user = user,
-                llm_rule_id = llm_rule.id,
-                llm_rule = llm_rule,
-                token_time_window_type = token_time_window_type,
-                token_time_window_num = token_time_window_num,
-                time_window_tokens = time_window_tokens,
-                max_tokens = max_tokens,
-                policy_type = policy_type
+                for_user=user,
+                llm_rule_id=llm_rule.id,
+                llm_rule=llm_rule,
+                token_time_window_type=token_time_window_type,
+                token_time_window_num=token_time_window_num,
+                time_window_tokens=time_window_tokens,
+                max_tokens=max_tokens,
+                policy_type=policy_type,
             )
             db.session.add(policy)
         else:
             if token_time_window_type:
-                policy.token_time_window_type=token_time_window_type
+                policy.token_time_window_type = token_time_window_type
             if token_time_window_num:
-                policy.token_time_window_num=token_time_window_num
+                policy.token_time_window_num = token_time_window_num
             if time_window_tokens:
-                policy.time_window_tokens=time_window_tokens
+                policy.time_window_tokens = time_window_tokens
             if max_tokens:
-                policy.max_tokens=max_tokens
+                policy.max_tokens = max_tokens
         db.session.commit()
         return policy
 
@@ -248,7 +254,9 @@ class TimDatabase:
         """
         Deletes the given global policy.
         """
-        stmt = delete(Policy).where(Policy.llm_rule == llm_rule, Policy.for_user.is_(None))
+        stmt = delete(Policy).where(
+            Policy.llm_rule == llm_rule, Policy.for_user.is_(None)
+        )
         db.session.execute(stmt)
         db.session.commit()
 
@@ -257,7 +265,9 @@ class TimDatabase:
         """
         Deletes the given student policy.
         """
-        stmt = delete(Policy).where(Policy.llm_rule == llm_rule, Policy.for_user == user_id)
+        stmt = delete(Policy).where(
+            Policy.llm_rule == llm_rule, Policy.for_user == user_id
+        )
         db.session.execute(stmt)
         db.session.commit()
 
@@ -266,7 +276,9 @@ class TimDatabase:
         """
         Gets the given global policy.
         """
-        stmt = select(Policy).where(Policy.llm_rule == llm_rule, Policy.for_user.is_(None))
+        stmt = select(Policy).where(
+            Policy.llm_rule == llm_rule, Policy.for_user.is_(None)
+        )
         return db.session.scalar(stmt)
 
     @staticmethod
@@ -274,15 +286,14 @@ class TimDatabase:
         """
         Gets the given user policy.
         """
-        stmt = select(Policy).where(Policy.llm_rule == llm_rule, Policy.for_user == user_id)
+        stmt = select(Policy).where(
+            Policy.llm_rule == llm_rule, Policy.for_user == user_id
+        )
         return db.session.scalar(stmt)
 
     @staticmethod
     def set_usage(
-            user: int,
-            conv_id: int,
-            llm_rule: LLMRule,
-            used_tokens: int
+        user: int, conv_id: int, llm_rule: LLMRule, used_tokens: int
     ) -> Usage:
         """
         Sets the usage for the given user in the given LLM rule context.
@@ -295,11 +306,11 @@ class TimDatabase:
         usage = TimDatabase.get_usage(llm_rule, user)
         if not usage:
             usage = Usage(
-                user = user,
-                conversation_id = conv_id,
-                llm_rule_id = llm_rule.id,
-                llm_rule = llm_rule,
-                used_tokens = used_tokens
+                user=user,
+                conversation_id=conv_id,
+                llm_rule_id=llm_rule.id,
+                llm_rule=llm_rule,
+                used_tokens=used_tokens,
             )
             db.session.add(usage)
         else:
