@@ -91,18 +91,6 @@ class MessageData:
     max_tokens: int
 
 
-def sum_chunks(iterable: Iterable[ModelResponse]) -> ModelResponse:
-    whole_msg: str = ""
-    usage: Usage | None = None
-    for chunk in iterable:
-        if chunk.delta:
-            whole_msg += chunk.delta
-        if chunk.usage:
-            usage = chunk.usage
-
-    return ModelResponse(content=whole_msg, usage=usage)
-
-
 class Rag:
     registry: ModelRegistry = ModelRegistry(SUPPORTED_MODELS)
     models: dict[int, ChatModel] = {}
@@ -116,7 +104,7 @@ class Rag:
         model_id: str,
         api_key: str,
         base_url: str | None = None,
-    ):
+    ) -> None:
         """
         Model spec need not specify the base_url.
         Note that if model with identifier exists it is overwritten.
@@ -166,13 +154,17 @@ class Rag:
         return False
 
     def answer(
-        self, request_data: MessageData, identifier: int
-    ) -> Iterable[ModelResponse]:
+        self,
+        request_data: MessageData,
+        identifier: int,
+        stream: bool = False,
+    ) -> Iterable[ModelResponse] | ModelResponse:
         """
         Give an answer to the user using the model.
 
         :param request_data: Information for the prompt.
         :param identifier: identifier of the model to be used.
+        :param stream: Return iterable model answer.
         :raises KeyError: If the model isn't created.
         :raises ModelError: If failed to generate an answer.
         :return: Model answer in iterable chunks.
@@ -183,16 +175,15 @@ class Rag:
 
         model = self.models[identifier]
         messages = self.build_prompt(request_data)
+        options = GenerateOptions()
 
-        if model.get_info().supports_streaming:
-            stream = model.generate_stream(messages, GenerateOptions())
-        else:
-            res: ModelResponse = model.generate(messages, GenerateOptions())
-            stream = [ModelResponse(delta=res.content, usage=res.usage)]
-
-        # TODO: answer post processing
-        # Include the urls/document ids?
-        return stream
+        if stream:
+            if model.get_info().supports_streaming:
+                return model.generate_stream(messages, options)
+            else:
+                res = model.generate(messages, options)
+                return [ModelResponse(delta=res.content, usage=res.usage)]
+        return model.generate(messages, options)
 
     def get_supported_models(
         self, provider: Provider | None = None
