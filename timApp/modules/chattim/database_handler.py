@@ -91,6 +91,7 @@ class TimDatabase:
         current_mode: str,
         total_tokens_spent: int,
         indexed_chunk_ids: list[int],
+        system_prompt_path: str,
         agent: str,
         conv_time_window: int,
         policy: list[Policy],
@@ -106,6 +107,7 @@ class TimDatabase:
         :param current_mode: Mode of the plugin instance: summarizing, creative or balanced.
         :param total_tokens_spent: The total number of tokens spent.
         :param indexed_chunk_ids:
+        :param system_prompt_path: TIM path for an optional custom system prompt.
         :param agent: LLm agent.
         :param conv_time_window: Time window for the conversation in minutes.
         :param policy: List of policies related to the LLMRule instance.
@@ -123,6 +125,7 @@ class TimDatabase:
                 current_mode=current_mode,
                 total_tokens_spent=total_tokens_spent,
                 indexed_chunk_ids=indexed_chunk_ids,
+                system_prompt_path=system_prompt_path,
                 agent=agent,
                 conv_time_window=conv_time_window,
             )
@@ -144,6 +147,7 @@ class TimDatabase:
                 rule.agent = agent
             if conv_time_window:
                 rule.conv_time_window = conv_time_window
+            rule.system_prompt_path = system_prompt_path
         rule.policy.extend(policy)
         rule.usage.extend(usage)
         db.session.commit()
@@ -168,6 +172,7 @@ class TimDatabase:
                 current_mode="",
                 total_tokens_spent=0,
                 indexed_chunk_ids=[],
+                system_prompt_path="",
                 agent="",
                 conv_time_window=0,
             )
