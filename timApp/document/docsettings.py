@@ -165,6 +165,7 @@ class DocSettings:
     print_settings_key = "print_settings"
     preamble_key = "preamble"
     show_authors_key = "show_authors"
+    par_author_only_edit_key = "parAuthorOnlyEdit"
     read_expiry_key = "read_expiry"
     add_par_button_text_key = "add_par_button_text"
     mathtype_key = "math_type"
@@ -521,6 +522,9 @@ class DocSettings:
 
     def show_authors(self, default=False):
         return self.__dict.get(self.show_authors_key, default)
+
+    def par_author_only_edit(self, default=False):
+        return self.__dict.get(self.par_author_only_edit_key, default)
 
     def read_expiry(self, default=timedelta(weeks=9999)) -> timedelta:
         r = self.__dict.get(self.read_expiry_key)
