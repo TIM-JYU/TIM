@@ -462,7 +462,7 @@ def update_users(ug: UserGroup, args: SCIMGroupModel) -> None:
                 user = existing_accounts_by_email_dict.get(u.primary_email)
                 if user:
                     if not user.is_email_user:
-                        # Special case: if the user is from HAKA and has unique codes set,
+                        # Special case: if the user has unique codes set (i.e. has logged in via Haka at some point),
                         # we can technically update the user's information.
                         # We rely on Haka information being correct, so we can be sure that
                         # the imported user and the existing users match.
@@ -476,9 +476,8 @@ def update_users(ug: UserGroup, args: SCIMGroupModel) -> None:
                         allow_info_update = current_app.config[
                             "SCIM_ALLOW_UPDATE_HAKA_USER_INFO"
                         ]
-                        if not allow_info_update or (
-                            user.origin != UserOrigin.Haka or not user.uniquecodes
-                        ):
+                        can_update_info = allow_info_update and user.uniquecodes
+                        if not can_update_info:
                             raise SCIMException(
                                 422,
                                 f"Key (email)=({user.email}) already exists. Conflicting username is: {u.value}",
