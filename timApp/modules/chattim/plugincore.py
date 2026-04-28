@@ -3,8 +3,6 @@ import uuid
 from dataclasses import dataclass, field
 from unicodedata import normalize, category
 
-from openai import models
-
 from timApp.timdb.dbaccess import get_files_path
 from timApp.auth.get_user_rights_for_item import UserItemRights
 from timApp.item.item import Item
@@ -18,16 +16,14 @@ from timApp.modules.chattim.rag import (
     Rag,
     MessageData,
     RagMode,
-    ModelSpec,
     Message,
     Iterable,
-    sum_chunks,
     ModelInfo,
 )
 from typing import Generic, TypeVar, TypedDict, cast
 
 from timApp.modules.chattim.model import (
-    ModelResponseChunk,
+    ModelResponse,
     Usage,
     GenericApiClient,
     Provider,
@@ -93,7 +89,7 @@ class PreparedChatRequest:
     caller_id: str
     document_id: str
     user_input: str
-    iterable: Iterable[ModelResponseChunk]
+    response: Iterable[ModelResponse] | ModelResponse
 
 
 class PluginCore:
@@ -117,12 +113,15 @@ class PluginCore:
         caller_id: int,
         document_id: int,
         user_input: str,
+        *,
+        stream: bool = False,
     ) -> Result[PreparedChatRequest, str]:
         """Prepare the chat request.
 
         :param caller_id: The id of the caller.
         :param document_id: The id of the document.
         :param user_input: User input.
+        :param stream: Use streaming for model response.
         :return: Result of the prepared chat request.
         """
         if not self._instance_exists(document_id):
@@ -163,20 +162,20 @@ class PluginCore:
         )
 
         try:
-            iterable: Iterable[ModelResponseChunk] = self.rag.answer(
-                msg_data,
-                identifier=document_id,
-            )
+            answer = self.rag.answer(msg_data, identifier=document_id, stream=stream)
         except ModelError as e:
             return Result(error=str(e))
         except Exception as e:
             return Result(error=str(e))
 
+        # TODO: answer post processing
+        # Add the citations to the context used
+        # Include TIM doc ids etc, and convert to TIM paths
         prepared = PreparedChatRequest(
             caller_id=caller_id_str,
             document_id=document_id_str,
             user_input=validated_input,
-            iterable=iterable,
+            response=answer,
         )
         return Result(value=prepared)
 
@@ -186,7 +185,7 @@ class PluginCore:
         plugin_id: str,
         caller_id: str,
         user_input: str,
-        assistant_msg: str,
+        assistant_answer: str,
         timestamp_user: int,
         timestamp_answer: int,
         usage: Usage | None,
@@ -196,7 +195,7 @@ class PluginCore:
         :param plugin_id: The id of the plugin or document.
         :param caller_id: The id of the caller.
         :param user_input: The input of the caller.
-        :param assistant_msg: The assistant message.
+        :param assistant_answer: The assistant message.
         :param timestamp_user: The timestamp of the user message.
         :param timestamp_answer: The timestamp of the answer.
         :param usage: The usage of the assistant message generation.
@@ -213,7 +212,7 @@ class PluginCore:
                 ),
                 ChatMessage(
                     role="assistant",
-                    content=assistant_msg,
+                    content=assistant_answer,
                     usage=usage,
                     timestamp=timestamp_answer,
                 ),
@@ -229,23 +228,27 @@ class PluginCore:
     ) -> Result[str | None, str | None]:
         timestamp_user = ChatMessage.ts_ms()
         # TODO: Do we save user messages to disk if error occurred from some of the checks or just discard?
-        prep = self._prepare_chat_request(caller_id, document_id, user_input)
+        prep = self._prepare_chat_request(
+            caller_id, document_id, user_input, stream=False
+        )
         if not prep.ok() or not prep.value:
             return Result(error=prep.error)
         p = prep.value
 
-        chunk: ModelResponseChunk = sum_chunks(p.iterable)
-        whole_msg = chunk.delta or ""
-        usage = chunk.usage
+        assert isinstance(p.response, ModelResponse)
+        response: ModelResponse = p.response
+        whole_msg = response.content or ""
+        usage = response.usage
 
         # TODO: viestit arkistoidaan
 
+        # TODO: save user message even if model response fails?
         timestamp_answer = ChatMessage.ts_ms()
         self._save_messages(
             plugin_id=p.document_id,
             caller_id=p.caller_id,
             user_input=p.user_input,
-            assistant_msg=whole_msg,
+            assistant_answer=whole_msg,
             timestamp_user=timestamp_user,
             timestamp_answer=timestamp_answer,
             usage=usage,
@@ -258,41 +261,46 @@ class PluginCore:
         caller_id: int,
         document_id: int,
         user_input: str,
-    ) -> Result[Iterable[ModelResponseChunk], str]:
+    ) -> Result[Iterable[ModelResponse], str]:
         timestamp_user = ChatMessage.ts_ms()
-        prep = self._prepare_chat_request(caller_id, document_id, user_input)
+        prep = self._prepare_chat_request(
+            caller_id, document_id, user_input, stream=True
+        )
         if not prep.ok() or not prep.value:
             return Result(error=prep.error)
         p = prep.value
 
+        assert isinstance(p.response, Iterable)
+        stream: Iterable[ModelResponse] = p.response
+
         # TODO: return only the string chunks or the usage as well?
-        def gen() -> Iterable[ModelResponseChunk]:
-            whole_msg: str = ""
+        def gen() -> Iterable[ModelResponse]:
+            full_answer: str = ""
             usage: Usage | None = None
 
             # Collect the chunk message and usage
-            def apply_chunk(c: ModelResponseChunk) -> None:
-                nonlocal whole_msg, usage
+            def apply_chunk(c: ModelResponse) -> None:
+                nonlocal full_answer, usage
                 if c.delta:
-                    whole_msg += c.delta
+                    full_answer += c.delta
                 if c.usage:
                     usage = c.usage
 
             try:
                 # Yield chunks to the caller
-                for chunk in p.iterable:
+                for chunk in stream:
                     apply_chunk(chunk)
                     yield chunk
             finally:
                 # Drain the remaining chunks if the client disconnected mid-stream
-                for chunk in p.iterable:
+                for chunk in stream:
                     apply_chunk(chunk)
                 timestamp_answer = ChatMessage.ts_ms()
                 self._save_messages(
                     plugin_id=p.document_id,
                     caller_id=p.caller_id,
                     user_input=p.user_input,
-                    assistant_msg=whole_msg,
+                    assistant_answer=full_answer,
                     timestamp_user=timestamp_user,
                     timestamp_answer=timestamp_answer,
                     usage=usage,
@@ -379,9 +387,9 @@ class PluginCore:
 
         # TODO: remove hard coded api key and model
         api_key = os.getenv("OPENAI_API_KEY")
-        spec = ModelSpec(provider="openai", model_id="gpt-4.1-nano", api_key=api_key)
+        kwargs_model = dict(provider="openai", model_id="gpt-4.1-nano", api_key=api_key)
         try:
-            self.rag.add_model(spec, identifier=document_id)
+            self.rag.add_model(identifier=document_id, **kwargs_model)
         except ValueError as e:
             return Result(None, str(e))
 
@@ -416,7 +424,7 @@ class PluginCore:
 
     def get_history(self, caller_id: str, document_id: str) -> list[Message]:
         # TODO: fetch with time window
-        history = self.history_manager.get_history_n(document_id, caller_id, 10)
+        history = self.history_manager.get_history(document_id, caller_id, 10)
         return [Message(role=m.role, content=m.content) for m in history]
 
     def get_messages_tw(
