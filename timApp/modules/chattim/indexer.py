@@ -5,24 +5,23 @@ from openai import OpenAI
 import numpy as np
 import os
 from timApp.document.document import Document
+from datetime import datetime, timezone
+from timApp.modules.chattim.database_handler import TimDatabase
 
 
-# TODO mallien määrittely/valinta Indexer luokkaan?
+@dataclass
+class TextBlock:
+    text: str
+    tim_block_id: int
+    sub_block_id: int
+
+
 @dataclass
 class EmbeddingResponse:
     """list containing embeddings returned from the model"""
 
     embeddings: list[list[float]]
     used_tokens: int
-
-
-@dataclass
-class TextBlock:
-    """text block containing text and corresponding id"""
-
-    text: str
-    tim_block_id: int
-    sub_block_id: int
 
 
 @dataclass
@@ -45,11 +44,11 @@ class EmbeddingData:
 
     embedding: list[float]
     text: str
-    block_id: int
+    tim_block_id: int
     sub_block_id: int
     document_id: int
     # TODO better way to store date?
-    last_edited: str
+    embeddings_created: str
     # filename: str
 
 
@@ -205,28 +204,46 @@ class Indexer:
         :param documents: list of tim documents
         :return: number of tokens used"""
         tokens_used = 0
+
         for document in documents:
+            changelog = document.get_changelog(max_entries=1)
+
+            document_last_edited = changelog.entries[0].time
+            try:
+                with open(f"{self.root_path}/{document.doc_id}.json", "r") as file:
+                    embedding_file = json.load(file)
+                    if embedding_file:
+                        embeddings_created = embedding_file[0]["embeddings_created"]
+                        print(
+                            f"embeddings_created{embeddings_created}, document_last_edited{document_last_edited}"
+                        )
+                        if document_last_edited <= datetime.fromisoformat(
+                            embeddings_created
+                        ):
+                            self.indexed_page_ids.append(document.doc_id)
+                            continue
+            except Exception as e:
+                print(e)
+                pass
             chunks = self.get_blocks(doc=document)
-            texts: list[str] = []
-            for chunk in chunks:
-                texts.append(chunk.text)
+            texts = [chunk.text for chunk in chunks]
 
             embeddings = self.embedding_model.generate(texts)
 
             tokens_used += embeddings.used_tokens
-            # block_ids = list(range(len(chunks)))
-            # document_id = document.doc_id
+            block_ids = list(range(len(chunks)))
+            document_id = document.doc_id
             data = [
                 EmbeddingData(
                     embedding=embedding,
                     text=chunk.text,
-                    block_id=chunk.tim_block_id,
+                    tim_block_id=chunk.tim_block_id,
                     sub_block_id=chunk.sub_block_id,
-                    document_id=document.doc_id,
+                    document_id=document_id,
+                    embeddings_created=datetime.now(timezone.utc).isoformat(),
                 )
                 for (embedding, chunk) in zip(embeddings.embeddings, chunks)
             ]
-            print(data)
             data_dict = [asdict(obj) for obj in data]
             file_name = document.doc_id
             os.makedirs(self.root_path, exist_ok=True)
