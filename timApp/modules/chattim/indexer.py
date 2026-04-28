@@ -6,11 +6,12 @@ import numpy as np
 import os
 from timApp.document.document import Document
 from datetime import datetime, timezone
-from timApp.modules.chattim.database_handler import TimDatabase
 
 
 @dataclass
 class TextBlock:
+    """contains text from tim chunk and corresponding tim block id and sub block id"""
+
     text: str
     tim_block_id: int
     sub_block_id: int
@@ -32,6 +33,7 @@ class ContextResponse:
     tokens_used: int
 
 
+# maybe useless?
 @dataclass
 class EmbeddingData:
     """
@@ -204,7 +206,7 @@ class Indexer:
         :param documents: list of tim documents
         :return: number of tokens used"""
         tokens_used = 0
-
+        os.makedirs(self.root_path, exist_ok=True)
         for document in documents:
             changelog = document.get_changelog(max_entries=1)
 
@@ -222,7 +224,7 @@ class Indexer:
                         ):
                             self.indexed_page_ids.append(document.doc_id)
                             continue
-            except Exception as e:
+            except FileNotFoundError as e:
                 print(e)
                 pass
             chunks = self.get_blocks(doc=document)
@@ -231,27 +233,27 @@ class Indexer:
             embeddings = self.embedding_model.generate(texts)
 
             tokens_used += embeddings.used_tokens
-            block_ids = list(range(len(chunks)))
+
             document_id = document.doc_id
             data = [
-                EmbeddingData(
-                    embedding=embedding,
-                    text=chunk.text,
-                    tim_block_id=chunk.tim_block_id,
-                    sub_block_id=chunk.sub_block_id,
-                    document_id=document_id,
-                    embeddings_created=datetime.now(timezone.utc).isoformat(),
-                )
-                for (embedding, chunk) in zip(embeddings.embeddings, chunks)
+                {
+                    "embedding": embedding,
+                    "text": chunk.text,
+                    "tim_block_id": chunk.tim_block_id,
+                    "sub_block_id": chunk.sub_block_id,
+                    "document_id": document_id,
+                    "embeddings_created": datetime.now(timezone.utc).isoformat(),
+                }
+                for embedding, chunk in zip(embeddings.embeddings, chunks)
             ]
-            data_dict = [asdict(obj) for obj in data]
+
             file_name = document.doc_id
-            os.makedirs(self.root_path, exist_ok=True)
+
             try:
                 with open(f"{self.root_path}/{file_name}.json", "w") as f:
                     # print(self.root_path)
-                    json.dump(data_dict, f, indent=2)
-                    self.indexed_page_ids.append(file_name)
+                    json.dump(data, f, indent=2)
+                    self.indexed_page_ids.append(document.doc_id)
             except Exception as e:
                 print(f"Error saving embeddings {e}")
 
