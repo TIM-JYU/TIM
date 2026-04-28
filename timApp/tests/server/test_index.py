@@ -247,12 +247,12 @@ Lorem ipsum.
         self.login_test1()
         d = self.create_doc(initial_par=["# 1", "# 2", "# 3"])
         self.assertEqual(
-            d.document.get_index(default_view_ctx),
             [
                 ({"id": "section", "level": 1, "text": "1"}, []),
                 ({"id": "section-1", "level": 1, "text": "2"}, []),
                 ({"id": "section-2", "level": 1, "text": "3"}, []),
             ],
+            d.document.get_index(default_view_ctx),
         )
 
     def test_index_numeric_headings_with_newline(self):
@@ -260,12 +260,12 @@ Lorem ipsum.
         self.login_test1()
         d = self.create_doc(initial_par=["# 1\nfoo", "# 2", "# 3\n\nbar"])
         self.assertEqual(
-            d.document.get_index(default_view_ctx),
             [
                 ({"id": "section", "level": 1, "text": "1"}, []),
                 ({"id": "section-1", "level": 1, "text": "2"}, []),
                 ({"id": "section-2", "level": 1, "text": "3"}, []),
             ],
+            d.document.get_index(default_view_ctx),
         )
 
     def test_index_skip_level(self):

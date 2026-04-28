@@ -70,6 +70,9 @@ class IdeDocument:
 
 DISABLE_ANSWER_REVIEW_MODE = "answer_review"
 
+# Change the following if the calculation method of the HTML cache changes.
+HASH_SYSTEM_VERSION = "0.1"
+
 
 # TODO: Start moving DocSettings keys to this dataclass
 @dataclass
@@ -217,6 +220,7 @@ class DocSettings:
         self.doc = doc
         self.__dict = settings_dict if settings_dict else YamlBlock()
         self.macroinfo_cache = {}
+        self._normal_par_cache_key_hash = None
 
     def to_paragraph(self) -> DocParagraph:
         text = "```\n" + self.__dict.to_markdown() + "\n```"
@@ -545,18 +549,33 @@ class DocSettings:
             f"{macros}{macro_delim}{charmacros}{self.auto_number_headings()}{self.heading_format()}{self.mathtype()}{self.get_globalmacros()}{self.preamble()}{self.input_format()}{self.smart_punct()}{autocounters}{self.macro_lstrip_blocks()}{self.macro_trim_blocks()}"
         )
 
-    def get_document_cache_key_hash(self):
+    def get_normal_par_cache_key_hash(self):
         """
         Hash from important values that should be considered
         when caching the document. If any of these values change,
         the cache should be invalidated and recalculated.
-        :return: hash value for important values
+        :return: hash value for important values for normal par
+        """
+        if not self._normal_par_cache_key_hash:
+            self._normal_par_cache_key_hash = hashfunc(
+                f"{HASH_SYSTEM_VERSION}"
+                f"{self.autocounters()}{self.input_format()}{self.mathtype()}"
+                f"{self.smart_punct()}"
+                f"{self.macro_lstrip_blocks()}{self.macro_trim_blocks()}"
+            )
+        return self._normal_par_cache_key_hash
+
+    def get_heading_par_cache_key_hash(self):
+        """
+        Hash for pars that have headings either in #-format or
+        Html <h?> format.
+        :return: main hash for pars with headings
         """
         return hashfunc(
-            f"{self.autocounters()}{self.input_format()}{self.mathtype()}"
-            f"{self.auto_number_headings()}{self.heading_format()}"
-            f"{self.get_globalmacros()}{self.smart_punct()}"
-            f"{self.macro_lstrip_blocks()}{self.macro_trim_blocks()}"
+            f"{self.get_normal_par_cache_key_hash()}"
+            f"{self.heading_format()}"
+            f"{self.auto_number_headings()}"
+            f"{self.auto_number_start()}"
         )
 
     def math_preamble(self):
