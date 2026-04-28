@@ -487,25 +487,13 @@ class PluginCore:
         return True
 
     @staticmethod
-    def _owns_item(rights: list[UserItemRights]) -> bool:
-        """Expects that you have checked already that doc and user exist, throws otherwise"""
-
-        for right in rights:
-            if not right:
-                raise Exception(f"(_owns_items) given UserItemRight does not exist")
-
-        return True
-
-    @staticmethod
     def _parse_paths(paths: str) -> list[str]:
         """
         Gets a string, splits it with separator as "\n", removes empty entries and trims each entry
         :param paths:
         :return: list of paths or an empty list
         """
-        parts = [x.strip() for x in paths.split("\n") if x.strip()]
-
-        return parts
+        return [x.strip() for x in paths.split("\n") if x.strip()]
 
     def _student_policy_check(
         self, caller_id: int, document_id: int
@@ -520,7 +508,7 @@ class PluginCore:
 
         # check globalpolicy
         # TODO: impl
-        return Result(value="ok", error=None)
+        return Result(value="ok")
 
     def _fetch_docs_by_paths(
         self, paths: list[str]
@@ -554,13 +542,13 @@ class PluginCore:
         self, user_id: int, documents: list[Document]
     ) -> Result[bool | None, str | None]:
         """
-        Checks for all documents that the given user owns them
+        Checks for all documents that the given user owns them. Expects that user and given documents exist.
         :param user_id: User for which the right is checked
         :param documents: Document for which the user has or has no right
         :return: If all documents are owned [True, None]
                  If no documents are provided [True, None]
                  If not all documents are owned [False, msg on item not owned]
-                 if error happens [None, error_msg]
+                 If error happens:
         """
 
         for document in documents:

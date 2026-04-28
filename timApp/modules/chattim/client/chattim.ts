@@ -29,8 +29,8 @@ import {
     HttpEventType,
 } from "@angular/common/http";
 import {DomSanitizer} from "@angular/platform-browser";
-import type {ChatModel, ControlPanelSettings} from "./controlpanel";
 import {Users} from "tim/user/userService";
+import type {ChatModel, ControlPanelSettings} from "./controlpanel";
 import {ChatControlPanelComponent} from "./controlpanel";
 
 const PluginMarkupFields = t.intersection([
@@ -154,10 +154,11 @@ export class ChatTIMComponent
 
     onControlPanelToggle(isOpen: boolean) {
         const dialog = this.getModalDialog();
-        if (!dialog) return;
-        const panelEl = this.hostElement.nativeElement.querySelector(
-            ".settings-panel"
-        ) as HTMLElement | null;
+        if (!dialog) {
+            return;
+        }
+        const panelEl: HTMLElement | null =
+            this.hostElement.nativeElement.querySelector(".settings-panel");
 
         if (isOpen) {
             if (panelEl) {
@@ -191,7 +192,7 @@ export class ChatTIMComponent
 
     conversation: ChatEntry[] = [];
 
-    answer?: string; // TODO: needed?
+    answer?: string;
     error?: string;
     isRunning: boolean = false;
     userInput = "";
@@ -222,8 +223,10 @@ export class ChatTIMComponent
     private getModalDialog(): HTMLElement | null {
         const dialogFrame =
             this.hostElement.nativeElement.querySelector("tim-dialog-frame");
-        if (!dialogFrame) return null;
-        return dialogFrame.querySelector(".modal-dialog") as HTMLElement | null;
+        if (!dialogFrame) {
+            return null;
+        }
+        return dialogFrame.querySelector(".modal-dialog");
     }
 
     async ngAfterViewInit() {
@@ -284,23 +287,8 @@ export class ChatTIMComponent
         return PluginFields;
     }
 
-    /* Extracts the tim-document id from the taskidurl. */
     initDocId() {
-        const task_id_url: string = String(this.pluginMeta.getTaskIdUrl());
-        const id_str: string | undefined = task_id_url
-            .split("/")
-            .pop()
-            ?.split(".")[0];
-
-        this.document_id = Number(id_str);
-
-        if (this.document_id === 0) {
-            console.error(
-                "Warning: could not parse document_id from task_id_url: ${task_id_url}"
-            );
-
-            this.document_id = -1;
-        }
+        this.document_id = this.pluginMeta.getDocumentId() ?? -1;
     }
 
     /* Initialize the scrollable chat box. */
