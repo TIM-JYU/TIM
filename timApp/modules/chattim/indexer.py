@@ -17,6 +17,15 @@ class EmbeddingResponse:
 
 
 @dataclass
+class TextBlock:
+    """text block containing text and corresponding id"""
+
+    text: str
+    tim_block_id: int
+    sub_block_id: int
+
+
+@dataclass
 class ContextResponse:
     """list containing context returned from the model"""
 
@@ -36,6 +45,7 @@ class EmbeddingData:
     embedding: list[float]
     text: str
     block_id: int
+    sub_block_id: int
     document_id: int
     # filename: str
 
@@ -137,33 +147,55 @@ class Indexer:
     # tätä ei ehkä tarvita enään
 
     def chunk_text(
-        self, text: str, max_chunk_size: int = 600, overlap: int = 100
-    ) -> list[str]:
+        self, block, max_chunk_size: int = 2500, overlap: int = 200
+    ) -> list[TextBlock]:
         chunks = []
+        text = block["md"]
+        if not text:
+            return []
+        block_id = block["id"]
+        sub_block_id = 0
         sentences = text.split(". ")
-        current_chunk = ""
+        current_chunk = sentences[0]
 
-        for sentence in sentences:
+        for sentence in sentences[1:]:
             if (len(current_chunk) + len(sentence)) < max_chunk_size:
                 current_chunk += sentence + ". "
             else:
-                chunks.append(current_chunk)
+                chunks.append(
+                    TextBlock(
+                        text=current_chunk,
+                        tim_block_id=block_id,
+                        sub_block_id=sub_block_id,
+                    )
+                )
+                sub_block_id += 1
                 overlapping_text = current_chunk[-overlap:]
                 current_chunk = overlapping_text + ". " + sentence
+
         if (len(current_chunk)) > 0:
-            chunks.append(current_chunk)
+            chunks.append(
+                TextBlock(
+                    text=current_chunk, tim_block_id=block_id, sub_block_id=sub_block_id
+                )
+            )
+            sub_block_id += 1
         return chunks
 
     # TODO ei haeta mahdollisia plugin lohkoja
-    def get_tim_blocks(self, doc: Document) -> list[str]:
-        """returns the text chunks from provided tim document"""
+    def get_blocks(self, doc: Document) -> list[TextBlock]:
+        """returns the text chunks from provided tim document and splits long chunks into smaller chunks"""
+        blocks: list[TextBlock] = []
         try:
-            blocks = doc.export_raw_data()
-            text = [block["md"] for block in blocks]
+            tim_blocks = doc.export_raw_data()
+
+            for tim_block in tim_blocks:
+                sub_blocks = self.chunk_text(tim_block)
+                blocks.extend(sub_blocks)
         except Exception as e:
             print(f"Error getting tim blocks {e}")
 
-        return text
+        return blocks
 
     def create_embeddings(self, documents: list[Document]) -> int:
         """generates the data object containing embeddings and corresponding text chunks
@@ -171,20 +203,27 @@ class Indexer:
         :return: number of tokens used"""
         tokens_used = 0
         for document in documents:
-            chunks = self.get_tim_blocks(doc=document)
-            # TODO split long chunks into smaller chunks
-            embeddings = self.embedding_model.generate(chunks)
+            chunks = self.get_blocks(doc=document)
+            texts: list[str] = []
+            for chunk in chunks:
+                texts.append(chunk.text)
+
+            embeddings = self.embedding_model.generate(texts)
+
             tokens_used += embeddings.used_tokens
-            block_ids = list(range(len(chunks)))
-            document_id = document.doc_id
+            # block_ids = list(range(len(chunks)))
+            # document_id = document.doc_id
             data = [
                 EmbeddingData(
-                    embedding=embedding, text=text, block_id=i, document_id=document_id
+                    embedding=embedding,
+                    text=chunk.text,
+                    block_id=chunk.tim_block_id,
+                    sub_block_id=chunk.sub_block_id,
+                    document_id=document.doc_id,
                 )
-                for (embedding, text, i) in zip(
-                    embeddings.embeddings, chunks, block_ids
-                )
+                for (embedding, chunk) in zip(embeddings.embeddings, chunks)
             ]
+            print(data)
             data_dict = [asdict(obj) for obj in data]
             file_name = document.doc_id
             os.makedirs(self.root_path, exist_ok=True)
