@@ -20,7 +20,7 @@ from enum import Enum
 # TODO: maybe add instruction to include the citations to the tim blocks
 # if the context includes the block ids
 _DEFAULT_SYSTEM_PROMPT_RETRIEVE = """
-You are a RAG chatbot specializing in providing answers based solely on the given material and summarizing the information.
+You are a chatbot specializing in providing answers based solely on the given material and summarizing the information.
 
 ROLE:
 - Answer the user by using only the provided material context as your source of truth.
@@ -85,6 +85,7 @@ class RagMode(Enum):
 @dataclass
 class MessageData:
     user_prompt: str
+    system_prompt: str | None
     context: str
     chat_history: list[Message]
     mode: RagMode
@@ -206,7 +207,9 @@ class Rag:
     def build_prompt(self, message_data: MessageData) -> list[Message]:
         """Build the message list to send to the model."""
         mode: RagMode = message_data.mode
-        system_prompt: list[Message] = self.system_message(mode)
+        system_prompt: list[Message] = self.system_message(
+            mode, message_data.system_prompt
+        )
         content: str = message_data.user_prompt
         history: list[Message] = message_data.chat_history
         context: str = message_data.context
@@ -238,10 +241,14 @@ class Rag:
 
         :param mode: The used assistant mode.
         :param extension: Additional instruction to add to the system prompt.
+                          Replaces the default system prompt if mode is CREATIVE.
+                          Else appends to the default system prompt.
         """
         prompt = self._default_system_prompt(mode)
         system_prompt = [Message(role="system", content=prompt)]
         if extension is not None:
-            extension_content = "ADDITIONAL INSTRUCTION:\n" + extension
+            if mode == RagMode.CREATIVE:
+                return [Message(role="system", content=extension)]
+            extension_content = "ADDITIONAL INSTRUCTION:\n\n" + extension
             system_prompt.append(Message(role="system", content=extension_content))
         return system_prompt
