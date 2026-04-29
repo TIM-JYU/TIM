@@ -11,6 +11,7 @@ export interface ControlPanelSettings extends Record<string, JsonValue> {
     llm_mode: string;
     max_tokens: number;
     tim_paths: string;
+    system_prompt_path: string;
 }
 
 @Component({
@@ -117,6 +118,25 @@ export interface ControlPanelSettings extends Record<string, JsonValue> {
                     </div>
                 </div>
 
+                <!-- Add a custom system prompt -->
+                <div class="settings-row">
+                    <button class="btn btn-link settings-section-btn"
+                            (click)="promptOpen = !promptOpen">
+                    <span class="glyphicon"
+                          [class.glyphicon-chevron-right]="!promptOpen"
+                          [class.glyphicon-chevron-down]="promptOpen">
+                    </span>
+                        Set system prompt path:
+                    </button>
+                    <div *ngIf="promptOpen" class="settings-section-body">
+                        <input type="text" class="form-control"
+                               style="width: 100%"
+                               placeholder="users/user/prompt"
+                               [(ngModel)]="systemPromptPath"
+                        >
+                    </div>
+                </div>
+
                 <!-- Save button that sends the chosen stuff -->
                 <div class="settings-row">
                     <button class="btn btn-primary" style="margin: 2px;"
@@ -136,6 +156,7 @@ export class ChatControlPanelComponent {
     modeOpen = false;
     tokensOpen = false;
     filesOpen = false;
+    promptOpen = false;
 
     @Input() localFilePaths!: string;
     @Input() error?: string;
@@ -143,6 +164,7 @@ export class ChatControlPanelComponent {
     @Input() selectedModel!: string;
     @Input() selectedMode!: string;
     @Input() maxTokens!: number;
+    @Input() systemPromptPath!: string;
     @Input() isTeacher: boolean = false;
 
     @Input() availableModels?: ChatModel[];
@@ -162,6 +184,7 @@ export class ChatControlPanelComponent {
             llm_mode: this.selectedMode,
             max_tokens: this.maxTokens,
             tim_paths: this.localFilePaths,
+            system_prompt_path: this.systemPromptPath,
         };
         console.log("sending: ", data);
         this.saveSettingsClick.emit(data);
