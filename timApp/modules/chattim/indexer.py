@@ -214,8 +214,15 @@ class Indexer:
             try:
                 with open(f"{self.root_path}/{document.doc_id}.json", "r") as file:
                     embedding_file = json.load(file)
-                    if embedding_file:
-                        embeddings_created = embedding_file[0]["embeddings_created"]
+                    if (
+                        embedding_file
+                        and isinstance(embedding_file, list)
+                        and len(embedding_file) > 0
+                    ):
+                        embeddings_created = embedding_file[0][
+                            "indexed_document_version"
+                        ]
+
                         print(
                             f"embeddings_created{embeddings_created}, document_last_edited{document_last_edited}"
                         )
@@ -242,7 +249,7 @@ class Indexer:
                     "tim_block_id": chunk.tim_block_id,
                     "sub_block_id": chunk.sub_block_id,
                     "document_id": document_id,
-                    "embeddings_created": datetime.now(timezone.utc).isoformat(),
+                    "indexed_document_version": document_last_edited.isoformat(),
                 }
                 for embedding, chunk in zip(embeddings.embeddings, chunks)
             ]
