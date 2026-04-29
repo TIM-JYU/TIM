@@ -5,6 +5,7 @@ from openai import OpenAI
 import numpy as np
 import os
 
+from openai.types import embedding_model
 from sqlalchemy.cyextension.processors import date_cls
 
 from timApp.document.document import Document
@@ -136,6 +137,9 @@ class OpenAiEmbeddingModel(EmbeddingModel):
     def change_key(self, key: str):
         self.api_key = key
 
+    def get_model_type(self) -> str:
+        return self.model_type
+
 
 # TODO tekstin paloitteluun eri vaihtoehtoja
 class Indexer:
@@ -147,9 +151,9 @@ class Indexer:
         self.root_path = os.path.join(file_path, "embeddings", "chattim")
         os.makedirs(self.root_path, exist_ok=True)
 
-    def delete_page(self, doc_id: int) -> bool:
+    def delete_page(self, doc_id: int, model_type) -> bool:
         """Deletes embedded page stored on disk"""
-        path = self._get_file_name(doc_id)
+        path = self._get_file_name(doc_id, model_type)
         if os.path.exists(path):
             os.remove(path)
             return True
@@ -208,7 +212,9 @@ class Indexer:
 
         return blocks
 
-    def create_embeddings(self, embedder_id: int, documents: list[Document]) -> int:
+    def create_embeddings(
+        self, embedder_id: int, documents: list[Document]
+    ) -> tuple[int, int]:
         """generates the data object containing embeddings and corresponding text chunks with specified model.
         Throws on non-existing embedder
         :param embedder_id: Stored model that is to be used for embeddings
@@ -224,7 +230,9 @@ class Indexer:
         os.makedirs(self.root_path, exist_ok=True)
         for document in documents:
             changelog = document.get_changelog(max_entries=1)
-            file_name = self._get_file_name(document.doc_id)
+            file_name = self._get_file_name(
+                document.doc_id, embedding_model.get_model_type()
+            )
 
             document_last_edited = changelog.entries[0].time
             try:
@@ -245,7 +253,7 @@ class Indexer:
                         if document_last_edited <= datetime.fromisoformat(
                             embeddings_created
                         ):
-                            self.indexed_page_ids.append(document.doc_id)
+                            # self.indexed_page_ids.append(document.doc_id)
 
                             continue
             except FileNotFoundError as e:
@@ -272,13 +280,15 @@ class Indexer:
                 for embedding, chunk in zip(embeddings.embeddings, chunks)
             ]
 
-            file_name = self._get_file_name(document.doc_id)
+            file_name = self._get_file_name(
+                document.doc_id, embedding_model.get_model_type()
+            )
 
             try:
                 with open(file_name, "w") as f:
                     # print(self.root_path)
                     json.dump(data, f, indent=2)
-                    self.indexed_page_ids.append(document.doc_id)
+                # self.indexed_page_ids.append(document.doc_id)
             except Exception as e:
                 failed_embeddings += 1
                 print(f"Error saving embeddings {e}")
@@ -288,12 +298,13 @@ class Indexer:
     def get_embeddings(
         self,
         doc_ids: list[int],
+        model_type: str,
     ):
         """returns embeddings for the indexed pages"""
         # TODO: update for inner divisoin
         page_embeddings = []
         for doc_id in doc_ids:
-            file_name = self._get_file_name(doc_id)
+            file_name = self._get_file_name(doc_id, model_type)
             try:
                 with open(file_name, "r") as file:
                     page_embeddings.append(json.load(file))
@@ -323,14 +334,13 @@ class Indexer:
             print(f"Prompt embedding error: {e}")
             ContextResponse(context="", tokens_used=tokens_used)
 
-        page_embeddings = self.get_embeddings(doc_ids)
+        page_embeddings = self.get_embeddings(doc_ids, embedding_model.get_model_type())
 
         embeddings: list[float] = []
         texts = []
 
         for page in page_embeddings:
             for chunk in page:
-                print(chunk["embedding"])
                 embeddings.append(chunk["embedding"])
                 texts.append(chunk["text"])
 
@@ -362,5 +372,5 @@ class Indexer:
     def change_key(self, identifier: int, key: str):
         self.embedding_models[identifier].change_key(key)
 
-    def _get_file_name(self, doc_id: int) -> str:
-        return f"{self.root_path}/{doc_id}.json"
+    def _get_file_name(self, doc_id: int, model_type: str) -> str:
+        return f"{self.root_path}/{doc_id}_{model_type}.json"

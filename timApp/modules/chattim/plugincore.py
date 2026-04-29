@@ -418,7 +418,9 @@ class PluginCore:
         emb_model = OpenAiEmbeddingModel(api_key=api_key)
         self.indexer.add_embedder(document_id, emb_model)
 
-        tokens_used = self.indexer.create_embeddings(document_id, documents=docs)
+        tokens_used, failed_embeddings = self.indexer.create_embeddings(
+            document_id, documents=docs
+        )
         # probably better ways to do this
 
         if failed_embeddings > 0:
