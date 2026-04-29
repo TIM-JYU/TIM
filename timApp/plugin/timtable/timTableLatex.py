@@ -19,6 +19,7 @@ default_font_size = 12
 default_width = "*"  # * = auto-width
 default_height = "0"  # Won't cut the first line of text even at 0pt.
 default_text_h_align = "l"
+default_text_v_align = ""  # Don't set a value if it was not specified in the table's markdown. LaTeX defaults to 'c'.
 
 # TODO: Fonts don't work inside the table if XeLaTeX is used!
 default_font_family = "qpl"
@@ -145,6 +146,8 @@ class Cell:
     """Cell background color."""
     h_align: str = default_text_h_align
     """Text horizontal alignment."""
+    v_align: str = ""
+    """Text vertical alignment."""
     cell_width: str = default_width
     """Width of the cell."""
     cell_height: str = default_height
@@ -243,14 +246,17 @@ class Cell:
         if "*" not in str(cell_width):
             cell_width = f"{cell_width}pt"
 
+        v_align = f"[{self.v_align}]" if self.v_align else default_text_v_align
+
         font_family_line = ""
         font_family_line_postfix = ""
         if self.font_family != default_font_family:
             font_family_line = rf"\fontfamily{{{self.font_family}}}\selectfont{{"
             font_family_line_postfix = f"}}"
+
         return (
             rf"\multicolumn{{{self.colspan}}}{{{v_border_and_align}}}{{"
-            rf"\multirow{{{self.rowspan}}}{{{cell_width}}}{{"
+            rf"\multirow{v_align}{{{self.rowspan}}}{{{cell_width}}}{{"
             f"{cell_color}"
             rf"\fontsize{{{self.font_size}}}{{{self.line_space}}}"
             rf"\selectfont{{\textcolor{self.text_color.to_latex_str()}{{{{{font_family_line}"
@@ -1016,6 +1022,26 @@ def get_text_horizontal_align(item: dict[str, Any], default: str | None) -> str 
     return str(align).strip()[:1]
 
 
+def get_text_vertical_align(item: dict[str, Any], default: str | None) -> str | None:
+    """
+    Parses text vertical alignment.
+
+    :param item: Row or cell data.
+    :param default: Value to be used if no set align.
+    :return: Set align or default.
+    """
+    align = item.get("verticalAlign", None)
+    # NOTE: LaTeX multirow only supports these vertical alignment options, so constrain to those for now
+    if align not in ["top", "center", "middle", "bottom"]:
+        return default
+    if align == "middle":
+        # LaTeX/multirow uses 'c' for 'center'
+        align = "center"
+    if align is None:
+        return default
+    return str(align).strip()[:1]
+
+
 def get_font_size(item: dict[str, Any], default_size: float | None) -> float | None:
     """
     Gets text size if set, and uses default otherwise.
@@ -1294,6 +1320,7 @@ class StyleOptions:
     height: float | None
     font_size: float | None
     h_align: str | None
+    v_align: str | None
     font_family: str | None
     font_weight: str | None
     span: tuple[int | None, int | None]
@@ -1307,6 +1334,7 @@ class StyleOptions:
         height = get_size(d, "height", None)
         font_size = get_font_size(d, None)
         h_align = get_text_horizontal_align(d, None)
+        v_align = get_text_vertical_align(d, None)
         font_family = get_font_family(d, None)
         font_weight = get_key_value(d, "fontWeight", None)
         span = get_span(d)
@@ -1319,6 +1347,7 @@ class StyleOptions:
             height,
             font_size,
             h_align,
+            v_align,
             font_family,
             font_weight,
             span,
@@ -1513,6 +1542,13 @@ def convert_table(
                     user_options.h_align,
                 ]
             )
+            v_align = decide_format(
+                [
+                    get_text_vertical_align(table_json, default_text_v_align),
+                    row_options.v_align,
+                    cell_options.v_align,
+                ]
+            )
             font_family = decide_format(
                 [
                     table_font_family,
@@ -1551,6 +1587,7 @@ def convert_table(
                 font_family=font_family or default_font_family,
                 font_size=font_size or default_font_size,
                 h_align=h_align or default_text_h_align,
+                v_align=v_align or default_text_v_align,
                 bg_color=bg_color,
                 text_color=text_color,
                 colspan=colspan or default_colspan,
