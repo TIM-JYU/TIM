@@ -201,11 +201,12 @@ class Indexer:
 
         return blocks
 
-    def create_embeddings(self, documents: list[Document]) -> int:
+    def create_embeddings(self, documents: list[Document]) -> tuple[int, int]:
         """generates the data object containing embeddings and corresponding text chunks
         :param documents: list of tim documents
-        :return: number of tokens used"""
+        :return: number of tokens used and number of failed embeddings"""
         tokens_used = 0
+        failed_embeddings = 0
         os.makedirs(self.root_path, exist_ok=True)
         for document in documents:
             changelog = document.get_changelog(max_entries=1)
@@ -230,6 +231,7 @@ class Indexer:
                             embeddings_created
                         ):
                             self.indexed_page_ids.append(document.doc_id)
+
                             continue
             except FileNotFoundError as e:
                 print(e)
@@ -262,9 +264,10 @@ class Indexer:
                     json.dump(data, f, indent=2)
                     self.indexed_page_ids.append(document.doc_id)
             except Exception as e:
+                failed_embeddings += 1
                 print(f"Error saving embeddings {e}")
 
-        return tokens_used
+        return tokens_used, failed_embeddings
 
     # TODO dataclass for page_embeddings?
     def get_embeddings(
