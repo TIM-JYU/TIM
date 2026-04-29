@@ -220,6 +220,8 @@ class Indexer:
 
         tokens_used = 0
 
+        failed_embeddings = 0
+        os.makedirs(self.root_path, exist_ok=True)
         for document in documents:
             changelog = document.get_changelog(max_entries=1)
             file_name = self._get_file_name(document.doc_id)
@@ -228,14 +230,23 @@ class Indexer:
             try:
                 with open(file_name, "r") as file:
                     embedding_file = json.load(file)
-                    if embedding_file:
-                        embeddings_created = embedding_file[0]["embeddings_created"]
+                    if (
+                        embedding_file
+                        and isinstance(embedding_file, list)
+                        and len(embedding_file) > 0
+                    ):
+                        embeddings_created = embedding_file[0][
+                            "indexed_document_version"
+                        ]
+
                         print(
                             f"embeddings_created{embeddings_created}, document_last_edited{document_last_edited}"
                         )
                         if document_last_edited <= datetime.fromisoformat(
                             embeddings_created
                         ):
+                            self.indexed_page_ids.append(document.doc_id)
+
                             continue
             except FileNotFoundError as e:
                 print(e)
@@ -256,7 +267,7 @@ class Indexer:
                     "tim_block_id": chunk.tim_block_id,
                     "sub_block_id": chunk.sub_block_id,
                     "document_id": document_id,
-                    "embeddings_created": datetime.now(timezone.utc).isoformat(),
+                    "indexed_document_version": document_last_edited.isoformat(),
                 }
                 for embedding, chunk in zip(embeddings.embeddings, chunks)
             ]
@@ -267,11 +278,12 @@ class Indexer:
                 with open(file_name, "w") as f:
                     # print(self.root_path)
                     json.dump(data, f, indent=2)
-                    print(json.dumps(data))  # TODO: delet
+                    self.indexed_page_ids.append(document.doc_id)
             except Exception as e:
+                failed_embeddings += 1
                 print(f"Error saving embeddings {e}")
 
-        return tokens_used
+        return tokens_used, failed_embeddings
 
     def get_embeddings(
         self,
