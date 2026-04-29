@@ -54,7 +54,7 @@ class GetRightsParams(GenericParams):
     pass
 
 
-def define_get_rights(params: GetRightsParams) -> dict:
+def get_rights(params: GetRightsParams) -> dict:
     doc = get_doc_or_abort(params.document_id)
     print(doc)
     # verify_teacher_access returns the access object if teacher, None if not
@@ -169,7 +169,7 @@ header: ChatTIM
     return result
 
 
-def define_ask_route(params: ChatTimAskParams) -> ChatTimAskResponse:
+def ask_route(params: ChatTimAskParams) -> ChatTimAskResponse:
     user_input = params.input
     document_id = params.document_id
     session_user_id = get_current_user_id()
@@ -183,7 +183,7 @@ def define_ask_route(params: ChatTimAskParams) -> ChatTimAskResponse:
     return response
 
 
-def define_ask_stream_route(params: ChatTimAskParams) -> Response:
+def ask_stream_route(params: ChatTimAskParams) -> Response:
     user_input = params.input
     document_id = params.document_id
 
@@ -208,7 +208,7 @@ def define_ask_stream_route(params: ChatTimAskParams) -> Response:
     )
 
 
-def define_get_settings(params: GenericParams) -> ChatTIMGetSettingsResponse:
+def get_settings(params: GenericParams) -> ChatTIMGetSettingsResponse:
     ret: ChatTIMGetSettingsResponse = {}
     document_id = params.document_id
     session_user_id = get_current_user_id()
@@ -222,7 +222,7 @@ def define_get_settings(params: GenericParams) -> ChatTIMGetSettingsResponse:
     return ret
 
 
-def define_save_settings(params: ChatTimSaveSettingsParams) -> PluginAnswerResp:
+def save_settings(params: ChatTimSaveSettingsParams) -> PluginAnswerResp:
     web: PluginAnswerWeb = {}
     result: PluginAnswerResp = {"web": web}
 
@@ -239,7 +239,7 @@ def define_save_settings(params: ChatTimSaveSettingsParams) -> PluginAnswerResp:
     return result
 
 
-def define_get_messages(params: GetMessagesParams) -> dict:
+def get_messages(params: GetMessagesParams) -> dict:
     user_id = str(get_current_user_id())
     document_id = str(params.document_id)
     amount = params.amount
@@ -256,7 +256,7 @@ def define_get_messages(params: GetMessagesParams) -> dict:
     return {"messages": messages}
 
 
-def define_save_api_key(params: SaveAPIKeyParams) -> Response:
+def save_api_key(params: SaveAPIKeyParams) -> Response:
     verify_logged_in()
 
     provider = params.model
@@ -273,7 +273,7 @@ def define_save_api_key(params: SaveAPIKeyParams) -> Response:
     # TODO avaimen tallennus validoimisen jälkeen, jos avain jo niin palautetaan tieto siitä
 
 
-def define_get_providers() -> list[str]:
+def get_providers() -> list[str]:
     response = plugincore.get_supported_providers()
     return response
 
@@ -295,13 +295,13 @@ chattim = create_nontask_blueprint(
     csrf=csrf,
 )
 
-register_route(chattim, "post", "ask", ChatTimAskParams, define_ask_route)
-register_route(chattim, "post", "askStream", ChatTimAskParams, define_ask_stream_route)
-register_route(chattim, "post", "getSettings", GenericParams, define_get_settings)
+register_route(chattim, "post", "ask", ChatTimAskParams, ask_route)
+register_route(chattim, "post", "askStream", ChatTimAskParams, ask_stream_route)
+register_route(chattim, "post", "getSettings", GenericParams, get_settings)
 register_route(
-    chattim, "post", "saveSettings", ChatTimSaveSettingsParams, define_save_settings
+    chattim, "post", "saveSettings", ChatTimSaveSettingsParams, save_settings
 )
-register_route(chattim, "post", "getMessages", GetMessagesParams, define_get_messages)
-register_route(chattim, "post", "validate_api", SaveAPIKeyParams, define_save_api_key)
-register_route(chattim, "get", "get_providers", None, define_get_providers)
-register_route(chattim, "post", "getRights", GetRightsParams, define_get_rights)
+register_route(chattim, "post", "getMessages", GetMessagesParams, get_messages)
+register_route(chattim, "post", "validate_api", SaveAPIKeyParams, save_api_key)
+register_route(chattim, "get", "get_providers", None, get_providers)
+register_route(chattim, "post", "getRights", GetRightsParams, get_rights)
