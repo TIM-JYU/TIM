@@ -5,15 +5,16 @@ from openai import OpenAI
 import numpy as np
 import os
 from timApp.document.document import Document
-from timApp.modules.chattim.database_handler import TimDatabase
+from datetime import datetime, timezone
 
 
-# TODO mallien määrittely/valinta Indexer luokkaan?
 @dataclass
-class TextChunks:
-    """text chunks to vectorize"""
+class TextBlock:
+    """contains text from tim chunk and corresponding tim block id and sub block id"""
 
-    chunks: list[str]
+    text: str
+    tim_block_id: int
+    sub_block_id: int
 
 
 @dataclass
@@ -32,6 +33,7 @@ class ContextResponse:
     tokens_used: int
 
 
+# maybe useless?
 @dataclass
 class EmbeddingData:
     """
@@ -39,19 +41,23 @@ class EmbeddingData:
     :param text: text chunk
     :param block_id: id of the chunk in the tim document
     :param document_id: id of the tim document
+    :param date when file was last edited
     """
 
     embedding: list[float]
     text: str
-    block_id: int
+    tim_block_id: int
+    sub_block_id: int
     document_id: int
+    # TODO better way to store date?
+    embeddings_created: str
     # filename: str
 
 
 # TODO mallin valinta,
 #  mahdollisesti mallikohtaisia asetuksia?(task type,vektorin koko jne)
 class EmbeddingModel(Protocol):
-    def generate(self, text_chunks: TextChunks) -> EmbeddingResponse:
+    def generate(self, text_chunks: list[str]) -> EmbeddingResponse:
         ...
 
 
@@ -62,7 +68,7 @@ class GeminiEmbeddingModel(EmbeddingModel):
         self.api_key = api_key
         self.client = None
 
-    def generate(self, chunks: TextChunks) -> EmbeddingResponse:
+    def generate(self, chunks: list[str]) -> EmbeddingResponse:
         """generates embeddings from provided chunks"""
         if self.client is None:
             self.client = OpenAI(
@@ -71,7 +77,7 @@ class GeminiEmbeddingModel(EmbeddingModel):
             )
             # self.client = genai.Client(api_key=self.api_key)
 
-        text = chunks.chunks
+        text = chunks
 
         try:
             result = self.client.embeddings.create(
@@ -96,10 +102,10 @@ class OpenAiEmbeddingModel(EmbeddingModel):
         self.api_key = api_key
         self.client = OpenAI(api_key=self.api_key)
 
-    def generate(self, chunks: TextChunks) -> EmbeddingResponse:
+    def generate(self, chunks: list[str]) -> EmbeddingResponse:
         """generates embeddings from provided chunks"""
 
-        text = chunks.chunks
+        text = chunks
 
         try:
             result = self.client.embeddings.create(
@@ -145,66 +151,123 @@ class Indexer:
     # tätä ei ehkä tarvita enään
 
     def chunk_text(
-        self, text: str, max_chunk_size: int = 600, overlap: int = 100
-    ) -> TextChunks:
+        self, block, max_chunk_size: int = 2500, overlap: int = 200
+    ) -> list[TextBlock]:
         chunks = []
+        text = block["md"]
+        if not text:
+            return []
+        block_id = block["id"]
+        sub_block_id = 0
         sentences = text.split(". ")
-        current_chunk = ""
+        current_chunk = sentences[0]
 
-        for sentence in sentences:
+        for sentence in sentences[1:]:
             if (len(current_chunk) + len(sentence)) < max_chunk_size:
                 current_chunk += sentence + ". "
             else:
-                chunks.append(current_chunk)
+                chunks.append(
+                    TextBlock(
+                        text=current_chunk,
+                        tim_block_id=block_id,
+                        sub_block_id=sub_block_id,
+                    )
+                )
+                sub_block_id += 1
                 overlapping_text = current_chunk[-overlap:]
                 current_chunk = overlapping_text + ". " + sentence
+
         if (len(current_chunk)) > 0:
-            chunks.append(current_chunk)
-        return TextChunks(chunks=chunks)
+            chunks.append(
+                TextBlock(
+                    text=current_chunk, tim_block_id=block_id, sub_block_id=sub_block_id
+                )
+            )
+            sub_block_id += 1
+        return chunks
 
     # TODO ei haeta mahdollisia plugin lohkoja
-    def get_tim_blocks(self, doc: Document) -> TextChunks:
-        """returns the text chunks from provided tim document"""
+    def get_blocks(self, doc: Document) -> list[TextBlock]:
+        """returns the text chunks from provided tim document and splits long chunks into smaller chunks"""
+        blocks: list[TextBlock] = []
         try:
-            blocks = doc.export_raw_data()
-            text = [block["md"] for block in blocks]
+            tim_blocks = doc.export_raw_data()
+
+            for tim_block in tim_blocks:
+                sub_blocks = self.chunk_text(tim_block)
+                blocks.extend(sub_blocks)
         except Exception as e:
             print(f"Error getting tim blocks {e}")
 
-        return TextChunks(chunks=text)
+        return blocks
 
-    def create_embeddings(self, documents: list[Document]) -> int:
+    def create_embeddings(self, documents: list[Document]) -> tuple[int, int]:
         """generates the data object containing embeddings and corresponding text chunks
         :param documents: list of tim documents
-        :return: number of tokens used"""
+        :return: number of tokens used and number of failed embeddings"""
         tokens_used = 0
+        failed_embeddings = 0
+        os.makedirs(self.root_path, exist_ok=True)
         for document in documents:
-            chunks = self.get_tim_blocks(doc=document)
-            # TODO split long chunks into smaller chunks
-            embeddings = self.embedding_model.generate(chunks)
+            changelog = document.get_changelog(max_entries=1)
+
+            document_last_edited = changelog.entries[0].time
+            try:
+                with open(f"{self.root_path}/{document.doc_id}.json", "r") as file:
+                    embedding_file = json.load(file)
+                    if (
+                        embedding_file
+                        and isinstance(embedding_file, list)
+                        and len(embedding_file) > 0
+                    ):
+                        embeddings_created = embedding_file[0][
+                            "indexed_document_version"
+                        ]
+
+                        print(
+                            f"embeddings_created{embeddings_created}, document_last_edited{document_last_edited}"
+                        )
+                        if document_last_edited <= datetime.fromisoformat(
+                            embeddings_created
+                        ):
+                            self.indexed_page_ids.append(document.doc_id)
+
+                            continue
+            except FileNotFoundError as e:
+                print(e)
+                pass
+            chunks = self.get_blocks(doc=document)
+            texts = [chunk.text for chunk in chunks]
+
+            embeddings = self.embedding_model.generate(texts)
+
             tokens_used += embeddings.used_tokens
-            block_ids = list(range(len(chunks.chunks)))
+
             document_id = document.doc_id
             data = [
-                EmbeddingData(
-                    embedding=embedding, text=text, block_id=i, document_id=document_id
-                )
-                for (embedding, text, i) in zip(
-                    embeddings.embeddings, chunks.chunks, block_ids
-                )
+                {
+                    "embedding": embedding,
+                    "text": chunk.text,
+                    "tim_block_id": chunk.tim_block_id,
+                    "sub_block_id": chunk.sub_block_id,
+                    "document_id": document_id,
+                    "indexed_document_version": document_last_edited.isoformat(),
+                }
+                for embedding, chunk in zip(embeddings.embeddings, chunks)
             ]
-            data_dict = [asdict(obj) for obj in data]
+
             file_name = document.doc_id
-            os.makedirs(self.root_path, exist_ok=True)
+
             try:
                 with open(f"{self.root_path}/{file_name}.json", "w") as f:
                     # print(self.root_path)
-                    json.dump(data_dict, f, indent=2)
-                    self.indexed_page_ids.append(file_name)
+                    json.dump(data, f, indent=2)
+                    self.indexed_page_ids.append(document.doc_id)
             except Exception as e:
+                failed_embeddings += 1
                 print(f"Error saving embeddings {e}")
 
-        return tokens_used
+        return tokens_used, failed_embeddings
 
     # TODO dataclass for page_embeddings?
     def get_embeddings(
@@ -230,9 +293,7 @@ class Indexer:
 
         tokens_used = 0
         try:
-            prompt_embedding = self.embedding_model.generate(
-                TextChunks(chunks=[prompt])
-            )
+            prompt_embedding = self.embedding_model.generate([prompt])
             tokens_used = prompt_embedding.used_tokens
             prompt_embedding = np.array(prompt_embedding.embeddings[0])
 

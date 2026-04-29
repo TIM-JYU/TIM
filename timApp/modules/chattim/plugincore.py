@@ -419,10 +419,13 @@ class PluginCore:
         indexer = Indexer(emb_model, file_path)
 
         self.rag.add_indexer(indexer, identifier=document_id)
-        tokens_used = indexer.create_embeddings(documents=docs)
+        tokens_used, failed_embeddings = indexer.create_embeddings(documents=docs)
         # probably better ways to do this
-        if tokens_used == 0:
-            return Result(None, "Could not create embeddings for given documents")
+
+        if failed_embeddings > 0:
+            return Result(
+                None, f"Failed to create embeddings for {failed_embeddings} documents."
+            )
         print(f"Tokens used for indexing: {tokens_used}")
         self.list_of_instance_ids.append(
             document_id
