@@ -100,6 +100,7 @@ class PluginCore:
     rag: Rag = Rag()
     history_manager: ConversationManager
     tim_database: TimDatabase = TimDatabase()
+    indexer: Indexer
     list_of_instance_ids: list[int] = []  # TODO: poista kun db:ssa rulet
     # TODO: a plugin instance specific variable? In global policy?
     max_input_len: int = 1024
@@ -111,6 +112,7 @@ class PluginCore:
             cache_ttl_s=60 * 15,
             cache_tail_len=64,
         )
+        self.indexer = Indexer(file_path)
 
     def _prepare_chat_request(
         self,
@@ -390,12 +392,9 @@ class PluginCore:
         # TODO:implementation for choosing embedding model provider
 
         emb_model = OpenAiEmbeddingModel(api_key=api_key)
+        self.indexer.add_embedder(document_id, emb_model)
 
-        file_path = get_files_path().as_posix()
-        indexer = Indexer(emb_model, file_path)
-
-        self.rag.add_indexer(indexer, identifier=document_id)
-        tokens_used = indexer.create_embeddings(documents=docs)
+        tokens_used = self.indexer.create_embeddings(document_id, documents=docs)
         # probably better ways to do this
         if tokens_used == 0:
             return Result(None, "Could not create embeddings for given documents")

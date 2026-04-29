@@ -4,6 +4,9 @@ import json
 from openai import OpenAI
 import numpy as np
 import os
+
+from sqlalchemy.cyextension.processors import date_cls
+
 from timApp.document.document import Document
 from datetime import datetime, timezone
 
@@ -60,11 +63,18 @@ class EmbeddingModel(Protocol):
     def generate(self, text_chunks: list[str]) -> EmbeddingResponse:
         ...
 
+    def change_key(self, new_key: str):
+        ...
+
+    def get_model_type(self) -> str:
+        ...
+
 
 class GeminiEmbeddingModel(EmbeddingModel):
     """gemini implementation of embedding model"""
 
-    def __init__(self, api_key: str):
+    def __init__(self, api_key: str, model_type: str = "gemini-embedding-001"):
+        self.model_type = model_type
         self.api_key = api_key
         self.client = None
 
@@ -78,11 +88,8 @@ class GeminiEmbeddingModel(EmbeddingModel):
             # self.client = genai.Client(api_key=self.api_key)
 
         text = chunks
-
         try:
-            result = self.client.embeddings.create(
-                input=text, model="gemini-embedding-001"
-            )
+            result = self.client.embeddings.create(input=text, model=self.model_type)
             # result = self.client.models.embed_content(model="gemini-embedding-001",contents=text,)
         except Exception as e:
             print(f"Error generating embeddings {e}")
@@ -94,11 +101,18 @@ class GeminiEmbeddingModel(EmbeddingModel):
             embeddings=embeddings, used_tokens=result.usage.total_tokens
         )
 
+    def change_key(self, key: str):
+        self.api_key = key
+
+    def get_model_type(self) -> str:
+        return self.model_type
+
 
 class OpenAiEmbeddingModel(EmbeddingModel):
     """openai implementation of embedding model"""
 
-    def __init__(self, api_key: str):
+    def __init__(self, api_key: str, model_type: str = "text-embedding-3-small"):
+        self.model_type = model_type
         self.api_key = api_key
         self.client = OpenAI(api_key=self.api_key)
 
@@ -108,10 +122,7 @@ class OpenAiEmbeddingModel(EmbeddingModel):
         text = chunks
 
         try:
-            result = self.client.embeddings.create(
-                input=text, model="text-embedding-3-small"
-            )
-
+            result = self.client.embeddings.create(input=text, model=self.model_type)
         except Exception as r:
             print("Error generating embeddings", r)
             return EmbeddingResponse(embeddings=[], used_tokens=0)
@@ -122,33 +133,28 @@ class OpenAiEmbeddingModel(EmbeddingModel):
             embeddings=embeddings, used_tokens=result.usage.total_tokens
         )
 
+    def change_key(self, key: str):
+        self.api_key = key
+
 
 # TODO tekstin paloitteluun eri vaihtoehtoja
 class Indexer:
-    def __init__(self, embedding_model: EmbeddingModel, file_path: str):
+    def __init__(self, file_path: str):
         """
-
-        :param embedding_model: embedding model object used for generating embeddings and for searching context
-        :param indexed_page_ids: list of page ids that are currently indexed
-        :param root_dir: root directory for storing index files
+        :param file_path: root directory for storing index files
         """
-        self.embedding_model = embedding_model
-        self.indexed_page_ids: list[int] = []
+        self.embedding_models: dict[int, EmbeddingModel] = {}
         self.root_path = os.path.join(file_path, "embeddings", "chattim")
-
-        # self.text_chunker = text_chunker
+        os.makedirs(self.root_path, exist_ok=True)
 
     def delete_page(self, doc_id: int) -> bool:
-        """Deletes the page from the index.
-        :param doc_id: id of the page to delete
-        :return: True if the page was deleted, otherwise False"""
-        if doc_id in self.indexed_page_ids:
-            self.indexed_page_ids.remove(doc_id)
+        """Deletes embedded page stored on disk"""
+        path = self._get_file_name(doc_id)
+        if os.path.exists(path):
+            os.remove(path)
             return True
-        else:
-            return False
 
-    # tätä ei ehkä tarvita enään
+        return False
 
     def chunk_text(
         self, block, max_chunk_size: int = 2500, overlap: int = 200
@@ -184,6 +190,7 @@ class Indexer:
                 )
             )
             sub_block_id += 1
+
         return chunks
 
     # TODO ei haeta mahdollisia plugin lohkoja
@@ -201,18 +208,25 @@ class Indexer:
 
         return blocks
 
-    def create_embeddings(self, documents: list[Document]) -> int:
-        """generates the data object containing embeddings and corresponding text chunks
+    def create_embeddings(self, embedder_id: int, documents: list[Document]) -> int:
+        """generates the data object containing embeddings and corresponding text chunks with specified model.
+        Throws on non-existing embedder
+        :param embedder_id: Stored model that is to be used for embeddings
         :param documents: list of tim documents
         :return: number of tokens used"""
+
+        embedding_model: EmbeddingModel = self.embedding_models[embedder_id]
+        model_type: str = embedding_model.get_model_type()
+
         tokens_used = 0
-        os.makedirs(self.root_path, exist_ok=True)
+
         for document in documents:
             changelog = document.get_changelog(max_entries=1)
+            file_name = self._get_file_name(document.doc_id)
 
             document_last_edited = changelog.entries[0].time
             try:
-                with open(f"{self.root_path}/{document.doc_id}.json", "r") as file:
+                with open(file_name, "r") as file:
                     embedding_file = json.load(file)
                     if embedding_file:
                         embeddings_created = embedding_file[0]["embeddings_created"]
@@ -222,15 +236,15 @@ class Indexer:
                         if document_last_edited <= datetime.fromisoformat(
                             embeddings_created
                         ):
-                            self.indexed_page_ids.append(document.doc_id)
                             continue
             except FileNotFoundError as e:
                 print(e)
                 pass
+
             chunks = self.get_blocks(doc=document)
             texts = [chunk.text for chunk in chunks]
 
-            embeddings = self.embedding_model.generate(texts)
+            embeddings = embedding_model.generate(texts)
 
             tokens_used += embeddings.used_tokens
 
@@ -247,50 +261,57 @@ class Indexer:
                 for embedding, chunk in zip(embeddings.embeddings, chunks)
             ]
 
-            file_name = document.doc_id
+            file_name = self._get_file_name(document.doc_id)
 
             try:
-                with open(f"{self.root_path}/{file_name}.json", "w") as f:
+                with open(file_name, "w") as f:
                     # print(self.root_path)
                     json.dump(data, f, indent=2)
-                    self.indexed_page_ids.append(document.doc_id)
+                    print(json.dumps(data))  # TODO: delet
             except Exception as e:
                 print(f"Error saving embeddings {e}")
 
         return tokens_used
 
-    # TODO dataclass for page_embeddings?
     def get_embeddings(
         self,
+        doc_ids: list[int],
     ):
         """returns embeddings for the indexed pages"""
+        # TODO: update for inner divisoin
         page_embeddings = []
-        for doc_id in self.indexed_page_ids:
+        for doc_id in doc_ids:
+            file_name = self._get_file_name(doc_id)
             try:
-                with open(f"{self.root_path}/{doc_id}.json", "r") as file:
+                with open(file_name, "r") as file:
                     page_embeddings.append(json.load(file))
             except Exception as e:
                 print(f"Error retrieving embeddings {e}")
 
         return page_embeddings
 
-    def get_context(self, prompt: str, k: int = 3) -> ContextResponse:
+    def get_context(
+        self, embedder_id: int, doc_ids: list[int], prompt: str, k: int = 3
+    ) -> ContextResponse:
         """returns the context for the prompt as list of text,and the number of tokens used
+        :param embedder_id: The embedder to be used for fetching the context
+        :param doc_ids: The documents in which we search for the prompts
         :param prompt: prompt that is used to search for context
         :param k: number of tim chunks to return
         :return: ContextResponse object containing the context and the number of tokens used
         """
+        embedding_model = self.embedding_models[embedder_id]
 
         tokens_used = 0
         try:
-            prompt_embedding = self.embedding_model.generate([prompt])
+            prompt_embedding = embedding_model.generate([prompt])
             tokens_used = prompt_embedding.used_tokens
             prompt_embedding = np.array(prompt_embedding.embeddings[0])
-
         except Exception as e:
             print(f"Prompt embedding error: {e}")
             ContextResponse(context="", tokens_used=tokens_used)
-        page_embeddings = self.get_embeddings()
+
+        page_embeddings = self.get_embeddings(doc_ids)
 
         embeddings: list[float] = []
         texts = []
@@ -319,3 +340,15 @@ class Indexer:
             context.append(text)
         context_string = ", ".join(context)
         return ContextResponse(context=context_string, tokens_used=tokens_used)
+
+    def add_embedder(self, identifier: int, embedder: EmbeddingModel):
+        self.embedding_models[identifier] = embedder
+
+    def remove_embedder(self, identifier: int):
+        del self.embedding_models[identifier]
+
+    def change_key(self, identifier: int, key: str):
+        self.embedding_models[identifier].change_key(key)
+
+    def _get_file_name(self, doc_id: int) -> str:
+        return f"{self.root_path}/{doc_id}.json"
