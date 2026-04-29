@@ -1,4 +1,4 @@
-<?xml version='1.0' encoding='UTF-8'?>
+<?xml version="1.0" encoding="UTF-8"?>
 <xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" version="1.2">
   <file source-language="en-US" datatype="plaintext" original="ng2.template" target-language="sv">
     <body>
@@ -11459,6 +11459,22 @@ Mata in flera användares adresser på separata rader eller åtskilda med kommat
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
           <context context-type="linenumber">647</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="931607032362944811" datatype="html">
+        <source> Welcome to use TIM&apos;s helper chatbot! </source>
+        <target state="new"> Welcome to use TIM&apos;s helper chatbot! </target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">modules/chattim/client/chattim.ts</context>
+          <context context-type="linenumber">92</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="6070908791363978183" datatype="html">
+        <source>Ask me about TIM related things</source>
+        <target state="new">Ask me about TIM related things</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">modules/chattim/client/chattim.ts</context>
+          <context context-type="linenumber">108,109</context>
         </context-group>
       </trans-unit>
     </body>

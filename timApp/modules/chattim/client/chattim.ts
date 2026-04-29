@@ -88,8 +88,8 @@ export interface ControlPanelData extends ControlPanelSettings {
             <ng-container body>
                 <div class="chattim-body">
                     <div class="scroll-box" #conversationScroll>
-                        <div *ngIf="conversation.length === 0" class="chat-welcome">
-                            Tervetuloa käyttämään TIM:in tekoälyavustajaa!
+                        <div i18n *ngIf="conversation.length === 0" class="chat-welcome">
+                            Welcome to use TIM's helper chatbot!
                         </div>
                         <div *ngFor="let entry of conversation">
                             <div class="chat-user">{{ entry.user.content }}</div>
@@ -103,9 +103,9 @@ export interface ControlPanelData extends ControlPanelSettings {
                     </div>
                     <label class="justify-center w-100">{{ inputStem }} </label>
                     <div class="d-flex flex-row w-100 justify-content-center chat-row">
-                    <textarea class="form-control chat-textarea"
+                    <textarea i18n-placeholder class="form-control chat-textarea" 
                               rows="2"
-                              placeholder="Kysy minulta TIM asioista"
+                              placeholder="Ask me about TIM related things"
                               style="resize: none; overflow: hidden; min-width: 0;"
                               [(ngModel)]="userInput"
                               (keyup.enter)="onEnter()"
