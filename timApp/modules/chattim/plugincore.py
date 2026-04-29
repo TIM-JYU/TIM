@@ -397,8 +397,7 @@ class PluginCore:
         self.rag.add_indexer(indexer, identifier=document_id)
         tokens_used, failed_embeddings = indexer.create_embeddings(documents=docs)
         # probably better ways to do this
-        if tokens_used == 0 and failed_embeddings == 0:
-            return Result(None, "All embeddings up to date.")
+
         if failed_embeddings > 0:
             return Result(
                 None, f"Failed to create embeddings for {failed_embeddings} documents."
