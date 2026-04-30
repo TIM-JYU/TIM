@@ -8,7 +8,11 @@ from timApp.timdb.dbaccess import get_files_path
 from timApp.auth.get_user_rights_for_item import UserItemRights
 from timApp.item.item import Item
 from timApp.document.docinfo import DocInfo
-from timApp.modules.chattim.indexer import OpenAiEmbeddingModel, Indexer
+from timApp.modules.chattim.indexer import (
+    OpenAiEmbeddingModel,
+    Indexer,
+    create_embedder,
+)
 from timApp.modules.chattim.database_handler import (
     TimDatabase,
     Document,
@@ -48,6 +52,7 @@ class InstanceAttributes:
     max_tokens: int = 2000
     tim_paths: str = ""
     system_prompt_path: str = ""
+    embedder_id: str = "text-embedding-3-small"
 
     @classmethod
     def default(cls) -> "InstanceAttributes":
@@ -156,7 +161,10 @@ class PluginCore:
         mode: RagMode = RagMode.RETRIEVE
         # TODO: No need for this attribute if we have character limit for input? Maybe keep as is for an option
         max_tokens_for_req = 99999
-        response = self.rag.get_context(prompt=validated_input, identifier=document_id)
+        # response = self.rag.get_context(prompt=validated_input, identifier=document_id)
+        response = self.indexer.get_context(
+            prompt=validated_input, identifier=document_id
+        )
         context = response.context
 
         system_prompt = self.get_system_prompt(caller_id, document_id)
@@ -357,7 +365,7 @@ class PluginCore:
         max_tokens: int = instance_settings.max_tokens
         tim_paths: str = instance_settings.tim_paths
         system_prompt_path: str = instance_settings.system_prompt_path.strip()
-
+        embedder: str = instance_settings.embedder_id
         if not self._document_exists(document_id):
             return Result(None, f"Document [{document_id}] does not exist")
 
@@ -415,11 +423,11 @@ class PluginCore:
 
         # TODO:implementation for choosing embedding model provider
 
-        emb_model = OpenAiEmbeddingModel(api_key=api_key)
+        emb_model = create_embedder(embedder_id=embedder)
         self.indexer.add_embedder(document_id, emb_model)
 
         tokens_used, failed_embeddings = self.indexer.create_embeddings(
-            document_id, documents=docs
+            identifier=document_id, documents=docs
         )
         # probably better ways to do this
 

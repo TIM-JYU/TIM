@@ -5,7 +5,6 @@ from openai import OpenAI
 import numpy as np
 import os
 
-from openai.types import embedding_model
 from sqlalchemy.cyextension.processors import date_cls
 
 from timApp.document.document import Document
@@ -141,6 +140,13 @@ class OpenAiEmbeddingModel(EmbeddingModel):
         return self.model_type
 
 
+def create_embedder(embedder_id: str) -> EmbeddingModel:
+    if embedder_id == "gemini-embedding-001":
+        return GeminiEmbeddingModel(api_key=os.environ["GEMINI_API_KEY"])
+
+    return OpenAiEmbeddingModel(api_key=os.environ["OPENAI_API_KEY"])
+
+
 # TODO tekstin paloitteluun eri vaihtoehtoja
 class Indexer:
     def __init__(self, file_path: str):
@@ -149,6 +155,7 @@ class Indexer:
         """
         self.embedding_models: dict[int, EmbeddingModel] = {}
         self.root_path = os.path.join(file_path, "embeddings", "chattim")
+        self.indexed_page_ids: list[int] = []
         os.makedirs(self.root_path, exist_ok=True)
 
     def delete_page(self, doc_id: int, model_type) -> bool:
@@ -213,7 +220,7 @@ class Indexer:
         return blocks
 
     def create_embeddings(
-        self, embedder_id: int, documents: list[Document]
+        self, identifier: int, documents: list[Document]
     ) -> tuple[int, int]:
         """generates the data object containing embeddings and corresponding text chunks with specified model.
         Throws on non-existing embedder
@@ -221,7 +228,7 @@ class Indexer:
         :param documents: list of tim documents
         :return: number of tokens used"""
 
-        embedding_model: EmbeddingModel = self.embedding_models[embedder_id]
+        embedding_model: EmbeddingModel = self.embedding_models[identifier]
         model_type: str = embedding_model.get_model_type()
 
         tokens_used = 0
@@ -253,7 +260,7 @@ class Indexer:
                         if document_last_edited <= datetime.fromisoformat(
                             embeddings_created
                         ):
-                            # self.indexed_page_ids.append(document.doc_id)
+                            self.indexed_page_ids.append(document.doc_id)
 
                             continue
             except FileNotFoundError as e:
@@ -288,7 +295,7 @@ class Indexer:
                 with open(file_name, "w") as f:
                     # print(self.root_path)
                     json.dump(data, f, indent=2)
-                # self.indexed_page_ids.append(document.doc_id)
+                    self.indexed_page_ids.append(document.doc_id)
             except Exception as e:
                 failed_embeddings += 1
                 print(f"Error saving embeddings {e}")
@@ -313,9 +320,7 @@ class Indexer:
 
         return page_embeddings
 
-    def get_context(
-        self, embedder_id: int, doc_ids: list[int], prompt: str, k: int = 3
-    ) -> ContextResponse:
+    def get_context(self, prompt: str, identifier: int, k: int = 3) -> ContextResponse:
         """returns the context for the prompt as list of text,and the number of tokens used
         :param embedder_id: The embedder to be used for fetching the context
         :param doc_ids: The documents in which we search for the prompts
@@ -323,7 +328,7 @@ class Indexer:
         :param k: number of tim chunks to return
         :return: ContextResponse object containing the context and the number of tokens used
         """
-        embedding_model = self.embedding_models[embedder_id]
+        embedding_model = self.embedding_models[identifier]
 
         tokens_used = 0
         try:
@@ -334,7 +339,9 @@ class Indexer:
             print(f"Prompt embedding error: {e}")
             ContextResponse(context="", tokens_used=tokens_used)
 
-        page_embeddings = self.get_embeddings(doc_ids, embedding_model.get_model_type())
+        page_embeddings = self.get_embeddings(
+            self.indexed_page_ids, embedding_model.get_model_type()
+        )
 
         embeddings: list[float] = []
         texts = []
