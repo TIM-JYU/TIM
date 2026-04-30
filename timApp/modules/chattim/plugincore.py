@@ -486,6 +486,9 @@ class PluginCore:
             document_id
         )  # TODO: for testing purposes remove when db ok or cache
 
+        rule = TimDatabase.set_llm_rule(document_id, caller_id, [], "", [], llm_mode, 0, [], model_id, 0, [], [])
+        TimDatabase.set_policy(0, rule, "", 0, 0, max_tokens, "global")
+
         return Result(True, None)
 
     def get_history(self, caller_id: str, document_id: str) -> list[Message]:
@@ -551,10 +554,13 @@ class PluginCore:
     def _instance_exists(self, document_id) -> bool:
         # TODO: todnäk pitää muistissa tiedetyt instanssi-idt jottei haeta aina tietokannalta turhaan
         # TODO: korvaa db haulla
-        print(
-            f"Checking if instance {document_id} exists, list of instances:{self.list_of_instance_ids}"
-        )
-        if document_id in self.list_of_instance_ids:
+        instance = TimDatabase.get_llm_rule(document_id)
+        #print(
+        #    f"Checking if instance {document_id} exists, list of instances:{self.list_of_instance_ids}"
+        #)
+        #if document_id in self.list_of_instance_ids:
+        #    return True
+        if instance:
             return True
         return False
 
