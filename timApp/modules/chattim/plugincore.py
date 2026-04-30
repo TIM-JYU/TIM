@@ -486,8 +486,8 @@ class PluginCore:
             document_id
         )  # TODO: for testing purposes remove when db ok or cache
 
-        rule = TimDatabase.set_llm_rule(document_id, caller_id, [], "", [], llm_mode, 0, [], model_id, 0, [], [])
-        TimDatabase.set_policy(0, rule, "", 0, 0, max_tokens, "global")
+        rule = self.tim_database.set_llm_rule(document_id, caller_id, [], "", [], llm_mode, 0, [], system_prompt_path, model_id, 0, [], [])
+        self.tim_database.set_policy(0, rule, "", 0, 0, max_tokens, "global")
 
         return Result(True, None)
 
@@ -554,7 +554,7 @@ class PluginCore:
     def _instance_exists(self, document_id) -> bool:
         # TODO: todnäk pitää muistissa tiedetyt instanssi-idt jottei haeta aina tietokannalta turhaan
         # TODO: korvaa db haulla
-        instance = TimDatabase.get_llm_rule(document_id)
+        instance = self.tim_database.get_llm_rule(document_id)
         #print(
         #    f"Checking if instance {document_id} exists, list of instances:{self.list_of_instance_ids}"
         #)
@@ -600,9 +600,14 @@ class PluginCore:
         :return: (can_make_req: bool, reason_for_deny: str)
         """
         # check userpolicy (if exists)
+        rule = self.tim_database.get_llm_rule(document_id)
+        student_policy = self.tim_database.get_student_policy(rule, caller_id)
+        if not student_policy:
+            return Result(value="")
 
         # check globalpolicy
-        # TODO: impl
+        # global_polcy = self.tim_database.get_global_policy(rule)
+
         return Result(value="ok")
 
     def _fetch_docs_by_paths(
