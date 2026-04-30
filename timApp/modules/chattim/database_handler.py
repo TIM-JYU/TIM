@@ -206,9 +206,7 @@ class TimDatabase:
         """
         Gets the LLM rule storing API keys of the given owner.
         """
-        stmt = select(LLMRule).where(
-            LLMRule.owner == owner_id, LLMRule.document_id == document_id
-        )
+        stmt = select(LLMRule).where(LLMRule.owner == owner_id)
         return db.session.scalar(stmt)
 
     @staticmethod
