@@ -114,7 +114,7 @@ class TimDatabase:
         :param usage: List of usages related to the LLMRule instance.
         :return: created LLMRule instance
         """
-        rule = TimDatabase.get_llm_rule(owner, document_id)
+        rule = TimDatabase.get_llm_rule(document_id)
         if not rule:
             rule = LLMRule(
                 document_id=document_id,
@@ -161,10 +161,10 @@ class TimDatabase:
         :param apikey: List of the API key providers, API keys and aliases of the owner. [apikey_provider,apikey,alias]
         :return: created LLMRule instance
         """
-        rule = TimDatabase.get_llm_rule(owner, 0)
+        rule = TimDatabase.get_api_keys(owner)
         if not rule:
             rule = LLMRule(
-                document_id=0,
+                document_id=-1,  # no document
                 owner=owner,
                 apikey=apikey,
                 chosen_key="",
@@ -178,7 +178,7 @@ class TimDatabase:
             )
             db.session.add(rule)
         else:
-            rule.apikey = apikey
+            rule.apikey = rule.apikey + apikey
         db.session.commit()
         return rule
 
@@ -194,9 +194,17 @@ class TimDatabase:
         db.session.commit()
 
     @staticmethod
-    def get_llm_rule(owner_id: int, document_id: int) -> LLMRule | None:
+    def get_llm_rule(document_id: int) -> LLMRule | None:
         """
-        Gets the LLM rule of the given owner in the given document.
+        Gets the LLM rule in the given document.
+        """
+        stmt = select(LLMRule).where(LLMRule.document_id == document_id)
+        return db.session.scalar(stmt)
+
+    @staticmethod
+    def get_api_keys(owner_id: int) -> LLMRule | None:
+        """
+        Gets the LLM rule storing API keys of the given owner.
         """
         stmt = select(LLMRule).where(
             LLMRule.owner == owner_id, LLMRule.document_id == document_id
