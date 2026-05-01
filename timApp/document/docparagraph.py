@@ -677,7 +677,7 @@ class DocParagraph:
         par: DocParagraph
         normal_par_hash: str
         heading_par_hash: str
-        auto_macro_hash: str
+        with_macros_hash: str
         heading_macro_par_hash: str
         auto_macros: dict
         all_headings_so_far: dict | None
@@ -834,7 +834,7 @@ class DocParagraph:
                     if is_heading:
                         par_html_hash = unloaded_par_info.heading_macro_par_hash
                     else:
-                        par_html_hash = unloaded_par_info.auto_macro_hash
+                        par_html_hash = unloaded_par_info.with_macros_hash
                     need_write = clear_cache or view_ctx.partial
                 par.html_cache[par_html_hash] = h
                 log_for_person(
@@ -863,8 +863,7 @@ class DocParagraph:
           (paragraph, hash of the auto macro values, auto macros, so far used headings, old HTML).
 
         """
-        cumulative_headings = []
-        all_headings_so_far = defaultdict(int)
+        cumulative_headings = defaultdict(int)
         my_headings_so_far = None
         unloaded_pars = []
         dyn = 0
@@ -903,16 +902,13 @@ class DocParagraph:
                 )
             par_headings = heading_cache.get(par.get_id())
 
-            if cumulative_headings:
-                # Performance optimization: copy only if the set of headings changes
-                if par_headings:
-                    all_headings_so_far = cumulative_headings[-1].copy()
-                else:
-                    all_headings_so_far = cumulative_headings[-1]
+            # Performance optimization: copy only if the set of headings changes
+            if par_headings:
+                all_headings_so_far = cumulative_headings.copy()
             else:
-                all_headings_so_far = defaultdict(int)
+                all_headings_so_far = cumulative_headings
 
-            cumulative_headings.append(all_headings_so_far)
+            cumulative_headings = all_headings_so_far
 
             if par_headings is not None:
                 # all_headings_so_far = all_headings_so_far.copy()
@@ -922,13 +918,13 @@ class DocParagraph:
                     # my_headings_so_far[h] = all_headings_so_far[h]
                     heading_par_hash = hashfunc(heading_par_hash + h)
             my_headings_so_far = all_headings_so_far
-            auto_macro_hash = hashfunc(settings_hash + str(auto_macros))
-            heading_macro_par_hash = hashfunc(auto_macro_hash + heading_par_hash)
+            with_macros_hash = hashfunc(settings_hash)
+            heading_macro_par_hash = hashfunc(settings_hash + heading_par_hash)
 
             old_html: str | None = None
             if not clear_cache and cached is not None:
                 log_for_person(
-                    lambda: f"check cache: auto_macro_hash: {auto_macro_hash} cache: {cached} of type {type(cached)} auto_macros: {str(auto_macros)}"
+                    lambda: f"check cache: with_macros_hash: {with_macros_hash} cache: {cached} of type {type(cached)} auto_macros: {str(auto_macros)}"
                 )
                 if isinstance(cached, str):  # Compatibility
                     old_html = cached
@@ -942,7 +938,7 @@ class DocParagraph:
                     for cache_key in (
                         normal_par_hash,
                         heading_par_hash,
-                        auto_macro_hash,
+                        with_macros_hash,
                         heading_macro_par_hash,
                     ):
                         cached_html = cached.get(cache_key)
@@ -959,7 +955,7 @@ class DocParagraph:
                     except StopIteration:
                         old_html = None
                     log_for_person(
-                        lambda: f"CACHE MISS: par {par.get_doc_id()}/{par.get_id()} with auto macro hash {auto_macro_hash}, auto macros: {auto_macros}, and cache: {cached} of type {type(cached)}"
+                        lambda: f"CACHE MISS: par {par.get_doc_id()}/{par.get_id()} with macros hash {with_macros_hash}, auto macros: {auto_macros}, and cache: {cached} of type {type(cached)}"
                     )
             else:
                 old_html = None
@@ -971,7 +967,7 @@ class DocParagraph:
                 par=par,
                 normal_par_hash=normal_par_hash,
                 heading_par_hash=heading_par_hash,
-                auto_macro_hash=auto_macro_hash,
+                with_macros_hash=with_macros_hash,
                 heading_macro_par_hash=heading_macro_par_hash,
                 auto_macros=auto_macros,
                 all_headings_so_far=my_headings_so_far,

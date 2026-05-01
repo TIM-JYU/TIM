@@ -7,6 +7,8 @@ import yaml
 from marshmallow import ValidationError, EXCLUDE
 from marshmallow.fields import Field
 
+from markdown.autocounters import TimSandboxedEnvironment
+from markdown.markdownconverter import expand_macros
 from timApp.answer.pointsumrule import PointSumRule
 from timApp.document.docparagraph import DocParagraph
 from timApp.document.macroinfo import MacroInfo
@@ -23,6 +25,8 @@ from tim_common.marshmallow_dataclass import field_for_schema
 if TYPE_CHECKING:
     from timApp.document.document import Document
     from timApp.user.preferences import BookmarkCollection
+
+RECURSIVE_SETTINGS_KEY = "recursive_settings"
 
 
 @dataclass
@@ -190,7 +194,7 @@ class DocSettings:
     answer_grace_period_key = "answer_grace_period"
 
     @classmethod
-    def from_paragraph(cls, par: DocParagraph):
+    def from_paragraph(cls, par: DocParagraph) -> "DocSettings | None":
         """Constructs DocSettings from the given DocParagraph.
 
         :param par: The DocParagraph to extract settings from.
@@ -206,9 +210,37 @@ class DocSettings:
         else:
             return DocSettings(par.doc, settings_dict=yaml_vals)
 
+    def do_recursive_settings(self, rec_settings: list[list[str]]):
+        # Change to code below if you want fieldmacros and urlmacros to be
+        # resolved in recursive settings, but it might lead to some
+        # security issues
+        #
+        # macroinfo = self.get_macroinfo(default_view_ctx)
+        # if not macroinfo.macro_map:
+        #    return
+        env = TimSandboxedEnvironment()
+        doc_macros = MacroInfo.get_doc_related_macros(self.doc)
+        for rec_sets in rec_settings:
+            for rec_set in rec_sets:
+                # macroinfo = self.get_macroinfo(default_view_ctx)
+                # macros = macroinfo.macro_map
+                final_settings = self.__dict
+                macros = final_settings.get("macros", None)
+                try:
+                    md = expand_macros(rec_set, doc_macros | macros, self, env)
+                    new_settings = YamlBlock.from_markdown(md)
+                    final_settings = final_settings.merge_with(new_settings)
+                    self.__dict = final_settings
+                except Exception as e:
+                    raise TimDbException(f"Invalid: {e}")
+
     @staticmethod
-    def parse_values(par) -> YamlBlock:
-        return YamlBlock.from_markdown(par.get_markdown())
+    def parse_values(par: DocParagraph) -> YamlBlock:
+        md = par.get_markdown()
+        if par.get_attr("settings", "") == "rec":
+            return YamlBlock({RECURSIVE_SETTINGS_KEY: md})
+
+        return YamlBlock.from_markdown(md)
 
     def get_setting_or_default(self, name: str, default: T) -> T:
         try:
@@ -472,6 +504,15 @@ class DocSettings:
 
     def exam_mode_themes(self) -> list[str]:
         return self.get_setting_or_default("exam_mode_themes", [])
+
+    def expand_rec_macros(self, s: str) -> str:
+        if s.startswith("rec:"):
+            s = s[4:]
+            macroinfo = self.get_macroinfo(default_view_ctx)
+            macros = macroinfo.get_macros()
+            env = macroinfo.jinja_env
+            s = expand_macros(s, macros, self, env)
+        return s
 
     def point_sum_rule(self, default=None) -> PointSumRule | None:
         psr_dict = self.__dict.get(self.point_sum_rule_key, default)
@@ -792,9 +833,30 @@ def resolve_settings_for_pars(pars: Iterable[DocParagraph]) -> YamlBlock:
 def __resolve_final_settings_impl(
     pars: Iterable[DocParagraph],
 ) -> tuple[YamlBlock, bool]:
+    """
+    If settings par, gets the setting dict.  If recursive settimgs par,
+    gets the Markdown and returns it as a dict under
+    the key "recursive_settings".  If reference par, resolves the reference and gets the settings from there.  If translation or citation par, first tries to get settings from the par itself and then resolves reference and gets settings from there.  Returns the merged settings from all pars and whether any settings were found.
+    :param pars: paragraphs to resolve settings for
+    :return: settings dict and true if had settings in any of pars.
+    """
     result = YamlBlock()
     had_settings = False
+    rec_settings = []
     for curr in pars:
+
+        def add_to_result_and_rec(local_settings: DocSettings | None):
+            nonlocal result
+            nonlocal had_settings
+            if not local_settings:
+                return
+            d = local_settings.get_dict()
+            rec = d.pop(RECURSIVE_SETTINGS_KEY, None)
+            if rec:
+                rec_settings.append(rec)
+            result = result.merge_with(d)
+            had_settings = True
+
         if not curr.is_setting():
             break
         if not curr.is_reference():
@@ -802,8 +864,7 @@ def __resolve_final_settings_impl(
                 settings = DocSettings.from_paragraph(curr)
             except TimDbException:
                 break
-            result = result.merge_with(settings.get_dict())
-            had_settings = True
+            add_to_result_and_rec(settings)
         else:
             curr_own_settings = None
 
@@ -829,10 +890,17 @@ def __resolve_final_settings_impl(
                 break
             ref_settings, ref_had_settings = __resolve_final_settings_impl(refs)
             if ref_had_settings:
+                rec = ref_settings.pop(RECURSIVE_SETTINGS_KEY, None)
+                if rec:
+                    rec_settings.append(rec)
                 result = result.merge_with(ref_settings)
                 had_settings = True
                 if is_tr_or_cit:
+                    rec = curr_own_settings.pop(RECURSIVE_SETTINGS_KEY, None)
+                    if rec:
+                        rec_settings.append(rec)
                     result = result.merge_with(curr_own_settings)
             else:
                 break
+    result[RECURSIVE_SETTINGS_KEY] = rec_settings
     return result, had_settings
