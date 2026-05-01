@@ -66,6 +66,9 @@ class YamlBlock:
     def get(self, key: str, default=None):
         return self.values.get(key, default)
 
+    def pop(self, key: str, default=None):
+        return self.values.pop(key, default)
+
     @staticmethod
     def from_markdown(md: str):
         md = strip_code_block(md)
