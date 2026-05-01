@@ -298,3 +298,52 @@ Field points: %%f1p%%
             r.cssselect(f"#{pars[1].id} .parContent")[0].text_content().strip(),
             "Anonymous users should not see any answers",
         )
+
+    def test_recursive_macros(self):
+        self.login_test1()
+        d = self.create_doc(
+            title="d1",
+            initial_par=r"""
+``` {settings=""}
+charmacros:
+  §: "4"
+macros:
+  p: Cat
+  color: red
+```
+
+``` {settings="rec"}
+charmacros:
+  w: t 
+macros:
+  first: §
+  animal: %%p%%
+```
+``` {settings="rec"}
+macros:
+  what: %%animal%% 
+  name: "doc: %%doctitle%%"
+css: |!!
+   .red { color: %%color%% !important; }
+!!  
+```
+""",
+        )
+        if d is None:
+            return
+        settings = d.document.get_settings()
+        self.assertEqual(
+            {
+                "charmacros": {"§": "4", "w": "t"},
+                "macros": {
+                    "p": "Cat",
+                    "color": "red",
+                    "first": 4,
+                    "animal": "Cat",
+                    "that": "Cat",
+                    "name": "doc: d1",
+                },
+                "css": ".red { color: red !important; }",
+            },
+            settings.get_dict(),
+        )

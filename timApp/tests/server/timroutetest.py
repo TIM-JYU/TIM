@@ -1,4 +1,5 @@
 """Defines the TimRouteTest class."""
+
 import base64
 import io
 import json
@@ -717,9 +718,9 @@ class TimRouteTestBase(TimDbTest):
                 f"/{plugin_type}/{task_id}/answer",
                 {
                     "input": user_input,
-                    "ref_from": {"docId": ref_from[0], "par": ref_from[1]}
-                    if ref_from
-                    else None,
+                    "ref_from": (
+                        {"docId": ref_from[0], "par": ref_from[1]} if ref_from else None
+                    ),
                     "abData": {
                         "saveTeacher": save_teacher,
                         "teacher": teacher,
@@ -740,9 +741,9 @@ class TimRouteTestBase(TimDbTest):
             f"/{plugin_type}/{task_id}/answer",
             {
                 "input": user_input,
-                "ref_from": {"docId": ref_from[0], "par": ref_from[1]}
-                if ref_from
-                else None,
+                "ref_from": (
+                    {"docId": ref_from[0], "par": ref_from[1]} if ref_from else None
+                ),
             },
             **kwargs,
         )
@@ -907,8 +908,8 @@ class TimRouteTestBase(TimDbTest):
         cite: int | None = None,
         template: str | None = None,
         title: str | None = None,
-        expect_status=200,
-        **kwargs,
+        expect_status: object = 200,
+        **kwargs: object,
     ) -> DocEntry | None:
         """Creates a new document.
 
@@ -1194,9 +1195,11 @@ class TimRouteTestBase(TimDbTest):
                 "doc_id": doc_id,
                 "points": points,
                 "velp_id": velp_id,
-                "visible_to": visible_to.value
-                if isinstance(visible_to, AnnotationVisibility)
-                else visible_to,
+                "visible_to": (
+                    visible_to.value
+                    if isinstance(visible_to, AnnotationVisibility)
+                    else visible_to
+                ),
                 "color": color,
                 "answer_id": answer_id,
                 "draw_data": draw_data,
@@ -1243,9 +1246,11 @@ class TimRouteTestBase(TimDbTest):
             "/update_annotation",
             {
                 "id": annotation_id,
-                "visible_to": visible_to.value
-                if isinstance(visible_to, AnnotationVisibility)
-                else visible_to,
+                "visible_to": (
+                    visible_to.value
+                    if isinstance(visible_to, AnnotationVisibility)
+                    else visible_to
+                ),
                 "points": points,
                 "color": color,
                 "coord": coord,
@@ -1388,9 +1393,11 @@ class TimRouteTestBase(TimDbTest):
         a = Answer(
             users_all=[user],
             task_id=f"{d.id}.{task_name}",
-            content=json.dumps({content_key: content})
-            if content_key is not None
-            else json.dumps(content),
+            content=(
+                json.dumps({content_key: content})
+                if content_key is not None
+                else json.dumps(content)
+            ),
             points=points,
             valid=valid,
             last_points_modifier=last_points_modifier,
