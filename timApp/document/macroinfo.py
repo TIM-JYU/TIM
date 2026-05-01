@@ -82,6 +82,18 @@ class MacroInfo:
 
         return self
 
+    @staticmethod
+    def get_doc_related_macros(doc: Document) -> dict[str, object]:
+        docinfo = doc.get_docinfo()
+        return {
+            "docid": doc.doc_id,
+            "docpath": docinfo.path,
+            "docdir": docinfo.location,
+            "doclang": docinfo.lang_id,
+            "doctitle": docinfo.title,
+            "docname": docinfo.short_name,
+        }
+
     def __post_init__(self) -> None:
         from timApp.tim_app import app
 
@@ -91,17 +103,7 @@ class MacroInfo:
             session.get("last_referrers", []) if session else []
         )
         if doc is not None:
-            docinfo = doc.get_docinfo()
-            self.macro_map.update(
-                {
-                    "docid": doc.doc_id,
-                    "docpath": docinfo.path,
-                    "docdir": docinfo.location,
-                    "doclang": docinfo.lang_id,
-                    "doctitle": docinfo.title,
-                    "docname": docinfo.short_name,
-                }
-            )
+            self.macro_map.update(MacroInfo.get_doc_related_macros(doc))
             urlmacros = doc.get_settings().urlmacros()
             if urlmacros:
                 self.macro_map.update(
