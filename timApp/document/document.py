@@ -329,7 +329,7 @@ class Document:
             self.own_settings = resolve_settings_for_pars(self.get_settings_pars())
         return self.own_settings
 
-    def get_settings(self) -> DocSettings:
+    def get_settings(self, show_errors: bool = False) -> DocSettings:
         cached = self.settings_cache
         if cached:
             return cached
@@ -352,7 +352,9 @@ class Document:
         if rec_settings:
             try:
                 settings.do_recursive_settings(rec_settings)
-            except TimDbException:
+            except TimDbException as e:
+                if show_errors:
+                    raise TimDbException(e)
                 pass
 
         return settings

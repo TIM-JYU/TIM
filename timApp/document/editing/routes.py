@@ -518,6 +518,7 @@ def preview_paragraphs(doc_id):
             edit_request=edit_request,
             edit_result=edit_result,
             extra_doc_settings=extra_doc_settings,
+            show_errors=True,
         )
     else:
         comment_html = md_to_html(text)
@@ -555,6 +556,7 @@ def par_response(
     partial_doc_pars: bool = False,
     extra_doc_settings: YamlBlock | None = None,
     for_view: ViewRoute | None = None,
+    show_errors: bool = False,
 ):
     """Return a JSON response containing updated paragraphs and updated HTMLs.
 
@@ -571,12 +573,20 @@ def par_response(
                              The option disables some checks that would be otherwise done for full paragraphs.
     :param extra_doc_settings: Extra settings to apply to the paragraph.
     :param for_view: The view route for which to generate the response. Affects what paragraphs to show.
+    :param show_errors: If True, shows error messages instead of ignoring them.
     :return: JSON object containing HTMLs, JS and CSS dependencies of changed paragraphs.
     """
     user_ctx = user_context_with_logged_in(None)
     doc = docu.document
     new_doc_version = doc.get_version()
-    settings = doc.get_settings()
+
+    # try:
+    settings = doc.get_settings(show_errors=False)
+    # except Exception as e:
+    #    pass  # TODO: How to get the error visible?
+    #    return json_response(
+    #        {"message": f"Failed to get document settings: {e}"}, status_code=400
+    #    )
 
     if extra_doc_settings:
         settings = DocSettings(doc, settings.get_dict().merge_with(extra_doc_settings))

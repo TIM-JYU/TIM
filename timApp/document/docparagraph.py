@@ -162,9 +162,7 @@ class DocParagraph:
         self.attrs: dict[str, str] | None = None
         self.nomacros = None
         self.ref_chain = None
-        self.answer_nr: int | None = (
-            None  # needed if variable tasks, None = not task at all or not variable task
-        )
+        self.answer_nr: int | None = None  # needed if variable tasks, None = not task at all or not variable task
         self.md = ""
         self.id = None
         self.ask_new: bool | None = None  # to send for plugins to force new question
@@ -633,7 +631,9 @@ class DocParagraph:
         from timApp.document.docsettings import DocSettings
 
         try:
-            DocSettings.from_paragraph(self)
+            settings = DocSettings.from_paragraph(self)
+            if settings is not None:
+                settings.check_recursive_settings()
         except TimDbException as e:
             return f'<div class="pluginError">Invalid settings: {e}</div>'
         return se.from_string("<pre>{{yml}}</pre>").render(yml=self.md)
@@ -874,7 +874,6 @@ class DocParagraph:
         settings_hash = settings.get_hash()
         normal_par_hash = settings.get_normal_par_cache_key_hash()
         heading_par_hash_base = settings.get_heading_par_cache_key_hash()
-        heading_par_hash = heading_par_hash_base
         log_for_person(
             lambda: f"Preloading {len(pars)} paragraphs ({', '.join(f'{p.get_doc_id()}/{p.get_id()}' for p in pars)}) with settings hash {settings_hash} and macros {macros}, clear cache: {clear_cache}"
         )
@@ -900,6 +899,7 @@ class DocParagraph:
                 raise TimDbException(
                     "Infinite recursion detected in get_auto_macro_values; the document may be broken."
                 )
+            heading_par_hash = hashfunc(heading_par_hash_base + str(auto_macros))
             par_headings = heading_cache.get(par.get_id())
 
             # Performance optimization: copy only if the set of headings changes
