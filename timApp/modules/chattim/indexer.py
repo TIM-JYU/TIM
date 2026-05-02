@@ -144,7 +144,9 @@ def create_embedder(embedder_id: str) -> EmbeddingModel:
     if embedder_id == "gemini-embedding-001":
         return GeminiEmbeddingModel(api_key=os.environ["GEMINI_API_KEY"])
 
-    return OpenAiEmbeddingModel(api_key=os.environ["OPENAI_API_KEY"])
+    return OpenAiEmbeddingModel(
+        api_key=os.environ["OPENAI_API_KEY"], model_type=embedder_id
+    )
 
 
 # TODO tekstin paloitteluun eri vaihtoehtoja

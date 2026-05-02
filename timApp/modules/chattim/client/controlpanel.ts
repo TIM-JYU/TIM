@@ -57,7 +57,24 @@ export interface ControlPanelSettings extends Record<string, JsonValue> {
                         </select>
                     </div>
                 </div>
-
+                <!-- Choose the embedding model -->
+                <div class="settings-row">
+                        <button class="btn btn-link settings-section-btn"
+                                (click)="embedOpen = !embedOpen">
+                        <span class="glyphicon"
+                              [class.glyphicon-chevron-right]="!embedOpen"
+                              [class.glyphicon-chevron-down]="embedOpen">
+                        </span>
+                            Embedding model: <strong>{{ embeddingModel }}</strong>
+                        </button>
+                        <div *ngIf="embedOpen" class="settings-section-body">
+                            <select class="form-control"
+                                    [(ngModel)]="embeddingModel">
+                                <option *ngFor="let m of embeddingModels" [ngValue]="m">{{ m }}</option>
+                            </select>
+                        </div>
+                    </div>
+                
                 <!-- Switch between summarizing, (balanced) and creative -->
                 <div class="settings-row">
                     <button class="btn btn-link settings-section-btn"
@@ -117,6 +134,7 @@ export interface ControlPanelSettings extends Record<string, JsonValue> {
                     </textarea>
                     </div>
                 </div>
+                
 
                 <!-- Add a custom system prompt -->
                 <div class="settings-row">
@@ -154,14 +172,16 @@ export class ChatControlPanelComponent {
     settingsOpen = false;
     modelOpen = false;
     modeOpen = false;
+    embedOpen = false;
     tokensOpen = false;
     filesOpen = false;
     promptOpen = false;
-
+    embeddingModels = ["text-embedding-3-small", "text-embedding-3-large"];
     @Input() localFilePaths!: string;
     @Input() error?: string;
     @Input() response?: string;
     @Input() selectedModel!: string;
+    @Input() embeddingModel!: string;
     @Input() selectedMode!: string;
     @Input() maxTokens!: number;
     @Input() systemPromptPath!: string;
@@ -185,6 +205,7 @@ export class ChatControlPanelComponent {
             max_tokens: this.maxTokens,
             tim_paths: this.localFilePaths,
             system_prompt_path: this.systemPromptPath,
+            embedder_id: this.embeddingModel,
         };
         console.log("sending: ", data);
         this.saveSettingsClick.emit(data);
