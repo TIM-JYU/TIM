@@ -210,7 +210,17 @@ class DocSettings:
         else:
             return DocSettings(par.doc, settings_dict=yaml_vals)
 
-    def do_recursive_settings(self, rec_settings: list[list[str]]):
+    def check_recursive_settings(self):
+        d = self.get_dict()
+        rec = d.pop(RECURSIVE_SETTINGS_KEY)
+        if not rec:
+            return
+        ds = self.doc.get_settings()
+        settings = DocSettings(self.doc, ds.get_dict())
+        if rec:
+            settings.do_recursive_settings([[rec]])
+
+    def do_recursive_settings(self, rec_settings: list[list[dict[str, str]]]):
         # Change to code below if you want fieldmacros and urlmacros to be
         # resolved in recursive settings, but it might lead to some
         # security issues
@@ -220,25 +230,50 @@ class DocSettings:
         #    return
         env = TimSandboxedEnvironment()
         doc_macros = MacroInfo.get_doc_related_macros(self.doc)
-        for rec_sets in rec_settings:
-            for rec_set in rec_sets:
-                # macroinfo = self.get_macroinfo(default_view_ctx)
-                # macros = macroinfo.macro_map
-                final_settings = self.__dict
-                macros = final_settings.get("macros", None)
-                try:
-                    md = expand_macros(rec_set, doc_macros | macros, self, env)
-                    new_settings = YamlBlock.from_markdown(md)
-                    final_settings = final_settings.merge_with(new_settings)
-                    self.__dict = final_settings
-                except Exception as e:
-                    raise TimDbException(f"Invalid: {e}")
+        changes = True
+        loops = 0
+        errors = ""
+        while changes and loops < 10:
+            changes = False
+            loops += 1
+            errors = ""
+            for rec_sets in rec_settings:
+                for rec_set in rec_sets:
+                    # macroinfo = self.get_macroinfo(default_view_ctx)
+                    # macros = macroinfo.macro_map
+                    final_settings = self.__dict
+                    macros = final_settings.get("macros", {})
+                    try:
+                        yml = rec_set.get("yaml", None)
+                        if not yml:
+                            continue
+                        yml = expand_macros(yml, doc_macros | macros, self, env)
+                        if yml != rec_set.get("prevyaml", ""):
+                            changes = True
+                            rec_set["prevyaml"] = yml
+                    except Exception as e:
+                        errors += " " + str(e)
+                        continue
+                    try:
+                        new_settings = YamlBlock.from_markdown(yml)
+
+                        charmacros = new_settings.get("charmacros", None)
+                        if charmacros:  # remove possible 't': 't' situation
+                            charmacros = {k: v for k, v in charmacros.items() if k != v}
+                            new_settings["charmacros"] = charmacros
+
+                        final_settings = final_settings.merge_with(new_settings)
+                        self.__dict = final_settings
+                    except Exception as e:
+                        errors += " " + str(e)
+        if errors:
+            raise TimDbException(f"Recursive calculation error : {errors}")
 
     @staticmethod
     def parse_values(par: DocParagraph) -> YamlBlock:
         md = par.get_markdown()
         if par.get_attr("settings", "") == "rec":
-            return YamlBlock({RECURSIVE_SETTINGS_KEY: md})
+            return YamlBlock({RECURSIVE_SETTINGS_KEY: {"yaml": md}})
 
         return YamlBlock.from_markdown(md)
 
@@ -609,7 +644,7 @@ class DocSettings:
     def get_heading_par_cache_key_hash(self):
         """
         Hash for pars that have headings either in #-format or
-        Html <h?> format.
+        HTML <h?> format.
         :return: main hash for pars with headings
         """
         return hashfunc(

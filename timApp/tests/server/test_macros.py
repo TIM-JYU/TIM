@@ -314,15 +314,18 @@ macros:
 
 ``` {settings="rec"}
 charmacros:
-  w: t 
+  W: t 
 macros:
   first: §
   animal: %%p%%
 ```
 ``` {settings="rec"}
 macros:
-  what: %%animal%% 
+  What: %%animal%% 
   name: "doc: %%doctitle%%"
+  smallAnimal: "small %%What%%"
+  verySmallAnimal: "very %%smallAnimal%%"
+  %%p%%: %%color%%
 css: |!!
    .red { color: %%color%% !important; }
 !!  
@@ -334,7 +337,7 @@ css: |!!
         settings = d.document.get_settings()
         self.assertEqual(
             {
-                "charmacros": {"§": "4", "w": "t"},
+                "charmacros": {"§": "4", "W": "t"},
                 "macros": {
                     "p": "Cat",
                     "color": "red",
@@ -342,6 +345,9 @@ css: |!!
                     "animal": "Cat",
                     "that": "Cat",
                     "name": "doc: d1",
+                    "smallAnimal": "small Cat",
+                    "verySmallAnimal": "very small Cat",
+                    "Cat": "red",
                 },
                 "css": ".red { color: red !important; }",
             },
