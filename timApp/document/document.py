@@ -16,6 +16,7 @@ from filelock import FileLock, BaseFileLock
 from flask import has_request_context, request
 from lxml import etree, html
 
+from document.docsettings import RECURSIVE_SETTINGS_KEY
 from timApp.document.changelog import Changelog
 from timApp.document.changelogentry import ChangelogEntry
 from timApp.document.docparagraph import DocParagraph
@@ -328,20 +329,34 @@ class Document:
             self.own_settings = resolve_settings_for_pars(self.get_settings_pars())
         return self.own_settings
 
-    def get_settings(self) -> DocSettings:
+    def get_settings(self, show_errors: bool = False) -> DocSettings:
         cached = self.settings_cache
         if cached:
             return cached
         settings_block = self.get_own_settings()
+        own_rec_settings = settings_block.pop(RECURSIVE_SETTINGS_KEY, None)
+        rec_settings = []
         final_settings = YamlBlock()
         preambles = self.get_docinfo().get_preamble_docs()
         for p in preambles:
-            final_settings = final_settings.merge_with(
-                resolve_settings_for_pars(p.document.get_settings_pars())
-            )
+            pre_settings = resolve_settings_for_pars(p.document.get_settings_pars())
+            rec = pre_settings.pop(RECURSIVE_SETTINGS_KEY, None)
+            if rec:
+                rec_settings.append(rec)
+            final_settings = final_settings.merge_with(pre_settings)
         final_settings = final_settings.merge_with(settings_block)
+        if own_rec_settings:
+            rec_settings.append(own_rec_settings)
         settings = DocSettings(self, settings_dict=final_settings)
         self.settings_cache = settings
+        if rec_settings:
+            try:
+                settings.do_recursive_settings(rec_settings)
+            except TimDbException as e:
+                if show_errors:
+                    raise TimDbException(e)
+                pass
+
         return settings
 
     def create(self, ignore_exists: bool = False):

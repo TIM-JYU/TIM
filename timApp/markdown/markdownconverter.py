@@ -32,13 +32,19 @@ from timApp.markdown.autocounters import (
 from timApp.util.utils import get_error_html, title_to_id, slugify
 from timApp.util.utils import widen_fields
 from tim_common.dumboclient import call_dumbo, DumboOptions
-from tim_common.html_sanitize import sanitize_html, presanitize_html_body
+from tim_common.html_sanitize import sanitize_html, presanitize_html_body, strip_div
 
 if TYPE_CHECKING:
     from timApp.document.docparagraph import DocParagraph
     from timApp.document.docsettings import DocSettings
     from timApp.document.document import Document
     from timApp.document.macroinfo import MacroInfo
+
+heading_re = re.compile(r"<h[1-6]\b", re.IGNORECASE)
+
+
+class HeadingHtml(str):
+    pass
 
 
 def has_macros(text: str, env: TimSandboxedEnvironment):
@@ -511,7 +517,8 @@ def expand_macros(
         conv = env.from_string(text).render(macros)
         if env.counters and env.counters.need_update_labels:
             conv = env.counters.update_labels(conv)
-        env.counters.is_plugin = False
+        if env.counters:
+            env.counters.is_plugin = False
         return conv
     except TemplateSyntaxError as e:
         if not ignore_errors:
@@ -885,11 +892,16 @@ def par_list_to_html_list(
     # Edit html after dumbo
     raw = edit_html_with_own_syntax(raw)
 
-    if auto_macros:
+    # Note: we can not check auto_number_headings yet, because
+    # we need to handle also normal Html headings to get autonumbers for them
+    if auto_macros:  # and settings.auto_number_headings() > 0:
         processed = []
         for pre_html, m, attrs in zip(raw, auto_macros, (p.get_attrs() for p in pars)):
             if "nonumber" in attrs.get("classes", []):
-                final_html = pre_html
+                if heading_re.search(pre_html):
+                    final_html = HeadingHtml(pre_html)
+                else:
+                    final_html = pre_html
             else:
                 final_html = insert_heading_numbers(
                     pre_html,
@@ -898,6 +910,9 @@ def par_list_to_html_list(
                     settings.heading_format(),
                     initial_heading_counts=settings.auto_number_start(),
                 )
+                final_html = strip_div(final_html)
+                if final_html != pre_html or heading_re.search(final_html):
+                    final_html = HeadingHtml(final_html)
             processed.append(final_html)
         raw = processed
 
@@ -1041,6 +1056,8 @@ CONFLICTING_HEADER_IDS = {
     "angular",  # Reserved by AngularJS
 }
 
+EMPTY_DICT = {}
+
 
 def insert_heading_numbers(
     html_str: str,
@@ -1064,6 +1081,9 @@ def insert_heading_numbers(
     tree = html.fragment_fromstring(presanitize_html_body(html_str), create_parent=True)
     counts = heading_info["h"]
     used = heading_info["headings"]
+    if used is None:
+        used = EMPTY_DICT
+
     for e in tree.iterchildren():
         is_heading = e.tag in HEADING_TAGS
         if not is_heading:
@@ -1083,7 +1103,8 @@ def insert_heading_numbers(
                 heading_format,
                 initial_counts=initial_heading_counts,
             )
-    final_html = etree.tostring(tree, encoding="utf-8")
+    # final_html = etree.tostring(tree, encoding="utf-8")
+    final_html = etree.tostring(tree, encoding="unicode")
     return final_html
 
 
