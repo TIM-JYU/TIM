@@ -1,0 +1,90 @@
+.scroll-box {
+  flex: 1 1 0;
+  min-height: 100px;
+  overflow-y: scroll;
+  overflow-x: hidden;
+  padding-right: 15px;
+}
+
+.chat-bot {
+  white-space: pre-wrap;
+  word-break: break-word;
+  color: #EB541C;
+
+  background-color: #fff3ee;
+  padding: 10px 14px;
+  border-radius: 16px;
+
+  display: inline-block;
+  margin-bottom: 10px;
+}
+
+.chat-user {
+  color: #0B0A09;
+}
+
+.chattim-dialog-frame .modal-dialog {
+  min-width: 35vh;
+  min-height: 32vh;
+  max-height: 90vh;
+  height: 50vh;
+  /// transition: height 0.3s ease;
+}
+
+.settings-panel {
+  overflow: hidden;
+}
+
+.chattim-dialog-frame .modal-body {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  min-height: 0;
+}
+
+
+.form-inline {
+  margin-top: auto;
+}
+
+.chattim-body {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.chat-row {
+  display: flex;
+  flex-direction: row;
+  width: 100%;
+  align-items: flex-end;
+  gap: 8px;
+}
+
+.chat-textarea {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.chat-textarea::placeholder {
+  color: #999;
+  opacity: 1;
+}
+
+.chat-welcome {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  min-height: 200px;
+  color: #888;
+  font-size: 14px;
+  text-align: center;
+}
+
+
+
+.control-panel-container {
+  align-items: start;
+  flex: 0 0 auto;
+}

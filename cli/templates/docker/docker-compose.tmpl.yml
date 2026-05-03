@@ -38,6 +38,7 @@ services:
    AUTHLIB_INSECURE_TRANSPORT: ${ "1" if tim.is_dev else "0" }
    GUNICORN_MAX_REQUESTS: ${ tim.worker_max_requests }
    GUNICORN_MAX_REQUESTS_JITTER: ${ tim.worker_max_requests_jitter }
+   OPENAI_API_KEY: ${OPENAI_API_KEY}
   restart: unless-stopped
   networks:
    - db

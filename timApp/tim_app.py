@@ -72,6 +72,7 @@ from timApp.messaging.timMessage.internalmessage_models import (
     InternalMessageDisplay,
     InternalMessageReadReceipt,
 )
+from timApp.modules.chattim.dbmodels import LLMRule, Policy, Usage
 from timApp.note.usernote import UserNote
 from timApp.notification.notification import Notification
 from timApp.notification.pending_notification import (
@@ -182,6 +183,7 @@ all_models = (
     Lecture,
     LectureAnswer,
     LectureUsers,
+    LLMRule,
     Message,
     MessageListDistribution,
     MessageListMember,
@@ -196,6 +198,7 @@ all_models = (
     PendingNotification,
     PersonalUniqueCode,
     PluginType,
+    Policy,
     PrintedDoc,
     Question,
     QuestionActivity,
@@ -212,6 +215,7 @@ all_models = (
     Translation,
     TranslationService,
     TranslationServiceKey,
+    Usage,
     User,
     UserActivity,
     UserAnswer,
