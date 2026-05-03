@@ -435,6 +435,8 @@ class PluginCore:
             return Result(None, docs.error)
         docs = docs.value
 
+        document_ids = [doc.id for doc in docs]
+
         owns_all = self._owns_all_items(caller_id, docs)
         if owns_all.ok():
             if not owns_all.value:
@@ -486,8 +488,32 @@ class PluginCore:
             document_id
         )  # TODO: for testing purposes remove when db ok or cache
 
-        rule = self.tim_database.set_llm_rule(document_id, caller_id, [], "", [], llm_mode, 0, [], system_prompt_path, model_id, 0, [], [])
-        self.tim_database.set_policy(0, rule, "", 0, 0, max_tokens, "global")
+        # TODO: hae aliasta vastaava API-avain
+        # TODO: tarkista onko aliasta vastaava API-avain olemassa
+
+        rule = self.tim_database.set_llm_rule(
+            document_id,
+            caller_id,
+            [],
+            "",
+            [],
+            llm_mode,
+            0,
+            document_ids,
+            system_prompt_path,
+            model_id,
+            0,
+            [],
+            []
+        )
+        self.tim_database.set_global_policy(
+            rule,
+            "",
+            0,
+            0,
+            max_tokens,
+            max_tokens
+        )
 
         return Result(True, None)
 
@@ -594,16 +620,14 @@ class PluginCore:
         self, caller_id: int, document_id: int
     ) -> Result[str | None, str | None]:
         """
-        Checks that user request is allowed as per set policies
+        Checks token limits as per global and user policies
         :param caller_id:  the user that is making the request
         :param document_id:  instance for the plugin
         :return: (can_make_req: bool, reason_for_deny: str)
         """
         # check userpolicy (if exists)
         rule = self.tim_database.get_llm_rule(document_id)
-        student_policy = self.tim_database.get_student_policy(rule, caller_id)
-        if not student_policy:
-            return Result(value="")
+        # student_policy = self.tim_database.get_user_policy(rule, caller_id)
 
         # check globalpolicy
         # global_polcy = self.tim_database.get_global_policy(rule)

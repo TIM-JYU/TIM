@@ -90,7 +90,7 @@ class TimDatabase:
         teachers: list[int],
         current_mode: str,
         total_tokens_spent: int,
-        indexed_chunk_ids: list[int],
+        indexed_document_ids: list[int],
         system_prompt_path: str,
         agent: str,
         conv_time_window: int,
@@ -102,11 +102,11 @@ class TimDatabase:
         :param document_id: The id of the document.
         :param owner: The id of the owner of the LLM rule.
         :param apikey: List of the API key providers, API keys and aliases of the owner. [apikey_provider,apikey,alias]
-        :param chosen_key: The chosen API key and alias for the instance.
+        :param chosen_key: The chosen API key for the instance.
         :param teachers: The ids of the teachers allowed to use the plugin instance.
         :param current_mode: Mode of the plugin instance: summarizing, creative or balanced.
         :param total_tokens_spent: The total number of tokens spent.
-        :param indexed_chunk_ids:
+        :param indexed_document_ids:
         :param system_prompt_path: TIM path for an optional custom system prompt.
         :param agent: LLm agent.
         :param conv_time_window: Time window for the conversation in minutes.
@@ -124,7 +124,7 @@ class TimDatabase:
                 teachers=teachers,
                 current_mode=current_mode,
                 total_tokens_spent=total_tokens_spent,
-                indexed_chunk_ids=indexed_chunk_ids,
+                indexed_document_ids=indexed_document_ids,
                 system_prompt_path=system_prompt_path,
                 agent=agent,
                 conv_time_window=conv_time_window,
@@ -141,8 +141,8 @@ class TimDatabase:
                 rule.current_mode = current_mode
             if total_tokens_spent:
                 rule.total_tokens_spent = total_tokens_spent
-            if indexed_chunk_ids:
-                rule.indexed_chunk_ids = indexed_chunk_ids
+            if indexed_document_ids:
+                rule.indexed_chunk_ids = indexed_document_ids
             if agent:
                 rule.agent = agent
             if conv_time_window:
@@ -202,11 +202,11 @@ class TimDatabase:
         return db.session.scalar(stmt)
 
     @staticmethod
-    def get_api_keys(owner_id: int) -> LLMRule | None:
+    def get_api_keys(owner_id: int) -> list[str] | None:
         """
-        Gets the LLM rule storing API keys of the given owner.
+        Gets the API keys of the given owner.
         """
-        stmt = select(LLMRule).where(LLMRule.owner == owner_id)
+        stmt = select(LLMRule.apikey).where(LLMRule.owner == owner_id)
         return db.session.scalar(stmt)
 
     @staticmethod
@@ -216,7 +216,8 @@ class TimDatabase:
         token_time_window_type: str,
         token_time_window_num: int,
         time_window_tokens: int,
-        max_tokens: int,
+        max_tokens_per_user: int,
+        token_pool: int,
         policy_type: str,  # global or student
     ) -> Policy:
         """
@@ -224,7 +225,7 @@ class TimDatabase:
         for the given user.
         """
         if user:
-            policy = TimDatabase.get_student_policy(llm_rule, user)
+            policy = TimDatabase.get_user_policy(llm_rule, user)
         else:
             policy = TimDatabase.get_global_policy(llm_rule)
         if not policy:
@@ -235,7 +236,8 @@ class TimDatabase:
                 token_time_window_type=token_time_window_type,
                 token_time_window_num=token_time_window_num,
                 time_window_tokens=time_window_tokens,
-                max_tokens=max_tokens,
+                max_tokens_per_user=max_tokens_per_user,
+                token_pool=token_pool,
                 policy_type=policy_type,
             )
             db.session.add(policy)
@@ -246,9 +248,61 @@ class TimDatabase:
                 policy.token_time_window_num = token_time_window_num
             if time_window_tokens:
                 policy.time_window_tokens = time_window_tokens
-            if max_tokens:
-                policy.max_tokens = max_tokens
+            if max_tokens_per_user:
+                policy.max_tokens_per_user = max_tokens_per_user
+            if token_pool:
+                policy.token_pool = token_pool
         db.session.commit()
+        return policy
+
+    def set_global_policy(
+        self,
+        llm_rule: LLMRule,
+        token_time_window_type: str,
+        token_time_window_num: int,
+        time_window_tokens: int,
+        max_tokens_per_user: int,
+        token_pool: int,
+    ) -> Policy:
+        """
+        Sets the global policy for the LLM rule.
+        :return:
+        """
+        policy = self.set_policy(
+            0,
+            llm_rule,
+            token_time_window_type,
+            token_time_window_num,
+            time_window_tokens,
+            max_tokens_per_user,
+            token_pool,
+            "global",
+        )
+        return policy
+
+    def set_user_policy(
+        self,
+        user: int,
+        llm_rule: LLMRule,
+        token_time_window_type: str,
+        token_time_window_num: int,
+        time_window_tokens: int,
+        max_tokens_per_user: int,
+    ) -> Policy:
+        """
+        Sets the user policy for the given user in the LLM rule context.
+        :return:
+        """
+        policy = self.set_policy(
+            user,
+            llm_rule,
+            token_time_window_type,
+            token_time_window_num,
+            time_window_tokens,
+            max_tokens_per_user,
+            0,
+            "user",
+        )
         return policy
 
     @staticmethod
@@ -272,9 +326,9 @@ class TimDatabase:
         db.session.commit()
 
     @staticmethod
-    def delete_student_policy(llm_rule: LLMRule, user_id: int) -> None:
+    def delete_user_policy(llm_rule: LLMRule, user_id: int) -> None:
         """
-        Deletes the given student policy.
+        Deletes the user policy of the given user.
         """
         stmt = delete(Policy).where(
             Policy.llm_rule == llm_rule, Policy.for_user == user_id
@@ -293,9 +347,9 @@ class TimDatabase:
         return db.session.scalar(stmt)
 
     @staticmethod
-    def get_student_policy(llm_rule: LLMRule, user_id: int) -> Policy | None:
+    def get_user_policy(llm_rule: LLMRule, user_id: int) -> Policy | None:
         """
-        Gets the given user policy.
+        Gets the user policy of the given user.
         """
         stmt = select(Policy).where(
             Policy.llm_rule == llm_rule, Policy.for_user == user_id

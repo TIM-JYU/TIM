@@ -56,7 +56,7 @@ class Policy(db.Model):
     )  # token limit for the window
     max_tokens_per_user: Mapped[int] = mapped_column(Integer)
     token_pool: Mapped[int] = mapped_column(Integer)
-    policy_type: Mapped[str] = mapped_column(String)  # global or student
+    policy_type: Mapped[str] = mapped_column(String)  # global or user
 
 
 class Usage(db.Model):
