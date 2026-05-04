@@ -52,7 +52,6 @@ class InstanceAttributes:
     max_tokens: int = 2000
     tim_paths: str = ""
     system_prompt_path: str = ""
-    embedder_id: str = "text-embedding-3-small"
 
     @classmethod
     def default(cls) -> "InstanceAttributes":
@@ -365,7 +364,7 @@ class PluginCore:
         max_tokens: int = instance_settings.max_tokens
         tim_paths: str = instance_settings.tim_paths
         system_prompt_path: str = instance_settings.system_prompt_path.strip()
-        # embedder: str = instance_settings.embedder_id
+
         if not self._document_exists(document_id):
             return Result(None, f"Document [{document_id}] does not exist")
 
