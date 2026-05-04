@@ -254,3 +254,10 @@
     font-style: italic;
     padding: 0.4em 0;
 }
+
+.video-toggles {
+    /* display: flex; */
+    gap: 0.75rem;
+    flex: 0 0 100%;
+    white-space: nowrap;
+}
