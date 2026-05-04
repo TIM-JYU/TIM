@@ -12,6 +12,16 @@ export interface ControlPanelSettings extends Record<string, JsonValue> {
     max_tokens: number;
     tim_paths: string;
     system_prompt_path: string;
+    global_policy: TokenLimitForUser;
+}
+
+export interface TokenLimitForUser extends Record<string, JsonValue> {
+    token_cap_enabled: boolean;
+    token_cap: number;
+    time_window_enabled: boolean;
+    window_unit: string;
+    window_value: number;
+    token_cap_for_window: number;
 }
 
 @Component({
@@ -82,7 +92,7 @@ export interface ControlPanelSettings extends Record<string, JsonValue> {
                     </div>
                 </div>
 
-                <!-- Set max tokens per user -->
+                <!-- Set max tokens for the instance -->
                 <div class="settings-row">
                     <button class="btn btn-link settings-section-btn"
                             (click)="tokensOpen = !tokensOpen">
@@ -139,6 +149,73 @@ export interface ControlPanelSettings extends Record<string, JsonValue> {
                     </div>
                 </div>
 
+
+                <!-- Add time window restrictions for users -->
+                <div class="settings-row">
+                    <button class="btn btn-link settings-section-btn"
+                            (click)="globalPolicyOpen = !globalPolicyOpen">
+                    <span class="glyphicon"
+                          [class.glyphicon-chevron-right]="!globalPolicyOpen"
+                          [class.glyphicon-chevron-down]="globalPolicyOpen">
+                    </span>
+                        Restrictions for all users:
+                    </button>
+
+                    <ng-container *ngIf="globalPolicyOpen">
+                        <div class="checkbox">
+                            <label>
+                                <input type="checkbox" 
+                                       [(ngModel)]="tokenLimitAllUsers.token_cap_enabled" >
+                                Enable token limits per user
+                            </label>
+                        </div>
+
+                        <div *ngIf="tokenLimitAllUsers.token_cap_enabled" class="settings-section-body">
+                            <input type="range"
+                                   class="form-control"
+                                   min="0" max="20000" step="200"
+                                   [(ngModel)]="tokenLimitAllUsers.token_cap">
+                              <span>
+                                {{ tokenLimitAllUsers.token_cap }}
+                              </span>
+                        </div>
+
+                        <div class="checkbox">
+                            <label>
+                                <input type="checkbox" [(ngModel)]="tokenLimitAllUsers.time_window_enabled">
+                                Enable time window token limits
+                            </label>
+                        </div>
+
+                        <div *ngIf="tokenLimitAllUsers.time_window_enabled">
+                            <div class="settings-section-body">
+                                    <input type="range"
+                                           min="100" max="20000" step="200"
+                                           [(ngModel)]="tokenLimitAllUsers.token_cap_for_window">
+                                    <span> {{ tokenLimitAllUsers.token_cap_for_window }} </span>
+                                <div class="control-panel-input-and-value">
+                                    <input type="number" class="form-control"
+                                           min="1"
+                                           step="1"
+                                           placeholder="5"
+                                           [(ngModel)]="tokenLimitAllUsers.window_value"
+                                           #numericControl="ngModel"
+                                    >
+                                    <select class="form-control"
+                                            [(ngModel)]="tokenLimitAllUsers.window_unit">
+                                        <option *ngFor="let timeUnit of timeUnitOptions" 
+                                                [ngValue]="timeUnit.value">{{ timeUnit.label }}
+                                        </option>
+                                    </select>
+                                </div>
+                                <div *ngIf="numericControl.invalid && numericControl.touched">
+                                    Must be a positive number
+                                </div>
+                            </div>
+                        </div>
+                    </ng-container>
+                </div>
+
                 <!-- Save button that sends the chosen stuff -->
                 <div class="settings-row">
                     <button class="btn btn-primary" style="margin: 2px;"
@@ -160,6 +237,7 @@ export class ChatControlPanelComponent {
     tokensOpen = false;
     filesOpen = false;
     promptOpen = false;
+    globalPolicyOpen = false;
 
     @Input() localFilePaths!: string;
     @Input() error?: string;
@@ -170,6 +248,13 @@ export class ChatControlPanelComponent {
     @Input() maxTokens!: number;
     @Input() systemPromptPath!: string;
     @Input() isTeacher: boolean = false;
+
+    timeUnitOptions: {value: string; label: string}[] = [
+        {value: "min", label: "Minutes"},
+        {value: "h", label: "Hours"},
+        {value: "d", label: "Days"},
+    ];
+    @Input() tokenLimitAllUsers!: TokenLimitForUser;
 
     @Input() availableModels?: ChatModel[];
     @Input() availableModes?: string[];
@@ -189,6 +274,7 @@ export class ChatControlPanelComponent {
             max_tokens: this.maxTokens,
             tim_paths: this.localFilePaths,
             system_prompt_path: this.systemPromptPath,
+            global_policy: this.tokenLimitAllUsers,
         };
         console.log("sending: ", data);
         this.saveSettingsClick.emit(data);

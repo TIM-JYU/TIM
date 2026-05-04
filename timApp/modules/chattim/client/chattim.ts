@@ -15,7 +15,6 @@ import {
     NgModule,
     ViewEncapsulation,
 } from "@angular/core";
-import {FormsModule} from "@angular/forms";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {AngularPluginBase} from "tim/plugin/angular-plugin-base.directive";
 import {DialogModule} from "tim/ui/angulardialog/dialog.module";
@@ -29,8 +28,13 @@ import {
     HttpEventType,
 } from "@angular/common/http";
 import {DomSanitizer} from "@angular/platform-browser";
+import {FormsModule} from "@angular/forms";
 import {Users} from "tim/user/userService";
-import type {ChatModel, ControlPanelSettings} from "./controlpanel";
+import type {
+    ChatModel,
+    ControlPanelSettings,
+    TokenLimitForUser,
+} from "./controlpanel";
 import {ChatControlPanelComponent} from "./controlpanel";
 
 const PluginMarkupFields = t.intersection([
@@ -132,7 +136,8 @@ export interface ControlPanelData extends ControlPanelSettings {
                         [error]="controlpanelError"
                         [localFilePaths]="localFilePaths"
                         [availableModels]="availableModels"
-                        [availableModes]="availableModes" >
+                        [availableModes]="availableModes" 
+                        [tokenLimitAllUsers]="globalPolicy">
                     </chattim-control-panel>
                             </div>
                 </div>
@@ -210,6 +215,14 @@ export class ChatTIMComponent
     controlpanelResponse?: string;
     availableModels?: ChatModel[];
     availableModes?: string[];
+    globalPolicy: TokenLimitForUser = {
+        token_cap_enabled: false,
+        token_cap: 1000,
+        time_window_enabled: false,
+        window_unit: "h",
+        window_value: 5,
+        token_cap_for_window: 5000,
+    };
 
     // TODO: make a configurable option for user in settings?
     useStreaming: boolean = true;
@@ -626,6 +639,7 @@ export class ChatTIMComponent
                 this.localFilePaths = result.tim_paths;
                 this.availableModels = result.availableModels;
                 this.availableModes = result.availableModes;
+                this.globalPolicy = result.global_policy;
             }
         } else {
             this.controlpanelError = response.result.error.error;
@@ -802,10 +816,10 @@ export class ChatTIMComponent
     imports: [
         CommonModule,
         HttpClientModule,
-        FormsModule,
         TimUtilityModule,
         PurifyModule,
         DialogModule,
+        FormsModule,
     ],
 })
 export class ChatTIMModule implements DoBootstrap {

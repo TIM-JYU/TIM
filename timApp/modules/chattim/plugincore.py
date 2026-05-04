@@ -46,12 +46,23 @@ class ChatModel(TypedDict):
 
 
 @dataclass()
+class Policy:
+    token_cap_enabled: bool = False
+    token_cap: int = 0
+    time_window_enabled: bool = False
+    window_unit: str = "h"
+    window_value: int = 0
+    token_cap_for_window: int = 100
+
+
+@dataclass()
 class InstanceAttributes:
     model_id: str = "gpt-4.1-mini"
     llm_mode: str = "Creative"
     max_tokens: int = 2000
     tim_paths: str = ""
     system_prompt_path: str = ""
+    global_policy: Policy = field(default_factory=Policy)
 
     @classmethod
     def default(cls) -> "InstanceAttributes":
@@ -364,6 +375,9 @@ class PluginCore:
         max_tokens: int = instance_settings.max_tokens
         tim_paths: str = instance_settings.tim_paths
         system_prompt_path: str = instance_settings.system_prompt_path.strip()
+        global_policy: Policy = instance_settings.global_policy
+        token_gap_enabled = global_policy.token_cap_enabled
+        time_window_enabled = global_policy.time_window_enabled
 
         if not self._document_exists(document_id):
             return Result(None, f"Document [{document_id}] does not exist")
@@ -407,7 +421,9 @@ class PluginCore:
 
         # TODO: update system prompt path in the db row
 
-        # TODO: kun policy saatu niin tässä check niille
+        if (valid := self._validate_policy(global_policy)) is not None:
+            return Result(error=valid)
+
         # TODO: if instance exists -> update OTHERIWISE create
 
         # TODO: remove hard coded api key and model
@@ -441,14 +457,6 @@ class PluginCore:
 
         return Result(True, None)
 
-    def remove_instance(self, caller_id: str, document_id: int):
-        pass
-
-    def modify_instance_pages(
-        self, caller_id: str, document_id: int, indexable_paths: list[str]
-    ):
-        pass
-
     def get_history(self, caller_id: str, document_id: str) -> list[Message]:
         # TODO: fetch with time window
         history = self.history_manager.get_history(document_id, caller_id, 10)
@@ -474,17 +482,6 @@ class PluginCore:
             )
 
         return chat_models
-
-    def change_chatmode(self, caller_id: str, document_id: int, mode: RagMode):
-        pass
-
-    def set_globalpolicy(self, caller_id: str, document_id: int, policy: GlobalPolicy):
-        pass
-
-    def set_studentpolicy(
-        self, caller_id: str, document_id: int, policy: StudentPolicy
-    ):
-        pass
 
     @cache.memoize(timeout=DEFAULT_CACHE_TIMEOUT, args_to_ignore=["self", "caller_id"])
     def get_system_prompt(self, caller_id: int, document_id: int) -> str | None:
@@ -656,6 +653,32 @@ class PluginCore:
         if input_len < 2 or input_len > self.max_input_len:
             raise ValueError(f"Invalid input length: {input_len}")
         return sanitized_input
+
+    @staticmethod
+    def _validate_policy(policy: Policy) -> None | str:
+        """Validates policy. None is returned if everything is ok otherwise error string is returned"""
+        valid_time_types = ["d", "h", "min"]
+        cap_enabled = policy.token_cap_enabled
+        token_cap = policy.token_cap
+
+        window_enabled = policy.time_window_enabled
+        time_type = policy.window_unit
+        time_value = policy.window_value
+        window_token_cap = policy.token_cap_for_window
+
+        if cap_enabled and token_cap < 0:
+            return f"Given token cap [{token_cap}] cannot be negative"
+
+        if window_enabled and time_value <= 0:
+            return f"Given time value [{time_value}] should be greater than 0"
+
+        if window_enabled and (time_type not in valid_time_types):
+            return f"Given time type [{time_type}] is not valid"
+
+        if window_enabled and window_token_cap <= 0:
+            return f"Given time cap [{window_token_cap}] should be greater than 0"
+
+        return None
 
     def get_supported_providers(self):
         return self.rag.registry.get_supported_providers()
