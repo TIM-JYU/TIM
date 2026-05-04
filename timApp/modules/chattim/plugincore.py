@@ -421,7 +421,7 @@ class PluginCore:
 
         # TODO: indeksoinnit pyörimään
 
-        # TODO:implementation for choosing embedding model provider
+        # TODO: retrieving llm provider when model info is not hardcoded
         llm_provider = kwargs_model["provider"]
         emb_model = create_embedder(provider=llm_provider)
         self.indexer.add_embedder(document_id, emb_model)

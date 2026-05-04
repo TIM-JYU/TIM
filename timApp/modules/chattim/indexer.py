@@ -144,6 +144,8 @@ class OpenAiEmbeddingModel(EmbeddingModel):
 
 
 def create_embedder(provider: str) -> EmbeddingModel:
+    """creates embedding model based on provider, defaults to openai
+    :param provider: provider of the embedding model"""
     if provider == "google":
         return GeminiEmbeddingModel(api_key=os.environ["GEMINI_API_KEY"])
 
