@@ -275,11 +275,12 @@ def save_api_key(params: SaveAPIKeyParams) -> Response:
     provider = params.model
     key = params.apikey
     alias = params.alias
+    userid = get_current_user_id()
 
     valid = plugincore.validate_api_key(provider, key)
 
     if valid:
-        return ok_response()
+        rule = plugincore.save_apikey_to_database(userid, [provider, key, alias])
     else:
         raise RouteException(description="API Key is invalid.")
 
