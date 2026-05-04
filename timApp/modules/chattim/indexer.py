@@ -250,16 +250,11 @@ class Indexer:
                     embedding_file = json.load(file)
                     if (
                         embedding_file
-                        and isinstance(embedding_file, list)
-                        and len(embedding_file) > 0
+                        and isinstance(embedding_file, dict)
+                        and "indexed_document_version" in embedding_file
                     ):
-                        embeddings_created = embedding_file[0][
-                            "indexed_document_version"
-                        ]
+                        embeddings_created = embedding_file["indexed_document_version"]
 
-                        print(
-                            f"embeddings_created{embeddings_created}, document_last_edited{document_last_edited}"
-                        )
                         if document_last_edited <= datetime.fromisoformat(
                             embeddings_created
                         ):
