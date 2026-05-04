@@ -143,12 +143,12 @@ class OpenAiEmbeddingModel(EmbeddingModel):
         return self.model_type
 
 
-def create_embedder(embedder_id: str) -> EmbeddingModel:
-    if embedder_id == "gemini-embedding-001":
+def create_embedder(provider: str) -> EmbeddingModel:
+    if provider == "google":
         return GeminiEmbeddingModel(api_key=os.environ["GEMINI_API_KEY"])
 
     return OpenAiEmbeddingModel(
-        api_key=os.environ["OPENAI_API_KEY"], model_type=embedder_id
+        api_key=os.environ["OPENAI_API_KEY"], model_type="text-embedding-3-small"
     )
 
 

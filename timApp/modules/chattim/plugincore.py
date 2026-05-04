@@ -365,7 +365,7 @@ class PluginCore:
         max_tokens: int = instance_settings.max_tokens
         tim_paths: str = instance_settings.tim_paths
         system_prompt_path: str = instance_settings.system_prompt_path.strip()
-        embedder: str = instance_settings.embedder_id
+        # embedder: str = instance_settings.embedder_id
         if not self._document_exists(document_id):
             return Result(None, f"Document [{document_id}] does not exist")
 
@@ -422,8 +422,8 @@ class PluginCore:
         # TODO: indeksoinnit pyörimään
 
         # TODO:implementation for choosing embedding model provider
-
-        emb_model = create_embedder(embedder_id=embedder)
+        llm_provider = kwargs_model["provider"]
+        emb_model = create_embedder(provider=llm_provider)
         self.indexer.add_embedder(document_id, emb_model)
 
         tokens_used, failed_embeddings = self.indexer.create_embeddings(

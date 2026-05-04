@@ -12,7 +12,6 @@ export interface ControlPanelSettings extends Record<string, JsonValue> {
     max_tokens: number;
     tim_paths: string;
     system_prompt_path: string;
-    embedder_id: string;
 }
 
 @Component({
@@ -58,23 +57,7 @@ export interface ControlPanelSettings extends Record<string, JsonValue> {
                         </select>
                     </div>
                 </div>
-                <!-- Choose the embedding model -->
-                <div class="settings-row">
-                        <button class="btn btn-link settings-section-btn"
-                                (click)="embedOpen = !embedOpen">
-                        <span class="glyphicon"
-                              [class.glyphicon-chevron-right]="!embedOpen"
-                              [class.glyphicon-chevron-down]="embedOpen">
-                        </span>
-                            Embedding model: <strong>{{ selectedEmbeddingModelLabel }}</strong>
-                        </button>
-                        <div *ngIf="embedOpen" class="settings-section-body">
-                            <select class="form-control"
-                                    [(ngModel)]="embeddingModel">
-                                <option *ngFor="let m of embeddingModels" [ngValue]="m.id">{{ m.label }}</option>
-                            </select>
-                        </div>
-                    </div>
+              
                 
                 <!-- Switch between summarizing, (balanced) and creative -->
                 <div class="settings-row">
@@ -173,20 +156,16 @@ export class ChatControlPanelComponent {
     settingsOpen = false;
     modelOpen = false;
     modeOpen = false;
-    embedOpen = false;
+
     tokensOpen = false;
     filesOpen = false;
     promptOpen = false;
-    embeddingModels = [
-        {id: "text-embedding-3-small", label: "OpenAI-small"},
-        {id: "text-embedding-3-large", label: "OpenAI-large"},
-        {id: "gemini-embedding-001", label: "Gemini"},
-    ];
+
     @Input() localFilePaths!: string;
     @Input() error?: string;
     @Input() response?: string;
     @Input() selectedModel!: string;
-    @Input() embeddingModel!: string;
+
     @Input() selectedMode!: string;
     @Input() maxTokens!: number;
     @Input() systemPromptPath!: string;
@@ -210,7 +189,6 @@ export class ChatControlPanelComponent {
             max_tokens: this.maxTokens,
             tim_paths: this.localFilePaths,
             system_prompt_path: this.systemPromptPath,
-            embedder_id: this.embeddingModel,
         };
         console.log("sending: ", data);
         this.saveSettingsClick.emit(data);
@@ -219,12 +197,6 @@ export class ChatControlPanelComponent {
     get selectedModelLabel(): string {
         const model = this.availableModels?.find(
             (m) => m.value === this.selectedModel
-        );
-        return model ? model.label : "";
-    }
-    get selectedEmbeddingModelLabel(): string {
-        const model = this.embeddingModels?.find(
-            (m) => m.id === this.embeddingModel
         );
         return model ? model.label : "";
     }
