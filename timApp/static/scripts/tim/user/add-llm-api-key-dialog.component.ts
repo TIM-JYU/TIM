@@ -21,8 +21,6 @@ import {AngularDialogComponent} from "tim/ui/angulardialog/angular-dialog-compon
 import {DialogModule} from "tim/ui/angulardialog/dialog.module";
 import {toPromise} from "tim/util/utils";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
-import type {ITranslator, ITranslatorUsage} from "tim/item/IItem";
-import {listTranslators} from "tim/document/languages";
 import type {IUserLLMApiKey} from "tim/user/IUser";
 
 /**
@@ -83,7 +81,7 @@ import type {IUserLLMApiKey} from "tim/user/IUser";
     `,
 })
 export class AddLLMAPIKeyDialogComponent extends AngularDialogComponent<
-    {onAdd: (key: IUserLLMApiKey) => void},
+    {onAdd: (key: IUserLLMApiKey) => void; existingKeys?: IUserLLMApiKey[]},
     void
 > {
     async ngOnInit() {
@@ -113,22 +111,41 @@ export class AddLLMAPIKeyDialogComponent extends AngularDialogComponent<
     async addNewAPIKey() {
         this.saving = true;
 
-        const validateResponse = await this.validateAPIKey();
+        console.log(this.data.existingKeys);
 
-        if (validateResponse.ok) {
+        const aliasUsed = this.data.existingKeys?.some(
+            (existingKey) =>
+                existingKey.alias.toLowerCase() ===
+                this.LLMKeyAlias!.toLowerCase()
+        );
+
+        if (aliasUsed) {
+            this.addError = "Alias already in use.";
             this.saving = false;
-            this.data.onAdd({
-                model: this.chosenModel,
-                APIkey: this.apiKey!,
-                alias: this.LLMKeyAlias!,
-                availableTokens: 0,
-                usedTokens: 0,
-                tokensChecked: false,
-            });
-            this.added = true;
-            this.dismiss();
-        } else {
-            this.addError = validateResponse.result.error.error;
+            return;
+        }
+
+        console.log(aliasUsed);
+
+        if (!aliasUsed) {
+            const validateResponse = await this.validateAPIKey();
+
+            if (validateResponse.ok) {
+                this.saving = false;
+                this.data.onAdd({
+                    model: this.chosenModel,
+                    APIkey: this.apiKey!,
+                    alias: this.LLMKeyAlias!,
+                    availableTokens: 0,
+                    usedTokens: 0,
+                    tokensChecked: false,
+                });
+                this.added = true;
+                this.dismiss();
+            } else {
+                this.saving = false;
+                this.addError = validateResponse.result.error.error;
+            }
         }
     }
 
@@ -152,7 +169,6 @@ export class AddLLMAPIKeyDialogComponent extends AngularDialogComponent<
         );
         if (result.ok) {
             this.LLMProviders = result.result;
-            console.log(result);
         }
     }
 }

@@ -1239,11 +1239,13 @@ export class SettingsComponent implements DoCheck, AfterViewInit {
         );
     }
     openLLMAPIKeyDialog() {
+        console.log("component");
+        console.log(this.userLLMAPIKeys);
         void to2(
             showAddLLMAPIKeyDialog((key) => {
                 this.userLLMAPIKeys.push(key);
                 this.cdr.detectChanges();
-            })
+            }, this.userLLMAPIKeys)
         );
     }
 
