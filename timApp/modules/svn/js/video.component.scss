@@ -261,3 +261,30 @@
     flex: 0 0 100%;
     white-space: nowrap;
 }
+
+.transcript-search-input-wrapper {
+    position: relative;
+    display: inline-block;
+}
+
+.transcript-search-input-wrapper input {
+    padding-right: 1.8em;
+}
+
+.clear-transcript-input-btn {
+    position: absolute;
+    right: 0.4em;
+    top: 50%;
+    transform: translateY(-50%);
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    font-size: 1em;
+    line-height: 1;
+    color: #666;
+    padding: 0;
+}
+
+.clear-transcript-input-btn:hover {
+    color: #000;
+}
