@@ -199,7 +199,7 @@ const ShowFileAll = t.type({
             </div>
 
             <ng-container *ngIf="videoOn">
-               <div *ngIf="iframesettings" class="iframeContainer"> 
+               <div *ngIf="iframesettings as iframesettings" class="iframeContainer"> 
                 <iframe *ngIf="iframesettings && isPdf"
                         class="showVideo"
                         allowfullscreen
@@ -230,7 +230,7 @@ const ShowFileAll = t.type({
                         <a class="hide-text" (click)="hideVideo()">{{hidetext}}</a>
                     </span>
                </div> 
-                <span class="videoRow" *ngIf="videosettings">
+                <span class="videoRow" *ngIf="videosettings as videosettings">
                     <video 
                            #video
                            class="showVideo"
@@ -249,7 +249,7 @@ const ShowFileAll = t.type({
                     </video>
                     <button class="settings-btn" (click)="toggleSettings()" type="button" title="More settings">⋮</button>
                 </span> 
-                <span class="audioRow" *ngIf="audiosettings">
+                <span class="audioRow" *ngIf="audiosettings as audiosettings">
                     <audio
                            #video
                            class="showAudio"
@@ -304,7 +304,10 @@ const ShowFileAll = t.type({
                         <a class="zoom-reset" (click)="zoom(0)" title="Normal zoom (r)">R</a>&ngsp;
                         <a class="zoom-plus" (click)="zoom(1.4)" title="Zoom in (z)"><i class="glyphicon glyphicon-plus"></i></a>
                     </div>
-                   <label *ngIf="!iframesettings" class="normalLabel video-setting-label" title="Advanced media controls">Advanced<input type="checkbox" [(ngModel)]="advVideo" (ngModelChange)="onAdvVideoStateChange($event)" /></label>
+                   <div class="video-toggles"> 
+                       <label *ngIf="videosettings && transcriptLoaded" class="normalLabel video-setting-label" title="Show transcript search"><input type="checkbox" [(ngModel)]="transcriptSearch" (ngModelChange)="onTranscriptSearchStateChange($any($event))" /> Transcript search</label>
+                       <label *ngIf="!iframesettings" class="normalLabel video-setting-label" title="Advanced media controls"><input type="checkbox" [(ngModel)]="advVideo" (ngModelChange)="onAdvVideoStateChange($any($event))" /> Advanced</label>
+                   </div>    
                    <a class="hide-text video-setting-label" (click)="hideVideo()">{{hidetext}}</a>
                 </div>    
             </div>
@@ -326,8 +329,8 @@ const ShowFileAll = t.type({
                 <a (click)="copyStartEnd()" title="Copy start/end to clipboard (c)">Copy</a>
             </div>
             <p class="plgfooter" *ngIf="footer" [innerHtml]="footer | purify"></p>
-            <div *ngIf="transcriptLoaded" class="transcript-search">
-                <a class="transcript-toggle" (click)="transcriptOpen = !transcriptOpen">
+            <div *ngIf="transcriptLoaded && videoOn" class="transcript-search">
+                <a *ngIf="transcriptSearch" class="transcript-toggle" (click)="transcriptOpen = !transcriptOpen">
                     <i class="glyphicon"
                        [class.glyphicon-chevron-right]="!transcriptOpen"
                        [class.glyphicon-chevron-down]="transcriptOpen"></i>
@@ -437,9 +440,11 @@ export class VideoComponent extends AngularPluginBase<
     videosettings?: {src: string; crossOrigin: string | null};
     audiosettings?: {src: string; crossOrigin: string | null};
     playbackRateString = "";
+    transcriptSearch: boolean = true;
     advVideo: boolean = true;
     requiresTaskId = false;
     advVideoState = new TimStorage("advVideoState", t.boolean);
+    transcriptSearchState = new TimStorage("transcriptSearchState", t.boolean);
     mtype: string = "normal";
     nolimits: boolean = false;
     showSettings: boolean = false;
@@ -455,6 +460,10 @@ export class VideoComponent extends AngularPluginBase<
 
     onAdvVideoStateChange(newValue: boolean) {
         this.advVideoState.set(newValue);
+    }
+
+    onTranscriptSearchStateChange(newValue: boolean) {
+        this.transcriptSearchState.set(newValue);
     }
 
     ngOnInit() {
@@ -492,6 +501,7 @@ export class VideoComponent extends AngularPluginBase<
         this.nolimits = this.markup.nolimits ?? this.nolimits;
 
         this.advVideo = this.advVideoState.get() ?? false;
+        this.transcriptSearch = this.transcriptSearchState.get() ?? true;
         this.start = toSeconds(this.markup.start);
         this.end = toSeconds(this.markup.end);
         this.bookmarks[0] = this.start ?? 0;
