@@ -155,7 +155,7 @@ export class AddLLMAPIKeyDialogComponent extends AngularDialogComponent<
      */
     async validateAPIKey() {
         return await toPromise(
-            this.http.post<Response>("/chattim/validate_api", {
+            this.http.post<Response>("/chattim/validateApi", {
                 model: this.chosenModel,
                 apikey: this.apiKey,
                 alias: this.LLMKeyAlias,
@@ -165,7 +165,7 @@ export class AddLLMAPIKeyDialogComponent extends AngularDialogComponent<
 
     async getLLMProviders() {
         const result = await toPromise(
-            this.http.get<[]>("/chattim/get_providers")
+            this.http.get<[]>("/chattim/getProviders")
         );
         if (result.ok) {
             this.LLMProviders = result.result;

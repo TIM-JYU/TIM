@@ -292,6 +292,10 @@ def get_providers() -> list[str]:
     return response
 
 
+def get_existing_keys() -> list[str]:
+    return []
+
+
 def to_ndjson_str(json_data: Any) -> str:
     """Return a newline delimited JSON string.
 
@@ -316,6 +320,6 @@ register_route(
     chattim, "post", "saveSettings", ChatTimSaveSettingsParams, save_settings
 )
 register_route(chattim, "post", "getMessages", GetMessagesParams, get_messages)
-register_route(chattim, "post", "validate_api", SaveAPIKeyParams, save_api_key)
-register_route(chattim, "get", "get_providers", None, get_providers)
+register_route(chattim, "post", "validateApi", SaveAPIKeyParams, save_api_key)
+register_route(chattim, "get", "getProviders", None, get_providers)
 register_route(chattim, "post", "getRights", GetRightsParams, get_rights)
