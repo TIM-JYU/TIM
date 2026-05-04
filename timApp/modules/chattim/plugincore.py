@@ -19,7 +19,6 @@ from timApp.modules.chattim.rag import (
     RagMode,
     Message,
     Iterable,
-    ModelInfo,
 )
 from typing import Generic, TypeVar, TypedDict, cast
 
@@ -29,12 +28,14 @@ from timApp.modules.chattim.model import (
     GenericApiClient,
     Provider,
     ModelError,
+    PROVIDERS,
 )
 from timApp.modules.chattim.conversation import ConversationManager, ChatMessage
 
 DEFAULT_CACHE_TIMEOUT = 60 * 15  # seconds
 
 
+# TODO: Is this needed if we have no model labels anymore?
 @dataclass(frozen=True)
 class ChatModel(TypedDict):
     label: str
@@ -343,9 +344,16 @@ class PluginCore:
             # TODO: get settings from db
             pass
 
+        # TODO: Need to get the used API-key from the db
+        # If the teacher has not yet saved the settings after setting an API-key alias,
+        # the list should be empty.
+        # Or should we just disable the model selection in the UI until an API-key alias has been set?
+        api_key = os.getenv("OPENAI_API_KEY") or ""
+        provider: Provider = "openai"
+
         data = InstanceSettingsData(
             availableModes=RagMode.supported_modes(),
-            availableModels=self._get_supported_chat_models(),
+            availableModels=self._get_supported_chat_models(provider, api_key),
         )
 
         return Result(value=data)
@@ -370,6 +378,12 @@ class PluginCore:
         token_gap_enabled = global_policy.token_cap_enabled
         time_window_enabled = global_policy.time_window_enabled
 
+        # TODO: Remove hard coded API-key, provider and model_id.
+        # Fetch from the database.
+        api_key = os.getenv("OPENAI_API_KEY")
+        provider_str: str = "openai"
+        model_id: str = "gpt-4.1-nano"
+
         if not self._document_exists(document_id):
             return Result(None, f"Document [{document_id}] does not exist")
 
@@ -380,7 +394,11 @@ class PluginCore:
         if rag_mode is None:
             return Result(None, f"Invalid rag mode [{llm_mode}] given")
 
-        supported_models = self.rag.get_supported_models()
+        if provider_str not in Provider.__args__:
+            return Result(None, f"Invalid provider [{provider_str}] given")
+        provider = cast(Provider, provider_str)
+
+        supported_models = PluginCore._get_supported_models(provider, api_key)
         if model_id not in supported_models:
             return Result(None, f"Given model [{model_id}] not supported")
 
@@ -417,9 +435,7 @@ class PluginCore:
 
         # TODO: if instance exists -> update OTHERIWISE create
 
-        # TODO: remove hard coded api key and model
-        api_key = os.getenv("OPENAI_API_KEY")
-        kwargs_model = dict(provider="openai", model_id="gpt-4.1-nano", api_key=api_key)
+        kwargs_model = dict(provider=provider, model_id=model_id, api_key=api_key)
         try:
             self.rag.add_model(identifier=document_id, **kwargs_model)
         except ValueError as e:
@@ -464,18 +480,40 @@ class PluginCore:
             document_id, caller_id, ts_begin, ts_end, max_count
         )
 
-    def _get_supported_chat_models(self) -> list[ChatModel]:
-        chat_models: list[ChatModel] = []
-        for model_spec in self.rag.get_supported_models().values():
-            chat_models.append(
-                ChatModel(label=model_spec.label, value=model_spec.model_id)
-            )
+    @staticmethod
+    def get_supported_providers():
+        """Get the list of supported API providers."""
+        return list(PROVIDERS.keys())
 
+    @staticmethod
+    @cache.memoize(timeout=DEFAULT_CACHE_TIMEOUT)
+    def _get_supported_models(provider: Provider, api_key: str) -> list[str]:
+        """Get all the models the given API-key has access to.
+        :param provider: Provider name.
+        :param api_key: API key, must match the given provider.
+        :return: List of all supported model IDs.
+        """
+        client = GenericApiClient(provider, api_key)
+        try:
+            return client.list_models()
+        except ModelError:
+            return []
+        finally:
+            client.close()
+
+    @staticmethod
+    def _get_supported_chat_models(provider: Provider, api_key: str) -> list[ChatModel]:
+        if not api_key:
+            return []
+        chat_models: list[ChatModel] = []
+        for model_id in PluginCore._get_supported_models(provider, api_key):
+            chat_models.append(ChatModel(label=model_id, value=model_id))
         return chat_models
 
     @cache.memoize(timeout=DEFAULT_CACHE_TIMEOUT, args_to_ignore=["self", "caller_id"])
     def get_system_prompt(self, caller_id: int, document_id: int) -> str | None:
-        # TODO: fetch from the database
+        # TODO: Fetch from the database. If the caller fetches the whole table for other info as well,
+        # then this function should probably only take the prompt path as a parameter.
         prompt_path = ""
         if not prompt_path:
             return None
@@ -669,6 +707,3 @@ class PluginCore:
             return f"Given time cap [{window_token_cap}] should be greater than 0"
 
         return None
-
-    def get_supported_providers(self):
-        return self.rag.registry.get_supported_providers()
