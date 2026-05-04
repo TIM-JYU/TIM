@@ -12,6 +12,7 @@ export interface ControlPanelSettings extends Record<string, JsonValue> {
     max_tokens: number;
     tim_paths: string;
     system_prompt_path: string;
+    embedder_id: string;
 }
 
 @Component({
@@ -65,12 +66,12 @@ export interface ControlPanelSettings extends Record<string, JsonValue> {
                               [class.glyphicon-chevron-right]="!embedOpen"
                               [class.glyphicon-chevron-down]="embedOpen">
                         </span>
-                            Embedding model: <strong>{{ embeddingModel }}</strong>
+                            Embedding model: <strong>{{ selectedEmbeddingModelLabel }}</strong>
                         </button>
                         <div *ngIf="embedOpen" class="settings-section-body">
                             <select class="form-control"
                                     [(ngModel)]="embeddingModel">
-                                <option *ngFor="let m of embeddingModels" [ngValue]="m">{{ m }}</option>
+                                <option *ngFor="let m of embeddingModels" [ngValue]="m.id">{{ m.label }}</option>
                             </select>
                         </div>
                     </div>
@@ -176,7 +177,11 @@ export class ChatControlPanelComponent {
     tokensOpen = false;
     filesOpen = false;
     promptOpen = false;
-    embeddingModels = ["text-embedding-3-small", "text-embedding-3-large"];
+    embeddingModels = [
+        {id: "text-embedding-3-small", label: "OpenAI-small"},
+        {id: "text-embedding-3-large", label: "OpenAI-large"},
+        {id: "gemini-embedding-001", label: "Gemini"},
+    ];
     @Input() localFilePaths!: string;
     @Input() error?: string;
     @Input() response?: string;
@@ -214,6 +219,12 @@ export class ChatControlPanelComponent {
     get selectedModelLabel(): string {
         const model = this.availableModels?.find(
             (m) => m.value === this.selectedModel
+        );
+        return model ? model.label : "";
+    }
+    get selectedEmbeddingModelLabel(): string {
+        const model = this.embeddingModels?.find(
+            (m) => m.id === this.embeddingModel
         );
         return model ? model.label : "";
     }

@@ -96,10 +96,13 @@ class GeminiEmbeddingModel(EmbeddingModel):
             return EmbeddingResponse(embeddings=[], used_tokens=0)
 
         embeddings = [x.embedding for x in result.data]
-
-        return EmbeddingResponse(
-            embeddings=embeddings, used_tokens=result.usage.total_tokens
-        )
+        # Usage field seems to be missing from the response when using gemini with openai library
+        try:
+            tokens_used = result.usage.total_tokens
+        except Exception as e:
+            print(f"Error getting tokens used {e}")
+            tokens_used = 0
+        return EmbeddingResponse(embeddings=embeddings, used_tokens=tokens_used)
 
     def change_key(self, key: str):
         self.api_key = key
@@ -239,9 +242,7 @@ class Indexer:
         os.makedirs(self.root_path, exist_ok=True)
         for document in documents:
             changelog = document.get_changelog(max_entries=1)
-            file_name = self._get_file_name(
-                document.doc_id, embedding_model.get_model_type()
-            )
+            file_name = self._get_file_name(document.doc_id, model_type)
 
             document_last_edited = changelog.entries[0].time
             try:
@@ -277,17 +278,19 @@ class Indexer:
             tokens_used += embeddings.used_tokens
 
             document_id = document.doc_id
-            data = [
-                {
-                    "embedding": embedding,
-                    "text": chunk.text,
-                    "tim_block_id": chunk.tim_block_id,
-                    "sub_block_id": chunk.sub_block_id,
-                    "document_id": document_id,
-                    "indexed_document_version": document_last_edited.isoformat(),
-                }
-                for embedding, chunk in zip(embeddings.embeddings, chunks)
-            ]
+            data = {
+                "indexed_document_version": document_last_edited.isoformat(),
+                "embeddings": [
+                    {
+                        "embedding": embedding,
+                        "text": chunk.text,
+                        "tim_block_id": chunk.tim_block_id,
+                        "sub_block_id": chunk.sub_block_id,
+                        "document_id": document_id,
+                    }
+                    for embedding, chunk in zip(embeddings.embeddings, chunks)
+                ],
+            }
 
             file_name = self._get_file_name(
                 document.doc_id, embedding_model.get_model_type()
@@ -349,7 +352,7 @@ class Indexer:
         texts = []
 
         for page in page_embeddings:
-            for chunk in page:
+            for chunk in page["embeddings"]:
                 embeddings.append(chunk["embedding"])
                 texts.append(chunk["text"])
 
