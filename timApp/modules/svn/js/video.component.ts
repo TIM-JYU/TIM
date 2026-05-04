@@ -171,6 +171,8 @@ const ShowFileAll = t.type({
              (keydown.g)="jump(-1, $event)"
              (keydown.h)="jump(1, $event)"
              (keydown.j)="jump(10, $event)"
+             (keydown.control.f)="openTranscriptSearch($event)"
+             (keydown.meta.f)="openTranscriptSearch($event)"
         >
             <tim-markup-error *ngIf="markupError" [data]="markupError!"></tim-markup-error>
             <p *ngIf="header" [innerHtml]="header | purify"></p>
@@ -338,13 +340,29 @@ const ShowFileAll = t.type({
                 </a>
                 <div *ngIf="transcriptOpen" class="transcript-search-panel">
                     <div class="transcript-search-row">
-                        <input type="text"
-                               class="form-control transcript-search-input"
-                               [(ngModel)]="transcriptQuery"
-                               (ngModelChange)="onTranscriptSearch()"
-                               (keydown)="$event.stopPropagation()"
-                               [attr.placeholder]="markup.transcriptPlaceholder ?? 'Search transcript...'"
-                        >
+                        <div class="transcript-search-input-wrapper">
+                            <input
+                                class="form-control transcript-search-input"
+                                id="transcript-search-input"
+                                #transcriptSearchInput
+                                type="text"
+                                [(ngModel)]="transcriptQuery"
+                                (ngModelChange)="onTranscriptSearch()"
+                                (keydown)="$event.stopPropagation()"
+                                [attr.placeholder]="markup.transcriptPlaceholder ?? 'Search transcript...'"
+                            />
+                        
+                            <button
+                                *ngIf="transcriptQuery"
+                                type="button"
+                                class="clear-transcript-input-btn"
+                                (click)="transcriptQuery = ''; transcriptSearchInput.focus(); onTranscriptSearch()"
+                                aria-label="Clear search"
+                                title="Clear search"
+                            >
+                                ×
+                            </button>
+                        </div>
                         <select *ngIf="transcriptSubtitleMap.size > 1"
                                 class="form-control transcript-subtitle-select"
                                 [(ngModel)]="selectedTranscriptName"
@@ -427,6 +445,8 @@ export class VideoComponent extends AngularPluginBase<
 
     // Removing the ElementRef caused the video's advanced controls not to work properly.
     @ViewChild("video") video?: ElementRef<HTMLVideoElement>;
+    @ViewChild("transcriptSearchInput")
+    transcriptSearchInput?: ElementRef<HTMLInputElement>;
 
     private limits!: string | null;
     duration!: string | null;
@@ -464,6 +484,15 @@ export class VideoComponent extends AngularPluginBase<
 
     onTranscriptSearchStateChange(newValue: boolean) {
         this.transcriptSearchState.set(newValue);
+    }
+
+    openTranscriptSearch(e: Event) {
+        e.preventDefault();
+        this.transcriptOpen = true;
+
+        setTimeout(() => {
+            this.transcriptSearchInput?.nativeElement.focus();
+        });
     }
 
     ngOnInit() {
