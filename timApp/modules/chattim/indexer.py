@@ -42,9 +42,9 @@ class EmbeddingData:
     """
     :param embedding: embedding vector
     :param text: text chunk
-    :param block_id: id of the chunk in the tim document
+    :param tim_block_id: id of the chunk in the tim document
+    :param sub_block_id: id of the sub block in the tim block
     :param document_id: id of the tim document
-    :param date when file was last edited
     """
 
     embedding: list[float]
@@ -52,13 +52,9 @@ class EmbeddingData:
     tim_block_id: int
     sub_block_id: int
     document_id: int
-    # TODO better way to store date?
     embeddings_created: str
-    # filename: str
 
 
-# TODO mallin valinta,
-#  mahdollisesti mallikohtaisia asetuksia?(task type,vektorin koko jne)
 class EmbeddingModel(Protocol):
     def generate(self, text_chunks: list[str]) -> EmbeddingResponse:
         ...
@@ -154,7 +150,6 @@ def create_embedder(provider: str) -> EmbeddingModel:
     )
 
 
-# TODO tekstin paloitteluun eri vaihtoehtoja
 class Indexer:
     def __init__(self, file_path: str):
         """
@@ -229,9 +224,9 @@ class Indexer:
     def create_embeddings(
         self, identifier: int, documents: list[Document]
     ) -> tuple[int, int]:
-        """generates the data object containing embeddings and corresponding text chunks with specified model.
+        """generates the data object containing embeddings and corresponding text chunks
         Throws on non-existing embedder
-        :param embedder_id: Stored model that is to be used for embeddings
+        :param identifier id of the plugin instance
         :param documents: list of tim documents
         :return: number of tokens used"""
 
@@ -310,7 +305,7 @@ class Indexer:
         model_type: str,
     ):
         """returns embeddings for the indexed pages"""
-        # TODO: update for inner divisoin
+
         page_embeddings = []
         for doc_id in doc_ids:
             file_name = self._get_file_name(doc_id, model_type)
@@ -324,9 +319,9 @@ class Indexer:
 
     def get_context(self, prompt: str, identifier: int, k: int = 3) -> ContextResponse:
         """returns the context for the prompt as list of text,and the number of tokens used
-        :param embedder_id: The embedder to be used for fetching the context
-        :param doc_ids: The documents in which we search for the prompts
+
         :param prompt: prompt that is used to search for context
+        :param identifier id of the plugin instance
         :param k: number of tim chunks to return
         :return: ContextResponse object containing the context and the number of tokens used
         """
