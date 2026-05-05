@@ -1,6 +1,7 @@
 ﻿// TODO: setting popup
 
 import * as t from "io-ts";
+import {firstValueFrom} from "rxjs";
 import type {ApplicationRef, DoBootstrap} from "@angular/core";
 import {Component, ElementRef, NgModule, ViewChild} from "@angular/core";
 import {
@@ -363,12 +364,12 @@ const ShowFileAll = t.type({
                                 ×
                             </button>
                         </div>
-                        <select *ngIf="transcriptSubtitleMap.size > 1"
+                        <select *ngIf="transcriptSubtitleNames.length > 1"
                                 class="form-control transcript-subtitle-select"
                                 [(ngModel)]="selectedTranscriptName"
                                 (ngModelChange)="onTranscriptSubtitleChange()"
                                 (keydown)="$event.stopPropagation()">
-                            <option *ngFor="let name of transcriptSubtitleMap.keys()" [value]="name">{{name}}</option>
+                            <option *ngFor="let name of transcriptSubtitleNames" [value]="name">{{name}}</option>
                         </select>
                     </div>
                     <div class="transcript-search-results" *ngIf="filteredCues.length > 0">
@@ -471,7 +472,8 @@ export class VideoComponent extends AngularPluginBase<
     hidetext: string = "Hide file";
     srcUrl!: URL;
     src: string = "";
-    transcriptSubtitleMap = new Map<string, VttCue[]>();
+    transcriptSubtitleMap: Map<string, VttCue[]> | null = null;
+    transcriptSubtitleNames: string[] = [];
     selectedTranscriptName = "";
     transcriptQuery = "";
     filteredCues: VttCue[] = [];
@@ -567,27 +569,54 @@ export class VideoComponent extends AngularPluginBase<
         if (this.markup.transcriptSearch === false) {
             return;
         }
+
+        this.transcriptLoaded = this.markup.subtitles.length > 0;
+    }
+
+    async loadTranscriptSubtitleMap(): Promise<Map<string, VttCue[]> | null> {
+        if (this.transcriptSubtitleMap != null) {
+            return this.transcriptSubtitleMap;
+        }
+
+        if (this.markup.subtitles == null) {
+            return null;
+        }
+
+        this.transcriptSubtitleMap = new Map<string, VttCue[]>();
+
         for (const subtitle of this.markup.subtitles) {
             if (!subtitle.file) {
                 continue;
             }
-            this.http
-                .get(subtitle.file, {responseType: "text"})
-                .subscribe((content) => {
-                    const label = subtitle.name || subtitle.file;
-                    this.transcriptSubtitleMap.set(label, parseVtt(content));
-                    if (!this.transcriptLoaded) {
-                        const defaultMatch = this.markup.subtitles.find(
-                            (s) =>
-                                s.name === this.markup.defaultSubtitles ||
-                                s.file === this.markup.defaultSubtitles
-                        );
-                        this.selectedTranscriptName =
-                            defaultMatch?.name ?? defaultMatch?.file ?? label;
-                        this.transcriptLoaded = true;
-                    }
-                });
+
+            const content = await firstValueFrom(
+                this.http.get(subtitle.file, {responseType: "text"})
+            );
+
+            const label = subtitle.name || subtitle.file;
+            this.transcriptSubtitleMap.set(label, parseVtt(content));
         }
+
+        this.transcriptSubtitleNames = Array.from(
+            this.transcriptSubtitleMap.keys()
+        );
+
+        const selectedTrack = this.video
+            ? [...this.video.nativeElement.textTracks].find(
+                  (tt) => tt.mode === "showing"
+              )
+            : undefined;
+
+        if (selectedTrack) {
+            this.selectedTranscriptName = selectedTrack.label;
+        } else {
+            this.selectedTranscriptName =
+                this.markup.subtitles[0]?.name ||
+                this.markup.subtitles[0]?.file ||
+                "";
+        }
+
+        return this.transcriptSubtitleMap;
     }
 
     hideVideo() {
@@ -903,6 +932,7 @@ export class VideoComponent extends AngularPluginBase<
             );
             if (track) {
                 track.mode = "showing";
+                this.selectedTranscriptName = track.label;
             }
         }
         this.video.nativeElement.currentTime = this.start ?? 0;
@@ -954,14 +984,18 @@ export class VideoComponent extends AngularPluginBase<
         // this.vctrl.runJsRunner();
     }
 
-    onTranscriptSearch() {
+    async onTranscriptSearch() {
+        const subtitleMap = await this.loadTranscriptSubtitleMap();
+        if (subtitleMap == null) {
+            return;
+        }
+
         const query = this.transcriptQuery.trim().toLowerCase();
         if (!query) {
             this.filteredCues = [];
             return;
         }
-        const cues =
-            this.transcriptSubtitleMap.get(this.selectedTranscriptName) ?? [];
+        const cues = subtitleMap.get(this.selectedTranscriptName) ?? [];
         const maxResults = this.markup.transcriptMaxResults ?? 50;
         const escaped = query.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
         const re = new RegExp(escaped, "gi");
@@ -984,8 +1018,11 @@ export class VideoComponent extends AngularPluginBase<
     }
 
     onTranscriptSubtitleChange() {
-        this.transcriptQuery = "";
+        // this.transcriptQuery = "";
         this.filteredCues = [];
+        if (this.transcriptQuery) {
+            void this.onTranscriptSearch();
+        }
     }
 
     seekTo(seconds: number) {
