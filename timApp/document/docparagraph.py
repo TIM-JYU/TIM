@@ -162,7 +162,9 @@ class DocParagraph:
         self.attrs: dict[str, str] | None = None
         self.nomacros = None
         self.ref_chain = None
-        self.answer_nr: int | None = None  # needed if variable tasks, None = not task at all or not variable task
+        self.answer_nr: int | None = (
+            None  # needed if variable tasks, None = not task at all or not variable task
+        )
         self.md = ""
         self.id = None
         self.ask_new: bool | None = None  # to send for plugins to force new question
@@ -347,29 +349,35 @@ class DocParagraph:
         :return: The retrieved DocParagraph.
 
         """
-        try:
+        while True:  # try with t and current
             par_path = cls._get_path(doc, par_id, t)
-            # We need to retry reading the file in case it is being written to.
-            # This can sometimes happen if the IO is busy,
-            # and we use a file system that doesn't lock files when writing.
-            # FIXME: This is a temporary workaround. We should probably properly lock the file.
-            attempt = 0
-            while True:
-                with open(par_path) as f:
-                    try:
-                        doc_dict = json.loads(f.read())
-                        break
-                    except json.JSONDecodeError as ex:
-                        attempt += 1
-                        if attempt >= 3:
-                            raise ValueError(
-                                f"Invalid JSON read from {par_path}: '{ex.doc}' (aborting after {attempt} attempts)"
-                            ) from ex
-                        else:
-                            time.sleep(0.01)
-            return cls.from_dict(doc, doc_dict)
-        except FileNotFoundError:
-            doc._raise_not_found(par_id)
+            try:
+                # We need to retry reading the file in case it is being written to.
+                # This can sometimes happen if the IO is busy,
+                # and we use a file system that doesn't lock files when writing.
+                # FIXME: This is a temporary workaround. We should probably properly lock the file.
+                attempt = 0
+                while True:
+                    with open(par_path) as f:
+                        try:
+                            doc_dict = json.loads(f.read())
+                            break
+                        except json.JSONDecodeError as ex:
+                            attempt += 1
+                            if attempt >= 3:
+                                raise ValueError(
+                                    f"Invalid JSON read from {par_path}: '{ex.doc}' (aborting after {attempt} attempts)"
+                                ) from ex
+                            else:
+                                time.sleep(0.01)
+                return cls.from_dict(doc, doc_dict)
+            except FileNotFoundError:
+                log_error(f"Paragraph file not found: {par_path}")
+                if t == "current":
+                    break
+                t = "current"
+
+        doc._raise_not_found(par_id)
 
     @classmethod
     def _get_path(cls, doc, par_id: str, t: str) -> str:
