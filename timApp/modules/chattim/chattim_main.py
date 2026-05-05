@@ -2,6 +2,7 @@ from dataclasses import dataclass
 from flask import request, Response, stream_with_context
 from typing import Any, TypedDict, Callable
 from webargs.flaskparser import use_args
+from flask_babel import gettext
 
 from timApp.auth.accesshelper import (
     verify_logged_in,
@@ -30,6 +31,7 @@ from timApp.modules.chattim.plugincore import (
     PluginCore,
     InstanceAttributes,
 )
+from .model import ModelError
 
 plugincore = PluginCore()
 
@@ -203,10 +205,8 @@ def ask_stream_route(params: ChatTimAskParams) -> Response:
                     yield to_ndjson_str(
                         ChatTimAskResponse(usage=chunk.usage.total_tokens)
                     )
-        except TimeoutError:
-            yield to_ndjson_str(
-                ChatTimAskResponse(error="Reached timeout generating the response")
-            )
+        except ModelError as e:
+            yield to_ndjson_str(ChatTimAskResponse(error=e.text()))
             return
         except Exception as e:
             yield to_ndjson_str(ChatTimAskResponse(error=str(e)))

@@ -185,9 +185,7 @@ class PluginCore:
         try:
             answer = self.rag.answer(msg_data, identifier=document_id, stream=stream)
         except ModelError as e:
-            if e.kind == ModelErrorKind.Timeout:
-                return Result(error="Reached timeout generating the response")
-            return Result(error=str(e))
+            return Result(error=e.text())
         except Exception as e:
             return Result(error=str(e))
 
@@ -249,6 +247,7 @@ class PluginCore:
         document_id: int,
         user_input: str,
     ) -> Result[str | None, str | None]:
+        """Generate a model response."""
         timestamp_user = ChatMessage.ts_ms()
         # TODO: Do we save user messages to disk if error occurred from some of the checks or just discard?
         prep = self._prepare_chat_request(
@@ -285,6 +284,14 @@ class PluginCore:
         document_id: int,
         user_input: str,
     ) -> Result[Iterable[ModelResponse], str]:
+        """Generate a model response using streaming.
+
+        :param caller_id: The id of the caller.
+        :param document_id: The id of the document.
+        :param user_input: The input of the caller.
+        :raises ModelError: If an error occurs during the stream.
+        :return: A stream of model response chunks.
+        """
         timestamp_user = ChatMessage.ts_ms()
         prep = self._prepare_chat_request(
             caller_id, document_id, user_input, stream=True
@@ -314,10 +321,6 @@ class PluginCore:
                 for chunk in stream:
                     apply_chunk(chunk)
                     yield chunk
-            except ModelError as e:
-                if e.kind == ModelErrorKind.Timeout:
-                    raise TimeoutError()
-                raise e
             finally:
                 # Drain the remaining chunks if the client disconnected mid-stream
                 try:

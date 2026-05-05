@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from flask_babel import gettext
 from dataclasses import dataclass, asdict
 from typing import Literal, Protocol, Callable, Iterable, Any, cast, AsyncIterator
 from enum import Enum
@@ -39,6 +40,21 @@ class ModelError(Exception):
     """Original exception cause."""
     status: int | None = None
     """Status code of the error."""
+
+    def text(self) -> str:
+        """Return the translated error text."""
+        match self.kind:
+            case ModelErrorKind.Timeout:
+                return gettext("The request timed out. Please try again later.")
+            case ModelErrorKind.RateLimit:
+                return gettext("Rate limit exceeded. Please wait and try again.")
+            case ModelErrorKind.Auth:
+                return gettext("Authentication failed.")
+            case ModelErrorKind.NotFound:
+                return gettext("The requested resource was not found.")
+            case ModelErrorKind.BadRequest:
+                return gettext("Bad request.")
+        return gettext("An error occurred while generating a response.")
 
     def __str__(self) -> str:
         if self.kind == ModelErrorKind.Unknown and self.cause is not None:
@@ -582,10 +598,10 @@ def _default_headers(provider: Provider, api_key: str) -> dict[str, str]:
 
 Provider = Literal["openai", "anthropic", "google", "dummy"]
 
-ProviderInitFn = Callable[[str, str, str, str | None], ChatModel]
+ProviderInitFn = Callable[[Provider, str, str, str | None], ChatModel]
 """Function type for initializing `ChatModel` instances from different providers.
 
-`ProviderInitFn(provider: str, model_id: str, api_key: str, base_url: str | None)`
+`ProviderInitFn(provider: Provider, model_id: str, api_key: str, base_url: str | None)`
 """
 
 PROVIDERS: dict[Provider, ProviderInitFn] = {
