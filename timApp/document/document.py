@@ -16,7 +16,7 @@ from filelock import FileLock, BaseFileLock
 from flask import has_request_context, request
 from lxml import etree, html
 
-from document.docsettings import RECURSIVE_SETTINGS_KEY
+from timApp.document.docsettings import RECURSIVE_SETTINGS_KEY
 from timApp.document.changelog import Changelog
 from timApp.document.changelogentry import ChangelogEntry
 from timApp.document.docparagraph import DocParagraph
