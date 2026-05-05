@@ -195,11 +195,22 @@ def ask_stream_route(params: ChatTimAskParams) -> Response:
             yield to_ndjson_str(ChatTimAskResponse(error=resp.error))
             return
 
-        for chunk in resp.value:
-            if chunk.delta:
-                yield to_ndjson_str(ChatTimAskResponse(answer=chunk.delta))
-            if chunk.usage:
-                yield to_ndjson_str(ChatTimAskResponse(usage=chunk.usage.total_tokens))
+        try:
+            for chunk in resp.value:
+                if chunk.delta:
+                    yield to_ndjson_str(ChatTimAskResponse(answer=chunk.delta))
+                if chunk.usage:
+                    yield to_ndjson_str(
+                        ChatTimAskResponse(usage=chunk.usage.total_tokens)
+                    )
+        except TimeoutError:
+            yield to_ndjson_str(
+                ChatTimAskResponse(error="Reached timeout generating the response")
+            )
+            return
+        except Exception as e:
+            yield to_ndjson_str(ChatTimAskResponse(error=str(e)))
+            return
 
     return Response(
         stream_with_context(generate()),

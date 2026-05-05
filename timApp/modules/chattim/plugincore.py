@@ -28,7 +28,9 @@ from timApp.modules.chattim.model import (
     GenericApiClient,
     Provider,
     ModelError,
+    ModelErrorKind,
     PROVIDERS,
+    ModelErrorKind,
 )
 from timApp.modules.chattim.conversation import ConversationManager, ChatMessage
 
@@ -183,6 +185,8 @@ class PluginCore:
         try:
             answer = self.rag.answer(msg_data, identifier=document_id, stream=stream)
         except ModelError as e:
+            if e.kind == ModelErrorKind.Timeout:
+                return Result(error="Reached timeout generating the response")
             return Result(error=str(e))
         except Exception as e:
             return Result(error=str(e))
@@ -310,10 +314,17 @@ class PluginCore:
                 for chunk in stream:
                     apply_chunk(chunk)
                     yield chunk
+            except ModelError as e:
+                if e.kind == ModelErrorKind.Timeout:
+                    raise TimeoutError()
+                raise e
             finally:
                 # Drain the remaining chunks if the client disconnected mid-stream
-                for chunk in stream:
-                    apply_chunk(chunk)
+                try:
+                    for chunk in stream:
+                        apply_chunk(chunk)
+                except ModelError:
+                    pass
                 timestamp_answer = ChatMessage.ts_ms()
                 self._save_messages(
                     plugin_id=p.document_id,

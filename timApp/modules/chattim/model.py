@@ -14,7 +14,10 @@ from openai import (
     NotFoundError,
     BadRequestError,
     APIStatusError,
+    types,
 )
+
+DEFAULT_COMPLETION_TIMEOUT_S = 60
 
 
 class ModelErrorKind(Enum):
@@ -182,7 +185,7 @@ class ModelResponse:
     """Usage statistics."""
 
 
-def _convert_usage(usage: Any) -> Usage | None:
+def _convert_usage(usage: types.CompletionUsage | None) -> Usage | None:
     """
     Convert completion usage from the API response to `Usage`
 
@@ -222,6 +225,7 @@ def _completion_kwargs(
         messages=cast(Any, msgs),
         temperature=options.temperature,
         max_completion_tokens=options.max_tokens,
+        timeout=DEFAULT_COMPLETION_TIMEOUT_S,
         **stream_options,
     )
 
@@ -233,9 +237,11 @@ def _parse_completion_response(res: Any) -> ModelResponse:
     :param res: The response from the model API.
     :return: Response in `ModelResponse`.
     """
-    message_content = res.choices[0].message.content or ""
+    if not res or not res.choices:
+        return ModelResponse()
+    choice = res.choices[0]
     usage = _convert_usage(res.usage)
-    return ModelResponse(content=message_content, usage=usage)
+    return ModelResponse(content=choice.message.content or "", usage=usage)
 
 
 def _parse_stream_chunk(chunk: Any) -> ModelResponse:
