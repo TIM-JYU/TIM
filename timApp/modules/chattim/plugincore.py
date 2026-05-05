@@ -627,10 +627,15 @@ class PluginCore:
         """
         # check userpolicy (if exists)
         rule = self.tim_database.get_llm_rule(document_id)
-        # student_policy = self.tim_database.get_user_policy(rule, caller_id)
-
+        usage = self.tim_database.get_usage(rule, caller_id).used_tokens
+        token_limit = self.tim_database.get_user_policy(rule, caller_id).max_tokens_per_user
         # check globalpolicy
-        # global_polcy = self.tim_database.get_global_policy(rule)
+        if not token_limit:
+            token_limit = self.tim_database.get_global_policy(rule).max_tokens_per_user
+            if not token_limit:
+                token_limit = self.tim_database.get_global_policy(rule).token_pool
+        if usage >= token_limit:
+            return Result(error="No more tokens")
 
         return Result(value="ok")
 
