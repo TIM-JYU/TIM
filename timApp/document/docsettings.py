@@ -7,8 +7,8 @@ import yaml
 from marshmallow import ValidationError, EXCLUDE
 from marshmallow.fields import Field
 
-from markdown.autocounters import TimSandboxedEnvironment
-from markdown.markdownconverter import expand_macros
+from timApp.markdown.autocounters import TimSandboxedEnvironment
+from timApp.markdown.markdownconverter import expand_macros
 from timApp.answer.pointsumrule import PointSumRule
 from timApp.document.docparagraph import DocParagraph
 from timApp.document.macroinfo import MacroInfo
