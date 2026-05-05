@@ -162,9 +162,7 @@ class DocParagraph:
         self.attrs: dict[str, str] | None = None
         self.nomacros = None
         self.ref_chain = None
-        self.answer_nr: int | None = (
-            None  # needed if variable tasks, None = not task at all or not variable task
-        )
+        self.answer_nr: int | None = None  # needed if variable tasks, None = not task at all or not variable task
         self.md = ""
         self.id = None
         self.ask_new: bool | None = None  # to send for plugins to force new question
@@ -1255,7 +1253,7 @@ class DocParagraph:
     def set_latest(self):
         """Updates the 'current' symlink to point to this paragraph version."""
         linkpath = self._get_path(self.doc, self.get_id(), "current")
-        if linkpath == self.get_hash():
+        if linkpath == self.get_hash():  # TODO: When this could be true?
             return
         if os.path.islink(linkpath) or os.path.isfile(linkpath):
             os.unlink(linkpath)
