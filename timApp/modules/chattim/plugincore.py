@@ -8,7 +8,11 @@ from timApp.timdb.dbaccess import get_files_path
 from timApp.auth.get_user_rights_for_item import UserItemRights
 from timApp.item.item import Item
 from timApp.document.docinfo import DocInfo
-from timApp.modules.chattim.indexer import OpenAiEmbeddingModel, Indexer
+from timApp.modules.chattim.indexer import (
+    OpenAiEmbeddingModel,
+    Indexer,
+    create_embedder,
+)
 from timApp.modules.chattim.database_handler import (
     TimDatabase,
     Document,
@@ -111,6 +115,7 @@ class PluginCore:
     rag: Rag = Rag()
     history_manager: ConversationManager
     tim_database: TimDatabase = TimDatabase()
+    indexer: Indexer
     list_of_instance_ids: list[int] = []  # TODO: poista kun db:ssa rulet
     # TODO: a plugin instance specific variable? In global policy?
     max_input_len: int = 1024
@@ -122,6 +127,7 @@ class PluginCore:
             cache_ttl_s=60 * 15,
             cache_tail_len=64,
         )
+        self.indexer = Indexer(file_path)
 
     def _prepare_chat_request(
         self,
@@ -165,7 +171,10 @@ class PluginCore:
         mode: RagMode = RagMode.RETRIEVE
         # TODO: No need for this attribute if we have character limit for input? Maybe keep as is for an option
         max_tokens_for_req = 99999
-        response = self.rag.get_context(prompt=validated_input, identifier=document_id)
+        # response = self.rag.get_context(prompt=validated_input, identifier=document_id)
+        response = self.indexer.get_context(
+            prompt=validated_input, identifier=document_id
+        )
         context = response.context
 
         system_prompt = self.get_system_prompt(caller_id, document_id)
@@ -425,15 +434,16 @@ class PluginCore:
         except ValueError as e:
             return Result(None, str(e))
 
-        # TODO:implementation for choosing embedding model provider
+        # TODO: indeksoinnit pyörimään
 
-        emb_model = OpenAiEmbeddingModel(api_key=api_key)
+        # TODO: retrieving llm provider when model info is not hardcoded
+        llm_provider = kwargs_model["provider"]
+        emb_model = create_embedder(provider=llm_provider)
+        self.indexer.add_embedder(document_id, emb_model)
 
-        file_path = get_files_path().as_posix()
-        indexer = Indexer(emb_model, file_path)
-
-        self.rag.add_indexer(indexer, identifier=document_id)
-        tokens_used, failed_embeddings = indexer.create_embeddings(documents=docs)
+        tokens_used, failed_embeddings = self.indexer.create_embeddings(
+            identifier=document_id, documents=docs
+        )
         # probably better ways to do this
 
         if failed_embeddings > 0:

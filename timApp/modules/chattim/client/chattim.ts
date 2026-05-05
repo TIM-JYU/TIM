@@ -129,6 +129,7 @@ export interface ControlPanelData extends ControlPanelSettings {
                         (saveSettingsClick)="onSaveSettings($event)"
                         (panelToggled)="onControlPanelToggle($event)"
                         [selectedModel]="selectedModel"
+                        
                         [selectedMode]="selectedMode"
                         [maxTokens]="maxTokens"
                         [response]="controlpanelResponse"
@@ -208,6 +209,7 @@ export class ChatTIMComponent
     localFilePaths = "";
     selectedMode = "Creative";
     selectedModel = "gpt-4.1-mini";
+
     maxTokens = 1000;
     controlpanelError?: string;
     controlpanelResponse?: string;
@@ -631,6 +633,7 @@ export class ChatTIMComponent
                 this.controlpanelError === ""
             ) {
                 this.selectedModel = result.model_id;
+
                 this.selectedMode = result.llm_mode;
                 this.maxTokens = result.max_tokens;
                 this.localFilePaths = result.tim_paths;
