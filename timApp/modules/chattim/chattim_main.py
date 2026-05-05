@@ -36,7 +36,7 @@ plugincore = PluginCore()
 
 @dataclass
 class ChatTimMarkupModel(GenericMarkupModel):
-    pass
+    welcomeText: str = "Welcome to use TIM's helper chatbot!"
 
 
 # TODO: make proper dataclasses
@@ -135,11 +135,13 @@ class ChatTimHtmlModel(
         return "chattim-runner"
 
 
+# Leave "welcomeText" empty to use default localized welcome text
 def reqs() -> PluginReqs:
     templates = [
         """
 ``` {plugin="chattim" #taskidhere}
 header: ChatTIM
+welcomeText: ""  
 ```
 """,
     ]
