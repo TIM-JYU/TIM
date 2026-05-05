@@ -206,7 +206,8 @@ class TimDatabase:
         """
         Gets the API keys of the given owner.
         """
-        stmt = select(LLMRule.apikey).where(LLMRule.owner == owner_id)
+        stmt = select(LLMRule.apikey).where(
+            LLMRule.owner == owner_id, LLMRule.document_id == -1)
         return db.session.scalar(stmt)
 
     @staticmethod
@@ -388,7 +389,9 @@ class TimDatabase:
         """
         Deletes the usage of the given user in the given LLM rule instance.
         """
-        stmt = delete(Usage).where(Usage.llm_rule == llm_rule, Usage.user == user_id)
+        stmt = delete(Usage).where(
+            Usage.llm_rule == llm_rule, Usage.user == user_id
+        )
         db.session.execute(stmt)
         db.session.commit()
 
@@ -397,5 +400,7 @@ class TimDatabase:
         """
         Gets the usage of the given user in the given LLM rule instance.
         """
-        stmt = select(Usage).where(Usage.llm_rule == llm_rule, Usage.user == user_id)
+        stmt = select(Usage).where(
+            Usage.llm_rule == llm_rule, Usage.user == user_id
+        )
         return db.session.scalar(stmt)
