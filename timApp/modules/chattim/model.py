@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from flask_babel import gettext
 from dataclasses import dataclass, asdict
 from typing import Literal, Protocol, Callable, Iterable, Any, cast, AsyncIterator
 from enum import Enum
@@ -14,7 +15,10 @@ from openai import (
     NotFoundError,
     BadRequestError,
     APIStatusError,
+    types,
 )
+
+DEFAULT_COMPLETION_TIMEOUT_S = 60
 
 
 class ModelErrorKind(Enum):
@@ -36,6 +40,21 @@ class ModelError(Exception):
     """Original exception cause."""
     status: int | None = None
     """Status code of the error."""
+
+    def text(self) -> str:
+        """Return the translated error text."""
+        match self.kind:
+            case ModelErrorKind.Timeout:
+                return gettext("The request timed out. Please try again later.")
+            case ModelErrorKind.RateLimit:
+                return gettext("Rate limit exceeded. Please wait and try again.")
+            case ModelErrorKind.Auth:
+                return gettext("Authentication failed.")
+            case ModelErrorKind.NotFound:
+                return gettext("The requested resource was not found.")
+            case ModelErrorKind.BadRequest:
+                return gettext("Bad request.")
+        return gettext("An error occurred while generating a response.")
 
     def __str__(self) -> str:
         if self.kind == ModelErrorKind.Unknown and self.cause is not None:
@@ -80,9 +99,9 @@ class ChatModel(Protocol):
         """
         ...
 
-    def get_info(self) -> ModelInfo:
+    def get_info(self) -> tuple[Provider, str]:
         """Return info about the model.
-        :return: `ModelInfo` of the chat model.
+        :return: A tuple of the provider name and the model ID.
         """
         ...
 
@@ -124,11 +143,9 @@ class AsyncChatModel(Protocol):
         """
         ...
 
-    def get_info(self) -> ModelInfo:
-        """
-        Return info about the model.
-
-        :return: `ModelInfo` of the chat model.
+    def get_info(self) -> tuple[Provider, str]:
+        """Return info about the model.
+        :return: A tuple of the provider name and the model ID.
         """
         ...
 
@@ -184,18 +201,7 @@ class ModelResponse:
     """Usage statistics."""
 
 
-@dataclass(frozen=True)
-class ModelInfo:
-    """Information about a model."""
-
-    provider: Provider
-    model_id: str
-    label: str | None = None
-    supports_temperature: bool = False
-    supports_streaming: bool = False
-
-
-def _convert_usage(usage: Any) -> Usage | None:
+def _convert_usage(usage: types.CompletionUsage | None) -> Usage | None:
     """
     Convert completion usage from the API response to `Usage`
 
@@ -212,7 +218,7 @@ def _convert_usage(usage: Any) -> Usage | None:
 
 
 def _completion_kwargs(
-    info: ModelInfo,
+    model_id: str,
     messages: list[Message],
     options: GenerateOptions,
     stream: bool,
@@ -220,22 +226,22 @@ def _completion_kwargs(
     """
     Prepare the keyword arguments for a completion request.
 
-    :param info: Information about the model being used.
+    :param model_id: The id of the model being used.
     :param messages: A list of messages to be sent to the model.
     :param options: Options for generating the completion.
     :param stream: Whether to use streaming for the response.
     :return: A dictionary of keyword arguments for the completion request.
     """
     msgs: list[dict[str, str]] = [asdict(m) for m in messages]
-    temperature = options.temperature if info.supports_temperature else None
     stream_options = (
         {"stream": True, "stream_options": {"include_usage": True}} if stream else {}
     )
     return dict(
-        model=info.model_id,
+        model=model_id,
         messages=cast(Any, msgs),
-        temperature=temperature,
+        temperature=options.temperature,
         max_completion_tokens=options.max_tokens,
+        timeout=DEFAULT_COMPLETION_TIMEOUT_S,
         **stream_options,
     )
 
@@ -247,9 +253,11 @@ def _parse_completion_response(res: Any) -> ModelResponse:
     :param res: The response from the model API.
     :return: Response in `ModelResponse`.
     """
-    message_content = res.choices[0].message.content or ""
+    if not res or not res.choices:
+        return ModelResponse()
+    choice = res.choices[0]
     usage = _convert_usage(res.usage)
-    return ModelResponse(content=message_content, usage=usage)
+    return ModelResponse(content=choice.message.content or "", usage=usage)
 
 
 def _parse_stream_chunk(chunk: Any) -> ModelResponse:
@@ -272,21 +280,22 @@ class GenericApiChatModel(ChatModel):
     `ChatModel` implementation for providers that are OpenAI SDK compatible.
     """
 
-    def __init__(self, info: ModelInfo, api_key: str, base_url: str):
-        self._info = info
+    def __init__(self, provider: Provider, model_id: str, api_key: str, base_url: str):
+        self._model_id = model_id
+        self._provider = provider
         self._api_key = api_key
         self._base_url = base_url
         self._client = OpenAI(
-            api_key=_sdk_api_key(info.provider, api_key),
+            api_key=_sdk_api_key(provider, api_key),
             base_url=self._base_url,
-            default_headers=_default_headers(info.provider, api_key),
+            default_headers=_default_headers(provider, api_key),
         )
 
     def generate(
         self, messages: list[Message], options: GenerateOptions
     ) -> ModelResponse:
         """Generate a model response from the given messages."""
-        kwargs = _completion_kwargs(self._info, messages, options, False)
+        kwargs = _completion_kwargs(self._model_id, messages, options, False)
         try:
             res = self._client.chat.completions.create(**kwargs)
         except Exception as e:
@@ -300,12 +309,7 @@ class GenericApiChatModel(ChatModel):
         Generate a model response from the given messages.
         Uses streaming and returns the response in chunks.
         """
-        if not self._info.supports_streaming:
-            raise ValueError(
-                f"Streaming is not supported with model: {self._info.model_id}"
-            )
-
-        kwargs = _completion_kwargs(self._info, messages, options, True)
+        kwargs = _completion_kwargs(self._model_id, messages, options, True)
         try:
             stream = self._client.chat.completions.create(**kwargs)
         except Exception as e:
@@ -315,8 +319,9 @@ class GenericApiChatModel(ChatModel):
         for chunk in stream:
             yield _parse_stream_chunk(chunk)
 
-    def get_info(self) -> ModelInfo:
-        return self._info
+    def get_info(self) -> tuple[Provider, str]:
+        """Return info about the model."""
+        return self._provider, self._model_id
 
     def close(self) -> None:
         self._client.close()
@@ -327,21 +332,22 @@ class AsyncGenericApiChatModel(AsyncChatModel):
     `AsyncChatModel` implementation for providers that are OpenAI SDK compatible.
     """
 
-    def __init__(self, info: ModelInfo, api_key: str, base_url: str):
-        self._info = info
+    def __init__(self, provider: Provider, model_id: str, api_key: str, base_url: str):
+        self._model_id = model_id
+        self._provider = provider
         self._api_key = api_key
         self._base_url = base_url
         self._client = AsyncOpenAI(
-            api_key=_sdk_api_key(info.provider, api_key),
+            api_key=_sdk_api_key(provider, api_key),
             base_url=self._base_url,
-            default_headers=_default_headers(info.provider, api_key),
+            default_headers=_default_headers(provider, api_key),
         )
 
     async def generate(
         self, messages: list[Message], options: GenerateOptions
     ) -> ModelResponse:
         """Generate a model response from the given messages."""
-        kwargs = _completion_kwargs(self._info, messages, options, False)
+        kwargs = _completion_kwargs(self._model_id, messages, options, False)
         try:
             res = await self._client.chat.completions.create(**kwargs)
         except Exception as e:
@@ -357,12 +363,7 @@ class AsyncGenericApiChatModel(AsyncChatModel):
         """
 
         async def gen() -> AsyncIterator[ModelResponse]:
-            if not self._info.supports_streaming:
-                raise ValueError(
-                    f"Streaming is not supported with model: {self._info.model_id}"
-                )
-
-            kwargs = _completion_kwargs(self._info, messages, options, True)
+            kwargs = _completion_kwargs(self._model_id, messages, options, True)
             try:
                 stream = await self._client.chat.completions.create(**kwargs)
             except Exception as e:
@@ -373,8 +374,9 @@ class AsyncGenericApiChatModel(AsyncChatModel):
 
         return gen()
 
-    def get_info(self) -> ModelInfo:
-        return self._info
+    def get_info(self) -> tuple[Provider, str]:
+        """Return info about the model."""
+        return self._provider, self._model_id
 
     async def close(self) -> None:
         await self._client.close()
@@ -383,8 +385,9 @@ class AsyncGenericApiChatModel(AsyncChatModel):
 class DummyChatModel(ChatModel):
     """A dummy chat model for testing."""
 
-    def __init__(self, info: ModelInfo):
-        self._info = info
+    def __init__(self, model_id: str):
+        self._model_id = model_id
+        self._provider: Provider = "dummy"
         self.response = "This is a dummy response"
 
     def generate(
@@ -399,8 +402,8 @@ class DummyChatModel(ChatModel):
             yield ModelResponse(delta=part)
         yield ModelResponse(usage=Usage(0, 0, 0))
 
-    def get_info(self) -> ModelInfo:
-        return self._info
+    def get_info(self) -> tuple[Provider, str]:
+        return self._provider, self._model_id
 
     def close(self) -> None:
         pass
@@ -409,8 +412,9 @@ class DummyChatModel(ChatModel):
 class DummyAsyncChatModel(AsyncChatModel):
     """A dummy async chat model for testing."""
 
-    def __init__(self, info: ModelInfo):
-        self._info = info
+    def __init__(self, model_id: str):
+        self._model_id = model_id
+        self._provider: Provider = "dummy"
         self.response = "This is a dummy response"
 
     async def generate(
@@ -428,8 +432,8 @@ class DummyAsyncChatModel(AsyncChatModel):
 
         return gen()
 
-    def get_info(self) -> ModelInfo:
-        return self._info
+    def get_info(self) -> tuple[Provider, str]:
+        return self._provider, self._model_id
 
     async def close(self) -> None:
         pass
@@ -448,15 +452,15 @@ class GenericApiClient:
             default_headers=_default_headers(provider, api_key),
         )
 
-    def list_models(self) -> list[ModelInfo]:
+    def list_models(self) -> list[str]:
         """Get all the available models from the Model API.
 
         :raises ModelError: If an error occurred.
-        :return: List of all models from the provider API.
+        :return: List of all model IDs from the provider API.
         """
         try:
             models = self._client.models.list()
-            return [ModelInfo(model_id=m.id, provider=self._provider) for m in models]
+            return [m.id for m in models]
         except Exception as e:
             raise _openai_to_model_error(e) from e
 
@@ -477,51 +481,12 @@ class GenericApiClient:
         :return: True if the model is accessible, False otherwise.
         """
         try:
-            return any(m.model_id == model_id for m in self.list_models())
+            return any(m_id == model_id for m_id in self.list_models())
         except ModelError:
             return False
 
-    def close(self) -> None:
-        """Close the underlying HTTPX client."""
-        self._client.close()
-
-
-# TODO: Let database handle the supported models and retrieving model info.
-# Here we should just create the correct model instance from the given spec.
-class ModelRegistry:
-    """Registry for all the supported models."""
-
-    def __init__(self, models: dict[Provider, list[ModelInfo]]):
-        self._models: dict[Provider, dict[str, ModelInfo]] = {
-            provider: {model.model_id: model for model in model_list}
-            for provider, model_list in models.items()
-        }
-
-    def get_models(self, provider: Provider | None = None) -> dict[str, ModelInfo]:
-        """Get all the supported models."""
-        if not provider:
-            out: dict[str, ModelInfo] = {}
-            for models in self._models.values():
-                out.update(models)
-            return out
-        return self._models.get(provider, {})
-
-    def get_model_info(
-        self,
-        provider: Provider,
-        model_id: str,
-    ) -> ModelInfo | None:
-        """Get model info for a specific model."""
-        models = self._models.get(provider, {})
-        return models.get(model_id)
-
     @staticmethod
-    def get_supported_providers() -> list[Provider]:
-        """Get the list of supported API providers."""
-        return list(PROVIDERS.keys())
-
-    def create(
-        self,
+    def create_chat_model(
         provider: Provider,
         model_id: str,
         api_key: str,
@@ -537,10 +502,6 @@ class ModelRegistry:
                             Or if the provided api key has no access to the model.
         :return: Created ChatModel instance.
         """
-        info = self.get_model_info(provider, model_id)
-        if info is None:
-            raise ValueError(f"Unknown model: {provider}/{model_id}")
-
         init_fn = PROVIDERS.get(provider)
         if init_fn is None:
             raise ValueError(f"Unknown provider: {provider}")
@@ -550,9 +511,13 @@ class ModelRegistry:
         has_access = client.check_model_access(model_id)
         client.close()
         if not has_access:
-            raise ValueError(f"No access to model: {model_id}")
+            raise ValueError(f"Unknown model or no access: {model_id}")
 
-        return init_fn(info, api_key, base_url)
+        return init_fn(provider, model_id, api_key, base_url)
+
+    def close(self) -> None:
+        """Close the underlying HTTPX client."""
+        self._client.close()
 
 
 def _split_keep_left(data: str, d: str) -> list[str]:
@@ -633,21 +598,21 @@ def _default_headers(provider: Provider, api_key: str) -> dict[str, str]:
 
 Provider = Literal["openai", "anthropic", "google", "dummy"]
 
-ProviderInitFn = Callable[[ModelInfo, str, str | None], ChatModel]
+ProviderInitFn = Callable[[Provider, str, str, str | None], ChatModel]
 """Function type for initializing `ChatModel` instances from different providers.
 
-`ProviderInitFn(info: ModelInfo, api_key: str, base_url: str | None)`
+`ProviderInitFn(provider: Provider, model_id: str, api_key: str, base_url: str | None)`
 """
 
 PROVIDERS: dict[Provider, ProviderInitFn] = {
-    "openai": lambda info, key, url: GenericApiChatModel(
-        info, key, _resolve_base_url("openai", url)
+    "openai": lambda provider, model_id, key, url: GenericApiChatModel(
+        provider, model_id, key, _resolve_base_url("openai", url)
     ),
-    "anthropic": lambda info, key, url: GenericApiChatModel(
-        info, key, _resolve_base_url("anthropic", url)
+    "anthropic": lambda provider, model_id, key, url: GenericApiChatModel(
+        provider, model_id, key, _resolve_base_url("anthropic", url)
     ),
-    "google": lambda info, key, url: GenericApiChatModel(
-        info, key, _resolve_base_url("google", url)
+    "google": lambda provider, model_id, key, url: GenericApiChatModel(
+        provider, model_id, key, _resolve_base_url("google", url)
     ),
 }
 """All the supported providers."""
@@ -657,43 +622,3 @@ _DEFAULT_BASE_URL_BY_PROVIDER: dict[Provider, str] = {
     "anthropic": "https://api.anthropic.com/v1",
     "google": "https://generativelanguage.googleapis.com/v1beta/openai",
 }
-
-
-# TODO: save in the database
-SUPPORTED_MODELS: dict[Provider, list[ModelInfo]] = {
-    "openai": [
-        ModelInfo(
-            provider="openai",
-            model_id="gpt-4.1-nano",
-            label="GPT-4.1 Nano",
-            supports_temperature=True,
-            supports_streaming=True,
-        ),
-        ModelInfo(
-            provider="openai",
-            model_id="gpt-4.1-mini",
-            label="GPT-4.1 Mini",
-            supports_temperature=True,
-            supports_streaming=True,
-        ),
-        ModelInfo(
-            provider="openai",
-            model_id="gpt-4o-mini",
-            label="GPT-4o Mini",
-            supports_temperature=True,
-            supports_streaming=True,
-        ),
-    ],
-}
-
-
-def get_dummy_model() -> ChatModel:
-    """Create a dummy model for testing."""
-    return DummyChatModel(
-        ModelInfo(
-            provider="dummy",
-            model_id="dummy-model-1",
-            label="Dummy model",
-            supports_streaming=True,
-        )
-    )

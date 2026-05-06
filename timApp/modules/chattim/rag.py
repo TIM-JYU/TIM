@@ -5,13 +5,11 @@ from typing import Iterable
 from timApp.modules.chattim.indexer import EmbeddingModel, ContextResponse, Indexer
 from timApp.modules.chattim.model import (
     ChatModel,
+    GenericApiClient,
     GenerateOptions,
     Message,
     ModelResponse,
-    ModelRegistry,
-    ModelInfo,
     Usage,
-    SUPPORTED_MODELS,
     Provider,
 )
 from enum import Enum
@@ -93,7 +91,6 @@ class MessageData:
 
 
 class Rag:
-    registry: ModelRegistry = ModelRegistry(SUPPORTED_MODELS)
     models: dict[int, ChatModel] = {}
 
     def add_model(
@@ -117,7 +114,9 @@ class Rag:
             ValueError: If the provider or model is unknown
         """
 
-        model = self.registry.create(provider, model_id, api_key, base_url)
+        model = GenericApiClient.create_chat_model(
+            provider, model_id, api_key, base_url
+        )
         self.models[identifier] = model
 
     def remove_model(self, identifier: int):
@@ -162,30 +161,8 @@ class Rag:
         options = GenerateOptions()
 
         if stream:
-            if model.get_info().supports_streaming:
-                return model.generate_stream(messages, options)
-            else:
-                res = model.generate(messages, options)
-                return [ModelResponse(delta=res.content, usage=res.usage)]
+            return model.generate_stream(messages, options)
         return model.generate(messages, options)
-
-    def get_supported_models(
-        self, provider: Provider | None = None
-    ) -> dict[str, ModelInfo]:
-        """
-        Get all supported models. Example:
-        "gpt-4.1-mini": [
-            ModelInfo(
-                provider="openai",
-                model_id="gpt-4.1-mini",
-                label="GPT-4.1 Mini",
-                supports_temperature=True,
-                supports_streaming=True,
-            ),
-        ],
-        :return:
-        """
-        return self.registry.get_models(provider)
 
     def build_prompt(self, message_data: MessageData) -> list[Message]:
         """Build the message list to send to the model."""
@@ -197,7 +174,6 @@ class Rag:
         history: list[Message] = message_data.chat_history
         context: str = message_data.context
         context_msg: Message = Message(
-            # TODO: change role?
             role="user",
             content=f"<CONTEXT> {context} </CONTEXT>",
         )
