@@ -298,7 +298,7 @@ class PermissionMassEditModel(PermissionEditModel, PermissionMassEditModelBase):
 
 @manage_page.get("/permissions/add/<int:doc_id>/<username>")
 def add_permission_basic(
-    doc_id: int, username: str, type: str, duration: int
+    doc_id: int, username: str, type: str, duration: float
 ) -> Response:
     if type != "view":
         raise RouteException("Only 'view' is allowed to prevent misuse")
@@ -313,15 +313,12 @@ def add_permission_basic(
 
     verify_permission_edit_access(i, AccessType.view)
 
-    if duration <= 10:
-        duration *= 60
-
     p_model = PermissionEditModel(
         type=AccessType.view,
         groups=[username],
         time=TimeOpt(
             type=TimeType.duration,
-            duration=Duration(minutes=duration),
+            duration=Duration(hours=duration),
         ),
         confirm=False,
     )
