@@ -95,7 +95,6 @@ class MessageData:
 class Rag:
     registry: ModelRegistry = ModelRegistry(SUPPORTED_MODELS)
     models: dict[int, ChatModel] = {}
-    indexers: dict[int, Indexer] = {}
 
     def add_model(
         self,
@@ -121,21 +120,6 @@ class Rag:
         model = self.registry.create(provider, model_id, api_key, base_url)
         self.models[identifier] = model
 
-    # tätä ei varmaankaan tarvita
-    def add_embedding_model(self, model: EmbeddingModel, identifier: int) -> None:
-        self.embedding_models[identifier] = model
-
-    def add_indexer(self, indexer, identifier: int) -> None:
-        self.indexers[identifier] = indexer
-
-    def get_context(self, prompt: str, identifier: int) -> ContextResponse:
-        """retrive context for user prompt
-        :param prompt: user prompt used for searching context
-        :identifier: identifier of the model"""
-        if identifier not in self.indexers:
-            raise KeyError(f"Key '{identifier}' not found in the dictionary")
-        return self.indexers[identifier].get_context(prompt)
-
     def remove_model(self, identifier: int):
         """
         Model spec need not specify the base_url.
@@ -147,7 +131,6 @@ class Rag:
         if identifier in self.models:
             self.models[identifier].close()
             del self.models[identifier]
-            del self.indexers[identifier]
 
     def model_exists(self, identifier: int) -> bool:
         if identifier in self.models:

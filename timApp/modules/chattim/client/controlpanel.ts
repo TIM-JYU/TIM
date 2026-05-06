@@ -67,7 +67,8 @@ export interface TokenLimitForUser extends Record<string, JsonValue> {
                         </select>
                     </div>
                 </div>
-
+              
+                
                 <!-- Switch between summarizing, (balanced) and creative -->
                 <div class="settings-row">
                     <button class="btn btn-link settings-section-btn"
@@ -127,6 +128,7 @@ export interface TokenLimitForUser extends Record<string, JsonValue> {
                     </textarea>
                     </div>
                 </div>
+                
 
                 <!-- Add a custom system prompt -->
                 <div class="settings-row">
@@ -231,6 +233,7 @@ export class ChatControlPanelComponent {
     settingsOpen = false;
     modelOpen = false;
     modeOpen = false;
+
     tokensOpen = false;
     filesOpen = false;
     promptOpen = false;
@@ -240,6 +243,7 @@ export class ChatControlPanelComponent {
     @Input() error?: string;
     @Input() response?: string;
     @Input() selectedModel!: string;
+
     @Input() selectedMode!: string;
     @Input() maxTokens!: number;
     @Input() systemPromptPath!: string;
