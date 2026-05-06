@@ -313,12 +313,15 @@ def add_permission_basic(
 
     verify_permission_edit_access(i, AccessType.view)
 
+    if duration <= 10:
+        duration *= 60
+
     p_model = PermissionEditModel(
         type=AccessType.view,
         groups=[username],
         time=TimeOpt(
             type=TimeType.duration,
-            duration=Duration(hours=duration),
+            duration=Duration(minutes=duration),
         ),
         confirm=False,
     )
