@@ -3,6 +3,8 @@ from __future__ import annotations
 import json
 import os
 import shelve
+import shutil
+import tempfile
 import time
 import flask
 from collections import defaultdict
@@ -64,6 +66,39 @@ BLINDED_SETTINGS_TEXT = """```
 
 # TODO: a bit short name for global variable
 se = SandboxedEnvironment(autoescape=True)
+
+
+def write_atomic(path: str, data: str, encoding: str = "utf-8") -> None:
+    """
+    Atomic write with backup:
+    - original -> .bak
+    - temp file -> original (atomic replace)
+    :param path: The file path to write to.
+    :param data: The data to write.
+    :param encoding: The encoding to use when writing the file.
+    """
+    dir_name = os.path.dirname(path) or "."
+    bak_path = path + ".bak"
+
+    # backup original file if it exists
+    if os.path.exists(path):
+        shutil.copy2(path, bak_path)
+
+    # write to a temporary file in the same directory to ensure
+    # atomicity of the replace operation
+    with tempfile.NamedTemporaryFile(
+        mode="w",
+        encoding=encoding,
+        dir=dir_name,
+        delete=False,
+    ) as tmp:
+        tmp.write(data)
+        tmp.flush()
+        os.fsync(tmp.fileno())
+        tmp_path = tmp.name
+
+    # atomic replace of the original file with the new file
+    os.replace(tmp_path, path)
 
 
 def log_filename(file_name: str):
@@ -338,7 +373,7 @@ class DocParagraph:
             doc._raise_not_found(par_id)
 
     @classmethod
-    def get(cls, doc, par_id: str, t: str) -> DocParagraph:
+    def get(cls, doc: Document, par_id: str, t: str) -> DocParagraph:
         """Retrieves a specific paragraph version from the data store.
 
         :param doc: The Document object for which to retrieve the paragraph.
@@ -347,35 +382,76 @@ class DocParagraph:
         :return: The retrieved DocParagraph.
 
         """
+        need_fix = False
+        par_path = cls._get_path(doc, par_id, t)
+        if not t:
+            log_error(f"Missing t from: {par_path}")
+            t = "current"
+            need_fix = True
+
         while True:  # try with t and current
-            par_path = cls._get_path(doc, par_id, t)
             try:
+                par_path = cls._get_path(doc, par_id, t)
                 # We need to retry reading the file in case it is being written to.
                 # This can sometimes happen if the IO is busy,
                 # and we use a file system that doesn't lock files when writing.
                 # FIXME: This is a temporary workaround. We should probably properly lock the file.
                 attempt = 0
+
                 while True:
                     with open(par_path) as f:
                         try:
-                            doc_dict = json.loads(f.read())
+                            doc_dict = json.load(f)
                             break
+
                         except json.JSONDecodeError as ex:
                             attempt += 1
-                            if attempt >= 3:
-                                raise ValueError(
-                                    f"Invalid JSON read from {par_path}: '{ex.doc}' (aborting after {attempt} attempts)"
-                                ) from ex
-                            else:
-                                time.sleep(0.01)
-                return cls.from_dict(doc, doc_dict)
+
+                            # fallback: cut from the error position to the end and try to parse again
+                            try:
+                                with open(par_path) as f2:
+                                    data = f2.read()
+
+                                fixed = data[: ex.pos]
+                                trimmed = len(data) - ex.pos
+                                removed = data[ex.pos :]
+                                doc_dict = json.loads(fixed)
+                                context = ex.doc[max(0, ex.pos - 20) : ex.pos + 20]
+                                log_error(
+                                    f"Fixed invalid JSON in {par_path} at pos {ex.pos} "
+                                    f"trimmed {trimmed} chars: '{removed}': {ex.msg}. "
+                                    f"Context: {context!r}"
+                                )
+                                if (
+                                    removed == '>"}}'
+                                ):  # this is the most common know case
+                                    write_atomic(par_path, fixed)
+                                    log_error(f"Trimmed 4 chars from {par_path}")
+                                break
+
+                            except json.JSONDecodeError:
+                                if attempt >= 3:
+                                    raise ValueError(
+                                        f"Invalid JSON read from {par_path}: '{ex.doc}' "
+                                        f"(aborting after {attempt} attempts)"
+                                    ) from ex
+                                else:
+                                    time.sleep(0.01)
+                par = cls.from_dict(doc, doc_dict)
+                if need_fix:
+                    # write doc_file
+                    log_error(f"Fix par hash: {par.id}")
+                    doc.modify_paragraph_obj(par.id, par, force=True)
+                return par
             except FileNotFoundError:
                 log_error(f"Paragraph file not found: {par_path}")
                 if t == "current":
                     break
                 t = "current"
+                need_fix = True
 
-        doc._raise_not_found(par_id)
+        # doc._raise_not_found(par_id)
+        return DocParagraph(doc)
 
     @classmethod
     def _get_path(cls, doc, par_id: str, t: str) -> str:
@@ -1243,12 +1319,9 @@ class DocParagraph:
             if not os.path.exists(base_path):
                 os.makedirs(base_path)
 
-        with open(file_name, "w") as f:
-            d = self.dict(include_html_cache=True)
-            log_for_person(
-                lambda: f"Writing par {self.get_doc_id()}/{self.get_id()}: {d}"
-            )
-            f.write(json.dumps(d))
+        d = self.dict(include_html_cache=True)
+        log_for_person(lambda: f"Writing par {self.get_doc_id()}/{self.get_id()}: {d}")
+        write_atomic(file_name, json.dumps(d))
 
     def set_latest(self):
         """Updates the 'current' symlink to point to this paragraph version."""
