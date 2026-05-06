@@ -18,6 +18,7 @@ import {showMessageDialog} from "tim/ui/showMessageDialog";
 import {showAddContactDialog} from "tim/user/showAddContactDialog";
 import {showAddAPIKeyDialog} from "tim/user/showAddAPIDialog";
 import {showAddLLMAPIKeyDialog} from "tim/user/showAddLLMAPIDialog";
+import {showEditLLMAPIKeyDialog} from "tim/user/showEditLLMAPIDialog";
 import {Channel} from "tim/messaging/listOptionTypes";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {createDowngradedModule, doDowngrade} from "tim/downgrade";
@@ -665,6 +666,10 @@ type StyleSelectionType =
                                         (click)="checkTokens(APIkey)">
                                     <i class="glyphicon glyphicon-refresh"></i>
                                 </button>
+                                <button *ngIf="true" class="btn" type="button"
+                                        (click)="openEditLLMAPIKeyDialog(APIkey)" i18n>
+                                    Edit permissions
+                                </button>
                                 <button class="btn btn-danger" type="button"
                                         (click)="deleteLLMKey(APIkey)">
                                     <i class="glyphicon glyphicon-trash"></i>
@@ -1249,6 +1254,14 @@ export class SettingsComponent implements DoCheck, AfterViewInit {
                 this.userLLMAPIKeys.push(key);
                 this.cdr.detectChanges();
             }, this.userLLMAPIKeys)
+        );
+    }
+
+    openEditLLMAPIKeyDialog(key: IUserLLMApiKey) {
+        void to2(
+            showEditLLMAPIKeyDialog(key, (key: IUserLLMApiKey) => {
+                this.cdr.detectChanges();
+            })
         );
     }
 
