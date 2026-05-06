@@ -451,7 +451,11 @@ class DocParagraph:
                 need_fix = True
 
         # doc._raise_not_found(par_id)
-        return DocParagraph(doc)
+        return DocParagraph.create(
+            doc,
+            md=f"[Lost par {par_id}.]" + "{.red} Delete this and write again.",
+            par_id=par_id,
+        )
 
     @classmethod
     def _get_path(cls, doc, par_id: str, t: str) -> str:

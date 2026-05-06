@@ -1488,6 +1488,8 @@ class Document:
                 line = f.readline()
                 if not line:
                     break
+                if len(line) < 10:
+                    continue
                 if len(line) > 14:
                     # Line contains both par_id and t
                     par_id, t, *_ = line.rstrip("\n").split("/", 2)
@@ -1727,6 +1729,9 @@ class DocParagraphIter:
             if not line:
                 self.close()
                 raise StopIteration
+            if len(line) < 10:
+                log_error(f"Doc: {self.doc.doc_id} - bad line {line}")
+                continue
             if line != "\n":
                 if len(line) > 14:
                     # Line contains both par_id and t
