@@ -930,21 +930,25 @@ class Document:
         p = DocParagraph.create(md=new_text, doc=self, par_id=par_id, attrs=new_attrs)
         return self.modify_paragraph_obj(par_id, p)
 
-    def modify_paragraph_obj(self, par_id: str, p: DocParagraph) -> DocParagraph:
+    def modify_paragraph_obj(
+        self, par_id: str, p: DocParagraph, force=False
+    ) -> DocParagraph:
         if not self.has_paragraph(par_id):
             raise KeyError(
                 f"No paragraph {par_id} in document {self.doc_id} version {self.get_version()}"
             )
 
-        p_src = DocParagraph.get_latest(self, par_id)
         p.set_id(par_id)
         new_hash = p.get_hash()
         p.store()
         p.set_latest()
         old_ver = self.get_version()
-        old_hash = p_src.get_hash()
-        if p.is_same_as(p_src):
-            return p
+        old_hash = ""
+        if not force:
+            p_src = DocParagraph.get_latest(self, par_id)
+            old_hash = p_src.get_hash()
+            if p.is_same_as(p_src):
+                return p
         new_ver = self.__increment_version(
             "Modified",
             par_id,
