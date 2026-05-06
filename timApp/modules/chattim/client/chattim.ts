@@ -39,7 +39,7 @@ import {ChatControlPanelComponent} from "./controlpanel";
 
 const PluginMarkupFields = t.intersection([
     t.partial({
-        // ei tarvita mitään ainakaan toistaiseksi
+        welcomeText: t.string,
     }),
     GenericPluginMarkup,
     t.type({
@@ -93,7 +93,12 @@ export interface ControlPanelData extends ControlPanelSettings {
                 <div class="chattim-body">
                     <div class="scroll-box" #conversationScroll>
                         <div *ngIf="conversation.length === 0" class="chat-welcome">
-                            Tervetuloa käyttämään TIM:in tekoälyavustajaa!
+                            <ng-container *ngIf="markup.welcomeText; else localizedWelcome">
+                                {{ markup.welcomeText }}
+                            </ng-container>
+                            <ng-template #localizedWelcome>
+                                <span i18n>"Welcome to use TIM's helper chatbot!"</span>
+                            </ng-template>
                         </div>
                         <div *ngFor="let entry of conversation">
                             <div class="chat-user">{{ entry.user.content }}</div>
@@ -107,39 +112,38 @@ export interface ControlPanelData extends ControlPanelSettings {
                     </div>
                     <label class="justify-center w-100">{{ inputStem }} </label>
                     <div class="d-flex flex-row w-100 justify-content-center chat-row">
-                    <textarea class="form-control chat-textarea"
+                    <textarea i18n-placeholder class="form-control chat-textarea"
                               rows="2"
-                              placeholder="Kysy minulta TIM asioista"
+                              placeholder="Ask me about TIM related things"
                               style="resize: none; overflow: hidden; min-width: 0;"
                               [(ngModel)]="userInput"
                               (keyup.enter)="onEnter()"
                               oninput="this.style.height='auto'; this.style.height=this.scrollHeight+'px'">
                     </textarea>
 
-                    <button class="timButton flex-shrink-0 ms-2"
-                            *ngIf="buttonText()"
-                            [disabled]="!canSendInput()"
-                            (click)="sendUserInput()"
-                            [innerHTML]="buttonText() | purify">
-                    </button>
-                        </div>
-                        <div class="control-panel-container">
-                    <chattim-control-panel 
-                        [isTeacher]="isTeacher"
-                        (saveSettingsClick)="onSaveSettings($event)"
-                        (panelToggled)="onControlPanelToggle($event)"
-                        [selectedModel]="selectedModel"
-                        
-                        [selectedMode]="selectedMode"
-                        [maxTokens]="maxTokens"
-                        [response]="controlpanelResponse"
-                        [error]="controlpanelError"
-                        [localFilePaths]="localFilePaths"
-                        [availableModels]="availableModels"
-                        [availableModes]="availableModes" 
-                        [tokenLimitAllUsers]="globalPolicy">
-                    </chattim-control-panel>
-                            </div>
+                        <button class="timButton flex-shrink-0 ms-2"
+                                *ngIf="buttonText()"
+                                [disabled]="!canSendInput()"
+                                (click)="sendUserInput()"
+                                [innerHTML]="buttonText() | purify">
+                        </button>
+                    </div>
+                    <div class="control-panel-container">
+                        <chattim-control-panel
+                            [isTeacher]="isTeacher"
+                            (saveSettingsClick)="onSaveSettings($event)"
+                            (panelToggled)="onControlPanelToggle($event)"
+                            [selectedModel]="selectedModel"
+                            [selectedMode]="selectedMode"
+                            [maxTokens]="maxTokens"
+                            [response]="controlpanelResponse"
+                            [error]="controlpanelError"
+                            [localFilePaths]="localFilePaths"
+                            [availableModels]="availableModels"
+                            [availableModes]="availableModes"
+                            [tokenLimitAllUsers]="globalPolicy">
+                        </chattim-control-panel>
+                    </div>
                 </div>
             </ng-container>
         </tim-dialog-frame>
@@ -284,7 +288,7 @@ export class ChatTIMComponent
     };
 
     buttonText() {
-        return super.buttonText() ?? "Send";
+        return super.buttonText() ?? $localize`Send`;
     }
 
     getDefaultMarkup() {
