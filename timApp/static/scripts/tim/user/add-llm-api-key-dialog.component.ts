@@ -38,7 +38,7 @@ import type {IUserLLMApiKey} from "tim/user/IUser";
                     <fieldset [disabled]="saving || saved">
                         <div class="form-group">
                             <label class="control-label" for="model-select" i18n>LLM model provider</label>
-                            <select class="form-control" name="channel-select" [(ngModel)]="chosenModel">
+                            <select class="form-control" name="channel-select" [(ngModel)]="chosenProvider">
                                 <option *ngFor="let provider of this.LLMProviders"
                                         value="{{provider}}"
                                 >{{provider}}</option>
@@ -72,7 +72,7 @@ import type {IUserLLMApiKey} from "tim/user/IUser";
                 </a>
                 <button class="timButton"
                         (click)="addNewAPIKey()"
-                        [disabled]="!(chosenModel && apiKey && LLMKeyAlias) || saved" i18n>
+                        [disabled]="!(chosenProvider && apiKey && LLMKeyAlias) || saved" i18n>
                     Add
                 </button>
                 <button class="timButton" (click)="dismiss()">Close</button>
@@ -90,7 +90,7 @@ export class AddLLMAPIKeyDialogComponent extends AngularDialogComponent<
 
     dialogName: string = "AddAPIKey";
 
-    chosenModel: string = "";
+    chosenProvider: string = "";
     apiKey?: string;
     LLMKeyAlias?: string = "";
     LLMProviders: [] = [];
@@ -132,9 +132,12 @@ export class AddLLMAPIKeyDialogComponent extends AngularDialogComponent<
 
             if (validateResponse.ok) {
                 this.saving = false;
+                const hidden_api = this.apiKey
+                    ? this.apiKey.slice(0, 6) + "..." + this.apiKey.slice(-4)
+                    : "";
                 this.data.onAdd({
-                    model: this.chosenModel,
-                    APIkey: this.apiKey!,
+                    provider: this.chosenProvider,
+                    APIkey: hidden_api,
                     alias: this.LLMKeyAlias!,
                     availableTokens: 0,
                     usedTokens: 0,
@@ -156,7 +159,7 @@ export class AddLLMAPIKeyDialogComponent extends AngularDialogComponent<
     async validateAPIKey() {
         return await toPromise(
             this.http.post<Response>("/chattim/validateApi", {
-                model: this.chosenModel,
+                provider: this.chosenProvider,
                 apikey: this.apiKey,
                 alias: this.LLMKeyAlias,
             })

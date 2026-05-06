@@ -91,7 +91,7 @@ class GetMessagesParams(GenericParams):
 
 @dataclass
 class SaveAPIKeyParams:
-    model: str  # TODO: rename to provider
+    provider: str
     apikey: str
     alias: str
 
@@ -272,7 +272,7 @@ def get_messages(params: GetMessagesParams) -> dict:
 def save_api_key(params: SaveAPIKeyParams) -> Response:
     verify_logged_in()
 
-    provider = params.model
+    provider = params.provider
     key = params.apikey
     alias = params.alias
     userid = get_current_user_id()
@@ -293,7 +293,26 @@ def get_providers() -> list[str]:
 
 
 def get_existing_keys() -> list[str]:
-    return []
+    print("Haetaan olemassaolevat avaimet")
+    userid = get_current_user_id()
+    document_id = 0  # users API-keys are stored with document id 0
+
+    data = plugincore.get_llmrule(userid, document_id)
+
+    if data is None or not data.apikey:
+        return []
+
+    keys = data.apikey
+
+    hidden_keys = []
+    for key in keys:
+        provider, apikey, alias = key
+        hidden_key = apikey[:6] + "..." + apikey[-4:]
+        hidden_keys.append({"provider": provider, "APIkey": hidden_key, "alias": alias})
+
+    print(hidden_keys)
+
+    return hidden_keys
 
 
 def to_ndjson_str(json_data: Any) -> str:
@@ -323,3 +342,4 @@ register_route(chattim, "post", "getMessages", GetMessagesParams, get_messages)
 register_route(chattim, "post", "validateApi", SaveAPIKeyParams, save_api_key)
 register_route(chattim, "get", "getProviders", None, get_providers)
 register_route(chattim, "post", "getRights", GetRightsParams, get_rights)
+register_route(chattim, "get", "getExistingKeys", None, get_existing_keys)
