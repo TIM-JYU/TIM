@@ -938,14 +938,16 @@ class Document:
                 f"No paragraph {par_id} in document {self.doc_id} version {self.get_version()}"
             )
 
+        p_src: DocParagraph | None = None
+        if not force:
+            p_src = DocParagraph.get_latest(self, par_id)
         p.set_id(par_id)
         new_hash = p.get_hash()
         p.store()
         p.set_latest()
         old_ver = self.get_version()
         old_hash = ""
-        if not force:
-            p_src = DocParagraph.get_latest(self, par_id)
+        if p_src:
             old_hash = p_src.get_hash()
             if p.is_same_as(p_src):
                 return p
