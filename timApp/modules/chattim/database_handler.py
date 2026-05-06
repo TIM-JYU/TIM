@@ -9,6 +9,7 @@ from timApp.item.item import Item
 from timApp.modules.chattim.dbmodels import LLMRule, Policy, Usage
 from timApp.timdb.sqa import db
 from timApp.user.user import User
+from timApp.user.usergroup import UserGroup
 from timApp.auth.get_user_rights_for_item import (
     get_user_rights_for_item,
     UserItemRights,
@@ -79,6 +80,25 @@ class TimDatabase:
             return rights
         else:
             return None
+
+    @staticmethod
+    def in_user_group(group_name: str, user_id: int) -> bool:
+        """Check if the user is in the given user group."""
+        # TODO: is there a TIM function for this?
+        group = UserGroup.get_by_name(group_name)
+        if group.is_personal_group:
+            return True
+        return any(u.id == user_id for u in group.users)
+
+    @staticmethod
+    def check_api_key_access(user_id: int, api_key_alias: str) -> bool:
+        api_llm_rule = TimDatabase.get_api_key_by_alias(api_key_alias)
+        if not api_llm_rule:
+            return False
+        # TODO: make the groups field
+        # groups = api_llm_rule.groups
+        # return any(TimDatabase.in_user_group(group, user_id) for group in groups)
+        return True
 
     @staticmethod
     def set_llm_rule(
@@ -210,6 +230,13 @@ class TimDatabase:
             LLMRule.owner == owner_id,
             LLMRule.document_id == -1,
         )
+        return db.session.scalar(stmt)
+
+    @staticmethod
+    def get_api_key_by_alias(alias: str) -> LLMRule | None:
+        """Gets the LLM rule table based on the alias."""
+        # TODO: can there be more than one key with same alias?
+        stmt = select(LLMRule).where(LLMRule.document_id <= 0, LLMRule.alias == alias)
         return db.session.scalar(stmt)
 
     @staticmethod
