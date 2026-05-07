@@ -286,7 +286,7 @@ def save_api_key(params: APIKeyParams) -> Response:
             if entry[2] == alias:
                 raise RouteException(description="Alias is already in use.")
 
-        keys = existing_keys + [[provider, key, alias]]  # rename key -> apikey
+        keys = existing_keys + [[provider, key, alias]]
 
         plugincore.save_apikey_to_database(userid, keys)
         return ok_response()
