@@ -281,16 +281,11 @@ def save_api_key(params: APIKeyParams) -> Response:
     valid = plugincore.validate_api_key(provider, key)
 
     if valid:
-        llmrule = plugincore.get_llmrule(userid, 0)
-        existing_keys = llmrule.apikey if llmrule is not None else []
+        try:
+            plugincore.add_api_key(userid, provider, alias, key)
+        except Exception as e:
+            raise RouteException(description=str(e))
 
-        for entry in existing_keys:
-            if entry[2] == alias:
-                raise RouteException(description="Alias is already in use.")
-
-        keys = existing_keys + [[provider, key, alias]]
-
-        plugincore.save_apikey_to_database(userid, keys)
         return ok_response()
     else:
         raise RouteException(description="API Key is invalid.")
@@ -317,47 +312,28 @@ def get_providers() -> list[str]:
 def get_existing_keys() -> list[str]:
     verify_logged_in()
     userid = get_current_user_id()
-    document_id = 0  # users API-keys are stored with document id 0
-    user_llmrule = plugincore.get_llmrule(userid, document_id)
-
-    if user_llmrule is None or not user_llmrule.apikey:
-        return []
-
-    keys = user_llmrule.apikey
+    api_keys = plugincore.get_user_api_keys(userid)
 
     hidden_keys = []
-    for key in keys:
-        provider, apikey, alias = key
-        hidden_key = apikey[:6] + "..." + apikey[-4:]
+    for key in api_keys:
+        alias, provider, api_key = key
+        hidden_key = api_key[:6] + "..." + api_key[-4:]
         hidden_keys.append({"provider": provider, "APIkey": hidden_key, "alias": alias})
 
     return hidden_keys
 
 
-def delete_existing_key(key: APIKeyParams) -> list[str]:
+def delete_existing_key(key: APIKeyParams) -> Response:
     verify_logged_in()
-    document_id = 0  # users API-keys are stored with document id 0
     alias = key.alias
     userid = get_current_user_id()
 
-    user_llmrule = plugincore.get_llmrule(userid, document_id)
-    if user_llmrule is None or not user_llmrule.apikey:
+    try:
+        plugincore.delete_api_key(userid, alias)
+    except Exception:
         raise RouteException(description="No API-keys found")
 
-    keys = []
-    for entry in user_llmrule.apikey:
-        if entry[2] != alias:
-            keys.append(entry)
-
-    plugincore.save_apikey_to_database(userid, keys)
-
-    hidden_keys = []
-    for key in keys:
-        provider, apikey, alias = key
-        hidden_key = apikey[:6] + "..." + apikey[-4:]
-        hidden_keys.append({"provider": provider, "APIkey": hidden_key, "alias": alias})
-
-    return hidden_keys
+    return ok_response()
 
 
 def to_ndjson_str(json_data: Any) -> str:

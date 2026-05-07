@@ -783,8 +783,18 @@ class PluginCore:
 
         return None
 
-    def save_apikey_to_database(self, userid: int, apikey: list[str]) -> LLMRule:
-        return self.tim_database.set_api_key(userid, apikey)
+    def add_api_key(
+        self, userid: int, provider: str, public_key: str, api_key: str
+    ) -> LLMRule:
+        return self.tim_database.set_api_key(userid, provider, public_key, api_key)
+
+    def get_user_api_keys(self, owner_id: int) -> list[tuple[str, str, str]]:
+        rows = self.tim_database.get_user_api_keys(owner_id)
+        print(rows)
+        return [(str(r.public_key), str(r.provider), str(r.api_key)) for r in rows]
+
+    def delete_api_key(self, owner_id: int, public_key: str) -> None:
+        self.tim_database.delete_api_key(owner_id, public_key)
 
     def get_llmrule(self, userid: int, documentid: int) -> LLMRule:
         return self.tim_database.get_llm_rule(userid, documentid)

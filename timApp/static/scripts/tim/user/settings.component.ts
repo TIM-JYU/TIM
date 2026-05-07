@@ -1378,7 +1378,7 @@ export class SettingsComponent implements DoCheck, AfterViewInit {
                 },
             })
         );
-        this.userLLMAPIKeys = r.result as IUserLLMApiKey[];
+        this.userLLMAPIKeys.filter((k) => k.alias != key.alias);
         this.saving = false;
         this.cdr.detectChanges();
 

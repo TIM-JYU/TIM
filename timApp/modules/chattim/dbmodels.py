@@ -3,6 +3,7 @@ from sqlalchemy import Integer, String, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.dialects.postgresql import ARRAY
 from timApp.timdb.sqa import db
+from timApp.user.usergroup import UserGroup
 
 
 class LLMRule(db.Model):
@@ -11,19 +12,25 @@ class LLMRule(db.Model):
     __tablename__ = "llm_rule"
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    document_id: Mapped[int] = mapped_column(Integer)
+    document_id: Mapped[int] = mapped_column(Integer, default=0)
     owner: Mapped[int] = mapped_column(ForeignKey("useraccount.id"))
-    apikey: Mapped[list[str]] = mapped_column(
-        ARRAY(String)
-    )  # list of apikey providers, apikeys and aliases [apikey_provider,apikey,alias]
-    chosen_key: Mapped[str] = mapped_column(String)  # chosen API key
-    teachers: Mapped[list[int]] = mapped_column(ARRAY(Integer))
-    current_mode: Mapped[str] = mapped_column(String)  # summarizing or creative
+
+    # API-key fields
+    public_key: Mapped[str] = mapped_column(String, default="")
+    provider: Mapped[str] = mapped_column(String, default="")
+    api_key: Mapped[str] = mapped_column(String, default="")
+    groups: Mapped[list[int]] = mapped_column(ARRAY(Integer), default=[])
+    """User group IDs that have access to this API-key using `public_key`."""
+
+    teachers: Mapped[list[int]] = mapped_column(ARRAY(Integer), default=[])
+    current_mode: Mapped[str] = mapped_column(
+        String, default=""
+    )  # summarizing or creative
     total_tokens_spent: Mapped[int] = mapped_column(Integer, default=0)
-    indexed_document_ids: Mapped[list[int]] = mapped_column(ARRAY(Integer))
-    system_prompt_path: Mapped[str] = mapped_column(String)
-    agent: Mapped[str] = mapped_column(String)
-    conv_time_window: Mapped[int] = mapped_column(Integer)
+    indexed_document_ids: Mapped[list[int]] = mapped_column(ARRAY(Integer), default=[])
+    system_prompt_path: Mapped[str] = mapped_column(String, default="")
+    agent: Mapped[str] = mapped_column(String, default="")
+    conv_time_window: Mapped[int] = mapped_column(Integer, default=0)
     policy: Mapped[list["Policy"]] = relationship(
         "Policy", back_populates="llm_rule", cascade="all, delete-orphan"
     )
