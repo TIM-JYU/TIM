@@ -111,8 +111,6 @@ export class AddLLMAPIKeyDialogComponent extends AngularDialogComponent<
     async addNewAPIKey() {
         this.saving = true;
 
-        console.log(this.data.existingKeys);
-
         const aliasUsed = this.data.existingKeys?.some(
             (existingKey) =>
                 existingKey.alias.toLowerCase() ===
@@ -123,11 +121,7 @@ export class AddLLMAPIKeyDialogComponent extends AngularDialogComponent<
             this.addError = "Alias already in use.";
             this.saving = false;
             return;
-        }
-
-        console.log(aliasUsed);
-
-        if (!aliasUsed) {
+        } else {
             const validateResponse = await this.validateAPIKey();
 
             if (validateResponse.ok) {

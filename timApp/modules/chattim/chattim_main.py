@@ -90,7 +90,7 @@ class GetMessagesParams(GenericParams):
 
 
 @dataclass
-class SaveAPIKeyParams:
+class APIKeyParams:
     provider: str
     apikey: str
     alias: str
@@ -269,22 +269,29 @@ def get_messages(params: GetMessagesParams) -> dict:
     return {"messages": messages}
 
 
-def save_api_key(params: SaveAPIKeyParams) -> Response:
+def save_api_key(params: APIKeyParams) -> Response:
     verify_logged_in()
 
     provider = params.provider
     key = params.apikey
     alias = params.alias
     userid = get_current_user_id()
-
     valid = plugincore.validate_api_key(provider, key)
 
     if valid:
-        rule = plugincore.save_apikey_to_database(userid, [provider, key, alias])
+        llmrule = plugincore.get_llmrule(userid, 0)
+        existing_keys = llmrule.apikey if llmrule is not None else []
+
+        for entry in existing_keys:
+            if entry[2] == alias:
+                raise RouteException(description="Alias is already in use.")
+
+        keys = existing_keys + [[provider, key, alias]]  # rename key -> apikey
+
+        plugincore.save_apikey_to_database(userid, keys)
+        return ok_response()
     else:
         raise RouteException(description="API Key is invalid.")
-
-    # TODO avaimen tallennus validoimisen jälkeen, jos avain jo niin palautetaan tieto siitä
 
 
 def get_providers() -> list[str]:
@@ -293,10 +300,9 @@ def get_providers() -> list[str]:
 
 
 def get_existing_keys() -> list[str]:
-    print("Haetaan olemassaolevat avaimet")
+    verify_logged_in()
     userid = get_current_user_id()
     document_id = 0  # users API-keys are stored with document id 0
-
     data = plugincore.get_llmrule(userid, document_id)
 
     if data is None or not data.apikey:
@@ -310,7 +316,31 @@ def get_existing_keys() -> list[str]:
         hidden_key = apikey[:6] + "..." + apikey[-4:]
         hidden_keys.append({"provider": provider, "APIkey": hidden_key, "alias": alias})
 
-    print(hidden_keys)
+    return hidden_keys
+
+
+def delete_existing_key(key: APIKeyParams) -> list[str]:
+    verify_logged_in()
+    document_id = 0
+    alias = key.alias
+    userid = get_current_user_id()
+
+    data = plugincore.get_llmrule(userid, document_id)
+    if data is None or not data.apikey:
+        raise RouteException(description="No API-keys found")
+
+    keys = []
+    for entry in data.apikey:
+        if entry[2] != alias:
+            keys.append(entry)
+
+    plugincore.save_apikey_to_database(userid, keys)
+
+    hidden_keys = []
+    for key in keys:
+        provider, apikey, alias = key
+        hidden_key = apikey[:6] + "..." + apikey[-4:]
+        hidden_keys.append({"provider": provider, "APIkey": hidden_key, "alias": alias})
 
     return hidden_keys
 
@@ -339,7 +369,8 @@ register_route(
     chattim, "post", "saveSettings", ChatTimSaveSettingsParams, save_settings
 )
 register_route(chattim, "post", "getMessages", GetMessagesParams, get_messages)
-register_route(chattim, "post", "validateApi", SaveAPIKeyParams, save_api_key)
+register_route(chattim, "post", "validateApi", APIKeyParams, save_api_key)
 register_route(chattim, "get", "getProviders", None, get_providers)
 register_route(chattim, "post", "getRights", GetRightsParams, get_rights)
 register_route(chattim, "get", "getExistingKeys", None, get_existing_keys)
+register_route(chattim, "delete", "deleteKey", APIKeyParams, delete_existing_key)

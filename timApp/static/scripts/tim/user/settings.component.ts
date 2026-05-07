@@ -798,9 +798,6 @@ export class SettingsComponent implements DoCheck, AfterViewInit {
         const r = await toPromise(
             this.http.get<IUserLLMApiKey[]>("/chattim/getExistingKeys")
         );
-        console.log("getLlmkeys");
-        console.log(r);
-        console.log(r.result);
         if (r.ok) {
             this.userLLMAPIKeys = r.result;
         }
@@ -1247,8 +1244,6 @@ export class SettingsComponent implements DoCheck, AfterViewInit {
         );
     }
     openLLMAPIKeyDialog() {
-        console.log("component");
-        console.log(this.userLLMAPIKeys);
         void to2(
             showAddLLMAPIKeyDialog((key) => {
                 this.userLLMAPIKeys.push(key);
@@ -1360,6 +1355,20 @@ export class SettingsComponent implements DoCheck, AfterViewInit {
     }
 
     async deleteLLMKey(key: IUserLLMApiKey) {
+        this.saving = true;
+        const r = await toPromise(
+            this.http.delete("/chattim/deleteKey", {
+                body: {
+                    provider: key.provider,
+                    apikey: key.APIkey,
+                    alias: key.alias,
+                },
+            })
+        );
+        this.userLLMAPIKeys = r.result as IUserLLMApiKey[];
+        this.saving = false;
+        this.cdr.detectChanges();
+
         // TODO give option to remove given API key
     }
 

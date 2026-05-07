@@ -5,8 +5,6 @@ export async function showAddLLMAPIKeyDialog(
     onAdd: (key: IUserLLMApiKey) => void,
     existingKeys?: IUserLLMApiKey[]
 ) {
-    console.log("shodialog");
-    console.log(existingKeys);
     const {AddLLMAPIKeyDialogComponent} = await import(
         "./add-llm-api-key-dialog.component"
     );

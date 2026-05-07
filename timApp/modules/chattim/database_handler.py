@@ -166,7 +166,7 @@ class TimDatabase:
             rule = LLMRule(
                 document_id=0,
                 owner=owner,
-                apikey=[apikey],
+                apikey=apikey,
                 chosen_key="",
                 teachers=[],
                 current_mode="",
@@ -178,7 +178,7 @@ class TimDatabase:
             )
             db.session.add(rule)
         else:
-            rule.apikey = rule.apikey + [apikey]
+            rule.apikey = apikey
         db.session.commit()
         return rule
 
