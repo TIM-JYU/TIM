@@ -82,21 +82,37 @@ class TimDatabase:
             return None
 
     @staticmethod
-    def in_user_group(group_name: str, user_id: int) -> bool:
+    def in_user_group(group: UserGroup, user_id: int) -> bool:
         """Check if the user is in the given user group."""
         # TODO: is there a TIM function for this?
-        group = UserGroup.get_by_name(group_name)
         if group.is_personal_group:
             return True
         return any(u.id == user_id for u in group.users)
+
+    @staticmethod
+    def validate_user_groups(groups: list[str]) -> list[UserGroup]:
+        """Check if all the user groups exists."""
+        user_groups: list[UserGroup] = []
+        for group in groups:
+            g = UserGroup.get_by_name(group)
+            if not g:
+                raise Exception(f"Invalid user group: {group}")
+            user_groups.append(g)
+        return user_groups
 
     @staticmethod
     def check_api_key_access(user_id: int, api_key_alias: str) -> bool:
         api_llm_rule = TimDatabase.get_api_key_by_alias(api_key_alias)
         if not api_llm_rule:
             return False
-        # TODO: make the groups field
+        if user_id == api_llm_rule.owner:
+            return True
+        # TODO: make the groups field list[UserGroup]
         # groups = api_llm_rule.groups
+        # TODO: default group value for key should be the owner
+        # If the user group list is empty, its global?
+        # if not groups:
+        #     return True
         # return any(TimDatabase.in_user_group(group, user_id) for group in groups)
         return True
 
@@ -238,6 +254,28 @@ class TimDatabase:
         # TODO: can there be more than one key with same alias?
         stmt = select(LLMRule).where(LLMRule.document_id <= 0, LLMRule.alias == alias)
         return db.session.scalar(stmt)
+
+    @staticmethod
+    def get_api_key_row(owner_id: int, alias: str) -> LLMRule | None:
+        """Gets the LLM rule row of the owner based on the alias."""
+        # TODO: change the table
+        # stmt = select(LLMRule).where(
+        #    LLMRule.owner == owner_id, LLMRule.document_id <= 0, LLMRule.alias == alias
+        # )
+        # return db.session.scalar(stmt)
+        return None
+
+    @staticmethod
+    def update_api_key_permissions(owner_id: int, alias: str, groups: list[str]):
+        """Gets the LLM rule table based on the alias."""
+        user_groups = TimDatabase.validate_user_groups(groups)
+
+        rule = TimDatabase.get_api_key_row(owner_id, alias)
+        if not rule:
+            raise Exception("No API-key with the alias found")
+
+        # rule.groups = user_groups
+        db.session.commit()
 
     @staticmethod
     def set_policy(

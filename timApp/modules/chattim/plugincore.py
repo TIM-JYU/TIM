@@ -753,6 +753,10 @@ class PluginCore:
             raise ValueError(f"Invalid input length: {input_len}")
         return sanitized_input
 
+    def update_api_key_permissions(self, owner_id: int, alias: str, groups: list[str]):
+        filtered = [g for g in groups if len(g) > 0]
+        self.tim_database.update_api_key_permissions(owner_id, alias, filtered)
+
     @staticmethod
     def _validate_policy(policy: Policy) -> None | str:
         """Validates policy. None is returned if everything is ok otherwise error string is returned"""

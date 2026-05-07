@@ -53,7 +53,7 @@ export interface IUserLLMApiKey {
     availableTokens: number;
     tokensChecked: boolean;
     // Group permissions
-    groupNames?: string; // Separated by ';' or '\n'
+    groupNames?: string[];
 }
 
 export interface IFullUser extends IUser {
