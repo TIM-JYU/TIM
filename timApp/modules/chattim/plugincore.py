@@ -504,7 +504,7 @@ class PluginCore:
             model_id,
             0,
             [],
-            []
+            [],
         )
         self.tim_database.set_global_policy(
             rule,
@@ -512,7 +512,7 @@ class PluginCore:
             0,
             0,
             max_tokens,
-            max_tokens
+            max_tokens,
         )
 
         return Result(True, None)
@@ -580,15 +580,9 @@ class PluginCore:
     def _instance_exists(self, document_id) -> bool:
         # TODO: todnäk pitää muistissa tiedetyt instanssi-idt jottei haeta aina tietokannalta turhaan
         # TODO: korvaa db haulla
-        instance = self.tim_database.get_llm_rule(document_id)
-        #print(
-        #    f"Checking if instance {document_id} exists, list of instances:{self.list_of_instance_ids}"
-        #)
-        #if document_id in self.list_of_instance_ids:
-        #    return True
-        if instance:
-            return True
-        return False
+        if not self.tim_database.get_llm_rule(document_id):
+            return False
+        return True
 
     def _owns_document(self, caller_id: int, document_id: int) -> bool:
         """Expects that you have checked already that doc and user exist, throws otherwise"""
@@ -628,6 +622,9 @@ class PluginCore:
         # check userpolicy (if exists)
         rule = self.tim_database.get_llm_rule(document_id)
         usage = self.tim_database.get_usage(rule, caller_id).used_tokens
+        if not usage:
+            self.tim_database.set_usage(caller_id, 0, rule, 0)  # TODO: conv_id?
+            return Result(value="ok")
         token_limit = self.tim_database.get_user_policy(rule, caller_id).max_tokens_per_user
         # check globalpolicy
         if not token_limit:
