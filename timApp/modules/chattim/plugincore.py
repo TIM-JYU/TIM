@@ -733,9 +733,6 @@ class PluginCore:
 
         return None
 
-    def get_supported_providers(self):
-        return self.rag.registry.get_supported_providers()
-
     def save_apikey_to_database(self, userid: int, apikey: list[str]) -> LLMRule:
         return self.tim_database.set_api_key(userid, apikey)
 
