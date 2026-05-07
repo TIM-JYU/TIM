@@ -2,7 +2,8 @@ import type {IUserLLMApiKey} from "tim/user/IUser";
 import {angularDialog} from "tim/ui/angulardialog/dialog.service";
 
 export async function showAddLLMAPIKeyDialog(
-    onAdd: (key: IUserLLMApiKey) => void
+    onAdd: (key: IUserLLMApiKey) => void,
+    existingKeys?: IUserLLMApiKey[]
 ) {
     const {AddLLMAPIKeyDialogComponent} = await import(
         "./add-llm-api-key-dialog.component"
@@ -11,7 +12,7 @@ export async function showAddLLMAPIKeyDialog(
     return (
         await angularDialog.open(
             AddLLMAPIKeyDialogComponent,
-            {onAdd},
+            {onAdd, existingKeys},
             {
                 resetSize: true,
             }

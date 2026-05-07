@@ -21,8 +21,6 @@ import {AngularDialogComponent} from "tim/ui/angulardialog/angular-dialog-compon
 import {DialogModule} from "tim/ui/angulardialog/dialog.module";
 import {toPromise} from "tim/util/utils";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
-import type {ITranslator, ITranslatorUsage} from "tim/item/IItem";
-import {listTranslators} from "tim/document/languages";
 import type {IUserLLMApiKey} from "tim/user/IUser";
 
 /**
@@ -40,7 +38,7 @@ import type {IUserLLMApiKey} from "tim/user/IUser";
                     <fieldset [disabled]="saving || saved">
                         <div class="form-group">
                             <label class="control-label" for="model-select" i18n>LLM model provider</label>
-                            <select class="form-control" name="channel-select" [(ngModel)]="chosenModel">
+                            <select class="form-control" name="channel-select" [(ngModel)]="chosenProvider">
                                 <option *ngFor="let provider of this.LLMProviders"
                                         value="{{provider}}"
                                 >{{provider}}</option>
@@ -74,7 +72,7 @@ import type {IUserLLMApiKey} from "tim/user/IUser";
                 </a>
                 <button class="timButton"
                         (click)="addNewAPIKey()"
-                        [disabled]="!(chosenModel && apiKey && LLMKeyAlias) || saved" i18n>
+                        [disabled]="!(chosenProvider && apiKey && LLMKeyAlias) || saved" i18n>
                     Add
                 </button>
                 <button class="timButton" (click)="dismiss()">Close</button>
@@ -83,7 +81,7 @@ import type {IUserLLMApiKey} from "tim/user/IUser";
     `,
 })
 export class AddLLMAPIKeyDialogComponent extends AngularDialogComponent<
-    {onAdd: (key: IUserLLMApiKey) => void},
+    {onAdd: (key: IUserLLMApiKey) => void; existingKeys?: IUserLLMApiKey[]},
     void
 > {
     async ngOnInit() {
@@ -92,7 +90,7 @@ export class AddLLMAPIKeyDialogComponent extends AngularDialogComponent<
 
     dialogName: string = "AddAPIKey";
 
-    chosenModel: string = "";
+    chosenProvider: string = "";
     apiKey?: string;
     LLMKeyAlias?: string = "";
     LLMProviders: [] = [];
@@ -113,22 +111,38 @@ export class AddLLMAPIKeyDialogComponent extends AngularDialogComponent<
     async addNewAPIKey() {
         this.saving = true;
 
-        const validateResponse = await this.validateAPIKey();
+        const aliasUsed = this.data.existingKeys?.some(
+            (existingKey) =>
+                existingKey.alias.toLowerCase() ===
+                this.LLMKeyAlias!.toLowerCase()
+        );
 
-        if (validateResponse.ok) {
+        if (aliasUsed) {
+            this.addError = "Alias already in use.";
             this.saving = false;
-            this.data.onAdd({
-                model: this.chosenModel,
-                APIkey: this.apiKey!,
-                alias: this.LLMKeyAlias!,
-                availableTokens: 0,
-                usedTokens: 0,
-                tokensChecked: false,
-            });
-            this.added = true;
-            this.dismiss();
+            return;
         } else {
-            this.addError = validateResponse.result.error.error;
+            const validateResponse = await this.validateAPIKey();
+
+            if (validateResponse.ok) {
+                this.saving = false;
+                const hidden_api = this.apiKey
+                    ? this.apiKey.slice(0, 6) + "..." + this.apiKey.slice(-4)
+                    : "";
+                this.data.onAdd({
+                    provider: this.chosenProvider,
+                    APIkey: hidden_api,
+                    alias: this.LLMKeyAlias!,
+                    availableTokens: 0,
+                    usedTokens: 0,
+                    tokensChecked: false,
+                });
+                this.added = true;
+                this.dismiss();
+            } else {
+                this.saving = false;
+                this.addError = validateResponse.result.error.error;
+            }
         }
     }
 
@@ -138,8 +152,8 @@ export class AddLLMAPIKeyDialogComponent extends AngularDialogComponent<
      */
     async validateAPIKey() {
         return await toPromise(
-            this.http.post<Response>("/chattim/validate_api", {
-                model: this.chosenModel,
+            this.http.post<Response>("/chattim/validateApi", {
+                provider: this.chosenProvider,
                 apikey: this.apiKey,
                 alias: this.LLMKeyAlias,
             })
@@ -148,11 +162,10 @@ export class AddLLMAPIKeyDialogComponent extends AngularDialogComponent<
 
     async getLLMProviders() {
         const result = await toPromise(
-            this.http.get<[]>("/chattim/get_providers")
+            this.http.get<[]>("/chattim/getProviders")
         );
         if (result.ok) {
             this.LLMProviders = result.result;
-            console.log(result);
         }
     }
 }

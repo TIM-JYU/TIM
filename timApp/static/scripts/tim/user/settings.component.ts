@@ -651,7 +651,7 @@ type StyleSelectionType =
                             <div class="contact-info" *ngFor="let APIkey of userLLMAPIKeys">
                                 <input type="text" class="form-control" [value]="APIkey.alias" disabled>
                                 <input type="text" class="form-control" [value]="APIkey.APIkey" disabled>
-                                <input type="text" class="form-control buttonBorder" [value]="APIkey.model"
+                                <input type="text" class="form-control buttonBorder" [value]="APIkey.provider"
                                        disabled>
                                 <div *ngIf="APIkey.tokensChecked" class="stacked quotaProgressBar">
                                     <progressbar tooltip="{{APIkey.usedTokens}} / {{APIkey.availableTokens}}"
@@ -795,7 +795,12 @@ export class SettingsComponent implements DoCheck, AfterViewInit {
     }
 
     async getLLMKeys() {
-        // TODO Add fetching users existing LLM keys
+        const r = await toPromise(
+            this.http.get<IUserLLMApiKey[]>("/chattim/getExistingKeys")
+        );
+        if (r.ok) {
+            this.userLLMAPIKeys = r.result;
+        }
     }
 
     async deleteSelectedStyle(
@@ -1243,7 +1248,7 @@ export class SettingsComponent implements DoCheck, AfterViewInit {
             showAddLLMAPIKeyDialog((key) => {
                 this.userLLMAPIKeys.push(key);
                 this.cdr.detectChanges();
-            })
+            }, this.userLLMAPIKeys)
         );
     }
 
@@ -1350,6 +1355,20 @@ export class SettingsComponent implements DoCheck, AfterViewInit {
     }
 
     async deleteLLMKey(key: IUserLLMApiKey) {
+        this.saving = true;
+        const r = await toPromise(
+            this.http.delete("/chattim/deleteKey", {
+                body: {
+                    provider: key.provider,
+                    apikey: key.APIkey,
+                    alias: key.alias,
+                },
+            })
+        );
+        this.userLLMAPIKeys = r.result as IUserLLMApiKey[];
+        this.saving = false;
+        this.cdr.detectChanges();
+
         // TODO give option to remove given API key
     }
 

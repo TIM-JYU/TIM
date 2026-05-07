@@ -45,7 +45,7 @@ export interface IUserApiKey {
 }
 
 export interface IUserLLMApiKey {
-    model: string;
+    provider: string;
     APIkey: string;
     alias: string;
     // TODO needed for tokens?

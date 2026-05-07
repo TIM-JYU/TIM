@@ -3,6 +3,7 @@ import uuid
 from dataclasses import dataclass, field
 from unicodedata import normalize, category
 
+from timApp.modules.chattim.dbmodels import LLMRule
 from timApp.util.flask.cache import cache
 from timApp.timdb.dbaccess import get_files_path
 from timApp.auth.get_user_rights_for_item import UserItemRights
@@ -731,3 +732,9 @@ class PluginCore:
             return f"Given time cap [{window_token_cap}] should be greater than 0"
 
         return None
+
+    def save_apikey_to_database(self, userid: int, apikey: list[str]) -> LLMRule:
+        return self.tim_database.set_api_key(userid, apikey)
+
+    def get_llmrule(self, userid: int, documentid: int) -> LLMRule:
+        return self.tim_database.get_llm_rule(userid, documentid)
