@@ -276,6 +276,7 @@ def save_api_key(params: APIKeyParams) -> Response:
     key = params.apikey
     alias = params.alias
     userid = get_current_user_id()
+
     valid = plugincore.validate_api_key(provider, key)
 
     if valid:
@@ -303,12 +304,12 @@ def get_existing_keys() -> list[str]:
     verify_logged_in()
     userid = get_current_user_id()
     document_id = 0  # users API-keys are stored with document id 0
-    data = plugincore.get_llmrule(userid, document_id)
+    user_llmrule = plugincore.get_llmrule(userid, document_id)
 
-    if data is None or not data.apikey:
+    if user_llmrule is None or not user_llmrule.apikey:
         return []
 
-    keys = data.apikey
+    keys = user_llmrule.apikey
 
     hidden_keys = []
     for key in keys:
@@ -321,16 +322,16 @@ def get_existing_keys() -> list[str]:
 
 def delete_existing_key(key: APIKeyParams) -> list[str]:
     verify_logged_in()
-    document_id = 0
+    document_id = 0  # users API-keys are stored with document id 0
     alias = key.alias
     userid = get_current_user_id()
 
-    data = plugincore.get_llmrule(userid, document_id)
-    if data is None or not data.apikey:
+    user_llmrule = plugincore.get_llmrule(userid, document_id)
+    if user_llmrule is None or not user_llmrule.apikey:
         raise RouteException(description="No API-keys found")
 
     keys = []
-    for entry in data.apikey:
+    for entry in user_llmrule.apikey:
         if entry[2] != alias:
             keys.append(entry)
 
