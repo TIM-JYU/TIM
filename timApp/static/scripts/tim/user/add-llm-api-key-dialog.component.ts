@@ -122,7 +122,7 @@ export class AddLLMAPIKeyDialogComponent extends AngularDialogComponent<
             this.saving = false;
             return;
         } else {
-            let validateResponse = await this.validateAPIKey();
+            const validateResponse = await this.validateAPIKey();
 
             if (validateResponse.ok) {
                 const key: IUserLLMApiKey = validateResponse.result;

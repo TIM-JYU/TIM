@@ -95,6 +95,7 @@ class APIKeyParams:
     apikey: str
     alias: str
     groups: list[str] | None = None
+    paths: list[str] | None = None
 
 
 @dataclass
@@ -299,6 +300,8 @@ def save_api_key_permissions(params: APIKeyParams) -> Response:
     user_id = get_current_user_id()
     alias = params.alias
     groups = params.groups or []
+    paths = params.paths or []
+    print(paths)
     try:
         plugincore.update_api_key_permissions(user_id, alias, groups)
     except Exception as e:

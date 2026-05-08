@@ -52,8 +52,8 @@ export interface IUserLLMApiKey {
     usedTokens: number;
     availableTokens: number;
     tokensChecked: boolean;
-    // Group permissions
     groupNames?: string[];
+    docPaths?: string[];
 }
 
 export interface IFullUser extends IUser {

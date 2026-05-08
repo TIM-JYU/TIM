@@ -39,7 +39,7 @@ import {NotificationType, settingsglobals} from "tim/util/globals";
 import type {IOkResponse} from "tim/util/utils";
 import {isIOS, replaceStyle, timeout, to2, toPromise} from "tim/util/utils";
 import type {DocumentOrFolder, ITranslatorUsage} from "tim/item/IItem";
-import {
+import type {
     IFullUser,
     IUserApiKey,
     IUserLLMApiKey,
@@ -1259,7 +1259,7 @@ export class SettingsComponent implements DoCheck, AfterViewInit {
 
     openEditLLMAPIKeyDialog(key: IUserLLMApiKey) {
         void to2(
-            showEditLLMAPIKeyDialog(key, (key: IUserLLMApiKey) => {
+            showEditLLMAPIKeyDialog(key, (apiKey: IUserLLMApiKey) => {
                 this.cdr.detectChanges();
             })
         );
@@ -1411,7 +1411,7 @@ export class SettingsComponent implements DoCheck, AfterViewInit {
     }
 
     async checkTokens(key: IUserLLMApiKey) {
-        //TODO Check used tokens for LLM API key
+        // TODO Check used tokens for LLM API key
     }
 
     saveUserAccountInfo = async () => {
