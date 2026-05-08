@@ -296,7 +296,6 @@ def save_api_key_permissions(params: APIKeyParams) -> Response:
     user_id = get_current_user_id()
     alias = params.alias
     groups = params.groups or []
-    print(groups)
     try:
         plugincore.update_api_key_permissions(user_id, alias, groups)
     except Exception as e:
@@ -316,9 +315,16 @@ def get_existing_keys() -> list[str]:
 
     hidden_keys = []
     for key in api_keys:
-        alias, provider, api_key = key
+        alias, provider, api_key, groups = key
         hidden_key = api_key[:6] + "..." + api_key[-4:]
-        hidden_keys.append({"provider": provider, "APIkey": hidden_key, "alias": alias})
+        hidden_keys.append(
+            {
+                "provider": provider,
+                "APIkey": hidden_key,
+                "alias": alias,
+                "groupNames": groups,
+            }
+        )
 
     return hidden_keys
 

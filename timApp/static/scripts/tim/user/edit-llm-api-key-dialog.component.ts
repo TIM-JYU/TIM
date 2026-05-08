@@ -62,7 +62,8 @@ export class EditLLMAPIKeyDialogComponent extends AngularDialogComponent<
     void
 > {
     async ngOnInit() {
-        console.log(this.data.key);
+        const groups: string[] = this.data.key.groupNames ?? [];
+        this.groupNames = groups.join(";");
     }
 
     dialogName: string = "EditAPIKey";
@@ -97,7 +98,6 @@ export class EditLLMAPIKeyDialogComponent extends AngularDialogComponent<
         );
         if (res.ok) {
             key.groupNames = groups;
-            console.log(key);
             this.saving = false;
             this.dismiss();
             return;

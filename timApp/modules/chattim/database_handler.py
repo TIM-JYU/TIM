@@ -101,12 +101,12 @@ class TimDatabase:
         return user_groups
 
     @staticmethod
-    def check_api_key_access(user_id: int, api_key_alias: str) -> bool:
+    def check_api_key_access(user_id: int, public_key: str) -> bool:
         """
         Check if the given user has access to the API key associated
-         with the given alias.
+         with the given alias or public key.
         """
-        api_llm_rule = TimDatabase.get_api_key_by_alias(api_key_alias)
+        api_llm_rule = TimDatabase.get_api_key_by_alias(public_key)
         if not api_llm_rule:
             return False
         if user_id == api_llm_rule.owner:
@@ -201,7 +201,6 @@ class TimDatabase:
         provider: str,
         public_key: str,
         api_key: str,
-        override: bool = False,
     ) -> LLMRule:
         """
         Saves a new API key, its alias and the API key provider.
@@ -209,15 +208,14 @@ class TimDatabase:
         :param provider: Provider of the apikey.
         :param public_key: The public alias for the key.
         :param api_key: The API-key.
-        :param override: Override existing API key with the alias.
         :return: created LLMRule instance
         """
-        rule = TimDatabase.get_api_key_row(owner, public_key)
+        rule = TimDatabase.get_api_key_by_alias(public_key)
         if rule:
             if owner != rule.owner:
-                raise Exception("No permission to change the API-key.")
-            if not override:
                 raise Exception("API-key exists with the alias.")
+            rule.provider = provider
+            rule.api_key = api_key
             rule.public_key = public_key
         else:
             rule = LLMRule(
@@ -233,11 +231,11 @@ class TimDatabase:
 
     @staticmethod
     def get_user_api_keys(owner_id: int) -> list[LLMRule]:
-        """Get all the API keys associated with the given owner."""
+        """Get all the API keys owner by the given owner."""
         stmt = select(LLMRule).where(
             LLMRule.owner == owner_id, LLMRule.document_id <= 0
         )
-        return db.session.execute(stmt).all()
+        return db.session.execute(stmt).scalars().all()
 
     @staticmethod
     def delete_llm_rule(owner_id: int, document_id: int) -> None:
@@ -271,11 +269,10 @@ class TimDatabase:
         return db.session.scalar(stmt)
 
     @staticmethod
-    def get_api_key_by_alias(alias: str) -> LLMRule | None:
+    def get_api_key_by_alias(public_key: str) -> LLMRule | None:
         """Gets the LLM rule table based on the alias."""
-        # TODO: can there be more than one key with same alias?
         stmt = select(LLMRule).where(
-            LLMRule.document_id <= 0, LLMRule.public_key == alias
+            LLMRule.document_id <= 0, LLMRule.public_key == public_key
         )
         return db.session.scalar(stmt)
 

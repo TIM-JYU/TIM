@@ -9,6 +9,7 @@ from timApp.timdb.dbaccess import get_files_path
 from timApp.auth.get_user_rights_for_item import UserItemRights
 from timApp.item.item import Item
 from timApp.document.docinfo import DocInfo
+from timApp.user.usergroup import get_groups_by_ids
 from timApp.modules.chattim.indexer import (
     OpenAiEmbeddingModel,
     Indexer,
@@ -788,10 +789,25 @@ class PluginCore:
     ) -> LLMRule:
         return self.tim_database.set_api_key(userid, provider, public_key, api_key)
 
-    def get_user_api_keys(self, owner_id: int) -> list[tuple[str, str, str]]:
+    def get_user_api_keys(self, owner_id: int) -> list[tuple[str, str, str, list[str]]]:
+        """Fetch all the API keys the user owns.
+        :param owner_id: Owner ID.
+        :return: A list of tuples containing the API keys.
+                 (alias, provider, api_key, group_names)
+        """
         rows = self.tim_database.get_user_api_keys(owner_id)
-        print(rows)
-        return [(str(r.public_key), str(r.provider), str(r.api_key)) for r in rows]
+        keys: list[tuple[str, str, str, list[str]]] = []
+        for row in rows:
+            groups = get_groups_by_ids(row.groups)
+            keys.append(
+                (
+                    str(row.public_key),
+                    str(row.provider),
+                    str(row.api_key),
+                    [str(g.name) for g in groups],
+                )
+            )
+        return keys
 
     def delete_api_key(self, owner_id: int, public_key: str) -> None:
         self.tim_database.delete_api_key(owner_id, public_key)
