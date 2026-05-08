@@ -303,7 +303,7 @@ def save_api_key_permissions(params: APIKeyParams) -> Response:
     paths = params.paths or []
     print(paths)
     try:
-        plugincore.update_api_key_permissions(user_id, alias, groups)
+        plugincore.update_api_key_permissions(user_id, alias, groups, paths)
     except Exception as e:
         raise RouteException(description=str(e))
     return ok_response()

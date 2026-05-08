@@ -1,8 +1,9 @@
-from typing import Optional
+from typing import Optional, List
 from sqlalchemy import Integer, String, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.dialects.postgresql import ARRAY
 from timApp.timdb.sqa import db
+from timApp.document.docentry import DocEntry
 from timApp.user.usergroup import UserGroup
 
 
@@ -24,6 +25,8 @@ class LLMRule(db.Model):
     """The API key. Only used when saving the key."""
     groups: Mapped[list[int]] = mapped_column(ARRAY(Integer), default=[])
     """User group IDs that have access to this API-key using `public_key`."""
+    paths: Mapped[list[str]] = mapped_column(ARRAY(String), default=[])
+    """Document or folder paths where the API key can be used on."""
 
     teachers: Mapped[list[int]] = mapped_column(ARRAY(Integer), default=[])
     current_mode: Mapped[str] = mapped_column(
@@ -32,6 +35,9 @@ class LLMRule(db.Model):
     total_tokens_spent: Mapped[int] = mapped_column(Integer, default=0)
     indexed_document_ids: Mapped[list[int]] = mapped_column(ARRAY(Integer), default=[])
     system_prompt_path: Mapped[str] = mapped_column(String, default="")
+    # TODO: this should maybe be something like this
+    # system_prompt_doc: Mapped["DocEntry"] = relationship(back_populates="llm_rule")
+
     agent: Mapped[str] = mapped_column(String, default="")
     conv_time_window: Mapped[int] = mapped_column(Integer, default=0)
     policy: Mapped[list["Policy"]] = relationship(

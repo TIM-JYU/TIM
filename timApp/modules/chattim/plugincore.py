@@ -536,7 +536,7 @@ class PluginCore:
         )
 
     @staticmethod
-    def get_supported_providers():
+    def get_supported_providers() -> list[Provider]:
         """Get the list of supported API providers."""
         return list(PROVIDERS.keys())
 
@@ -754,9 +754,22 @@ class PluginCore:
             raise ValueError(f"Invalid input length: {input_len}")
         return sanitized_input
 
-    def update_api_key_permissions(self, owner_id: int, alias: str, groups: list[str]):
-        filtered = [g for g in groups if len(g) > 0]
-        self.tim_database.update_api_key_permissions(owner_id, alias, filtered)
+    def update_api_key_permissions(
+        self, owner_id: int, public_key: str, groups: list[str], paths: list[str]
+    ) -> None:
+        """
+        Update the permissions for the API key.
+        :param owner_id: Owner of the API key.
+        :param public_key: Alias of the API key.
+        :param groups: User groups that have access to the API key.
+        :param paths: Document paths that this key can be used on.
+        """
+        f = lambda e: len(e) > 0
+        filtered_groups = list(filter(f, groups))
+        filtered_paths = list(filter(f, paths))
+        self.tim_database.update_api_key_permissions(
+            owner_id, public_key, filtered_groups, filtered_paths
+        )
 
     @staticmethod
     def _validate_policy(policy: Policy) -> None | str:

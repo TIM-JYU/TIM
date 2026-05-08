@@ -101,6 +101,17 @@ class TimDatabase:
         return user_groups
 
     @staticmethod
+    def validate_item_paths(paths: list[str]) -> list[Item]:
+        """Check if all the user groups exists."""
+        items: list[Item] = []
+        for path in paths:
+            item = Item.find_by_path(path)
+            if not item:
+                raise Exception(f"Invalid item path: {item}")
+            items.append(item)
+        return items
+
+    @staticmethod
     def access_api_key(user_id: int, public_key: str) -> LLMRule | None:
         """
         Get the API key if the given user has access to it.
@@ -311,15 +322,19 @@ class TimDatabase:
         db.session.commit()
 
     @staticmethod
-    def update_api_key_permissions(owner_id: int, alias: str, groups: list[str]):
+    def update_api_key_permissions(
+        owner_id: int, alias: str, groups: list[str], paths: list[str]
+    ) -> None:
         """Gets the LLM rule table based on the alias."""
         user_groups = TimDatabase.validate_user_groups(groups)
+        TimDatabase.validate_item_paths(paths)
 
         rule = TimDatabase.get_api_key_row(owner_id, alias)
         if not rule:
             raise Exception("No API-key with the alias found")
 
         rule.groups = [g.id for g in user_groups]
+        rule.paths = paths
         db.session.commit()
 
     @staticmethod
