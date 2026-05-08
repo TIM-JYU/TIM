@@ -17,8 +17,11 @@ class LLMRule(db.Model):
 
     # API-key fields
     public_key: Mapped[str] = mapped_column(String, default="")
+    """The public key used associated with the API key or the chosen key for the plugin."""
     provider: Mapped[str] = mapped_column(String, default="")
+    """Provider of the API key. Only used when saving the key."""
     api_key: Mapped[str] = mapped_column(String, default="")
+    """The API key. Only used when saving the key."""
     groups: Mapped[list[int]] = mapped_column(ARRAY(Integer), default=[])
     """User group IDs that have access to this API-key using `public_key`."""
 

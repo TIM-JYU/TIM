@@ -785,9 +785,17 @@ class PluginCore:
         return None
 
     def add_api_key(
-        self, userid: int, provider: str, public_key: str, api_key: str
+        self,
+        userid: int,
+        provider: str,
+        public_key: str,
+        api_key: str,
+        *,
+        group_names: list[str] | None = None,
     ) -> LLMRule:
-        return self.tim_database.set_api_key(userid, provider, public_key, api_key)
+        return self.tim_database.set_api_key(
+            userid, provider, public_key, api_key, group_names=group_names
+        )
 
     def get_user_api_keys(self, owner_id: int) -> list[tuple[str, str, str, list[str]]]:
         """Fetch all the API keys the user owns.

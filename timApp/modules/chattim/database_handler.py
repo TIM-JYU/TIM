@@ -101,27 +101,33 @@ class TimDatabase:
         return user_groups
 
     @staticmethod
-    def check_api_key_access(user_id: int, public_key: str) -> bool:
+    def access_api_key(user_id: int, public_key: str) -> LLMRule | None:
         """
-        Check if the given user has access to the API key associated
-         with the given alias or public key.
+        Get the API key if the given user has access to it.
+        User has access to the key if it's the owner of the key, or
+        it is included in some of the user groups that have access.
+
+        :param user_id: The id of the user.
+        :param public_key: The associated public key for the desired API key.
+        :return: The API key or None if it does not exist or the user has no access.
         """
-        api_llm_rule = TimDatabase.get_api_key_by_alias(public_key)
-        if not api_llm_rule:
-            return False
-        if user_id == api_llm_rule.owner:
-            return True
-        group_ids = api_llm_rule.groups
-        # TODO: If the user group list is empty, its global or only owner?
+        api_key = TimDatabase.get_api_key_by_alias(public_key)
+        if not api_key:
+            return None
+        if user_id == api_key.owner:
+            return api_key
+        group_ids = api_key.groups
+        # TODO: If the user group list is empty,
+        #  should the key be global or accessible only to the owner?
         if not group_ids:
-            return True
+            return api_key
         for group_id in group_ids:
             group = UserGroup.get_by_id(group_id)
             if not group:
                 continue
             if TimDatabase.in_user_group(group, user_id):
-                return True
-        return False
+                return api_key
+        return None
 
     @staticmethod
     def set_llm_rule(
@@ -201,6 +207,8 @@ class TimDatabase:
         provider: str,
         public_key: str,
         api_key: str,
+        *,
+        group_names: list[str] | None = None,
     ) -> LLMRule:
         """
         Saves a new API key, its alias and the API key provider.
@@ -208,6 +216,7 @@ class TimDatabase:
         :param provider: Provider of the apikey.
         :param public_key: The public alias for the key.
         :param api_key: The API-key.
+        :param group_names: Optional user groups to add to the API key permissions.
         :return: created LLMRule instance
         """
         rule = TimDatabase.get_api_key_by_alias(public_key)
@@ -218,12 +227,17 @@ class TimDatabase:
             rule.api_key = api_key
             rule.public_key = public_key
         else:
+            groups: list[int] = []
+            if group_names:
+                for group_name in group_names:
+                    if g := UserGroup.get_by_name(group_name):
+                        groups.append(g.id)
             rule = LLMRule(
                 owner=owner,
                 api_key=api_key,
                 public_key=public_key,
                 provider=provider,
-                groups=[],  # TODO: add owners group?
+                groups=groups,
             )
             db.session.add(rule)
         db.session.commit()
@@ -289,12 +303,10 @@ class TimDatabase:
     @staticmethod
     def delete_api_key(owner_id: int, alias: str) -> None:
         """Deletes the LLM rule row of the owner based on the alias."""
-        key = db.session.query(LLMRule).filter(owner=owner_id, public_key=alias).first()
+        key = TimDatabase.get_api_key_row(owner_id, alias)
         if not key:
             raise Exception("No API key with the alias found.")
         assert isinstance(key, LLMRule)
-        if key.owner == owner_id:
-            raise Exception("No permission to delete the API-key.")
         db.session.delete(key)
         db.session.commit()
 

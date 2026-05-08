@@ -12,7 +12,7 @@ from timApp.auth.accesshelper import (
 from timApp.util.flask.requesthelper import RouteException
 from tim_common.marshmallow_dataclass import class_schema
 
-from timApp.auth.sessioninfo import get_current_user_id
+from timApp.auth.sessioninfo import get_current_user_id, get_current_user_name
 from timApp.tim_app import csrf
 from timApp.util.flask.responsehelper import json_response, to_json_str, ok_response
 from tim_common.markupmodels import GenericMarkupModel
@@ -277,12 +277,14 @@ def save_api_key(params: APIKeyParams) -> Response:
     key = params.apikey
     alias = params.alias
     userid = get_current_user_id()
+    username = get_current_user_name()
+    groups = params.groups or [username]
 
     valid = plugincore.validate_api_key(provider, key)
 
     if valid:
         try:
-            plugincore.add_api_key(userid, provider, alias, key)
+            plugincore.add_api_key(userid, provider, alias, key, group_names=groups)
         except Exception as e:
             raise RouteException(description=str(e))
 

@@ -1378,11 +1378,13 @@ export class SettingsComponent implements DoCheck, AfterViewInit {
                 },
             })
         );
-        this.userLLMAPIKeys.filter((k) => k.alias != key.alias);
         this.saving = false;
+        if (r.ok) {
+            this.userLLMAPIKeys.splice(this.userLLMAPIKeys.indexOf(key), 1);
+        } else {
+            await showMessageDialog(r.result.error.error);
+        }
         this.cdr.detectChanges();
-
-        // TODO give option to remove given API key
     }
 
     /**
