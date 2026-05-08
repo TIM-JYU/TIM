@@ -122,20 +122,19 @@ export class AddLLMAPIKeyDialogComponent extends AngularDialogComponent<
             this.saving = false;
             return;
         } else {
-            const validateResponse = await this.validateAPIKey();
+            let validateResponse = await this.validateAPIKey();
 
             if (validateResponse.ok) {
+                const key: IUserLLMApiKey = validateResponse.result;
                 this.saving = false;
-                const hidden_api = this.apiKey
-                    ? this.apiKey.slice(0, 6) + "..." + this.apiKey.slice(-4)
-                    : "";
                 this.data.onAdd({
-                    provider: this.chosenProvider,
-                    APIkey: hidden_api,
-                    alias: this.LLMKeyAlias!,
+                    provider: key.provider,
+                    APIkey: key.APIkey,
+                    alias: key.alias,
                     availableTokens: 0,
                     usedTokens: 0,
                     tokensChecked: false,
+                    groupNames: key.groupNames,
                 });
                 this.added = true;
                 this.dismiss();
@@ -152,7 +151,7 @@ export class AddLLMAPIKeyDialogComponent extends AngularDialogComponent<
      */
     async validateAPIKey() {
         return await toPromise(
-            this.http.post<Response>("/chattim/validateApi", {
+            this.http.post<IUserLLMApiKey>("/chattim/validateApi", {
                 provider: this.chosenProvider,
                 apikey: this.apiKey,
                 alias: this.LLMKeyAlias,

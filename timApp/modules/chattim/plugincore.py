@@ -792,10 +792,11 @@ class PluginCore:
         api_key: str,
         *,
         group_names: list[str] | None = None,
-    ) -> LLMRule:
-        return self.tim_database.set_api_key(
+    ) -> tuple[str, str, str, list[str]]:
+        row = self.tim_database.set_api_key(
             userid, provider, public_key, api_key, group_names=group_names
         )
+        return self._api_row_to_tuple(row)
 
     def get_user_api_keys(self, owner_id: int) -> list[tuple[str, str, str, list[str]]]:
         """Fetch all the API keys the user owns.
@@ -806,15 +807,7 @@ class PluginCore:
         rows = self.tim_database.get_user_api_keys(owner_id)
         keys: list[tuple[str, str, str, list[str]]] = []
         for row in rows:
-            groups = get_groups_by_ids(row.groups)
-            keys.append(
-                (
-                    str(row.public_key),
-                    str(row.provider),
-                    str(row.api_key),
-                    [str(g.name) for g in groups],
-                )
-            )
+            keys.append(self._api_row_to_tuple(row))
         return keys
 
     def delete_api_key(self, owner_id: int, public_key: str) -> None:
@@ -822,3 +815,13 @@ class PluginCore:
 
     def get_llmrule(self, userid: int, documentid: int) -> LLMRule:
         return self.tim_database.get_llm_rule(userid, documentid)
+
+    @staticmethod
+    def _api_row_to_tuple(rule: LLMRule) -> tuple[str, str, str, list[str]]:
+        groups = get_groups_by_ids(rule.groups)
+        return (
+            str(rule.public_key),
+            str(rule.provider),
+            str(rule.api_key),
+            [str(g.name) for g in groups],
+        )

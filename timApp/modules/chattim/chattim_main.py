@@ -284,11 +284,12 @@ def save_api_key(params: APIKeyParams) -> Response:
 
     if valid:
         try:
-            plugincore.add_api_key(userid, provider, alias, key, group_names=groups)
+            key = plugincore.add_api_key(
+                userid, provider, alias, key, group_names=groups
+            )
+            return json_response(_api_key_to_dict(key))
         except Exception as e:
             raise RouteException(description=str(e))
-
-        return ok_response()
     else:
         raise RouteException(description="API Key is invalid.")
 
@@ -310,24 +311,14 @@ def get_providers() -> list[str]:
     return response
 
 
-def get_existing_keys() -> list[str]:
+def get_existing_keys() -> list[dict]:
     verify_logged_in()
     userid = get_current_user_id()
     api_keys = plugincore.get_user_api_keys(userid)
 
     hidden_keys = []
     for key in api_keys:
-        alias, provider, api_key, groups = key
-        hidden_key = api_key[:6] + "..." + api_key[-4:]
-        hidden_keys.append(
-            {
-                "provider": provider,
-                "APIkey": hidden_key,
-                "alias": alias,
-                "groupNames": groups,
-            }
-        )
-
+        hidden_keys.append(_api_key_to_dict(key))
     return hidden_keys
 
 
@@ -351,6 +342,17 @@ def to_ndjson_str(json_data: Any) -> str:
     :return: A string representation of the JSON data ending in a newline.
     """
     return to_json_str(json_data) + "\n"
+
+
+def _api_key_to_dict(key: tuple[str, str, str, list[str]]) -> dict:
+    alias, provider, api_key, groups = key
+    hidden_key = api_key[:6] + "..." + api_key[-4:]
+    return {
+        "provider": provider,
+        "APIkey": hidden_key,
+        "alias": alias,
+        "groupNames": groups,
+    }
 
 
 chattim = create_nontask_blueprint(
