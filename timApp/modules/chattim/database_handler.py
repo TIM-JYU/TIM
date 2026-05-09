@@ -1,7 +1,6 @@
 from dataclasses import dataclass
 
 from sqlalchemy import select, delete
-from xxlimited_35 import Null
 
 from timApp.document.document import Document
 from timApp.document import docentry
@@ -207,7 +206,8 @@ class TimDatabase:
         Gets the API keys of the given owner.
         """
         stmt = select(LLMRule.apikey).where(
-            LLMRule.owner == owner_id, LLMRule.document_id == -1)
+            LLMRule.owner == owner_id, LLMRule.document_id == -1
+        )
         return db.session.scalar(stmt)
 
     @staticmethod
