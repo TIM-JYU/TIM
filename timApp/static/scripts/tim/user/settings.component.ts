@@ -1259,7 +1259,12 @@ export class SettingsComponent implements DoCheck, AfterViewInit {
 
     openEditLLMAPIKeyDialog(key: IUserLLMApiKey) {
         void to2(
-            showEditLLMAPIKeyDialog(key, (apiKey: IUserLLMApiKey) => {
+            showEditLLMAPIKeyDialog(key, (editedKey: IUserLLMApiKey) => {
+                const index = this.userLLMAPIKeys.indexOf(key);
+                if (index < 0) {
+                    return;
+                }
+                this.userLLMAPIKeys[index] = editedKey;
                 this.cdr.detectChanges();
             })
         );

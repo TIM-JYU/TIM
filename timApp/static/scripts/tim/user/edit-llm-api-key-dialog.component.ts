@@ -41,11 +41,11 @@ import {TooltipModule} from "ngx-bootstrap/tooltip";
                             </span>
                         </div>
 
-                        <label for="docPaths">Document paths:</label>
+                        <label for="docPaths">Folder or document paths:</label>
                         <div class="input-group" style="width: 100%">
                             <textarea name="docPaths" class="form-control" type="text"
                                       placeholder="{{getPlaceholderDocs()}}"
-                                      [(ngModel)]="documentPaths">
+                                      [(ngModel)]="itemPaths">
                             </textarea>
                         </div>
 
@@ -73,14 +73,14 @@ export class EditLLMAPIKeyDialogComponent extends AngularDialogComponent<
 > {
     ngOnInit() {
         const groups: string[] = this.data.key.groupNames ?? [];
-        const paths: string[] = this.data.key.docPaths ?? [];
+        const paths: string[] = this.data.key.itemPaths ?? [];
         this.groupNames = groups.join(";");
-        this.documentPaths = paths.join("\n");
+        this.itemPaths = paths.join("\n");
     }
 
     dialogName: string = "EditLLMAPIKey";
     groupNames: string = "";
-    documentPaths: string = "";
+    itemPaths: string = "";
     listMode: boolean = false;
     saving = false;
     editError?: string;
@@ -97,7 +97,7 @@ export class EditLLMAPIKeyDialogComponent extends AngularDialogComponent<
         this.saving = true;
         const key: IUserLLMApiKey = this.data.key;
         const groups: string[] = this.splitInput(this.groupNames, "\n;");
-        const paths: string[] = this.splitInput(this.documentPaths, "\n");
+        const paths: string[] = this.splitInput(this.itemPaths, "\n");
 
         const res = await toPromise(
             this.http.post<Response>("/chattim/saveApiKeyPermissions", {
@@ -110,8 +110,11 @@ export class EditLLMAPIKeyDialogComponent extends AngularDialogComponent<
         );
         this.saving = false;
         if (res.ok) {
-            key.groupNames = groups;
-            key.docPaths = paths;
+            this.data.onEdit({
+                ...this.data.key,
+                groupNames: groups,
+                itemPaths: paths,
+            });
             this.dismiss();
             return;
         }
@@ -133,7 +136,7 @@ export class EditLLMAPIKeyDialogComponent extends AngularDialogComponent<
     }
 
     getPlaceholderDocs(): string {
-        return "enter document paths separated by newlines";
+        return "enter folder or document paths separated by newlines";
     }
 }
 

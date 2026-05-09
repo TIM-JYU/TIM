@@ -53,7 +53,7 @@ export interface IUserLLMApiKey {
     availableTokens: number;
     tokensChecked: boolean;
     groupNames?: string[];
-    docPaths?: string[];
+    itemPaths?: string[];
 }
 
 export interface IFullUser extends IUser {

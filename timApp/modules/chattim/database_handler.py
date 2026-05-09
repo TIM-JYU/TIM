@@ -289,8 +289,10 @@ class TimDatabase:
     @staticmethod
     def get_user_api_keys(owner_id: int) -> list[LLMRule]:
         """Get all the API keys owner by the given owner."""
-        stmt = select(LLMRule).where(
-            LLMRule.owner == owner_id, LLMRule.document_id <= 0
+        stmt = (
+            select(LLMRule)
+            .where(LLMRule.owner == owner_id, LLMRule.document_id <= 0)
+            .order_by(LLMRule.id)
         )
         return db.session.execute(stmt).scalars().all()
 

@@ -347,14 +347,15 @@ def to_ndjson_str(json_data: Any) -> str:
     return to_json_str(json_data) + "\n"
 
 
-def _api_key_to_dict(key: tuple[str, str, str, list[str]]) -> dict:
-    alias, provider, api_key, groups = key
+def _api_key_to_dict(key: tuple[str, str, str, list[str], list[str]]) -> dict:
+    alias, provider, api_key, groups, paths = key
     hidden_key = api_key[:6] + "..." + api_key[-4:]
     return {
         "provider": provider,
         "APIkey": hidden_key,
         "alias": alias,
         "groupNames": groups,
+        "itemPaths": paths,
     }
 
 

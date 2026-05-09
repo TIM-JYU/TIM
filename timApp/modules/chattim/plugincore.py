@@ -811,21 +811,24 @@ class PluginCore:
         api_key: str,
         *,
         group_names: list[str] | None = None,
-    ) -> tuple[str, str, str, list[str]]:
+        paths: list[str] | None = None,
+    ) -> tuple[str, str, str, list[str], list[str]]:
         """Add an API key for the user."""
         row = self.tim_database.set_api_key(
-            userid, provider, public_key, api_key, group_names=group_names
+            userid, provider, public_key, api_key, group_names=group_names, paths=paths
         )
         return self._api_row_to_tuple(row)
 
-    def get_user_api_keys(self, owner_id: int) -> list[tuple[str, str, str, list[str]]]:
+    def get_user_api_keys(
+        self, owner_id: int
+    ) -> list[tuple[str, str, str, list[str], list[str]]]:
         """Fetch all the API keys the user owns.
         :param owner_id: Owner ID.
         :return: A list of tuples containing the API keys.
-                 (alias, provider, api_key, group_names)
+                 (alias, provider, api_key, group_names, paths)
         """
         rows = self.tim_database.get_user_api_keys(owner_id)
-        keys: list[tuple[str, str, str, list[str]]] = []
+        keys: list[tuple[str, str, str, list[str], list[str]]] = []
         for row in rows:
             keys.append(self._api_row_to_tuple(row))
         return keys
@@ -873,11 +876,12 @@ class PluginCore:
         return self.tim_database.get_llm_rule(userid, documentid)
 
     @staticmethod
-    def _api_row_to_tuple(rule: LLMRule) -> tuple[str, str, str, list[str]]:
+    def _api_row_to_tuple(rule: LLMRule) -> tuple[str, str, str, list[str], list[str]]:
         groups = get_groups_by_ids(rule.groups)
         return (
             str(rule.public_key),
             str(rule.provider),
             str(rule.api_key),
             [str(g.name) for g in groups],
+            [str(p) for p in rule.paths],
         )
