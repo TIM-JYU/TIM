@@ -187,7 +187,8 @@ class TimDatabase:
         Deletes the LLM rule of the given owner in the given document.
         """
         stmt = delete(LLMRule).where(
-            LLMRule.owner == owner_id, LLMRule.document_id == document_id
+            LLMRule.owner == owner_id,
+            LLMRule.document_id == document_id,
         )
         db.session.execute(stmt)
         db.session.commit()
@@ -206,7 +207,8 @@ class TimDatabase:
         Gets the API keys of the given owner.
         """
         stmt = select(LLMRule.apikey).where(
-            LLMRule.owner == owner_id, LLMRule.document_id == -1
+            LLMRule.owner == owner_id,
+            LLMRule.document_id == -1,
         )
         return db.session.scalar(stmt)
 
@@ -219,7 +221,7 @@ class TimDatabase:
         time_window_tokens: int,
         max_tokens_per_user: int,
         token_pool: int,
-        policy_type: str,  # global or student
+        policy_type: str,  # global or user
     ) -> Policy:
         """
         Sets a new policy for the LLM rule. Policy can be a global policy for the whole LLM rule or a student policy
@@ -321,7 +323,8 @@ class TimDatabase:
         Deletes the given global policy.
         """
         stmt = delete(Policy).where(
-            Policy.llm_rule == llm_rule, Policy.for_user.is_(None)
+            Policy.llm_rule == llm_rule,
+            Policy.for_user.is_(None),
         )
         db.session.execute(stmt)
         db.session.commit()
@@ -332,7 +335,8 @@ class TimDatabase:
         Deletes the user policy of the given user.
         """
         stmt = delete(Policy).where(
-            Policy.llm_rule == llm_rule, Policy.for_user == user_id
+            Policy.llm_rule == llm_rule,
+            Policy.for_user == user_id,
         )
         db.session.execute(stmt)
         db.session.commit()
@@ -343,7 +347,8 @@ class TimDatabase:
         Gets the given global policy.
         """
         stmt = select(Policy).where(
-            Policy.llm_rule == llm_rule, Policy.for_user.is_(None)
+            Policy.llm_rule == llm_rule,
+            Policy.for_user.is_(None),
         )
         return db.session.scalar(stmt)
 
@@ -353,7 +358,8 @@ class TimDatabase:
         Gets the user policy of the given user.
         """
         stmt = select(Policy).where(
-            Policy.llm_rule == llm_rule, Policy.for_user == user_id
+            Policy.llm_rule == llm_rule,
+            Policy.for_user == user_id,
         )
         return db.session.scalar(stmt)
 
@@ -390,7 +396,8 @@ class TimDatabase:
         Deletes the usage of the given user in the given LLM rule instance.
         """
         stmt = delete(Usage).where(
-            Usage.llm_rule == llm_rule, Usage.user == user_id
+            Usage.llm_rule == llm_rule,
+            Usage.user == user_id,
         )
         db.session.execute(stmt)
         db.session.commit()
@@ -401,6 +408,7 @@ class TimDatabase:
         Gets the usage of the given user in the given LLM rule instance.
         """
         stmt = select(Usage).where(
-            Usage.llm_rule == llm_rule, Usage.user == user_id
+            Usage.llm_rule == llm_rule,
+            Usage.user == user_id,
         )
         return db.session.scalar(stmt)
