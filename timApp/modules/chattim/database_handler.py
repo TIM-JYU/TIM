@@ -5,6 +5,7 @@ from sqlalchemy import select, delete
 from timApp.document.document import Document
 from timApp.document import docentry
 from timApp.document.docentry import DocEntry
+from timApp.folder.folder import Folder, path_includes
 from timApp.item.item import Item
 from timApp.modules.chattim.dbmodels import LLMRule, Policy, Usage
 from timApp.timdb.sqa import db
@@ -102,7 +103,7 @@ class TimDatabase:
 
     @staticmethod
     def validate_item_paths(paths: list[str]) -> list[Item]:
-        """Check if all the user groups exists."""
+        """Check if all the paths exist."""
         items: list[Item] = []
         for path in paths:
             item = Item.find_by_path(path)
@@ -110,6 +111,32 @@ class TimDatabase:
                 raise Exception(f"Invalid item path: {item}")
             items.append(item)
         return items
+
+    @staticmethod
+    def api_key_valid_in_doc(key: LLMRule, doc_id: int) -> bool:
+        """Check if the API key can be used in the given document."""
+        if key.document_id > 0:
+            return False
+        # TODO: Should the key be accessible everywhere if no paths added or no?
+        if len(key.paths) == 0:
+            return False
+
+        entries = docentry.DocEntry.find_all_by_id(doc_id)
+        if not entries:
+            return False
+        doc = entries[0]
+
+        for path in key.paths:
+            if doc.path == path:
+                return True
+            item = Item.find_by_path(path)
+            if not item:
+                continue
+            if isinstance(item, Folder):
+                # TODO: is there a better way?
+                if path_includes(doc.path, path):
+                    return True
+        return False
 
     @staticmethod
     def access_api_key(user_id: int, public_key: str) -> LLMRule | None:
@@ -220,6 +247,7 @@ class TimDatabase:
         api_key: str,
         *,
         group_names: list[str] | None = None,
+        paths: list[str] | None = None,
     ) -> LLMRule:
         """
         Saves a new API key, its alias and the API key provider.
@@ -228,6 +256,7 @@ class TimDatabase:
         :param public_key: The public alias for the key.
         :param api_key: The API-key.
         :param group_names: Optional user groups to add to the API key permissions.
+        :param paths: Optional paths to add to the API key permissions.
         :return: created LLMRule instance
         """
         rule = TimDatabase.get_api_key_by_alias(public_key)
@@ -238,18 +267,21 @@ class TimDatabase:
             rule.api_key = api_key
             rule.public_key = public_key
         else:
-            groups: list[int] = []
-            if group_names:
-                for group_name in group_names:
-                    if g := UserGroup.get_by_name(group_name):
-                        groups.append(g.id)
             rule = LLMRule(
                 owner=owner,
                 api_key=api_key,
                 public_key=public_key,
                 provider=provider,
-                groups=groups,
             )
+            if group_names:
+                groups: list[int] = []
+                for group_name in group_names:
+                    if g := UserGroup.get_by_name(group_name):
+                        groups.append(g.id)
+                rule.groups = groups
+            if paths:
+                rule.paths = paths
+
             db.session.add(rule)
         db.session.commit()
         return rule
