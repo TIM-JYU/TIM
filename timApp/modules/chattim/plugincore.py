@@ -714,11 +714,17 @@ class PluginCore:
             return None
 
     @staticmethod
+    def _parse_provider(provider_str: str) -> Provider | None:
+        if provider_str not in Provider.__args__:
+            return None
+        return cast(Provider, provider_str)
+
+    @staticmethod
     def validate_api_key(provider_str: str, api_key: str) -> bool:
         """Check if the api key is valid."""
-        if provider_str not in Provider.__args__:
+        provider = PluginCore._parse_provider(provider_str)
+        if not provider:
             return False
-        provider = cast(Provider, provider_str)
         client = GenericApiClient(provider, api_key)
         try:
             return client.verify_api_key()
@@ -806,6 +812,7 @@ class PluginCore:
         *,
         group_names: list[str] | None = None,
     ) -> tuple[str, str, str, list[str]]:
+        """Add an API key for the user."""
         row = self.tim_database.set_api_key(
             userid, provider, public_key, api_key, group_names=group_names
         )
@@ -822,6 +829,42 @@ class PluginCore:
         for row in rows:
             keys.append(self._api_row_to_tuple(row))
         return keys
+
+    def try_access_api_key(self, user_id: int, public_key: str) -> tuple[Provider, str]:
+        """
+        Try to access the API key. Checks that the user has access to it.
+        Used to link an API key to a plugin.
+
+        :param user_id: ID of the user saving the plugin.
+        :param public_key: Alias of the API key.
+        :raises Exception: If the user has no access to the API key.
+                           Or the API key provider is invalid.
+        :return: A tuple (provider, api_key)
+        """
+        key = self.tim_database.access_api_key(user_id, public_key)
+        if not key:
+            raise Exception(f"No access to the API key.")
+        provider = PluginCore._parse_provider(key.provider)
+        if not provider:
+            raise Exception(f"No provider found for API key.")
+        return provider, key.api_key
+
+    def get_api_key(self, public_key: str) -> tuple[Provider, str]:
+        """
+        Get the API key matching the public key.
+
+        :param public_key: Alias of the API key.
+        :raises Exception: If no API key is found.
+                           Or the API key provider is invalid.
+        :return: A tuple (provider, api_key)
+        """
+        key = self.tim_database.get_api_key_by_alias(public_key)
+        if not key:
+            raise Exception(f"API key not found")
+        provider = PluginCore._parse_provider(key.provider)
+        if not provider:
+            raise Exception(f"No provider found for API key.")
+        return provider, key.api_key
 
     def delete_api_key(self, owner_id: int, public_key: str) -> None:
         self.tim_database.delete_api_key(owner_id, public_key)

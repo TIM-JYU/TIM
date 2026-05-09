@@ -86,7 +86,7 @@ class TimDatabase:
     def in_user_group(group: UserGroup, user_id: int) -> bool:
         """Check if the user is in the given user group."""
         # TODO: is there a TIM function for this?
-        if group.is_personal_group:
+        if group.is_personal_group and group.personal_user.id == user_id:
             return True
         return any(u.id == user_id for u in group.users)
 
