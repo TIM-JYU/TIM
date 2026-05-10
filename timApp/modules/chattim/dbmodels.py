@@ -1,10 +1,8 @@
-from typing import Optional, List
+from typing import Optional
 from sqlalchemy import Integer, String, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.dialects.postgresql import ARRAY
 from timApp.timdb.sqa import db
-from timApp.document.docentry import DocEntry
-from timApp.user.usergroup import UserGroup
 
 
 class LLMRule(db.Model):
@@ -16,9 +14,9 @@ class LLMRule(db.Model):
     document_id: Mapped[int] = mapped_column(Integer, default=0)
     owner: Mapped[int] = mapped_column(ForeignKey("useraccount.id"))
 
-    # API-key fields
+    # API key fields
     public_key: Mapped[str] = mapped_column(String, default="")
-    """The public key used associated with the API key or the chosen key for the plugin."""
+    """The public key associated with the API key or the chosen key for the plugin."""
     provider: Mapped[str] = mapped_column(String, default="")
     """Provider of the API key. Only used when saving the key."""
     api_key: Mapped[str] = mapped_column(String, default="")
@@ -28,6 +26,7 @@ class LLMRule(db.Model):
     paths: Mapped[list[str]] = mapped_column(ARRAY(String), default=[])
     """Document or folder paths where the API key can be used on."""
 
+    # TODO: Should this be combined with `groups` or kept separate?
     teachers: Mapped[list[int]] = mapped_column(ARRAY(Integer), default=[])
     current_mode: Mapped[str] = mapped_column(
         String, default=""
@@ -35,8 +34,10 @@ class LLMRule(db.Model):
     total_tokens_spent: Mapped[int] = mapped_column(Integer, default=0)
     indexed_document_ids: Mapped[list[int]] = mapped_column(ARRAY(Integer), default=[])
     system_prompt_path: Mapped[str] = mapped_column(String, default="")
-    # TODO: this should maybe be something like this
-    # system_prompt_doc: Mapped["DocEntry"] = relationship(back_populates="llm_rule")
+    # TODO: this should probably be something like:
+    # system_prompt_doc: Mapped[str] = mapped_column(
+    #     String, ForeignKey("docentry.name"), default=""
+    # )
 
     agent: Mapped[str] = mapped_column(String, default="")
     conv_time_window: Mapped[int] = mapped_column(Integer, default=0)

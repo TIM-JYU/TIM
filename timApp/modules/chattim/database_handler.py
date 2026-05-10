@@ -171,7 +171,6 @@ class TimDatabase:
     def set_llm_rule(
         document_id: int,
         owner: int,
-        apikey: list[str],
         public_key: str,
         teachers: list[int],
         current_mode: str,
@@ -187,8 +186,7 @@ class TimDatabase:
         Creates a new LLM rule or updates the existing rule if one already exists for the given owner.
         :param document_id: The id of the document.
         :param owner: The id of the owner of the LLM rule.
-        :param apikey: List of the API key providers, API keys and aliases of the owner. [apikey_provider,apikey,alias]
-        :param public_key: The chosen API key and alias for the instance.
+        :param public_key: The alias of the chosen API key for the instance.
         :param teachers: The ids of the teachers allowed to use the plugin instance.
         :param current_mode: Mode of the plugin instance: summarizing, creative or balanced.
         :param total_tokens_spent: The total number of tokens spent.
@@ -205,7 +203,6 @@ class TimDatabase:
             rule = LLMRule(
                 document_id=document_id,
                 owner=owner,
-                apikey=apikey,
                 public_key=public_key,
                 teachers=teachers,
                 current_mode=current_mode,
@@ -217,8 +214,6 @@ class TimDatabase:
             )
             db.session.add(rule)
         else:
-            if apikey:
-                rule.apikey = apikey
             if public_key:
                 rule.public_key = public_key
             if teachers:
@@ -263,38 +258,25 @@ class TimDatabase:
         if rule:
             if owner != rule.owner:
                 raise Exception("API-key exists with the alias.")
-            rule.provider = provider
-            rule.api_key = api_key
-            rule.public_key = public_key
         else:
-            rule = LLMRule(
-                owner=owner,
-                api_key=api_key,
-                public_key=public_key,
-                provider=provider,
-            )
-            if group_names:
-                groups: list[int] = []
-                for group_name in group_names:
-                    if g := UserGroup.get_by_name(group_name):
-                        groups.append(g.id)
-                rule.groups = groups
-            if paths:
-                rule.paths = paths
-
+            rule = LLMRule(owner=owner)
             db.session.add(rule)
+
+        rule.provider = provider
+        rule.api_key = api_key
+        rule.public_key = public_key
+
+        if group_names:
+            groups: list[int] = []
+            for group_name in group_names:
+                if g := UserGroup.get_by_name(group_name):
+                    groups.append(g.id)
+            rule.groups = groups
+        if paths:
+            rule.paths = paths
+
         db.session.commit()
         return rule
-
-    @staticmethod
-    def get_user_api_keys(owner_id: int) -> list[LLMRule]:
-        """Get all the API keys owner by the given owner."""
-        stmt = (
-            select(LLMRule)
-            .where(LLMRule.owner == owner_id, LLMRule.document_id <= 0)
-            .order_by(LLMRule.id)
-        )
-        return db.session.execute(stmt).scalars().all()
 
     @staticmethod
     def delete_llm_rule(owner_id: int, document_id: int) -> None:
@@ -317,15 +299,14 @@ class TimDatabase:
         return db.session.scalar(stmt)
 
     @staticmethod
-    def get_api_keys(owner_id: int) -> list[str] | None:
-        """
-        Gets the API keys of the given owner.
-        """
-        stmt = select(LLMRule.apikey).where(
-            LLMRule.owner == owner_id,
-            LLMRule.document_id == -1,
+    def get_user_api_keys(owner_id: int) -> list[LLMRule]:
+        """Get all the API keys owner by the given owner."""
+        stmt = (
+            select(LLMRule)
+            .where(LLMRule.owner == owner_id, LLMRule.document_id <= 0)
+            .order_by(LLMRule.id)
         )
-        return db.session.scalar(stmt)
+        return db.session.execute(stmt).scalars().all()
 
     @staticmethod
     def get_api_key_by_alias(public_key: str) -> LLMRule | None:
@@ -336,7 +317,7 @@ class TimDatabase:
         return db.session.scalar(stmt)
 
     @staticmethod
-    def get_api_key_row(owner_id: int, alias: str) -> LLMRule | None:
+    def get_owner_api_key(owner_id: int, alias: str) -> LLMRule | None:
         """Gets the LLM rule row of the owner based on the alias."""
         stmt = select(LLMRule).where(
             LLMRule.owner == owner_id,
@@ -348,7 +329,7 @@ class TimDatabase:
     @staticmethod
     def delete_api_key(owner_id: int, alias: str) -> None:
         """Deletes the LLM rule row of the owner based on the alias."""
-        key = TimDatabase.get_api_key_row(owner_id, alias)
+        key = TimDatabase.get_owner_api_key(owner_id, alias)
         if not key:
             raise Exception("No API key with the alias found.")
         assert isinstance(key, LLMRule)
@@ -363,7 +344,7 @@ class TimDatabase:
         user_groups = TimDatabase.validate_user_groups(groups)
         TimDatabase.validate_item_paths(paths)
 
-        rule = TimDatabase.get_api_key_row(owner_id, alias)
+        rule = TimDatabase.get_owner_api_key(owner_id, alias)
         if not rule:
             raise Exception("No API-key with the alias found")
 

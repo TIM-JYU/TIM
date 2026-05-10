@@ -116,6 +116,10 @@ class PreparedChatRequest:
     response: Iterable[ModelResponse] | ModelResponse
 
 
+# TODO: maybe a dict or dataclass would be more descriptive
+APIKey = tuple[str, str, str, list[str], list[str]]
+
+
 class PluginCore:
     rag: Rag = Rag()
     history_manager: ConversationManager
@@ -495,7 +499,6 @@ class PluginCore:
         rule = self.tim_database.set_llm_rule(
             document_id,
             caller_id,
-            [],
             "",
             [],
             llm_mode,
@@ -631,7 +634,7 @@ class PluginCore:
         if policy:
             token_limit = policy.max_tokens_per_user
         else:
-        # check globalpolicy
+            # check globalpolicy
             policy = self.tim_database.get_global_policy(rule)
             if policy:
                 token_limit = policy.max_tokens_per_user
@@ -812,23 +815,23 @@ class PluginCore:
         *,
         group_names: list[str] | None = None,
         paths: list[str] | None = None,
-    ) -> tuple[str, str, str, list[str], list[str]]:
+    ) -> APIKey:
         """Add an API key for the user."""
+        alias = public_key.strip()
+        if not alias:
+            raise ValueError("Alias cannot be empty")
         row = self.tim_database.set_api_key(
-            userid, provider, public_key, api_key, group_names=group_names, paths=paths
+            userid, provider, alias, api_key, group_names=group_names, paths=paths
         )
         return self._api_row_to_tuple(row)
 
-    def get_user_api_keys(
-        self, owner_id: int
-    ) -> list[tuple[str, str, str, list[str], list[str]]]:
+    def get_user_api_keys(self, owner_id: int) -> list[APIKey]:
         """Fetch all the API keys the user owns.
         :param owner_id: Owner ID.
         :return: A list of tuples containing the API keys.
-                 (alias, provider, api_key, group_names, paths)
         """
         rows = self.tim_database.get_user_api_keys(owner_id)
-        keys: list[tuple[str, str, str, list[str], list[str]]] = []
+        keys: list[APIKey] = []
         for row in rows:
             keys.append(self._api_row_to_tuple(row))
         return keys
@@ -872,11 +875,15 @@ class PluginCore:
     def delete_api_key(self, owner_id: int, public_key: str) -> None:
         self.tim_database.delete_api_key(owner_id, public_key)
 
-    def get_llmrule(self, userid: int, documentid: int) -> LLMRule:
-        return self.tim_database.get_llm_rule(userid, documentid)
+    def get_llmrule(self, documentid: int) -> LLMRule:
+        return self.tim_database.get_llm_rule(documentid)
 
     @staticmethod
-    def _api_row_to_tuple(rule: LLMRule) -> tuple[str, str, str, list[str], list[str]]:
+    def _api_row_to_tuple(rule: LLMRule) -> APIKey:
+        """
+        Converts the LLMRule table of the API key to a tuple.
+        `(alias, provider, api_key, group_names, paths)`
+        """
         groups = get_groups_by_ids(rule.groups)
         return (
             str(rule.public_key),

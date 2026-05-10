@@ -30,6 +30,7 @@ from tim_common.pluginserver_flask import (
 from timApp.modules.chattim.plugincore import (
     PluginCore,
     InstanceAttributes,
+    APIKey,
 )
 from .model import ModelError
 
@@ -347,7 +348,7 @@ def to_ndjson_str(json_data: Any) -> str:
     return to_json_str(json_data) + "\n"
 
 
-def _api_key_to_dict(key: tuple[str, str, str, list[str], list[str]]) -> dict:
+def _api_key_to_dict(key: APIKey) -> dict:
     alias, provider, api_key, groups, paths = key
     hidden_key = api_key[:6] + "..." + api_key[-4:]
     return {
