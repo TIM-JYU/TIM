@@ -16,11 +16,11 @@ class LLMRule(db.Model):
     apikey: Mapped[list[str]] = mapped_column(
         ARRAY(String)
     )  # list of apikey providers, apikeys and aliases [apikey_provider,apikey,alias]
-    chosen_key: Mapped[str] = mapped_column(String)
+    chosen_key: Mapped[str] = mapped_column(String)  # chosen API key
     teachers: Mapped[list[int]] = mapped_column(ARRAY(Integer))
     current_mode: Mapped[str] = mapped_column(String)  # summarizing or creative
     total_tokens_spent: Mapped[int] = mapped_column(Integer, default=0)
-    indexed_chunk_ids: Mapped[list[int]] = mapped_column(ARRAY(Integer))
+    indexed_document_ids: Mapped[list[int]] = mapped_column(ARRAY(Integer))
     system_prompt_path: Mapped[str] = mapped_column(String)
     agent: Mapped[str] = mapped_column(String)
     conv_time_window: Mapped[int] = mapped_column(Integer)
@@ -54,8 +54,9 @@ class Policy(db.Model):
     time_window_tokens: Mapped[int] = mapped_column(
         Integer, nullable=False
     )  # token limit for the window
-    max_tokens: Mapped[int] = mapped_column(Integer)
-    policy_type: Mapped[str] = mapped_column(String)  # global or student
+    max_tokens_per_user: Mapped[int] = mapped_column(Integer)
+    token_pool: Mapped[int] = mapped_column(Integer)
+    policy_type: Mapped[str] = mapped_column(String)  # global or user
 
 
 class Usage(db.Model):

@@ -435,6 +435,8 @@ class PluginCore:
             return Result(None, docs.error)
         docs = docs.value
 
+        document_ids = [doc.id for doc in docs]
+
         owns_all = self._owns_all_items(caller_id, docs)
         if owns_all.ok():
             if not owns_all.value:
@@ -485,6 +487,33 @@ class PluginCore:
         self.list_of_instance_ids.append(
             document_id
         )  # TODO: for testing purposes remove when db ok or cache
+
+        # TODO: hae aliasta vastaava API-avain
+        # TODO: tarkista onko aliasta vastaava API-avain olemassa
+
+        rule = self.tim_database.set_llm_rule(
+            document_id,
+            caller_id,
+            [],
+            "",
+            [],
+            llm_mode,
+            0,
+            document_ids,
+            system_prompt_path,
+            model_id,
+            0,
+            [],
+            [],
+        )
+        self.tim_database.set_global_policy(
+            rule,
+            "",
+            0,
+            0,
+            max_tokens,
+            max_tokens,
+        )
 
         return Result(True, None)
 
@@ -551,12 +580,9 @@ class PluginCore:
     def _instance_exists(self, document_id) -> bool:
         # TODO: todnäk pitää muistissa tiedetyt instanssi-idt jottei haeta aina tietokannalta turhaan
         # TODO: korvaa db haulla
-        print(
-            f"Checking if instance {document_id} exists, list of instances:{self.list_of_instance_ids}"
-        )
-        if document_id in self.list_of_instance_ids:
-            return True
-        return False
+        if not self.tim_database.get_llm_rule(document_id):
+            return False
+        return True
 
     def _owns_document(self, caller_id: int, document_id: int) -> bool:
         """Expects that you have checked already that doc and user exist, throws otherwise"""
@@ -588,15 +614,35 @@ class PluginCore:
         self, caller_id: int, document_id: int
     ) -> Result[str | None, str | None]:
         """
-        Checks that user request is allowed as per set policies
+        Checks token limits as per global and user policies
         :param caller_id:  the user that is making the request
         :param document_id:  instance for the plugin
         :return: (can_make_req: bool, reason_for_deny: str)
         """
         # check userpolicy (if exists)
-
+        rule = self.tim_database.get_llm_rule(document_id)
+        usage = self.tim_database.get_usage(rule, caller_id)
+        if not usage:
+            self.tim_database.set_usage(caller_id, 0, rule, 0)  # TODO: conv_id?
+            return Result(value="ok")
+        used_tokens = usage.used_tokens
+        policy = self.tim_database.get_user_policy(rule, caller_id)
+        if policy:
+            token_limit = policy.max_tokens_per_user
+        else:
         # check globalpolicy
-        # TODO: impl
+            policy = self.tim_database.get_global_policy(rule)
+            if policy:
+                token_limit = policy.max_tokens_per_user
+            else:
+                policy = self.tim_database.get_global_policy(rule)
+                if policy:
+                    token_limit = policy.token_pool
+                else:
+                    return Result(value="ok")
+        if used_tokens >= token_limit:
+            return Result(error="No more tokens")
+
         return Result(value="ok")
 
     def _fetch_docs_by_paths(
