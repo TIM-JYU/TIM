@@ -12,7 +12,7 @@ from timApp.auth.accesshelper import (
 from timApp.util.flask.requesthelper import RouteException
 from tim_common.marshmallow_dataclass import class_schema
 
-from timApp.auth.sessioninfo import get_current_user_id
+from timApp.auth.sessioninfo import get_current_user_id, get_current_user_name
 from timApp.tim_app import csrf
 from timApp.util.flask.responsehelper import json_response, to_json_str, ok_response
 from tim_common.markupmodels import GenericMarkupModel
@@ -30,6 +30,7 @@ from tim_common.pluginserver_flask import (
 from timApp.modules.chattim.plugincore import (
     PluginCore,
     InstanceAttributes,
+    APIKey,
 )
 from .model import ModelError
 
@@ -94,6 +95,8 @@ class APIKeyParams:
     provider: str
     apikey: str
     alias: str
+    groups: list[str] | None = None
+    paths: list[str] | None = None
 
 
 @dataclass
@@ -276,23 +279,35 @@ def save_api_key(params: APIKeyParams) -> Response:
     key = params.apikey
     alias = params.alias
     userid = get_current_user_id()
+    username = get_current_user_name()
+    groups = params.groups or [username]
 
     valid = plugincore.validate_api_key(provider, key)
 
     if valid:
-        llmrule = plugincore.get_llmrule(userid, 0)
-        existing_keys = llmrule.apikey if llmrule is not None else []
-
-        for entry in existing_keys:
-            if entry[2] == alias:
-                raise RouteException(description="Alias is already in use.")
-
-        keys = existing_keys + [[provider, key, alias]]
-
-        plugincore.save_apikey_to_database(userid, keys)
-        return ok_response()
+        try:
+            key = plugincore.add_api_key(
+                userid, provider, alias, key, group_names=groups
+            )
+            return json_response(_api_key_to_dict(key))
+        except Exception as e:
+            raise RouteException(description=str(e))
     else:
         raise RouteException(description="API Key is invalid.")
+
+
+def save_api_key_permissions(params: APIKeyParams) -> Response:
+    verify_logged_in()
+    user_id = get_current_user_id()
+    alias = params.alias
+    groups = params.groups or []
+    paths = params.paths or []
+    print(paths)
+    try:
+        plugincore.update_api_key_permissions(user_id, alias, groups, paths)
+    except Exception as e:
+        raise RouteException(description=str(e))
+    return ok_response()
 
 
 def get_providers() -> list[str]:
@@ -300,50 +315,28 @@ def get_providers() -> list[str]:
     return response
 
 
-def get_existing_keys() -> list[str]:
+def get_existing_keys() -> list[dict]:
     verify_logged_in()
     userid = get_current_user_id()
-    document_id = 0  # users API-keys are stored with document id 0
-    user_llmrule = plugincore.get_llmrule(userid, document_id)
-
-    if user_llmrule is None or not user_llmrule.apikey:
-        return []
-
-    keys = user_llmrule.apikey
+    api_keys = plugincore.get_user_api_keys(userid)
 
     hidden_keys = []
-    for key in keys:
-        provider, apikey, alias = key
-        hidden_key = apikey[:6] + "..." + apikey[-4:]
-        hidden_keys.append({"provider": provider, "APIkey": hidden_key, "alias": alias})
-
+    for key in api_keys:
+        hidden_keys.append(_api_key_to_dict(key))
     return hidden_keys
 
 
-def delete_existing_key(key: APIKeyParams) -> list[str]:
+def delete_existing_key(key: APIKeyParams) -> Response:
     verify_logged_in()
-    document_id = 0  # users API-keys are stored with document id 0
     alias = key.alias
     userid = get_current_user_id()
 
-    user_llmrule = plugincore.get_llmrule(userid, document_id)
-    if user_llmrule is None or not user_llmrule.apikey:
+    try:
+        plugincore.delete_api_key(userid, alias)
+    except Exception:
         raise RouteException(description="No API-keys found")
 
-    keys = []
-    for entry in user_llmrule.apikey:
-        if entry[2] != alias:
-            keys.append(entry)
-
-    plugincore.save_apikey_to_database(userid, keys)
-
-    hidden_keys = []
-    for key in keys:
-        provider, apikey, alias = key
-        hidden_key = apikey[:6] + "..." + apikey[-4:]
-        hidden_keys.append({"provider": provider, "APIkey": hidden_key, "alias": alias})
-
-    return hidden_keys
+    return ok_response()
 
 
 def to_ndjson_str(json_data: Any) -> str:
@@ -353,6 +346,18 @@ def to_ndjson_str(json_data: Any) -> str:
     :return: A string representation of the JSON data ending in a newline.
     """
     return to_json_str(json_data) + "\n"
+
+
+def _api_key_to_dict(key: APIKey) -> dict:
+    alias, provider, api_key, groups, paths = key
+    hidden_key = api_key[:6] + "..." + api_key[-4:]
+    return {
+        "provider": provider,
+        "APIkey": hidden_key,
+        "alias": alias,
+        "groupNames": groups,
+        "itemPaths": paths,
+    }
 
 
 chattim = create_nontask_blueprint(
@@ -372,6 +377,13 @@ register_route(
 register_route(chattim, "post", "getMessages", GetMessagesParams, get_messages)
 register_route(chattim, "post", "validateApi", APIKeyParams, save_api_key)
 register_route(chattim, "get", "getProviders", None, get_providers)
+register_route(
+    chattim,
+    "post",
+    "saveApiKeyPermissions",
+    APIKeyParams,
+    save_api_key_permissions,
+)
 register_route(chattim, "post", "getRights", GetRightsParams, get_rights)
 register_route(chattim, "get", "getExistingKeys", None, get_existing_keys)
 register_route(chattim, "delete", "deleteKey", APIKeyParams, delete_existing_key)

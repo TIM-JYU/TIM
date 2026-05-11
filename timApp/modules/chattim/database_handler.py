@@ -5,10 +5,12 @@ from sqlalchemy import select, delete
 from timApp.document.document import Document
 from timApp.document import docentry
 from timApp.document.docentry import DocEntry
+from timApp.folder.folder import Folder, path_includes
 from timApp.item.item import Item
 from timApp.modules.chattim.dbmodels import LLMRule, Policy, Usage
 from timApp.timdb.sqa import db
 from timApp.user.user import User
+from timApp.user.usergroup import UserGroup
 from timApp.auth.get_user_rights_for_item import (
     get_user_rights_for_item,
     UserItemRights,
@@ -81,11 +83,95 @@ class TimDatabase:
             return None
 
     @staticmethod
+    def in_user_group(group: UserGroup, user_id: int) -> bool:
+        """Check if the user is in the given user group."""
+        # TODO: is there a TIM function for this?
+        if group.is_personal_group and group.personal_user.id == user_id:
+            return True
+        return any(u.id == user_id for u in group.users)
+
+    @staticmethod
+    def validate_user_groups(groups: list[str]) -> list[UserGroup]:
+        """Check if all the user groups exists."""
+        user_groups: list[UserGroup] = []
+        for group in groups:
+            g = UserGroup.get_by_name(group)
+            if not g:
+                raise Exception(f"Invalid user group: {group}")
+            user_groups.append(g)
+        return user_groups
+
+    @staticmethod
+    def validate_item_paths(paths: list[str]) -> list[Item]:
+        """Check if all the paths exist."""
+        items: list[Item] = []
+        for path in paths:
+            item = Item.find_by_path(path)
+            if not item:
+                raise Exception(f"Invalid item path: {item}")
+            items.append(item)
+        return items
+
+    @staticmethod
+    def api_key_valid_in_doc(key: LLMRule, doc_id: int) -> bool:
+        """Check if the API key can be used in the given document."""
+        if key.document_id > 0:
+            return False
+        # TODO: Should the key be accessible everywhere if no paths added or no?
+        if len(key.paths) == 0:
+            return False
+
+        entries = docentry.DocEntry.find_all_by_id(doc_id)
+        if not entries:
+            return False
+        doc = entries[0]
+
+        for path in key.paths:
+            if doc.path == path:
+                return True
+            item = Item.find_by_path(path)
+            if not item:
+                continue
+            if isinstance(item, Folder):
+                # TODO: is there a better way?
+                if path_includes(doc.path, path):
+                    return True
+        return False
+
+    @staticmethod
+    def access_api_key(user_id: int, public_key: str) -> LLMRule | None:
+        """
+        Get the API key if the given user has access to it.
+        User has access to the key if it's the owner of the key, or
+        it is included in some of the user groups that have access.
+
+        :param user_id: The id of the user.
+        :param public_key: The associated public key for the desired API key.
+        :return: The API key or None if it does not exist or the user has no access.
+        """
+        api_key = TimDatabase.get_api_key_by_alias(public_key)
+        if not api_key:
+            return None
+        if user_id == api_key.owner:
+            return api_key
+        group_ids = api_key.groups
+        # TODO: If the user group list is empty,
+        #  should the key be global or accessible only to the owner?
+        if not group_ids:
+            return api_key
+        for group_id in group_ids:
+            group = UserGroup.get_by_id(group_id)
+            if not group:
+                continue
+            if TimDatabase.in_user_group(group, user_id):
+                return api_key
+        return None
+
+    @staticmethod
     def set_llm_rule(
         document_id: int,
         owner: int,
-        apikey: list[str],
-        chosen_key: str,
+        public_key: str,
         teachers: list[int],
         current_mode: str,
         total_tokens_spent: int,
@@ -100,8 +186,7 @@ class TimDatabase:
         Creates a new LLM rule or updates the existing rule if one already exists for the given owner.
         :param document_id: The id of the document.
         :param owner: The id of the owner of the LLM rule.
-        :param apikey: List of the API key providers, API keys and aliases of the owner. [apikey_provider,apikey,alias]
-        :param chosen_key: The chosen API key for the instance.
+        :param public_key: The alias of the chosen API key for the instance.
         :param teachers: The ids of the teachers allowed to use the plugin instance.
         :param current_mode: Mode of the plugin instance: summarizing, creative or balanced.
         :param total_tokens_spent: The total number of tokens spent.
@@ -118,8 +203,7 @@ class TimDatabase:
             rule = LLMRule(
                 document_id=document_id,
                 owner=owner,
-                apikey=apikey,
-                chosen_key=chosen_key,
+                public_key=public_key,
                 teachers=teachers,
                 current_mode=current_mode,
                 total_tokens_spent=total_tokens_spent,
@@ -130,10 +214,8 @@ class TimDatabase:
             )
             db.session.add(rule)
         else:
-            if apikey:
-                rule.apikey = apikey
-            if chosen_key:
-                rule.chosen_key = chosen_key
+            if public_key:
+                rule.public_key = public_key
             if teachers:
                 rule.teachers = teachers
             if current_mode:
@@ -153,31 +235,46 @@ class TimDatabase:
         return rule
 
     @staticmethod
-    def set_api_key(owner: int, apikey: list[str]) -> LLMRule:
+    def set_api_key(
+        owner: int,
+        provider: str,
+        public_key: str,
+        api_key: str,
+        *,
+        group_names: list[str] | None = None,
+        paths: list[str] | None = None,
+    ) -> LLMRule:
         """
         Saves a new API key, its alias and the API key provider.
         :param owner: The id of the owner of the apikey.
-        :param apikey: List of the API key providers, API keys and aliases of the owner. [apikey_provider,apikey,alias]
+        :param provider: Provider of the apikey.
+        :param public_key: The public alias for the key.
+        :param api_key: The API-key.
+        :param group_names: Optional user groups to add to the API key permissions.
+        :param paths: Optional paths to add to the API key permissions.
         :return: created LLMRule instance
         """
-        rule = TimDatabase.get_api_keys(owner)
-        if not rule:
-            rule = LLMRule(
-                document_id=-1,  # no document
-                owner=owner,
-                apikey=apikey,
-                chosen_key="",
-                teachers=[],
-                current_mode="",
-                total_tokens_spent=0,
-                indexed_chunk_ids=[],
-                system_prompt_path="",
-                agent="",
-                conv_time_window=0,
-            )
-            db.session.add(rule)
+        rule = TimDatabase.get_api_key_by_alias(public_key)
+        if rule:
+            if owner != rule.owner:
+                raise Exception("API-key exists with the alias.")
         else:
-            rule.apikey = rule.apikey + apikey
+            rule = LLMRule(owner=owner)
+            db.session.add(rule)
+
+        rule.provider = provider
+        rule.api_key = api_key
+        rule.public_key = public_key
+
+        if group_names:
+            groups: list[int] = []
+            for group_name in group_names:
+                if g := UserGroup.get_by_name(group_name):
+                    groups.append(g.id)
+            rule.groups = groups
+        if paths:
+            rule.paths = paths
+
         db.session.commit()
         return rule
 
@@ -202,15 +299,58 @@ class TimDatabase:
         return db.session.scalar(stmt)
 
     @staticmethod
-    def get_api_keys(owner_id: int) -> list[str] | None:
-        """
-        Gets the API keys of the given owner.
-        """
-        stmt = select(LLMRule.apikey).where(
-            LLMRule.owner == owner_id,
-            LLMRule.document_id == -1,
+    def get_user_api_keys(owner_id: int) -> list[LLMRule]:
+        """Get all the API keys owner by the given owner."""
+        stmt = (
+            select(LLMRule)
+            .where(LLMRule.owner == owner_id, LLMRule.document_id <= 0)
+            .order_by(LLMRule.id)
+        )
+        return db.session.execute(stmt).scalars().all()
+
+    @staticmethod
+    def get_api_key_by_alias(public_key: str) -> LLMRule | None:
+        """Gets the LLM rule table based on the alias."""
+        stmt = select(LLMRule).where(
+            LLMRule.document_id <= 0, LLMRule.public_key == public_key
         )
         return db.session.scalar(stmt)
+
+    @staticmethod
+    def get_owner_api_key(owner_id: int, alias: str) -> LLMRule | None:
+        """Gets the LLM rule row of the owner based on the alias."""
+        stmt = select(LLMRule).where(
+            LLMRule.owner == owner_id,
+            LLMRule.document_id <= 0,
+            LLMRule.public_key == alias,
+        )
+        return db.session.scalar(stmt)
+
+    @staticmethod
+    def delete_api_key(owner_id: int, alias: str) -> None:
+        """Deletes the LLM rule row of the owner based on the alias."""
+        key = TimDatabase.get_owner_api_key(owner_id, alias)
+        if not key:
+            raise Exception("No API key with the alias found.")
+        assert isinstance(key, LLMRule)
+        db.session.delete(key)
+        db.session.commit()
+
+    @staticmethod
+    def update_api_key_permissions(
+        owner_id: int, alias: str, groups: list[str], paths: list[str]
+    ) -> None:
+        """Gets the LLM rule table based on the alias."""
+        user_groups = TimDatabase.validate_user_groups(groups)
+        TimDatabase.validate_item_paths(paths)
+
+        rule = TimDatabase.get_owner_api_key(owner_id, alias)
+        if not rule:
+            raise Exception("No API-key with the alias found")
+
+        rule.groups = [g.id for g in user_groups]
+        rule.paths = paths
+        db.session.commit()
 
     @staticmethod
     def set_policy(

@@ -9,6 +9,7 @@ from timApp.timdb.dbaccess import get_files_path
 from timApp.auth.get_user_rights_for_item import UserItemRights
 from timApp.item.item import Item
 from timApp.document.docinfo import DocInfo
+from timApp.user.usergroup import get_groups_by_ids
 from timApp.modules.chattim.indexer import (
     OpenAiEmbeddingModel,
     Indexer,
@@ -113,6 +114,10 @@ class PreparedChatRequest:
     document_id: str
     user_input: str
     response: Iterable[ModelResponse] | ModelResponse
+
+
+# TODO: maybe a dict or dataclass would be more descriptive
+APIKey = tuple[str, str, str, list[str], list[str]]
 
 
 class PluginCore:
@@ -494,7 +499,6 @@ class PluginCore:
         rule = self.tim_database.set_llm_rule(
             document_id,
             caller_id,
-            [],
             "",
             [],
             llm_mode,
@@ -535,7 +539,7 @@ class PluginCore:
         )
 
     @staticmethod
-    def get_supported_providers():
+    def get_supported_providers() -> list[Provider]:
         """Get the list of supported API providers."""
         return list(PROVIDERS.keys())
 
@@ -713,11 +717,17 @@ class PluginCore:
             return None
 
     @staticmethod
+    def _parse_provider(provider_str: str) -> Provider | None:
+        if provider_str not in Provider.__args__:
+            return None
+        return cast(Provider, provider_str)
+
+    @staticmethod
     def validate_api_key(provider_str: str, api_key: str) -> bool:
         """Check if the api key is valid."""
-        if provider_str not in Provider.__args__:
+        provider = PluginCore._parse_provider(provider_str)
+        if not provider:
             return False
-        provider = cast(Provider, provider_str)
         client = GenericApiClient(provider, api_key)
         try:
             return client.verify_api_key()
@@ -753,6 +763,23 @@ class PluginCore:
             raise ValueError(f"Invalid input length: {input_len}")
         return sanitized_input
 
+    def update_api_key_permissions(
+        self, owner_id: int, public_key: str, groups: list[str], paths: list[str]
+    ) -> None:
+        """
+        Update the permissions for the API key.
+        :param owner_id: Owner of the API key.
+        :param public_key: Alias of the API key.
+        :param groups: User groups that have access to the API key.
+        :param paths: Document paths that this key can be used on.
+        """
+        f = lambda e: len(e) > 0
+        filtered_groups = list(filter(f, groups))
+        filtered_paths = list(filter(f, paths))
+        self.tim_database.update_api_key_permissions(
+            owner_id, public_key, filtered_groups, filtered_paths
+        )
+
     @staticmethod
     def _validate_policy(policy: Policy) -> None | str:
         """Validates policy. None is returned if everything is ok otherwise error string is returned"""
@@ -779,8 +806,89 @@ class PluginCore:
 
         return None
 
-    def save_apikey_to_database(self, userid: int, apikey: list[str]) -> LLMRule:
-        return self.tim_database.set_api_key(userid, apikey)
+    def add_api_key(
+        self,
+        userid: int,
+        provider: str,
+        public_key: str,
+        api_key: str,
+        *,
+        group_names: list[str] | None = None,
+        paths: list[str] | None = None,
+    ) -> APIKey:
+        """Add an API key for the user."""
+        alias = public_key.strip()
+        if not alias:
+            raise ValueError("Alias cannot be empty")
+        row = self.tim_database.set_api_key(
+            userid, provider, alias, api_key, group_names=group_names, paths=paths
+        )
+        return self._api_row_to_tuple(row)
 
-    def get_llmrule(self, userid: int, documentid: int) -> LLMRule:
-        return self.tim_database.get_llm_rule(userid, documentid)
+    def get_user_api_keys(self, owner_id: int) -> list[APIKey]:
+        """Fetch all the API keys the user owns.
+        :param owner_id: Owner ID.
+        :return: A list of tuples containing the API keys.
+        """
+        rows = self.tim_database.get_user_api_keys(owner_id)
+        keys: list[APIKey] = []
+        for row in rows:
+            keys.append(self._api_row_to_tuple(row))
+        return keys
+
+    def try_access_api_key(self, user_id: int, public_key: str) -> tuple[Provider, str]:
+        """
+        Try to access the API key. Checks that the user has access to it.
+        Used to link an API key to a plugin.
+
+        :param user_id: ID of the user saving the plugin.
+        :param public_key: Alias of the API key.
+        :raises Exception: If the user has no access to the API key.
+                           Or the API key provider is invalid.
+        :return: A tuple (provider, api_key)
+        """
+        key = self.tim_database.access_api_key(user_id, public_key)
+        if not key:
+            raise Exception(f"No access to the API key.")
+        provider = PluginCore._parse_provider(key.provider)
+        if not provider:
+            raise Exception(f"No provider found for API key.")
+        return provider, key.api_key
+
+    def get_api_key(self, public_key: str) -> tuple[Provider, str]:
+        """
+        Get the API key matching the public key.
+
+        :param public_key: Alias of the API key.
+        :raises Exception: If no API key is found.
+                           Or the API key provider is invalid.
+        :return: A tuple (provider, api_key)
+        """
+        key = self.tim_database.get_api_key_by_alias(public_key)
+        if not key:
+            raise Exception(f"API key not found")
+        provider = PluginCore._parse_provider(key.provider)
+        if not provider:
+            raise Exception(f"No provider found for API key.")
+        return provider, key.api_key
+
+    def delete_api_key(self, owner_id: int, public_key: str) -> None:
+        self.tim_database.delete_api_key(owner_id, public_key)
+
+    def get_llmrule(self, documentid: int) -> LLMRule:
+        return self.tim_database.get_llm_rule(documentid)
+
+    @staticmethod
+    def _api_row_to_tuple(rule: LLMRule) -> APIKey:
+        """
+        Converts the LLMRule table of the API key to a tuple.
+        `(alias, provider, api_key, group_names, paths)`
+        """
+        groups = get_groups_by_ids(rule.groups)
+        return (
+            str(rule.public_key),
+            str(rule.provider),
+            str(rule.api_key),
+            [str(g.name) for g in groups],
+            [str(p) for p in rule.paths],
+        )
