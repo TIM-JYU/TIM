@@ -103,10 +103,11 @@ export interface TokenLimitForUser extends Record<string, JsonValue> {
                         Max tokens: <strong>{{ maxTokens }}</strong>
                     </button>
                     <div *ngIf="tokensOpen" class="settings-section-body">
-                        <input type="range"
+                        <input type="number"
                                class="form-control"
-                               min="100" max="10000" step="100"
-                               [(ngModel)]="maxTokens">
+                               min="0" 
+                               [(ngModel)]="maxTokens"
+                               >
                     </div>
                 </div>
 
@@ -171,13 +172,13 @@ export interface TokenLimitForUser extends Record<string, JsonValue> {
                         </div>
 
                         <div *ngIf="tokenLimitAllUsers.token_cap_enabled" class="settings-section-body">
-                            <input type="range"
+                            <input type="number"
                                    class="form-control"
-                                   min="0" max="20000" step="200"
-                                   [(ngModel)]="tokenLimitAllUsers.token_cap">
-                              <span>
-                                {{ tokenLimitAllUsers.token_cap }}
-                              </span>
+                                   [(ngModel)]="tokenLimitAllUsers.token_cap"
+                            >
+                        </div>
+                        <div class="error" *ngIf="isInvalidTokenCap">
+                            Input invalid or empty while token limit is enabled! 
                         </div>
 
                         <div class="checkbox">
@@ -188,29 +189,34 @@ export interface TokenLimitForUser extends Record<string, JsonValue> {
                         </div>
 
                         <div *ngIf="tokenLimitAllUsers.time_window_enabled">
-                            <div class="settings-section-body">
-                                    <input type="range"
-                                           min="100" max="20000" step="200"
+                            <div class="form-group">
+                                <label class="col-sm-2 control-label time-window-label">
+                                    <span class="time-window-label-span">Tokens</span>
+                                    <input type="number" class="form-control restriction-inputs"
+                                           placeholder="5000"
                                            [(ngModel)]="tokenLimitAllUsers.token_cap_for_window">
-                                    <span> {{ tokenLimitAllUsers.token_cap_for_window }} </span>
-                                <div class="control-panel-input-and-value">
-                                    <input type="number" class="form-control"
-                                           min="1"
-                                           step="1"
-                                           placeholder="5"
-                                           [(ngModel)]="tokenLimitAllUsers.window_value"
-                                           #numericControl="ngModel"
-                                    >
-                                    <select class="form-control"
+                                </label>
+                                <div class="error" *ngIf="isInvalidWindowTokens">
+                                    Input invalid or empty while window is enabled!
+                                </div>
+                                <div>
+                                    <label class="col-sm-2 control-label time-window-label">
+                                        <span class="time-window-label-span">Window</span>
+                                        <input type="number" class="form-control restriction-inputs"
+                                               placeholder="5"
+                                               [(ngModel)]="tokenLimitAllUsers.window_value"
+                                               >
+                                    <select class="form-control restriction-inputs"
                                             [(ngModel)]="tokenLimitAllUsers.window_unit">
                                         <option *ngFor="let timeUnit of timeUnitOptions" 
                                                 [ngValue]="timeUnit.value">{{ timeUnit.label }}
                                         </option>
                                     </select>
+                                    </label>
                                 </div>
-                                <div *ngIf="numericControl.invalid && numericControl.touched">
-                                    Must be a positive number
-                                </div>
+                            </div>
+                            <div class="error" *ngIf="isInvalidWindowTime">
+                                Input invalid or empty while window is enabled!
                             </div>
                         </div>
                     </ng-container>
@@ -230,6 +236,7 @@ export interface TokenLimitForUser extends Record<string, JsonValue> {
     `,
 })
 export class ChatControlPanelComponent {
+    invalidInputState = false;
     settingsOpen = false;
     modelOpen = false;
     modeOpen = false;
@@ -285,5 +292,34 @@ export class ChatControlPanelComponent {
             (m) => m.value === this.selectedModel
         );
         return model ? model.label : "";
+    }
+
+    isValidNonNegativeNumber(value: number | null): boolean {
+        return !(value === null || value < 0 || !Number.isFinite(value));
+    }
+
+    isValidNumberInput(enabled: boolean, value: number): boolean {
+        return enabled && !this.isValidNonNegativeNumber(value);
+    }
+
+    get isInvalidTokenCap(): boolean {
+        return this.isValidNumberInput(
+            this.tokenLimitAllUsers.token_cap_enabled,
+            this.tokenLimitAllUsers.token_cap
+        );
+    }
+
+    get isInvalidWindowTokens(): boolean {
+        return this.isValidNumberInput(
+            this.tokenLimitAllUsers.time_window_enabled,
+            this.tokenLimitAllUsers.token_cap_for_window
+        );
+    }
+
+    get isInvalidWindowTime(): boolean {
+        return this.isValidNumberInput(
+            this.tokenLimitAllUsers.time_window_enabled,
+            this.tokenLimitAllUsers.window_value
+        );
     }
 }

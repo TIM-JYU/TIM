@@ -90,7 +90,7 @@ export interface ControlPanelData extends ControlPanelSettings {
         <tim-dialog-frame class="chattim-dialog-frame" [size]="'md'">
             <ng-container header> {{ header }}</ng-container>
             <ng-container body>
-                <div class="chattim-body">
+                <div class="chattim-body scroll-box">
                     <div class="scroll-box" #conversationScroll>
                         <div *ngIf="conversation.length === 0" class="chat-welcome">
                             <ng-container *ngIf="markup.welcomeText; else localizedWelcome">
