@@ -52,11 +52,11 @@ class ChatModel(TypedDict):
 @dataclass()
 class Policy:
     token_cap_enabled: bool = False
-    token_cap: int = 0
+    token_cap: int | None = 0
     time_window_enabled: bool = False
     window_unit: str = "h"
-    window_value: int = 0
-    token_cap_for_window: int = 100
+    window_value: int | None = 0
+    token_cap_for_window: int | None = 100
 
 
 @dataclass()
@@ -630,7 +630,7 @@ class PluginCore:
         if policy:
             token_limit = policy.max_tokens_per_user
         else:
-        # check globalpolicy
+            # check globalpolicy
             policy = self.tim_database.get_global_policy(rule)
             if policy:
                 token_limit = policy.max_tokens_per_user

@@ -17,11 +17,11 @@ export interface ControlPanelSettings extends Record<string, JsonValue> {
 
 export interface TokenLimitForUser extends Record<string, JsonValue> {
     token_cap_enabled: boolean;
-    token_cap: number;
+    token_cap: number | null;
     time_window_enabled: boolean;
     window_unit: string;
-    window_value: number;
-    token_cap_for_window: number;
+    window_value: number | null;
+    token_cap_for_window: number | null;
 }
 
 @Component({
@@ -214,9 +214,9 @@ export interface TokenLimitForUser extends Record<string, JsonValue> {
                                     </select>
                                     </label>
                                 </div>
-                            </div>
-                            <div class="error" *ngIf="isInvalidWindowTime">
-                                Input invalid or empty while window is enabled!
+                                <div class="error" *ngIf="isInvalidWindowTime">
+                                    Input invalid or empty while window is enabled!
+                                </div>
                             </div>
                         </div>
                     </ng-container>
@@ -225,6 +225,7 @@ export interface TokenLimitForUser extends Record<string, JsonValue> {
                 <!-- Save button that sends the chosen stuff -->
                 <div class="settings-row">
                     <button class="btn btn-primary" style="margin: 2px;"
+                            [disabled]="invalidInputState"
                             (click)="saveSettingsClicked()">
                         Save
                     </button>
@@ -236,7 +237,6 @@ export interface TokenLimitForUser extends Record<string, JsonValue> {
     `,
 })
 export class ChatControlPanelComponent {
-    invalidInputState = false;
     settingsOpen = false;
     modelOpen = false;
     modeOpen = false;
@@ -298,7 +298,7 @@ export class ChatControlPanelComponent {
         return !(value === null || value < 0 || !Number.isFinite(value));
     }
 
-    isValidNumberInput(enabled: boolean, value: number): boolean {
+    isValidNumberInput(enabled: boolean, value: number | null): boolean {
         return enabled && !this.isValidNonNegativeNumber(value);
     }
 
@@ -320,6 +320,14 @@ export class ChatControlPanelComponent {
         return this.isValidNumberInput(
             this.tokenLimitAllUsers.time_window_enabled,
             this.tokenLimitAllUsers.window_value
+        );
+    }
+
+    get invalidInputState(): boolean {
+        return (
+            this.isInvalidTokenCap ||
+            this.isInvalidWindowTime ||
+            this.isInvalidWindowTokens
         );
     }
 }
