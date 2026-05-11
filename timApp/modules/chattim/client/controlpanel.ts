@@ -9,7 +9,7 @@ export interface ChatModel extends Record<string, JsonValue> {
 export interface ControlPanelSettings extends Record<string, JsonValue> {
     model_id: string;
     llm_mode: string;
-    max_tokens: number;
+    max_tokens: number | null;
     tim_paths: string;
     system_prompt_path: string;
     global_policy: TokenLimitForUser;
@@ -100,14 +100,18 @@ export interface TokenLimitForUser extends Record<string, JsonValue> {
                           [class.glyphicon-chevron-right]="!tokensOpen"
                           [class.glyphicon-chevron-down]="tokensOpen">
                     </span>
-                        Max tokens: <strong>{{ maxTokens }}</strong>
+                        Max tokens: <strong>{{ maxTokensValue }}</strong>
                     </button>
                     <div *ngIf="tokensOpen" class="settings-section-body">
-                        <input type="number"
+                        <input type="text"
                                class="form-control"
-                               min="0" 
-                               [(ngModel)]="maxTokens"
+                               [(ngModel)]="maxTokensLocal"
+                               (ngModelChange)="onMaxTokensChanged()"
                                >
+                    </div>
+                    
+                    <div class="error" *ngIf="isInvalidMaxTokens">
+                        Input should be a positive integer
                     </div>
                 </div>
 
@@ -178,7 +182,7 @@ export interface TokenLimitForUser extends Record<string, JsonValue> {
                             >
                         </div>
                         <div class="error" *ngIf="isInvalidTokenCap">
-                            Input invalid or empty while token limit is enabled! 
+                            Input should be a positive integer
                         </div>
 
                         <div class="checkbox">
@@ -197,7 +201,7 @@ export interface TokenLimitForUser extends Record<string, JsonValue> {
                                            [(ngModel)]="tokenLimitAllUsers.token_cap_for_window">
                                 </label>
                                 <div class="error" *ngIf="isInvalidWindowTokens">
-                                    Input invalid or empty while window is enabled!
+                                    Input should be a positive integer
                                 </div>
                                 <div>
                                     <label class="col-sm-2 control-label time-window-label">
@@ -215,7 +219,7 @@ export interface TokenLimitForUser extends Record<string, JsonValue> {
                                     </label>
                                 </div>
                                 <div class="error" *ngIf="isInvalidWindowTime">
-                                    Input invalid or empty while window is enabled!
+                                    Input should be a positive integer
                                 </div>
                             </div>
                         </div>
@@ -230,7 +234,7 @@ export interface TokenLimitForUser extends Record<string, JsonValue> {
                         Save
                     </button>
                 </div>
-                <div *ngIf="error && !response" [innerHTML]="error | purify"></div>
+                <div class="error" *ngIf="error && !response" [innerHTML]="error | purify"></div>
                 <div *ngIf="response && !error" [innerHTML]="response | purify"></div>
             </ng-container>
         </div>
@@ -246,13 +250,21 @@ export class ChatControlPanelComponent {
     promptOpen = false;
     globalPolicyOpen = false;
 
+    isInvalidMaxTokens = false;
+    maxTokensLocal = "";
+    maxTokensValue: number | null = null;
+    @Input() set maxTokens(value: number | null) {
+        this.maxTokensValue = value;
+        this.maxTokensLocal = value != null ? String(value) : "";
+    }
+
     @Input() localFilePaths!: string;
     @Input() error?: string;
     @Input() response?: string;
     @Input() selectedModel!: string;
 
     @Input() selectedMode!: string;
-    @Input() maxTokens!: number;
+
     @Input() systemPromptPath!: string;
     @Input() isTeacher: boolean = false;
 
@@ -278,7 +290,7 @@ export class ChatControlPanelComponent {
         const data: ControlPanelSettings = {
             model_id: this.selectedModel,
             llm_mode: this.selectedMode,
-            max_tokens: this.maxTokens,
+            max_tokens: this.maxTokensValue,
             tim_paths: this.localFilePaths,
             system_prompt_path: this.systemPromptPath,
             global_policy: this.tokenLimitAllUsers,
@@ -294,12 +306,12 @@ export class ChatControlPanelComponent {
         return model ? model.label : "";
     }
 
-    isValidNonNegativeNumber(value: number | null): boolean {
-        return !(value === null || value < 0 || !Number.isFinite(value));
+    isValidNonNegativeInt(value: number | null): boolean {
+        return value !== null && Number.isInteger(value) && value >= 0;
     }
 
     isValidNumberInput(enabled: boolean, value: number | null): boolean {
-        return enabled && !this.isValidNonNegativeNumber(value);
+        return enabled && !this.isValidNonNegativeInt(value);
     }
 
     get isInvalidTokenCap(): boolean {
@@ -325,9 +337,29 @@ export class ChatControlPanelComponent {
 
     get invalidInputState(): boolean {
         return (
+            this.isInvalidMaxTokens ||
             this.isInvalidTokenCap ||
             this.isInvalidWindowTime ||
             this.isInvalidWindowTokens
         );
+    }
+
+    onMaxTokensChanged(): void {
+        const trimmed = this.maxTokensLocal.trim();
+
+        if (trimmed === "") {
+            this.maxTokensValue = null;
+            this.isInvalidMaxTokens = false;
+            return;
+        }
+
+        const parsed = Number(trimmed);
+
+        this.isInvalidMaxTokens =
+            Number.isNaN(parsed) || parsed < 0 || !Number.isInteger(parsed);
+
+        if (!this.isInvalidMaxTokens) {
+            this.maxTokensValue = parsed;
+        }
     }
 }
