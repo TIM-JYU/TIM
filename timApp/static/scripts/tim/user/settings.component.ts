@@ -18,6 +18,7 @@ import {showMessageDialog} from "tim/ui/showMessageDialog";
 import {showAddContactDialog} from "tim/user/showAddContactDialog";
 import {showAddAPIKeyDialog} from "tim/user/showAddAPIDialog";
 import {showAddLLMAPIKeyDialog} from "tim/user/showAddLLMAPIDialog";
+import {showEditLLMAPIKeyDialog} from "tim/user/showEditLLMAPIDialog";
 import {Channel} from "tim/messaging/listOptionTypes";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {createDowngradedModule, doDowngrade} from "tim/downgrade";
@@ -38,7 +39,7 @@ import {NotificationType, settingsglobals} from "tim/util/globals";
 import type {IOkResponse} from "tim/util/utils";
 import {isIOS, replaceStyle, timeout, to2, toPromise} from "tim/util/utils";
 import type {DocumentOrFolder, ITranslatorUsage} from "tim/item/IItem";
-import {
+import type {
     IFullUser,
     IUserApiKey,
     IUserLLMApiKey,
@@ -665,6 +666,10 @@ type StyleSelectionType =
                                         (click)="checkTokens(APIkey)">
                                     <i class="glyphicon glyphicon-refresh"></i>
                                 </button>
+                                <button *ngIf="true" class="btn" type="button"
+                                        (click)="openEditLLMAPIKeyDialog(APIkey)" i18n>
+                                    Edit permissions
+                                </button>
                                 <button class="btn btn-danger" type="button"
                                         (click)="deleteLLMKey(APIkey)">
                                     <i class="glyphicon glyphicon-trash"></i>
@@ -1252,6 +1257,19 @@ export class SettingsComponent implements DoCheck, AfterViewInit {
         );
     }
 
+    openEditLLMAPIKeyDialog(key: IUserLLMApiKey) {
+        void to2(
+            showEditLLMAPIKeyDialog(key, (editedKey: IUserLLMApiKey) => {
+                const index = this.userLLMAPIKeys.indexOf(key);
+                if (index < 0) {
+                    return;
+                }
+                this.userLLMAPIKeys[index] = editedKey;
+                this.cdr.detectChanges();
+            })
+        );
+    }
+
     private getContactsFor(channel: Channel): IUserContact[] {
         if (!EDITABLE_CONTACT_CHANNELS[channel]) {
             return [];
@@ -1365,11 +1383,13 @@ export class SettingsComponent implements DoCheck, AfterViewInit {
                 },
             })
         );
-        this.userLLMAPIKeys = r.result as IUserLLMApiKey[];
         this.saving = false;
+        if (r.ok) {
+            this.userLLMAPIKeys.splice(this.userLLMAPIKeys.indexOf(key), 1);
+        } else {
+            await showMessageDialog(r.result.error.error);
+        }
         this.cdr.detectChanges();
-
-        // TODO give option to remove given API key
     }
 
     /**
@@ -1396,7 +1416,7 @@ export class SettingsComponent implements DoCheck, AfterViewInit {
     }
 
     async checkTokens(key: IUserLLMApiKey) {
-        //TODO Check used tokens for LLM API key
+        // TODO Check used tokens for LLM API key
     }
 
     saveUserAccountInfo = async () => {

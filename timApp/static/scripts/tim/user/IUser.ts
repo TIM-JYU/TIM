@@ -52,6 +52,8 @@ export interface IUserLLMApiKey {
     usedTokens: number;
     availableTokens: number;
     tokensChecked: boolean;
+    groupNames?: string[];
+    itemPaths?: string[];
 }
 
 export interface IFullUser extends IUser {

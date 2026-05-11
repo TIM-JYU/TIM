@@ -11,19 +11,36 @@ class LLMRule(db.Model):
     __tablename__ = "llm_rule"
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    document_id: Mapped[int] = mapped_column(Integer)
+    document_id: Mapped[int] = mapped_column(Integer, default=0)
     owner: Mapped[int] = mapped_column(ForeignKey("useraccount.id"))
-    apikey: Mapped[list[str]] = mapped_column(
-        ARRAY(String)
-    )  # list of apikey providers, apikeys and aliases [apikey_provider,apikey,alias]
-    chosen_key: Mapped[str] = mapped_column(String)  # chosen API key
-    teachers: Mapped[list[int]] = mapped_column(ARRAY(Integer))
-    current_mode: Mapped[str] = mapped_column(String)  # summarizing or creative
+
+    # API key fields
+    public_key: Mapped[str] = mapped_column(String, default="")
+    """The public key associated with the API key or the chosen key for the plugin."""
+    provider: Mapped[str] = mapped_column(String, default="")
+    """Provider of the API key. Only used when saving the key."""
+    api_key: Mapped[str] = mapped_column(String, default="")
+    """The API key. Only used when saving the key."""
+    groups: Mapped[list[int]] = mapped_column(ARRAY(Integer), default=[])
+    """User group IDs that have access to this API-key using `public_key`."""
+    paths: Mapped[list[str]] = mapped_column(ARRAY(String), default=[])
+    """Document or folder paths where the API key can be used on."""
+
+    # TODO: Should this be combined with `groups` or kept separate?
+    teachers: Mapped[list[int]] = mapped_column(ARRAY(Integer), default=[])
+    current_mode: Mapped[str] = mapped_column(
+        String, default=""
+    )  # summarizing or creative
     total_tokens_spent: Mapped[int] = mapped_column(Integer, default=0)
-    indexed_document_ids: Mapped[list[int]] = mapped_column(ARRAY(Integer))
-    system_prompt_path: Mapped[str] = mapped_column(String)
-    agent: Mapped[str] = mapped_column(String)
-    conv_time_window: Mapped[int] = mapped_column(Integer)
+    indexed_document_ids: Mapped[list[int]] = mapped_column(ARRAY(Integer), default=[])
+    system_prompt_path: Mapped[str] = mapped_column(String, default="")
+    # TODO: this should probably be something like:
+    # system_prompt_doc: Mapped[str] = mapped_column(
+    #     String, ForeignKey("docentry.name"), default=""
+    # )
+
+    agent: Mapped[str] = mapped_column(String, default="")
+    conv_time_window: Mapped[int] = mapped_column(Integer, default=0)
     policy: Mapped[list["Policy"]] = relationship(
         "Policy", back_populates="llm_rule", cascade="all, delete-orphan"
     )
