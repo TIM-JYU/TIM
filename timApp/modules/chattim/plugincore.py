@@ -53,18 +53,18 @@ class ChatModel(TypedDict):
 @dataclass()
 class Policy:
     token_cap_enabled: bool = False
-    token_cap: int = 0
+    token_cap: int | None = 0
     time_window_enabled: bool = False
     window_unit: str = "h"
-    window_value: int = 0
-    token_cap_for_window: int = 100
+    window_value: int | None = 0
+    token_cap_for_window: int | None = 100
 
 
 @dataclass()
 class InstanceAttributes:
     model_id: str = "gpt-4.1-mini"
     llm_mode: str = "Creative"
-    max_tokens: int = 2000
+    max_tokens: int | None = 2000
     tim_paths: str = ""
     system_prompt_path: str = ""
     global_policy: Policy = field(default_factory=Policy)
@@ -96,16 +96,6 @@ class Result(Generic[T, E]):
 
     def __repr__(self):
         return f"Ok({self.value})" if self.ok() else f"Err({self.error})"
-
-
-@dataclass
-class GlobalPolicy:
-    pass
-
-
-@dataclass
-class StudentPolicy:
-    pass
 
 
 @dataclass(frozen=True)
@@ -158,7 +148,7 @@ class PluginCore:
             return Result(error=f"Instance has not been created yet")
 
         # policy check
-        policy_result: Result[str | None, str | None] = self._student_policy_check(
+        policy_result: Result[str | None, str | None] = self._policy_checks(
             caller_id, document_id
         )
         if not policy_result.ok():
@@ -404,8 +394,6 @@ class PluginCore:
         tim_paths: str = instance_settings.tim_paths
         system_prompt_path: str = instance_settings.system_prompt_path.strip()
         global_policy: Policy = instance_settings.global_policy
-        token_gap_enabled = global_policy.token_cap_enabled
-        time_window_enabled = global_policy.time_window_enabled
 
         # TODO: Remove hard coded API-key, provider and model_id.
         # Fetch from the database.
@@ -450,7 +438,7 @@ class PluginCore:
             return Result(None, "Internal error")
 
         # validating max tokens
-        if max_tokens < 0:
+        if max_tokens is not None and max_tokens < 0:
             return Result(None, "Give non-negative max tokens value")
 
         if system_prompt_path:
@@ -512,10 +500,10 @@ class PluginCore:
         )
         self.tim_database.set_global_policy(
             rule,
-            "",
-            0,
-            0,
-            max_tokens,
+            global_policy.window_unit,
+            global_policy.window_value,
+            global_policy.token_cap_for_window,
+            global_policy.token_cap,
             max_tokens,
         )
 
@@ -614,7 +602,7 @@ class PluginCore:
         """
         return [x.strip() for x in paths.split("\n") if x.strip()]
 
-    def _student_policy_check(
+    def _policy_checks(
         self, caller_id: int, document_id: int
     ) -> Result[str | None, str | None]:
         """
@@ -626,11 +614,14 @@ class PluginCore:
         # check userpolicy (if exists)
         rule = self.tim_database.get_llm_rule(document_id)
         usage = self.tim_database.get_usage(rule, caller_id)
+
         if not usage:
             self.tim_database.set_usage(caller_id, 0, rule, 0)  # TODO: conv_id?
             return Result(value="ok")
+
         used_tokens = usage.used_tokens
         policy = self.tim_database.get_user_policy(rule, caller_id)
+
         if policy:
             token_limit = policy.max_tokens_per_user
         else:

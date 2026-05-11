@@ -63,16 +63,16 @@ class Policy(db.Model):
     )
     llm_rule: Mapped["LLMRule"] = relationship("LLMRule", back_populates="policy")
     token_time_window_type: Mapped[str] = mapped_column(
-        String, nullable=False
+        String, nullable=True
     )  # d,h,min,sec
     token_time_window_num: Mapped[int] = mapped_column(
-        Integer, nullable=False
+        Integer, nullable=True
     )  # 5 of type
     time_window_tokens: Mapped[int] = mapped_column(
-        Integer, nullable=False
+        Integer, nullable=True
     )  # token limit for the window
-    max_tokens_per_user: Mapped[int] = mapped_column(Integer)
-    token_pool: Mapped[int] = mapped_column(Integer)
+    max_tokens_per_user: Mapped[int] = mapped_column(Integer, nullable=True)
+    token_pool: Mapped[int] = mapped_column(Integer, nullable=True)
     policy_type: Mapped[str] = mapped_column(String)  # global or user
 
 
