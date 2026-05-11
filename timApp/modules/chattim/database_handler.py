@@ -356,11 +356,11 @@ class TimDatabase:
     def set_policy(
         user: int,
         llm_rule: LLMRule,
-        token_time_window_type: str,
-        token_time_window_num: int,
-        time_window_tokens: int,
-        max_tokens_per_user: int,
-        token_pool: int,
+        token_time_window_type: str | None,
+        token_time_window_num: int | None,
+        time_window_tokens: int | None,
+        max_tokens_per_user: int | None,
+        token_pool: int | None,
         policy_type: str,  # global or user
     ) -> Policy:
         """
@@ -401,11 +401,11 @@ class TimDatabase:
     def set_global_policy(
         self,
         llm_rule: LLMRule,
-        token_time_window_type: str,
-        token_time_window_num: int,
-        time_window_tokens: int,
-        max_tokens_per_user: int,
-        token_pool: int,
+        token_time_window_type: str | None,
+        token_time_window_num: int | None,
+        time_window_tokens: int | None,
+        max_tokens_per_user: int | None,
+        token_pool: int | None,
     ) -> Policy:
         """
         Sets the global policy for the LLM rule.
@@ -427,10 +427,10 @@ class TimDatabase:
         self,
         user: int,
         llm_rule: LLMRule,
-        token_time_window_type: str,
-        token_time_window_num: int,
-        time_window_tokens: int,
-        max_tokens_per_user: int,
+        token_time_window_type: str | None,
+        token_time_window_num: int | None,
+        time_window_tokens: int | None,
+        max_tokens_per_user: int | None,
     ) -> Policy:
         """
         Sets the user policy for the given user in the LLM rule context.
