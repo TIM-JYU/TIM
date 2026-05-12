@@ -28,7 +28,7 @@ class LLMRule(db.Model):
 
     use_streaming: Mapped[bool] = mapped_column(default=False)
     """If `True`, the plugin uses streaming model response."""
-    temperature: Mapped[Optional[float]] = mapped_column(Optional[Float], nullable=True)
+    temperature: Mapped[Optional[float]] = mapped_column(nullable=True)
     """
     Optional temperature setting to use when creating the model response.
     If null, the temperature parameter is not used.

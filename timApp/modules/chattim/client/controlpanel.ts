@@ -15,6 +15,8 @@ export interface ControlPanelSettings extends Record<string, JsonValue> {
     tim_paths: string;
     system_prompt_path: string;
     global_policy: TokenLimitForUser;
+    use_streaming: boolean;
+    model_temperature: number | null;
 }
 
 export interface TokenLimitForUser extends Record<string, JsonValue> {
@@ -67,26 +69,57 @@ export interface TokenLimitForUser extends Record<string, JsonValue> {
                                 [(ngModel)]="selectedModel">
                             <option *ngFor="let m of availableModels" [ngValue]="m.value">{{ m.label }}</option>
                         </select>
-                    
-                        Provider for embedding creation: <strong>{{ selectedEmbedderProvider }}</strong>
-                    
-                            <div class="embedder-buttons">
-                                    <div class="form-check" *ngFor="let provider of allEmbedderProviders">
-                                        <label class="form-check-label" [class.disabled-label]="!embedderAvailable(provider)"
-                                        [title]="embedderAvailable(provider) ? '' : 'No API key for ' + provider">
-                                            <input type="radio"
-                                                   class="form-check-input"
-                                                   name="embedderProviderRadio"
-                                                   [disabled]="!embedderAvailable(provider)"
-                                                   [value]="provider"
-                                                   
-                                                   [(ngModel)]="selectedEmbedderProvider">
-                                            {{ provider }}
-                                        </label>
-                                    </div>
-                                </div>
+
+                        <!-- Model parameters -->
+                        <div class="settings-section-body">
+                            <div class="checkbox">
+                                <label>
+                                    <input type="checkbox"
+                                           [(ngModel)]="useStreaming">
+                                    Use streaming responses
+                                </label>
                             </div>
+                            <div class="checkbox">
+                                <label>
+                                    <input type="checkbox"
+                                           [(ngModel)]="enabledTemperature">
+                                    Enable temperature parameter
+                                </label>
+                            </div>
+                            <div *ngIf="enabledTemperature" class="settings-section-body">
+                                <input type="number"
+                                       class="form-control"
+                                       [(ngModel)]="modelTemperature"
+                                       [min]="0"
+                                       [max]="2"
+                                       [step]="0.1"
+                                >
+                            </div>
+                            <div class="error" *ngIf="isInvalidModelTemperature">
+                                Input should be between 0 and 2
+                            </div>
+                        </div>
+
+                        Provider for embedding creation: <strong>{{ selectedEmbedderProvider }}</strong> 
+                        <div class="embedder-buttons">
+                            <div class="form-check" *ngFor="let provider of allEmbedderProviders">
+                                <label class="form-check-label" [class.disabled-label]="!embedderAvailable(provider)"
+                                       [title]="embedderAvailable(provider) ? '' : 'No API key for ' + provider">
+                                    <input type="radio"
+                                           class="form-check-input"
+                                           name="embedderProviderRadio"
+                                           [disabled]="!embedderAvailable(provider)"
+                                           [value]="provider" 
+                                           [(ngModel)]="selectedEmbedderProvider">
+                                    {{ provider }}
+                                </label>
+                            </div>
+                        </div>
+                        
                     </div>
+                </div>
+
+ 
                 <!-- Switch between summarizing, (balanced) and creative -->
                 <div class="settings-row">
                     <button class="btn btn-link settings-section-btn"
@@ -125,9 +158,9 @@ export interface TokenLimitForUser extends Record<string, JsonValue> {
                                class="form-control"
                                [(ngModel)]="maxTokensLocal"
                                (ngModelChange)="onMaxTokensChanged()"
-                               >
+                        >
                     </div>
-                    
+
                     <div class="error" *ngIf="isInvalidMaxTokens">
                         Input should be a positive integer
                     </div>
@@ -151,7 +184,7 @@ export interface TokenLimitForUser extends Record<string, JsonValue> {
                     </textarea>
                     </div>
                 </div>
-                
+
 
                 <!-- Add a custom system prompt -->
                 <div class="settings-row">
@@ -187,8 +220,8 @@ export interface TokenLimitForUser extends Record<string, JsonValue> {
                     <ng-container *ngIf="globalPolicyOpen">
                         <div class="checkbox">
                             <label>
-                                <input type="checkbox" 
-                                       [(ngModel)]="tokenLimitAllUsers.token_cap_enabled" >
+                                <input type="checkbox"
+                                       [(ngModel)]="tokenLimitAllUsers.token_cap_enabled">
                                 Enable token limits per user
                             </label>
                         </div>
@@ -227,13 +260,13 @@ export interface TokenLimitForUser extends Record<string, JsonValue> {
                                         <input type="number" class="form-control restriction-inputs"
                                                placeholder="5"
                                                [(ngModel)]="tokenLimitAllUsers.window_value"
-                                               >
-                                    <select class="form-control restriction-inputs"
-                                            [(ngModel)]="tokenLimitAllUsers.window_unit">
-                                        <option *ngFor="let timeUnit of timeUnitOptions" 
-                                                [ngValue]="timeUnit.value">{{ timeUnit.label }}
-                                        </option>
-                                    </select>
+                                        >
+                                        <select class="form-control restriction-inputs"
+                                                [(ngModel)]="tokenLimitAllUsers.window_unit">
+                                            <option *ngFor="let timeUnit of timeUnitOptions"
+                                                    [ngValue]="timeUnit.value">{{ timeUnit.label }}
+                                            </option>
+                                        </select>
                                     </label>
                                 </div>
                                 <div class="error" *ngIf="isInvalidWindowTime">
@@ -275,6 +308,17 @@ export class ChatControlPanelComponent {
         this.maxTokensValue = value;
         this.maxTokensLocal = value != null ? String(value) : "";
     }
+
+    enabledTemperature: boolean = false;
+    modelTemperature: number | null = 0.2;
+    @Input() set setModelTemperature(value: number | null) {
+        if (!value) {
+            this.enabledTemperature = false;
+            return;
+        }
+        this.modelTemperature = value;
+    }
+    @Input() useStreaming: boolean = false;
 
     @Input() localFilePaths!: string;
     @Input() error?: string;
@@ -319,6 +363,10 @@ export class ChatControlPanelComponent {
             tim_paths: this.localFilePaths,
             system_prompt_path: this.systemPromptPath,
             global_policy: this.tokenLimitAllUsers,
+            use_streaming: this.useStreaming,
+            model_temperature: this.enabledTemperature
+                ? this.modelTemperature
+                : null,
         };
         console.log("sending: ", data);
         this.saveSettingsClick.emit(data);
@@ -337,6 +385,14 @@ export class ChatControlPanelComponent {
 
     isValidNumberInput(enabled: boolean, value: number | null): boolean {
         return enabled && !this.isValidNonNegativeInt(value);
+    }
+
+    isValidFloatBetween(
+        value: number | null,
+        min: number,
+        max: number
+    ): boolean {
+        return value !== null && value >= min && value <= max;
     }
 
     get isInvalidTokenCap(): boolean {
@@ -360,12 +416,20 @@ export class ChatControlPanelComponent {
         );
     }
 
+    get isInvalidModelTemperature(): boolean {
+        return (
+            this.enabledTemperature &&
+            !this.isValidFloatBetween(this.modelTemperature, 0, 2)
+        );
+    }
+
     get invalidInputState(): boolean {
         return (
             this.isInvalidMaxTokens ||
             this.isInvalidTokenCap ||
             this.isInvalidWindowTime ||
-            this.isInvalidWindowTokens
+            this.isInvalidWindowTokens ||
+            this.isInvalidModelTemperature
         );
     }
 

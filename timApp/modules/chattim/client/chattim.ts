@@ -135,6 +135,9 @@ export interface ControlPanelData extends ControlPanelSettings {
                             (saveSettingsClick)="onSaveSettings($event)"
                             (panelToggled)="onControlPanelToggle($event)"
                             [selectedModel]="selectedModel"
+                            [setModelTemperature]="modelTemperature"
+                            [useStreaming]="useStreaming"
+                            [systemPromptPath]="systemPromptPath"
                             [selectedMode]="selectedMode"
                             [maxTokens]="maxTokens"
                             [response]="controlpanelResponse"
@@ -234,8 +237,9 @@ export class ChatTIMComponent
         token_cap_for_window: 5000,
     };
 
-    // TODO: make a configurable option for user in settings?
-    useStreaming: boolean = true;
+    useStreaming: boolean = false;
+    modelTemperature: number | null = null;
+    systemPromptPath: string = "";
 
     constructor(
         el: ElementRef<HTMLElement>,
@@ -643,7 +647,6 @@ export class ChatTIMComponent
                 this.controlpanelError === ""
             ) {
                 this.selectedModel = result.model_id;
-
                 this.selectedMode = result.llm_mode;
                 this.maxTokens = result.max_tokens;
                 this.localFilePaths = result.tim_paths;
@@ -654,6 +657,9 @@ export class ChatTIMComponent
                     this.availableEmbedderProviders[0];
                 this.availableModes = result.availableModes;
                 this.globalPolicy = result.global_policy;
+                this.useStreaming = result.use_streaming;
+                this.modelTemperature = result.model_temperature;
+                this.systemPromptPath = result.system_prompt_path;
             }
         } else {
             this.controlpanelError = response.result.error.error;

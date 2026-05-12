@@ -178,7 +178,7 @@ class PluginCore:
         temperature: float | None = 0.2
 
         # TODO: get this from the LLMRule table
-        use_streaming: bool = True
+        use_streaming: bool = stream
         # Validate that the user has the correct generate mode
         if stream != use_streaming:
             return Result(error="Bad request. Mismatching generation mode.")
@@ -389,6 +389,7 @@ class PluginCore:
             availableModes=RagMode.supported_modes(),
             availableModels=self._get_supported_chat_models(provider, api_key),
             availableEmbedderProviders=self._get_available_embedder_providers(user_id),
+            use_streaming=True,  # TODO: from db
         )
 
         return Result(value=data)
@@ -466,7 +467,7 @@ class PluginCore:
                 return Result(None, "Invalid system prompt path")
             cache.delete_memoized(PluginCore.get_system_prompt, document_id=document_id)
 
-        if temperature is not None and temperature < 0 or temperature > 2:
+        if temperature is not None and (temperature < 0 or temperature > 2):
             return Result(None, "Temperature must be between 0 and 2")
 
         # TODO: update system prompt path in the db row
