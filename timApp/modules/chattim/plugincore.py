@@ -67,6 +67,8 @@ class InstanceAttributes:
     max_tokens: int | None = 2000
     tim_paths: str = ""
     system_prompt_path: str = ""
+    use_streaming: bool = False
+    model_temperature: float | None = None
     global_policy: Policy = field(default_factory=Policy)
     embedder_provider: str = "dummy"
 
@@ -172,6 +174,15 @@ class PluginCore:
         mode: RagMode = RagMode.RETRIEVE
         # TODO: No need for this attribute if we have character limit for input? Maybe keep as is for an option
         max_tokens_for_req = 99999
+        # TODO: from the LLMRule table here or bring as arg
+        temperature: float | None = 0.2
+
+        # TODO: get this from the LLMRule table
+        use_streaming: bool = True
+        # Validate that the user has the correct generate mode
+        if stream != use_streaming:
+            return Result(error="Bad request. Mismatching generation mode.")
+
         # response = self.rag.get_context(prompt=validated_input, identifier=document_id)
         response = self.indexer.get_context(
             prompt=validated_input, identifier=document_id
@@ -190,7 +201,9 @@ class PluginCore:
         )
 
         try:
-            answer = self.rag.answer(msg_data, identifier=document_id, stream=stream)
+            answer = self.rag.answer(
+                msg_data, identifier=document_id, stream=stream, temperature=temperature
+            )
         except ModelError as e:
             return Result(error=e.text())
         except Exception as e:
@@ -398,6 +411,8 @@ class PluginCore:
         tim_paths: str = instance_settings.tim_paths
         system_prompt_path: str = instance_settings.system_prompt_path.strip()
         global_policy: Policy = instance_settings.global_policy
+        use_streaming: bool = instance_settings.use_streaming
+        temperature: float | None = instance_settings.model_temperature
 
         # TODO: Remove hard coded API-key, provider and model_id.
         # Fetch from the database.
@@ -450,6 +465,9 @@ class PluginCore:
             if not prompt_doc:
                 return Result(None, "Invalid system prompt path")
             cache.delete_memoized(PluginCore.get_system_prompt, document_id=document_id)
+
+        if temperature is not None and temperature < 0 or temperature > 2:
+            return Result(None, "Temperature must be between 0 and 2")
 
         # TODO: update system prompt path in the db row
 
