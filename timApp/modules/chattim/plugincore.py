@@ -85,9 +85,17 @@ class InstanceAttributes:
 
 
 @dataclass
+class UserKey:
+    provider: str
+    public_key: str
+    is_selected: bool
+
+
+@dataclass
 class InstanceSettingsData(InstanceAttributes):
     availableModels: list[ChatModel] = field(kw_only=True)
     availableModes: list[str] = field(kw_only=True)
+    availableKeys: list[UserKey] = field(kw_only=True)
     availableEmbedderProviders: list[str] = field(kw_only=True)
     allowedItemPaths: list[str] | None = None
 
@@ -399,12 +407,37 @@ class PluginCore:
         # If the teacher has not yet saved the settings after setting an API-key alias,
         # the list should be empty.
         # Or should we just disable the model selection in the UI until an API-key alias has been set?
-        api_key = os.getenv("OPENAI_API_KEY") or ""
-        provider: Provider = "openai"
+        plugin_key = self.tim_database.get_llm_rule(document_id)
+        user_keys = self.tim_database.get_user_api_keys(user_id)
+
+        available_keys = [
+            UserKey(
+                provider=str(k.provider),
+                public_key=str(k.public_key),
+                is_selected=k.public_key == plugin_key.public_key,
+            )
+            for k in user_keys
+        ]
+
+        print(vars(plugin_key))  # show all fields
+        print("db apikey")
+        print(plugin_key.api_key)
+        print("db public key")
+        print(plugin_key.public_key)
+        print("db provider")
+        print(plugin_key.provider)
+        # TODO: remove enviroment key when not needed
+
+        api_key = plugin_key.api_key or os.getenv("OPENAI_API_KEY") or ""
+        provider: Provider = str(plugin_key.provider) or "openai"
+
+        print("apikey")
+        print(api_key)
 
         data = InstanceSettingsData(
             availableModes=RagMode.supported_modes(),
             availableModels=self._get_supported_chat_models(provider, api_key),
+            availableKeys=available_keys,
             availableEmbedderProviders=self._get_available_embedder_providers(user_id),
             use_streaming=True,  # TODO: from db
             allowedItemPaths=None,  # TODO: from the API key restrictions?

@@ -37,6 +37,7 @@ import type {
     ChatModel,
     ControlPanelSettings,
     TokenLimitForUser,
+    UserKey,
 } from "./controlpanel";
 import {ChatControlPanelComponent} from "./controlpanel";
 
@@ -90,6 +91,8 @@ export interface ControlPanelData extends ControlPanelSettings {
     availableModels: ChatModel[];
     availableModes: string[];
     availableEmbedderProviders: string[];
+    availableKeys: UserKey[];
+    chosenKey: string;
     allowedItemPaths?: string[];
 }
 
@@ -168,7 +171,9 @@ export interface ControlPanelData extends ControlPanelSettings {
                             [availableEmbedderProviders]="availableEmbedderProviders"
                             [selectedEmbedderProvider]="selectedEmbedderProvider"
                             [availableModes]="availableModes"
-                            [tokenLimitAllUsers]="globalPolicy">
+                            [tokenLimitAllUsers]="globalPolicy"
+                            [selectedPublicKey]="selectedPublicKey"
+                            [availablePublicKeys]="availablePublicKeys">
                         </chattim-control-panel>
                     </div>
                     
@@ -240,6 +245,9 @@ export class ChatTIMComponent
     used_chunks?: string[];
     selectedItemPaths: string[] = [];
     pathRestrictions?: DirectoryPickerRestrictions;
+    localFilePaths = "";
+    selectedPublicKey: string = "";
+    availablePublicKeys: UserKey[] = [];
     selectedMode = "Creative";
     selectedModel = "gpt-4.1-mini";
     selectedEmbedderProvider = "";
@@ -680,6 +688,11 @@ export class ChatTIMComponent
             const data = response.result;
             const result = data.result;
             this.controlpanelError = data.error;
+
+            console.log("chosenkey");
+            console.log(result);
+            console.log(result.availableKeys);
+
             if (
                 this.controlpanelError === undefined ||
                 this.controlpanelError === ""
@@ -700,6 +713,7 @@ export class ChatTIMComponent
                 this.selectedEmbedderProvider ||=
                     this.availableEmbedderProviders[0];
                 this.availableModes = result.availableModes;
+                this.availablePublicKeys = result.availableKeys;
                 this.globalPolicy = result.global_policy;
                 this.useStreaming = result.use_streaming;
                 this.modelTemperature = result.model_temperature;

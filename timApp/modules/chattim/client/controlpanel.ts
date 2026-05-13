@@ -8,6 +8,12 @@ export interface ChatModel extends Record<string, JsonValue> {
     value: string;
 }
 
+export interface UserKey extends Record<string, JsonValue> {
+    provider: string;
+    public_key: string;
+    is_selected: boolean;
+}
+
 export interface ControlPanelSettings extends Record<string, JsonValue> {
     model_id: string;
     llm_mode: string;
@@ -57,6 +63,26 @@ export interface TokenLimitForUser extends Record<string, JsonValue> {
                 </div>
             </ng-container>
             <ng-container *ngIf="isTeacher">
+                
+<!-- Choose API-key -->
+<div class="settings-row">
+    <button class="btn btn-link settings-section-btn"
+            (click)="keyOpen = !keyOpen">
+    <span class="glyphicon"
+          [class.glyphicon-chevron-right]="!keyOpen"
+          [class.glyphicon-chevron-down]="keyOpen">
+    </span>
+        API-alias: <strong>{{ selectedPublicKey }}</strong>
+    </button>
+    <div *ngIf="keyOpen" class="settings-section-body">
+        <select class="form-control"
+                [(ngModel)]="selectedPublicKey">
+            <option *ngFor="let key of availablePublicKeys" [ngValue]="key.public_key">{{ key.public_key }}</option>
+        </select>
+    </div>
+</div>
+                
+                
                 <!-- Choose the LLM -->
                 <div class="settings-row">
                     <button class="btn btn-link settings-section-btn"
@@ -302,6 +328,7 @@ export class ChatControlPanelComponent {
     settingsOpen = false;
     modelOpen = false;
     modeOpen = false;
+    keyOpen = false;
 
     tokensOpen = false;
     filesOpen = false;
@@ -356,6 +383,9 @@ export class ChatControlPanelComponent {
 
     @Input() availableModels?: ChatModel[];
     @Input() availableModes?: string[];
+    @Input() selectedPublicKey: string = "";
+    @Input() availablePublicKeys: UserKey[] = [];
+
     allEmbedderProviders: string[] = ["OpenAI", "Google"];
     @Input() availableEmbedderProviders: string[] = [];
     embedderAvailable(provider: string): boolean {
