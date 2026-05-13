@@ -138,6 +138,7 @@ export class EditLLMAPIKeyDialogComponent extends AngularDialogComponent<
             });
             this.groups = res.result.groups;
             this.groupNamesInput = "";
+            this.editError = undefined;
             return;
         }
         this.editError = res.result.error.error;
@@ -154,6 +155,7 @@ export class EditLLMAPIKeyDialogComponent extends AngularDialogComponent<
         );
         if (res.ok) {
             this.groups.splice(this.groups.indexOf(group), 1);
+            this.editError = undefined;
             return;
         }
         this.editError = res.result.error.error;
