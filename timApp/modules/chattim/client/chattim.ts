@@ -688,6 +688,7 @@ export class ChatTIMComponent
             this.controlpanelError = data.web.error;
             this.controlpanelResponse = data.web.result;
             this.error = undefined; // on successful save we clear chattim-error, maybe not great
+            this.useStreaming = controlPanelSettings.use_streaming;
         } else {
             this.controlpanelError = response.result.error.error;
         }

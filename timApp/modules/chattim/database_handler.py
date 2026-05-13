@@ -172,6 +172,8 @@ class TimDatabase:
         document_id: int,
         owner: int,
         public_key: str,
+        use_streaming: bool,
+        temperature: float | None,
         teachers: list[int],
         current_mode: str,
         total_tokens_spent: int,
@@ -187,6 +189,8 @@ class TimDatabase:
         :param document_id: The id of the document.
         :param owner: The id of the owner of the LLM rule.
         :param public_key: The alias of the chosen API key for the instance.
+        :param use_streaming: Use streaming for model answers.
+        :param temperature: The temperature parameter for the model.
         :param teachers: The ids of the teachers allowed to use the plugin instance.
         :param current_mode: Mode of the plugin instance: summarizing, creative or balanced.
         :param total_tokens_spent: The total number of tokens spent.
@@ -204,6 +208,8 @@ class TimDatabase:
                 document_id=document_id,
                 owner=owner,
                 public_key=public_key,
+                use_streaming=use_streaming,
+                temperature=temperature,
                 teachers=teachers,
                 current_mode=current_mode,
                 total_tokens_spent=total_tokens_spent,
@@ -229,6 +235,8 @@ class TimDatabase:
             if conv_time_window:
                 rule.conv_time_window = conv_time_window
             rule.system_prompt_path = system_prompt_path
+            rule.use_streaming = use_streaming
+            rule.temperature = temperature
         rule.policy.extend(policy)
         rule.usage.extend(usage)
         db.session.commit()

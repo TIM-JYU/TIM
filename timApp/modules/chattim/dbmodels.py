@@ -44,7 +44,7 @@ class LLMRule(db.Model):
     system_prompt_path: Mapped[str] = mapped_column(String, default="")
     # TODO: this should probably be something like:
     # system_prompt_doc: Mapped[str] = mapped_column(
-    #     String, ForeignKey("docentry.name"), default=""
+    #     String, ForeignKey("docentry.name"), nullable=True
     # )
 
     agent: Mapped[str] = mapped_column(String, default="")

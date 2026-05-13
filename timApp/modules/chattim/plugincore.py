@@ -518,6 +518,8 @@ class PluginCore:
             document_id,
             caller_id,
             "",
+            use_streaming,
+            temperature,
             [],
             llm_mode,
             0,
