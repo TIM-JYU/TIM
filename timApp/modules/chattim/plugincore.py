@@ -817,6 +817,11 @@ class PluginCore:
         groups = get_groups_by_ids(key.groups)
         return groups, key.paths
 
+    def remove_api_key_group(
+        self, owner_id: int, public_key: str, group_id: int
+    ) -> None:
+        self.tim_database.remove_api_key_group(owner_id, public_key, group_id)
+
     @staticmethod
     def _validate_policy(policy: Policy) -> None | str:
         """Validates policy. None is returned if everything is ok otherwise error string is returned"""

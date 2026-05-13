@@ -26,13 +26,15 @@ import {PurifyModule} from "tim/util/purify.module";
 
                         <label for="{{ listMode ? 'groupNameList' : 'groupName' }}">User groups:</label>
 
-                        <ul>
+                        <ul class="rights-list">
                             <li *ngFor="let group of groups">
-                                <span>{{ group.name }}</span>
-                                <span class="action-btn remove">
-                                    <button class="btn btn-default btn-xs"
-                                            (click)="removeConfirm(group)">remove</button>
-                                    <tim-loading *ngIf="removingRight === group && loading"></tim-loading>
+                                <span class="flex align-center">
+                                    <span class="name">{{ group.name }}</span>
+                                    <span class="action-btn remove">
+                                        <button class="btn btn-default btn-xs"
+                                                (click)="removeConfirm(group)">remove</button>
+                                        <tim-loading *ngIf="removingRight === group && loading"></tim-loading>
+                                    </span>
                                 </span>
                             </li>
                         </ul>
@@ -144,8 +146,11 @@ export class EditLLMAPIKeyDialogComponent extends AngularDialogComponent<
     /* Remove access right from the user group. */
     async removeRight(group: IGroup) {
         const id = group.id;
+        const key = this.data.key;
         const res = await toPromise(
-            this.http.post<Response>("/chattim/removeGroupRight", {id})
+            this.http.post<Response>(`/chattim/removeGroupRight/${id}`, {
+                public_key: key.alias,
+            })
         );
         if (res.ok) {
             this.groups.splice(this.groups.indexOf(group), 1);

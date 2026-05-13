@@ -2,6 +2,7 @@ from dataclasses import dataclass
 from flask import request, Response, stream_with_context
 from typing import Any, TypedDict, Callable
 from webargs.flaskparser import use_args
+import json
 from flask_babel import gettext
 
 from timApp.auth.accesshelper import (
@@ -105,33 +106,6 @@ class ChatTIMGetSettingsResponse(TypedDict, total=False):
     error: str | None
 
 
-def register_route(
-    app: Flask | Blueprint,
-    method: str,
-    route: str,
-    route_model: type | None,
-    route_handler: Callable[..., Any],
-) -> None:
-    def to_response(r: Any) -> Response:
-        # Allow handlers to define their own Flask Response
-        if isinstance(r, Response):
-            return r
-        return jsonify(r)
-
-    if route_model is None:
-
-        @app.route(f"/{route}", methods=[method], endpoint=route)
-        def define() -> Response:
-            return to_response(route_handler())
-
-        return
-
-    @app.route(f"/{route}", methods=[method], endpoint=route)
-    @use_args(class_schema(route_model)(), locations=("json",))
-    def define(m: Any) -> Response:
-        return to_response(route_handler(m))
-
-
 @dataclass
 class ChatTimHtmlModel(
     GenericHtmlModel[ChatTimInputModel, ChatTimMarkupModel, ChatTimStateModel]
@@ -174,6 +148,42 @@ welcomeText: ""
 
     result["editor_tabs"] = editor_tabs
     return result
+
+
+chattim = create_nontask_blueprint(
+    name=__name__,
+    plugin_name="chattim",
+    html_model=ChatTimHtmlModel,
+    reqs_handler=reqs,
+    csrf=csrf,
+)
+
+
+def register_route(
+    app: Flask | Blueprint,
+    method: str,
+    route: str,
+    route_model: type | tuple[type] | None,
+    route_handler: Callable[..., Any],
+) -> None:
+    def to_response(r: Any) -> Response:
+        # Allow handlers to define their own Flask Response
+        if isinstance(r, Response):
+            return r
+        return jsonify(r)
+
+    if route_model is None:
+
+        @app.route(f"/{route}", methods=[method], endpoint=route)
+        def define() -> Response:
+            return to_response(route_handler())
+
+        return
+
+    @app.route(f"/{route}", methods=[method], endpoint=route)
+    @use_args(class_schema(route_model)(), locations=("json",))
+    def define(m: Any) -> Response:
+        return to_response(route_handler(m))
 
 
 def ask_route(params: ChatTimAskParams) -> ChatTimAskResponse:
@@ -315,6 +325,18 @@ def add_api_key_permissions(params: APIKeyParams) -> Response:
     return json_response(res)
 
 
+@chattim.post("/removeGroupRight/<int:group_id>")
+def remove_key_group_right(group_id: int) -> Response:
+    user_id = get_current_user_id()
+    data = json.loads(request.data)
+    try:
+        public_key = data["public_key"]
+        plugincore.remove_api_key_group(user_id, public_key, group_id)
+    except KeyError:
+        raise RouteException(description="Bad request.")
+    return ok_response()
+
+
 def get_providers() -> list[str]:
     response = plugincore.get_supported_providers()
     return response
@@ -364,14 +386,6 @@ def _api_key_to_dict(key: APIKey) -> dict:
         "itemPaths": paths,
     }
 
-
-chattim = create_nontask_blueprint(
-    name=__name__,
-    plugin_name="chattim",
-    html_model=ChatTimHtmlModel,
-    reqs_handler=reqs,
-    csrf=csrf,
-)
 
 register_route(chattim, "post", "ask", ChatTimAskParams, ask_route)
 register_route(chattim, "post", "askStream", ChatTimAskParams, ask_stream_route)

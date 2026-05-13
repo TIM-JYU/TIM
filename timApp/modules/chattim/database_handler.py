@@ -366,6 +366,17 @@ class TimDatabase:
         db.session.commit()
         return rule
 
+    def remove_api_key_group(
+        self, owner_id: int, public_key: str, group_id: int
+    ) -> None:
+        """Remove access to the API key from the given user group."""
+        rule = TimDatabase.get_owner_api_key(owner_id, public_key)
+        if not rule:
+            raise Exception("No API-key with the alias found")
+        groups = rule.groups
+        rule.groups = filter(lambda id: id != group_id, groups)
+        db.session.commit()
+
     @staticmethod
     def set_policy(
         user: int,
