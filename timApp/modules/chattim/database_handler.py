@@ -91,8 +91,8 @@ class TimDatabase:
         return any(u.id == user_id for u in group.users)
 
     @staticmethod
-    def validate_user_groups(groups: list[str]) -> list[UserGroup]:
-        """Check if all the user groups exists."""
+    def get_user_groups(groups: list[str]) -> list[UserGroup]:
+        """Check if all the user groups exists and return them."""
         user_groups: list[UserGroup] = []
         for group in groups:
             g = UserGroup.get_by_name(group)
@@ -102,7 +102,7 @@ class TimDatabase:
         return user_groups
 
     @staticmethod
-    def validate_item_paths(paths: list[str]) -> list[Item]:
+    def get_item_paths(paths: list[str]) -> list[Item]:
         """Check if all the paths exist."""
         items: list[Item] = []
         for path in paths:
@@ -347,18 +347,24 @@ class TimDatabase:
     @staticmethod
     def update_api_key_permissions(
         owner_id: int, alias: str, groups: list[str], paths: list[str]
-    ) -> None:
-        """Gets the LLM rule table based on the alias."""
-        user_groups = TimDatabase.validate_user_groups(groups)
-        TimDatabase.validate_item_paths(paths)
-
+    ) -> LLMRule:
+        """Update the API key permissions."""
         rule = TimDatabase.get_owner_api_key(owner_id, alias)
         if not rule:
             raise Exception("No API-key with the alias found")
 
-        rule.groups = [g.id for g in user_groups]
+        user_groups = TimDatabase.get_user_groups(groups)
+        TimDatabase.get_item_paths(paths)
+
+        # Append unique user groups
+        group_ids: set[int] = set(rule.groups)
+        for group in user_groups:
+            group_ids.add(group.id)
+
+        rule.groups = list(group_ids)
         rule.paths = paths
         db.session.commit()
+        return rule
 
     @staticmethod
     def set_policy(

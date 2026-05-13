@@ -296,18 +296,23 @@ def save_api_key(params: APIKeyParams) -> Response:
         raise RouteException(description="API Key is invalid.")
 
 
-def save_api_key_permissions(params: APIKeyParams) -> Response:
+def add_api_key_permissions(params: APIKeyParams) -> Response:
     verify_logged_in()
     user_id = get_current_user_id()
     alias = params.alias
     groups = params.groups or []
     paths = params.paths or []
-    print(paths)
     try:
-        plugincore.update_api_key_permissions(user_id, alias, groups, paths)
+        user_groups, item_paths = plugincore.update_api_key_permissions(
+            user_id, alias, groups, paths
+        )
     except Exception as e:
         raise RouteException(description=str(e))
-    return ok_response()
+    res = {
+        "groups": user_groups,
+        "paths": item_paths,
+    }
+    return json_response(res)
 
 
 def get_providers() -> list[str]:
@@ -355,7 +360,7 @@ def _api_key_to_dict(key: APIKey) -> dict:
         "provider": provider,
         "APIkey": hidden_key,
         "alias": alias,
-        "groupNames": groups,
+        "groups": groups,
         "itemPaths": paths,
     }
 
@@ -380,9 +385,9 @@ register_route(chattim, "get", "getProviders", None, get_providers)
 register_route(
     chattim,
     "post",
-    "saveApiKeyPermissions",
+    "addApiKeyPermissions",
     APIKeyParams,
-    save_api_key_permissions,
+    add_api_key_permissions,
 )
 register_route(chattim, "post", "getRights", GetRightsParams, get_rights)
 register_route(chattim, "get", "getExistingKeys", None, get_existing_keys)

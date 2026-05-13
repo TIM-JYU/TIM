@@ -9,7 +9,7 @@ from timApp.timdb.dbaccess import get_files_path
 from timApp.auth.get_user_rights_for_item import UserItemRights
 from timApp.item.item import Item
 from timApp.document.docinfo import DocInfo
-from timApp.user.usergroup import get_groups_by_ids
+from timApp.user.usergroup import get_groups_by_ids, UserGroup
 from timApp.modules.chattim.indexer import (
     OpenAiEmbeddingModel,
     Indexer,
@@ -111,7 +111,7 @@ class PreparedChatRequest:
 
 
 # TODO: maybe a dict or dataclass would be more descriptive
-APIKey = tuple[str, str, str, list[str], list[str]]
+APIKey = tuple[str, str, str, list[UserGroup], list[str]]
 
 
 class PluginCore:
@@ -800,7 +800,7 @@ class PluginCore:
 
     def update_api_key_permissions(
         self, owner_id: int, public_key: str, groups: list[str], paths: list[str]
-    ) -> None:
+    ) -> tuple[list[UserGroup], list[str]]:
         """
         Update the permissions for the API key.
         :param owner_id: Owner of the API key.
@@ -811,9 +811,11 @@ class PluginCore:
         f = lambda e: len(e) > 0
         filtered_groups = list(filter(f, groups))
         filtered_paths = list(filter(f, paths))
-        self.tim_database.update_api_key_permissions(
+        key = self.tim_database.update_api_key_permissions(
             owner_id, public_key, filtered_groups, filtered_paths
         )
+        groups = get_groups_by_ids(key.groups)
+        return groups, key.paths
 
     @staticmethod
     def _validate_policy(policy: Policy) -> None | str:
@@ -919,11 +921,10 @@ class PluginCore:
         Converts the LLMRule table of the API key to a tuple.
         `(alias, provider, api_key, group_names, paths)`
         """
-        groups = get_groups_by_ids(rule.groups)
         return (
             str(rule.public_key),
             str(rule.provider),
             str(rule.api_key),
-            [str(g.name) for g in groups],
+            get_groups_by_ids(rule.groups),
             [str(p) for p in rule.paths],
         )

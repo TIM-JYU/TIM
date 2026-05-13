@@ -134,7 +134,7 @@ export class AddLLMAPIKeyDialogComponent extends AngularDialogComponent<
                     availableTokens: 0,
                     usedTokens: 0,
                     tokensChecked: false,
-                    groupNames: key.groupNames,
+                    groups: key.groups,
                     itemPaths: key.itemPaths,
                 });
                 this.added = true;
