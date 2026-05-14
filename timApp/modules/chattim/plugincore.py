@@ -470,14 +470,24 @@ class PluginCore:
         use_streaming: bool = instance_settings.use_streaming
         temperature: float | None = instance_settings.model_temperature
 
+        old_plugin_rule = self.tim_database.get_llm_rule(document_id)
+        old_provider = None
+        if old_plugin_rule is not None and old_plugin_rule.public_key:
+            try:
+                old_provider, _ = self.get_api_key(str(old_plugin_rule.public_key))
+            except Exception:
+                old_provider = None
+
         # TODO: Remove hard coded API-key, provider and model_id.
         # Fetch from the database.
+
         try:
             provider_str, api_key = self.get_api_key(public_key)
         except Exception as e:
             return Result(None, str(e))
 
         print(f"haettu api-avain: {api_key}")
+        print(f"haettu provider: {provider_str}")
 
         # provider_str: str = "openai"
         # model_id: str = "gpt-4.1-nano"
@@ -497,7 +507,10 @@ class PluginCore:
         provider = provider_str
 
         supported_models = PluginCore._get_supported_models(provider, api_key)
-        if model_id not in supported_models:
+        provider_changed = old_provider is not None and old_provider != provider_str
+        if provider_changed:
+            model_id = supported_models[0] if supported_models else model_id
+        elif model_id not in supported_models:
             return Result(None, f"Given model [{model_id}] not supported")
 
         paths_for_indexing = tim_paths
