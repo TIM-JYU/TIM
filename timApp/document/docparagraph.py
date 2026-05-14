@@ -206,7 +206,9 @@ class DocParagraph:
         self.attrs: dict[str, str] | None = None
         self.nomacros = None
         self.ref_chain = None
-        self.answer_nr: int | None = None  # needed if variable tasks, None = not task at all or not variable task
+        self.answer_nr: int | None = (
+            None  # needed if variable tasks, None = not task at all or not variable task
+        )
         self.md = ""
         self.id = None
         self.ask_new: bool | None = None  # to send for plugins to force new question
@@ -928,6 +930,7 @@ class DocParagraph:
                 par = unloaded_par_info.par
                 if getattr(par, "was_invalid", False):
                     continue
+
                 nocache = par.get_attr("nocache")
                 if nocache == "false":  # force to cache
                     par.depends_on_macros = MacroDependency.NO
@@ -1013,6 +1016,13 @@ class DocParagraph:
             f"macros {macros}, clear cache: {clear_cache}"
         )
         for par in pars:
+            if clear_cache:
+                # clear automatically set nocache value
+                nocache = par.get_attr("nocache")
+                if nocache == "force" or nocache == "auto":
+                    if par.attrs:
+                        par.attrs.pop("nocache", None)
+
             if par.is_dynamic():
                 dyn += 1
                 continue
