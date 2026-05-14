@@ -82,7 +82,7 @@ def post_process_pars(
     final_pars = presult.pars
     taketime("end pluginify")
     should_mark_all_read = False
-    settings = doc.get_settings() if settings is None else settings
+    settings: DocSettings = doc.get_settings() if settings is None else settings
     macroinfo = settings.get_macroinfo(view_ctx, user_ctx)
     user_macros = get_user_specific_macros(user_ctx)
     macros = macroinfo.get_macros()
@@ -185,7 +185,7 @@ def post_process_pars(
         # TODO: UserContext should support multiple users like in group login.
         usergroup_ids = [user_ctx.logged_user.get_personal_group().id]
 
-        # If we're in exam mode and we're visiting the page for the first time, mark everything read
+        # If we're in exam mode, and we're visiting the page for the first time, mark everything read
         if should_auto_read(
             doc, usergroup_ids, user_ctx.logged_user, view_ctx.for_cache
         ):
@@ -269,8 +269,8 @@ def expand_macro_for_bool_attr(
     """
     Parse boolean value from a macro string for a paragraph attribute that expects a boolean.
     :param maybe_macro: string that is possibly a macro
-    :param macro_delimiter: delimiter used for defining macros
-    :param macros: document macros
+    :param macro_delimiter: delimiter used for defining macro values
+    :param macros: macros available for the document.
     :param settings: document settings
     :param env: environment for expanding macros
     :param ignore_errors:
@@ -363,8 +363,8 @@ def process_areas(
                 )
             if current_areas:
                 # Insert a closing paragraph for the current area.
-                # We do this regardless of whether the area_end name matches because it's reasonable and we
-                # cannot guess what the user is trying to do.
+                # We do this regardless of whether the area_end name matches because it's
+                # reasonable, and we cannot guess what the user is trying to do.
                 if not is_single:
                     html_par.areainfo = AreaEnd(area_end)
                 new_pars.append(html_par)

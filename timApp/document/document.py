@@ -9,7 +9,7 @@ from difflib import SequenceMatcher
 from pathlib import Path
 from tempfile import mkstemp
 from time import time
-from typing import Iterable, Generator, Optional
+from typing import Iterable, Generator, Optional, NoReturn
 from typing import TYPE_CHECKING
 
 from filelock import FileLock, BaseFileLock
@@ -420,14 +420,14 @@ class Document:
         try:
             start_index = all_par_ids.index(par_id_start)
         except ValueError:
-            return self._raise_not_found(par_id_start)
+            return self.raise_not_found(par_id_start)
         if par_id_end == MISSING_AREA_END_PAR_ID:
             # par_id_end = par_id_start  # TODO: would it be better the last par?
             par_id_end = all_par_ids[-1]
         try:
             end_index = all_par_ids.index(par_id_end)
         except ValueError:
-            return self._raise_not_found(par_id_end)
+            return self.raise_not_found(par_id_end)
         if end_index < start_index:
             start_index, end_index = end_index, start_index
         return all_pars[start_index : end_index + 1]
@@ -629,9 +629,9 @@ class Document:
 
     def raise_if_not_exist(self, par_id: str):
         if not self.has_paragraph(par_id):
-            self._raise_not_found(par_id)
+            self.raise_not_found(par_id)
 
-    def _raise_not_found(self, par_id: str):
+    def raise_not_found(self, par_id: str) -> NoReturn:
         raise TimDbException(self.get_par_not_found_msg(par_id))
 
     def get_par_not_found_msg(self, par_id: str):
@@ -653,7 +653,7 @@ class Document:
             try:
                 return self.par_map[par_id]["c"]
             except KeyError:
-                return self._raise_not_found(par_id)
+                return self.raise_not_found(par_id)
         cached = self.single_par_cache.get(par_id)
         if cached:
             return cached
@@ -661,7 +661,7 @@ class Document:
         try:
             idx = self.par_ids.index(par_id)
         except ValueError:
-            return self._raise_not_found(par_id)
+            return self.raise_not_found(par_id)
         fetched = DocParagraph.get(self, self.par_ids[idx], self.par_hashes[idx])
         self.single_par_cache[par_id] = fetched
         return fetched
