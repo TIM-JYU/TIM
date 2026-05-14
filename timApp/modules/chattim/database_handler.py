@@ -1,11 +1,11 @@
 from dataclasses import dataclass
 
 from sqlalchemy import select, delete
-
+from typing import cast
 from timApp.document.document import Document
 from timApp.document import docentry
-from timApp.document.docentry import DocEntry
-from timApp.folder.folder import Folder, path_includes
+from timApp.document.docentry import DocEntry, get_documents_in_folder
+from timApp.folder.folder import Folder, path_includes, get_documents
 from timApp.item.item import Item
 from timApp.modules.chattim.dbmodels import LLMRule, Policy, Usage
 from timApp.timdb.sqa import db
@@ -91,8 +91,8 @@ class TimDatabase:
         return any(u.id == user_id for u in group.users)
 
     @staticmethod
-    def validate_user_groups(groups: list[str]) -> list[UserGroup]:
-        """Check if all the user groups exists."""
+    def get_user_groups(groups: list[str]) -> list[UserGroup]:
+        """Check if all the user groups exists and return them."""
         user_groups: list[UserGroup] = []
         for group in groups:
             g = UserGroup.get_by_name(group)
@@ -102,14 +102,62 @@ class TimDatabase:
         return user_groups
 
     @staticmethod
-    def validate_item_paths(paths: list[str]) -> list[Item]:
-        """Check if all the paths exist."""
+    def validate_item_paths(
+        user: User,
+        paths: list[str],
+        *,
+        depth: int = 1,
+        add_documents: bool = True,
+    ) -> list[Item]:
+        """
+        Check if all the paths exist and that the user has access to them.
+        If the path is a folder, check access to the documents directly under it.
+
+        :param user: The user of which access to check.
+        :param paths: The list of paths to check.
+        :param depth: The depth to check.
+                      If depth > 0, check the documents under folders.
+        :param add_documents: Whether to add documents to the returned item list.
+        :return: The list of items found.
+        """
         items: list[Item] = []
+        to_check: list[str] = []
+
         for path in paths:
             item = Item.find_by_path(path)
             if not item:
-                raise Exception(f"Invalid item path: {item}")
+                raise Exception(f"Invalid item path: '{path}'")
+
+            is_folder = isinstance(item, Folder)
+
+            rights = get_user_rights_for_item(item, user)
+            if not rights.get("owner") and not rights.get("manage"):
+                raise Exception(f"Insufficient rights: '{path}'")
+
+            if not is_folder:
+                if add_documents:
+                    items.append(item)
+                continue
+
             items.append(item)
+            folder: Folder = cast(Folder, item)
+
+            # Check rights for the documents under this folder
+            if depth > 0:
+                docs = get_documents_in_folder(path)
+                to_check.extend([d.name for d in docs])
+                # Check rights for the folders under this folder
+                if depth > 1:
+                    folders = folder.get_all_folders()
+                    to_check.extend([f.path for f in folders])
+
+        # Check the rights for pending items
+        if len(to_check) > 0:
+            sub_items = TimDatabase.validate_item_paths(
+                user, to_check, add_documents=False, depth=depth - 1
+            )
+            items.extend(sub_items)
+
         return items
 
     @staticmethod
@@ -117,24 +165,27 @@ class TimDatabase:
         """Check if the API key can be used in the given document."""
         if key.document_id > 0:
             return False
-        # TODO: Should the key be accessible everywhere if no paths added or no?
         if len(key.paths) == 0:
             return False
 
-        entries = docentry.DocEntry.find_all_by_id(doc_id)
-        if not entries:
-            return False
-        doc = entries[0]
-
         for path in key.paths:
-            if doc.path == path:
-                return True
             item = Item.find_by_path(path)
             if not item:
                 continue
-            if isinstance(item, Folder):
-                # TODO: is there a better way?
-                if path_includes(doc.path, path):
+            is_doc = isinstance(item, DocEntry)
+
+            if is_doc:
+                doc = cast(DocEntry, item)
+                if doc.id == doc_id:
+                    return True
+                continue
+
+            # Check if the document is this folder
+            folder = cast(Folder, item)
+            docs = folder.get_all_documents()
+            # TODO: can probably be done more efficiently
+            for doc in docs:
+                if doc.document.doc_id == doc.id:
                     return True
         return False
 
@@ -155,10 +206,9 @@ class TimDatabase:
         if user_id == api_key.owner:
             return api_key
         group_ids = api_key.groups
-        # TODO: If the user group list is empty,
-        #  should the key be global or accessible only to the owner?
+
         if not group_ids:
-            return api_key
+            return None
         for group_id in group_ids:
             group = UserGroup.get_by_id(group_id)
             if not group:
@@ -172,6 +222,8 @@ class TimDatabase:
         document_id: int,
         owner: int,
         public_key: str,
+        use_streaming: bool,
+        temperature: float | None,
         teachers: list[int],
         current_mode: str,
         total_tokens_spent: int,
@@ -187,6 +239,8 @@ class TimDatabase:
         :param document_id: The id of the document.
         :param owner: The id of the owner of the LLM rule.
         :param public_key: The alias of the chosen API key for the instance.
+        :param use_streaming: Use streaming for model answers.
+        :param temperature: The temperature parameter for the model.
         :param teachers: The ids of the teachers allowed to use the plugin instance.
         :param current_mode: Mode of the plugin instance: summarizing, creative or balanced.
         :param total_tokens_spent: The total number of tokens spent.
@@ -204,6 +258,8 @@ class TimDatabase:
                 document_id=document_id,
                 owner=owner,
                 public_key=public_key,
+                use_streaming=use_streaming,
+                temperature=temperature,
                 teachers=teachers,
                 current_mode=current_mode,
                 total_tokens_spent=total_tokens_spent,
@@ -229,6 +285,8 @@ class TimDatabase:
             if conv_time_window:
                 rule.conv_time_window = conv_time_window
             rule.system_prompt_path = system_prompt_path
+            rule.use_streaming = use_streaming
+            rule.temperature = temperature
         rule.policy.extend(policy)
         rule.usage.extend(usage)
         db.session.commit()
@@ -339,17 +397,38 @@ class TimDatabase:
     @staticmethod
     def update_api_key_permissions(
         owner_id: int, alias: str, groups: list[str], paths: list[str]
-    ) -> None:
-        """Gets the LLM rule table based on the alias."""
-        user_groups = TimDatabase.validate_user_groups(groups)
-        TimDatabase.validate_item_paths(paths)
-
+    ) -> LLMRule:
+        """Update the API key permissions."""
         rule = TimDatabase.get_owner_api_key(owner_id, alias)
         if not rule:
             raise Exception("No API-key with the alias found")
 
-        rule.groups = [g.id for g in user_groups]
+        user = User.get_by_id(owner_id)
+        if not user:
+            raise Exception(f"Invalid user.")
+
+        user_groups = TimDatabase.get_user_groups(groups)
+        TimDatabase.validate_item_paths(user, paths)
+
+        # Append unique user groups
+        group_ids: set[int] = set(rule.groups)
+        for group in user_groups:
+            group_ids.add(group.id)
+
+        rule.groups = list(group_ids)
         rule.paths = paths
+        db.session.commit()
+        return rule
+
+    def remove_api_key_group(
+        self, owner_id: int, public_key: str, group_id: int
+    ) -> None:
+        """Remove access to the API key from the given user group."""
+        rule = TimDatabase.get_owner_api_key(owner_id, public_key)
+        if not rule:
+            raise Exception("No API-key with the alias found")
+        groups = rule.groups
+        rule.groups = filter(lambda id: id != group_id, groups)
         db.session.commit()
 
     @staticmethod

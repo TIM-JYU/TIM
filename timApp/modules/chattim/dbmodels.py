@@ -1,5 +1,5 @@
 from typing import Optional
-from sqlalchemy import Integer, String, ForeignKey
+from sqlalchemy import Integer, String, ForeignKey, Float
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.dialects.postgresql import ARRAY
 from timApp.timdb.sqa import db
@@ -26,6 +26,14 @@ class LLMRule(db.Model):
     paths: Mapped[list[str]] = mapped_column(ARRAY(String), default=[])
     """Document or folder paths where the API key can be used on."""
 
+    use_streaming: Mapped[bool] = mapped_column(default=False)
+    """If `True`, the plugin uses streaming model response."""
+    temperature: Mapped[Optional[float]] = mapped_column(nullable=True)
+    """
+    Optional temperature setting to use when creating the model response.
+    If null, the temperature parameter is not used.
+    """
+
     # TODO: Should this be combined with `groups` or kept separate?
     teachers: Mapped[list[int]] = mapped_column(ARRAY(Integer), default=[])
     current_mode: Mapped[str] = mapped_column(
@@ -36,7 +44,7 @@ class LLMRule(db.Model):
     system_prompt_path: Mapped[str] = mapped_column(String, default="")
     # TODO: this should probably be something like:
     # system_prompt_doc: Mapped[str] = mapped_column(
-    #     String, ForeignKey("docentry.name"), default=""
+    #     String, ForeignKey("docentry.name"), nullable=True
     # )
 
     agent: Mapped[str] = mapped_column(String, default="")
