@@ -68,6 +68,7 @@ class InstanceAttributes:
     tim_paths: str = ""
     system_prompt_path: str = ""
     global_policy: Policy = field(default_factory=Policy)
+    embedder_provider: str = "dummy"
 
     @classmethod
     def default(cls) -> "InstanceAttributes":
@@ -78,6 +79,7 @@ class InstanceAttributes:
 class InstanceSettingsData(InstanceAttributes):
     availableModels: list[ChatModel] = field(kw_only=True)
     availableModes: list[str] = field(kw_only=True)
+    availableEmbedderProviders: list[str] = field(kw_only=True)
 
 
 T = TypeVar("T")
@@ -373,6 +375,7 @@ class PluginCore:
         data = InstanceSettingsData(
             availableModes=RagMode.supported_modes(),
             availableModels=self._get_supported_chat_models(provider, api_key),
+            availableEmbedderProviders=self._get_available_embedder_providers(user_id),
         )
 
         return Result(value=data)
@@ -389,6 +392,7 @@ class PluginCore:
         :return: On error: Result(None, error_reason) On success (True, None)
         """
         model_id: str = instance_settings.model_id
+        embedder_provider: str = instance_settings.embedder_provider
         llm_mode: str = instance_settings.llm_mode
         max_tokens: int = instance_settings.max_tokens
         tim_paths: str = instance_settings.tim_paths
@@ -460,11 +464,18 @@ class PluginCore:
         except ValueError as e:
             return Result(None, str(e))
 
-        # TODO: indeksoinnit pyörimään
-
-        # TODO: retrieving llm provider when model info is not hardcoded
+        # TODO: api key from db, change create_embedder to take api key as parameter
         llm_provider = kwargs_model["provider"]
-        emb_model = create_embedder(provider=llm_provider)
+        available_keys: list[APIKey] = self.get_user_api_keys(owner_id=caller_id)
+
+        for key in available_keys:
+            if key[1].lower() == embedder_provider.lower():
+                emb_model = create_embedder(
+                    embedder_provider=embedder_provider, api_key=key[2]
+                )
+                break
+            # return Result(None, f"Failed to create embedder, No available API key")
+
         self.indexer.add_embedder(document_id, emb_model)
 
         tokens_used, failed_embeddings = self.indexer.create_embeddings(
@@ -555,6 +566,18 @@ class PluginCore:
         for model_id in PluginCore._get_supported_models(provider, api_key):
             chat_models.append(ChatModel(label=model_id, value=model_id))
         return chat_models
+
+    def _get_available_embedder_providers(self, caller_id: int) -> list[str]:
+        """Returns a list of available embedding providers based on API keys."""
+        print("================================")
+        keys = self.get_user_api_keys(owner_id=caller_id)
+        providers = []
+        for key in keys:
+            providers.append(key[1])
+        print(f"Providers from DB{providers}")
+        print("================================")
+
+        return providers
 
     @cache.memoize(timeout=DEFAULT_CACHE_TIMEOUT, args_to_ignore=["self", "caller_id"])
     def get_system_prompt(self, caller_id: int, document_id: int) -> str | None:

@@ -78,6 +78,7 @@ export interface AskParams {
 export interface ControlPanelData extends ControlPanelSettings {
     availableModels: ChatModel[];
     availableModes: string[];
+    availableEmbedderProviders: string[];
 }
 
 // Huom: <tim-dialog-frame ei sisällä markupError attribuuttia
@@ -140,6 +141,8 @@ export interface ControlPanelData extends ControlPanelSettings {
                             [error]="controlpanelError"
                             [localFilePaths]="localFilePaths"
                             [availableModels]="availableModels"
+                            [availableEmbedderProviders]="availableEmbedderProviders"
+                            [selectedEmbedderProvider]="selectedEmbedderProvider"
                             [availableModes]="availableModes"
                             [tokenLimitAllUsers]="globalPolicy">
                         </chattim-control-panel>
@@ -213,12 +216,15 @@ export class ChatTIMComponent
     localFilePaths = "";
     selectedMode = "Creative";
     selectedModel = "gpt-4.1-mini";
+    selectedEmbedderProvider = "";
 
     maxTokens: number | null = 1000;
     controlpanelError?: string;
     controlpanelResponse?: string;
     availableModels?: ChatModel[];
     availableModes?: string[];
+    availableEmbedderProviders: string[] = [];
+
     globalPolicy: TokenLimitForUser = {
         token_cap_enabled: false,
         token_cap: 1000,
@@ -642,6 +648,10 @@ export class ChatTIMComponent
                 this.maxTokens = result.max_tokens;
                 this.localFilePaths = result.tim_paths;
                 this.availableModels = result.availableModels;
+                this.availableEmbedderProviders =
+                    result.availableEmbedderProviders;
+                this.selectedEmbedderProvider ||=
+                    this.availableEmbedderProviders[0];
                 this.availableModes = result.availableModes;
                 this.globalPolicy = result.global_policy;
             }
