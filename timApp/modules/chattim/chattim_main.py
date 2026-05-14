@@ -245,12 +245,13 @@ def get_settings(params: GenericParams) -> ChatTIMGetSettingsResponse:
     document_id = params.document_id
     session_user_id = get_current_user_id()
 
-    error_or_ok = plugincore.get_plugin_settings(session_user_id, document_id)
-    if not error_or_ok.ok():
-        ret["error"] = error_or_ok.error
+    get_result = plugincore.get_plugin_settings(session_user_id, document_id)
+    if not get_result.ok():
+        ret["error"] = get_result.error
         return ret
 
-    ret["result"] = error_or_ok.value or InstanceAttributes.default()
+    ret["result"] = get_result.value or InstanceAttributes.default()
+
     return ret
 
 
@@ -262,12 +263,13 @@ def save_settings(params: ChatTimSaveSettingsParams) -> PluginAnswerResp:
     document_id = params.document_id
     session_user_id = get_current_user_id()
 
-    error_or_ok = plugincore.save_instance(session_user_id, document_id, panel_data)
-    if not error_or_ok.ok():
-        web["error"] = error_or_ok.error or ""
+    save_result = plugincore.save_instance(session_user_id, document_id, panel_data)
+    if not save_result.ok():
+        web["error"] = save_result.error or ""
         return result
 
-    web["result"] = "Settings saved!"
+    web["availableModels"] = [{"label": m, "value": m} for m in save_result.value]
+
     return result
 
 

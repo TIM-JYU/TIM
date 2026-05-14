@@ -69,6 +69,7 @@ class Policy:
 
 @dataclass()
 class InstanceAttributes:
+    public_key: str = ""
     model_id: str = "gpt-4.1-mini"
     llm_mode: str = "Creative"
     max_tokens: int | None = 2000
@@ -410,29 +411,30 @@ class PluginCore:
         plugin_key = self.tim_database.get_llm_rule(document_id)
         user_keys = self.tim_database.get_user_api_keys(user_id)
 
+        # Options for selecting key for plugin, no apikey shown
         available_keys = [
             UserKey(
                 provider=str(k.provider),
                 public_key=str(k.public_key),
-                is_selected=k.public_key == plugin_key.public_key,
+                is_selected=plugin_key is not None
+                and k.public_key == plugin_key.public_key,
             )
             for k in user_keys
         ]
 
-        print(vars(plugin_key))  # show all fields
-        print("db apikey")
-        print(plugin_key.api_key)
-        print("db public key")
-        print(plugin_key.public_key)
-        print("db provider")
-        print(plugin_key.provider)
         # TODO: remove enviroment key when not needed
 
-        api_key = plugin_key.api_key or os.getenv("OPENAI_API_KEY") or ""
-        provider: Provider = str(plugin_key.provider) or "openai"
+        if plugin_key is not None:
+            for key in user_keys:
+                if key.public_key == plugin_key.public_key:
+                    api_key = key.api_key
+                    provider: Provider = str(plugin_key.provider) or "openai"
+        else:
+            api_key = ""
+            provider = "openai"  # TODO: remove when not needed
 
-        print("apikey")
-        print(api_key)
+        print(f"apikey on :{api_key}")
+        print(f"provider on :{provider}")
 
         data = InstanceSettingsData(
             availableModes=RagMode.supported_modes(),
@@ -442,12 +444,13 @@ class PluginCore:
             use_streaming=True,  # TODO: from db
             allowedItemPaths=None,  # TODO: from the API key restrictions?
         )
+        print(f"data: {data}")
 
         return Result(value=data)
 
     def save_instance(
         self, caller_id: int, document_id: int, instance_settings: InstanceAttributes
-    ) -> Result[bool | None, str | None]:
+    ) -> Result[list[str], str | None]:
         """
         Create instance if it doesn't exist. New settings are saved if valid.
         Adds a new model instance to RAG and a new llmrule table to database
@@ -456,6 +459,7 @@ class PluginCore:
         :param instance_settings:
         :return: On error: Result(None, error_reason) On success (True, None)
         """
+        public_key: str = instance_settings.public_key
         model_id: str = instance_settings.model_id
         embedder_provider: str = instance_settings.embedder_provider
         llm_mode: str = instance_settings.llm_mode
@@ -468,9 +472,15 @@ class PluginCore:
 
         # TODO: Remove hard coded API-key, provider and model_id.
         # Fetch from the database.
-        api_key = os.getenv("OPENAI_API_KEY")
-        provider_str: str = "openai"
-        model_id: str = "gpt-4.1-nano"
+        try:
+            provider_str, api_key = self.get_api_key(public_key)
+        except Exception as e:
+            return Result(None, str(e))
+
+        print(f"haettu api-avain: {api_key}")
+
+        # provider_str: str = "openai"
+        # model_id: str = "gpt-4.1-nano"
 
         if not self._document_exists(document_id):
             return Result(None, f"Document [{document_id}] does not exist")
@@ -484,7 +494,7 @@ class PluginCore:
 
         if provider_str not in Provider.__args__:
             return Result(None, f"Invalid provider [{provider_str}] given")
-        provider = cast(Provider, provider_str)
+        provider = provider_str
 
         supported_models = PluginCore._get_supported_models(provider, api_key)
         if model_id not in supported_models:
@@ -529,6 +539,9 @@ class PluginCore:
         # TODO: if instance exists -> update OTHERIWISE create
 
         kwargs_model = dict(provider=provider, model_id=model_id, api_key=api_key)
+        print(
+            f"[add_model] provider={provider}, model_id={model_id}, api_key starts with={api_key[:6]}"
+        )
         try:
             self.rag.add_model(identifier=document_id, **kwargs_model)
         except ValueError as e:
@@ -571,6 +584,7 @@ class PluginCore:
             "",
             use_streaming,
             temperature,
+            public_key,
             [],
             llm_mode,
             0,
@@ -590,7 +604,10 @@ class PluginCore:
             max_tokens,
         )
 
-        return Result(True, None)
+        print("supported models")
+        print(supported_models)
+
+        return Result(value=supported_models, error=None)
 
     def delete_instance(self, owner_id: int, document_id: int) -> None:
         self.tim_database.delete_llm_rule(owner_id, document_id)

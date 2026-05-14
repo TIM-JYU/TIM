@@ -15,6 +15,7 @@ export interface UserKey extends Record<string, JsonValue> {
 }
 
 export interface ControlPanelSettings extends Record<string, JsonValue> {
+    public_key: string;
     model_id: string;
     llm_mode: string;
     embedder_provider: string;
@@ -64,24 +65,24 @@ export interface TokenLimitForUser extends Record<string, JsonValue> {
             </ng-container>
             <ng-container *ngIf="isTeacher">
                 
-<!-- Choose API-key -->
-<div class="settings-row">
-    <button class="btn btn-link settings-section-btn"
-            (click)="keyOpen = !keyOpen">
-    <span class="glyphicon"
-          [class.glyphicon-chevron-right]="!keyOpen"
-          [class.glyphicon-chevron-down]="keyOpen">
-    </span>
-        API-alias: <strong>{{ selectedPublicKey }}</strong>
-    </button>
-    <div *ngIf="keyOpen" class="settings-section-body">
-        <select class="form-control"
-                [(ngModel)]="selectedPublicKey">
-            <option *ngFor="let key of availablePublicKeys" [ngValue]="key.public_key">{{ key.public_key }}</option>
-        </select>
-    </div>
-</div>
-                
+                <!-- Choose API-key -->
+                <div class="settings-row">
+                    <button class="btn btn-link settings-section-btn"
+                            (click)="keyOpen = !keyOpen">
+                    <span class="glyphicon"
+                          [class.glyphicon-chevron-right]="!keyOpen"
+                          [class.glyphicon-chevron-down]="keyOpen">
+                    </span>
+                        API-alias: <strong>{{ selectedPublicKey }}</strong>
+                    </button>
+                    <div *ngIf="keyOpen" class="settings-section-body">
+                        <select class="form-control"
+                                [(ngModel)]="selectedPublicKey">
+                            <option *ngFor="let key of availablePublicKeys" [ngValue]="key.public_key">{{ key.public_key +" - "+ key.provider }}</option>
+                        </select>
+                    </div>
+                </div>
+                                
                 
                 <!-- Choose the LLM -->
                 <div class="settings-row">
@@ -414,6 +415,7 @@ export class ChatControlPanelComponent {
 
     saveSettingsClicked() {
         const data: ControlPanelSettings = {
+            public_key: this.selectedPublicKey,
             model_id: this.selectedModel,
             llm_mode: this.selectedMode,
             embedder_provider: this.selectedEmbedderProvider,

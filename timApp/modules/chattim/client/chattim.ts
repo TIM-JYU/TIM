@@ -249,8 +249,9 @@ export class ChatTIMComponent
     selectedPublicKey: string = "";
     availablePublicKeys: UserKey[] = [];
     selectedMode = "Creative";
-    selectedModel = "gpt-4.1-mini";
+    // selectedModel = "gpt-4.1-mini";
     selectedEmbedderProvider = "";
+    selectedModel = "";
 
     maxTokens: number | null = 1000;
     controlpanelError?: string;
@@ -714,6 +715,10 @@ export class ChatTIMComponent
                     this.availableEmbedderProviders[0];
                 this.availableModes = result.availableModes;
                 this.availablePublicKeys = result.availableKeys;
+                this.selectedPublicKey =
+                    result.availableKeys.find((k) => k.is_selected)
+                        ?.public_key ?? "";
+
                 this.globalPolicy = result.global_policy;
                 this.useStreaming = result.use_streaming;
                 this.modelTemperature = result.model_temperature;
@@ -737,7 +742,11 @@ export class ChatTIMComponent
         };
 
         const response = await this.httpPost<{
-            web: {result: string; error?: string};
+            web: {
+                result: string;
+                error?: string;
+                availableModels?: ChatModel[];
+            };
         }>(this.route("saveSettings"), save_request);
 
         this.isRunning = false;
@@ -745,6 +754,9 @@ export class ChatTIMComponent
             const data = response.result;
             this.controlpanelError = data.web.error;
             this.controlpanelResponse = data.web.result;
+            if (data.web.availableModels) {
+                this.availableModels = data.web.availableModels;
+            }
             this.error = undefined; // on successful save we clear chattim-error, maybe not great
             this.useStreaming = controlPanelSettings.use_streaming;
         } else {
