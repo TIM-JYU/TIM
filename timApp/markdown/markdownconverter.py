@@ -318,7 +318,7 @@ def now(frmt=0):
     Used in Jinja macros like tomorrow: %%1 | now%%
     Or this week %% "%w" | now %%
 
-    :param frmt: format for current date or delta for current date
+    :param frmt: format for current date or delta from now
     :return: current date + (fmt as int) if fmt is int, otherwise current timestamp formatted
     """
     if isinstance(frmt, int):
@@ -334,7 +334,7 @@ def fmt_date(d, frmt="", weekdays="ma|ti|ke|to|pe|la|su"):
     :param d: date to format
     :param frmt: Python format
     :param weekdays: pipe separated list of weekday names, used for %w
-    :return: string from d an format
+    :return: string from d a format
     """
     if isinstance(d, str):
         d = str_to_date(d)
@@ -456,7 +456,7 @@ def preinc(v, delta=1):
     return v[0]
 
 
-def timezone_filter(s: Any, timezone: Any = None) -> Any:
+def timezone_filter(s: str, timezone: str | None = None) -> Any:
     if timezone is None:
         return s
     try:
@@ -814,7 +814,7 @@ def md_to_html(
     ignore_errors=False,
     doc: Document | None = None,
 ) -> str:
-    """Converts the specified markdown text to HTML.
+    """Converts the specified Markdown text to HTML.
 
     :param ignore_errors: Whether to ignore errors expanding macros
     :param dumbo_options: Options for Dumbo.
@@ -822,7 +822,7 @@ def md_to_html(
     :param sanitize: Whether the HTML should be sanitized. Default is True.
     :param text: The text to be converted.
     :param doc: The document the text belongs to. If provided, document settings will be used for macro expansion.
-    :return: A HTML string.
+    :return: HTML string.
 
     """
 
@@ -857,7 +857,7 @@ def par_list_to_html_list(
     :param view_ctx:
     :return: A list of HTML strings.
     :param settings: The document settings.
-    :param auto_macros: Currently a list(dict) containing the heading information ('h': dict(int,int) of heading counts
+    :param auto_macros: Currently, a list(dict) containing the heading information ('h': dict(int,int) of heading counts
            and 'headings': dict(str,int) of so-far used headings and their counts).
     :param pars: The list of DocParagraphs to be converted.
 
@@ -911,7 +911,11 @@ def par_list_to_html_list(
                     initial_heading_counts=settings.auto_number_start(),
                 )
                 final_html = strip_div(final_html)
-                if final_html != pre_html or heading_re.search(final_html):
+                # if final_html != pre_html or heading_re.search(final_html):
+                # Previous may not be good idea, because broken HTML may cause
+                # final_html to differ from pre_html even if there are no headings.
+                # So we just check for headings separately.
+                if heading_re.search(final_html):
                     final_html = HeadingHtml(final_html)
             processed.append(final_html)
         raw = processed
@@ -985,10 +989,11 @@ def check_and_edit_html_if_surrounded_with(
 
 
 def change_classes_to_fragment(html_list: list) -> str:
-    """If found, html_list[1] will have the content that we need to make a fragment of and html_list[0] might have the
+    """If found, html_list[1] will have the content that we need to
+    make a fragment of and html_list[0] might have the
     element tag that will have "fragment" added to it's class.
 
-    There might be multiple fragments in the html list.
+    There might be multiple fragments in the html_list.
 
     """
     # Start from 1, the previous will contain the html tag to change
@@ -1009,7 +1014,7 @@ def change_classes_to_fragment(html_list: list) -> str:
 def change_class(
     text_containing_html_tag: str, text_content: str, new_class: str
 ) -> list:
-    """Find the last html tag in the list and change that element's class to new_class or add the new class to element's
+    """Find the last HTML tag in the list and change that element's class to new_class or add the new class to element's
     classes or surround the new content with span element with the new class."""
     try:
         # Find where the html tag supposedly ends
@@ -1066,8 +1071,10 @@ def insert_heading_numbers(
     heading_format: dict | None = None,
     initial_heading_counts: dict[int, int] | None = None,
 ):
-    """Applies the given heading_format to the HTML if it is a heading, based on the given heading_info. Additionally
-    corrects the id attribute of the heading in case it has been used earlier.
+    """
+    Applies the given heading_format to the HTML if it is a heading, based on the given heading_info.
+    Additionally, corrects the id attribute of the heading in case
+    it has been used earlier.
 
     :param heading_info: A dict containing the heading information ('h': dict(int,int) of heading counts
            and 'headings': dict(str,int) of so-far used headings and their counts).
@@ -1104,7 +1111,7 @@ def insert_heading_numbers(
                 initial_counts=initial_heading_counts,
             )
     # final_html = etree.tostring(tree, encoding="utf-8")
-    final_html = etree.tostring(tree, encoding="unicode")
+    final_html = etree.tostring(tree, encoding="unicode", method="html")
     return final_html
 
 

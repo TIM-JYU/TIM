@@ -131,6 +131,8 @@ class DocSettingTypes:
     showSettingsTypes: list[str]
     macro_lstrip_blocks: bool
     macro_trim_blocks: bool
+    __static_macros: dict[str, Any]
+    __static_macros_hash: str
 
 
 doc_setting_field_map: dict[str, Field] = {
@@ -289,6 +291,8 @@ class DocSettings:
         self.__dict = settings_dict if settings_dict else YamlBlock()
         self.macroinfo_cache = {}
         self._normal_par_cache_key_hash = None
+        self._static_macros_cache = {}
+        self._static_macros_hash_cache = None
 
     def to_paragraph(self) -> DocParagraph:
         text = "```\n" + self.__dict.to_markdown() + "\n```"
@@ -618,16 +622,46 @@ class DocSettings:
     def mathtype(self, default="mathjax") -> MathType:
         return MathType.from_string(self.__dict.get(self.mathtype_key, default))
 
-    def get_hash(self):
+    def get_static_macros(self):
+        """
+        Get macros that are not dynamic, so remove
+         - last_referrers
+         - seed
+         - rndmacros
+         - urlmacros
+        :return: static macros
+        """
+        if self._static_macros_cache:
+            return self._static_macros_cache
         macroinfo = self.get_macroinfo(default_view_ctx)
         macros = macroinfo.get_macros()
-        macros = {**macros, "last_referrers": []}
+        macros = {**macros, "last_referrers": [], "seed": 0}
+
+        def clear_macros(macs):
+            if not macs:
+                return
+            for k in macs:
+                macros[k] = "¤"
+
+        clear_macros(self.rndmacros())
+        clear_macros(self.urlmacros())
+        clear_macros(self.fieldmacros())
+
+        self._static_macros_cache = macros
+        return self._static_macros_cache
+
+    def get_static_macros_hash(self):
+        if self._static_macros_hash_cache:
+            return self._static_macros_hash_cache
+        macros = self.get_static_macros()
+        macroinfo = self.get_macroinfo(default_view_ctx)
         charmacros = self.get_charmacros() or ""
         macro_delim = macroinfo.get_macro_delimiter()
         autocounters = self.autocounters()
-        return hashfunc(
+        self._static_macros_hash_cache = hashfunc(
             f"{macros}{macro_delim}{charmacros}{self.auto_number_headings()}{self.heading_format()}{self.mathtype()}{self.get_globalmacros()}{self.preamble()}{self.input_format()}{self.smart_punct()}{autocounters}{self.macro_lstrip_blocks()}{self.macro_trim_blocks()}"
         )
+        return self._static_macros_hash_cache
 
     def get_normal_par_cache_key_hash(self):
         """

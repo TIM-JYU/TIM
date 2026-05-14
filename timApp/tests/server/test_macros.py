@@ -244,14 +244,14 @@ globalmacros:
         )
         grant_access(UserGroup.get_anonymous_group(), d, AccessType.view)
         db.session.commit()
-
+        # Automatic nocache for fields
         pars = d.document.add_text(
             """
-#- {nocache="true" #fieldNoCache}
+#- { #fieldNoCache}
 Field (nocache): %%field1%%
 Field points (nocache): %%f1p%%
 
-#-
+#- {nocache="false" #fieldWithCache}
 Field: %%field1%%
 Field points: %%f1p%%
 """
