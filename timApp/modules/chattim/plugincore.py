@@ -99,6 +99,7 @@ class InstanceSettingsData(InstanceAttributes):
     availableModes: list[str] = field(kw_only=True)
     availableKeys: list[UserKey] = field(kw_only=True)
     availableEmbedderProviders: list[str] = field(kw_only=True)
+    selectedModel: str | None = None
     allowedItemPaths: list[str] | None = None
 
 
@@ -414,7 +415,7 @@ class PluginCore:
         # If the teacher has not yet saved the settings after setting an API-key alias,
         # the list should be empty.
         # Or should we just disable the model selection in the UI until an API-key alias has been set?
-        plugin_key = self.tim_database.get_llm_rule(document_id)
+        plugin_data = self.tim_database.get_llm_rule(document_id)
         user_keys = self.tim_database.get_user_api_keys(user_id)
 
         # Options for selecting key for plugin, no apikey shown
@@ -422,22 +423,21 @@ class PluginCore:
             UserKey(
                 provider=str(k.provider),
                 public_key=str(k.public_key),
-                is_selected=plugin_key is not None
-                and k.public_key == plugin_key.public_key,
+                is_selected=plugin_data is not None
+                and k.public_key == plugin_data.public_key,
             )
             for k in user_keys
         ]
 
         api_key = ""
         provider = "openai"
+        selected_model = str(plugin_data.agent) if plugin_data is not None else None
 
-        if plugin_key is not None:
+        if plugin_data is not None:
             for key in user_keys:
-                if key.public_key == plugin_key.public_key:
+                if key.public_key == plugin_data.public_key:
                     api_key = key.api_key
-                    provider = (
-                        self._parse_provider(str(plugin_key.provider)) or provider
-                    )
+                    provider = key.provider
 
         data = InstanceSettingsData(
             availableModes=RagMode.supported_modes(),
@@ -445,6 +445,7 @@ class PluginCore:
             availableKeys=available_keys,
             availableEmbedderProviders=self._get_available_embedder_providers(user_id),
             use_streaming=True,  # TODO: from db
+            selectedModel=selected_model,
             allowedItemPaths=None,  # TODO: from the API key restrictions?
         )
 

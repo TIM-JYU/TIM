@@ -93,6 +93,7 @@ export interface ControlPanelData extends ControlPanelSettings {
     availableEmbedderProviders: string[];
     availableKeys: UserKey[];
     chosenKey: string;
+    selectedModel: string | null;
     allowedItemPaths?: string[];
 }
 
@@ -693,7 +694,7 @@ export class ChatTIMComponent
                 this.controlpanelError === undefined ||
                 this.controlpanelError === ""
             ) {
-                this.selectedModel = result.model_id;
+                this.selectedModel = result.selectedModel ?? result.model_id;
                 this.selectedMode = result.llm_mode;
                 this.maxTokens = result.max_tokens;
                 this.selectedItemPaths = result.tim_paths;
