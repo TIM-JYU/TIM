@@ -43,6 +43,12 @@ from timApp.modules.chattim.conversation import ConversationManager, ChatMessage
 DEFAULT_CACHE_TIMEOUT = 60 * 15  # seconds
 
 
+@dataclass
+class ChatResponse:
+    whole_msg: str
+    used_chunks: list[str] | None = None
+
+
 # TODO: Is this needed if we have no model labels anymore?
 @dataclass(frozen=True)
 class ChatModel(TypedDict):
@@ -114,6 +120,7 @@ class PreparedChatRequest:
     document_id: str
     user_input: str
     response: Iterable[ModelResponse] | ModelResponse
+    used_chunks: list[str]
 
 
 # TODO: maybe a dict or dataclass would be more descriptive
@@ -185,7 +192,7 @@ class PluginCore:
             prompt=validated_input, identifier=document_id
         )
         context = response.context
-
+        used_chunks = response.used_chunks
         system_prompt = self.get_system_prompt(caller_id, document_id)
 
         msg_data = MessageData(
@@ -212,6 +219,7 @@ class PluginCore:
             document_id=document_id_str,
             user_input=validated_input,
             response=answer,
+            used_chunks=used_chunks,
         )
         return Result(value=prepared)
 
@@ -256,12 +264,13 @@ class PluginCore:
         )
 
     # TODO: palautetaan token usage tätä kautta tai muualta?
+
     def chat_request(
         self,
         caller_id: int,
         document_id: int,
         user_input: str,
-    ) -> Result[str | None, str | None]:
+    ) -> Result[ChatResponse | None, str | None]:
         """Generate a model response."""
         timestamp_user = ChatMessage.ts_ms()
         # TODO: Do we save user messages to disk if error occurred from some of the checks or just discard?
@@ -290,14 +299,18 @@ class PluginCore:
             timestamp_answer=timestamp_answer,
             usage=usage,
         )
+        used_chunks = p.used_chunks
 
-        return Result(value=whole_msg, error=None)
+        return Result(
+            value=ChatResponse(whole_msg=whole_msg, used_chunks=used_chunks), error=None
+        )
 
     def chat_request_stream(
         self,
         caller_id: int,
         document_id: int,
         user_input: str,
+        used_chunks: list[str] | None = None,
     ) -> Result[Iterable[ModelResponse], str]:
         """Generate a model response using streaming.
 

@@ -72,6 +72,7 @@ class ChatTimAskResponse(TypedDict, total=False):
     answer: str | None
     usage: int | None
     error: str | None
+    used_chunks: list[str] | None
 
 
 @dataclass
@@ -184,7 +185,8 @@ def ask_route(params: ChatTimAskParams) -> ChatTimAskResponse:
     resp = plugincore.chat_request(session_user_id, document_id, user_input)
 
     response = ChatTimAskResponse(
-        answer=resp.value,
+        answer=resp.value.whole_msg,
+        used_chunks=resp.value.used_chunks,
         error=resp.error,
     )
     return response

@@ -68,6 +68,7 @@ export interface AskResponse {
     answer?: string;
     usage?: number;
     error?: string;
+    used_chunks?: string[];
 }
 
 export interface AskParams {
@@ -103,6 +104,9 @@ export interface ControlPanelData extends ControlPanelSettings {
                         <div *ngFor="let entry of conversation">
                             <div class="chat-user">{{ entry.user.content }}</div>
                             <div class="chat-bot" [innerHTML]="entry.agent.content | purify"></div>
+                        </div>
+                        <div *ngFor="let chunk of used_chunks">
+                            <div class="chat-user">{{ chunk }}</div>
                         </div>
                     </div>
 
@@ -203,6 +207,7 @@ export class ChatTIMComponent
     conversation: ChatEntry[] = [];
 
     answer?: string;
+    used_chunks?: string[];
     error?: string;
     isRunning: boolean = false;
     userInput = "";
@@ -229,7 +234,7 @@ export class ChatTIMComponent
     };
 
     // TODO: make a configurable option for user in settings?
-    useStreaming: boolean = true;
+    useStreaming: boolean = false;
 
     constructor(
         el: ElementRef<HTMLElement>,
@@ -515,6 +520,8 @@ export class ChatTIMComponent
             }
 
             this.answer = data.answer;
+            this.used_chunks = data.used_chunks;
+            console.log("used_chunks: ", this.used_chunks);
             const message: Message = this.conversation[entry_index].agent;
             message.content = this.answer ?? "";
             message.timestamp_ms = Date.now();
