@@ -506,8 +506,6 @@ class PluginCore:
         supported_models = PluginCore._get_supported_models(provider, api_key)
         provider_changed = old_provider is not None and old_provider != provider_str
         if provider_changed:
-            print("provider vaihtui")
-            print(supported_models)
             if provider == "openai":
                 model_id = "gpt-4.1-mini"
             else:
