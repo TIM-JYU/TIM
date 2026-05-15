@@ -695,10 +695,10 @@ class PluginCore:
             return None
         usage = self.tim_database.get_usage(rule, caller_id)
         if not usage:
-            self.tim_database.set_usage(caller_id, rule, used_tokens)  # conv_id?
+            self.tim_database.set_usage(caller_id, rule, used_tokens)
             return used_tokens
         tokens = usage.used_tokens + used_tokens
-        self.tim_database.set_usage(caller_id, rule, tokens)  # conv_id?
+        self.tim_database.set_usage(caller_id, rule, tokens)
         return tokens
 
     def _policy_checks(
@@ -731,12 +731,12 @@ class PluginCore:
             if policy:
                 token_limit = policy.max_tokens_per_user
             else:
-                return Result(value="ok")  # ?
+                return Result(value="ok")
         if used_tokens and token_limit:
             if used_tokens >= token_limit:
                 return Result(error="No more tokens")
 
-        return Result(value="ok")  # ?
+        return Result(value="ok")
 
     def _fetch_docs_by_paths(
         self, paths: list[str]
