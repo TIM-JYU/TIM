@@ -260,6 +260,8 @@ class PluginCore:
                 ),
             ],
         )
+        if usage:
+            self.update_usage(int(caller_id), int(plugin_id), usage.total_tokens)
 
     # TODO: palautetaan token usage tätä kautta tai muualta?
     def chat_request(
@@ -703,7 +705,7 @@ class PluginCore:
         self, caller_id: int, document_id: int
     ) -> Result[str | None, str | None]:
         """
-        Checks token limits as per global and user policies
+        Checks token limits as per global and user policies.
         :param caller_id:  the user that is making the request
         :param document_id:  instance for the plugin
         :return: (can_make_req: bool, reason_for_deny: str)
@@ -715,8 +717,7 @@ class PluginCore:
         usage = self.tim_database.get_usage(rule, caller_id)
 
         if not usage:
-            self.tim_database.set_usage(caller_id, 0, rule, 0)  # TODO: conv_id?
-            # self.tim_database.set_user_policy(caller_id, rule, "", 0, 0, 0)
+            self.update_usage(caller_id, document_id, 0)
             return Result(value="ok")
 
         used_tokens = usage.used_tokens
@@ -969,9 +970,6 @@ class PluginCore:
 
     def delete_api_key(self, owner_id: int, public_key: str) -> None:
         self.tim_database.delete_api_key(owner_id, public_key)
-
-    def get_llm_rule(self, document_id: int) -> LLMRule | None:
-        return self.tim_database.get_llm_rule(document_id)
 
     @staticmethod
     def _api_row_to_tuple(rule: LLMRule) -> APIKey:
