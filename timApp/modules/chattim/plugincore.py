@@ -4,6 +4,7 @@ from dataclasses import dataclass, field
 from unicodedata import normalize, category
 
 from timApp.modules.chattim.dbmodels import LLMRule
+from timApp.plugin.containerLink import call_plugin_resource
 from timApp.util.flask.cache import cache
 from timApp.timdb.dbaccess import get_files_path
 from timApp.auth.get_user_rights_for_item import UserItemRights
@@ -649,8 +650,30 @@ class PluginCore:
         """
         return [x.strip() for x in paths.split("\n") if x.strip()]
 
-    def set_user_policy(self):
-        pass
+    def set_user_policy(
+        self, caller_id: int, document_id: int, policy_settings: Policy
+    ) -> Result[bool | None, str | None]:
+        """
+        Sets the user's policy for the given user in the given document. Adds new policy row to the database.
+        :param caller_id: The user for the policy.
+        :param document_id: The document of the plugin.
+        :param policy_settings: Settings for the user policy.
+        :return: On error: Result(None, error_reason) On success Result(True, None)
+        """
+        rule = self.tim_database.get_llm_rule(document_id)
+        if not rule:
+            return Result(None, "No LLMRule found for this document")
+
+        self.tim_database.set_user_policy(
+            caller_id,
+            rule,
+            policy_settings.window_unit,
+            policy_settings.window_value,
+            policy_settings.token_cap_for_window,
+            policy_settings.token_cap,
+        )
+
+        return Result(True, None)
 
     def update_usage(
         self,
