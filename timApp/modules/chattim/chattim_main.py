@@ -268,8 +268,13 @@ def save_settings(params: ChatTimSaveSettingsParams) -> PluginAnswerResp:
         web["error"] = save_result.error or ""
         return result
 
-    web["availableModels"] = [{"label": m, "value": m} for m in save_result.value]
+    data = save_result.value
 
+    web["result"] = "Settings saved!"
+    web["availableModels"] = [
+        {"label": m, "value": m} for m in data["supported_models"]
+    ]
+    web["selectedModel"] = data["model_id"]
     return result
 
 

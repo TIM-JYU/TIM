@@ -70,7 +70,8 @@ class Policy:
 @dataclass()
 class InstanceAttributes:
     public_key: str = ""
-    model_id: str = "gpt-4.1-mini"
+    # model_id: str = "gpt-4.1-mini"
+    model_id: str = ""
     llm_mode: str = "Creative"
     max_tokens: int | None = 2000
     tim_paths: list[str] = field(default_factory=list)
@@ -433,9 +434,6 @@ class PluginCore:
             api_key = ""
             provider = "openai"  # TODO: remove when not needed
 
-        print(f"apikey on :{api_key}")
-        print(f"provider on :{provider}")
-
         data = InstanceSettingsData(
             availableModes=RagMode.supported_modes(),
             availableModels=self._get_supported_chat_models(provider, api_key),
@@ -444,13 +442,12 @@ class PluginCore:
             use_streaming=True,  # TODO: from db
             allowedItemPaths=None,  # TODO: from the API key restrictions?
         )
-        print(f"data: {data}")
 
         return Result(value=data)
 
     def save_instance(
         self, caller_id: int, document_id: int, instance_settings: InstanceAttributes
-    ) -> Result[list[str], str | None]:
+    ) -> Result[dict[str, list[str]], str | None]:
         """
         Create instance if it doesn't exist. New settings are saved if valid.
         Adds a new model instance to RAG and a new llmrule table to database
@@ -486,9 +483,6 @@ class PluginCore:
         except Exception as e:
             return Result(None, str(e))
 
-        print(f"haettu api-avain: {api_key}")
-        print(f"haettu provider: {provider_str}")
-
         # provider_str: str = "openai"
         # model_id: str = "gpt-4.1-nano"
 
@@ -509,7 +503,13 @@ class PluginCore:
         supported_models = PluginCore._get_supported_models(provider, api_key)
         provider_changed = old_provider is not None and old_provider != provider_str
         if provider_changed:
-            model_id = supported_models[0] if supported_models else model_id
+            print("provider vaihtui")
+            print(supported_models)
+            if provider == "openai":
+                model_id = "gpt-4.1-mini"
+            else:
+                model_id = supported_models[0] if supported_models else model_id
+            print(model_id)
         elif model_id not in supported_models:
             return Result(None, f"Given model [{model_id}] not supported")
 
@@ -552,9 +552,7 @@ class PluginCore:
         # TODO: if instance exists -> update OTHERIWISE create
 
         kwargs_model = dict(provider=provider, model_id=model_id, api_key=api_key)
-        print(
-            f"[add_model] provider={provider}, model_id={model_id}, api_key starts with={api_key[:6]}"
-        )
+
         try:
             self.rag.add_model(identifier=document_id, **kwargs_model)
         except ValueError as e:
@@ -592,21 +590,20 @@ class PluginCore:
         # TODO: tarkista onko aliasta vastaava API-avain olemassa
 
         rule = self.tim_database.set_llm_rule(
-            document_id,
-            caller_id,
-            "",
-            use_streaming,
-            temperature,
-            public_key,
-            [],
-            llm_mode,
-            0,
-            document_ids,
-            system_prompt_path,
-            model_id,
-            0,
-            [],
-            [],
+            document_id=document_id,
+            owner=caller_id,
+            public_key=public_key,
+            use_streaming=use_streaming,
+            temperature=temperature,
+            teachers=[],  # or actual teacher IDs
+            current_mode=llm_mode,
+            total_tokens_spent=0,
+            indexed_document_ids=document_ids,
+            system_prompt_path=system_prompt_path,
+            agent=model_id,
+            conv_time_window=0,
+            policy=[],
+            usage=[],
         )
         self.tim_database.set_global_policy(
             rule,
@@ -617,10 +614,9 @@ class PluginCore:
             max_tokens,
         )
 
-        print("supported models")
-        print(supported_models)
+        data = {"supported_models": supported_models, "model_id": model_id}
 
-        return Result(value=supported_models, error=None)
+        return Result(value=data, error=None)
 
     def delete_instance(self, owner_id: int, document_id: int) -> None:
         self.tim_database.delete_llm_rule(owner_id, document_id)

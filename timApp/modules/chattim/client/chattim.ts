@@ -690,10 +690,6 @@ export class ChatTIMComponent
             const result = data.result;
             this.controlpanelError = data.error;
 
-            console.log("chosenkey");
-            console.log(result);
-            console.log(result.availableKeys);
-
             if (
                 this.controlpanelError === undefined ||
                 this.controlpanelError === ""
@@ -746,6 +742,7 @@ export class ChatTIMComponent
                 result: string;
                 error?: string;
                 availableModels?: ChatModel[];
+                selectedModel?: string;
             };
         }>(this.route("saveSettings"), save_request);
 
@@ -756,6 +753,9 @@ export class ChatTIMComponent
             this.controlpanelResponse = data.web.result;
             if (data.web.availableModels) {
                 this.availableModels = data.web.availableModels;
+            }
+            if (data.web.selectedModel) {
+                this.selectedModel = data.web.selectedModel;
             }
             this.error = undefined; // on successful save we clear chattim-error, maybe not great
             this.useStreaming = controlPanelSettings.use_streaming;
