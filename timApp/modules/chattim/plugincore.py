@@ -99,7 +99,7 @@ class Result(Generic[T, E]):
     def ok(self) -> bool:
         return self.error is None
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"Ok({self.value})" if self.ok() else f"Err({self.error})"
 
 
@@ -124,7 +124,7 @@ class PluginCore:
     # TODO: a plugin instance specific variable? In global policy?
     max_input_len: int = 1024
 
-    def __init__(self):
+    def __init__(self) -> None:
         file_path = get_files_path().as_posix()
         self.history_manager = ConversationManager(
             file_path,
@@ -409,7 +409,7 @@ class PluginCore:
         model_id: str = instance_settings.model_id
         embedder_provider: str = instance_settings.embedder_provider
         llm_mode: str = instance_settings.llm_mode
-        max_tokens: int = instance_settings.max_tokens
+        max_tokens: int | None = instance_settings.max_tokens
         tim_paths: str = instance_settings.tim_paths
         system_prompt_path: str = instance_settings.system_prompt_path.strip()
         global_policy: Policy = instance_settings.global_policy
@@ -444,10 +444,10 @@ class PluginCore:
         if not paths_for_indexing and rag_mode == RagMode.RETRIEVE:
             return Result(None, "Give at least one path when using summarizing mode")
 
-        docs = self._fetch_docs_by_paths(paths_for_indexing)
-        if not docs.ok():
-            return Result(None, docs.error)
-        docs = docs.value
+        docs_result = self._fetch_docs_by_paths(paths_for_indexing)
+        if not docs_result.ok():
+            return Result(None, docs_result.error)
+        docs = docs_result.value or []
 
         document_ids = [doc.id for doc in docs]
 
@@ -617,7 +617,7 @@ class PluginCore:
         content = prompt_doc.export_markdown(export_ids=False).strip()
         return content if len(content) > 0 else None
 
-    def _instance_exists(self, document_id) -> bool:
+    def _instance_exists(self, document_id: int) -> bool:
         # TODO: todnäk pitää muistissa tiedetyt instanssi-idt jottei haeta aina tietokannalta turhaan
         # TODO: korvaa db haulla
         if not self.tim_database.get_llm_rule(document_id):
@@ -710,6 +710,8 @@ class PluginCore:
         """
         # check user policy (if exists)
         rule = self.tim_database.get_llm_rule(document_id)
+        if not rule:
+            return Result(None, "No LLMRule found for this document")
         usage = self.tim_database.get_usage(rule, caller_id)
 
         if not usage:
@@ -885,16 +887,16 @@ class PluginCore:
         time_value = policy.window_value
         window_token_cap = policy.token_cap_for_window
 
-        if cap_enabled and token_cap < 0:
+        if cap_enabled and token_cap and token_cap < 0:
             return f"Given token cap [{token_cap}] cannot be negative"
 
-        if window_enabled and time_value <= 0:
+        if window_enabled and time_value and time_value <= 0:
             return f"Given time value [{time_value}] should be greater than 0"
 
         if window_enabled and (time_type not in valid_time_types):
             return f"Given time type [{time_type}] is not valid"
 
-        if window_enabled and window_token_cap <= 0:
+        if window_enabled and window_token_cap and window_token_cap <= 0:
             return f"Given time cap [{window_token_cap}] should be greater than 0"
 
         return None
@@ -968,8 +970,8 @@ class PluginCore:
     def delete_api_key(self, owner_id: int, public_key: str) -> None:
         self.tim_database.delete_api_key(owner_id, public_key)
 
-    def get_llmrule(self, documentid: int) -> LLMRule:
-        return self.tim_database.get_llm_rule(documentid)
+    def get_llm_rule(self, document_id: int) -> LLMRule | None:
+        return self.tim_database.get_llm_rule(document_id)
 
     @staticmethod
     def _api_row_to_tuple(rule: LLMRule) -> APIKey:
