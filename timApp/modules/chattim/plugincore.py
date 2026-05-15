@@ -541,6 +541,9 @@ class PluginCore:
 
         return Result(True, None)
 
+    def delete_instance(self, owner_id: int, document_id: int) -> None:
+        self.tim_database.delete_llm_rule(owner_id, document_id)
+
     def get_history(self, caller_id: str, document_id: str) -> list[Message]:
         # TODO: fetch with time window
         history = self.history_manager.get_history(document_id, caller_id, 10)
@@ -646,6 +649,33 @@ class PluginCore:
         """
         return [x.strip() for x in paths.split("\n") if x.strip()]
 
+    def set_user_policy(self):
+        pass
+
+    def update_usage(
+        self,
+        caller_id: int,
+        document_id: int,
+        used_tokens: int,
+    ) -> int | None:
+        """
+        Updates the usage of the given user in the given document.
+        :param caller_id: The user of the tokens.
+        :param document_id: The document of the plugin.
+        :param used_tokens: Tokens used.
+        :return: The complete amount of tokens used by the user.
+        """
+        rule = self.tim_database.get_llm_rule(document_id)
+        if not rule:
+            return None
+        usage = self.tim_database.get_usage(rule, caller_id)
+        if not usage:
+            self.tim_database.set_usage(caller_id, 0, rule, used_tokens)  # conv_id?
+            return used_tokens
+        tokens = usage.used_tokens + used_tokens
+        self.tim_database.set_usage(caller_id, 0, rule, tokens)  # conv_id?
+        return tokens
+
     def _policy_checks(
         self, caller_id: int, document_id: int
     ) -> Result[str | None, str | None]:
@@ -655,12 +685,13 @@ class PluginCore:
         :param document_id:  instance for the plugin
         :return: (can_make_req: bool, reason_for_deny: str)
         """
-        # check userpolicy (if exists)
+        # check user policy (if exists)
         rule = self.tim_database.get_llm_rule(document_id)
         usage = self.tim_database.get_usage(rule, caller_id)
 
         if not usage:
             self.tim_database.set_usage(caller_id, 0, rule, 0)  # TODO: conv_id?
+            # self.tim_database.set_user_policy(caller_id, rule, "", 0, 0, 0)
             return Result(value="ok")
 
         used_tokens = usage.used_tokens
@@ -669,20 +700,17 @@ class PluginCore:
         if policy:
             token_limit = policy.max_tokens_per_user
         else:
-            # check globalpolicy
+            # check global policy
             policy = self.tim_database.get_global_policy(rule)
             if policy:
                 token_limit = policy.max_tokens_per_user
             else:
-                policy = self.tim_database.get_global_policy(rule)
-                if policy:
-                    token_limit = policy.token_pool
-                else:
-                    return Result(value="ok")
-        if used_tokens >= token_limit:
-            return Result(error="No more tokens")
+                return Result(value="ok")  # ?
+        if used_tokens and token_limit:
+            if used_tokens >= token_limit:
+                return Result(error="No more tokens")
 
-        return Result(value="ok")
+        return Result(value="ok")  # ?
 
     def _fetch_docs_by_paths(
         self, paths: list[str]
