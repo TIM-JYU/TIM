@@ -510,7 +510,6 @@ class PluginCore:
                 model_id = "gpt-4.1-mini"
             else:
                 model_id = supported_models[0] if supported_models else model_id
-            print(model_id)
         elif model_id not in supported_models:
             return Result(None, f"Given model [{model_id}] not supported")
 
