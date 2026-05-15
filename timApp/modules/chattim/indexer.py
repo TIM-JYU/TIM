@@ -82,7 +82,6 @@ class GeminiEmbeddingModel(EmbeddingModel):
                 api_key=self.api_key,
                 base_url="https://generativelanguage.googleapis.com/v1beta/openai/",
             )
-            # self.client = genai.Client(api_key=self.api_key)
 
         text = chunks
         try:
@@ -140,15 +139,15 @@ class OpenAiEmbeddingModel(EmbeddingModel):
         return self.model_type
 
 
-def create_embedder(provider: str) -> EmbeddingModel:
+def create_embedder(embedder_provider: str, api_key: str) -> EmbeddingModel | None:
     """creates embedding model based on provider, defaults to openai
     :param provider: provider of the embedding model"""
-    if provider == "google":
-        return GeminiEmbeddingModel(api_key=os.environ["GEMINI_API_KEY"])
+    if embedder_provider.lower() == "openai":
+        return OpenAiEmbeddingModel(api_key=api_key)
+    elif embedder_provider.lower() == "google":
+        return GeminiEmbeddingModel(api_key=api_key)
 
-    return OpenAiEmbeddingModel(
-        api_key=os.environ["OPENAI_API_KEY"], model_type="text-embedding-3-small"
-    )
+    return None
 
 
 class Indexer:
@@ -265,6 +264,9 @@ class Indexer:
 
             chunks = self.get_blocks(doc=document)
             texts = [chunk.text for chunk in chunks]
+            if len(texts) == 0:
+                failed_embeddings += 1
+                continue
 
             embeddings = embedding_model.generate(texts)
 
@@ -318,6 +320,19 @@ class Indexer:
 
         return page_embeddings
 
+    def calculate_similarity(
+        self, embeddings: list[float], prompt_embedding: list[float]
+    ):
+        embeddings = np.array(embeddings)
+        prompt_embedding = np.array(prompt_embedding)
+
+        dot_product = embeddings @ prompt_embedding
+        norm_embeddings = np.linalg.norm(embeddings, axis=1)
+        norm_prompt = float(np.linalg.norm(prompt_embedding))
+        similarities = dot_product / (norm_embeddings * norm_prompt)
+
+        return similarities
+
     def get_context(self, prompt: str, identifier: int, k: int = 3) -> ContextResponse:
         """returns the context for the prompt as list of text,and the number of tokens used
 
@@ -329,35 +344,37 @@ class Indexer:
         embedding_model = self.embedding_models[identifier]
 
         tokens_used = 0
+
         try:
             prompt_embedding = embedding_model.generate([prompt])
             tokens_used = prompt_embedding.used_tokens
-            prompt_embedding = np.array(prompt_embedding.embeddings[0])
+            prompt_embedding = prompt_embedding.embeddings[0]
         except Exception as e:
             print(f"Prompt embedding error: {e}")
-            ContextResponse(context="", tokens_used=tokens_used)
+            return ContextResponse(context="", tokens_used=tokens_used)
 
         page_embeddings = self.get_embeddings(
             self.indexed_page_ids, embedding_model.get_model_type()
         )
 
-        embeddings: list[float] = []
-        texts = []
+        embeddings: list[list[float]] = []
+        texts: list[str] = []
 
         for page in page_embeddings:
-            for chunk in page["embeddings"]:
-                print(chunk)
-                embeddings.append(chunk["embedding"])
-                texts.append(chunk["text"])
+            for chunk in page.get("embeddings", []):
+                embedding = chunk.get("embedding")
+                text = chunk.get("text")
+                if not embedding or not text:
+                    continue
+                embeddings.append(embedding)
+                texts.append(text)
 
-        embeddings = np.array(embeddings)
+        if not embeddings or not prompt_embedding:
+            return ContextResponse(context="", tokens_used=tokens_used)
 
-        # manual cosine similarity
-        dot_product = embeddings @ prompt_embedding
-        norm_embeddings = np.linalg.norm(embeddings, axis=1)
-        norm_prompt = np.linalg.norm(prompt_embedding)
-        similarities = dot_product / (norm_embeddings * norm_prompt)
-
+        similarities = self.calculate_similarity(
+            embeddings=embeddings, prompt_embedding=prompt_embedding
+        )
         data = [[t, e] for t, e in zip(texts, similarities)]
 
         data.sort(key=lambda x: x[1], reverse=True)

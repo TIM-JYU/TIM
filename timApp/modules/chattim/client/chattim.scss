@@ -93,6 +93,28 @@
   flex: 0 0 auto;
 }
 
-.control-panel-input-and-value {
-  display: flex;
+.time-window-label {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+}
+
+.restriction-inputs {
+  font-weight: normal;
+}
+
+.time-window-label-span {
+  flex: 0 0 15ch;
+}
+.embedder-buttons{
+  display:flex;
+  gap:15px;
+  align-items: center;
+
+}
+.disabled-label {
+  color: gray;
+  opacity: 0.6;
+  cursor: not-allowed;
 }

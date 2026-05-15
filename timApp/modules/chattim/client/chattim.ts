@@ -68,7 +68,6 @@ export interface AskResponse {
     answer?: string;
     usage?: number;
     error?: string;
-    used_chunks?: string[];
 }
 
 export interface AskParams {
@@ -79,6 +78,7 @@ export interface AskParams {
 export interface ControlPanelData extends ControlPanelSettings {
     availableModels: ChatModel[];
     availableModes: string[];
+    availableEmbedderProviders: string[];
 }
 
 // Huom: <tim-dialog-frame ei sisällä markupError attribuuttia
@@ -91,7 +91,7 @@ export interface ControlPanelData extends ControlPanelSettings {
         <tim-dialog-frame class="chattim-dialog-frame" [size]="'md'">
             <ng-container header> {{ header }}</ng-container>
             <ng-container body>
-                <div class="chattim-body">
+                <div class="chattim-body scroll-box">
                     <div class="scroll-box" #conversationScroll>
                         <div *ngIf="conversation.length === 0" class="chat-welcome">
                             <ng-container *ngIf="markup.welcomeText; else localizedWelcome">
@@ -104,9 +104,6 @@ export interface ControlPanelData extends ControlPanelSettings {
                         <div *ngFor="let entry of conversation">
                             <div class="chat-user">{{ entry.user.content }}</div>
                             <div class="chat-bot" [innerHTML]="entry.agent.content | purify"></div>
-                        </div>
-                        <div *ngFor="let chunk of used_chunks">
-                            <div class="chat-user">{{ chunk }}</div>
                         </div>
                     </div>
 
@@ -138,12 +135,17 @@ export interface ControlPanelData extends ControlPanelSettings {
                             (saveSettingsClick)="onSaveSettings($event)"
                             (panelToggled)="onControlPanelToggle($event)"
                             [selectedModel]="selectedModel"
+                            [setModelTemperature]="modelTemperature"
+                            [useStreaming]="useStreaming"
+                            [systemPromptPath]="systemPromptPath"
                             [selectedMode]="selectedMode"
                             [maxTokens]="maxTokens"
                             [response]="controlpanelResponse"
                             [error]="controlpanelError"
                             [localFilePaths]="localFilePaths"
                             [availableModels]="availableModels"
+                            [availableEmbedderProviders]="availableEmbedderProviders"
+                            [selectedEmbedderProvider]="selectedEmbedderProvider"
                             [availableModes]="availableModes"
                             [tokenLimitAllUsers]="globalPolicy">
                         </chattim-control-panel>
@@ -207,7 +209,6 @@ export class ChatTIMComponent
     conversation: ChatEntry[] = [];
 
     answer?: string;
-    used_chunks?: string[];
     error?: string;
     isRunning: boolean = false;
     userInput = "";
@@ -218,12 +219,15 @@ export class ChatTIMComponent
     localFilePaths = "";
     selectedMode = "Creative";
     selectedModel = "gpt-4.1-mini";
+    selectedEmbedderProvider = "";
 
-    maxTokens = 1000;
+    maxTokens: number | null = 1000;
     controlpanelError?: string;
     controlpanelResponse?: string;
     availableModels?: ChatModel[];
     availableModes?: string[];
+    availableEmbedderProviders: string[] = [];
+
     globalPolicy: TokenLimitForUser = {
         token_cap_enabled: false,
         token_cap: 1000,
@@ -233,6 +237,9 @@ export class ChatTIMComponent
         token_cap_for_window: 5000,
     };
 
+    useStreaming: boolean = false;
+    modelTemperature: number | null = null;
+    systemPromptPath: string = "";
     // TODO: make a configurable option for user in settings?
     useStreaming: boolean = false;
 
@@ -644,13 +651,19 @@ export class ChatTIMComponent
                 this.controlpanelError === ""
             ) {
                 this.selectedModel = result.model_id;
-
                 this.selectedMode = result.llm_mode;
                 this.maxTokens = result.max_tokens;
                 this.localFilePaths = result.tim_paths;
                 this.availableModels = result.availableModels;
+                this.availableEmbedderProviders =
+                    result.availableEmbedderProviders;
+                this.selectedEmbedderProvider ||=
+                    this.availableEmbedderProviders[0];
                 this.availableModes = result.availableModes;
                 this.globalPolicy = result.global_policy;
+                this.useStreaming = result.use_streaming;
+                this.modelTemperature = result.model_temperature;
+                this.systemPromptPath = result.system_prompt_path;
             }
         } else {
             this.controlpanelError = response.result.error.error;
@@ -679,6 +692,7 @@ export class ChatTIMComponent
             this.controlpanelError = data.web.error;
             this.controlpanelResponse = data.web.result;
             this.error = undefined; // on successful save we clear chattim-error, maybe not great
+            this.useStreaming = controlPanelSettings.use_streaming;
         } else {
             this.controlpanelError = response.result.error.error;
         }

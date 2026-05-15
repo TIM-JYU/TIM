@@ -140,7 +140,10 @@ class Rag:
         self,
         request_data: MessageData,
         identifier: int,
+        *,
         stream: bool = False,
+        temperature: float | None = None,
+        max_tokens: int | None = None,
     ) -> Iterable[ModelResponse] | ModelResponse:
         """
         Give an answer to the user using the model.
@@ -148,6 +151,8 @@ class Rag:
         :param request_data: Information for the prompt.
         :param identifier: identifier of the model to be used.
         :param stream: Return iterable model answer.
+        :param temperature: Temperature parameter for the model.
+        :param max_tokens: Maximum number of tokens to use for generating answer.
         :raises KeyError: If the model isn't created.
         :raises ModelError: If failed to generate an answer.
         :return: Model answer in iterable chunks.
@@ -158,7 +163,7 @@ class Rag:
 
         model = self.models[identifier]
         messages = self.build_prompt(request_data)
-        options = GenerateOptions()
+        options = GenerateOptions(temperature=temperature, max_tokens=max_tokens)
 
         if stream:
             return model.generate_stream(messages, options)

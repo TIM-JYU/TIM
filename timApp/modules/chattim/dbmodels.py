@@ -1,5 +1,5 @@
 from typing import Optional
-from sqlalchemy import Integer, String, ForeignKey
+from sqlalchemy import Integer, String, ForeignKey, Float
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.dialects.postgresql import ARRAY
 from timApp.timdb.sqa import db
@@ -26,6 +26,14 @@ class LLMRule(db.Model):
     paths: Mapped[list[str]] = mapped_column(ARRAY(String), default=[])
     """Document or folder paths where the API key can be used on."""
 
+    use_streaming: Mapped[bool] = mapped_column(default=False)
+    """If `True`, the plugin uses streaming model response."""
+    temperature: Mapped[Optional[float]] = mapped_column(nullable=True)
+    """
+    Optional temperature setting to use when creating the model response.
+    If null, the temperature parameter is not used.
+    """
+
     # TODO: Should this be combined with `groups` or kept separate?
     teachers: Mapped[list[int]] = mapped_column(ARRAY(Integer), default=[])
     current_mode: Mapped[str] = mapped_column(
@@ -36,7 +44,7 @@ class LLMRule(db.Model):
     system_prompt_path: Mapped[str] = mapped_column(String, default="")
     # TODO: this should probably be something like:
     # system_prompt_doc: Mapped[str] = mapped_column(
-    #     String, ForeignKey("docentry.name"), default=""
+    #     String, ForeignKey("docentry.name"), nullable=True
     # )
 
     agent: Mapped[str] = mapped_column(String, default="")
@@ -63,16 +71,16 @@ class Policy(db.Model):
     )
     llm_rule: Mapped["LLMRule"] = relationship("LLMRule", back_populates="policy")
     token_time_window_type: Mapped[str] = mapped_column(
-        String, nullable=False
+        String, nullable=True
     )  # d,h,min,sec
     token_time_window_num: Mapped[int] = mapped_column(
-        Integer, nullable=False
+        Integer, nullable=True
     )  # 5 of type
     time_window_tokens: Mapped[int] = mapped_column(
-        Integer, nullable=False
+        Integer, nullable=True
     )  # token limit for the window
-    max_tokens_per_user: Mapped[int] = mapped_column(Integer)
-    token_pool: Mapped[int] = mapped_column(Integer)
+    max_tokens_per_user: Mapped[int] = mapped_column(Integer, nullable=True)
+    token_pool: Mapped[int] = mapped_column(Integer, nullable=True)
     policy_type: Mapped[str] = mapped_column(String)  # global or user
 
 

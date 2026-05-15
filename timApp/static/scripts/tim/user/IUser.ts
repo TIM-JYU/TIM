@@ -52,7 +52,7 @@ export interface IUserLLMApiKey {
     usedTokens: number;
     availableTokens: number;
     tokensChecked: boolean;
-    groupNames?: string[];
+    groups?: IGroup[];
     itemPaths?: string[];
 }
 

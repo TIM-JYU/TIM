@@ -9,19 +9,23 @@ export interface ChatModel extends Record<string, JsonValue> {
 export interface ControlPanelSettings extends Record<string, JsonValue> {
     model_id: string;
     llm_mode: string;
-    max_tokens: number;
+    embedder_provider: string;
+
+    max_tokens: number | null;
     tim_paths: string;
     system_prompt_path: string;
     global_policy: TokenLimitForUser;
+    use_streaming: boolean;
+    model_temperature: number | null;
 }
 
 export interface TokenLimitForUser extends Record<string, JsonValue> {
     token_cap_enabled: boolean;
-    token_cap: number;
+    token_cap: number | null;
     time_window_enabled: boolean;
     window_unit: string;
-    window_value: number;
-    token_cap_for_window: number;
+    window_value: number | null;
+    token_cap_for_window: number | null;
 }
 
 @Component({
@@ -65,10 +69,57 @@ export interface TokenLimitForUser extends Record<string, JsonValue> {
                                 [(ngModel)]="selectedModel">
                             <option *ngFor="let m of availableModels" [ngValue]="m.value">{{ m.label }}</option>
                         </select>
+
+                        <!-- Model parameters -->
+                        <div class="settings-section-body">
+                            <div class="checkbox">
+                                <label>
+                                    <input type="checkbox"
+                                           [(ngModel)]="useStreaming">
+                                    Use streaming responses
+                                </label>
+                            </div>
+                            <div class="checkbox">
+                                <label>
+                                    <input type="checkbox"
+                                           [(ngModel)]="enabledTemperature">
+                                    Enable temperature parameter
+                                </label>
+                            </div>
+                            <div *ngIf="enabledTemperature" class="settings-section-body">
+                                <input type="number"
+                                       class="form-control"
+                                       [(ngModel)]="modelTemperature"
+                                       [min]="0"
+                                       [max]="2"
+                                       [step]="0.1"
+                                >
+                            </div>
+                            <div class="error" *ngIf="isInvalidModelTemperature">
+                                Input should be between 0 and 2
+                            </div>
+                        </div>
+
+                        Provider for embedding creation: <strong>{{ selectedEmbedderProvider }}</strong> 
+                        <div class="embedder-buttons">
+                            <div class="form-check" *ngFor="let provider of allEmbedderProviders">
+                                <label class="form-check-label" [class.disabled-label]="!embedderAvailable(provider)"
+                                       [title]="embedderAvailable(provider) ? '' : 'No API key for ' + provider">
+                                    <input type="radio"
+                                           class="form-check-input"
+                                           name="embedderProviderRadio"
+                                           [disabled]="!embedderAvailable(provider)"
+                                           [value]="provider" 
+                                           [(ngModel)]="selectedEmbedderProvider">
+                                    {{ provider }}
+                                </label>
+                            </div>
+                        </div>
+                        
                     </div>
                 </div>
-              
-                
+
+ 
                 <!-- Switch between summarizing, (balanced) and creative -->
                 <div class="settings-row">
                     <button class="btn btn-link settings-section-btn"
@@ -100,13 +151,18 @@ export interface TokenLimitForUser extends Record<string, JsonValue> {
                           [class.glyphicon-chevron-right]="!tokensOpen"
                           [class.glyphicon-chevron-down]="tokensOpen">
                     </span>
-                        Max tokens: <strong>{{ maxTokens }}</strong>
+                        Max tokens: <strong>{{ maxTokensValue }}</strong>
                     </button>
                     <div *ngIf="tokensOpen" class="settings-section-body">
-                        <input type="range"
+                        <input type="text"
                                class="form-control"
-                               min="100" max="10000" step="100"
-                               [(ngModel)]="maxTokens">
+                               [(ngModel)]="maxTokensLocal"
+                               (ngModelChange)="onMaxTokensChanged()"
+                        >
+                    </div>
+
+                    <div class="error" *ngIf="isInvalidMaxTokens">
+                        Input should be a positive integer
                     </div>
                 </div>
 
@@ -128,7 +184,7 @@ export interface TokenLimitForUser extends Record<string, JsonValue> {
                     </textarea>
                     </div>
                 </div>
-                
+
 
                 <!-- Add a custom system prompt -->
                 <div class="settings-row">
@@ -164,20 +220,20 @@ export interface TokenLimitForUser extends Record<string, JsonValue> {
                     <ng-container *ngIf="globalPolicyOpen">
                         <div class="checkbox">
                             <label>
-                                <input type="checkbox" 
-                                       [(ngModel)]="tokenLimitAllUsers.token_cap_enabled" >
+                                <input type="checkbox"
+                                       [(ngModel)]="tokenLimitAllUsers.token_cap_enabled">
                                 Enable token limits per user
                             </label>
                         </div>
 
                         <div *ngIf="tokenLimitAllUsers.token_cap_enabled" class="settings-section-body">
-                            <input type="range"
+                            <input type="number"
                                    class="form-control"
-                                   min="0" max="20000" step="200"
-                                   [(ngModel)]="tokenLimitAllUsers.token_cap">
-                              <span>
-                                {{ tokenLimitAllUsers.token_cap }}
-                              </span>
+                                   [(ngModel)]="tokenLimitAllUsers.token_cap"
+                            >
+                        </div>
+                        <div class="error" *ngIf="isInvalidTokenCap">
+                            Input should be a positive integer
                         </div>
 
                         <div class="checkbox">
@@ -188,28 +244,33 @@ export interface TokenLimitForUser extends Record<string, JsonValue> {
                         </div>
 
                         <div *ngIf="tokenLimitAllUsers.time_window_enabled">
-                            <div class="settings-section-body">
-                                    <input type="range"
-                                           min="100" max="20000" step="200"
+                            <div class="form-group">
+                                <label class="col-sm-2 control-label time-window-label">
+                                    <span class="time-window-label-span">Tokens</span>
+                                    <input type="number" class="form-control restriction-inputs"
+                                           placeholder="5000"
                                            [(ngModel)]="tokenLimitAllUsers.token_cap_for_window">
-                                    <span> {{ tokenLimitAllUsers.token_cap_for_window }} </span>
-                                <div class="control-panel-input-and-value">
-                                    <input type="number" class="form-control"
-                                           min="1"
-                                           step="1"
-                                           placeholder="5"
-                                           [(ngModel)]="tokenLimitAllUsers.window_value"
-                                           #numericControl="ngModel"
-                                    >
-                                    <select class="form-control"
-                                            [(ngModel)]="tokenLimitAllUsers.window_unit">
-                                        <option *ngFor="let timeUnit of timeUnitOptions" 
-                                                [ngValue]="timeUnit.value">{{ timeUnit.label }}
-                                        </option>
-                                    </select>
+                                </label>
+                                <div class="error" *ngIf="isInvalidWindowTokens">
+                                    Input should be a positive integer
                                 </div>
-                                <div *ngIf="numericControl.invalid && numericControl.touched">
-                                    Must be a positive number
+                                <div>
+                                    <label class="col-sm-2 control-label time-window-label">
+                                        <span class="time-window-label-span">Window</span>
+                                        <input type="number" class="form-control restriction-inputs"
+                                               placeholder="5"
+                                               [(ngModel)]="tokenLimitAllUsers.window_value"
+                                        >
+                                        <select class="form-control restriction-inputs"
+                                                [(ngModel)]="tokenLimitAllUsers.window_unit">
+                                            <option *ngFor="let timeUnit of timeUnitOptions"
+                                                    [ngValue]="timeUnit.value">{{ timeUnit.label }}
+                                            </option>
+                                        </select>
+                                    </label>
+                                </div>
+                                <div class="error" *ngIf="isInvalidWindowTime">
+                                    Input should be a positive integer
                                 </div>
                             </div>
                         </div>
@@ -219,11 +280,12 @@ export interface TokenLimitForUser extends Record<string, JsonValue> {
                 <!-- Save button that sends the chosen stuff -->
                 <div class="settings-row">
                     <button class="btn btn-primary" style="margin: 2px;"
+                            [disabled]="invalidInputState"
                             (click)="saveSettingsClicked()">
                         Save
                     </button>
                 </div>
-                <div *ngIf="error && !response" [innerHTML]="error | purify"></div>
+                <div class="error" *ngIf="error && !response" [innerHTML]="error | purify"></div>
                 <div *ngIf="response && !error" [innerHTML]="response | purify"></div>
             </ng-container>
         </div>
@@ -239,13 +301,33 @@ export class ChatControlPanelComponent {
     promptOpen = false;
     globalPolicyOpen = false;
 
+    isInvalidMaxTokens = false;
+    maxTokensLocal = "";
+    maxTokensValue: number | null = null;
+    @Input() set maxTokens(value: number | null) {
+        this.maxTokensValue = value;
+        this.maxTokensLocal = value != null ? String(value) : "";
+    }
+
+    enabledTemperature: boolean = false;
+    modelTemperature: number | null = 0.2;
+    @Input() set setModelTemperature(value: number | null) {
+        if (!value) {
+            this.enabledTemperature = false;
+            return;
+        }
+        this.modelTemperature = value;
+    }
+    @Input() useStreaming: boolean = false;
+
     @Input() localFilePaths!: string;
     @Input() error?: string;
     @Input() response?: string;
     @Input() selectedModel!: string;
 
     @Input() selectedMode!: string;
-    @Input() maxTokens!: number;
+    @Input() selectedEmbedderProvider!: string;
+
     @Input() systemPromptPath!: string;
     @Input() isTeacher: boolean = false;
 
@@ -258,7 +340,11 @@ export class ChatControlPanelComponent {
 
     @Input() availableModels?: ChatModel[];
     @Input() availableModes?: string[];
-
+    allEmbedderProviders: string[] = ["OpenAI", "Google"];
+    @Input() availableEmbedderProviders: string[] = [];
+    embedderAvailable(provider: string): boolean {
+        return this.availableEmbedderProviders.includes(provider.toLowerCase());
+    }
     @Output() saveSettingsClick = new EventEmitter<ControlPanelSettings>();
     @Output() panelToggled = new EventEmitter<boolean>();
 
@@ -271,10 +357,16 @@ export class ChatControlPanelComponent {
         const data: ControlPanelSettings = {
             model_id: this.selectedModel,
             llm_mode: this.selectedMode,
-            max_tokens: this.maxTokens,
+            embedder_provider: this.selectedEmbedderProvider,
+
+            max_tokens: this.maxTokensValue,
             tim_paths: this.localFilePaths,
             system_prompt_path: this.systemPromptPath,
             global_policy: this.tokenLimitAllUsers,
+            use_streaming: this.useStreaming,
+            model_temperature: this.enabledTemperature
+                ? this.modelTemperature
+                : null,
         };
         console.log("sending: ", data);
         this.saveSettingsClick.emit(data);
@@ -285,5 +377,78 @@ export class ChatControlPanelComponent {
             (m) => m.value === this.selectedModel
         );
         return model ? model.label : "";
+    }
+
+    isValidNonNegativeInt(value: number | null): boolean {
+        return value !== null && Number.isInteger(value) && value >= 0;
+    }
+
+    isValidNumberInput(enabled: boolean, value: number | null): boolean {
+        return enabled && !this.isValidNonNegativeInt(value);
+    }
+
+    isValidFloatBetween(
+        value: number | null,
+        min: number,
+        max: number
+    ): boolean {
+        return value !== null && value >= min && value <= max;
+    }
+
+    get isInvalidTokenCap(): boolean {
+        return this.isValidNumberInput(
+            this.tokenLimitAllUsers.token_cap_enabled,
+            this.tokenLimitAllUsers.token_cap
+        );
+    }
+
+    get isInvalidWindowTokens(): boolean {
+        return this.isValidNumberInput(
+            this.tokenLimitAllUsers.time_window_enabled,
+            this.tokenLimitAllUsers.token_cap_for_window
+        );
+    }
+
+    get isInvalidWindowTime(): boolean {
+        return this.isValidNumberInput(
+            this.tokenLimitAllUsers.time_window_enabled,
+            this.tokenLimitAllUsers.window_value
+        );
+    }
+
+    get isInvalidModelTemperature(): boolean {
+        return (
+            this.enabledTemperature &&
+            !this.isValidFloatBetween(this.modelTemperature, 0, 2)
+        );
+    }
+
+    get invalidInputState(): boolean {
+        return (
+            this.isInvalidMaxTokens ||
+            this.isInvalidTokenCap ||
+            this.isInvalidWindowTime ||
+            this.isInvalidWindowTokens ||
+            this.isInvalidModelTemperature
+        );
+    }
+
+    onMaxTokensChanged(): void {
+        const trimmed = this.maxTokensLocal.trim();
+
+        if (trimmed === "") {
+            this.maxTokensValue = null;
+            this.isInvalidMaxTokens = false;
+            return;
+        }
+
+        const parsed = Number(trimmed);
+
+        this.isInvalidMaxTokens =
+            Number.isNaN(parsed) || parsed < 0 || !Number.isInteger(parsed);
+
+        if (!this.isInvalidMaxTokens) {
+            this.maxTokensValue = parsed;
+        }
     }
 }

@@ -9,7 +9,7 @@ from timApp.timdb.dbaccess import get_files_path
 from timApp.auth.get_user_rights_for_item import UserItemRights
 from timApp.item.item import Item
 from timApp.document.docinfo import DocInfo
-from timApp.user.usergroup import get_groups_by_ids
+from timApp.user.usergroup import get_groups_by_ids, UserGroup
 from timApp.modules.chattim.indexer import (
     OpenAiEmbeddingModel,
     Indexer,
@@ -59,21 +59,24 @@ class ChatModel(TypedDict):
 @dataclass()
 class Policy:
     token_cap_enabled: bool = False
-    token_cap: int = 0
+    token_cap: int | None = 0
     time_window_enabled: bool = False
     window_unit: str = "h"
-    window_value: int = 0
-    token_cap_for_window: int = 100
+    window_value: int | None = 0
+    token_cap_for_window: int | None = 100
 
 
 @dataclass()
 class InstanceAttributes:
     model_id: str = "gpt-4.1-mini"
     llm_mode: str = "Creative"
-    max_tokens: int = 2000
+    max_tokens: int | None = 2000
     tim_paths: str = ""
     system_prompt_path: str = ""
+    use_streaming: bool = False
+    model_temperature: float | None = None
     global_policy: Policy = field(default_factory=Policy)
+    embedder_provider: str = "dummy"
 
     @classmethod
     def default(cls) -> "InstanceAttributes":
@@ -84,6 +87,7 @@ class InstanceAttributes:
 class InstanceSettingsData(InstanceAttributes):
     availableModels: list[ChatModel] = field(kw_only=True)
     availableModes: list[str] = field(kw_only=True)
+    availableEmbedderProviders: list[str] = field(kw_only=True)
 
 
 T = TypeVar("T")
@@ -104,16 +108,6 @@ class Result(Generic[T, E]):
         return f"Ok({self.value})" if self.ok() else f"Err({self.error})"
 
 
-@dataclass
-class GlobalPolicy:
-    pass
-
-
-@dataclass
-class StudentPolicy:
-    pass
-
-
 @dataclass(frozen=True)
 class PreparedChatRequest:
     caller_id: str
@@ -124,7 +118,7 @@ class PreparedChatRequest:
 
 
 # TODO: maybe a dict or dataclass would be more descriptive
-APIKey = tuple[str, str, str, list[str], list[str]]
+APIKey = tuple[str, str, str, list[UserGroup], list[str]]
 
 
 class PluginCore:
@@ -165,7 +159,7 @@ class PluginCore:
             return Result(error=f"Instance has not been created yet")
 
         # policy check
-        policy_result: Result[str | None, str | None] = self._student_policy_check(
+        policy_result: Result[str | None, str | None] = self._policy_checks(
             caller_id, document_id
         )
         if not policy_result.ok():
@@ -187,6 +181,15 @@ class PluginCore:
         mode: RagMode = RagMode.RETRIEVE
         # TODO: No need for this attribute if we have character limit for input? Maybe keep as is for an option
         max_tokens_for_req = 99999
+        # TODO: from the LLMRule table here or bring as arg
+        temperature: float | None = 0.2
+
+        # TODO: get this from the LLMRule table
+        use_streaming: bool = stream
+        # Validate that the user has the correct generate mode
+        if stream != use_streaming:
+            return Result(error="Bad request. Mismatching generation mode.")
+
         # response = self.rag.get_context(prompt=validated_input, identifier=document_id)
         response = self.indexer.get_context(
             prompt=validated_input, identifier=document_id
@@ -205,7 +208,9 @@ class PluginCore:
         )
 
         try:
-            answer = self.rag.answer(msg_data, identifier=document_id, stream=stream)
+            answer = self.rag.answer(
+                msg_data, identifier=document_id, stream=stream, temperature=temperature
+            )
         except ModelError as e:
             return Result(error=e.text())
         except Exception as e:
@@ -396,6 +401,8 @@ class PluginCore:
         data = InstanceSettingsData(
             availableModes=RagMode.supported_modes(),
             availableModels=self._get_supported_chat_models(provider, api_key),
+            availableEmbedderProviders=self._get_available_embedder_providers(user_id),
+            use_streaming=True,  # TODO: from db
         )
 
         return Result(value=data)
@@ -412,13 +419,14 @@ class PluginCore:
         :return: On error: Result(None, error_reason) On success (True, None)
         """
         model_id: str = instance_settings.model_id
+        embedder_provider: str = instance_settings.embedder_provider
         llm_mode: str = instance_settings.llm_mode
         max_tokens: int = instance_settings.max_tokens
         tim_paths: str = instance_settings.tim_paths
         system_prompt_path: str = instance_settings.system_prompt_path.strip()
         global_policy: Policy = instance_settings.global_policy
-        token_gap_enabled = global_policy.token_cap_enabled
-        time_window_enabled = global_policy.time_window_enabled
+        use_streaming: bool = instance_settings.use_streaming
+        temperature: float | None = instance_settings.model_temperature
 
         # TODO: Remove hard coded API-key, provider and model_id.
         # Fetch from the database.
@@ -463,7 +471,7 @@ class PluginCore:
             return Result(None, "Internal error")
 
         # validating max tokens
-        if max_tokens < 0:
+        if max_tokens is not None and max_tokens < 0:
             return Result(None, "Give non-negative max tokens value")
 
         if system_prompt_path:
@@ -471,6 +479,9 @@ class PluginCore:
             if not prompt_doc:
                 return Result(None, "Invalid system prompt path")
             cache.delete_memoized(PluginCore.get_system_prompt, document_id=document_id)
+
+        if temperature is not None and (temperature < 0 or temperature > 2):
+            return Result(None, "Temperature must be between 0 and 2")
 
         # TODO: update system prompt path in the db row
 
@@ -485,11 +496,18 @@ class PluginCore:
         except ValueError as e:
             return Result(None, str(e))
 
-        # TODO: indeksoinnit pyörimään
-
-        # TODO: retrieving llm provider when model info is not hardcoded
+        # TODO: api key from db, change create_embedder to take api key as parameter
         llm_provider = kwargs_model["provider"]
-        emb_model = create_embedder(provider=llm_provider)
+        available_keys: list[APIKey] = self.get_user_api_keys(owner_id=caller_id)
+
+        for key in available_keys:
+            if key[1].lower() == embedder_provider.lower():
+                emb_model = create_embedder(
+                    embedder_provider=embedder_provider, api_key=key[2]
+                )
+                break
+            # return Result(None, f"Failed to create embedder, No available API key")
+
         self.indexer.add_embedder(document_id, emb_model)
 
         tokens_used, failed_embeddings = self.indexer.create_embeddings(
@@ -513,6 +531,8 @@ class PluginCore:
             document_id,
             caller_id,
             "",
+            use_streaming,
+            temperature,
             [],
             llm_mode,
             0,
@@ -525,10 +545,10 @@ class PluginCore:
         )
         self.tim_database.set_global_policy(
             rule,
-            "",
-            0,
-            0,
-            max_tokens,
+            global_policy.window_unit,
+            global_policy.window_value,
+            global_policy.token_cap_for_window,
+            global_policy.token_cap,
             max_tokens,
         )
 
@@ -581,6 +601,18 @@ class PluginCore:
             chat_models.append(ChatModel(label=model_id, value=model_id))
         return chat_models
 
+    def _get_available_embedder_providers(self, caller_id: int) -> list[str]:
+        """Returns a list of available embedding providers based on API keys."""
+        print("================================")
+        keys = self.get_user_api_keys(owner_id=caller_id)
+        providers = []
+        for key in keys:
+            providers.append(key[1])
+        print(f"Providers from DB{providers}")
+        print("================================")
+
+        return providers
+
     @cache.memoize(timeout=DEFAULT_CACHE_TIMEOUT, args_to_ignore=["self", "caller_id"])
     def get_system_prompt(self, caller_id: int, document_id: int) -> str | None:
         # TODO: Fetch from the database. If the caller fetches the whole table for other info as well,
@@ -627,7 +659,7 @@ class PluginCore:
         """
         return [x.strip() for x in paths.split("\n") if x.strip()]
 
-    def _student_policy_check(
+    def _policy_checks(
         self, caller_id: int, document_id: int
     ) -> Result[str | None, str | None]:
         """
@@ -639,11 +671,14 @@ class PluginCore:
         # check userpolicy (if exists)
         rule = self.tim_database.get_llm_rule(document_id)
         usage = self.tim_database.get_usage(rule, caller_id)
+
         if not usage:
             self.tim_database.set_usage(caller_id, 0, rule, 0)  # TODO: conv_id?
             return Result(value="ok")
+
         used_tokens = usage.used_tokens
         policy = self.tim_database.get_user_policy(rule, caller_id)
+
         if policy:
             token_limit = policy.max_tokens_per_user
         else:
@@ -778,7 +813,7 @@ class PluginCore:
 
     def update_api_key_permissions(
         self, owner_id: int, public_key: str, groups: list[str], paths: list[str]
-    ) -> None:
+    ) -> tuple[list[UserGroup], list[str]]:
         """
         Update the permissions for the API key.
         :param owner_id: Owner of the API key.
@@ -789,9 +824,16 @@ class PluginCore:
         f = lambda e: len(e) > 0
         filtered_groups = list(filter(f, groups))
         filtered_paths = list(filter(f, paths))
-        self.tim_database.update_api_key_permissions(
+        key = self.tim_database.update_api_key_permissions(
             owner_id, public_key, filtered_groups, filtered_paths
         )
+        groups = get_groups_by_ids(key.groups)
+        return groups, key.paths
+
+    def remove_api_key_group(
+        self, owner_id: int, public_key: str, group_id: int
+    ) -> None:
+        self.tim_database.remove_api_key_group(owner_id, public_key, group_id)
 
     @staticmethod
     def _validate_policy(policy: Policy) -> None | str:
@@ -897,11 +939,10 @@ class PluginCore:
         Converts the LLMRule table of the API key to a tuple.
         `(alias, provider, api_key, group_names, paths)`
         """
-        groups = get_groups_by_ids(rule.groups)
         return (
             str(rule.public_key),
             str(rule.provider),
             str(rule.api_key),
-            [str(g.name) for g in groups],
+            get_groups_by_ids(rule.groups),
             [str(p) for p in rule.paths],
         )
