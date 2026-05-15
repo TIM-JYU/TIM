@@ -117,6 +117,11 @@ class ChatTimHtmlModel(
         return "chattim-runner"
 
 
+class ChatTimAnswerWeb(PluginAnswerWeb, total=False):
+    availableModels: list[dict[str, str]]
+    selectedModel: str
+
+
 # Leave "welcomeText" empty to use default localized welcome text
 def reqs() -> PluginReqs:
     templates = [
@@ -256,7 +261,7 @@ def get_settings(params: GenericParams) -> ChatTIMGetSettingsResponse:
 
 
 def save_settings(params: ChatTimSaveSettingsParams) -> PluginAnswerResp:
-    web: PluginAnswerWeb = {}
+    web: ChatTimAnswerWeb = {}
     result: PluginAnswerResp = {"web": web}
 
     panel_data = params.control_panel_settings

@@ -249,7 +249,6 @@ export class ChatTIMComponent
     selectedPublicKey: string = "";
     availablePublicKeys: UserKey[] = [];
     selectedMode = "Creative";
-    // selectedModel = "gpt-4.1-mini";
     selectedEmbedderProvider = "";
     selectedModel = "";
 

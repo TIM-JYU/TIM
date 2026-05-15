@@ -106,6 +106,11 @@ T = TypeVar("T")
 E = TypeVar("E")
 
 
+class SaveInstanceResult(TypedDict):
+    supported_models: list[str]
+    model_id: str
+
+
 class Result(Generic[T, E]):
     def __init__(self, value: T | None = None, error: E | None = None):
         if (value is None) == (error is None):
@@ -423,16 +428,16 @@ class PluginCore:
             for k in user_keys
         ]
 
-        # TODO: remove enviroment key when not needed
+        api_key = ""
+        provider = "openai"
 
         if plugin_key is not None:
             for key in user_keys:
                 if key.public_key == plugin_key.public_key:
                     api_key = key.api_key
-                    provider: Provider = str(plugin_key.provider) or "openai"
-        else:
-            api_key = ""
-            provider = "openai"  # TODO: remove when not needed
+                    provider = (
+                        self._parse_provider(str(plugin_key.provider)) or provider
+                    )
 
         data = InstanceSettingsData(
             availableModes=RagMode.supported_modes(),
@@ -447,7 +452,7 @@ class PluginCore:
 
     def save_instance(
         self, caller_id: int, document_id: int, instance_settings: InstanceAttributes
-    ) -> Result[dict[str, list[str]], str | None]:
+    ) -> Result[SaveInstanceResult, str | None]:
         """
         Create instance if it doesn't exist. New settings are saved if valid.
         Adds a new model instance to RAG and a new llmrule table to database
@@ -482,9 +487,6 @@ class PluginCore:
             provider_str, api_key = self.get_api_key(public_key)
         except Exception as e:
             return Result(None, str(e))
-
-        # provider_str: str = "openai"
-        # model_id: str = "gpt-4.1-nano"
 
         if not self._document_exists(document_id):
             return Result(None, f"Document [{document_id}] does not exist")
@@ -595,7 +597,7 @@ class PluginCore:
             public_key=public_key,
             use_streaming=use_streaming,
             temperature=temperature,
-            teachers=[],  # or actual teacher IDs
+            teachers=[],
             current_mode=llm_mode,
             total_tokens_spent=0,
             indexed_document_ids=document_ids,
@@ -614,8 +616,10 @@ class PluginCore:
             max_tokens,
         )
 
-        data = {"supported_models": supported_models, "model_id": model_id}
-
+        data: SaveInstanceResult = {
+            "supported_models": supported_models,
+            "model_id": model_id,
+        }
         return Result(value=data, error=None)
 
     def delete_instance(self, owner_id: int, document_id: int) -> None:
