@@ -568,9 +568,7 @@ class TimDatabase:
         return db.session.scalar(stmt)
 
     @staticmethod
-    def set_usage(
-        user: int, llm_rule: LLMRule, used_tokens: int
-    ) -> Usage:
+    def set_usage(user: int, llm_rule: LLMRule, used_tokens: int) -> Usage:
         """
         Sets the usage for the given user in the given LLM rule context.
         :param user: ID of the user for the usage.
