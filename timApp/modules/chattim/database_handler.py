@@ -569,12 +569,11 @@ class TimDatabase:
 
     @staticmethod
     def set_usage(
-        user: int, conv_id: int, llm_rule: LLMRule, used_tokens: int
+        user: int, llm_rule: LLMRule, used_tokens: int
     ) -> Usage:
         """
         Sets the usage for the given user in the given LLM rule context.
         :param user: ID of the user for the usage.
-        :param conv_id: ID of the conversation of the user.
         :param llm_rule: LLM rule instance.
         :param used_tokens: Number of used tokens.
         :return: Usage of the given user.
@@ -583,7 +582,6 @@ class TimDatabase:
         if not usage:
             usage = Usage(
                 user=user,
-                conversation_id=conv_id,
                 llm_rule_id=llm_rule.id,
                 llm_rule=llm_rule,
                 used_tokens=used_tokens,

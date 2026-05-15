@@ -695,10 +695,10 @@ class PluginCore:
             return None
         usage = self.tim_database.get_usage(rule, caller_id)
         if not usage:
-            self.tim_database.set_usage(caller_id, 0, rule, used_tokens)  # conv_id?
+            self.tim_database.set_usage(caller_id, rule, used_tokens)  # conv_id?
             return used_tokens
         tokens = usage.used_tokens + used_tokens
-        self.tim_database.set_usage(caller_id, 0, rule, tokens)  # conv_id?
+        self.tim_database.set_usage(caller_id, rule, tokens)  # conv_id?
         return tokens
 
     def _policy_checks(
@@ -970,6 +970,9 @@ class PluginCore:
 
     def delete_api_key(self, owner_id: int, public_key: str) -> None:
         self.tim_database.delete_api_key(owner_id, public_key)
+
+    def get_llm_rule(self, document_id: int) -> LLMRule:
+        return self.tim_database.get_llm_rule(document_id)
 
     @staticmethod
     def _api_row_to_tuple(rule: LLMRule) -> APIKey:
