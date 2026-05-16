@@ -24,6 +24,12 @@ export interface DirectoryPickerRestrictions {
     standalone: true,
     imports: [CommonModule, FormsModule, TimUtilityModule],
     template: `
+        <div>
+            Selected items: {{ totalSelectedCount }}
+            <button class="btn btn-default btn-xs"
+                    (click)="unselectAll()">Unselect all
+            </button>
+        </div>
         <table class="table" *ngIf="itemList.length > 0 || currentFolder">
             <thead>
             <tr>
@@ -52,6 +58,11 @@ export interface DirectoryPickerRestrictions {
                 </td>
                 <td>
                     <a *ngIf="item.isFolder" href (click)="openFolder(item, $event)">{{ item.title }}</a>
+                    <span *ngIf="item.isFolder && (selectedUnderFolder(item) > 0)"
+                          class="badge pull-right"
+                          [title]="selectedUnderFolder(item) + ' selected inside'">
+                          {{ selectedUnderFolder(item) }}
+                    </span>
                     <span *ngIf="!item.isFolder">{{ item.title }}</span>
                     <tim-loading *ngIf="loadingFolder === item.id"></tim-loading>
                 </td>
@@ -86,6 +97,8 @@ export class DirectoryPickerComponent implements OnInit {
     selected: Set<string> = new Set();
     allowedPaths?: Set<string>;
 
+    selectedUnderCount: Map<string, number> = new Map();
+
     showId: boolean = false;
     loadingFolder?: number;
     error?: string;
@@ -106,6 +119,7 @@ export class DirectoryPickerComponent implements OnInit {
             this.allowedPaths = new Set([...this.restrictions.allowedPaths]);
         }
         void this.loadFolder(this.currentFolder);
+        this.rebuildSelectedUnderCount();
     }
 
     isSelected(item: DocumentOrFolder): boolean {
@@ -133,10 +147,65 @@ export class DirectoryPickerComponent implements OnInit {
     toggleSelection(item: DocumentOrFolder) {
         if (this.selected.has(item.path)) {
             this.selected.delete(item.path);
+            this.bumpAncestors(item, -1);
         } else {
             this.selected.add(item.path);
+            this.bumpAncestors(item, 1);
         }
         this.selectionChange.emit([...this.selected]);
+    }
+
+    /* Unselect all selected paths. */
+    unselectAll() {
+        if (this.totalSelectedCount == 0) {
+            return;
+        }
+        if (window.confirm("Unselect all items?")) {
+            this.selected.clear();
+            this.selectionChange.emit([]);
+            this.selectedUnderCount.clear();
+        }
+    }
+
+    /* Return the amount of items selected under this folder. */
+    selectedUnderFolder(item: DocumentOrFolder): number {
+        if (!item.isFolder) {
+            return -1;
+        }
+        const total: number = this.selectedUnderCount.get(item.path) ?? 0;
+        return this.selected.has(item.path) ? Math.max(0, total - 1) : total;
+    }
+
+    /* Rebuild the map maintaining a count of selected items under each folder. */
+    private rebuildSelectedUnderCount() {
+        this.selectedUnderCount.clear();
+        for (const p of this.selected) {
+            const parts: string[] = p.split("/").filter(Boolean);
+            let cur: string = "";
+            for (const part of parts) {
+                cur = cur ? `${cur}/${part}` : part;
+                this.selectedUnderCount.set(
+                    cur,
+                    (this.selectedUnderCount.get(cur) ?? 0) + 1
+                );
+            }
+        }
+    }
+
+    /* Increment or decrement the item count for all ancestors of the item. */
+    private bumpAncestors(item: DocumentOrFolder, delta: 1 | -1) {
+        const parts: string[] = item.path.split("/").filter(Boolean);
+        let cur: string = "";
+        for (const part of parts) {
+            cur = cur ? `${cur}/${part}` : part;
+            const next: number =
+                (this.selectedUnderCount.get(cur) ?? 0) + delta;
+            if (next <= 0) {
+                this.selectedUnderCount.delete(cur);
+            } else {
+                this.selectedUnderCount.set(cur, next);
+            }
+        }
     }
 
     /* Go up to the parent folder. */
@@ -198,7 +267,7 @@ export class DirectoryPickerComponent implements OnInit {
     }
 
     /* Return the path string of the parent folder. */
-    get parentFolder(): string {
+    private get parentFolder(): string {
         if (!this.currentFolder) {
             return "";
         }
@@ -207,6 +276,10 @@ export class DirectoryPickerComponent implements OnInit {
             .filter((p) => p.length);
         parts.pop();
         return parts.join("/");
+    }
+
+    get totalSelectedCount(): number {
+        return this.selected.size;
     }
 
     get canGoUp(): boolean {
