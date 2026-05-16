@@ -4,11 +4,13 @@ import type {DocumentOrFolder} from "tim/item/IItem";
 import {toPromise} from "tim/util/utils";
 import {HttpClient} from "@angular/common/http";
 import {CommonModule} from "@angular/common";
+import {FormsModule} from "@angular/forms";
+import {TimUtilityModule} from "tim/ui/tim-utility.module";
 
 @Component({
     selector: "tim-directory-picker",
     standalone: true,
-    imports: [CommonModule],
+    imports: [CommonModule, FormsModule, TimUtilityModule],
     template: `
         <table class="table" *ngIf="itemList.length > 0 || currentFolder">
             <thead>
@@ -39,14 +41,27 @@ import {CommonModule} from "@angular/common";
                 <td>
                     <a *ngIf="item.isFolder" href (click)="openFolder(item, $event)">{{ item.title }}</a>
                     <span *ngIf="!item.isFolder">{{ item.title }}</span>
+                    <tim-loading *ngIf="loadingFolder === item.id"></tim-loading>
                 </td>
-                <td></td>
+                <td>
+                    <input
+                        [checked]="isSelected(item)"
+                        [disabled]="isDisabled(item)"
+                        (click)="$event.stopPropagation()"
+                        (change)="toggleSelection(item)"
+                        type="checkbox"
+                        aria-label="Select item"
+                    >
+                </td>
                 <td *ngIf="showId">
                     {{ item.id }}
                 </td>
             </tr>
             </tbody>
         </table>
+        <tim-alert *ngIf="error" severity="danger" i18n>
+            {{ error }}
+        </tim-alert>
         <p *ngIf="itemList.length == 0">There are no items to show.</p>
     `,
     styleUrls: ["directory-list.component.scss"],
@@ -57,7 +72,8 @@ export class DirectoryPickerComponent implements OnInit {
     currentFolder: string = "";
     selected: Set<string> = new Set();
     showId: boolean = false;
-    error: string | null = null;
+    loadingFolder?: number;
+    error?: string;
 
     @Input() startFolder: string = "";
     @Input() selectable: "folders" | "documents" | "both" = "both";
@@ -73,6 +89,28 @@ export class DirectoryPickerComponent implements OnInit {
         void this.loadFolder(this.currentFolder);
     }
 
+    isSelected(item: DocumentOrFolder): boolean {
+        return this.selected.has(item.path);
+    }
+
+    isDisabled(item: DocumentOrFolder): boolean {
+        return (
+            (this.selectable === "folders" && !item.isFolder) ||
+            (this.selectable === "documents" && item.isFolder)
+        );
+    }
+
+    /* Select or unselect an item path. */
+    toggleSelection(item: DocumentOrFolder) {
+        if (this.selected.has(item.path)) {
+            this.selected.delete(item.path);
+        } else {
+            this.selected.add(item.path);
+        }
+        console.log(this.selected);
+        this.selectionChange.emit([...this.selected]);
+    }
+
     /* Go up to the parent folder. */
     goUp(e: Event) {
         e.preventDefault();
@@ -80,23 +118,25 @@ export class DirectoryPickerComponent implements OnInit {
     }
 
     /* Open the given folder and load documents inside. */
-    openFolder(item: DocumentOrFolder, e: Event) {
+    async openFolder(item: DocumentOrFolder, e: Event) {
         e.preventDefault();
         if (!item.isFolder) {
             return;
         }
-        void this.loadFolder(item.path);
+        this.loadingFolder = item.id;
+        await this.loadFolder(item.path);
+        this.loadingFolder = undefined;
     }
 
     /* Load items for a folder path. */
     private async loadFolder(folder: string) {
-        this.error = null;
+        this.error = undefined;
         this.currentFolder = folder;
         const r = await toPromise(
             this.http.get<DocumentOrFolder[]>("/getItems", {params: {folder}})
         );
         if (!r.ok) {
-            this.error = "Failed to load items";
+            this.error = `Failed to load folder "${folder}"`;
             this.itemList = [];
             return;
         }
@@ -108,7 +148,9 @@ export class DirectoryPickerComponent implements OnInit {
         if (!this.currentFolder) {
             return "";
         }
-        const parts = this.currentFolder.split("/").filter((p) => p.length);
+        const parts: string[] = this.currentFolder
+            .split("/")
+            .filter((p) => p.length);
         parts.pop();
         return parts.join("/");
     }
