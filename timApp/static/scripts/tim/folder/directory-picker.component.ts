@@ -7,6 +7,18 @@ import {CommonModule} from "@angular/common";
 import {FormsModule} from "@angular/forms";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 
+export interface DirectoryPickerRestrictions {
+    // Paths that are selectable. Can be folders or documents.
+    allowedPaths?: string[];
+    // Depth for checking the paths in allowedPaths.
+    // Value 0 is only the path itself.
+    maxDepth?: number;
+    // Which items are selectable.
+    selectable?: "folders" | "documents" | "both";
+    // Checkbox behavior of unselectable items.
+    behavior?: "disable" | "hide";
+}
+
 @Component({
     selector: "tim-directory-picker",
     standalone: true,
@@ -45,12 +57,13 @@ import {TimUtilityModule} from "tim/ui/tim-utility.module";
                 </td>
                 <td>
                     <input
-                        [checked]="isSelected(item)"
-                        [disabled]="isDisabled(item)"
-                        (click)="$event.stopPropagation()"
-                        (change)="toggleSelection(item)"
                         type="checkbox"
                         aria-label="Select item"
+                        [checked]="isSelected(item)"
+                        [disabled]="isDisabled(item)"
+                        [hidden]="isHidden && isDisabled(item)"
+                        (click)="$event.stopPropagation()"
+                        (change)="toggleSelection(item)"
                     >
                 </td>
                 <td *ngIf="showId">
@@ -71,13 +84,16 @@ export class DirectoryPickerComponent implements OnInit {
 
     currentFolder: string = "";
     selected: Set<string> = new Set();
+    allowedPaths?: Set<string>;
+
     showId: boolean = false;
     loadingFolder?: number;
     error?: string;
 
-    @Input() startFolder: string = "";
-    @Input() selectable: "folders" | "documents" | "both" = "both";
     @Input() selection: string[] = [];
+    @Input() startFolder: string = "";
+    @Input() restrictions?: DirectoryPickerRestrictions;
+    @Input() canSelectItem?: (item: DocumentOrFolder) => boolean;
 
     @Output() selectionChange: EventEmitter<string[]> = new EventEmitter();
 
@@ -86,6 +102,9 @@ export class DirectoryPickerComponent implements OnInit {
     ngOnInit() {
         this.currentFolder = this.startFolder ?? "";
         this.selected = new Set(this.selection ?? []);
+        if (this.restrictions?.allowedPaths != undefined) {
+            this.allowedPaths = new Set([...this.restrictions.allowedPaths]);
+        }
         void this.loadFolder(this.currentFolder);
     }
 
@@ -93,10 +112,20 @@ export class DirectoryPickerComponent implements OnInit {
         return this.selected.has(item.path);
     }
 
+    /* Check if the item is selectable. */
     isDisabled(item: DocumentOrFolder): boolean {
+        const canSelect: boolean = this.canSelectItem
+            ? this.canSelectItem(item)
+            : true;
+        if (!this.restrictions) {
+            return !canSelect;
+        }
+        const selectable = this.restrictions.selectable ?? "both";
         return (
-            (this.selectable === "folders" && !item.isFolder) ||
-            (this.selectable === "documents" && item.isFolder)
+            !canSelect ||
+            !this.isAllowedItem(item) ||
+            (selectable === "folders" && !item.isFolder) ||
+            (selectable === "documents" && item.isFolder)
         );
     }
 
@@ -107,7 +136,6 @@ export class DirectoryPickerComponent implements OnInit {
         } else {
             this.selected.add(item.path);
         }
-        console.log(this.selected);
         this.selectionChange.emit([...this.selected]);
     }
 
@@ -143,6 +171,32 @@ export class DirectoryPickerComponent implements OnInit {
         this.itemList = r.result;
     }
 
+    /* Check if the item is in the allowed paths. */
+    private isAllowedItem(item: DocumentOrFolder): boolean {
+        const allowed = this.allowedPaths;
+        if (!allowed) {
+            return true;
+        }
+        const maxDepth = this.restrictions?.maxDepth;
+        if (maxDepth === undefined) {
+            return allowed.has(item.path);
+        }
+
+        // Check item.path, then its parents up to maxDepth steps.
+        let path: string = item.path;
+        for (let d: number = 0; d <= maxDepth; d++) {
+            if (allowed.has(path)) {
+                return true;
+            }
+            const cut: number = path.lastIndexOf("/");
+            if (cut < 0) {
+                break;
+            }
+            path = path.slice(0, cut);
+        }
+        return false;
+    }
+
     /* Return the path string of the parent folder. */
     get parentFolder(): string {
         if (!this.currentFolder) {
@@ -155,7 +209,14 @@ export class DirectoryPickerComponent implements OnInit {
         return parts.join("/");
     }
 
-    get canGoUp() {
+    get canGoUp(): boolean {
         return this.currentFolder.length > 0;
+    }
+
+    get isHidden(): boolean {
+        if (this.restrictions?.behavior) {
+            return this.restrictions.behavior === "hide";
+        }
+        return false;
     }
 }
