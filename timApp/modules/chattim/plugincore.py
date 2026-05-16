@@ -485,7 +485,7 @@ class PluginCore:
         # Fetch from the database.
 
         try:
-            provider_str, api_key = self.get_api_key(public_key)
+            provider_str, api_key = self.try_access_api_key(caller_id, public_key)
         except Exception as e:
             return Result(None, str(e))
 
