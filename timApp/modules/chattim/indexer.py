@@ -384,6 +384,7 @@ class Indexer:
         for text, similarity in best_chunks:
             context.append(text)
         context_string = ", ".join(context)
+        print(context)
         return ContextResponse(
             context=context_string, tokens_used=tokens_used, used_chunks=context
         )

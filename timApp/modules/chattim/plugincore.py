@@ -571,6 +571,9 @@ class PluginCore:
             document_id, caller_id, ts_begin, ts_end, max_count
         )
 
+    def clear_history(self, caller_id: str, document_id: str) -> None:
+        self.history_manager.clear_history(document_id, caller_id)
+
     @staticmethod
     def get_supported_providers() -> list[Provider]:
         """Get the list of supported API providers."""

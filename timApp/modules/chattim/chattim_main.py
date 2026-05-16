@@ -284,6 +284,14 @@ def get_messages(params: GetMessagesParams) -> dict:
     return {"messages": messages}
 
 
+def clear_messages(params: GenericParams) -> Response:
+    user_id = str(get_current_user_id())
+    document_id = str(params.document_id)
+
+    plugincore.clear_history(user_id, document_id)
+    return ok_response()
+
+
 def save_api_key(params: APIKeyParams) -> Response:
     verify_logged_in()
 
@@ -396,6 +404,7 @@ register_route(
     chattim, "post", "saveSettings", ChatTimSaveSettingsParams, save_settings
 )
 register_route(chattim, "post", "getMessages", GetMessagesParams, get_messages)
+register_route(chattim, "post", "clearMessages", GenericParams, clear_messages)
 register_route(chattim, "post", "validateApi", APIKeyParams, save_api_key)
 register_route(chattim, "get", "getProviders", None, get_providers)
 register_route(

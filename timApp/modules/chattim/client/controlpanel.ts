@@ -48,8 +48,9 @@ export interface TokenLimitForUser extends Record<string, JsonValue> {
                     <span>Käytetyt tokenit: <strong>TODO!</strong></span>
                 </div>
                 <div class="settings-row">
-                    <button class="btn btn-warning">
-                        TODO: Tyhjennä keskustelu
+                    <button class="btn btn-warning"
+                            (click)="clearConversationClicked()">
+                        Tyhjennä keskustelu
                     </button>
                 </div>
             </ng-container>
@@ -347,10 +348,15 @@ export class ChatControlPanelComponent {
     }
     @Output() saveSettingsClick = new EventEmitter<ControlPanelSettings>();
     @Output() panelToggled = new EventEmitter<boolean>();
+    @Output() clearConversationClick = new EventEmitter<void>();
 
     togglePanel() {
         this.settingsOpen = !this.settingsOpen;
         this.panelToggled.emit(this.settingsOpen);
+    }
+
+    clearConversationClicked() {
+        this.clearConversationClick.emit();
     }
 
     saveSettingsClicked() {
