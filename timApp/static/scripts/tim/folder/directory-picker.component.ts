@@ -1,11 +1,16 @@
+import type {OnInit} from "@angular/core";
 import {Component, EventEmitter, Input, Output} from "@angular/core";
-import type {DocumentOrFolder, IFolder, IItem, ITag} from "tim/item/IItem";
+import type {DocumentOrFolder} from "tim/item/IItem";
+import {toPromise} from "tim/util/utils";
 import {HttpClient} from "@angular/common/http";
+import {CommonModule} from "@angular/common";
 
 @Component({
     selector: "tim-directory-picker",
+    standalone: true,
+    imports: [CommonModule],
     template: `
-        <table class="table" *ngIf="itemList.length > 0 || item.path">
+        <table class="table" *ngIf="itemList.length > 0 || currentFolder">
             <thead>
             <tr>
                 <th></th>
@@ -15,28 +20,29 @@ import {HttpClient} from "@angular/common/http";
             </tr>
             </thead>
             <tbody>
-            <tr *ngIf="item.path">
+            <tr *ngIf="canGoUp">
                 <td>
-                    <a href="/view/{{ item.location }}">
+                    <a href (click)="goUp($event)">
                         <span class="glyphicon glyphicon-level-up" aria-hidden="true"></span>
                     </a>
                 </td>
-                <td><a href="/view/{{ item.location }}">Go to parent folder</a></td>
+                <td><a href (click)="goUp($event)">Go to parent folder</a></td>
                 <td></td>
                 <td></td>
             </tr>
             <tr *ngFor="let item of itemList">
                 <td>
-                    <a *ngIf="item.isFolder" href="/view/{{ item.path }}">
+                    <a *ngIf="item.isFolder" href (click)="openFolder(item, $event)">
                         <span class="glyphicon glyphicon-folder-open" aria-hidden="true"></span>
                     </a>
                 </td>
                 <td>
-                    <a href="/view/{{ item.path }}">{{ item.title }}</a>&ngsp;
+                    <a *ngIf="item.isFolder" href (click)="openFolder(item, $event)">{{ item.title }}</a>
+                    <span *ngIf="!item.isFolder">{{ item.title }}</span>
                 </td>
                 <td></td>
                 <td *ngIf="showId">
-                    {{item.id}}
+                    {{ item.id }}
                 </td>
             </tr>
             </tbody>
@@ -45,9 +51,8 @@ import {HttpClient} from "@angular/common/http";
     `,
     styleUrls: ["directory-list.component.scss"],
 })
-export class DirectoryPickerComponent {
+export class DirectoryPickerComponent implements OnInit {
     itemList: DocumentOrFolder[] = [];
-    item: IFolder;
 
     currentFolder: string = "";
     selected: Set<string> = new Set();
@@ -65,5 +70,50 @@ export class DirectoryPickerComponent {
     ngOnInit() {
         this.currentFolder = this.startFolder ?? "";
         this.selected = new Set(this.selection ?? []);
+        void this.loadFolder(this.currentFolder);
+    }
+
+    /* Go up to the parent folder. */
+    goUp(e: Event) {
+        e.preventDefault();
+        void this.loadFolder(this.parentFolder);
+    }
+
+    /* Open the given folder and load documents inside. */
+    openFolder(item: DocumentOrFolder, e: Event) {
+        e.preventDefault();
+        if (!item.isFolder) {
+            return;
+        }
+        void this.loadFolder(item.path);
+    }
+
+    /* Load items for a folder path. */
+    private async loadFolder(folder: string) {
+        this.error = null;
+        this.currentFolder = folder;
+        const r = await toPromise(
+            this.http.get<DocumentOrFolder[]>("/getItems", {params: {folder}})
+        );
+        if (!r.ok) {
+            this.error = "Failed to load items";
+            this.itemList = [];
+            return;
+        }
+        this.itemList = r.result;
+    }
+
+    /* Return the path string of the parent folder. */
+    get parentFolder(): string {
+        if (!this.currentFolder) {
+            return "";
+        }
+        const parts = this.currentFolder.split("/").filter((p) => p.length);
+        parts.pop();
+        return parts.join("/");
+    }
+
+    get canGoUp() {
+        return this.currentFolder.length > 0;
     }
 }
