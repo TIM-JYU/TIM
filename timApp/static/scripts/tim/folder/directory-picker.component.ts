@@ -21,6 +21,11 @@ export interface DirectoryPickerRestrictions {
     behavior?: "disable" | "hide";
 }
 
+export interface StartItem {
+    itemPath: string;
+    isFolder: boolean;
+}
+
 @Component({
     selector: "tim-directory-picker",
     standalone: true,
@@ -44,28 +49,28 @@ export interface DirectoryPickerRestrictions {
             <tbody>
             <tr *ngIf="canGoUp">
                 <td>
-                    <a href (click)="goUp($event)">
+                    <a (click)="goUp()">
                         <span class="glyphicon glyphicon-level-up" aria-hidden="true"></span>
                     </a>
                 </td>
-                <td><a href (click)="goUp($event)">Go to parent folder</a></td>
+                <td><a (click)="goUp()">Go to parent folder</a></td>
                 <td></td>
                 <td></td>
             </tr>
             <tr *ngFor="let item of itemList">
                 <td>
-                    <a *ngIf="item.isFolder" href (click)="openFolder(item, $event)">
+                    <a *ngIf="item.isFolder" (click)="openFolder(item)">
                         <span class="glyphicon glyphicon-folder-open" aria-hidden="true"></span>
                     </a>
                 </td>
                 <td>
-                    <a *ngIf="item.isFolder" href (click)="openFolder(item, $event)">{{ item.title }}</a>
+                    <a *ngIf="item.isFolder" (click)="openFolder(item)">{{ item.title }}</a>
                     <span *ngIf="item.isFolder && (selectedUnderFolder(item) > 0)"
                           class="badge pull-right"
                           [title]="selectedUnderFolder(item) + ' selected inside'">
                           {{ selectedUnderFolder(item) }}
                     </span>
-                    <span *ngIf="!item.isFolder">{{ item.title }}</span>
+                    <a *ngIf="!item.isFolder" href="/view/{{item.path}}" target="_blank">{{ item.title }}</a> 
                     <tim-loading *ngIf="loadingFolder === item.id"></tim-loading>
                 </td>
                 <td>
@@ -106,7 +111,7 @@ export class DirectoryPickerComponent implements OnInit {
     error?: string;
 
     @Input() selection: string[] = [];
-    @Input() startFolder?: string;
+    @Input() startItem?: StartItem;
     @Input() restrictions?: DirectoryPickerRestrictions;
     @Input() canSelectItem?: (item: DocumentOrFolder) => boolean;
 
@@ -115,7 +120,11 @@ export class DirectoryPickerComponent implements OnInit {
     constructor(private http: HttpClient) {}
 
     ngOnInit() {
-        this.currentFolder = this.startFolder ?? "";
+        if (this.startItem) {
+            this.currentFolder = this.startItem.isFolder
+                ? this.startItem.itemPath
+                : this.parentFolder(this.startItem.itemPath);
+        }
         this.selected = new Set(this.selection ?? []);
         if (this.restrictions?.allowedPaths != undefined) {
             this.allowedPaths = new Set([...this.restrictions.allowedPaths]);
@@ -217,14 +226,12 @@ export class DirectoryPickerComponent implements OnInit {
     }
 
     /* Go up to the parent folder. */
-    goUp(e: Event) {
-        e.preventDefault();
-        void this.loadFolder(this.parentFolder);
+    goUp() {
+        void this.loadFolder(this.parentOfCurrent);
     }
 
     /* Open the given folder and load documents inside. */
-    async openFolder(item: DocumentOrFolder, e: Event) {
-        e.preventDefault();
+    async openFolder(item: DocumentOrFolder) {
         if (!item.isFolder) {
             return;
         }
@@ -275,15 +282,17 @@ export class DirectoryPickerComponent implements OnInit {
     }
 
     /* Return the path string of the parent folder. */
-    private get parentFolder(): string {
-        if (!this.currentFolder) {
+    private parentFolder(path: string): string {
+        if (!path) {
             return "";
         }
-        const parts: string[] = this.currentFolder
-            .split("/")
-            .filter((p) => p.length);
+        const parts: string[] = path.split("/").filter((p) => p.length);
         parts.pop();
         return parts.join("/");
+    }
+
+    private get parentOfCurrent(): string {
+        return this.parentFolder(this.currentFolder);
     }
 
     private get hasMaxSelected(): boolean {

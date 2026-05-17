@@ -179,7 +179,9 @@ export interface TokenLimitForUser extends Record<string, JsonValue> {
                     </button>
                     <div *ngIf="filesOpen" class="settings-section-body">
                         <tim-directory-picker
-                            [startFolder]="currentFolder"
+                            [startItem]="currentFolder 
+                                        ? {itemPath: currentFolder, isFolder: true} 
+                                        : undefined"
                             [(selection)]="selectedItemPaths"
                             [restrictions]="pathRestrictions"
                         ></tim-directory-picker>
@@ -195,14 +197,16 @@ export interface TokenLimitForUser extends Record<string, JsonValue> {
                           [class.glyphicon-chevron-right]="!promptOpen"
                           [class.glyphicon-chevron-down]="promptOpen">
                     </span>
-                        Set system prompt path:
+                        Set system prompt path: {{systemPrompt}}
                     </button>
                     <div *ngIf="promptOpen" class="settings-section-body">
-                        <input type="text" class="form-control"
-                               style="width: 100%"
-                               placeholder="users/user/prompt"
-                               [(ngModel)]="systemPromptPath"
-                        >
+                        <tim-directory-picker
+                            [startItem]="systemPrompt 
+                                        ? {itemPath: systemPrompt, isFolder: false} 
+                                        : undefined"
+                            [(selection)]="systemPromptSelection"
+                            [restrictions]="{maxSelectedCount: 1, selectable: 'documents'}"
+                        ></tim-directory-picker> 
                     </div>
                 </div>
 
@@ -332,8 +336,14 @@ export class ChatControlPanelComponent {
     @Input() selectedMode!: string;
     @Input() selectedEmbedderProvider!: string;
 
-    @Input() systemPromptPath!: string;
     @Input() isTeacher: boolean = false;
+
+    @Input() set systemPromptPath(path: string) {
+        if (path) {
+            this.systemPromptSelection = [path.trim()];
+        }
+    }
+    systemPromptSelection: string[] = [];
 
     timeUnitOptions: {value: string; label: string}[] = [
         {value: "min", label: "Minutes"},
@@ -365,7 +375,7 @@ export class ChatControlPanelComponent {
 
             max_tokens: this.maxTokensValue,
             tim_paths: this.selectedItemPaths,
-            system_prompt_path: this.systemPromptPath,
+            system_prompt_path: this.systemPrompt ?? "",
             global_policy: this.tokenLimitAllUsers,
             use_streaming: this.useStreaming,
             model_temperature: this.enabledTemperature
@@ -454,5 +464,12 @@ export class ChatControlPanelComponent {
         if (!this.isInvalidMaxTokens) {
             this.maxTokensValue = parsed;
         }
+    }
+
+    get systemPrompt(): string | undefined {
+        if (!this.systemPromptSelection) {
+            return undefined;
+        }
+        return this.systemPromptSelection[0];
     }
 }
