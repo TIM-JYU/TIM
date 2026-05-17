@@ -30,11 +30,8 @@ import {
 import {DomSanitizer} from "@angular/platform-browser";
 import {FormsModule} from "@angular/forms";
 import {Users} from "tim/user/userService";
-import type {
-    DirectoryPickerRestrictions} from "tim/folder/directory-picker.component";
-import {
-    DirectoryPickerComponent
-} from "tim/folder/directory-picker.component";
+import type {DirectoryPickerRestrictions} from "tim/folder/directory-picker.component";
+import {DirectoryPickerComponent} from "tim/folder/directory-picker.component";
 import {itemglobals} from "tim/util/globals";
 import type {
     ChatModel,
@@ -85,6 +82,7 @@ export interface ControlPanelData extends ControlPanelSettings {
     availableModels: ChatModel[];
     availableModes: string[];
     availableEmbedderProviders: string[];
+    allowedItemPaths?: string[];
 }
 
 // Huom: <tim-dialog-frame ei sisällä markupError attribuuttia
@@ -665,7 +663,10 @@ export class ChatTIMComponent
                 this.maxTokens = result.max_tokens;
                 this.selectedItemPaths = result.tim_paths;
                 this.pathRestrictions = {
+                    allowedPaths: result.allowedItemPaths,
                     maxDepth: 1,
+                    selectable: "both",
+                    behavior: "disable",
                 };
                 this.availableModels = result.availableModels;
                 this.availableEmbedderProviders =

@@ -13,6 +13,8 @@ export interface DirectoryPickerRestrictions {
     // Depth for checking the paths in allowedPaths.
     // Value 0 is only the path itself.
     maxDepth?: number;
+    // Maximum number of items that can be selected.
+    maxSelectedCount?: number;
     // Which items are selectable.
     selectable?: "folders" | "documents" | "both";
     // Checkbox behavior of unselectable items.
@@ -128,6 +130,12 @@ export class DirectoryPickerComponent implements OnInit {
 
     /* Check if the item is selectable. */
     isDisabled(item: DocumentOrFolder): boolean {
+        if (this.selected.has(item.path)) {
+            return false;
+        }
+        if (this.hasMaxSelected) {
+            return true;
+        }
         const canSelect: boolean = this.canSelectItem
             ? this.canSelectItem(item)
             : true;
@@ -276,6 +284,13 @@ export class DirectoryPickerComponent implements OnInit {
             .filter((p) => p.length);
         parts.pop();
         return parts.join("/");
+    }
+
+    private get hasMaxSelected(): boolean {
+        if (this.restrictions?.maxSelectedCount === undefined) {
+            return false;
+        }
+        return this.totalSelectedCount >= this.restrictions.maxSelectedCount;
     }
 
     get totalSelectedCount(): number {

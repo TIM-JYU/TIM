@@ -83,6 +83,7 @@ class InstanceSettingsData(InstanceAttributes):
     availableModels: list[ChatModel] = field(kw_only=True)
     availableModes: list[str] = field(kw_only=True)
     availableEmbedderProviders: list[str] = field(kw_only=True)
+    allowedItemPaths: list[str] | None = None
 
 
 T = TypeVar("T")
@@ -393,6 +394,7 @@ class PluginCore:
             availableModels=self._get_supported_chat_models(provider, api_key),
             availableEmbedderProviders=self._get_available_embedder_providers(user_id),
             use_streaming=True,  # TODO: from db
+            allowedItemPaths=None,  # TODO: from the API key restrictions?
         )
 
         return Result(value=data)
