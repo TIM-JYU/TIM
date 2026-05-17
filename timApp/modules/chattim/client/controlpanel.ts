@@ -1,5 +1,6 @@
 import {Component, EventEmitter, Input, Output} from "@angular/core";
 import type {JsonValue} from "tim/util/jsonvalue";
+import {DirectoryPickerRestrictions} from "tim/folder/directory-picker.component";
 
 export interface ChatModel extends Record<string, JsonValue> {
     label: string;
@@ -12,7 +13,7 @@ export interface ControlPanelSettings extends Record<string, JsonValue> {
     embedder_provider: string;
 
     max_tokens: number | null;
-    tim_paths: string;
+    tim_paths: string[];
     system_prompt_path: string;
     global_policy: TokenLimitForUser;
     use_streaming: boolean;
@@ -174,14 +175,14 @@ export interface TokenLimitForUser extends Record<string, JsonValue> {
                           [class.glyphicon-chevron-right]="!filesOpen"
                           [class.glyphicon-chevron-down]="filesOpen">
                     </span>
-                        Add TIM-documents:
+                        Add TIM-documents: {{selectedItemPaths.length}}
                     </button>
                     <div *ngIf="filesOpen" class="settings-section-body">
-                    <textarea class="form-control"
-                              style="width: 100%"
-                              placeholder="kurssit/tie/proj/2026/chattim"
-                              [(ngModel)]="localFilePaths">
-                    </textarea>
+                        <tim-directory-picker
+                            [startFolder]="currentFolder"
+                            [(selection)]="selectedItemPaths"
+                            [restrictions]="pathRestrictions"
+                        ></tim-directory-picker>
                     </div>
                 </div>
 
@@ -320,7 +321,10 @@ export class ChatControlPanelComponent {
     }
     @Input() useStreaming: boolean = false;
 
-    @Input() localFilePaths!: string;
+    @Input() selectedItemPaths!: string[];
+    @Input() pathRestrictions?: DirectoryPickerRestrictions;
+    @Input() currentFolder?: string;
+
     @Input() error?: string;
     @Input() response?: string;
     @Input() selectedModel!: string;
@@ -360,7 +364,7 @@ export class ChatControlPanelComponent {
             embedder_provider: this.selectedEmbedderProvider,
 
             max_tokens: this.maxTokensValue,
-            tim_paths: this.localFilePaths,
+            tim_paths: this.selectedItemPaths,
             system_prompt_path: this.systemPromptPath,
             global_policy: this.tokenLimitAllUsers,
             use_streaming: this.useStreaming,

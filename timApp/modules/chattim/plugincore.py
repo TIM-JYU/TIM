@@ -66,7 +66,7 @@ class InstanceAttributes:
     model_id: str = "gpt-4.1-mini"
     llm_mode: str = "Creative"
     max_tokens: int | None = 2000
-    tim_paths: str = ""
+    tim_paths: list[str] = field(default_factory=list)
     system_prompt_path: str = ""
     use_streaming: bool = False
     model_temperature: float | None = None
@@ -412,7 +412,7 @@ class PluginCore:
         embedder_provider: str = instance_settings.embedder_provider
         llm_mode: str = instance_settings.llm_mode
         max_tokens: int | None = instance_settings.max_tokens
-        tim_paths: str = instance_settings.tim_paths
+        tim_paths: list[str] = instance_settings.tim_paths
         system_prompt_path: str = instance_settings.system_prompt_path.strip()
         global_policy: Policy = instance_settings.global_policy
         use_streaming: bool = instance_settings.use_streaming
@@ -442,7 +442,7 @@ class PluginCore:
         if model_id not in supported_models:
             return Result(None, f"Given model [{model_id}] not supported")
 
-        paths_for_indexing = self._parse_paths(tim_paths)
+        paths_for_indexing = tim_paths
         if not paths_for_indexing and rag_mode == RagMode.RETRIEVE:
             return Result(None, "Give at least one path when using summarizing mode")
 
@@ -643,15 +643,6 @@ class PluginCore:
 
         return True
 
-    @staticmethod
-    def _parse_paths(paths: str) -> list[str]:
-        """
-        Gets a string, splits it with separator as "\n", removes empty entries and trims each entry
-        :param paths:
-        :return: list of paths or an empty list
-        """
-        return [x.strip() for x in paths.split("\n") if x.strip()]
-
     def set_user_policy(
         self, caller_id: int, document_id: int, policy_settings: Policy
     ) -> Result[bool | None, str | None]:
@@ -752,7 +743,8 @@ class PluginCore:
         for path in paths:
             found_documents = self.tim_database.get_tim_documents_by_path(path)
             if not found_documents:
-                return Result(error=f"Given path [{path}] does not exist")
+                continue  # Might be just empty
+                # return Result(error=f"Given path [{path}] does not exist")
             documents.extend(found_documents)
 
         doc_set = list(set(documents))

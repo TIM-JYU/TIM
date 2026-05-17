@@ -104,7 +104,7 @@ export class DirectoryPickerComponent implements OnInit {
     error?: string;
 
     @Input() selection: string[] = [];
-    @Input() startFolder: string = "";
+    @Input() startFolder?: string;
     @Input() restrictions?: DirectoryPickerRestrictions;
     @Input() canSelectItem?: (item: DocumentOrFolder) => boolean;
 
