@@ -411,7 +411,6 @@ class PluginCore:
             # TODO: get settings from db
             pass
 
-        # TODO: Need to get the used API-key from the db
         # If the teacher has not yet saved the settings after setting an API-key alias,
         # the list should be empty.
         # Or should we just disable the model selection in the UI until an API-key alias has been set?
@@ -480,9 +479,6 @@ class PluginCore:
                 old_provider, _ = self.get_api_key(str(old_plugin_rule.public_key))
             except Exception:
                 old_provider = None
-
-        # TODO: Remove hard coded API-key, provider and model_id.
-        # Fetch from the database.
 
         try:
             provider_str, api_key = self.try_access_api_key(caller_id, public_key)
