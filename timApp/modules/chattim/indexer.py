@@ -379,10 +379,10 @@ class Indexer:
         self,
         doc_ids: list[int],
         model_type: str,
-    ):
+    ) -> list[dict]:
         """returns embeddings for the indexed pages"""
 
-        page_embeddings = []
+        page_embeddings: list[dict] = []
         for doc_id in doc_ids:
             file_name = self._get_file_name(doc_id, model_type)
             try:
@@ -393,6 +393,7 @@ class Indexer:
 
         return page_embeddings
 
+    # TODO: fix either the logic or types
     @staticmethod
     def calculate_similarity(
         embeddings: list[float], prompt_embedding: list[float]

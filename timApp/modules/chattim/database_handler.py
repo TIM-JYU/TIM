@@ -169,8 +169,8 @@ class TimDatabase:
             folder = cast(Folder, item)
             docs = folder.get_all_documents()
             # TODO: can probably be done more efficiently
-            for doc in docs:
-                if doc.document.doc_id == doc.id:
+            for doc_info in docs:
+                if doc_info.document.doc_id == doc_id:
                     return True
         return False
 
@@ -398,15 +398,14 @@ class TimDatabase:
         db.session.commit()
         return rule
 
-    def remove_api_key_group(
-        self, owner_id: int, public_key: str, group_id: int
-    ) -> None:
+    @staticmethod
+    def remove_api_key_group(owner_id: int, public_key: str, group_id: int) -> None:
         """Remove access to the API key from the given user group."""
         rule = TimDatabase.get_owner_api_key(owner_id, public_key)
         if not rule:
             raise Exception("No API-key with the alias found")
         groups = rule.groups
-        rule.groups = filter(lambda id: id != group_id, groups)
+        rule.groups = filter(lambda gid: gid != group_id, groups)  # type: ignore
         db.session.commit()
 
     @staticmethod

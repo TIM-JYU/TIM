@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from flask import request, Response, stream_with_context
-from typing import Any, TypedDict, Callable, Literal
+from typing import Any, TypedDict, Callable, Iterator, cast, Literal
 from webargs.flaskparser import use_args
 import json
 from flask_babel import gettext
@@ -146,10 +146,10 @@ defaultWindowSize: "md" # [sm, md, lg, xs]
             ],
         },
     ]
-    result: PluginReqs = {
-        "js": ["js/build/chattim.js"],
-        "multihtml": True,
-    }
+    result: PluginReqs = PluginReqs(
+        js=["js/build/chattim.js"],
+        multihtml=True,
+    )
 
     result["editor_tabs"] = editor_tabs
     return result
@@ -168,7 +168,7 @@ def register_route(
     app: Flask | Blueprint,
     method: str,
     route: str,
-    route_model: type | tuple[type] | None,
+    route_model: type | None,
     route_handler: Callable[..., Any],
 ) -> None:
     def to_response(r: Any) -> Response:
@@ -180,14 +180,14 @@ def register_route(
     if route_model is None:
 
         @app.route(f"/{route}", methods=[method], endpoint=route)
-        def define() -> Response:
+        def handler() -> Response:
             return to_response(route_handler())
 
         return
 
     @app.route(f"/{route}", methods=[method], endpoint=route)
     @use_args(class_schema(route_model)(), locations=("json",))
-    def define(m: Any) -> Response:
+    def handler_args(m: Any) -> Response:
         return to_response(route_handler(m))
 
 
@@ -212,7 +212,7 @@ def ask_stream_route(params: ChatTimAskParams) -> Response:
 
     session_user_id = get_current_user_id()
 
-    def generate():
+    def generate() -> Iterator[str]:
         resp = plugincore.chat_request_stream(session_user_id, document_id, user_input)
         if not resp.ok() or not resp.value:
             yield to_ndjson_str(ChatTimAskResponse(error=resp.error))
@@ -250,7 +250,7 @@ def get_settings(params: GenericParams) -> ChatTIMGetSettingsResponse:
         ret["error"] = error_or_ok.error
         return ret
 
-    ret["result"] = error_or_ok.value
+    ret["result"] = error_or_ok.value or InstanceAttributes.default()
     return ret
 
 
@@ -264,7 +264,7 @@ def save_settings(params: ChatTimSaveSettingsParams) -> PluginAnswerResp:
 
     error_or_ok = plugincore.save_instance(session_user_id, document_id, panel_data)
     if not error_or_ok.ok():
-        web["error"] = error_or_ok.error
+        web["error"] = error_or_ok.error or ""
         return result
 
     web["result"] = "Settings saved!"
@@ -310,10 +310,10 @@ def save_api_key(params: APIKeyParams) -> Response:
 
     if valid:
         try:
-            key = plugincore.add_api_key(
+            api_key = plugincore.add_api_key(
                 userid, provider, alias, key, group_names=groups
             )
-            return json_response(_api_key_to_dict(key))
+            return json_response(_api_key_to_dict(api_key))
         except Exception as e:
             raise RouteException(description=str(e))
     else:
@@ -353,7 +353,7 @@ def remove_key_group_right(group_id: int) -> Response:
 
 def get_providers() -> list[str]:
     response = plugincore.get_supported_providers()
-    return response
+    return cast(list[str], response)
 
 
 def get_existing_keys() -> list[dict]:

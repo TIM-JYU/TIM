@@ -119,7 +119,7 @@ class Rag:
         )
         self.models[identifier] = model
 
-    def remove_model(self, identifier: int):
+    def remove_model(self, identifier: int) -> None:
         """
         Model spec need not specify the base_url.
         Nothing is done if model with identifier doesn't exist.
