@@ -16,7 +16,7 @@ class TextBlock:
     """contains text from tim chunk and corresponding tim block id and sub block id"""
 
     text: str
-    tim_block_id: int
+    tim_block_id: str
     sub_block_id: int
 
 
@@ -60,7 +60,7 @@ class EmbeddingModel(Protocol):
     def generate(self, text_chunks: list[str]) -> EmbeddingResponse:
         ...
 
-    def change_key(self, new_key: str):
+    def change_key(self, new_key: str) -> None:
         ...
 
     def get_model_type(self) -> str:
@@ -73,15 +73,13 @@ class GeminiEmbeddingModel(EmbeddingModel):
     def __init__(self, api_key: str, model_type: str = "gemini-embedding-001"):
         self.model_type = model_type
         self.api_key = api_key
-        self.client = None
+        self.client = OpenAI(
+            api_key=self.api_key,
+            base_url="https://generativelanguage.googleapis.com/v1beta/openai/",
+        )
 
     def generate(self, chunks: list[str]) -> EmbeddingResponse:
         """generates embeddings from provided chunks"""
-        if self.client is None:
-            self.client = OpenAI(
-                api_key=self.api_key,
-                base_url="https://generativelanguage.googleapis.com/v1beta/openai/",
-            )
 
         text = chunks
         try:
@@ -100,7 +98,7 @@ class GeminiEmbeddingModel(EmbeddingModel):
             tokens_used = 0
         return EmbeddingResponse(embeddings=embeddings, used_tokens=tokens_used)
 
-    def change_key(self, key: str):
+    def change_key(self, key: str) -> None:
         self.api_key = key
 
     def get_model_type(self) -> str:
@@ -132,7 +130,7 @@ class OpenAiEmbeddingModel(EmbeddingModel):
             embeddings=embeddings, used_tokens=result.usage.total_tokens
         )
 
-    def change_key(self, key: str):
+    def change_key(self, key: str) -> None:
         self.api_key = key
 
     def get_model_type(self) -> str:
@@ -160,8 +158,10 @@ class Indexer:
         self.indexed_page_ids: list[int] = []
         os.makedirs(self.root_path, exist_ok=True)
 
-    def delete_page(self, doc_id: int, model_type) -> bool:
-        """Deletes embedded page stored on disk"""
+    def delete_page(self, doc_id: int, model_type: str) -> bool:
+        """Deletes embedded page stored on disk
+        :param doc_id: id of the page to delete
+        :param model_type: name of embedding model used for the page"""
         path = self._get_file_name(doc_id, model_type)
         if os.path.exists(path):
             os.remove(path)
@@ -172,8 +172,12 @@ class Indexer:
     def chunk_text(
         self, block, max_chunk_size: int = 2500, overlap: int = 200
     ) -> list[TextBlock]:
+        """ " splits a chunk into smaller chunks
+        :param block: tim block
+        :param max_chunk_size: maximum size of the chunk
+        :param overlap: overlap between chunks"""
         chunks = []
-        text = block["md"]
+        text = block.get["md"]
         if not text:
             return []
         block_id = block["id"]
@@ -322,7 +326,7 @@ class Indexer:
 
     def calculate_similarity(
         self, embeddings: list[float], prompt_embedding: list[float]
-    ):
+    ) -> list[float]:
         embeddings = np.array(embeddings)
         prompt_embedding = np.array(prompt_embedding)
 
@@ -330,7 +334,7 @@ class Indexer:
         norm_embeddings = np.linalg.norm(embeddings, axis=1)
         norm_prompt = float(np.linalg.norm(prompt_embedding))
         similarities = dot_product / (norm_embeddings * norm_prompt)
-
+        print(f"similarities {similarities}")
         return similarities
 
     def get_context(self, prompt: str, identifier: int, k: int = 3) -> ContextResponse:
@@ -351,13 +355,13 @@ class Indexer:
             prompt_embedding = prompt_embedding.embeddings[0]
         except Exception as e:
             print(f"Prompt embedding error: {e}")
-            return ContextResponse(context="", tokens_used=tokens_used)
+            return ContextResponse(context="", tokens_used=tokens_used, used_chunks=[])
 
         page_embeddings = self.get_embeddings(
             self.indexed_page_ids, embedding_model.get_model_type()
         )
 
-        embeddings: list[list[float]] = []
+        embeddings: list[float] = []
         texts: list[str] = []
 
         for page in page_embeddings:
@@ -370,7 +374,7 @@ class Indexer:
                 texts.append(text)
 
         if not embeddings or not prompt_embedding:
-            return ContextResponse(context="", tokens_used=tokens_used)
+            return ContextResponse(context="", tokens_used=tokens_used, used_chunks=[])
 
         similarities = self.calculate_similarity(
             embeddings=embeddings, prompt_embedding=prompt_embedding
@@ -389,13 +393,13 @@ class Indexer:
             context=context_string, tokens_used=tokens_used, used_chunks=context
         )
 
-    def add_embedder(self, identifier: int, embedder: EmbeddingModel):
+    def add_embedder(self, identifier: int, embedder: EmbeddingModel) -> None:
         self.embedding_models[identifier] = embedder
 
-    def remove_embedder(self, identifier: int):
+    def remove_embedder(self, identifier: int) -> None:
         del self.embedding_models[identifier]
 
-    def change_key(self, identifier: int, key: str):
+    def change_key(self, identifier: int, key: str) -> None:
         self.embedding_models[identifier].change_key(key)
 
     def _get_file_name(self, doc_id: int, model_type: str) -> str:

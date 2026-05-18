@@ -22,7 +22,7 @@ class ChatMessage:
     """Timestamp of when the message was sent in milliseconds."""
     usage: Usage | None = None
     """Tokens used for generating the message."""
-    used_chunks: list[str] | None = None
+    # used_chunks: list[str] | None = None
 
     def to_dict(self) -> dict:
         """Convert `ChatMessage` object to a `dict`.
