@@ -30,6 +30,9 @@ import {
 import {DomSanitizer} from "@angular/platform-browser";
 import {FormsModule} from "@angular/forms";
 import {Users} from "tim/user/userService";
+import type {DirectoryPickerRestrictions} from "tim/folder/directory-picker.component";
+import {DirectoryPickerComponent} from "tim/folder/directory-picker.component";
+import {itemglobals} from "tim/util/globals";
 import type {
     ChatModel,
     ControlPanelSettings,
@@ -79,6 +82,7 @@ export interface ControlPanelData extends ControlPanelSettings {
     availableModels: ChatModel[];
     availableModes: string[];
     availableEmbedderProviders: string[];
+    allowedItemPaths?: string[];
 }
 
 // Huom: <tim-dialog-frame ei sisällä markupError attribuuttia
@@ -142,7 +146,9 @@ export interface ControlPanelData extends ControlPanelSettings {
                             [maxTokens]="maxTokens"
                             [response]="controlpanelResponse"
                             [error]="controlpanelError"
-                            [localFilePaths]="localFilePaths"
+                            [selectedItemPaths]="selectedItemPaths"
+                            [pathRestrictions]="pathRestrictions"
+                            [currentFolder]="getCurrentFolder"
                             [availableModels]="availableModels"
                             [availableEmbedderProviders]="availableEmbedderProviders"
                             [selectedEmbedderProvider]="selectedEmbedderProvider"
@@ -216,7 +222,8 @@ export class ChatTIMComponent
     document_id = -1;
     isTeacher: boolean = false;
 
-    localFilePaths = "";
+    selectedItemPaths: string[] = [];
+    pathRestrictions?: DirectoryPickerRestrictions;
     selectedMode = "Creative";
     selectedModel = "gpt-4.1-mini";
     selectedEmbedderProvider = "";
@@ -318,6 +325,11 @@ export class ChatTIMComponent
 
     initDocId() {
         this.document_id = this.pluginMeta.getDocumentId() ?? -1;
+    }
+
+    get getCurrentFolder(): string {
+        const it = itemglobals().curr_item;
+        return it.isFolder ? it.path : it.location;
     }
 
     /* Initialize the scrollable chat box. */
@@ -649,7 +661,13 @@ export class ChatTIMComponent
                 this.selectedModel = result.model_id;
                 this.selectedMode = result.llm_mode;
                 this.maxTokens = result.max_tokens;
-                this.localFilePaths = result.tim_paths;
+                this.selectedItemPaths = result.tim_paths;
+                this.pathRestrictions = {
+                    allowedPaths: result.allowedItemPaths,
+                    maxDepth: 1,
+                    selectable: "both",
+                    behavior: "disable",
+                };
                 this.availableModels = result.availableModels;
                 this.availableEmbedderProviders =
                     result.availableEmbedderProviders;
@@ -841,6 +859,7 @@ export class ChatTIMComponent
         PurifyModule,
         DialogModule,
         FormsModule,
+        DirectoryPickerComponent,
     ],
 })
 export class ChatTIMModule implements DoBootstrap {
