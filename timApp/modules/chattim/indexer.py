@@ -1,14 +1,18 @@
-from dataclasses import dataclass, asdict
+from dataclasses import dataclass
+from json import JSONDecodeError
 from typing import Protocol
 import json
 from openai import OpenAI
 import numpy as np
 import os
 
-from sqlalchemy.cyextension.processors import date_cls
-
 from timApp.document.document import Document
-from datetime import datetime, timezone
+from datetime import datetime
+
+# Max tokens for API requests. Approximately 32000 characters
+MAX_TOKENS_CHUNK = 8192
+CHUNK_TOKEN_TARGET = 512
+CHARACTERS_PER_TOKEN = 3
 
 
 @dataclass
@@ -169,25 +173,50 @@ class Indexer:
 
         return False
 
-    def chunk_text(
-        self, block, max_chunk_size: int = 2500, overlap: int = 200
-    ) -> list[TextBlock]:
+    @staticmethod
+    def chunk_text(text: str, max_chunk_size: int, overlap: int) -> list[str]:
+        """Split the text into overlapping chunks."""
+        chunk_size = max_chunk_size - overlap * 2
+        chunks: list[str] = []
+        index = 0
+        while index < len(text):
+            start = max(0, index - overlap)
+            end = min(len(text), index + chunk_size + overlap)
+            chunk = text[start:end]
+            chunks.append(chunk)
+            index += chunk_size
+        return chunks
+
+    def chunk_block(
+        self, block: dict, max_chunk_size: int = 2500, overlap: int = 200
+    ) -> tuple[list[TextBlock], int]:
         """ " splits a chunk into smaller chunks
         :param block: tim block
         :param max_chunk_size: maximum size of the chunk
         :param overlap: overlap between chunks"""
-        chunks = []
+        chunks: list[TextBlock] = []
         text = block["md"]
         if not text:
-            return []
+            return chunks, 0
         block_id = block["id"]
         sub_block_id = 0
         sentences = text.split(". ")
+        if not sentences:
+            return chunks, 0
         current_chunk = sentences[0]
 
         for sentence in sentences[1:]:
             if (len(current_chunk) + len(sentence)) < max_chunk_size:
                 current_chunk += sentence + ". "
+                continue
+            if len(current_chunk) >= self._max_chunk_size_characters:
+                for c in self.chunk_text(current_chunk, max_chunk_size, overlap):
+                    chunks.append(
+                        TextBlock(
+                            text=c, tim_block_id=block_id, sub_block_id=sub_block_id
+                        ),
+                    )
+                    sub_block_id += 1
             else:
                 chunks.append(
                     TextBlock(
@@ -197,10 +226,16 @@ class Indexer:
                     )
                 )
                 sub_block_id += 1
-                overlapping_text = current_chunk[-overlap:]
-                current_chunk = overlapping_text + ". " + sentence
+            overlapping_text = current_chunk[-overlap:]
+            current_chunk = overlapping_text + ". " + sentence
 
-        if (len(current_chunk)) > 0:
+        if len(current_chunk) >= self._max_chunk_size_characters:
+            for c in self.chunk_text(current_chunk, max_chunk_size, overlap):
+                chunks.append(
+                    TextBlock(text=c, tim_block_id=block_id, sub_block_id=sub_block_id),
+                )
+                sub_block_id += 1
+        elif (len(current_chunk)) > 0:
             chunks.append(
                 TextBlock(
                     text=current_chunk, tim_block_id=block_id, sub_block_id=sub_block_id
@@ -208,22 +243,46 @@ class Indexer:
             )
             sub_block_id += 1
 
-        return chunks
+        return chunks, len(text)
 
     # TODO ei haeta mahdollisia plugin lohkoja
-    def get_blocks(self, doc: Document) -> list[TextBlock]:
+    def get_blocks(self, doc: Document) -> tuple[list[TextBlock], int]:
         """returns the text chunks from provided tim document and splits long chunks into smaller chunks"""
+        total_content_len: int = 0
         blocks: list[TextBlock] = []
         try:
             tim_blocks = doc.export_raw_data()
 
             for tim_block in tim_blocks:
-                sub_blocks = self.chunk_text(tim_block)
+                sub_blocks, content_len = self.chunk_block(
+                    tim_block, self._chunk_size_characters
+                )
                 blocks.extend(sub_blocks)
+                total_content_len += content_len
         except Exception as e:
             print(f"Error getting tim blocks {e}")
 
-        return blocks
+        return blocks, total_content_len
+
+    @staticmethod
+    def get_generate_batches(
+        chunks: list[str], content_len: int, max_batch_size: int
+    ) -> list[list[str]]:
+        """Divide the chunks into multiple batches."""
+        if content_len <= max_batch_size:
+            return [chunks]
+        batches: list[list[str]] = []
+        current_batch: list[str] = []
+        batch_len: int = 0
+        for chunk in chunks:
+            chunk_len = len(chunk)
+            if batch_len + chunk_len >= max_batch_size and current_batch:
+                batches.append(current_batch)
+                current_batch = []
+                batch_len = 0
+            current_batch.append(chunk)
+            batch_len += chunk_len
+        return batches
 
     def create_embeddings(
         self, identifier: int, documents: list[Document]
@@ -254,6 +313,8 @@ class Indexer:
                         embedding_file
                         and isinstance(embedding_file, dict)
                         and "indexed_document_version" in embedding_file
+                        and "embeddings" in embedding_file
+                        and embedding_file["embeddings"]
                     ):
                         embeddings_created = embedding_file["indexed_document_version"]
 
@@ -266,18 +327,27 @@ class Indexer:
             except FileNotFoundError as e:
                 print(e)
                 pass
+            except JSONDecodeError:  # Invalid embeddings file
+                pass
             except IndexError:  # No changelog
                 pass
 
-            chunks = self.get_blocks(doc=document)
+            chunks, content_len = self.get_blocks(doc=document)
             texts = [chunk.text for chunk in chunks]
             if len(texts) == 0:
                 failed_embeddings += 1
                 continue
 
-            embeddings = embedding_model.generate(texts)
+            embeddings: list[list[float]] = []
 
-            tokens_used += embeddings.used_tokens
+            # Generate in batches to prevent exceeding maximum input len
+            batches = self.get_generate_batches(
+                texts, content_len, self._max_chunk_size_characters
+            )
+            for batch in batches:
+                batch_embeddings = embedding_model.generate(batch)
+                tokens_used += batch_embeddings.used_tokens
+                embeddings.extend(batch_embeddings.embeddings)
 
             document_id = document.doc_id
             data = {
@@ -290,7 +360,7 @@ class Indexer:
                         "sub_block_id": chunk.sub_block_id,
                         "document_id": document_id,
                     }
-                    for embedding, chunk in zip(embeddings.embeddings, chunks)
+                    for embedding, chunk in zip(embeddings, chunks)
                 ],
             }
 
@@ -323,8 +393,9 @@ class Indexer:
 
         return page_embeddings
 
+    @staticmethod
     def calculate_similarity(
-        self, embeddings: list[float], prompt_embedding: list[float]
+        embeddings: list[float], prompt_embedding: list[float]
     ) -> list[float]:
         embeddings = np.array(embeddings)
         prompt_embedding = np.array(prompt_embedding)
@@ -349,9 +420,9 @@ class Indexer:
         tokens_used = 0
 
         try:
-            prompt_embedding = embedding_model.generate([prompt])
-            tokens_used = prompt_embedding.used_tokens
-            prompt_embedding = prompt_embedding.embeddings[0]
+            prompt_result = embedding_model.generate([prompt])
+            tokens_used = prompt_result.used_tokens
+            prompt_embedding = prompt_result.embeddings[0]
         except Exception as e:
             print(f"Prompt embedding error: {e}")
             return ContextResponse(context="", tokens_used=tokens_used, used_chunks=[])
@@ -369,12 +440,14 @@ class Indexer:
                 text = chunk.get("text")
                 if not embedding or not text:
                     continue
+                # TODO: extend or append
                 embeddings.append(embedding)
                 texts.append(text)
 
         if not embeddings or not prompt_embedding:
             return ContextResponse(context="", tokens_used=tokens_used, used_chunks=[])
 
+        # FIX: similarity calc
         similarities = self.calculate_similarity(
             embeddings=embeddings, prompt_embedding=prompt_embedding
         )
@@ -403,3 +476,11 @@ class Indexer:
 
     def _get_file_name(self, doc_id: int, model_type: str) -> str:
         return f"{self.root_path}/{doc_id}_{model_type}.json"
+
+    @property
+    def _chunk_size_characters(self) -> int:
+        return CHUNK_TOKEN_TARGET * CHARACTERS_PER_TOKEN
+
+    @property
+    def _max_chunk_size_characters(self) -> int:
+        return MAX_TOKENS_CHUNK * CHARACTERS_PER_TOKEN
