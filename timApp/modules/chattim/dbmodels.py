@@ -91,7 +91,6 @@ class Usage(db.Model):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     user: Mapped[int] = mapped_column(ForeignKey("useraccount.id"))
-    conversation_id: Mapped[int] = mapped_column(Integer)
     llm_rule_id: Mapped[int] = mapped_column(
         ForeignKey("llm_rule.id", ondelete="CASCADE")
     )
