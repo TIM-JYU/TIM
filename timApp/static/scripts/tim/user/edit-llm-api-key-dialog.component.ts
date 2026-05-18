@@ -39,11 +39,11 @@ import {DirectoryPickerComponent} from "tim/folder/directory-picker.component";
                         </ul> 
                     </div>
 
-
                     <div class="form-group input-group-sm"> 
                         <div class="input-group">
                             <input name="groupName" class="form-control" type="text"
                                    [hidden]="listMode"
+                                   (keydown.enter)="$event.preventDefault()"
                                    [(ngModel)]="groupNamesInput"
                                    placeholder="{{ getPlaceholderGroups() }}">
                             <textarea name="groupNameList" class="form-control" type="text"
