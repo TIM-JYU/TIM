@@ -177,7 +177,7 @@ class Indexer:
         :param max_chunk_size: maximum size of the chunk
         :param overlap: overlap between chunks"""
         chunks = []
-        text = block.get["md"]
+        text = block["md"]
         if not text:
             return []
         block_id = block["id"]
