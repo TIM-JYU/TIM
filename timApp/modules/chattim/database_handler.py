@@ -604,3 +604,20 @@ class TimDatabase:
             Usage.user == user_id,
         )
         return db.session.scalar(stmt)
+
+    @staticmethod
+    def get_shared_api_keys(user_id: int) -> list[LLMRule]:
+        """Get API keys shared with the user via user groups."""
+        user = User.get_by_id(user_id)
+        if not user:
+            return []
+        user_group_ids = [g.id for g in user.groups]
+        if not user_group_ids:
+            return []
+
+        stmt = select(LLMRule).where(
+            LLMRule.owner != user_id,
+            LLMRule.document_id <= 0,
+            LLMRule.groups.overlap(user_group_ids),
+        )
+        return db.session.execute(stmt).scalars().all()

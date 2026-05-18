@@ -27,6 +27,7 @@ from timApp.modules.chattim.rag import (
     Message,
     Iterable,
 )
+from timApp.user.user import User
 from typing import Generic, TypeVar, TypedDict, cast
 
 from timApp.modules.chattim.model import (
@@ -91,6 +92,8 @@ class UserKey:
     provider: str
     public_key: str
     is_selected: bool
+    is_shared: bool = False
+    shared_by: str = ""
 
 
 @dataclass
@@ -416,6 +419,7 @@ class PluginCore:
         # Or should we just disable the model selection in the UI until an API-key alias has been set?
         plugin_data = self.tim_database.get_llm_rule(document_id)
         user_keys = self.tim_database.get_user_api_keys(user_id)
+        shared_keys = self.tim_database.get_shared_api_keys(user_id)
 
         # Options for selecting key for plugin, no apikey shown
         available_keys = [
@@ -427,6 +431,20 @@ class PluginCore:
             )
             for k in user_keys
         ]
+
+        for k in shared_keys:
+            owner = User.get_by_id(k.owner)
+            owner_name = owner.name if owner else "unknown"
+            available_keys.append(
+                UserKey(
+                    provider=str(k.provider),
+                    public_key=str(k.public_key),
+                    is_selected=plugin_data is not None
+                    and k.public_key == plugin_data.public_key,
+                    is_shared=True,
+                    shared_by=owner_name,
+                )
+            )
 
         api_key = ""
         provider = "openai"

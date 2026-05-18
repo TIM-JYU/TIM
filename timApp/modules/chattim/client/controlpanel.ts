@@ -12,6 +12,8 @@ export interface UserKey extends Record<string, JsonValue> {
     provider: string;
     public_key: string;
     is_selected: boolean;
+    is_shared: boolean;
+    shared_by: string;
 }
 
 export interface ControlPanelSettings extends Record<string, JsonValue> {
@@ -78,7 +80,10 @@ export interface TokenLimitForUser extends Record<string, JsonValue> {
                     <div *ngIf="keyOpen" class="settings-section-body">
                         <select class="form-control"
                                 [(ngModel)]="selectedPublicKey">
-                            <option *ngFor="let key of availablePublicKeys" [ngValue]="key.public_key">{{ key.public_key +" - "+ key.provider }}</option>
+                           <option *ngFor="let key of availablePublicKeys" 
+                                   [ngValue]="key.public_key">{{ key.public_key + " - " + key.provider + (key.is_shared ? " " +
+                                   "(shared by " + key.shared_by + ")" : "") }}
+                            </option>z§
                         </select>
                         <button class="btn btn-default"
                                 style="margin-top: 6px;"
