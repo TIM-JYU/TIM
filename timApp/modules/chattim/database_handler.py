@@ -255,20 +255,13 @@ class TimDatabase:
             )
             db.session.add(rule)
         else:
-            if public_key:
-                rule.public_key = public_key
-            if teachers:
-                rule.teachers = teachers
-            if current_mode:
-                rule.current_mode = current_mode
-            if total_tokens_spent:
-                rule.total_tokens_spent = total_tokens_spent
-            if indexed_document_ids:
-                rule.indexed_chunk_ids = indexed_document_ids
-            if agent:
-                rule.agent = agent
-            if conv_time_window:
-                rule.conv_time_window = conv_time_window
+            rule.public_key = public_key
+            rule.teachers = teachers
+            rule.current_mode = current_mode
+            rule.total_tokens_spent = total_tokens_spent
+            rule.indexed_document_ids = indexed_document_ids
+            rule.agent = agent
+            rule.conv_time_window = conv_time_window
             rule.system_prompt_path = system_prompt_path
             rule.use_streaming = use_streaming
             rule.temperature = temperature
