@@ -132,7 +132,8 @@ export interface ControlPanelData extends ControlPanelSettings {
                               placeholder="Ask me about TIM related things"
                               style="resize: none; overflow: hidden; min-width: 0;"
                               [(ngModel)]="userInput"
-                              (keyup.enter)="onEnter()"
+                              (keydown.enter)="onEnter($event)"
+                              onkeyup="this.style.height='auto'; this.style.height=this.scrollHeight+'px'"
                               oninput="this.style.height='auto'; this.style.height=this.scrollHeight+'px'">
                     </textarea>
 
@@ -306,7 +307,8 @@ export class ChatTIMComponent
         }
     }
 
-    async onEnter() {
+    async onEnter(e: Event) {
+        e.preventDefault();
         await this.sendUserInput();
     }
 
@@ -512,6 +514,7 @@ export class ChatTIMComponent
 
     async doSendUserInput(): Promise<void> {
         this.isRunning = true;
+        this.error = undefined;
         this.answer = undefined;
 
         const input: string = this.userInput;
