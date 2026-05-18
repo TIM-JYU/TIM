@@ -101,9 +101,14 @@ export interface TokenLimitForUser extends Record<string, JsonValue> {
                         Model: <strong>{{ selectedModelLabel }}</strong>
                     </button>
                     <div *ngIf="modelOpen" class="settings-section-body">
-                        <select class="form-control"
-                                [(ngModel)]="selectedModel">
-                            <option *ngFor="let m of availableModels" [ngValue]="m.value">{{ m.label }}</option>
+                        <div class="checkbox">
+                            <label>
+                                <input type="checkbox" [(ngModel)]="filterModels">
+                                Filter non-chat models
+                            </label>
+                        </div>
+                        <select class="form-control" [(ngModel)]="selectedModel">
+                            <option *ngFor="let m of filteredModels" [ngValue]="m.value">{{ m.label }}</option>
                         </select>
 
                         <!-- Model parameters -->
@@ -381,6 +386,20 @@ export class ChatControlPanelComponent {
     }
     systemPromptSelection: string[] = [];
 
+    readonly NON_CHAT_PREFIXES = [
+        "image",
+        "embedding",
+        "whisper",
+        "tts",
+        "audio",
+        "transcribe",
+        "realtime",
+        "sora",
+        "dall-e",
+        "moderation",
+    ];
+    filterModels = true;
+
     timeUnitOptions: {value: string; label: string}[] = [
         {value: "min", label: "Minutes"},
         {value: "h", label: "Hours"},
@@ -529,5 +548,13 @@ export class ChatControlPanelComponent {
             return undefined;
         }
         return this.systemPromptSelection[0];
+    }
+
+    get filteredModels(): ChatModel[] {
+        if (!this.availableModels) return [];
+        if (!this.filterModels) return this.availableModels;
+        return this.availableModels.filter(
+            (m) => !this.NON_CHAT_PREFIXES.some((p) => m.value.includes(p))
+        );
     }
 }

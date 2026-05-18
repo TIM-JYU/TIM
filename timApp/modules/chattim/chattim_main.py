@@ -418,21 +418,6 @@ def _api_key_to_dict(key: APIKey) -> dict:
     }
 
 
-# TO exclude models not best suited for chat
-NON_CHAT_PREFIXES = (
-    "image",
-    "embedding",
-    "whisper",
-    "tts",
-    "audio",
-    "transcribe",
-    "realtime",
-    "sora",
-    "dall-e",
-    "moderation",
-)
-
-
 def get_models(params: GetModelsParams) -> dict:
     user_id = get_current_user_id()
     try:
@@ -440,12 +425,7 @@ def get_models(params: GetModelsParams) -> dict:
     except Exception as e:
         return {"error": str(e), "models": []}
     models = plugincore.get_models(provider, api_key)
-    filtered = [
-        model
-        for model in models
-        if not any(part in model["value"] for part in NON_CHAT_PREFIXES)
-    ]
-    return {"models": filtered}
+    return {"models": models}
 
 
 register_route(chattim, "post", "ask", ChatTimAskParams, ask_route)
