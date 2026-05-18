@@ -242,11 +242,12 @@ class Indexer:
         failed_embeddings = 0
         os.makedirs(self.root_path, exist_ok=True)
         for document in documents:
-            changelog = document.get_changelog(max_entries=1)
             file_name = self._get_file_name(document.doc_id, model_type)
+            document_last_edited: datetime = datetime.now()
 
-            document_last_edited = changelog.entries[0].time
             try:
+                changelog = document.get_changelog(max_entries=1)
+                document_last_edited = changelog.entries[0].time
                 with open(file_name, "r") as file:
                     embedding_file = json.load(file)
                     if (
@@ -264,6 +265,8 @@ class Indexer:
                             continue
             except FileNotFoundError as e:
                 print(e)
+                pass
+            except IndexError:  # No changelog
                 pass
 
             chunks = self.get_blocks(doc=document)
@@ -290,10 +293,6 @@ class Indexer:
                     for embedding, chunk in zip(embeddings.embeddings, chunks)
                 ],
             }
-
-            file_name = self._get_file_name(
-                document.doc_id, embedding_model.get_model_type()
-            )
 
             try:
                 with open(file_name, "w") as f:
