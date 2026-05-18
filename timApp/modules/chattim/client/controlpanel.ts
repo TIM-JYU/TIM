@@ -80,6 +80,12 @@ export interface TokenLimitForUser extends Record<string, JsonValue> {
                                 [(ngModel)]="selectedPublicKey">
                             <option *ngFor="let key of availablePublicKeys" [ngValue]="key.public_key">{{ key.public_key +" - "+ key.provider }}</option>
                         </select>
+                        <button class="btn btn-default"
+                                style="margin-top: 6px;"
+                                [disabled]="!selectedPublicKey"
+                                (click)="fetchModelsClicked()">
+                            Fetch models
+                        </button>
                     </div>
                 </div>
                                 
@@ -392,9 +398,14 @@ export class ChatControlPanelComponent {
     embedderAvailable(provider: string): boolean {
         return this.availableEmbedderProviders.includes(provider.toLowerCase());
     }
+    @Output() fetchModelsClick = new EventEmitter<string>();
     @Output() saveSettingsClick = new EventEmitter<ControlPanelSettings>();
     @Output() panelToggled = new EventEmitter<boolean>();
     @Output() clearConversationClick = new EventEmitter<void>();
+
+    fetchModelsClicked() {
+        this.fetchModelsClick.emit(this.selectedPublicKey);
+    }
 
     togglePanel() {
         this.settingsOpen = !this.settingsOpen;

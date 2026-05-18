@@ -157,6 +157,7 @@ export interface ControlPanelData extends ControlPanelSettings {
                             (saveSettingsClick)="onSaveSettings($event)"
                             (clearConversationClick)="onClearConversation()"
                             (panelToggled)="onControlPanelToggle($event)"
+                            (fetchModelsClick)="onFetchModels($event)"
                             [selectedModel]="selectedModel"
                             [setModelTemperature]="modelTemperature"
                             [useStreaming]="useStreaming"
@@ -924,6 +925,33 @@ export class ChatTIMComponent
      */
     dateString(ts: number | undefined): string {
         return ts ? new Date(ts).toLocaleString() : "";
+    }
+
+    async onFetchModels(publicKey: string) {
+        this.isRunning = true;
+        this.controlpanelError = undefined;
+
+        const response = await this.httpPost<{
+            models: ChatModel[];
+            error?: string;
+        }>(this.route("getModels"), {public_key: publicKey});
+
+        this.isRunning = false;
+        if (response.ok) {
+            const data = response.result;
+            if (data.error) {
+                this.controlpanelError = data.error;
+                return;
+            }
+            this.availableModels = data.models;
+            if (this.availableModels.length > 0) {
+                this.selectedModel = this.availableModels[0].value;
+            } else {
+                this.controlpanelError = "No models found for this API key.";
+            }
+        } else {
+            this.controlpanelError = response.result.error.error;
+        }
     }
 }
 

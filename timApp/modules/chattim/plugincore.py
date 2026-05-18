@@ -1058,3 +1058,10 @@ class PluginCore:
             get_groups_by_ids(rule.groups),
             [str(p) for p in rule.paths],
         )
+
+    def get_models(self, provider_str: str, api_key: str) -> list[ChatModel]:
+        provider = self._parse_provider(provider_str)
+        if provider is not None:
+            return self._get_supported_chat_models(provider, api_key)
+        else:
+            return []
