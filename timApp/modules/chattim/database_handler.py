@@ -24,9 +24,9 @@ class TimDatabase:
         """
         Returns a document corresponding to the given id.
         """
-        doc_entry = docentry.DocEntry.find_all_by_id(doc_id)
+        doc_entry = TimDatabase.get_doc_entry_by_id(doc_id)
         if doc_entry:
-            return doc_entry[0].document  # paragraphs -> .get_paragraphs()
+            return doc_entry.document  # paragraphs -> .get_paragraphs()
         return None
 
     @staticmethod
@@ -53,6 +53,13 @@ class TimDatabase:
         for d in doc_entries if doc_entries else []:
             documents.append(d.document)  # paragraphs -> .get_paragraphs()
         return documents
+
+    @staticmethod
+    def get_doc_entry_by_id(doc_id: int) -> DocEntry | None:
+        entries = docentry.DocEntry.find_all_by_id(doc_id)
+        if not entries:
+            return None
+        return entries[0]
 
     @staticmethod
     def check_rights(user_id: int, doc_id: int) -> UserItemRights | None:

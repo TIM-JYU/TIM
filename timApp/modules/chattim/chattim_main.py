@@ -75,7 +75,7 @@ class ChatTimAskResponse(TypedDict, total=False):
     answer: str | None
     usage: int | None  # TODO: maybe not needed
     error: str | None
-    used_chunks: list[str] | None
+    citations: list[str] | None
 
 
 @dataclass
@@ -211,7 +211,7 @@ def ask_route(params: ChatTimAskParams) -> ChatTimAskResponse:
         message, context = resp.value
         return ChatTimAskResponse(
             answer=message,
-            used_chunks=context,
+            citations=context,
         )
     return ChatTimAskResponse(error=resp.error)
 
@@ -228,8 +228,11 @@ def ask_stream_route(params: ChatTimAskParams) -> Response:
             yield to_ndjson_str(ChatTimAskResponse(error=resp.error))
             return
 
+        citations: list[str] | None = None
+
         try:
             stream, context = resp.value
+            citations = context.citations
             for chunk in stream:
                 yield to_ndjson_str(ChatTimAskResponse(answer=chunk))
         except ModelError as e:
@@ -239,6 +242,8 @@ def ask_stream_route(params: ChatTimAskParams) -> Response:
         except Exception as e:
             yield to_ndjson_str(ChatTimAskResponse(error=str(e)))
             return
+        finally:
+            yield to_ndjson_str(ChatTimAskResponse(citations=citations))
 
     return Response(
         stream_with_context(generate()),
@@ -286,19 +291,11 @@ def save_settings(params: ChatTimSaveSettingsParams) -> PluginAnswerResp:
 
 
 def get_messages(params: GetMessagesParams) -> dict:
-    user_id = str(get_current_user_id())
-    document_id = str(params.document_id)
+    user_id = get_current_user_id()
+    document_id = params.document_id
     amount = params.amount
     ts_end = params.timestamp_end_ms
-
-    chat_messages = plugincore.get_messages_tw(
-        user_id, document_id, None, ts_end, amount
-    )
-    messages = [
-        {"content": m.content, "role": m.role, "timestamp_ms": m.timestamp}
-        for m in chat_messages
-        if m.role in ("user", "assistant")
-    ]
+    messages = plugincore.get_messages_ui(user_id, document_id, ts_end, amount)
     return {"messages": messages}
 
 

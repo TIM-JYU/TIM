@@ -23,6 +23,8 @@ class ChatMessage:
     """Timestamp of when the message was sent in milliseconds."""
     usage: Usage | None = None
     """Tokens used for generating the message."""
+    citations: list[str] | None = None
+    """Cited materials for the agent message."""
 
     def to_dict(self) -> dict:
         """Convert `ChatMessage` object to a `dict`.

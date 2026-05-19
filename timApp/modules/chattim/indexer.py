@@ -38,7 +38,8 @@ class ContextResponse:
 
     context: str
     tokens_used: int
-    used_chunks: list[str]
+    used_context: list[tuple[int, int]]
+    """A list of tuples of document IDs and block IDs."""
 
 
 # maybe useless?
@@ -434,34 +435,42 @@ class Indexer:
 
         embeddings: list[list[float]] = []
         texts: list[str] = []
+        blocks: list[tuple[int, int]] = []
 
         for page in page_embeddings:
             for chunk in page.get("embeddings", []):
                 embedding = chunk.get("embedding")
                 text = chunk.get("text")
+                doc_id = chunk.get("document_id", -1)
+                tim_block_id = chunk.get("tim_block_id", -1)
                 if not embedding or not text:
                     continue
                 embeddings.append(embedding)
                 texts.append(text)
+                blocks.append((doc_id, tim_block_id))
 
         if not embeddings or not prompt_embedding:
-            return ContextResponse(context="", tokens_used=tokens_used, used_chunks=[])
+            return ContextResponse(context="", tokens_used=tokens_used, used_context=[])
 
         similarities: list[float] = self.calculate_similarity(
             embeddings=embeddings, prompt_embedding=prompt_embedding
         )
-        data = [[t, e] for t, e in zip(texts, similarities)]
+        data: list[tuple[float, int]] = [
+            (e, i) for e, i in zip(similarities, range(0, len(similarities)))
+        ]
 
-        data.sort(key=lambda x: x[1], reverse=True)
+        data.sort(key=lambda x: x[0], reverse=True)
 
         best_chunks = data[0:k]
-        context = []
-        for text, similarity in best_chunks:
-            context.append(text)
-        context_string = ", ".join(context)
+        context: str = ""
+        context_ids: list[tuple[int, int]] = []
+        for similarity, index in best_chunks:
+            content = texts[index]
+            context += f"{content}\n\n"
+            context_ids.append(blocks[index])
 
         return ContextResponse(
-            context=context_string, tokens_used=tokens_used, used_chunks=context
+            context=context, tokens_used=tokens_used, used_context=context_ids
         )
 
     def add_embedder(self, identifier: int, embedder: EmbeddingModel) -> None:

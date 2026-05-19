@@ -47,8 +47,7 @@ DEFAULT_CACHE_TIMEOUT = 60 * 15  # seconds
 
 @dataclass
 class ChatContext:
-    # TODO: use links
-    used_chunks: list[str] | None = None
+    citations: list[str] | None = None
 
 
 # TODO: Is this needed if we have no model labels anymore?
@@ -135,7 +134,7 @@ class PreparedChatRequest:
     document_id: str
     user_input: str
     response: Iterable[ModelResponse] | ModelResponse
-    used_chunks: list[str]
+    citations: list[str]
 
 
 # TODO: maybe a dict or dataclass would be more descriptive
@@ -216,7 +215,8 @@ class PluginCore:
             prompt=validated_input, identifier=document_id
         )
         context = response.context
-        used_chunks = response.used_chunks
+        citations = self._get_citations(response.used_context)
+        print(citations)
         system_prompt = self.get_system_prompt(caller_id, document_id)
 
         msg_data = MessageData(
@@ -247,7 +247,7 @@ class PluginCore:
             document_id=document_id_str,
             user_input=validated_input,
             response=answer,
-            used_chunks=used_chunks,
+            citations=citations,
         )
         return Result(value=prepared)
 
@@ -261,6 +261,7 @@ class PluginCore:
         timestamp_user: int,
         timestamp_answer: int,
         usage: Usage | None,
+        citations: list[str] | None,
     ) -> None:
         """Save the messages.
 
@@ -287,6 +288,7 @@ class PluginCore:
                     content=assistant_answer,
                     usage=usage,
                     timestamp=timestamp_answer,
+                    citations=citations,
                 ),
             ],
         )
@@ -312,7 +314,7 @@ class PluginCore:
         response: ModelResponse = p.response
         whole_msg = response.content or ""
         usage = response.usage
-        context = p.used_chunks
+        citations = p.citations
 
         # TODO: save user message even if model response fails?
         timestamp_answer = ChatMessage.ts_ms()
@@ -324,9 +326,10 @@ class PluginCore:
             timestamp_user=timestamp_user,
             timestamp_answer=timestamp_answer,
             usage=usage,
+            citations=citations,
         )
 
-        return Result(value=(whole_msg, ChatContext(used_chunks=context)))
+        return Result(value=(whole_msg, ChatContext(citations=citations)))
 
     def chat_request_stream(
         self,
@@ -349,6 +352,7 @@ class PluginCore:
         if not prep.ok() or not prep.value:
             return Result(error=prep.error)
         p = prep.value
+        citations = p.citations
 
         assert isinstance(p.response, Iterable)
         stream: Iterable[ModelResponse] = p.response
@@ -386,10 +390,10 @@ class PluginCore:
                     timestamp_user=timestamp_user,
                     timestamp_answer=timestamp_answer,
                     usage=usage,
+                    citations=citations,
                 )
 
-        context = p.used_chunks
-        return Result(value=(gen(), ChatContext(used_chunks=context)))
+        return Result(value=(gen(), ChatContext(citations=citations)))
 
     def get_plugin_settings(
         self, user_id: int, document_id: int
@@ -647,6 +651,34 @@ class PluginCore:
         return self.history_manager.get_history_time_window(
             document_id, caller_id, ts_begin, ts_end, max_count
         )
+
+    def get_messages_ui(
+        self,
+        caller_id: int,
+        document_id: int,
+        ts_end: int | None = None,
+        max_count: int = 128,
+    ) -> list[dict]:
+        """Retrieve the wanted message window to the UI."""
+        # TODO: get the LLMRule from cache
+        # rule = self.tim_database.get_llm_rule(document_id)
+        # include_citations = rule.include_citations
+        include_citations = True
+
+        messages = self.history_manager.get_history_time_window(
+            str(document_id), str(caller_id), None, ts_end, max_count
+        )
+
+        return [
+            {
+                "content": m.content,
+                "role": m.role,
+                "timestamp_ms": m.timestamp,
+                "citations": m.citations if include_citations else None,
+            }
+            for m in messages
+            if m.role in ("user", "assistant")
+        ]
 
     def clear_history(self, caller_id: str, document_id: str) -> None:
         self.history_manager.clear_history(document_id, caller_id)
@@ -1081,3 +1113,17 @@ class PluginCore:
             return self._get_supported_chat_models(provider, api_key)
         else:
             return []
+
+    def _get_citations(self, blocks: list[tuple[int, int]]) -> list[str]:
+        citations: list[str] = []
+        print(blocks)
+        for doc_id, block_id in blocks:
+            doc = self.tim_database.get_doc_entry_by_id(doc_id)
+            if not doc:
+                continue
+            citations.append(self._get_block_view_addr(doc.path, block_id))
+        return list(set(citations))
+
+    @staticmethod
+    def _get_block_view_addr(document_path: str, block_id: int) -> str:
+        return "/view/" + document_path + "#" + str(block_id)

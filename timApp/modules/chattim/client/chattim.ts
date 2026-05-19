@@ -68,6 +68,7 @@ export interface Message {
     content: string;
     role: string;
     timestamp_ms?: number;
+    citations?: string[];
 }
 
 export interface ChatEntry {
@@ -77,9 +78,8 @@ export interface ChatEntry {
 
 export interface AskResponse {
     answer?: string;
-    usage?: number;
+    citations?: string[];
     error?: string;
-    used_chunks?: string[];
 }
 
 export interface AskParams {
@@ -120,7 +120,15 @@ export interface ControlPanelData extends ControlPanelSettings {
                             </div>
                             <div *ngFor="let entry of conversation">
                                 <div class="chat-user">{{ entry.user.content }}</div>
-                                <div class="chat-bot" [innerHTML]="entry.agent.content | purify"></div>
+                                <div class="chat-bot">
+                                    <div [innerHTML]="entry.agent.content | purify"></div>
+                                    <span *ngIf="entry.agent.citations && entry.agent.citations.length > 0">
+                                        <ng-container *ngFor="let citation of entry.agent.citations; let i = index">
+                                            <a [href]="citation" target="_blank">[{{ i + 1 }}]</a>
+                                            <ng-container *ngIf="i < entry.agent.citations.length - 1">, </ng-container>
+                                        </ng-container>
+                                    </span>
+                                </div>
                             </div>
                         </div>
 
@@ -150,7 +158,7 @@ export interface ControlPanelData extends ControlPanelSettings {
                             </div>
                         </div>
                     </div>
-                    
+
                     <div class="control-panel-container">
                         <chattim-control-panel
                             [isTeacher]="isTeacher"
@@ -178,7 +186,7 @@ export interface ControlPanelData extends ControlPanelSettings {
                             [availablePublicKeys]="availablePublicKeys">
                         </chattim-control-panel>
                     </div>
-                    
+
                 </div>
             </ng-container>
         </tim-dialog-frame>
@@ -244,7 +252,6 @@ export class ChatTIMComponent
     inputStem = ""; // TODO: do something with this or remove?
     document_id = -1;
     isTeacher: boolean = false;
-    used_chunks?: string[];
     selectedItemPaths: string[] = [];
     pathRestrictions?: DirectoryPickerRestrictions;
     localFilePaths = "";
@@ -571,16 +578,10 @@ export class ChatTIMComponent
             }
 
             this.answer = data.answer;
-            this.used_chunks = data.used_chunks;
-            //console.log("used_chunks: ", this.used_chunks);
             const message: Message = this.conversation[entry_index].agent;
             message.content = this.answer ?? "";
             message.timestamp_ms = Date.now();
-            // TODO: For testing purposes
-            if (data.usage != undefined) {
-                this.conversation[entry_index].agent.content +=
-                    "\nTokens used: " + data.usage ?? "";
-            }
+            message.citations = data.citations;
             this.scheduleAutoScroll(false, pinned);
         } else {
             this.handleError(response.result.error.error, "http");
@@ -637,13 +638,13 @@ export class ChatTIMComponent
                     break;
                 }
 
+                if (res.citations) {
+                    entry.agent.citations = res.citations;
+                }
+
                 entry.agent.content += res.answer ?? "";
                 processedIdx += idx + 1;
                 didAppend = true;
-                // TODO: For dev purposes. Handle tokens somehow else
-                if (res.usage) {
-                    entry.agent.content += "\nTokens used: " + res.usage;
-                }
                 this.handleError(res.error, "server");
             }
             if (didAppend) {
@@ -781,7 +782,6 @@ export class ChatTIMComponent
         if (response.ok) {
             this.conversation = [];
             this.hasMoreHistory = false;
-            this.used_chunks = undefined;
             this.answer = undefined;
             this.error = undefined;
             return;
