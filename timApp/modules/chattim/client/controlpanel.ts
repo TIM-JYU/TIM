@@ -50,7 +50,7 @@ export interface TokenLimitForUser extends Record<string, JsonValue> {
                 <div class="settings-row">
                     <button class="btn btn-warning"
                             (click)="clearConversationClicked()">
-                        Tyhjennä keskustelu
+                        Clear conversation
                     </button>
                 </div>
             </ng-container>
