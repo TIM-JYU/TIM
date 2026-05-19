@@ -9,6 +9,7 @@ import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import type {IGroup, IUserLLMApiKey} from "tim/user/IUser";
 import {TooltipModule} from "ngx-bootstrap/tooltip";
 import {PurifyModule} from "tim/util/purify.module";
+import {DirectoryPickerComponent} from "tim/folder/directory-picker.component";
 
 /**
  * User can edit LLM model API key permissions.
@@ -22,10 +23,8 @@ import {PurifyModule} from "tim/util/purify.module";
             </ng-container>
             <ng-container body>
                 <form>
-                    <div class="form-group input-group-sm">
-
-                        <label for="{{ listMode ? 'groupNameList' : 'groupName' }}">User groups:</label>
-
+                    <div class="form-group input-group-sm"> 
+                        <label for="{{ listMode ? 'groupNameList' : 'groupName' }}">User groups:</label> 
                         <ul class="rights-list">
                             <li *ngFor="let group of groups">
                                 <span class="flex align-center">
@@ -37,8 +36,11 @@ import {PurifyModule} from "tim/util/purify.module";
                                     </span>
                                 </span>
                             </li>
-                        </ul>
- 
+                        </ul> 
+                    </div>
+
+
+                    <div class="form-group input-group-sm"> 
                         <div class="input-group">
                             <input name="groupName" class="form-control" type="text"
                                    [hidden]="listMode"
@@ -55,20 +57,18 @@ import {PurifyModule} from "tim/util/purify.module";
                             <i class="glyphicon glyphicon-align-left"></i>
                             </span>
                         </div>
-
-                        <label for="docPaths">Folder or document paths:</label>
-                        <div class="input-group" style="width: 100%">
-                            <textarea name="docPaths" class="form-control" type="text"
-                                      placeholder="{{getPlaceholderDocs()}}"
-                                      [(ngModel)]="itemPathsInput">
-                            </textarea>
-                        </div>
-
-                        <tim-alert *ngIf="editError" severity="danger" i18n>
-                            Failed to save: {{ editError }}
-                        </tim-alert>
                     </div>
-                </form>
+
+                    <div class="form-group input-group-sm"> 
+                        <label for="docPaths">Folder or document paths:</label> 
+                        <tim-directory-picker
+                            [(selection)]="paths"
+                        ></tim-directory-picker>
+                    </div>
+                </form> 
+                <tim-alert *ngIf="editError" severity="danger" i18n>
+                    Failed to save: {{ editError }}
+                </tim-alert>
             </ng-container>
             <ng-container footer>
                 <tim-loading *ngIf="saving" style="margin-right: 1em;"></tim-loading>
@@ -88,16 +88,15 @@ export class EditLLMAPIKeyDialogComponent extends AngularDialogComponent<
 > {
     ngOnInit() {
         this.groups = this.data.key.groups ?? [];
-        const paths = this.data.key.itemPaths ?? [];
+        this.paths = this.data.key.itemPaths ?? [];
         this.groupNamesInput = "";
-        this.itemPathsInput = paths.join("\n");
     }
 
     dialogName: string = "EditLLMAPIKey";
     groupNamesInput: string = "";
-    itemPathsInput: string = "";
 
     groups: IGroup[] = [];
+    paths: string[] = [];
 
     removingRight?: IGroup;
     loading: boolean = false;
@@ -115,7 +114,7 @@ export class EditLLMAPIKeyDialogComponent extends AngularDialogComponent<
         this.saving = true;
         const key: IUserLLMApiKey = this.data.key;
         const groups: string[] = this.splitInput(this.groupNamesInput, "\n;");
-        const paths: string[] = this.splitInput(this.itemPathsInput, "\n");
+        const paths: string[] = this.paths;
 
         const res = await toPromise(
             this.http.post<{groups: IGroup[]; paths: string[]}>(
@@ -137,6 +136,7 @@ export class EditLLMAPIKeyDialogComponent extends AngularDialogComponent<
                 itemPaths: res.result.paths,
             });
             this.groups = res.result.groups;
+            this.paths = res.result.paths;
             this.groupNamesInput = "";
             this.editError = undefined;
             return;
@@ -187,10 +187,6 @@ export class EditLLMAPIKeyDialogComponent extends AngularDialogComponent<
             (this.listMode ? " or newlines" : "")
         );
     }
-
-    getPlaceholderDocs(): string {
-        return "enter folder or document paths separated by newlines";
-    }
 }
 
 @NgModule({
@@ -202,6 +198,7 @@ export class EditLLMAPIKeyDialogComponent extends AngularDialogComponent<
         CommonModule,
         TooltipModule,
         PurifyModule,
+        DirectoryPickerComponent,
     ],
 })
 export class EditLLMAPIKeyDialogModule {}

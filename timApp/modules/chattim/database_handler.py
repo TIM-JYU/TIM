@@ -20,21 +20,6 @@ from timApp.auth.get_user_rights_for_item import (
 @dataclass
 class TimDatabase:
     @staticmethod
-    def identify_user(user_id: int) -> str:
-        """
-        Checks if the given user is a teacher or a student
-        """
-        user = User.get_by_id(user_id)
-        if user:
-            teacher = user.is_sisu_teacher
-            if teacher:
-                return "teacher"
-            student = User.get_home_org_student_id(user)
-            if student:
-                return "student"
-        return "user"  # TODO: better options
-
-    @staticmethod
     def get_tim_document_by_id(doc_id: int) -> Document | None:
         """
         Returns a document corresponding to the given id.
@@ -542,7 +527,7 @@ class TimDatabase:
         Deletes the given global policy.
         """
         stmt = delete(Policy).where(
-            Policy.llm_rule == llm_rule,
+            Policy.llm_rule_id == llm_rule.id,
             Policy.for_user.is_(None),
         )
         db.session.execute(stmt)
@@ -554,7 +539,7 @@ class TimDatabase:
         Deletes the user policy of the given user.
         """
         stmt = delete(Policy).where(
-            Policy.llm_rule == llm_rule,
+            Policy.llm_rule_id == llm_rule.id,
             Policy.for_user == user_id,
         )
         db.session.execute(stmt)
@@ -566,7 +551,7 @@ class TimDatabase:
         Gets the given global policy.
         """
         stmt = select(Policy).where(
-            Policy.llm_rule == llm_rule,
+            Policy.llm_rule_id == llm_rule.id,
             Policy.for_user.is_(None),
         )
         return db.session.scalar(stmt)
@@ -577,19 +562,16 @@ class TimDatabase:
         Gets the user policy of the given user.
         """
         stmt = select(Policy).where(
-            Policy.llm_rule == llm_rule,
+            Policy.llm_rule_id == llm_rule.id,
             Policy.for_user == user_id,
         )
         return db.session.scalar(stmt)
 
     @staticmethod
-    def set_usage(
-        user: int, conv_id: int, llm_rule: LLMRule, used_tokens: int
-    ) -> Usage:
+    def set_usage(user: int, llm_rule: LLMRule, used_tokens: int) -> Usage:
         """
         Sets the usage for the given user in the given LLM rule context.
         :param user: ID of the user for the usage.
-        :param conv_id: ID of the conversation of the user.
         :param llm_rule: LLM rule instance.
         :param used_tokens: Number of used tokens.
         :return: Usage of the given user.
@@ -598,7 +580,6 @@ class TimDatabase:
         if not usage:
             usage = Usage(
                 user=user,
-                conversation_id=conv_id,
                 llm_rule_id=llm_rule.id,
                 llm_rule=llm_rule,
                 used_tokens=used_tokens,
@@ -615,7 +596,7 @@ class TimDatabase:
         Deletes the usage of the given user in the given LLM rule instance.
         """
         stmt = delete(Usage).where(
-            Usage.llm_rule == llm_rule,
+            Usage.llm_rule_id == llm_rule.id,
             Usage.user == user_id,
         )
         db.session.execute(stmt)
@@ -627,7 +608,7 @@ class TimDatabase:
         Gets the usage of the given user in the given LLM rule instance.
         """
         stmt = select(Usage).where(
-            Usage.llm_rule == llm_rule,
+            Usage.llm_rule_id == llm_rule.id,
             Usage.user == user_id,
         )
         return db.session.scalar(stmt)
