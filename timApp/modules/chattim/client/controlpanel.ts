@@ -1,4 +1,5 @@
 import {Component, EventEmitter, Input, Output} from "@angular/core";
+import {showConfirm} from "tim/ui/showConfirmDialog";
 import type {JsonValue} from "tim/util/jsonvalue";
 
 export interface ChatModel extends Record<string, JsonValue> {
@@ -355,7 +356,15 @@ export class ChatControlPanelComponent {
         this.panelToggled.emit(this.settingsOpen);
     }
 
-    clearConversationClicked() {
+    async clearConversationClicked() {
+        if (
+            !(await showConfirm(
+                "Clear conversation?",
+                "Are you sure you want to clear the conversation?"
+            ))
+        ) {
+            return;
+        }
         this.clearConversationClick.emit();
     }
 

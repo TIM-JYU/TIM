@@ -531,7 +531,7 @@ export class ChatTIMComponent
 
             this.answer = data.answer;
             this.used_chunks = data.used_chunks;
-            console.log("used_chunks: ", this.used_chunks);
+            //console.log("used_chunks: ", this.used_chunks);
             const message: Message = this.conversation[entry_index].agent;
             message.content = this.answer ?? "";
             message.timestamp_ms = Date.now();
@@ -705,7 +705,9 @@ export class ChatTIMComponent
         if (this.isRunning || this.document_id <= 0) {
             return;
         }
-
+        if (this.conversation.length == 0) {
+            return;
+        }
         this.isRunning = true;
         const response = await this.httpPost(this.route("clearMessages"), {
             document_id: this.document_id,
