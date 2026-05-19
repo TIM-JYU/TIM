@@ -71,6 +71,7 @@ export interface AskResponse {
     answer?: string;
     usage?: number;
     error?: string;
+    used_chunks?: string[];
 }
 
 export interface AskParams {
@@ -133,10 +134,12 @@ export interface ControlPanelData extends ControlPanelSettings {
                                 [innerHTML]="buttonText() | purify">
                         </button>
                     </div>
+                    
                     <div class="control-panel-container">
                         <chattim-control-panel
                             [isTeacher]="isTeacher"
                             (saveSettingsClick)="onSaveSettings($event)"
+                            (clearConversationClick)="onClearConversation()"
                             (panelToggled)="onControlPanelToggle($event)"
                             [selectedModel]="selectedModel"
                             [setModelTemperature]="modelTemperature"
@@ -156,6 +159,7 @@ export interface ControlPanelData extends ControlPanelSettings {
                             [tokenLimitAllUsers]="globalPolicy">
                         </chattim-control-panel>
                     </div>
+                    
                 </div>
             </ng-container>
         </tim-dialog-frame>
@@ -221,7 +225,7 @@ export class ChatTIMComponent
     inputStem = ""; // TODO: do something with this or remove?
     document_id = -1;
     isTeacher: boolean = false;
-
+    used_chunks?: string[];
     selectedItemPaths: string[] = [];
     pathRestrictions?: DirectoryPickerRestrictions;
     selectedMode = "Creative";
@@ -247,6 +251,7 @@ export class ChatTIMComponent
     useStreaming: boolean = false;
     modelTemperature: number | null = null;
     systemPromptPath: string = "";
+    // TODO: make a configurable option for user in settings?
 
     constructor(
         el: ElementRef<HTMLElement>,
@@ -537,6 +542,8 @@ export class ChatTIMComponent
             }
 
             this.answer = data.answer;
+            this.used_chunks = data.used_chunks;
+            //console.log("used_chunks: ", this.used_chunks);
             const message: Message = this.conversation[entry_index].agent;
             message.content = this.answer ?? "";
             message.timestamp_ms = Date.now();
@@ -710,6 +717,31 @@ export class ChatTIMComponent
         } else {
             this.controlpanelError = response.result.error.error;
         }
+    }
+
+    async onClearConversation(): Promise<void> {
+        if (this.isRunning || this.document_id <= 0) {
+            return;
+        }
+        if (this.conversation.length == 0) {
+            return;
+        }
+        this.isRunning = true;
+        const response = await this.httpPost(this.route("clearMessages"), {
+            document_id: this.document_id,
+        });
+        this.isRunning = false;
+
+        if (response.ok) {
+            this.conversation = [];
+            this.hasMoreHistory = false;
+            this.used_chunks = undefined;
+            this.answer = undefined;
+            this.error = undefined;
+            return;
+        }
+
+        this.handleError(response.result.error.error, "http");
     }
 
     /**

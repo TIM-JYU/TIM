@@ -1,4 +1,5 @@
 import {Component, EventEmitter, Input, Output} from "@angular/core";
+import {showConfirm} from "tim/ui/showConfirmDialog";
 import type {JsonValue} from "tim/util/jsonvalue";
 import {DirectoryPickerRestrictions} from "tim/folder/directory-picker.component";
 
@@ -49,8 +50,9 @@ export interface TokenLimitForUser extends Record<string, JsonValue> {
                     <span>Käytetyt tokenit: <strong>TODO!</strong></span>
                 </div>
                 <div class="settings-row">
-                    <button class="btn btn-warning">
-                        TODO: Tyhjennä keskustelu
+                    <button class="btn btn-warning"
+                            (click)="clearConversationClicked()">
+                        Clear conversation
                     </button>
                 </div>
             </ng-container>
@@ -361,10 +363,23 @@ export class ChatControlPanelComponent {
     }
     @Output() saveSettingsClick = new EventEmitter<ControlPanelSettings>();
     @Output() panelToggled = new EventEmitter<boolean>();
+    @Output() clearConversationClick = new EventEmitter<void>();
 
     togglePanel() {
         this.settingsOpen = !this.settingsOpen;
         this.panelToggled.emit(this.settingsOpen);
+    }
+
+    async clearConversationClicked() {
+        if (
+            !(await showConfirm(
+                "Clear conversation?",
+                "Are you sure you want to clear the conversation?"
+            ))
+        ) {
+            return;
+        }
+        this.clearConversationClick.emit();
     }
 
     saveSettingsClicked() {

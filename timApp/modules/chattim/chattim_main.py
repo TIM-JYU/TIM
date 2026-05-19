@@ -73,6 +73,7 @@ class ChatTimAskResponse(TypedDict, total=False):
     answer: str | None
     usage: int | None
     error: str | None
+    used_chunks: list[str] | None
 
 
 @dataclass
@@ -194,7 +195,8 @@ def ask_route(params: ChatTimAskParams) -> ChatTimAskResponse:
     resp = plugincore.chat_request(session_user_id, document_id, user_input)
 
     response = ChatTimAskResponse(
-        answer=resp.value,
+        answer=resp.value.whole_msg,
+        used_chunks=resp.value.used_chunks,
         error=resp.error,
     )
     return response
@@ -280,6 +282,14 @@ def get_messages(params: GetMessagesParams) -> dict:
         if m.role in ("user", "assistant")
     ]
     return {"messages": messages}
+
+
+def clear_messages(params: GenericParams) -> Response:
+    user_id = str(get_current_user_id())
+    document_id = str(params.document_id)
+
+    plugincore.clear_history(user_id, document_id)
+    return ok_response()
 
 
 def save_api_key(params: APIKeyParams) -> Response:
@@ -394,6 +404,7 @@ register_route(
     chattim, "post", "saveSettings", ChatTimSaveSettingsParams, save_settings
 )
 register_route(chattim, "post", "getMessages", GetMessagesParams, get_messages)
+register_route(chattim, "post", "clearMessages", GenericParams, clear_messages)
 register_route(chattim, "post", "validateApi", APIKeyParams, save_api_key)
 register_route(chattim, "get", "getProviders", None, get_providers)
 register_route(

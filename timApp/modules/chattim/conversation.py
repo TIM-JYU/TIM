@@ -22,6 +22,7 @@ class ChatMessage:
     """Timestamp of when the message was sent in milliseconds."""
     usage: Usage | None = None
     """Tokens used for generating the message."""
+    # used_chunks: list[str] | None = None
 
     def to_dict(self) -> dict:
         """Convert `ChatMessage` object to a `dict`.
@@ -80,6 +81,16 @@ class ConversationManager:
         if not json_messages:
             return
         self._append_to_cache(plugin_id, user_id, json_messages)
+
+    def clear_history(self, plugin_id: str, user_id: str) -> None:
+        """
+        Clear the conversation history of the user.
+
+        :param plugin_id: The ID of the plugin instance.
+        :param user_id: The ID of the user.
+        """
+        self._store.clear_messages(plugin_id, user_id)
+        cache.delete(self._cache_key_tail(plugin_id, user_id))
 
     def get_history(
         self,
@@ -379,6 +390,30 @@ class ConversationStore:
             f.writelines(data)
 
         return json_messages
+
+    def clear_messages(self, plugin_id: str, user_id: str) -> None:
+        """
+        Clear stored messages from the conversation file if it exists.
+
+        :param plugin_id: Plugin instance ID.
+        :param user_id: User ID.
+        """
+        import datetime
+        import zoneinfo
+
+        file_path = self.resolve_conversation_path(plugin_id, user_id)
+        try:
+            with open(file_path, "r", encoding="utf-8") as f:
+                content = f.read()
+                timezone = zoneinfo.ZoneInfo("Europe/Helsinki")
+                timestamp = datetime.datetime.now(timezone)
+                archive_path = file_path.replace(".jsonl", f"{timestamp}.jsonl")
+            with open(archive_path, "w", encoding="utf-8") as f:
+                f.write(content)
+            with open(file_path, "w", encoding="utf-8"):
+                pass
+        except FileNotFoundError:
+            return
 
     def load_messages(
         self, plugin_id: str, user_id: str, last_n: int | None = None, offset: int = 0
