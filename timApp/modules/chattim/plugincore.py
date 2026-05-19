@@ -657,18 +657,26 @@ class PluginCore:
         return list(PROVIDERS.keys())
 
     @staticmethod
-    @cache.memoize(timeout=DEFAULT_CACHE_TIMEOUT)
     def _get_supported_models(provider: Provider, api_key: str) -> list[str]:
         """Get all the models the given API-key has access to.
         :param provider: Provider name.
         :param api_key: API key, must match the given provider.
         :return: List of all supported model IDs.
         """
+        try:
+            return PluginCore._get_supported_models_cache(provider, api_key)
+        except ModelError:
+            cache.delete_memoized(
+                PluginCore._get_supported_models_cache, provider, api_key
+            )
+            return []
+
+    @staticmethod
+    @cache.memoize(timeout=DEFAULT_CACHE_TIMEOUT)
+    def _get_supported_models_cache(provider: Provider, api_key: str) -> list[str]:
         client = GenericApiClient(provider, api_key)
         try:
             return client.list_models()
-        except ModelError:
-            return []
         finally:
             client.close()
 
