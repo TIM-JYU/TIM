@@ -334,7 +334,7 @@ class Indexer:
         norm_embeddings = np.linalg.norm(embeddings, axis=1)
         norm_prompt = float(np.linalg.norm(prompt_embedding))
         similarities = dot_product / (norm_embeddings * norm_prompt)
-        print(f"similarities {similarities}")
+        # print(f"similarities {similarities}")
         return similarities
 
     def get_context(self, prompt: str, identifier: int, k: int = 3) -> ContextResponse:
@@ -388,7 +388,7 @@ class Indexer:
         for text, similarity in best_chunks:
             context.append(text)
         context_string = ", ".join(context)
-        print(context)
+
         return ContextResponse(
             context=context_string, tokens_used=tokens_used, used_chunks=context
         )

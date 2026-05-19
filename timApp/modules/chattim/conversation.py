@@ -398,8 +398,17 @@ class ConversationStore:
         :param plugin_id: Plugin instance ID.
         :param user_id: User ID.
         """
+        import datetime
+
         file_path = self.resolve_conversation_path(plugin_id, user_id)
         try:
+            with open(file_path, "r", encoding="utf-8") as f:
+                content = f.read()
+
+                timestamp = datetime.datetime.now(datetime.timezone.utc)
+                archive_path = file_path.replace(".jsonl", f"{timestamp}.jsonl")
+            with open(archive_path, "w", encoding="utf-8") as f:
+                f.write(content)
             with open(file_path, "w", encoding="utf-8"):
                 pass
         except FileNotFoundError:
