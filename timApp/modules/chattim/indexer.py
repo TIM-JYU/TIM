@@ -397,15 +397,16 @@ class Indexer:
     def calculate_similarity(
         embeddings: list[list[float]], prompt_embedding: list[float]
     ) -> list[float]:
-        embeddings = np.array(embeddings)
-        prompt_embedding = np.array(prompt_embedding)
+        """Compute cosine similarity between a prompt embedding and
+        each row vector in the embeddings list."""
+        embeddings_np = np.array(embeddings)
+        prompt_embedding_np = np.array(prompt_embedding)
 
-        dot_product = embeddings @ prompt_embedding
-        norm_embeddings = np.linalg.norm(embeddings, axis=1)
-        norm_prompt = float(np.linalg.norm(prompt_embedding))
+        dot_product = embeddings_np @ prompt_embedding_np
+        norm_embeddings = np.linalg.norm(embeddings_np, axis=1)
+        norm_prompt = float(np.linalg.norm(prompt_embedding_np))
         similarities = dot_product / (norm_embeddings * norm_prompt)
-        # print(f"similarities {similarities}")
-        return similarities
+        return similarities.tolist()
 
     def get_context(self, prompt: str, identifier: int, k: int = 3) -> ContextResponse:
         """returns the context for the prompt as list of text,and the number of tokens used
@@ -446,7 +447,7 @@ class Indexer:
         if not embeddings or not prompt_embedding:
             return ContextResponse(context="", tokens_used=tokens_used, used_chunks=[])
 
-        similarities = self.calculate_similarity(
+        similarities: list[float] = self.calculate_similarity(
             embeddings=embeddings, prompt_embedding=prompt_embedding
         )
         data = [[t, e] for t, e in zip(texts, similarities)]
