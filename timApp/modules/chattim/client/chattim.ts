@@ -169,6 +169,8 @@ export interface ControlPanelData extends ControlPanelSettings {
                             [selectedModel]="selectedModel"
                             [setModelTemperature]="modelTemperature"
                             [useStreaming]="useStreaming"
+                            [includeCitations]="includeCitations"
+                            [setSimilarityThreshold]="similarityThreshold"
                             [systemPromptPath]="systemPromptPath"
                             [selectedMode]="selectedMode"
                             [maxTokens]="maxTokens"
@@ -268,6 +270,12 @@ export class ChatTIMComponent
     availableModes?: string[];
     availableEmbedderProviders: string[] = [];
 
+    useStreaming: boolean = false;
+    modelTemperature: number | null = null;
+    systemPromptPath: string = "";
+    includeCitations: boolean = false;
+    similarityThreshold: number | null = null;
+
     globalPolicy: TokenLimitForUser = {
         token_cap_enabled: false,
         token_cap: 1000,
@@ -276,11 +284,6 @@ export class ChatTIMComponent
         window_value: 5,
         token_cap_for_window: 5000,
     };
-
-    useStreaming: boolean = false;
-    modelTemperature: number | null = null;
-    systemPromptPath: string = "";
-    // TODO: make a configurable option for user in settings?
 
     constructor(
         el: ElementRef<HTMLElement>,
@@ -721,6 +724,8 @@ export class ChatTIMComponent
                 this.useStreaming = result.use_streaming;
                 this.modelTemperature = result.model_temperature;
                 this.systemPromptPath = result.system_prompt_path;
+                this.includeCitations = result.include_citations;
+                this.similarityThreshold = result.similarity_threshold;
             }
         } else {
             this.controlpanelError = response.result.error.error;
