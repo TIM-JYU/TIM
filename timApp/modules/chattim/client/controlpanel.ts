@@ -1,4 +1,11 @@
-import {Component, EventEmitter, Input, Output} from "@angular/core";
+import {
+    Component,
+    EventEmitter,
+    Input,
+    OnChanges,
+    Output,
+    SimpleChanges,
+} from "@angular/core";
 import {showConfirm} from "tim/ui/showConfirmDialog";
 import type {JsonValue} from "tim/util/jsonvalue";
 import {DirectoryPickerRestrictions} from "tim/folder/directory-picker.component";
@@ -341,7 +348,7 @@ export interface TokenLimitForUser extends Record<string, JsonValue> {
         </div>
     `,
 })
-export class ChatControlPanelComponent {
+export class ChatControlPanelComponent implements OnChanges {
     settingsOpen = false;
     modelOpen = false;
     modeOpen = false;
@@ -355,40 +362,11 @@ export class ChatControlPanelComponent {
     isInvalidMaxTokens = false;
     maxTokensLocal = "";
     maxTokensValue: number | null = null;
-    @Input() set maxTokens(value: number | null) {
-        this.maxTokensValue = value;
-        this.maxTokensLocal = value != null ? String(value) : "";
-    }
 
     enabledTemperature: boolean = false;
     modelTemperature: number | null = 0.2;
-    @Input() set setModelTemperature(value: number | null) {
-        if (!value) {
-            this.enabledTemperature = false;
-            return;
-        }
-        this.modelTemperature = value;
-    }
-    @Input() useStreaming: boolean = false;
+    filterModels = true;
 
-    @Input() selectedItemPaths!: string[];
-    @Input() pathRestrictions?: DirectoryPickerRestrictions;
-    @Input() currentFolder?: string;
-
-    @Input() error?: string;
-    @Input() response?: string;
-    @Input() selectedModel!: string;
-
-    @Input() selectedMode!: string;
-    @Input() selectedEmbedderProvider!: string;
-
-    @Input() isTeacher: boolean = false;
-
-    @Input() set systemPromptPath(path: string) {
-        if (path) {
-            this.systemPromptSelection = [path.trim()];
-        }
-    }
     systemPromptSelection: string[] = [];
 
     readonly NON_CHAT_PREFIXES = [
@@ -403,29 +381,89 @@ export class ChatControlPanelComponent {
         "dall-e",
         "moderation",
     ];
-    filterModels = true;
 
     timeUnitOptions: {value: string; label: string}[] = [
         {value: "min", label: "Minutes"},
         {value: "h", label: "Hours"},
         {value: "d", label: "Days"},
     ];
-    @Input() tokenLimitAllUsers!: TokenLimitForUser;
 
+    allEmbedderProviders: string[] = ["OpenAI", "Google"];
+
+    @Input() set maxTokens(value: number | null) {
+        this.maxTokensValue = value;
+        this.maxTokensLocal = value != null ? String(value) : "";
+    }
+
+    @Input() set setModelTemperature(value: number | null) {
+        if (!value) {
+            this.enabledTemperature = false;
+            return;
+        }
+        this.modelTemperature = value;
+    }
+
+    @Input() set systemPromptPath(path: string) {
+        if (path) {
+            this.systemPromptSelection = [path.trim()];
+        }
+    }
+
+    @Input() useStreaming: boolean = false;
+    @Input() selectedItemPaths!: string[];
+    @Input() pathRestrictions?: DirectoryPickerRestrictions;
+    @Input() currentFolder?: string;
+    @Input() error?: string;
+    @Input() response?: string;
+    @Input() selectedModel!: string;
+    @Input() selectedMode!: string;
+    @Input() selectedEmbedderProvider!: string;
+    @Input() isTeacher: boolean = false;
+    @Input() tokenLimitAllUsers!: TokenLimitForUser;
     @Input() availableModels?: ChatModel[];
     @Input() availableModes?: string[];
     @Input() selectedPublicKey: string = "";
     @Input() availablePublicKeys: UserKey[] = [];
-
-    allEmbedderProviders: string[] = ["OpenAI", "Google"];
     @Input() availableEmbedderProviders: string[] = [];
-    embedderAvailable(provider: string): boolean {
-        return this.availableEmbedderProviders.includes(provider.toLowerCase());
-    }
+
     @Output() fetchModelsClick = new EventEmitter<string>();
     @Output() saveSettingsClick = new EventEmitter<ControlPanelSettings>();
     @Output() panelToggled = new EventEmitter<boolean>();
     @Output() clearConversationClick = new EventEmitter<void>();
+
+    ngOnChanges(changes: SimpleChanges): void {
+        if (changes["availableModels"]) {
+            const prev = changes["availableModels"].previousValue as
+                | ChatModel[]
+                | undefined;
+            const curr = changes["availableModels"].currentValue as
+                | ChatModel[]
+                | undefined;
+            if (curr && curr.length > 0 && curr !== prev) {
+                this.selectFirstFilteredModel();
+            }
+        }
+    }
+
+    selectFirstFilteredModel(): void {
+        const first = this.filteredModels[0];
+        if (first) {
+            this.selectedModel = first.value;
+        }
+    }
+
+    onFilterModelsChanged(): void {
+        const stillVisible = this.filteredModels.some(
+            (m) => m.value === this.selectedModel
+        );
+        if (!stillVisible) {
+            this.selectFirstFilteredModel();
+        }
+    }
+
+    embedderAvailable(provider: string): boolean {
+        return this.availableEmbedderProviders.includes(provider.toLowerCase());
+    }
 
     fetchModelsClicked() {
         this.fetchModelsClick.emit(this.selectedPublicKey);
@@ -454,7 +492,6 @@ export class ChatControlPanelComponent {
             model_id: this.selectedModel,
             llm_mode: this.selectedMode,
             embedder_provider: this.selectedEmbedderProvider,
-
             max_tokens: this.maxTokensValue,
             tim_paths: this.selectedItemPaths,
             system_prompt_path: this.systemPrompt ?? "",
@@ -475,20 +512,19 @@ export class ChatControlPanelComponent {
         return model ? model.label : "";
     }
 
-    isValidNonNegativeInt(value: number | null): boolean {
-        return value !== null && Number.isInteger(value) && value >= 0;
+    get systemPrompt(): string | undefined {
+        if (!this.systemPromptSelection) {
+            return undefined;
+        }
+        return this.systemPromptSelection[0];
     }
 
-    isValidNumberInput(enabled: boolean, value: number | null): boolean {
-        return enabled && !this.isValidNonNegativeInt(value);
-    }
-
-    isValidFloatBetween(
-        value: number | null,
-        min: number,
-        max: number
-    ): boolean {
-        return value !== null && value >= min && value <= max;
+    get filteredModels(): ChatModel[] {
+        if (!this.availableModels) return [];
+        if (!this.filterModels) return this.availableModels;
+        return this.availableModels.filter(
+            (m) => !this.NON_CHAT_PREFIXES.some((p) => m.value.includes(p))
+        );
     }
 
     get isInvalidTokenCap(): boolean {
@@ -529,6 +565,22 @@ export class ChatControlPanelComponent {
         );
     }
 
+    isValidNonNegativeInt(value: number | null): boolean {
+        return value !== null && Number.isInteger(value) && value >= 0;
+    }
+
+    isValidNumberInput(enabled: boolean, value: number | null): boolean {
+        return enabled && !this.isValidNonNegativeInt(value);
+    }
+
+    isValidFloatBetween(
+        value: number | null,
+        min: number,
+        max: number
+    ): boolean {
+        return value !== null && value >= min && value <= max;
+    }
+
     onMaxTokensChanged(): void {
         const trimmed = this.maxTokensLocal.trim();
 
@@ -545,28 +597,6 @@ export class ChatControlPanelComponent {
 
         if (!this.isInvalidMaxTokens) {
             this.maxTokensValue = parsed;
-        }
-    }
-
-    get systemPrompt(): string | undefined {
-        if (!this.systemPromptSelection) {
-            return undefined;
-        }
-        return this.systemPromptSelection[0];
-    }
-
-    get filteredModels(): ChatModel[] {
-        if (!this.availableModels) return [];
-        if (!this.filterModels) return this.availableModels;
-        return this.availableModels.filter(
-            (m) => !this.NON_CHAT_PREFIXES.some((p) => m.value.includes(p))
-        );
-    }
-
-    selectFirstFilteredModel(): void {
-        const first = this.filteredModels[0];
-        if (first) {
-            this.selectedModel = first.value;
         }
     }
 }
