@@ -46,8 +46,8 @@ DEFAULT_CACHE_TIMEOUT = 60 * 15  # seconds
 
 
 @dataclass
-class ChatResponse:
-    whole_msg: str
+class ChatContext:
+    # TODO: use links
     used_chunks: list[str] | None = None
 
 
@@ -233,7 +233,9 @@ class PluginCore:
                 msg_data, identifier=document_id, stream=stream, temperature=temperature
             )
         except ModelError as e:
-            return Result(error=e.text())
+            # TODO: Leave out extra info if not teacher or no access to plugin
+            error = f"{e.text()} {str(e.cause)}"
+            return Result(error=error)
         except Exception as e:
             return Result(error=str(e))
 
@@ -291,17 +293,14 @@ class PluginCore:
         if usage:
             self.update_usage(int(caller_id), int(plugin_id), usage.total_tokens)
 
-    # TODO: palautetaan token usage tätä kautta tai muualta?
-
     def chat_request(
         self,
         caller_id: int,
         document_id: int,
         user_input: str,
-    ) -> Result[ChatResponse | None, str | None]:
+    ) -> Result[tuple[str, ChatContext], str]:
         """Generate a model response."""
         timestamp_user = ChatMessage.ts_ms()
-        # TODO: Do we save user messages to disk if error occurred from some of the checks or just discard?
         prep = self._prepare_chat_request(
             caller_id, document_id, user_input, stream=False
         )
@@ -313,8 +312,7 @@ class PluginCore:
         response: ModelResponse = p.response
         whole_msg = response.content or ""
         usage = response.usage
-
-        # TODO: viestit arkistoidaan
+        context = p.used_chunks
 
         # TODO: save user message even if model response fails?
         timestamp_answer = ChatMessage.ts_ms()
@@ -327,19 +325,15 @@ class PluginCore:
             timestamp_answer=timestamp_answer,
             usage=usage,
         )
-        used_chunks = p.used_chunks
 
-        return Result(
-            value=ChatResponse(whole_msg=whole_msg, used_chunks=used_chunks), error=None
-        )
+        return Result(value=(whole_msg, ChatContext(used_chunks=context)))
 
     def chat_request_stream(
         self,
         caller_id: int,
         document_id: int,
         user_input: str,
-        used_chunks: list[str] | None = None,
-    ) -> Result[Iterable[ModelResponse], str]:
+    ) -> Result[tuple[Iterable[str], ChatContext], str]:
         """Generate a model response using streaming.
 
         :param caller_id: The id of the caller.
@@ -359,8 +353,7 @@ class PluginCore:
         assert isinstance(p.response, Iterable)
         stream: Iterable[ModelResponse] = p.response
 
-        # TODO: return only the string chunks or the usage as well?
-        def gen() -> Iterable[ModelResponse]:
+        def gen() -> Iterable[str]:
             full_answer: str = ""
             usage: Usage | None = None
 
@@ -376,7 +369,7 @@ class PluginCore:
                 # Yield chunks to the caller
                 for chunk in stream:
                     apply_chunk(chunk)
-                    yield chunk
+                    yield chunk.delta
             finally:
                 # Drain the remaining chunks if the client disconnected mid-stream
                 try:
@@ -395,7 +388,8 @@ class PluginCore:
                     usage=usage,
                 )
 
-        return Result(value=gen(), error=None)
+        context = p.used_chunks
+        return Result(value=(gen(), ChatContext(used_chunks=context)))
 
     def get_plugin_settings(
         self, user_id: int, document_id: int

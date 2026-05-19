@@ -73,7 +73,7 @@ def get_rights(params: GetRightsParams) -> dict:
 
 class ChatTimAskResponse(TypedDict, total=False):
     answer: str | None
-    usage: int | None
+    usage: int | None  # TODO: maybe not needed
     error: str | None
     used_chunks: list[str] | None
 
@@ -207,13 +207,13 @@ def ask_route(params: ChatTimAskParams) -> ChatTimAskResponse:
     session_user_id = get_current_user_id()
 
     resp = plugincore.chat_request(session_user_id, document_id, user_input)
-
-    response = ChatTimAskResponse(
-        answer=resp.value.whole_msg,
-        used_chunks=resp.value.used_chunks,
-        error=resp.error,
-    )
-    return response
+    if resp.ok():
+        message, context = resp.value
+        return ChatTimAskResponse(
+            answer=message,
+            used_chunks=context,
+        )
+    return ChatTimAskResponse(error=resp.error)
 
 
 def ask_stream_route(params: ChatTimAskParams) -> Response:
@@ -229,15 +229,12 @@ def ask_stream_route(params: ChatTimAskParams) -> Response:
             return
 
         try:
-            for chunk in resp.value:
-                if chunk.delta:
-                    yield to_ndjson_str(ChatTimAskResponse(answer=chunk.delta))
-                if chunk.usage:
-                    yield to_ndjson_str(
-                        ChatTimAskResponse(usage=chunk.usage.total_tokens)
-                    )
+            stream, context = resp.value
+            for chunk in stream:
+                yield to_ndjson_str(ChatTimAskResponse(answer=chunk))
         except ModelError as e:
-            yield to_ndjson_str(ChatTimAskResponse(error=e.text()))
+            error = f"{e.text()} {str(e.cause)}"
+            yield to_ndjson_str(ChatTimAskResponse(error=error))
             return
         except Exception as e:
             yield to_ndjson_str(ChatTimAskResponse(error=str(e)))

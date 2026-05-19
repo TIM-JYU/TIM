@@ -199,8 +199,6 @@ class ModelResponse:
     """A chunk of the response content."""
     usage: Usage | None = None
     """Usage statistics."""
-    used_chunks: list[str] | None = None
-    """Used chunks of the response content."""
 
 
 def _convert_usage(usage: types.CompletionUsage | None) -> Usage | None:
