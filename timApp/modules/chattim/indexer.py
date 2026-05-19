@@ -393,10 +393,9 @@ class Indexer:
 
         return page_embeddings
 
-    # TODO: fix either the logic or types
     @staticmethod
     def calculate_similarity(
-        embeddings: list[float], prompt_embedding: list[float]
+        embeddings: list[list[float]], prompt_embedding: list[float]
     ) -> list[float]:
         embeddings = np.array(embeddings)
         prompt_embedding = np.array(prompt_embedding)
@@ -432,7 +431,7 @@ class Indexer:
             self.indexed_page_ids, embedding_model.get_model_type()
         )
 
-        embeddings: list[float] = []
+        embeddings: list[list[float]] = []
         texts: list[str] = []
 
         for page in page_embeddings:
@@ -441,14 +440,12 @@ class Indexer:
                 text = chunk.get("text")
                 if not embedding or not text:
                     continue
-                # TODO: extend or append
                 embeddings.append(embedding)
                 texts.append(text)
 
         if not embeddings or not prompt_embedding:
             return ContextResponse(context="", tokens_used=tokens_used, used_chunks=[])
 
-        # FIX: similarity calc
         similarities = self.calculate_similarity(
             embeddings=embeddings, prompt_embedding=prompt_embedding
         )
