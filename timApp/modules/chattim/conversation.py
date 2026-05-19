@@ -6,6 +6,7 @@ import time
 from dataclasses import dataclass, asdict
 from collections import deque
 from timApp.util.flask.cache import cache
+from timApp.util.utils import get_current_time
 from typing import BinaryIO, Iterator, Any, Callable
 from .model import Message, Usage
 
@@ -22,7 +23,6 @@ class ChatMessage:
     """Timestamp of when the message was sent in milliseconds."""
     usage: Usage | None = None
     """Tokens used for generating the message."""
-    # used_chunks: list[str] | None = None
 
     def to_dict(self) -> dict:
         """Convert `ChatMessage` object to a `dict`.
@@ -89,7 +89,7 @@ class ConversationManager:
         :param plugin_id: The ID of the plugin instance.
         :param user_id: The ID of the user.
         """
-        self._store.clear_messages(plugin_id, user_id)
+        self._store.archive_messages(plugin_id, user_id)
         cache.delete(self._cache_key_tail(plugin_id, user_id))
 
     def get_history(
@@ -391,27 +391,20 @@ class ConversationStore:
 
         return json_messages
 
-    def clear_messages(self, plugin_id: str, user_id: str) -> None:
+    def archive_messages(self, plugin_id: str, user_id: str) -> None:
         """
-        Clear stored messages from the conversation file if it exists.
+        Create an archive of the current conversation file.
 
         :param plugin_id: Plugin instance ID.
         :param user_id: User ID.
         """
-        import datetime
-        import zoneinfo
-
         file_path = self.resolve_conversation_path(plugin_id, user_id)
+        archive_path = self._resolve_archive_path(plugin_id, user_id)
         try:
-            with open(file_path, "r", encoding="utf-8") as f:
-                content = f.read()
-                timezone = zoneinfo.ZoneInfo("Europe/Helsinki")
-                timestamp = datetime.datetime.now(timezone)
-                archive_path = file_path.replace(".jsonl", f"{timestamp}.jsonl")
-            with open(archive_path, "w", encoding="utf-8") as f:
-                f.write(content)
-            with open(file_path, "w", encoding="utf-8"):
-                pass
+            stat = os.stat(file_path)
+            if stat.st_size == 0:
+                return
+            os.rename(file_path, archive_path)
         except FileNotFoundError:
             return
 
@@ -611,3 +604,11 @@ class ConversationStore:
         """
         file_name = "messages.jsonl"
         return os.path.join(self.root_path, plugin_id, user_id, file_name)
+
+    def _resolve_archive_path(self, plugin_id: str, user_id: str) -> str:
+        """Create a unique path for the conversation archive file."""
+        dt = get_current_time()
+        dt_str = dt.isoformat()
+        return os.path.join(
+            self.root_path, plugin_id, user_id, f"messages_{dt_str}.jsonl"
+        )
