@@ -1,6 +1,6 @@
 from selenium.common.exceptions import StaleElementReferenceException
 from selenium.webdriver import ActionChains
-
+from selenium.webdriver.support import expected_conditions as ec
 from timApp.tests.browser.browsertest import BrowserTest
 
 
@@ -21,8 +21,7 @@ class TimTableTest(BrowserTest):
         """
         self.login_browser_quick_test1()
         self.login_test1()
-        d = self.create_doc(
-            initial_par="""
+        d = self.create_doc(initial_par="""
 ``` {plugin="timTable"}
 table:
   rows:
@@ -32,8 +31,7 @@ table:
       - "Testi3"
 
 ```
-                    """
-        )
+                    """)
         self.goto_document(d)
         self.find_and_save_timtable("timTableSimple")
 
@@ -44,8 +42,7 @@ table:
         self.login_browser_quick_test1()
         self.login_test1()
         # TODO: borderRight on first column doesn't work?
-        d = self.create_doc(
-            initial_par="""
+        d = self.create_doc(initial_par="""
 ``` {plugin="timTable"}
 table:
   columns:
@@ -85,8 +82,7 @@ table:
 
 ```
 
-                    """
-        )
+                    """)
         self.goto_document(d)
         self.find_and_save_timtable("timTableAllColumnStyles")
 
@@ -97,8 +93,7 @@ table:
         self.login_browser_quick_test1()
         self.login_test1()
         # TODO: borderRight on first row doesn't work?
-        d = self.create_doc(
-            initial_par="""
+        d = self.create_doc(initial_par="""
 ``` {plugin="timTable"}
 table:
   rows:
@@ -138,8 +133,7 @@ table:
 
 ```
 
-                    """
-        )
+                    """)
         self.goto_document(d)
         self.find_and_save_timtable("timTableAllRowStyles")
 
@@ -149,8 +143,7 @@ table:
         """
         self.login_browser_quick_test1()
         self.login_test1()
-        d = self.create_doc(
-            initial_par="""
+        d = self.create_doc(initial_par="""
 ``` {plugin="timTable"}
 table:
   rows:
@@ -191,8 +184,7 @@ table:
       - cell: "16"
 
 ```
-                    """
-        )
+                    """)
         self.goto_document(d)
         self.find_and_save_timtable("timTableAllCellStyles")
 
@@ -203,8 +195,7 @@ table:
         """
         self.login_browser_quick_test1()
         self.login_test1()
-        d = self.create_doc(
-            initial_par="""
+        d = self.create_doc(initial_par="""
 ``` {plugin="timTable"}
 table:
   rows:
@@ -243,8 +234,7 @@ table:
   borderLeft: 5px solid green
 ```
         
-                    """
-        )
+                    """)
         self.goto_document(d)
         self.find_and_save_timtable("timTableTableStyles")
 
@@ -254,8 +244,7 @@ table:
         """
         self.login_browser_quick_test1()
         self.login_test1()
-        d = self.create_doc(
-            initial_par="""
+        d = self.create_doc(initial_par="""
 ``` {plugin="timTable"}
 table:
   columns:
@@ -330,8 +319,7 @@ table:
   borderLeft: 5px solid green
 ```
 
-                    """
-        )
+                    """)
         self.goto_document(d)
         self.find_and_save_timtable("timTableAllStyles")
 
@@ -347,8 +335,7 @@ table:
         """
         self.login_browser_quick_test1()
         self.login_test1()
-        d = self.create_doc(
-            initial_par="""
+        d = self.create_doc(initial_par="""
 ``` {plugin="timTable"}
 table:
   columns:
@@ -426,8 +413,7 @@ table:
   Marcus: Aurelius
 ```
 
-                    """
-        )
+                    """)
         self.goto_document(d)
         self.find_and_save_timtable("timTableExtraStyles")
 
@@ -437,8 +423,7 @@ table:
         """
         self.login_browser_quick_test1()
         self.login_test1()
-        d = self.create_doc(
-            initial_par="""
+        d = self.create_doc(initial_par="""
 ``` {plugin="timTable"}
 table:
   rows:
@@ -468,8 +453,7 @@ table:
       - cell: "astra."
 ```
 
-                    """
-        )
+                    """)
         self.goto_document(d)
         self.find_and_save_timtable("timTableColspan")
 
@@ -479,8 +463,7 @@ table:
         """
         self.login_browser_quick_test1()
         self.login_test1()
-        d = self.create_doc(
-            initial_par="""
+        d = self.create_doc(initial_par="""
 ``` {plugin="timTable"}
 table:
   rows:
@@ -510,8 +493,7 @@ table:
       - cell: "astra."
 ```
 
-                    """
-        )
+                    """)
         self.goto_document(d)
         self.find_and_save_timtable("timTableRowspan")
 
@@ -521,8 +503,7 @@ table:
         """
         self.login_browser_quick_test1()
         self.login_test1()
-        d = self.create_doc(
-            initial_par="""
+        d = self.create_doc(initial_par="""
 ``` {plugin="timTable"}
 table:
   rows:
@@ -553,8 +534,7 @@ table:
         rowspan: 2
 ```
 
-                    """
-        )
+                    """)
         self.goto_document(d)
         self.find_and_save_timtable("timTableRowspanOverRows")
 
@@ -565,8 +545,7 @@ table:
         """
         self.login_browser_quick_test1()
         self.login_test1()
-        d = self.create_doc(
-            initial_par="""
+        d = self.create_doc(initial_par="""
 ``` {plugin="timTable"}
 table:
   rows:
@@ -594,8 +573,7 @@ table:
       - cell: "ad"
       - cell: "astra."
 ```
-                    """
-        )
+                    """)
         self.goto_document(d)
         self.find_and_save_timtable("timTableColspanOverColumns")
 
@@ -605,8 +583,7 @@ table:
         """
         self.login_browser_quick_test1()
         self.login_test1()
-        d = self.create_doc(
-            initial_par="""
+        d = self.create_doc(initial_par="""
 ``` {plugin="timTable"}
 table:
   rows:
@@ -638,8 +615,7 @@ table:
       - cell: "astra."
 ```
 
-                    """
-        )
+                    """)
         self.goto_document(d)
         self.find_and_save_timtable("timTableRowspanColspan")
 
@@ -649,8 +625,7 @@ table:
         """
         self.login_browser_quick_test1()
         self.login_test1()
-        d = self.create_doc(
-            initial_par="""
+        d = self.create_doc(initial_par="""
 ``` {plugin="timTable"}
 table:
   columns:
@@ -687,8 +662,7 @@ table:
       - cell: "astra."
 ```
 
-                    """
-        )
+                    """)
         self.goto_document(d)
         self.find_and_save_timtable("timTableColumnSpan")
 
@@ -698,8 +672,7 @@ table:
         """
         self.login_browser_quick_test1()
         self.login_test1()
-        d = self.create_doc(
-            initial_par=r"""
+        d = self.create_doc(initial_par=r"""
 ``` {plugin="timTable"}
     table:
       columns:
@@ -775,8 +748,7 @@ table:
 
 ```
 
-            """
-        )
+            """)
         self.goto_document(d)
         self.find_and_save_timtable("timTableManyThings")
 
@@ -786,8 +758,7 @@ table:
         """
         self.login_browser_quick_test1()
         self.login_test1()
-        d = self.create_doc(
-            initial_par="""
+        d = self.create_doc(initial_par="""
 ``` {plugin="timTable"}
 table:
   rows:
@@ -817,16 +788,14 @@ table:
     type: relative
       
 ```
-                        """
-        )
+                        """)
         self.goto_document(d)
         self.find_and_save_timtable("timTableTabledatablock")
 
     def test_svg_math(self):
         self.login_browser_quick_test1()
         self.login_test1()
-        d = self.create_doc(
-            initial_par="""
+        d = self.create_doc(initial_par="""
 #- {settings=""}
 math_type: svg
 
@@ -836,8 +805,7 @@ table:
     - row:
       - cell: '$x$'
 ```
-                                """
-        )
+                                """)
         self.goto_document(d)
         self.find_and_save_timtable("timTableSvgMath")
 
@@ -845,8 +813,7 @@ table:
         # TimTable loads differently than most of the plugins, ensure answer browsing works
         self.login_browser_quick_test1()
         self.login_test1()
-        d = self.create_doc(
-            initial_par="""
+        d = self.create_doc(initial_par="""
 ``` {plugin="timTable" #tabletask}
 task: true
 table:
@@ -856,8 +823,7 @@ table:
       - row:
         - cell: ''
 ```
-"""
-        )
+""")
         self.goto_document(d)
         td = self.find_element_avoid_staleness("#tabletask td")
         td.click()
@@ -870,9 +836,15 @@ table:
         ActionChains(self.drv).send_keys("Bye").perform()
         self.find_element("#tabletask .buttonAcceptEdit").click()
         self.find_element("#tabletask .csRunMenu button").click()
+
         self.wait_until_present_and_vis("answerbrowser .prevAnswer")
+        td = self.find_element_avoid_staleness("#tabletask td")
+
         self.find_element("answerbrowser .prevAnswer").click()
+        self.wait.until(ec.staleness_of(td))
         self.wait_until_hidden("#tabletask .csRunMenu span")
+
+        self.wait_until_present("#tabletask td")
         td = self.find_element_avoid_staleness("#tabletask td")
         self.assertEqual("Hello", td.text)
 
@@ -880,8 +852,7 @@ table:
         # Ensure toolbar closing callbacks make one and only one autosave
         self.login_browser_quick_test1()
         self.login_test1()
-        d = self.create_doc(
-            initial_par="""
+        d = self.create_doc(initial_par="""
 ``` {#tableForm plugin="tableForm"}
 showInView: true
 fields:
@@ -899,8 +870,7 @@ table:
       - row:
         - cell: ''
 ```
-        """
-        )
+        """)
         self.goto_document(d)
         td = self.find_element_avoid_staleness("#tabletask td")
         td.click()
