@@ -43,6 +43,13 @@ import {ChatControlPanelComponent} from "./controlpanel";
 const PluginMarkupFields = t.intersection([
     t.partial({
         welcomeText: t.string,
+        apiAlias: t.string,
+        defaultWindowSize: t.union([
+            t.literal("sm"),
+            t.literal("md"),
+            t.literal("lg"),
+            t.literal("xs"),
+        ]),
     }),
     GenericPluginMarkup,
     t.type({
@@ -93,31 +100,33 @@ export interface ControlPanelData extends ControlPanelSettings {
     encapsulation: ViewEncapsulation.None,
     // TODO: Display message datetime from the timestamp with `dateString()`
     template: `
-        <tim-dialog-frame class="chattim-dialog-frame" [size]="'md'">
+        <tim-dialog-frame class="chattim-dialog-frame" [size]="windowSize">
             <ng-container header> {{ header }}</ng-container>
             <ng-container body>
-                <div class="chattim-body scroll-box">
-                    <div class="scroll-box" #conversationScroll>
-                        <div *ngIf="conversation.length === 0" class="chat-welcome">
-                            <ng-container *ngIf="markup.welcomeText; else localizedWelcome">
-                                {{ markup.welcomeText }}
-                            </ng-container>
-                            <ng-template #localizedWelcome>
-                                <span i18n>"Welcome to use TIM's helper chatbot!"</span>
-                            </ng-template>
+                <div class="chattim-body scroll-box" #conversationScroll>
+                    <div class="upper-area">
+                        <div>
+                            <div *ngIf="conversation.length === 0" class="chat-welcome">
+                                <ng-container *ngIf="markup.welcomeText; else localizedWelcome">
+                                    {{ markup.welcomeText }}
+                                </ng-container>
+                                <ng-template #localizedWelcome>
+                                    <span i18n>"Welcome to use TIM's helper chatbot!"</span>
+                                </ng-template>
+                            </div>
+                            <div *ngFor="let entry of conversation">
+                                <div class="chat-user">{{ entry.user.content }}</div>
+                                <div class="chat-bot" [innerHTML]="entry.agent.content | purify"></div>
+                            </div>
                         </div>
-                        <div *ngFor="let entry of conversation">
-                            <div class="chat-user">{{ entry.user.content }}</div>
-                            <div class="chat-bot" [innerHTML]="entry.agent.content | purify"></div>
-                        </div>
-                    </div>
 
-                    <div>
-                        <tim-loading *ngIf="isRunning"></tim-loading>
-                        <div *ngIf="error" [innerHTML]="error | purify"></div>
-                    </div>
-                    <label class="justify-center w-100">{{ inputStem }} </label>
-                    <div class="d-flex flex-row w-100 justify-content-center chat-row">
+                        <div>
+                            <tim-loading *ngIf="isRunning"></tim-loading>
+                            <div *ngIf="error" [innerHTML]="error | purify"></div>
+                        </div>
+                        <label class="justify-center w-100">{{ inputStem }} </label>
+                        <div class="sticky-chat-row">
+                            <div class="d-flex flex-row w-100 justify-content-center chat-row">
                     <textarea i18n-placeholder class="form-control chat-textarea"
                               rows="2"
                               placeholder="Ask me about TIM related things"
@@ -127,12 +136,14 @@ export interface ControlPanelData extends ControlPanelSettings {
                               oninput="this.style.height='auto'; this.style.height=this.scrollHeight+'px'">
                     </textarea>
 
-                        <button class="timButton flex-shrink-0 ms-2"
-                                *ngIf="buttonText()"
-                                [disabled]="!canSendInput()"
-                                (click)="sendUserInput()"
-                                [innerHTML]="buttonText() | purify">
-                        </button>
+                                <button class="timButton flex-shrink-0 ms-2"
+                                        *ngIf="buttonText()"
+                                        [disabled]="!canSendInput()"
+                                        (click)="sendUserInput()"
+                                        [innerHTML]="buttonText() | purify">
+                                </button>
+                            </div>
+                        </div>
                     </div>
                     
                     <div class="control-panel-container">
@@ -322,6 +333,11 @@ export class ChatTIMComponent
             return;
         }
         await this.doSendUserInput();
+    }
+
+    /* used to set the default window size from markup */
+    get windowSize(): "sm" | "md" | "lg" | "xs" {
+        return this.markup.defaultWindowSize ?? "md";
     }
 
     getAttributeType() {

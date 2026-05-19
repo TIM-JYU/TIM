@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from flask import request, Response, stream_with_context
-from typing import Any, TypedDict, Callable
+from typing import Any, TypedDict, Callable, Literal
 from webargs.flaskparser import use_args
 import json
 from flask_babel import gettext
@@ -41,6 +41,8 @@ plugincore = PluginCore()
 @dataclass
 class ChatTimMarkupModel(GenericMarkupModel):
     welcomeText: str = "Welcome to use TIM's helper chatbot!"
+    apiAlias: str = ""
+    defaultWindowSize: Literal["sm", "md", "lg", "xs"] = "md"
 
 
 # TODO: make proper dataclasses
@@ -122,6 +124,8 @@ def reqs() -> PluginReqs:
 ``` {plugin="chattim" #taskidhere}
 header: ChatTIM
 welcomeText: ""  
+apiAlias: ""
+defaultWindowSize: "md" # [sm, md, lg, xs]
 ```
 """,
     ]
