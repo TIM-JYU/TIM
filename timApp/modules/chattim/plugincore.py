@@ -380,7 +380,7 @@ class PluginCore:
 
     def get_plugin_settings(
         self, user_id: int, document_id: int
-    ) -> Result[InstanceAttributes | None, str | None]:
+    ) -> Result[InstanceAttributes, str]:
         """
         Get the settings for the plugin.
         """
@@ -817,7 +817,7 @@ class PluginCore:
 
     @staticmethod
     def _parse_provider(provider_str: str) -> Provider | None:
-        if provider_str not in Provider.__args__:
+        if provider_str not in PluginCore.get_supported_providers():
             return None
         return cast(Provider, provider_str)
 

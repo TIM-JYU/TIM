@@ -169,8 +169,8 @@ class TimDatabase:
             folder = cast(Folder, item)
             docs = folder.get_all_documents()
             # TODO: can probably be done more efficiently
-            for doc in docs:
-                if doc.document.doc_id == doc.id:
+            for doc_info in docs:
+                if doc_info.document.doc_id == doc_id:
                     return True
         return False
 
@@ -255,20 +255,13 @@ class TimDatabase:
             )
             db.session.add(rule)
         else:
-            if public_key:
-                rule.public_key = public_key
-            if teachers:
-                rule.teachers = teachers
-            if current_mode:
-                rule.current_mode = current_mode
-            if total_tokens_spent:
-                rule.total_tokens_spent = total_tokens_spent
-            if indexed_document_ids:
-                rule.indexed_chunk_ids = indexed_document_ids
-            if agent:
-                rule.agent = agent
-            if conv_time_window:
-                rule.conv_time_window = conv_time_window
+            rule.public_key = public_key
+            rule.teachers = teachers
+            rule.current_mode = current_mode
+            rule.total_tokens_spent = total_tokens_spent
+            rule.indexed_document_ids = indexed_document_ids
+            rule.agent = agent
+            rule.conv_time_window = conv_time_window
             rule.system_prompt_path = system_prompt_path
             rule.use_streaming = use_streaming
             rule.temperature = temperature
@@ -405,15 +398,14 @@ class TimDatabase:
         db.session.commit()
         return rule
 
-    def remove_api_key_group(
-        self, owner_id: int, public_key: str, group_id: int
-    ) -> None:
+    @staticmethod
+    def remove_api_key_group(owner_id: int, public_key: str, group_id: int) -> None:
         """Remove access to the API key from the given user group."""
         rule = TimDatabase.get_owner_api_key(owner_id, public_key)
         if not rule:
             raise Exception("No API-key with the alias found")
         groups = rule.groups
-        rule.groups = filter(lambda id: id != group_id, groups)
+        rule.groups = filter(lambda gid: gid != group_id, groups)  # type: ignore
         db.session.commit()
 
     @staticmethod
