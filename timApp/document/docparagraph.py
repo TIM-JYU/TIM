@@ -55,12 +55,10 @@ if TYPE_CHECKING:
     from timApp.document.docinfo import DocInfo
 
 # Enable user personal logs with url param ?userlogs=TAG
-ENABLE_LOG_FOR_PERSON = 0
+ENABLE_LOG_FOR_PERSON_LONG = 0
 ENABLE_LOG_FOR_PERSON_SHORT = 1
 
 SKIPPED_ATTRS = {"r", "rd", "rp", "ra", "rt", "rtask", "mt", "settings"}
-
-WITHOUT_MACROS_CACHED = "womacros"
 
 BLINDED_SETTINGS_TEXT = """```
 # Setting paragraphs cannot be shown via references
@@ -115,7 +113,7 @@ def _log_filename_for_person(file_name: str):
     if not flask.has_request_context():
         return
     # If url_param "debug_writes", log the filename and stack trace for debugging purposes
-    tag = flask.request.args.get("debug_writes")
+    tag = flask.request.args.get("debug_writes_long")
     if tag is None:
         return
 
@@ -128,7 +126,7 @@ def _log_for_person(msg_func):
     if not flask.has_request_context():
         return
     # If url_param "debug_writes", log the filename and stack trace for debugging purposes
-    tag = flask.request.args.get("debug_writes")
+    tag = flask.request.args.get("debug_writes_long")
     if tag is None:
         return
 
@@ -142,7 +140,7 @@ def _log_for_person_short(msg_func):
     if not flask.has_request_context():
         return
     # If url_param "debug_writes", log the filename and stack trace for debugging purposes
-    tag = flask.request.args.get("debug_writes_short")
+    tag = flask.request.args.get("debug_writes")
     if tag is None:
         return
 
@@ -153,9 +151,9 @@ def _log_for_person_short(msg_func):
 
 
 log_filename_for_person = (
-    _log_filename_for_person if ENABLE_LOG_FOR_PERSON else lambda *a, **k: None
+    _log_filename_for_person if ENABLE_LOG_FOR_PERSON_LONG else lambda *a, **k: None
 )
-log_for_person = _log_for_person if ENABLE_LOG_FOR_PERSON else lambda *a, **k: None
+log_for_person = _log_for_person if ENABLE_LOG_FOR_PERSON_LONG else lambda *a, **k: None
 log_for_person_short = (
     _log_for_person_short if ENABLE_LOG_FOR_PERSON_SHORT else lambda *a, **k: None
 )
@@ -232,9 +230,7 @@ class DocParagraph:
         self.attrs: dict[str, str] | None = None
         self.nomacros = None
         self.ref_chain = None
-        self.answer_nr: int | None = (
-            None  # needed if variable tasks, None = not task at all or not variable task
-        )
+        self.answer_nr: int | None = None  # needed if variable tasks, None = not task at all or not variable task
         self.md = ""
         self.id = None
         self.ask_new: bool | None = None  # to send for plugins to force new question
@@ -964,7 +960,7 @@ class DocParagraph:
                     cache_index = CacheHashNames.HEADING_PAR_HASH
                 # if isinstance(h, bytes):
                 #    h = h.decode()
-                # h = strip_div(h)  # should be done earier
+                # h = strip_div(h)  # should be done earlier
                 old_html = unloaded_par_info.old_html
                 old_cache_index = unloaded_par_info.old_cache_index
                 if h != old_html:
@@ -1025,8 +1021,8 @@ class DocParagraph:
                The key is paragraph id and value is a list of headings
                in that paragraph.
         :param clear_cache: Whether all caches should be refreshed.
-        :return: A 5-tuple of the form:
-          (paragraph, hash of the auto macro values, auto macros, so far used headings, old HTML).
+        :return: list of UnloadedParInfo objects containing the paragraphs
+                  that need to be preloaded and their related information.
 
         """
         cumulative_headings = defaultdict(int)
@@ -1038,10 +1034,6 @@ class DocParagraph:
         macros = macroinfo.get_macros()
         env = macroinfo.jinja_env
         static_macros_hash = settings.get_static_macros_hash()
-        cache_hashes: list[str] = [""] * (len(CacheHashNames) - 1)
-        cache_hashes[CacheHashNames.NORMAL_PAR_HASH] = (
-            settings.get_normal_par_cache_key_hash()
-        )
         heading_par_hash_base = settings.get_heading_par_cache_key_hash()
         log_for_person(
             lambda: f"Preloading {len(pars)} paragraphs "
@@ -1050,6 +1042,10 @@ class DocParagraph:
             f"macros {macros}, clear cache: {clear_cache}"
         )
         for par in pars:
+            cache_hashes: list[str] = [""] * (len(CacheHashNames) - 1)
+            cache_hashes[
+                CacheHashNames.NORMAL_PAR_HASH
+            ] = settings.get_normal_par_cache_key_hash()
             cache_index: CacheHashNames = CacheHashNames.NO_CACHE
             if clear_cache:
                 # clear automatically set nocache value
@@ -1098,8 +1094,8 @@ class DocParagraph:
                     # my_headings_so_far[h] = all_headings_so_far[h]
                     heading_par_hash = hashfunc(heading_par_hash + h)
             my_headings_so_far = all_headings_so_far
-            cache_hashes[CacheHashNames.WITH_MACROS_HASH] = hashfunc(static_macros_hash)
             cache_hashes[CacheHashNames.HEADING_PAR_HASH] = heading_par_hash
+            cache_hashes[CacheHashNames.WITH_MACROS_HASH] = static_macros_hash
             cache_hashes[CacheHashNames.HEADING_MACRO_PAR_HASH] = hashfunc(
                 static_macros_hash + heading_par_hash
             )
@@ -1115,10 +1111,6 @@ class DocParagraph:
                     old_html = cached
                     log_for_person_short(
                         lambda: f"OLD CACHE MISS: par {par.get_doc_id()}/{par.get_id()} "
-                        f"with cache: {cached} of type {type(cached)}"
-                    )
-                    log_for_person(
-                        lambda: f"CACHE MISS: par {par.get_doc_id()}/{par.get_id()} "
                         f"with cache: {cached} of type {type(cached)}"
                     )
                 else:
@@ -1139,21 +1131,10 @@ class DocParagraph:
                         f"auto macros: {auto_macros}, and "
                         f"cache: {cached} of type {type(cached)}"
                     )
-                    log_for_person(
-                        lambda: f"CACHE MISS: par {par.get_doc_id()}/{par.get_id()} "
-                        f"with hashs {cache_hashes}, "
-                        f"auto macros: {auto_macros}, and "
-                        f"cache: {cached} of type {type(cached)}"
-                    )
             else:
                 old_html = None
                 if par.get_attr("nocache") != "force":
                     log_for_person_short(
-                        lambda: f"CACHE SKIP: par {par.get_doc_id()}/{par.get_id()} "
-                        f"with cache: {cached} of type {type(cached)}; "
-                        f"clear_cache: {clear_cache}"
-                    )
-                    log_for_person(
                         lambda: f"CACHE SKIP: par {par.get_doc_id()}/{par.get_id()} "
                         f"with cache: {cached} of type {type(cached)}; "
                         f"clear_cache: {clear_cache}"
