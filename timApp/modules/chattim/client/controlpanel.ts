@@ -1,4 +1,11 @@
-import {Component, EventEmitter, Input, Output} from "@angular/core";
+import {
+    Component,
+    EventEmitter,
+    Input,
+    OnChanges,
+    Output,
+    SimpleChanges,
+} from "@angular/core";
 import {showConfirm} from "tim/ui/showConfirmDialog";
 import type {JsonValue} from "tim/util/jsonvalue";
 import {DirectoryPickerRestrictions} from "tim/folder/directory-picker.component";
@@ -8,7 +15,16 @@ export interface ChatModel extends Record<string, JsonValue> {
     value: string;
 }
 
+export interface UserKey extends Record<string, JsonValue> {
+    provider: string;
+    public_key: string;
+    is_selected: boolean;
+    is_shared: boolean;
+    shared_by: string;
+}
+
 export interface ControlPanelSettings extends Record<string, JsonValue> {
+    public_key: string;
     model_id: string;
     llm_mode: string;
     embedder_provider: string;
@@ -57,6 +73,35 @@ export interface TokenLimitForUser extends Record<string, JsonValue> {
                 </div>
             </ng-container>
             <ng-container *ngIf="isTeacher">
+                
+                <!-- Choose API-key -->
+                <div class="settings-row">
+                    <button class="btn btn-link settings-section-btn"
+                            (click)="keyOpen = !keyOpen">
+                    <span class="glyphicon"
+                          [class.glyphicon-chevron-right]="!keyOpen"
+                          [class.glyphicon-chevron-down]="keyOpen">
+                    </span>
+                        API-alias: <strong>{{ selectedPublicKey }}</strong>
+                    </button>
+                    <div *ngIf="keyOpen" class="settings-section-body">
+                        <select class="form-control"
+                                [(ngModel)]="selectedPublicKey">
+                           <option *ngFor="let key of availablePublicKeys" 
+                                   [ngValue]="key.public_key">{{ key.public_key + " - " + key.provider + (key.is_shared ? " " +
+                                   "(shared by " + key.shared_by + ")" : "") }}
+                            </option>z§
+                        </select>
+                        <button class="btn btn-default"
+                                style="margin-top: 6px;"
+                                [disabled]="!selectedPublicKey"
+                                (click)="fetchModelsClicked()">
+                            Fetch models
+                        </button>
+                    </div>
+                </div>
+                                
+                
                 <!-- Choose the LLM -->
                 <div class="settings-row">
                     <button class="btn btn-link settings-section-btn"
@@ -68,9 +113,14 @@ export interface TokenLimitForUser extends Record<string, JsonValue> {
                         Model: <strong>{{ selectedModelLabel }}</strong>
                     </button>
                     <div *ngIf="modelOpen" class="settings-section-body">
-                        <select class="form-control"
-                                [(ngModel)]="selectedModel">
-                            <option *ngFor="let m of availableModels" [ngValue]="m.value">{{ m.label }}</option>
+                        <div class="checkbox">
+                            <label>
+                                <input type="checkbox" [(ngModel)]="filterModels">
+                                Filter non-chat models
+                            </label>
+                        </div>
+                        <select class="form-control" [(ngModel)]="selectedModel">
+                            <option *ngFor="let m of filteredModels" [ngValue]="m.value">{{ m.label }}</option>
                         </select>
 
                         <!-- Model parameters -->
@@ -298,10 +348,11 @@ export interface TokenLimitForUser extends Record<string, JsonValue> {
         </div>
     `,
 })
-export class ChatControlPanelComponent {
+export class ChatControlPanelComponent implements OnChanges {
     settingsOpen = false;
     modelOpen = false;
     modeOpen = false;
+    keyOpen = false;
 
     tokensOpen = false;
     filesOpen = false;
@@ -311,13 +362,39 @@ export class ChatControlPanelComponent {
     isInvalidMaxTokens = false;
     maxTokensLocal = "";
     maxTokensValue: number | null = null;
+
+    enabledTemperature: boolean = false;
+    modelTemperature: number | null = 0.2;
+    filterModels = true;
+
+    systemPromptSelection: string[] = [];
+
+    readonly NON_CHAT_PREFIXES = [
+        "image",
+        "embedding",
+        "whisper",
+        "tts",
+        "audio",
+        "transcribe",
+        "realtime",
+        "sora",
+        "dall-e",
+        "moderation",
+    ];
+
+    timeUnitOptions: {value: string; label: string}[] = [
+        {value: "min", label: "Minutes"},
+        {value: "h", label: "Hours"},
+        {value: "d", label: "Days"},
+    ];
+
+    allEmbedderProviders: string[] = ["OpenAI", "Google"];
+
     @Input() set maxTokens(value: number | null) {
         this.maxTokensValue = value;
         this.maxTokensLocal = value != null ? String(value) : "";
     }
 
-    enabledTemperature: boolean = false;
-    modelTemperature: number | null = 0.2;
     @Input() set setModelTemperature(value: number | null) {
         if (!value) {
             this.enabledTemperature = false;
@@ -325,45 +402,72 @@ export class ChatControlPanelComponent {
         }
         this.modelTemperature = value;
     }
-    @Input() useStreaming: boolean = false;
-
-    @Input() selectedItemPaths!: string[];
-    @Input() pathRestrictions?: DirectoryPickerRestrictions;
-    @Input() currentFolder?: string;
-
-    @Input() error?: string;
-    @Input() response?: string;
-    @Input() selectedModel!: string;
-
-    @Input() selectedMode!: string;
-    @Input() selectedEmbedderProvider!: string;
-
-    @Input() isTeacher: boolean = false;
 
     @Input() set systemPromptPath(path: string) {
         if (path) {
             this.systemPromptSelection = [path.trim()];
         }
     }
-    systemPromptSelection: string[] = [];
 
-    timeUnitOptions: {value: string; label: string}[] = [
-        {value: "min", label: "Minutes"},
-        {value: "h", label: "Hours"},
-        {value: "d", label: "Days"},
-    ];
+    @Input() useStreaming: boolean = false;
+    @Input() selectedItemPaths!: string[];
+    @Input() pathRestrictions?: DirectoryPickerRestrictions;
+    @Input() currentFolder?: string;
+    @Input() error?: string;
+    @Input() response?: string;
+    @Input() selectedModel!: string;
+    @Input() selectedMode!: string;
+    @Input() selectedEmbedderProvider!: string;
+    @Input() isTeacher: boolean = false;
     @Input() tokenLimitAllUsers!: TokenLimitForUser;
-
     @Input() availableModels?: ChatModel[];
     @Input() availableModes?: string[];
-    allEmbedderProviders: string[] = ["OpenAI", "Google"];
+    @Input() selectedPublicKey: string = "";
+    @Input() availablePublicKeys: UserKey[] = [];
     @Input() availableEmbedderProviders: string[] = [];
-    embedderAvailable(provider: string): boolean {
-        return this.availableEmbedderProviders.includes(provider.toLowerCase());
-    }
+
+    @Output() fetchModelsClick = new EventEmitter<string>();
     @Output() saveSettingsClick = new EventEmitter<ControlPanelSettings>();
     @Output() panelToggled = new EventEmitter<boolean>();
     @Output() clearConversationClick = new EventEmitter<void>();
+
+    ngOnChanges(changes: SimpleChanges): void {
+        if (changes["availableModels"]) {
+            const prev = changes["availableModels"].previousValue as
+                | ChatModel[]
+                | undefined;
+            const curr = changes["availableModels"].currentValue as
+                | ChatModel[]
+                | undefined;
+            if (curr && curr.length > 0 && curr !== prev) {
+                this.selectFirstFilteredModel();
+            }
+        }
+    }
+
+    selectFirstFilteredModel(): void {
+        const first = this.filteredModels[0];
+        if (first) {
+            this.selectedModel = first.value;
+        }
+    }
+
+    onFilterModelsChanged(): void {
+        const stillVisible = this.filteredModels.some(
+            (m) => m.value === this.selectedModel
+        );
+        if (!stillVisible) {
+            this.selectFirstFilteredModel();
+        }
+    }
+
+    embedderAvailable(provider: string): boolean {
+        return this.availableEmbedderProviders.includes(provider.toLowerCase());
+    }
+
+    fetchModelsClicked() {
+        this.fetchModelsClick.emit(this.selectedPublicKey);
+    }
 
     togglePanel() {
         this.settingsOpen = !this.settingsOpen;
@@ -384,10 +488,10 @@ export class ChatControlPanelComponent {
 
     saveSettingsClicked() {
         const data: ControlPanelSettings = {
+            public_key: this.selectedPublicKey,
             model_id: this.selectedModel,
             llm_mode: this.selectedMode,
             embedder_provider: this.selectedEmbedderProvider,
-
             max_tokens: this.maxTokensValue,
             tim_paths: this.selectedItemPaths,
             system_prompt_path: this.systemPrompt ?? "",
@@ -408,20 +512,19 @@ export class ChatControlPanelComponent {
         return model ? model.label : "";
     }
 
-    isValidNonNegativeInt(value: number | null): boolean {
-        return value !== null && Number.isInteger(value) && value >= 0;
+    get systemPrompt(): string | undefined {
+        if (!this.systemPromptSelection) {
+            return undefined;
+        }
+        return this.systemPromptSelection[0];
     }
 
-    isValidNumberInput(enabled: boolean, value: number | null): boolean {
-        return enabled && !this.isValidNonNegativeInt(value);
-    }
-
-    isValidFloatBetween(
-        value: number | null,
-        min: number,
-        max: number
-    ): boolean {
-        return value !== null && value >= min && value <= max;
+    get filteredModels(): ChatModel[] {
+        if (!this.availableModels) return [];
+        if (!this.filterModels) return this.availableModels;
+        return this.availableModels.filter(
+            (m) => !this.NON_CHAT_PREFIXES.some((p) => m.value.includes(p))
+        );
     }
 
     get isInvalidTokenCap(): boolean {
@@ -462,6 +565,22 @@ export class ChatControlPanelComponent {
         );
     }
 
+    isValidNonNegativeInt(value: number | null): boolean {
+        return value !== null && Number.isInteger(value) && value >= 0;
+    }
+
+    isValidNumberInput(enabled: boolean, value: number | null): boolean {
+        return enabled && !this.isValidNonNegativeInt(value);
+    }
+
+    isValidFloatBetween(
+        value: number | null,
+        min: number,
+        max: number
+    ): boolean {
+        return value !== null && value >= min && value <= max;
+    }
+
     onMaxTokensChanged(): void {
         const trimmed = this.maxTokensLocal.trim();
 
@@ -479,12 +598,5 @@ export class ChatControlPanelComponent {
         if (!this.isInvalidMaxTokens) {
             this.maxTokensValue = parsed;
         }
-    }
-
-    get systemPrompt(): string | undefined {
-        if (!this.systemPromptSelection) {
-            return undefined;
-        }
-        return this.systemPromptSelection[0];
     }
 }

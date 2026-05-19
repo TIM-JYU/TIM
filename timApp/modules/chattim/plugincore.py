@@ -27,6 +27,7 @@ from timApp.modules.chattim.rag import (
     Message,
     Iterable,
 )
+from timApp.user.user import User
 from typing import Generic, TypeVar, TypedDict, cast
 
 from timApp.modules.chattim.model import (
@@ -69,7 +70,9 @@ class Policy:
 
 @dataclass()
 class InstanceAttributes:
-    model_id: str = "gpt-4.1-mini"
+    public_key: str = ""
+    # model_id: str = "gpt-4.1-mini"
+    model_id: str = ""
     llm_mode: str = "Creative"
     max_tokens: int | None = 2000
     tim_paths: list[str] = field(default_factory=list)
@@ -85,15 +88,31 @@ class InstanceAttributes:
 
 
 @dataclass
+class UserKey:
+    provider: str
+    public_key: str
+    is_selected: bool
+    is_shared: bool = False
+    shared_by: str = ""
+
+
+@dataclass
 class InstanceSettingsData(InstanceAttributes):
     availableModels: list[ChatModel] = field(kw_only=True)
     availableModes: list[str] = field(kw_only=True)
+    availableKeys: list[UserKey] = field(kw_only=True)
     availableEmbedderProviders: list[str] = field(kw_only=True)
+    selectedModel: str | None = None
     allowedItemPaths: list[str] | None = None
 
 
 T = TypeVar("T")
 E = TypeVar("E")
+
+
+class SaveInstanceResult(TypedDict):
+    supported_models: list[str]
+    model_id: str
 
 
 class Result(Generic[T, E]):
@@ -395,18 +414,55 @@ class PluginCore:
             # TODO: get settings from db
             pass
 
-        # TODO: Need to get the used API-key from the db
         # If the teacher has not yet saved the settings after setting an API-key alias,
         # the list should be empty.
         # Or should we just disable the model selection in the UI until an API-key alias has been set?
-        api_key = os.getenv("OPENAI_API_KEY") or ""
-        provider: Provider = "openai"
+        plugin_data = self.tim_database.get_llm_rule(document_id)
+        user_keys = self.tim_database.get_user_api_keys(user_id)
+        shared_keys = self.tim_database.get_shared_api_keys(user_id)
+
+        # Options for selecting key for plugin, no apikey shown
+        available_keys = [
+            UserKey(
+                provider=str(k.provider),
+                public_key=str(k.public_key),
+                is_selected=plugin_data is not None
+                and k.public_key == plugin_data.public_key,
+            )
+            for k in user_keys
+        ]
+
+        for k in shared_keys:
+            owner = User.get_by_id(k.owner)
+            owner_name = owner.name if owner else "unknown"
+            available_keys.append(
+                UserKey(
+                    provider=str(k.provider),
+                    public_key=str(k.public_key),
+                    is_selected=plugin_data is not None
+                    and k.public_key == plugin_data.public_key,
+                    is_shared=True,
+                    shared_by=owner_name,
+                )
+            )
+
+        api_key = ""
+        provider = "openai"
+        selected_model = str(plugin_data.agent) if plugin_data is not None else None
+
+        if plugin_data is not None:
+            for key in user_keys:
+                if key.public_key == plugin_data.public_key:
+                    api_key = key.api_key
+                    provider = key.provider
 
         data = InstanceSettingsData(
             availableModes=RagMode.supported_modes(),
             availableModels=self._get_supported_chat_models(provider, api_key),
+            availableKeys=available_keys,
             availableEmbedderProviders=self._get_available_embedder_providers(user_id),
             use_streaming=True,  # TODO: from db
+            selectedModel=selected_model,
             allowedItemPaths=None,  # TODO: from the API key restrictions?
         )
 
@@ -414,7 +470,7 @@ class PluginCore:
 
     def save_instance(
         self, caller_id: int, document_id: int, instance_settings: InstanceAttributes
-    ) -> Result[bool | None, str | None]:
+    ) -> Result[SaveInstanceResult, str | None]:
         """
         Create instance if it doesn't exist. New settings are saved if valid.
         Adds a new model instance to RAG and a new llmrule table to database
@@ -423,6 +479,7 @@ class PluginCore:
         :param instance_settings:
         :return: On error: Result(None, error_reason) On success (True, None)
         """
+        public_key: str = instance_settings.public_key
         model_id: str = instance_settings.model_id
         embedder_provider: str = instance_settings.embedder_provider
         llm_mode: str = instance_settings.llm_mode
@@ -433,11 +490,18 @@ class PluginCore:
         use_streaming: bool = instance_settings.use_streaming
         temperature: float | None = instance_settings.model_temperature
 
-        # TODO: Remove hard coded API-key, provider and model_id.
-        # Fetch from the database.
-        api_key = os.getenv("OPENAI_API_KEY")
-        provider_str: str = "openai"
-        model_id: str = "gpt-4.1-nano"
+        old_plugin_rule = self.tim_database.get_llm_rule(document_id)
+        old_provider = None
+        if old_plugin_rule is not None and old_plugin_rule.public_key:
+            try:
+                old_provider, _ = self.get_api_key(str(old_plugin_rule.public_key))
+            except Exception:
+                old_provider = None
+
+        try:
+            provider_str, api_key = self.try_access_api_key(caller_id, public_key)
+        except Exception as e:
+            return Result(None, str(e))
 
         if not self._document_exists(document_id):
             return Result(None, f"Document [{document_id}] does not exist")
@@ -451,10 +515,16 @@ class PluginCore:
 
         if provider_str not in Provider.__args__:
             return Result(None, f"Invalid provider [{provider_str}] given")
-        provider = cast(Provider, provider_str)
+        provider = provider_str
 
         supported_models = PluginCore._get_supported_models(provider, api_key)
-        if model_id not in supported_models:
+        provider_changed = old_provider is not None and old_provider != provider_str
+        if provider_changed:
+            if provider == "openai":
+                model_id = "gpt-4.1-mini"
+            else:
+                model_id = supported_models[0] if supported_models else model_id
+        elif model_id not in supported_models:
             return Result(None, f"Given model [{model_id}] not supported")
 
         paths_for_indexing = tim_paths
@@ -496,6 +566,7 @@ class PluginCore:
         # TODO: if instance exists -> update OTHERIWISE create
 
         kwargs_model = dict(provider=provider, model_id=model_id, api_key=api_key)
+
         try:
             self.rag.add_model(identifier=document_id, **kwargs_model)
         except ValueError as e:
@@ -533,20 +604,20 @@ class PluginCore:
         # TODO: tarkista onko aliasta vastaava API-avain olemassa
 
         rule = self.tim_database.set_llm_rule(
-            document_id,
-            caller_id,
-            "",
-            use_streaming,
-            temperature,
-            [],
-            llm_mode,
-            0,
-            document_ids,
-            system_prompt_path,
-            model_id,
-            0,
-            [],
-            [],
+            document_id=document_id,
+            owner=caller_id,
+            public_key=public_key,
+            use_streaming=use_streaming,
+            temperature=temperature,
+            teachers=[],
+            current_mode=llm_mode,
+            total_tokens_spent=0,
+            indexed_document_ids=document_ids,
+            system_prompt_path=system_prompt_path,
+            agent=model_id,
+            conv_time_window=0,
+            policy=[],
+            usage=[],
         )
         self.tim_database.set_global_policy(
             rule,
@@ -557,7 +628,11 @@ class PluginCore:
             max_tokens,
         )
 
-        return Result(True, None)
+        data: SaveInstanceResult = {
+            "supported_models": supported_models,
+            "model_id": model_id,
+        }
+        return Result(value=data, error=None)
 
     def delete_instance(self, owner_id: int, document_id: int) -> None:
         self.tim_database.delete_llm_rule(owner_id, document_id)
@@ -997,3 +1072,10 @@ class PluginCore:
             get_groups_by_ids(rule.groups),
             [str(p) for p in rule.paths],
         )
+
+    def get_models(self, provider_str: str, api_key: str) -> list[ChatModel]:
+        provider = self._parse_provider(provider_str)
+        if provider is not None:
+            return self._get_supported_chat_models(provider, api_key)
+        else:
+            return []

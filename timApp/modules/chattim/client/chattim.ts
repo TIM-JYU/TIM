@@ -37,6 +37,7 @@ import type {
     ChatModel,
     ControlPanelSettings,
     TokenLimitForUser,
+    UserKey,
 } from "./controlpanel";
 import {ChatControlPanelComponent} from "./controlpanel";
 
@@ -90,6 +91,9 @@ export interface ControlPanelData extends ControlPanelSettings {
     availableModels: ChatModel[];
     availableModes: string[];
     availableEmbedderProviders: string[];
+    availableKeys: UserKey[];
+    chosenKey: string;
+    selectedModel: string | null;
     allowedItemPaths?: string[];
 }
 
@@ -153,6 +157,7 @@ export interface ControlPanelData extends ControlPanelSettings {
                             (saveSettingsClick)="onSaveSettings($event)"
                             (clearConversationClick)="onClearConversation()"
                             (panelToggled)="onControlPanelToggle($event)"
+                            (fetchModelsClick)="onFetchModels($event)"
                             [selectedModel]="selectedModel"
                             [setModelTemperature]="modelTemperature"
                             [useStreaming]="useStreaming"
@@ -168,7 +173,9 @@ export interface ControlPanelData extends ControlPanelSettings {
                             [availableEmbedderProviders]="availableEmbedderProviders"
                             [selectedEmbedderProvider]="selectedEmbedderProvider"
                             [availableModes]="availableModes"
-                            [tokenLimitAllUsers]="globalPolicy">
+                            [tokenLimitAllUsers]="globalPolicy"
+                            [selectedPublicKey]="selectedPublicKey"
+                            [availablePublicKeys]="availablePublicKeys">
                         </chattim-control-panel>
                     </div>
                     
@@ -240,9 +247,12 @@ export class ChatTIMComponent
     used_chunks?: string[];
     selectedItemPaths: string[] = [];
     pathRestrictions?: DirectoryPickerRestrictions;
+    localFilePaths = "";
+    selectedPublicKey: string = "";
+    availablePublicKeys: UserKey[] = [];
     selectedMode = "Creative";
-    selectedModel = "gpt-4.1-mini";
     selectedEmbedderProvider = "";
+    selectedModel = "";
 
     maxTokens: number | null = 1000;
     controlpanelError?: string;
@@ -680,11 +690,12 @@ export class ChatTIMComponent
             const data = response.result;
             const result = data.result;
             this.controlpanelError = data.error;
+
             if (
                 this.controlpanelError === undefined ||
                 this.controlpanelError === ""
             ) {
-                this.selectedModel = result.model_id;
+                this.selectedModel = result.selectedModel ?? result.model_id;
                 this.selectedMode = result.llm_mode;
                 this.maxTokens = result.max_tokens;
                 this.selectedItemPaths = result.tim_paths;
@@ -700,6 +711,11 @@ export class ChatTIMComponent
                 this.selectedEmbedderProvider ||=
                     this.availableEmbedderProviders[0];
                 this.availableModes = result.availableModes;
+                this.availablePublicKeys = result.availableKeys;
+                this.selectedPublicKey =
+                    result.availableKeys.find((k) => k.is_selected)
+                        ?.public_key ?? "";
+
                 this.globalPolicy = result.global_policy;
                 this.useStreaming = result.use_streaming;
                 this.modelTemperature = result.model_temperature;
@@ -723,7 +739,12 @@ export class ChatTIMComponent
         };
 
         const response = await this.httpPost<{
-            web: {result: string; error?: string};
+            web: {
+                result: string;
+                error?: string;
+                availableModels?: ChatModel[];
+                selectedModel?: string;
+            };
         }>(this.route("saveSettings"), save_request);
 
         this.isRunning = false;
@@ -731,6 +752,12 @@ export class ChatTIMComponent
             const data = response.result;
             this.controlpanelError = data.web.error;
             this.controlpanelResponse = data.web.result;
+            if (data.web.availableModels) {
+                this.availableModels = data.web.availableModels;
+            }
+            if (data.web.selectedModel) {
+                this.selectedModel = data.web.selectedModel;
+            }
             this.error = undefined; // on successful save we clear chattim-error, maybe not great
             this.useStreaming = controlPanelSettings.use_streaming;
         } else {
@@ -898,6 +925,33 @@ export class ChatTIMComponent
      */
     dateString(ts: number | undefined): string {
         return ts ? new Date(ts).toLocaleString() : "";
+    }
+
+    async onFetchModels(publicKey: string) {
+        this.isRunning = true;
+        this.controlpanelError = undefined;
+
+        const response = await this.httpPost<{
+            models: ChatModel[];
+            error?: string;
+        }>(this.route("getModels"), {public_key: publicKey});
+
+        this.isRunning = false;
+        if (response.ok) {
+            const data = response.result;
+            if (data.error) {
+                this.controlpanelError = data.error;
+                return;
+            }
+            this.availableModels = data.models;
+            if (this.availableModels.length > 0) {
+                this.controlPanel.selectFirstFilteredModel();
+            } else {
+                this.controlpanelError = "No models found for this API key.";
+            }
+        } else {
+            this.controlpanelError = response.result.error.error;
+        }
     }
 }
 

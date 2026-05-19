@@ -84,6 +84,11 @@ class ChatTimAskParams(GenericParams):
 
 
 @dataclass
+class GetModelsParams:
+    public_key: str
+
+
+@dataclass
 class ChatTimSaveSettingsParams(GenericParams):
     control_panel_settings: InstanceAttributes
 
@@ -115,6 +120,11 @@ class ChatTimHtmlModel(
 ):
     def get_component_html_name(self) -> str:
         return "chattim-runner"
+
+
+class ChatTimAnswerWeb(PluginAnswerWeb, total=False):
+    availableModels: list[dict[str, str]]
+    selectedModel: str
 
 
 # Leave "welcomeText" empty to use default localized welcome text
@@ -245,29 +255,36 @@ def get_settings(params: GenericParams) -> ChatTIMGetSettingsResponse:
     document_id = params.document_id
     session_user_id = get_current_user_id()
 
-    error_or_ok = plugincore.get_plugin_settings(session_user_id, document_id)
-    if not error_or_ok.ok():
-        ret["error"] = error_or_ok.error
+    get_result = plugincore.get_plugin_settings(session_user_id, document_id)
+    if not get_result.ok():
+        ret["error"] = get_result.error
         return ret
 
-    ret["result"] = error_or_ok.value or InstanceAttributes.default()
+    ret["result"] = get_result.value or InstanceAttributes.default()
+
     return ret
 
 
 def save_settings(params: ChatTimSaveSettingsParams) -> PluginAnswerResp:
-    web: PluginAnswerWeb = {}
+    web: ChatTimAnswerWeb = {}
     result: PluginAnswerResp = {"web": web}
 
     panel_data = params.control_panel_settings
     document_id = params.document_id
     session_user_id = get_current_user_id()
 
-    error_or_ok = plugincore.save_instance(session_user_id, document_id, panel_data)
-    if not error_or_ok.ok():
-        web["error"] = error_or_ok.error or ""
+    save_result = plugincore.save_instance(session_user_id, document_id, panel_data)
+    if not save_result.ok():
+        web["error"] = save_result.error or ""
         return result
 
+    data = save_result.value
+
     web["result"] = "Settings saved!"
+    web["availableModels"] = [
+        {"label": m, "value": m} for m in data["supported_models"]
+    ]
+    web["selectedModel"] = data["model_id"]
     return result
 
 
@@ -401,6 +418,16 @@ def _api_key_to_dict(key: APIKey) -> dict:
     }
 
 
+def get_models(params: GetModelsParams) -> dict:
+    user_id = get_current_user_id()
+    try:
+        provider, api_key = plugincore.try_access_api_key(user_id, params.public_key)
+    except Exception as e:
+        return {"error": str(e), "models": []}
+    models = plugincore.get_models(provider, api_key)
+    return {"models": models}
+
+
 register_route(chattim, "post", "ask", ChatTimAskParams, ask_route)
 register_route(chattim, "post", "askStream", ChatTimAskParams, ask_stream_route)
 register_route(chattim, "post", "getSettings", GenericParams, get_settings)
@@ -421,3 +448,4 @@ register_route(
 register_route(chattim, "post", "getRights", GetRightsParams, get_rights)
 register_route(chattim, "get", "getExistingKeys", None, get_existing_keys)
 register_route(chattim, "delete", "deleteKey", APIKeyParams, delete_existing_key)
+register_route(chattim, "post", "getModels", GetModelsParams, get_models)

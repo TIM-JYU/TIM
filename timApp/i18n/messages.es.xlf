@@ -11580,6 +11580,30 @@ Separate multiple addresses with commas or write each address on a new line.</so
           <context context-type="linenumber">100,101</context>
         </context-group>
       </trans-unit>
+      <trans-unit id="2443492338531163252" datatype="html">
+        <source> Edit LLM API-key permissions </source>
+        <target state="new"> Edit LLM API-key permissions </target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/user/edit-llm-api-key-dialog.component.ts</context>
+          <context context-type="linenumber">20</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="3891725291958668712" datatype="html">
+        <source> Failed to save: <x id="INTERPOLATION" equiv-text="{{ editError }}"/> </source>
+        <target state="new"> Failed to save: <x id="INTERPOLATION" equiv-text="{{ editError }}"/> </target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/user/edit-llm-api-key-dialog.component.ts</context>
+          <context context-type="linenumber">53,54</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="1703325564855070585" datatype="html">
+        <source> Edit permissions </source>
+        <target state="new"> Edit permissions </target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
+          <context context-type="linenumber">671</context>
+        </context-group>
+      </trans-unit>
     </body>
   </file>
 </xliff>
