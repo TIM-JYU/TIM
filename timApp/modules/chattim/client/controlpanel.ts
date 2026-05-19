@@ -562,4 +562,11 @@ export class ChatControlPanelComponent {
             (m) => !this.NON_CHAT_PREFIXES.some((p) => m.value.includes(p))
         );
     }
+
+    selectFirstFilteredModel(): void {
+        const first = this.filteredModels[0];
+        if (first) {
+            this.selectedModel = first.value;
+        }
+    }
 }

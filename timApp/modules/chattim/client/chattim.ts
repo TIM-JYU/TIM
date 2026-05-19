@@ -945,7 +945,7 @@ export class ChatTIMComponent
             }
             this.availableModels = data.models;
             if (this.availableModels.length > 0) {
-                this.selectedModel = this.availableModels[0].value;
+                this.controlPanel.selectFirstFilteredModel();
             } else {
                 this.controlpanelError = "No models found for this API key.";
             }
