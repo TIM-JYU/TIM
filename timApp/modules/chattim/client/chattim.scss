@@ -118,3 +118,72 @@
   opacity: 0.6;
   cursor: not-allowed;
 }
+
+
+// usercontrol stuff //
+.user-table {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  overflow: hidden;
+  background: white;
+}
+
+.table-row {
+  display: grid;
+  grid-template-columns:
+        minmax(180px, 1fr)
+        140px
+        120px;
+
+  align-items: center;
+  width: 100%;
+  box-sizing: border-box;
+  gap: 12px;
+  padding: 10px 14px;
+}
+
+.header-row {
+  font-weight: bold;
+  background: #f5f5f5;
+  border-bottom: 2px solid #ccc;
+}
+
+.user-row {
+  appearance: none;
+  border: none;
+  background: white;
+  text-align: left;
+  cursor: pointer;
+  border-bottom: 1px solid #eee;
+  transition: background 0.15s ease;
+}
+
+.user-row:last-child {
+  border-bottom: none;
+}
+
+.user-row:hover {
+  background: black;
+}
+
+.user-row.selected {
+  background: green;
+}
+
+.user-row div {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.usercontrol-save-button-div {
+  text-align: right;
+}
+
+
+// usercontrol ends //
+
+

@@ -1,5 +1,11 @@
 import {Component, EventEmitter, Input, Output} from "@angular/core";
 import type {JsonValue} from "tim/util/jsonvalue";
+import {FormsModule} from "@angular/forms";
+import {NgForOf, NgIf} from "@angular/common";
+import {PurifyModule} from "tim/util/purify.module";
+import {TokenLimitForUser, UserPolicyComponent} from "./userpolicy";
+import {UserControlComponent} from "./usercontrol";
+import type {UserData} from "./usercontrol";
 
 export interface ChatModel extends Record<string, JsonValue> {
     label: string;
@@ -19,17 +25,17 @@ export interface ControlPanelSettings extends Record<string, JsonValue> {
     model_temperature: number | null;
 }
 
-export interface TokenLimitForUser extends Record<string, JsonValue> {
-    token_cap_enabled: boolean;
-    token_cap: number | null;
-    time_window_enabled: boolean;
-    window_unit: string;
-    window_value: number | null;
-    token_cap_for_window: number | null;
-}
-
 @Component({
     selector: "chattim-control-panel",
+    standalone: true,
+    imports: [
+        UserPolicyComponent,
+        FormsModule,
+        NgIf,
+        NgForOf,
+        PurifyModule,
+        UserControlComponent,
+    ],
     template: `
         <button class="btn btn-link settings-btn"
                 (click)="togglePanel()"
@@ -218,63 +224,29 @@ export interface TokenLimitForUser extends Record<string, JsonValue> {
                     </button>
 
                     <ng-container *ngIf="globalPolicyOpen">
-                        <div class="checkbox">
-                            <label>
-                                <input type="checkbox"
-                                       [(ngModel)]="tokenLimitAllUsers.token_cap_enabled">
-                                Enable token limits per user
-                            </label>
-                        </div>
-
-                        <div *ngIf="tokenLimitAllUsers.token_cap_enabled" class="settings-section-body">
-                            <input type="number"
-                                   class="form-control"
-                                   [(ngModel)]="tokenLimitAllUsers.token_cap"
-                            >
-                        </div>
-                        <div class="error" *ngIf="isInvalidTokenCap">
-                            Input should be a positive integer
-                        </div>
-
-                        <div class="checkbox">
-                            <label>
-                                <input type="checkbox" [(ngModel)]="tokenLimitAllUsers.time_window_enabled">
-                                Enable time window token limits
-                            </label>
-                        </div>
-
-                        <div *ngIf="tokenLimitAllUsers.time_window_enabled">
-                            <div class="form-group">
-                                <label class="col-sm-2 control-label time-window-label">
-                                    <span class="time-window-label-span">Tokens</span>
-                                    <input type="number" class="form-control restriction-inputs"
-                                           placeholder="5000"
-                                           [(ngModel)]="tokenLimitAllUsers.token_cap_for_window">
-                                </label>
-                                <div class="error" *ngIf="isInvalidWindowTokens">
-                                    Input should be a positive integer
-                                </div>
-                                <div>
-                                    <label class="col-sm-2 control-label time-window-label">
-                                        <span class="time-window-label-span">Window</span>
-                                        <input type="number" class="form-control restriction-inputs"
-                                               placeholder="5"
-                                               [(ngModel)]="tokenLimitAllUsers.window_value"
+                            <userpolicy [userLimits]="tokenLimitAllUsers"
+                                        (isInInvalidState)="invalidUserPolicyState = $event"
                                         >
-                                        <select class="form-control restriction-inputs"
-                                                [(ngModel)]="tokenLimitAllUsers.window_unit">
-                                            <option *ngFor="let timeUnit of timeUnitOptions"
-                                                    [ngValue]="timeUnit.value">{{ timeUnit.label }}
-                                            </option>
-                                        </select>
-                                    </label>
-                                </div>
-                                <div class="error" *ngIf="isInvalidWindowTime">
-                                    Input should be a positive integer
-                                </div>
-                            </div>
-                        </div>
+                            </userpolicy>
                     </ng-container>
+                </div>
+
+                <!-- Open dialog to view user token usage and policy modif -->
+                <div class="settings-row"  >
+                    <button class="btn btn-link settings-section-btn"
+                            (click)="userControlOpen = !userControlOpen">
+                        <span class="glyphicon"
+                              [class.glyphicon-chevron-right]="!userControlOpen"
+                              [class.glyphicon-chevron-down]="userControlOpen">
+                        </span>
+                        Token consumption & per user policies:
+                    </button>
+                    <usercontrol *ngIf="userControlOpen"
+                                 [setUserData]="userUsageAndPolicyData"
+                                 (userDataRequest)="userDataRequest.emit($event)"
+                                 (policySaveRequest)="policySaveRequest.emit($event)"
+                                 >
+                    </usercontrol>
                 </div>
 
                 <!-- Save button that sends the chosen stuff -->
@@ -300,6 +272,12 @@ export class ChatControlPanelComponent {
     filesOpen = false;
     promptOpen = false;
     globalPolicyOpen = false;
+    userControlOpen = false;
+
+    @Input() policyDataSaveResp: undefined | string;
+    @Input() userUsageAndPolicyData: undefined | UserData[];
+    @Output() userDataRequest = new EventEmitter<number>();
+    @Output() policySaveRequest = new EventEmitter<UserData>();
 
     isInvalidMaxTokens = false;
     maxTokensLocal = "";
@@ -308,6 +286,8 @@ export class ChatControlPanelComponent {
         this.maxTokensValue = value;
         this.maxTokensLocal = value != null ? String(value) : "";
     }
+
+    invalidUserPolicyState: boolean = false;
 
     enabledTemperature: boolean = false;
     modelTemperature: number | null = 0.2;
@@ -331,11 +311,6 @@ export class ChatControlPanelComponent {
     @Input() systemPromptPath!: string;
     @Input() isTeacher: boolean = false;
 
-    timeUnitOptions: {value: string; label: string}[] = [
-        {value: "min", label: "Minutes"},
-        {value: "h", label: "Hours"},
-        {value: "d", label: "Days"},
-    ];
     @Input() tokenLimitAllUsers!: TokenLimitForUser;
 
     @Input() availableModels?: ChatModel[];
@@ -351,6 +326,10 @@ export class ChatControlPanelComponent {
     togglePanel() {
         this.settingsOpen = !this.settingsOpen;
         this.panelToggled.emit(this.settingsOpen);
+    }
+
+    openUsageViewClicked() {
+        this.userControlOpen = !this.userControlOpen;
     }
 
     saveSettingsClicked() {
@@ -379,41 +358,12 @@ export class ChatControlPanelComponent {
         return model ? model.label : "";
     }
 
-    isValidNonNegativeInt(value: number | null): boolean {
-        return value !== null && Number.isInteger(value) && value >= 0;
-    }
-
-    isValidNumberInput(enabled: boolean, value: number | null): boolean {
-        return enabled && !this.isValidNonNegativeInt(value);
-    }
-
     isValidFloatBetween(
         value: number | null,
         min: number,
         max: number
     ): boolean {
         return value !== null && value >= min && value <= max;
-    }
-
-    get isInvalidTokenCap(): boolean {
-        return this.isValidNumberInput(
-            this.tokenLimitAllUsers.token_cap_enabled,
-            this.tokenLimitAllUsers.token_cap
-        );
-    }
-
-    get isInvalidWindowTokens(): boolean {
-        return this.isValidNumberInput(
-            this.tokenLimitAllUsers.time_window_enabled,
-            this.tokenLimitAllUsers.token_cap_for_window
-        );
-    }
-
-    get isInvalidWindowTime(): boolean {
-        return this.isValidNumberInput(
-            this.tokenLimitAllUsers.time_window_enabled,
-            this.tokenLimitAllUsers.window_value
-        );
     }
 
     get isInvalidModelTemperature(): boolean {
@@ -426,9 +376,7 @@ export class ChatControlPanelComponent {
     get invalidInputState(): boolean {
         return (
             this.isInvalidMaxTokens ||
-            this.isInvalidTokenCap ||
-            this.isInvalidWindowTime ||
-            this.isInvalidWindowTokens ||
+            this.invalidUserPolicyState ||
             this.isInvalidModelTemperature
         );
     }
