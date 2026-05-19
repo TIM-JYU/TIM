@@ -78,6 +78,8 @@ class InstanceAttributes:
     system_prompt_path: str = ""
     use_streaming: bool = False
     model_temperature: float | None = None
+    include_citations: bool = False
+    similarity_threshold: float | None = None
     global_policy: Policy = field(default_factory=Policy)
     embedder_provider: str = "dummy"
 
@@ -201,22 +203,22 @@ class PluginCore:
         mode: RagMode = RagMode.RETRIEVE
         # TODO: No need for this attribute if we have character limit for input? Maybe keep as is for an option
         max_tokens_for_req = 99999
-        # TODO: from the LLMRule table here or bring as arg
-        temperature: float | None = 0.2
-
-        # TODO: get this from the LLMRule table
+        # TODO: get these from the LLMRule table
+        temperature: float | None = None
+        similarity_threshold: float | None = None
         use_streaming: bool = stream
+
         # Validate that the user has the correct generate mode
         if stream != use_streaming:
             return Result(error="Bad request. Mismatching generation mode.")
 
-        # response = self.rag.get_context(prompt=validated_input, identifier=document_id)
         response = self.indexer.get_context(
-            prompt=validated_input, identifier=document_id
+            prompt=validated_input,
+            identifier=document_id,
+            threshold=similarity_threshold,
         )
         context = response.context
         citations = self._get_citations(response.used_context)
-        print(citations)
         system_prompt = self.get_system_prompt(caller_id, document_id)
 
         msg_data = MessageData(
@@ -239,9 +241,6 @@ class PluginCore:
         except Exception as e:
             return Result(error=str(e))
 
-        # TODO: answer post processing
-        # Add the citations to the context used
-        # Include TIM doc ids etc, and convert to TIM paths
         prepared = PreparedChatRequest(
             caller_id=caller_id_str,
             document_id=document_id_str,
@@ -487,6 +486,8 @@ class PluginCore:
         global_policy: Policy = instance_settings.global_policy
         use_streaming: bool = instance_settings.use_streaming
         temperature: float | None = instance_settings.model_temperature
+        include_citations: bool = instance_settings.include_citations
+        similarity_threshold: float | None = instance_settings.similarity_threshold
 
         old_plugin_rule = self.tim_database.get_llm_rule(document_id)
         old_provider = None
@@ -556,6 +557,11 @@ class PluginCore:
         if temperature is not None and (temperature < 0 or temperature > 2):
             return Result(None, "Temperature must be between 0 and 2")
 
+        if similarity_threshold is not None and (
+            similarity_threshold < -1 or similarity_threshold > 1
+        ):
+            return Result(None, "Similarity threshold must be between -1 and 1")
+
         # TODO: update system prompt path in the db row
 
         if (valid := self._validate_policy(global_policy)) is not None:
@@ -607,6 +613,8 @@ class PluginCore:
             public_key=public_key,
             use_streaming=use_streaming,
             temperature=temperature,
+            include_citations=include_citations,
+            similarity_threshold=similarity_threshold,
             teachers=[],
             current_mode=llm_mode,
             total_tokens_spent=0,
@@ -661,14 +669,14 @@ class PluginCore:
     ) -> list[dict]:
         """Retrieve the wanted message window to the UI."""
         # TODO: get the LLMRule from cache
-        # rule = self.tim_database.get_llm_rule(document_id)
-        # include_citations = rule.include_citations
-        include_citations = True
+        rule = self.tim_database.get_llm_rule(document_id)
+        if not rule:
+            return []
+        include_citations = rule.include_citations
 
         messages = self.history_manager.get_history_time_window(
             str(document_id), str(caller_id), None, ts_end, max_count
         )
-
         return [
             {
                 "content": m.content,

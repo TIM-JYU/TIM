@@ -26,6 +26,7 @@ class LLMRule(db.Model):
     paths: Mapped[list[str]] = mapped_column(ARRAY(String), default=[])
     """Document or folder paths where the API key can be used on."""
 
+    # Model options
     use_streaming: Mapped[bool] = mapped_column(default=False)
     """If `True`, the plugin uses streaming model response."""
     temperature: Mapped[Optional[float]] = mapped_column(nullable=True)
@@ -33,6 +34,10 @@ class LLMRule(db.Model):
     Optional temperature setting to use when creating the model response.
     If null, the temperature parameter is not used.
     """
+    include_citations: Mapped[bool] = mapped_column(default=False)
+    """Whether to include citations to the agent messages."""
+    similarity_threshold: Mapped[Optional[float]] = mapped_column(nullable=True)
+    """Threshold for a block to be included in the agent context. Should be between -1 and 1."""
 
     # TODO: Should this be combined with `groups` or kept separate?
     teachers: Mapped[list[int]] = mapped_column(ARRAY(Integer), default=[])

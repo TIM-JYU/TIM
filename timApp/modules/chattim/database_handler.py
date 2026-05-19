@@ -216,6 +216,8 @@ class TimDatabase:
         public_key: str,
         use_streaming: bool,
         temperature: float | None,
+        include_citations: bool,
+        similarity_threshold: float | None,
         teachers: list[int],
         current_mode: str,
         total_tokens_spent: int,
@@ -233,6 +235,8 @@ class TimDatabase:
         :param public_key: The alias of the chosen API key for the instance.
         :param use_streaming: Use streaming for model answers.
         :param temperature: The temperature parameter for the model.
+        :param include_citations: Whether to include citations.
+        :param similarity_threshold: The similarity threshold for context inclusion.
         :param teachers: The ids of the teachers allowed to use the plugin instance.
         :param current_mode: Mode of the plugin instance: summarizing, creative or balanced.
         :param total_tokens_spent: The total number of tokens spent.
@@ -252,6 +256,8 @@ class TimDatabase:
                 public_key=public_key,
                 use_streaming=use_streaming,
                 temperature=temperature,
+                include_citations=include_citations,
+                similarity_threshold=similarity_threshold,
                 teachers=teachers,
                 current_mode=current_mode,
                 total_tokens_spent=total_tokens_spent,
@@ -272,6 +278,8 @@ class TimDatabase:
             rule.system_prompt_path = system_prompt_path
             rule.use_streaming = use_streaming
             rule.temperature = temperature
+            rule.include_citations = include_citations
+            rule.similarity_threshold = similarity_threshold
         rule.policy.extend(policy)
         rule.usage.extend(usage)
         db.session.commit()

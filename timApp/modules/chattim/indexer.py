@@ -409,12 +409,15 @@ class Indexer:
         similarities = dot_product / (norm_embeddings * norm_prompt)
         return similarities.tolist()
 
-    def get_context(self, prompt: str, identifier: int, k: int = 3) -> ContextResponse:
+    def get_context(
+        self, prompt: str, identifier: int, k: int = 3, threshold: float | None = None
+    ) -> ContextResponse:
         """returns the context for the prompt as list of text,and the number of tokens used
 
         :param prompt: prompt that is used to search for context
         :param identifier id of the plugin instance
         :param k: number of tim chunks to return
+        :param threshold: Threshold for the similarity values of the chunks. Between -1 and 1.
         :return: ContextResponse object containing the context and the number of tokens used
         """
         embedding_model = self.embedding_models[identifier]
@@ -465,6 +468,8 @@ class Indexer:
         context: str = ""
         context_ids: list[tuple[int, int]] = []
         for similarity, index in best_chunks:
+            if threshold is not None and similarity < threshold:
+                continue
             content = texts[index]
             context += f"{content}\n\n"
             context_ids.append(blocks[index])
