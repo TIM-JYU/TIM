@@ -131,6 +131,7 @@ type SimilarityMode = "none" | "loose" | "balanced" | "strict" | "custom";
                                 <input type="checkbox"
                                        [(ngModel)]="useStreaming">
                                 Use streaming responses
+                                <a tooltip="{{getStreamTooltip}}"><i class="glyphicon glyphicon-info-sign"></i></a>
                             </label>
                         </div>
 
@@ -139,6 +140,7 @@ type SimilarityMode = "none" | "loose" | "balanced" | "strict" | "custom";
                                 <input type="checkbox"
                                        [(ngModel)]="enabledTemperature">
                                 Enable temperature parameter
+                                <a tooltip="{{getTemperatureTooltip}}"><i class="glyphicon glyphicon-info-sign"></i></a>
                             </label>
                         </div>
                         <div *ngIf="enabledTemperature" class="settings-section-body">
@@ -159,12 +161,15 @@ type SimilarityMode = "none" | "loose" | "balanced" | "strict" | "custom";
                                 <input type="checkbox"
                                        [(ngModel)]="includeCitations">
                                 Include citations
+                                <a tooltip="{{getCitationTooltip}}"><i class="glyphicon glyphicon-info-sign"></i></a>
                             </label>
                         </div>
 
                         <div class="form-group">
                             <div class="inline-field">
-                                <label class="inline-field-label">Similarity threshold</label>
+                                <label class="inline-field-label">Similarity threshold
+                                    <a tooltip="{{getSimilarityTooltip}}"><i class="glyphicon glyphicon-info-sign"></i></a>
+                                </label>
                                 <select class="form-control inline-field-control"
                                         [(ngModel)]="similarityThresholdMode">
                                     <option *ngFor="let o of SIMILARITY_OPTION_LIST" [ngValue]="o.mode">
@@ -187,9 +192,11 @@ type SimilarityMode = "none" | "loose" | "balanced" | "strict" | "custom";
                                 Similarity input should be between -1 and 1
                             </div>
                         </div>
-                        
+
                         <div class="inline-field">
-                            <label class="inline-field-label">Top-K chunks</label>
+                            <label class="inline-field-label">Top-K chunks
+                                <a tooltip="{{getTopKTooltip}}"><i class="glyphicon glyphicon-info-sign"></i></a>
+                            </label>
                             <input
                                 type="number"
                                 class="form-control inline-field-control"
@@ -710,5 +717,31 @@ export class ChatControlPanelComponent implements OnChanges {
         if (!this.isInvalidMaxTokens) {
             this.maxTokensValue = parsed;
         }
+    }
+
+    get getStreamTooltip(): string {
+        return "Enable streaming to receive responses incrementally.";
+    }
+
+    get getTemperatureTooltip(): string {
+        return (
+            "Adjust the randomness of the model's responses." +
+            " Higher values result in more random outputs."
+        );
+    }
+
+    get getCitationTooltip(): string {
+        return "Include citations in the responses to provide references for the used context.";
+    }
+
+    get getSimilarityTooltip(): string {
+        return (
+            "Affects the selection of found context." +
+            " The higher the value, the stricter the similarity requirement for context selection."
+        );
+    }
+
+    get getTopKTooltip(): string {
+        return "Specify the number of top chunks to consider for context selection.";
     }
 }

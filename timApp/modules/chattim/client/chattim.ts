@@ -33,6 +33,7 @@ import {Users} from "tim/user/userService";
 import type {DirectoryPickerRestrictions} from "tim/folder/directory-picker.component";
 import {DirectoryPickerComponent} from "tim/folder/directory-picker.component";
 import {itemglobals} from "tim/util/globals";
+import {TooltipModule} from "ngx-bootstrap/tooltip";
 import type {
     ChatModel,
     ControlPanelSettings,
@@ -666,7 +667,6 @@ export class ChatTIMComponent
                     reject();
                 },
                 complete: () => {
-                    console.log("Answer completed");
                     entry.agent.timestamp_ms = Date.now();
                     sub.unsubscribe();
                     resolve();
@@ -973,6 +973,7 @@ export class ChatTIMComponent
         DialogModule,
         FormsModule,
         DirectoryPickerComponent,
+        TooltipModule,
     ],
 })
 export class ChatTIMModule implements DoBootstrap {
