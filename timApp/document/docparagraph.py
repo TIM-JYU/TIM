@@ -58,6 +58,11 @@ if TYPE_CHECKING:
 ENABLE_LOG_FOR_PERSON_LONG = 0
 ENABLE_LOG_FOR_PERSON_SHORT = 1
 
+# Special handling is needed for cache headers with macros.
+# The text must start with 'f' to be interpreted as false
+# in par attribute nocache="f...".
+FORCE_MACROS_HEADDER = "force_macros_header"
+
 SKIPPED_ATTRS = {"r", "rd", "rp", "ra", "rt", "rtask", "mt", "settings"}
 
 BLINDED_SETTINGS_TEXT = """```
@@ -100,6 +105,7 @@ def write_atomic(path: str, data: str, encoding: str = "utf-8") -> None:
 
     # atomic replace of the original file with the new file
     os.replace(tmp_path, path)
+    os.chmod(path, 0o664)
 
 
 def log_filename(file_name: str):
@@ -262,6 +268,7 @@ class DocParagraph:
         par_hash: str | None = None,
         html: str | None = None,
         attrs: dict | None = None,
+        html_cache: dict | None = None,
     ) -> DocParagraph:
         """Creates a DocParagraph from the given parameters.
 
@@ -271,6 +278,7 @@ class DocParagraph:
         :param par_hash: The hash for the paragraph or None if it should be computed.
         :param html: The HTML for the paragraph or None if it should be generated based on Markdown.
         :param attrs: The attributes for the paragraph.
+        :param html_cache: The HTML cache for this paragraph.
         :return: The created DocParagraph.
 
         """
@@ -281,6 +289,7 @@ class DocParagraph:
         par.hash = hashfunc(md, attrs) if par_hash is None else par_hash
         par.attrs = attrs or {}
         par._cache_props()
+        par.html_cache = html_cache
         return par
 
     @property
@@ -705,6 +714,20 @@ class DocParagraph:
         )
 
         if not self.is_dynamic() and expanded_md != md:
+            # may depend on macros, but is it only
+            # from comments or static macros?
+            if md.find(env.comment_start_string) >= 0:
+                # is diff only from comments?
+                without_comments = expand_macros(
+                    md,
+                    {},
+                    settings,
+                    ignore_errors=ignore_errors,
+                    env=env,
+                )
+                if without_comments == expanded_md:
+                    self.depends_on_macros = MacroDependency.NO
+                    return expanded_md
             # depends on macros, is static enough?
             static_md = expand_macros(
                 md,
@@ -885,7 +908,11 @@ class DocParagraph:
                     heading_cache_file
                 ) as heading_cache:
                     unloaded_pars = cls.get_unloaded_pars(
-                        pars, settings, cache, heading_cache, clear_cache
+                        pars,
+                        settings,
+                        cache,
+                        heading_cache,
+                        clear_cache,
                     )
                     for k, v in heading_cache.items():
                         heading_cache[k] = v
@@ -951,6 +978,7 @@ class DocParagraph:
                 if getattr(par, "was_invalid", False):
                     continue
 
+                is_from_preamble = par.from_preamble()
                 nocache = par.get_attr("nocache")
                 if nocache == "false":  # force to cache
                     par.depends_on_macros = MacroDependency.NO
@@ -966,7 +994,7 @@ class DocParagraph:
                 if h != old_html:
                     h = sanitize_html(h)
                     if h != old_html:
-                        if not par.from_preamble():
+                        if not is_from_preamble:
                             changed_pars.append(par)
                             if par.depends_on_macros is not MacroDependency.DYNAMIC:
                                 need_write = True
@@ -976,7 +1004,7 @@ class DocParagraph:
                     else:
                         cache_index = CacheHashNames.WITH_MACROS_HASH
                     need_write = clear_cache or view_ctx.partial
-                if old_cache_index != cache_index:
+                if old_cache_index != cache_index and not is_from_preamble:
                     if par.depends_on_macros is not MacroDependency.DYNAMIC:
                         need_write = True
 
@@ -986,8 +1014,10 @@ class DocParagraph:
                         if is_heading:
                             # heading with dynamic macros needs different handling
                             # to get autnumbers
-                            par.attrs["nocache"] = "force"  # f matches false
-                            need_write = nocache != "force"
+                            par.attrs[
+                                "nocache"
+                            ] = FORCE_MACROS_HEADDER  # f matches false
+                            need_write = nocache != FORCE_MACROS_HEADDER
                         else:
                             par.attrs["nocache"] = "auto"
                             need_write = True
@@ -1003,14 +1033,19 @@ class DocParagraph:
                     )
                 # noinspection PyProtectedMember
                 par._set_html(h, sanitized=True)
-                if persist and not par.from_preamble() and need_write:
+                if persist and not is_from_preamble and need_write:
                     par.__write()
         log_for_person(lambda: f"changed pars: {changed_pars}")
         return changed_pars
 
     @classmethod
     def get_unloaded_pars(
-        cls, pars, settings, auto_macro_cache, heading_cache, clear_cache=False
+        cls,
+        pars,
+        settings,
+        auto_macro_cache,
+        heading_cache,
+        clear_cache=False,
     ) -> list[UnloadedParInfo]:
         """Finds out which of the given paragraphs need to be preloaded again.
 
@@ -1050,7 +1085,7 @@ class DocParagraph:
             if clear_cache:
                 # clear automatically set nocache value
                 nocache = par.get_attr("nocache")
-                if nocache == "force" or nocache == "auto":
+                if nocache == FORCE_MACROS_HEADDER or nocache == "auto":
                     if par.attrs:
                         par.attrs.pop("nocache", None)
 
@@ -1125,15 +1160,25 @@ class DocParagraph:
                                 normal_pars += 1
                             continue  # ideal case
                     old_html = next((v for k, v in cached.items() if k != "i"), None)
-                    log_for_person_short(
-                        lambda: f"CACHE MISS: par {par.get_doc_id()}/{par.get_id()} "
-                        f"with hashes {cache_hashes}, "
-                        f"auto macros: {auto_macros}, and "
-                        f"cache: {cached} of type {type(cached)}"
-                    )
+                    if (
+                        not par.from_preamble()
+                        and flask.has_request_context()
+                        and flask.request.path.startswith("/view")
+                    ):  # The preamble leads to many misses.
+                        log_for_person_short(
+                            lambda: f"CACHE MISS: par {par.get_doc_id()}/{par.get_id()} "
+                            f"with hashes {cache_hashes}, "
+                            f"auto macros: {auto_macros}, and "
+                            f"cache: {cached} of type {type(cached)}"
+                        )
             else:
                 old_html = None
-                if par.get_attr("nocache") != "force":
+                if (
+                    par.get_attr("nocache") != FORCE_MACROS_HEADDER
+                    and flask.has_request_context()
+                    and flask.request.path.startswith("/view")
+                    and not par.from_preamble()
+                ):
                     log_for_person_short(
                         lambda: f"CACHE SKIP: par {par.get_doc_id()}/{par.get_id()} "
                         f"with cache: {cached} of type {type(cached)}; "
@@ -1442,6 +1487,7 @@ class DocParagraph:
             md=p.md,
             par_hash=p.hash,
             par_id=p.id,
+            html_cache=p.html_cache,
         )
 
     def clear_cache(self) -> None:
