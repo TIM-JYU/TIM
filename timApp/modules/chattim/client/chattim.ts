@@ -52,6 +52,7 @@ const PluginMarkupFields = t.intersection([
             t.literal("lg"),
             t.literal("xs"),
         ]),
+        blockContent: t.string,
     }),
     GenericPluginMarkup,
     t.type({
@@ -105,6 +106,10 @@ export interface ControlPanelData extends ControlPanelSettings {
     encapsulation: ViewEncapsulation.None,
     // TODO: Display message datetime from the timestamp with `dateString()`
     template: `
+        <div class="chattim-block-anchor"
+             *ngIf="(markup.blockContent ?? '').trim().length > 0"
+             [innerHTML]="markup.blockContent | purify">
+        </div>
         <tim-dialog-frame class="chattim-dialog-frame" [size]="windowSize">
             <ng-container header> {{ header }}</ng-container>
             <ng-container body>

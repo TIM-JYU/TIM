@@ -43,6 +43,7 @@ class ChatTimMarkupModel(GenericMarkupModel):
     welcomeText: str = "Welcome to use TIM's helper chatbot!"
     apiAlias: str = ""
     defaultWindowSize: Literal["sm", "md", "lg", "xs"] = "md"
+    blockContent: str = ""
 
 
 # TODO: make proper dataclasses
@@ -135,6 +136,7 @@ header: ChatTIM
 welcomeText: ""  
 apiAlias: ""
 defaultWindowSize: "md" # [sm, md, lg, xs]
+blockContent: ""
 ```
 """,
     ]
