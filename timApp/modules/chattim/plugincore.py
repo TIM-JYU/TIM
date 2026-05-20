@@ -64,6 +64,7 @@ class GenericPolicy:
 @dataclass()
 class UserData:
     username: str
+    user_id: int
     tokens_spent: int
     hasPolicy: bool
     policy: GenericPolicy
@@ -584,20 +585,26 @@ class PluginCore:
 
         def convert_sqlpolicy_to_userpolicy(sql_policy: Policy) -> GenericPolicy:
             max_tokens_per_user = sql_policy.max_tokens_per_user
-            time_window_tokens = sql_policy.token_time_window_tokens
+            time_window_tokens = sql_policy.time_window_tokens
             time_window_value = sql_policy.token_time_window_num
-            token_cap_enabled = False if not max_tokens_per_user else True
-            time_window_enabled = (
-                False if (not time_window_tokens or not time_window_value) else True
-            )
+            token_cap_enabled = True
+            time_window_enabled = True
+
+            if max_tokens_per_user == -1:
+                token_cap_enabled = False
+                max_tokens_per_user = 0
+
+            if time_window_tokens == -1:
+                time_window_enabled = False
+                time_window_tokens = 0
 
             return GenericPolicy(
                 token_cap_enabled=token_cap_enabled,
-                token_cap=sql_policy.max_tokens_per_user,
+                token_cap=max_tokens_per_user,
                 time_window_enabled=time_window_enabled,
                 window_unit=sql_policy.token_time_window_type,
                 window_value=time_window_value,
-                token_cap_for_window=sql_policy.time_window_tokens,
+                token_cap_for_window=time_window_tokens,
             )
 
         llm_rule = self.tim_database.get_llm_rule(document_id)
@@ -605,7 +612,7 @@ class PluginCore:
             raise LookupError("Instance has not been created yet")
 
         owner = llm_rule.owner
-        if owner != caller_id:  # this should never happen due to UI-limitations
+        if owner != caller_id:  # this should never happen since we have UI-limitations
             raise PermissionError("You have no access to this resource")
 
         user_data: list[UserData] = []
@@ -618,18 +625,22 @@ class PluginCore:
             if user_id == caller_id:
                 continue
 
-            user_policy = GenericPolicy()
+            user_policy: GenericPolicy
             user_policy_sql = self.tim_database.get_user_policy(llm_rule, user_id)
+            print(user_id, user_policy_sql.max_tokens_per_user)
 
             if user_policy_sql:
                 user_policy = convert_sqlpolicy_to_userpolicy(user_policy_sql)
+            else:
+                user_policy = GenericPolicy()
 
-            policy_enabled = (
+            policy_enabled: bool = (
                 user_policy.time_window_enabled or user_policy.token_cap_enabled
             )
 
             data = UserData(
                 username=username,
+                user_id=user_id,
                 tokens_spent=usage.used_tokens,
                 hasPolicy=policy_enabled,
                 policy=user_policy,
@@ -637,9 +648,50 @@ class PluginCore:
 
             user_data.append(data)
 
-        print(user_data)  # TODO:remove
-
         return user_data
+
+    def save_user_policy(self, caller_id, document_id, user_data) -> str:
+        """
+        Saves given user policy for the given user
+        :param caller_id: the user who is saving
+        :param document_id: document id for the plugin associated with policy
+        :param user_data: user data that policy applies for
+        :return:
+        """
+        llm_rule = self.tim_database.get_llm_rule(document_id)
+        if not llm_rule:
+            raise LookupError("Instance has not been created yet")
+
+        owner = llm_rule.owner
+        if owner != caller_id:  # this should never happen since we have UI-limitations
+            raise PermissionError("You have no access to this resource")
+
+        user_id = user_data.user_id
+        if not User.get_by_id(user_id):
+            raise LookupError("This user no longer exists")
+
+        policy: GenericPolicy = user_data.policy
+        if (valid := self._validate_policy(policy)) is not None:
+            raise ValueError(valid)
+
+        if not policy.token_cap_enabled:
+            policy.token_cap = -1
+
+        if not policy.time_window_enabled:
+            policy.token_cap_for_window = -1
+
+        print(policy)
+
+        self.tim_database.set_user_policy(
+            user=user_id,
+            llm_rule=llm_rule,
+            token_time_window_type=policy.window_unit,
+            token_time_window_num=policy.window_value,
+            time_window_tokens=policy.token_cap_for_window,
+            max_tokens_per_user=policy.token_cap,
+        )
+
+        return "Save successful"
 
     @staticmethod
     @cache.memoize(timeout=DEFAULT_CACHE_TIMEOUT)

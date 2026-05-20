@@ -446,6 +446,7 @@ class TimDatabase:
         Sets a new policy for the LLM rule. Policy can be a global policy for the whole LLM rule or a student policy
         for the given user.
         """
+        print(max_tokens_per_user)
         if user:
             policy = TimDatabase.get_user_policy(llm_rule, user)
         else:
@@ -464,15 +465,15 @@ class TimDatabase:
             )
             db.session.add(policy)
         else:
-            if token_time_window_type:
+            if token_time_window_type is not None:
                 policy.token_time_window_type = token_time_window_type
-            if token_time_window_num:
+            if token_time_window_num is not None:
                 policy.token_time_window_num = token_time_window_num
-            if time_window_tokens:
+            if time_window_tokens is not None:
                 policy.time_window_tokens = time_window_tokens
-            if max_tokens_per_user:
+            if max_tokens_per_user is not None:
                 policy.max_tokens_per_user = max_tokens_per_user
-            if token_pool:
+            if token_pool is not None:
                 policy.token_pool = token_pool
         db.session.commit()
         return policy

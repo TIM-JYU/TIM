@@ -8,6 +8,7 @@ import {
     nullable,
 } from "tim/plugin/attributes";
 import type {AfterViewInit, ApplicationRef, DoBootstrap} from "@angular/core";
+import {Input} from "@angular/core";
 import {ViewChild} from "@angular/core";
 import {
     Component,
@@ -147,6 +148,7 @@ export interface ControlPanelData extends ControlPanelSettings {
                             [userUsageAndPolicyData]="userUsageAndPolicyData"
                             (userDataRequest)="getUserData()"
                             (policySaveRequest)="handleUserPolicySave($event)" 
+                            [policySaveResponse]="policySaveResponse" 
                         >
                         </chattim-control-panel>
                     </div>
@@ -221,48 +223,11 @@ export class ChatTIMComponent
     selectedModel = "gpt-4.1-mini";
     selectedEmbedderProvider = "";
 
-    policyDataSaveResp: undefined | string;
-    userUsageAndPolicyData: undefined | UserData[] = [
-        {
-            username: "alice",
-            tokens_spent: 100,
-            hasPolicy: false,
-            policy: {
-                token_cap_enabled: true,
-                token_cap: 123,
-                time_window_enabled: true,
-                window_unit: "h",
-                window_value: 123,
-                token_cap_for_window: 123,
-            },
-        },
-        {
-            username: "onni",
-            tokens_spent: 444,
-            hasPolicy: true,
-            policy: {
-                token_cap_enabled: true,
-                token_cap: 444,
-                time_window_enabled: true,
-                window_unit: "h",
-                window_value: 444,
-                token_cap_for_window: 444,
-            },
-        },
-        {
-            username: "sami",
-            tokens_spent: 111,
-            hasPolicy: true,
-            policy: {
-                token_cap_enabled: false,
-                token_cap: 111,
-                time_window_enabled: false,
-                window_unit: "h",
-                window_value: 111,
-                token_cap_for_window: 111,
-            },
-        },
-    ];
+    policySaveResponse = {
+        result: "",
+        error: "",
+    };
+    userUsageAndPolicyData: undefined | UserData[] = [];
 
     maxTokens: number | null = 1000;
     controlpanelError?: string;
@@ -876,7 +841,23 @@ export class ChatTIMComponent
     }
 
     async handleUserPolicySave(userData: UserData) {
-        // TODO
+        this.isRunning = true;
+        const save_request = {
+            document_id: this.document_id,
+            user_data: userData,
+        };
+        const response = await this.httpPost<{
+            result: string;
+            error: string;
+        }>(this.route("saveUserPolicy"), save_request);
+        this.isRunning = false;
+        if (response.ok) {
+            const data = response.result;
+            this.policySaveResponse.error = data.error;
+            this.policySaveResponse.result = data.result;
+        } else {
+            this.controlpanelError = response.result.error.error;
+        }
     }
 
     async getUserData() {

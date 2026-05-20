@@ -245,6 +245,7 @@ export interface ControlPanelSettings extends Record<string, JsonValue> {
                                  [setUserData]="userUsageAndPolicyData"
                                  (userDataRequest)="userDataRequest.emit()"
                                  (policySaveRequest)="policySaveRequest.emit($event)"
+                                 [policySaveResponse]="policySaveResponse"
                                  >
                     </usercontrol>
                 </div>
@@ -274,7 +275,10 @@ export class ChatControlPanelComponent {
     globalPolicyOpen = false;
     userControlOpen = false;
 
-    @Input() policyDataSaveResp: undefined | string;
+    @Input() policySaveResponse!: {
+        result: string;
+        error: string;
+    };
     @Input() userUsageAndPolicyData: undefined | UserData[];
     @Output() userDataRequest = new EventEmitter<number>();
     @Output() policySaveRequest = new EventEmitter<UserData>();

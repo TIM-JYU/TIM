@@ -1,6 +1,8 @@
 import {Component, EventEmitter, Input, Output} from "@angular/core";
 import {DialogModule} from "tim/ui/angulardialog/dialog.module";
 import {NgForOf, NgIf} from "@angular/common";
+import {PurifyModule} from "tim/util/purify.module";
+import type {JsonValue} from "tim/util/jsonvalue";
 import type {TokenLimitForUser} from "./userpolicy";
 import {UserPolicyComponent} from "./userpolicy";
 
@@ -10,15 +12,12 @@ enum UserSortMode {
     HasPolicy = "has_policy",
 }
 
-export interface UserData {
+export interface UserData extends Record<string, JsonValue> {
     username: string;
+    user_id: number;
     tokens_spent: number;
     hasPolicy: boolean;
     policy: TokenLimitForUser;
-}
-
-export interface UserDataRequest {
-    user_count: number;
 }
 
 @Component({
@@ -28,9 +27,31 @@ export interface UserDataRequest {
         <div class="user-table">
 
             <div class="table-row header-row">
-                <div>Username</div>
-                <div>Spent Tokens</div>
-                <div>Policy</div>
+
+                <button
+                    type="button"
+                    class="header-button"
+                    (click)="clickedSort(UserSortMode.Username)"
+                >
+                    Username {{ getSortArrow(UserSortMode.Username) }}
+                </button>
+
+                <button
+                    type="button"
+                    class="header-button"
+                    (click)="clickedSort(UserSortMode.TokensSpent)"
+                >
+                    Spent Tokens {{ getSortArrow(UserSortMode.TokensSpent) }}
+                </button>
+
+                <button
+                    type="button"
+                    class="header-button"
+                    (click)="clickedSort(UserSortMode.HasPolicy)"
+                >
+                    Policy {{ getSortArrow(UserSortMode.HasPolicy) }}
+                </button>
+
             </div>
 
             <button
@@ -71,12 +92,15 @@ export interface UserDataRequest {
                     Save
                 </button>
             </div>
+            <div class="error" *ngIf="policySaveResponse.error" [innerHTML]="policySaveResponse.error | purify"></div>
+            <div *ngIf="policySaveResponse.result" [innerHTML]="policySaveResponse.result | purify"></div>
         </div>
 
     `,
-    imports: [DialogModule, NgForOf, UserPolicyComponent, NgIf],
+    imports: [DialogModule, NgForOf, UserPolicyComponent, NgIf, PurifyModule],
 })
 export class UserControlComponent {
+    readonly UserSortMode = UserSortMode;
     invalidUserPolicyState: boolean = false;
 
     selectedUser: UserData | null = null;
@@ -93,11 +117,35 @@ export class UserControlComponent {
     private reverseSort: boolean = false;
     userData: undefined | UserData[];
 
+    @Input() policySaveResponse!: {
+        result: string;
+        error: string;
+    };
     @Output() policySaveRequest = new EventEmitter<UserData>();
     @Output() userDataRequest = new EventEmitter<void>();
 
     @Input() set setUserData(value: undefined | UserData[]) {
         this.userData = value;
+    }
+
+    getSortArrow(mode: UserSortMode): string {
+        if (this.currentSort !== mode) {
+            return "";
+        }
+
+        return this.reverseSort ? "▲" : "▼";
+    }
+
+    clickedSort(mode: UserSortMode): void {
+        if (this.currentSort === mode) {
+            this.reverseSort = !this.reverseSort;
+        } else {
+            this.currentSort = mode;
+
+            this.reverseSort = false;
+        }
+
+        this.sortUsers();
     }
 
     sortUsers(): void {
@@ -118,7 +166,7 @@ export class UserControlComponent {
                     break;
             }
 
-            return this.reverseSort ? result : -result;
+            return this.reverseSort ? -result : result;
         });
     }
 
