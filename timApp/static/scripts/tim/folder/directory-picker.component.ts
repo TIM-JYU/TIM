@@ -90,7 +90,7 @@ export interface StartItem {
             </tr>
             </tbody>
         </table>
-        <tim-alert *ngIf="error" severity="danger" i18n>
+        <tim-alert *ngIf="error" severity="danger">
             {{ error }}
         </tim-alert>
         <p *ngIf="itemList.length == 0">There are no items to show.</p>

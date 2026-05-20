@@ -24,7 +24,7 @@ import {DirectoryPickerComponent} from "tim/folder/directory-picker.component";
             <ng-container body>
                 <form>
                     <div class="form-group input-group-sm">
-                        <label for="{{ listMode ? 'groupNameList' : 'groupName' }}">User groups
+                        <label i18n for="{{ listMode ? 'groupNameList' : 'groupName' }}">User groups
                             <a tooltip="{{ getGroupTooltip }}"><i class="glyphicon glyphicon-info-sign"></i></a>
                         </label>
                         <ul class="rights-list">
@@ -62,7 +62,7 @@ import {DirectoryPickerComponent} from "tim/folder/directory-picker.component";
                     </div>
 
                     <div class="form-group input-group-sm">
-                        <label for="docPaths">Folder or document paths
+                        <label i18n for="docPaths">Folder or document paths
                             <a tooltip="{{ getPathTooltip }}"><i class="glyphicon glyphicon-info-sign"></i></a>
                         </label>
                         <tim-directory-picker
