@@ -80,6 +80,7 @@ class InstanceAttributes:
     model_temperature: float | None = None
     include_citations: bool = False
     similarity_threshold: float | None = None
+    top_k_chunks: int = 3
     global_policy: Policy = field(default_factory=Policy)
     embedder_provider: str = "dummy"
 
@@ -206,6 +207,7 @@ class PluginCore:
         # TODO: get these from the LLMRule table
         temperature: float | None = None
         similarity_threshold: float | None = None
+        top_k_chunks: int = 3
         use_streaming: bool = stream
 
         # Validate that the user has the correct generate mode
@@ -215,6 +217,7 @@ class PluginCore:
         response = self.indexer.get_context(
             prompt=validated_input,
             identifier=document_id,
+            k=top_k_chunks,
             threshold=similarity_threshold,
         )
         context = response.context
@@ -488,6 +491,7 @@ class PluginCore:
         temperature: float | None = instance_settings.model_temperature
         include_citations: bool = instance_settings.include_citations
         similarity_threshold: float | None = instance_settings.similarity_threshold
+        top_k_chunks: int = instance_settings.top_k_chunks
 
         old_plugin_rule = self.tim_database.get_llm_rule(document_id)
         old_provider = None
@@ -562,6 +566,9 @@ class PluginCore:
         ):
             return Result(None, "Similarity threshold must be between -1 and 1")
 
+        if top_k_chunks < 1 or top_k_chunks > 20:
+            return Result(None, "Top-K must be between 1 and 20")
+
         # TODO: update system prompt path in the db row
 
         if (valid := self._validate_policy(global_policy)) is not None:
@@ -615,6 +622,7 @@ class PluginCore:
             temperature=temperature,
             include_citations=include_citations,
             similarity_threshold=similarity_threshold,
+            top_k_chunks=top_k_chunks,
             teachers=[],
             current_mode=llm_mode,
             total_tokens_spent=0,
@@ -1124,7 +1132,6 @@ class PluginCore:
 
     def _get_citations(self, blocks: list[tuple[int, int]]) -> list[str]:
         citations: list[str] = []
-        print(blocks)
         for doc_id, block_id in blocks:
             doc = self.tim_database.get_doc_entry_by_id(doc_id)
             if not doc:

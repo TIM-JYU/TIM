@@ -116,15 +116,23 @@
   flex: 0 0 15ch;
 }
 
-.inline-label {
-  margin: 0;
-  display: inline-block;
-}
-
-.inline-flex {
+.inline-field {
   display: flex;
   align-items: center;
   gap: 10px;
+  flex-wrap: nowrap;
+  width: 100%;
+}
+
+.inline-field-label {
+  margin: 0;
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
+
+.inline-field-control {
+  flex: 1 1 auto;
+  min-width: 0;
 }
 
 .embedder-buttons {

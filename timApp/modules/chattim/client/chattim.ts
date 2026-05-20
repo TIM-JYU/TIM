@@ -171,6 +171,7 @@ export interface ControlPanelData extends ControlPanelSettings {
                             [useStreaming]="useStreaming"
                             [includeCitations]="includeCitations"
                             [setSimilarityThreshold]="similarityThreshold"
+                            [topKChunks]="topKChunks"
                             [systemPromptPath]="systemPromptPath"
                             [selectedMode]="selectedMode"
                             [maxTokens]="maxTokens"
@@ -275,6 +276,7 @@ export class ChatTIMComponent
     systemPromptPath: string = "";
     includeCitations: boolean = false;
     similarityThreshold: number | null = null;
+    topKChunks: number = 3;
 
     globalPolicy: TokenLimitForUser = {
         token_cap_enabled: false,
@@ -726,6 +728,7 @@ export class ChatTIMComponent
                 this.systemPromptPath = result.system_prompt_path;
                 this.includeCitations = result.include_citations;
                 this.similarityThreshold = result.similarity_threshold;
+                this.topKChunks = result.top_k_chunks;
             }
         } else {
             this.controlpanelError = response.result.error.error;

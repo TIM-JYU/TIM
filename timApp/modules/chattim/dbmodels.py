@@ -38,6 +38,8 @@ class LLMRule(db.Model):
     """Whether to include citations to the agent messages."""
     similarity_threshold: Mapped[Optional[float]] = mapped_column(nullable=True)
     """Threshold for a block to be included in the agent context. Should be between -1 and 1."""
+    top_k_chunks: Mapped[int] = mapped_column(Integer)
+    """Number of most relevant chunks to retrieve for context."""
 
     # TODO: Should this be combined with `groups` or kept separate?
     teachers: Mapped[list[int]] = mapped_column(ARRAY(Integer), default=[])

@@ -73,9 +73,8 @@ def get_rights(params: GetRightsParams) -> dict:
 
 class ChatTimAskResponse(TypedDict, total=False):
     answer: str | None
-    usage: int | None  # TODO: maybe not needed
-    error: str | None
     citations: list[str] | None
+    error: str | None
 
 
 @dataclass

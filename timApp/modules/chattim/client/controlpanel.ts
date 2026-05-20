@@ -29,6 +29,7 @@ export interface ControlPanelSettings extends Record<string, JsonValue> {
     global_policy: TokenLimitForUser;
     use_streaming: boolean;
     model_temperature: number | null;
+    top_k_chunks: number;
     include_citations: boolean;
     similarity_threshold: number | null;
 }
@@ -162,10 +163,9 @@ type SimilarityMode = "none" | "loose" | "balanced" | "strict" | "custom";
                         </div>
 
                         <div class="form-group">
-                            <div class="inline-flex">
-                                <label class="inline-label">Similarity threshold</label>
-                                <select class="form-control"
-                                        style="width: auto"
+                            <div class="inline-field">
+                                <label class="inline-field-label">Similarity threshold</label>
+                                <select class="form-control inline-field-control"
                                         [(ngModel)]="similarityThresholdMode">
                                     <option *ngFor="let o of SIMILARITY_OPTION_LIST" [ngValue]="o.mode">
                                         {{ o.label }}
@@ -175,17 +175,31 @@ type SimilarityMode = "none" | "loose" | "balanced" | "strict" | "custom";
 
                             <div *ngIf="similarityThresholdMode === 'custom'" style="margin-top: 6px;">
                                 <input
-                                        type="number"
-                                        class="form-control"
-                                        [(ngModel)]="similarityThreshold"
-                                        min="-1"
-                                        max="1"
-                                        step="0.05"
+                                    type="number"
+                                    class="form-control"
+                                    [(ngModel)]="similarityThreshold"
+                                    min="-1"
+                                    max="1"
+                                    step="0.05"
                                 />
                             </div>
                             <div class="error" *ngIf="isInvalidSimilarityThreshold">
                                 Similarity input should be between -1 and 1
                             </div>
+                        </div>
+                        
+                        <div class="inline-field">
+                            <label class="inline-field-label">Top-K chunks</label>
+                            <input
+                                type="number"
+                                class="form-control inline-field-control"
+                                [(ngModel)]="topKChunks"
+                                min="1"
+                                max="20"
+                            />
+                        </div>
+                        <div class="error" *ngIf="isInvalidTopChunks">
+                            Top-K should be between 1 and 20
                         </div>
 
                         Provider for embedding creation: <strong>{{ selectedEmbedderProvider }}</strong>
@@ -205,7 +219,7 @@ type SimilarityMode = "none" | "loose" | "balanced" | "strict" | "custom";
                         </div>
 
                     </div>
-                </div> 
+                </div>
 
                 <!-- Switch between summarizing, (balanced) and creative -->
                 <div class="settings-row">
@@ -479,6 +493,7 @@ export class ChatControlPanelComponent implements OnChanges {
 
     @Input() useStreaming: boolean = false;
     @Input() includeCitations: boolean = false;
+    @Input() topKChunks: number = 3;
     @Input() selectedItemPaths!: string[];
     @Input() pathRestrictions?: DirectoryPickerRestrictions;
     @Input() currentFolder?: string;
@@ -571,6 +586,7 @@ export class ChatControlPanelComponent implements OnChanges {
             model_temperature: this.enabledTemperature
                 ? this.modelTemperature
                 : null,
+            top_k_chunks: this.topKChunks,
         };
         console.log("sending: ", data);
         this.saveSettingsClick.emit(data);
@@ -645,6 +661,10 @@ export class ChatControlPanelComponent implements OnChanges {
         return !this.isValidFloatBetween(this.similarityThresholdValue, -1, 1);
     }
 
+    get isInvalidTopChunks(): boolean {
+        return !this.isValidFloatBetween(this.topKChunks, 1, 20);
+    }
+
     get invalidInputState(): boolean {
         return (
             this.isInvalidMaxTokens ||
@@ -652,7 +672,8 @@ export class ChatControlPanelComponent implements OnChanges {
             this.isInvalidWindowTime ||
             this.isInvalidWindowTokens ||
             this.isInvalidModelTemperature ||
-            this.isInvalidSimilarityThreshold
+            this.isInvalidSimilarityThreshold ||
+            this.isInvalidTopChunks
         );
     }
 

@@ -218,6 +218,7 @@ class TimDatabase:
         temperature: float | None,
         include_citations: bool,
         similarity_threshold: float | None,
+        top_k_chunks: int,
         teachers: list[int],
         current_mode: str,
         total_tokens_spent: int,
@@ -237,6 +238,7 @@ class TimDatabase:
         :param temperature: The temperature parameter for the model.
         :param include_citations: Whether to include citations.
         :param similarity_threshold: The similarity threshold for context inclusion.
+        :param top_k_chunks: The number of top chunks to include.
         :param teachers: The ids of the teachers allowed to use the plugin instance.
         :param current_mode: Mode of the plugin instance: summarizing, creative or balanced.
         :param total_tokens_spent: The total number of tokens spent.
@@ -258,6 +260,7 @@ class TimDatabase:
                 temperature=temperature,
                 include_citations=include_citations,
                 similarity_threshold=similarity_threshold,
+                top_k_chunks=top_k_chunks,
                 teachers=teachers,
                 current_mode=current_mode,
                 total_tokens_spent=total_tokens_spent,
@@ -280,6 +283,7 @@ class TimDatabase:
             rule.temperature = temperature
             rule.include_citations = include_citations
             rule.similarity_threshold = similarity_threshold
+            rule.top_k_chunks = top_k_chunks
         rule.policy.extend(policy)
         rule.usage.extend(usage)
         db.session.commit()
