@@ -36,18 +36,11 @@ from timApp.modules.chattim.model import (
     GenericApiClient,
     Provider,
     ModelError,
-    ModelErrorKind,
     PROVIDERS,
-    ModelErrorKind,
 )
 from timApp.modules.chattim.conversation import ConversationManager, ChatMessage
 
 DEFAULT_CACHE_TIMEOUT = 60 * 15  # seconds
-
-
-@dataclass
-class ChatContext:
-    citations: list[str] | None = None
 
 
 # TODO: Is this needed if we have no model labels anymore?
@@ -138,6 +131,7 @@ class PreparedChatRequest:
     user_input: str
     response: Iterable[ModelResponse] | ModelResponse
     citations: list[str]
+    include_citations: bool = False
 
 
 # TODO: maybe a dict or dataclass would be more descriptive
@@ -209,6 +203,11 @@ class PluginCore:
         similarity_threshold: float | None = None
         top_k_chunks: int = 3
         use_streaming: bool = stream
+        # TODO: replace with this
+        # include_citations: bool = (
+        #     rule.include_citations and rule.current_mode == RagMode.RETRIEVE
+        # )
+        include_citations: bool = mode == RagMode.RETRIEVE
 
         # Validate that the user has the correct generate mode
         if stream != use_streaming:
@@ -250,6 +249,7 @@ class PluginCore:
             user_input=validated_input,
             response=answer,
             citations=citations,
+            include_citations=include_citations,
         )
         return Result(value=prepared)
 
@@ -302,7 +302,7 @@ class PluginCore:
         caller_id: int,
         document_id: int,
         user_input: str,
-    ) -> Result[tuple[str, ChatContext], str]:
+    ) -> Result[tuple[str, list[str] | None], str]:
         """Generate a model response."""
         timestamp_user = ChatMessage.ts_ms()
         prep = self._prepare_chat_request(
@@ -331,14 +331,15 @@ class PluginCore:
             citations=citations,
         )
 
-        return Result(value=(whole_msg, ChatContext(citations=citations)))
+        context = citations if p.include_citations else None
+        return Result(value=(whole_msg, context))
 
     def chat_request_stream(
         self,
         caller_id: int,
         document_id: int,
         user_input: str,
-    ) -> Result[tuple[Iterable[str], ChatContext], str]:
+    ) -> Result[tuple[Iterable[str], list[str] | None], str]:
         """Generate a model response using streaming.
 
         :param caller_id: The id of the caller.
@@ -395,7 +396,8 @@ class PluginCore:
                     citations=citations,
                 )
 
-        return Result(value=(gen(), ChatContext(citations=citations)))
+        context = citations if p.include_citations else None
+        return Result(value=(gen(), context))
 
     def get_plugin_settings(
         self, user_id: int, document_id: int
@@ -680,7 +682,9 @@ class PluginCore:
         rule = self.tim_database.get_llm_rule(document_id)
         if not rule:
             return []
-        include_citations = rule.include_citations
+        include_citations = (
+            rule.include_citations and rule.current_mode == RagMode.RETRIEVE
+        )
 
         messages = self.history_manager.get_history_time_window(
             str(document_id), str(caller_id), None, ts_end, max_count

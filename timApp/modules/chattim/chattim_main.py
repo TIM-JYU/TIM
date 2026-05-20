@@ -231,7 +231,7 @@ def ask_stream_route(params: ChatTimAskParams) -> Response:
 
         try:
             stream, context = resp.value
-            citations = context.citations
+            citations = context
             for chunk in stream:
                 yield to_ndjson_str(ChatTimAskResponse(answer=chunk))
         except ModelError as e:
