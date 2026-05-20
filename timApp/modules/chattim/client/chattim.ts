@@ -145,7 +145,8 @@ export interface ControlPanelData extends ControlPanelSettings {
                             [availableModes]="availableModes"
                             [tokenLimitAllUsers]="globalPolicy"
                             [userUsageAndPolicyData]="userUsageAndPolicyData"
-                            (userDataRequest)="handleUserDataRequest($event)"
+                            (userDataRequest)="getUserData()"
+                            (policySaveRequest)="handleUserPolicySave($event)" 
                         >
                         </chattim-control-panel>
                     </div>
@@ -306,6 +307,7 @@ export class ChatTIMComponent
         this.initDocId();
         await this.initScrollContainer();
         await this.getControlPanelData();
+        await this.getUserData();
         await this.fetchRights();
     }
     async fetchRights(): Promise<void> {
@@ -877,25 +879,23 @@ export class ChatTIMComponent
         // TODO
     }
 
-    async handleUserDataRequest(count: number) {
-        // this.isRunning = true;
-        // const save_request = {
-        //    document_id: this.document_id,
-        //    control_panel_settings: controlPanelSettings,
-        // };
-        // const response = await this.httpPost<{
-        //    web: {result: string; error?: string};
-        // }>(this.route("saveSettings"), save_request);
-        // this.isRunning = false;
-        // if (response.ok) {
-        //    const data = response.result;
-        //    this.controlpanelError = data.web.error;
-        //    this.controlpanelResponse = data.web.result;
-        //    this.error = undefined; // on successful save we clear chattim-error, maybe not great
-        //    this.useStreaming = controlPanelSettings.use_streaming;
-        // } else {
-        //    this.controlpanelError = response.result.error.error;
-        // }
+    async getUserData() {
+        this.isRunning = true;
+        const data_request = {
+            document_id: this.document_id,
+        };
+        const response = await this.httpPost<{
+            result: UserData[];
+            error?: string;
+        }>(this.route("getUserPolicyData"), data_request);
+        this.isRunning = false;
+        if (response.ok) {
+            const data = response.result;
+            this.controlpanelError = data.error;
+            this.userUsageAndPolicyData = data.result;
+        } else {
+            this.controlpanelError = response.result.error.error;
+        }
     }
 }
 

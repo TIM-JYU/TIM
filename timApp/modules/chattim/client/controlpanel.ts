@@ -239,11 +239,11 @@ export interface ControlPanelSettings extends Record<string, JsonValue> {
                               [class.glyphicon-chevron-right]="!userControlOpen"
                               [class.glyphicon-chevron-down]="userControlOpen">
                         </span>
-                        Token consumption & per user policies:
+                        Token consumption & per-user policies:
                     </button>
                     <usercontrol *ngIf="userControlOpen"
                                  [setUserData]="userUsageAndPolicyData"
-                                 (userDataRequest)="userDataRequest.emit($event)"
+                                 (userDataRequest)="userDataRequest.emit()"
                                  (policySaveRequest)="policySaveRequest.emit($event)"
                                  >
                     </usercontrol>

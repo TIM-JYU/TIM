@@ -3,9 +3,10 @@ import uuid
 from dataclasses import dataclass, field
 from unicodedata import normalize, category
 
-from timApp.modules.chattim.dbmodels import LLMRule
+from timApp.modules.chattim.dbmodels import LLMRule, Policy
 from timApp.util.flask.cache import cache
 from timApp.timdb.dbaccess import get_files_path
+from timApp.user.user import User, UserInfo
 from timApp.auth.get_user_rights_for_item import UserItemRights
 from timApp.item.item import Item
 from timApp.document.docinfo import DocInfo
@@ -51,13 +52,21 @@ class ChatModel(TypedDict):
 
 
 @dataclass()
-class Policy:
+class GenericPolicy:
     token_cap_enabled: bool = False
     token_cap: int | None = 0
     time_window_enabled: bool = False
     window_unit: str = "h"
     window_value: int | None = 0
-    token_cap_for_window: int | None = 100
+    token_cap_for_window: int | None = 0
+
+
+@dataclass()
+class UserData:
+    username: str
+    tokens_spent: int
+    hasPolicy: bool
+    policy: GenericPolicy
 
 
 @dataclass()
@@ -69,7 +78,7 @@ class InstanceAttributes:
     system_prompt_path: str = ""
     use_streaming: bool = False
     model_temperature: float | None = None
-    global_policy: Policy = field(default_factory=Policy)
+    global_policy: GenericPolicy = field(default_factory=GenericPolicy)
     embedder_provider: str = "dummy"
 
     @classmethod
@@ -411,7 +420,7 @@ class PluginCore:
         max_tokens: int = instance_settings.max_tokens
         tim_paths: str = instance_settings.tim_paths
         system_prompt_path: str = instance_settings.system_prompt_path.strip()
-        global_policy: Policy = instance_settings.global_policy
+        global_policy: GenericPolicy = instance_settings.global_policy
         use_streaming: bool = instance_settings.use_streaming
         temperature: float | None = instance_settings.model_temperature
 
@@ -562,6 +571,75 @@ class PluginCore:
     def get_supported_providers() -> list[Provider]:
         """Get the list of supported API providers."""
         return list(PROVIDERS.keys())
+
+    def get_user_data(self, caller_id, document_id) -> list[UserData]:
+        """
+        Returns set policy and token usage for each user that has interacted with the plugin.
+        For users that have no policy set, a default GenericPolicy is sent back.
+        Owner's data is not sent.
+        :param caller_id: The plugin owner that is using the component
+        :param document_id: The document id where instance is located
+        :return: list of UserData objects
+        """
+
+        def convert_sqlpolicy_to_userpolicy(sql_policy: Policy) -> GenericPolicy:
+            max_tokens_per_user = sql_policy.max_tokens_per_user
+            time_window_tokens = sql_policy.token_time_window_tokens
+            time_window_value = sql_policy.token_time_window_num
+            token_cap_enabled = False if not max_tokens_per_user else True
+            time_window_enabled = (
+                False if (not time_window_tokens or not time_window_value) else True
+            )
+
+            return GenericPolicy(
+                token_cap_enabled=token_cap_enabled,
+                token_cap=sql_policy.max_tokens_per_user,
+                time_window_enabled=time_window_enabled,
+                window_unit=sql_policy.token_time_window_type,
+                window_value=time_window_value,
+                token_cap_for_window=sql_policy.time_window_tokens,
+            )
+
+        llm_rule = self.tim_database.get_llm_rule(document_id)
+        if not llm_rule:
+            raise LookupError("Instance has not been created yet")
+
+        owner = llm_rule.owner
+        if owner != caller_id:  # this should never happen due to UI-limitations
+            raise PermissionError("You have no access to this resource")
+
+        user_data: list[UserData] = []
+        usages = self.tim_database.get_usages(llm_rule)
+        for usage in usages:
+            user_id = usage.user
+            user = User.get_by_id(user_id)
+            username = user.name
+
+            if user_id == caller_id:
+                continue
+
+            user_policy = GenericPolicy()
+            user_policy_sql = self.tim_database.get_user_policy(llm_rule, user_id)
+
+            if user_policy_sql:
+                user_policy = convert_sqlpolicy_to_userpolicy(user_policy_sql)
+
+            policy_enabled = (
+                user_policy.time_window_enabled or user_policy.token_cap_enabled
+            )
+
+            data = UserData(
+                username=username,
+                tokens_spent=usage.used_tokens,
+                hasPolicy=policy_enabled,
+                policy=user_policy,
+            )
+
+            user_data.append(data)
+
+        print(user_data)  # TODO:remove
+
+        return user_data
 
     @staticmethod
     @cache.memoize(timeout=DEFAULT_CACHE_TIMEOUT)
@@ -823,7 +901,7 @@ class PluginCore:
         self.tim_database.remove_api_key_group(owner_id, public_key, group_id)
 
     @staticmethod
-    def _validate_policy(policy: Policy) -> None | str:
+    def _validate_policy(policy: GenericPolicy) -> None | str:
         """Validates policy. None is returned if everything is ok otherwise error string is returned"""
         valid_time_types = ["d", "h", "min"]
         cap_enabled = policy.token_cap_enabled

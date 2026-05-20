@@ -248,6 +248,25 @@ def get_settings(params: GenericParams) -> ChatTIMGetSettingsResponse:
     return ret
 
 
+def get_user_data(params: GenericParams) -> dict:
+    """
+    Gets user data (policy and usage) for all users that have chatted with the instance
+    :param params:
+    :return:
+    """
+    ret: dict = {}
+    document_id = params.document_id
+    session_user_id = get_current_user_id()
+
+    try:
+        data_list = plugincore.get_user_data(session_user_id, document_id)
+        ret["result"] = data_list
+    except (LookupError, PermissionError) as e:
+        ret["error"] = e
+
+    return ret
+
+
 def save_settings(params: ChatTimSaveSettingsParams) -> PluginAnswerResp:
     web: PluginAnswerWeb = {}
     result: PluginAnswerResp = {"web": web}
@@ -396,6 +415,7 @@ register_route(
 register_route(chattim, "post", "getMessages", GetMessagesParams, get_messages)
 register_route(chattim, "post", "validateApi", APIKeyParams, save_api_key)
 register_route(chattim, "get", "getProviders", None, get_providers)
+register_route(chattim, "post", "getUserPolicyData", GenericParams, get_user_data)
 register_route(
     chattim,
     "post",

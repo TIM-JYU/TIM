@@ -92,11 +92,9 @@ export class UserControlComponent {
     private currentSort: UserSortMode = UserSortMode.TokensSpent;
     private reverseSort: boolean = false;
     userData: undefined | UserData[];
-    private fetchedUsersCap: number = 10;
 
     @Output() policySaveRequest = new EventEmitter<UserData>();
-    @Output() userDataRequest = new EventEmitter<number>();
-    @Input() policyDataSaveResp: undefined | string;
+    @Output() userDataRequest = new EventEmitter<void>();
 
     @Input() set setUserData(value: undefined | UserData[]) {
         this.userData = value;

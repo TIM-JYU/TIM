@@ -631,3 +631,15 @@ class TimDatabase:
             Usage.user == user_id,
         )
         return db.session.scalar(stmt)
+
+    @staticmethod
+    def get_usages(llm_rule: LLMRule) -> list[Usage] | None:
+        """
+        Gets all usages associated with llm rule.
+        :param llm_rule:
+        :return:
+        """
+        stmt = select(Usage).where(
+            Usage.llm_rule == llm_rule,
+        )
+        return db.session.scalars(stmt).all()
