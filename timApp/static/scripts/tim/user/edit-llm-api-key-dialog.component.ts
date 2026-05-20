@@ -23,8 +23,10 @@ import {DirectoryPickerComponent} from "tim/folder/directory-picker.component";
             </ng-container>
             <ng-container body>
                 <form>
-                    <div class="form-group input-group-sm"> 
-                        <label for="{{ listMode ? 'groupNameList' : 'groupName' }}">User groups:</label> 
+                    <div class="form-group input-group-sm">
+                        <label for="{{ listMode ? 'groupNameList' : 'groupName' }}">User groups
+                            <a tooltip="{{ getGroupTooltip }}"><i class="glyphicon glyphicon-info-sign"></i></a>
+                        </label>
                         <ul class="rights-list">
                             <li *ngFor="let group of groups">
                                 <span class="flex align-center">
@@ -36,20 +38,20 @@ import {DirectoryPickerComponent} from "tim/folder/directory-picker.component";
                                     </span>
                                 </span>
                             </li>
-                        </ul> 
+                        </ul>
                     </div>
 
-                    <div class="form-group input-group-sm"> 
+                    <div class="form-group input-group-sm">
                         <div class="input-group">
                             <input name="groupName" class="form-control" type="text"
                                    [hidden]="listMode"
                                    (keydown.enter)="$event.preventDefault()"
                                    [(ngModel)]="groupNamesInput"
-                                   placeholder="{{ getPlaceholderGroups() }}">
+                                   placeholder="{{ getPlaceholderGroups }}">
                             <textarea name="groupNameList" class="form-control" type="text"
                                       [hidden]="!listMode"
                                       [(ngModel)]="groupNamesInput"
-                                      placeholder="{{ getPlaceholderGroups() }}"></textarea>
+                                      placeholder="{{ getPlaceholderGroups }}"></textarea>
                             <span class="input-group-addon btn btn-default"
                                   (click)="this.listMode = !this.listMode"
                                   tooltip="Toggle multiline mode"
@@ -59,22 +61,23 @@ import {DirectoryPickerComponent} from "tim/folder/directory-picker.component";
                         </div>
                     </div>
 
-                    <div class="form-group input-group-sm"> 
-                        <label for="docPaths">Folder or document paths:</label> 
+                    <div class="form-group input-group-sm">
+                        <label for="docPaths">Folder or document paths
+                            <a tooltip="{{ getPathTooltip }}"><i class="glyphicon glyphicon-info-sign"></i></a>
+                        </label>
                         <tim-directory-picker
                             [(selection)]="paths"
                         ></tim-directory-picker>
                     </div>
-                </form> 
-                <tim-alert *ngIf="editError" severity="danger" i18n>
+                </form>
+                <tim-alert *ngIf="editError" severity="danger">
                     Failed to save: {{ editError }}
                 </tim-alert>
             </ng-container>
             <ng-container footer>
                 <tim-loading *ngIf="saving" style="margin-right: 1em;"></tim-loading>
                 <button class="timButton"
-                        (click)="savePermissions()"
-                        [disabled]="" i18n>
+                        (click)="savePermissions()" i18n>
                     Save
                 </button>
                 <button class="timButton" (click)="dismiss()">Close</button>
@@ -163,7 +166,7 @@ export class EditLLMAPIKeyDialogComponent extends AngularDialogComponent<
 
     /* Confirm the removal of access right. */
     async removeConfirm(group: IGroup) {
-        if (window.confirm(`${this.getConfirmDesc(group)}?`)) {
+        if (window.confirm(`${this.getConfirmDesc(group)}`)) {
             this.removingRight = group;
             await this.removeRight(group);
             this.removingRight = undefined;
@@ -171,7 +174,7 @@ export class EditLLMAPIKeyDialogComponent extends AngularDialogComponent<
     }
 
     getConfirmDesc(group: IGroup): string {
-        return `Remove rights from ${group.name}`;
+        return `Remove rights from ${group.name}?`;
     }
 
     splitInput(input: string, splitter: string): string[] {
@@ -181,10 +184,21 @@ export class EditLLMAPIKeyDialogComponent extends AngularDialogComponent<
             .filter((n) => n);
     }
 
-    getPlaceholderGroups(): string {
+    get getPlaceholderGroups(): string {
         return (
             "enter username(s)/group name(s) separated by semicolons" +
             (this.listMode ? " or newlines" : "")
+        );
+    }
+
+    get getGroupTooltip(): string {
+        return "User groups that have access to the API key using the alias.";
+    }
+
+    get getPathTooltip(): string {
+        return (
+            "Specify folders or documents where the API key is permitted. " +
+            "Selecting a folder grants access to all documents directly within it."
         );
     }
 }
