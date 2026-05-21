@@ -203,10 +203,15 @@ class PluginCore:
         else:
             mode: RagMode = RagMode.RETRIEVE
 
+        try:
+            mode: RagMode = self._parse_rag_mode(str(rule.current_mode))
+        except ValueError as e:
+            return Result(error=str(e))
+
         # TODO: No need for this attribute if we have character limit for input? Maybe keep as is for an option
         max_tokens_for_req = 99999
 
-        temperature: float | None = 0.2
+        temperature: float | None = None
         if rule.temperature is not None:
             temperature = float(rule.temperature)
 
@@ -214,9 +219,8 @@ class PluginCore:
         if rule.similarity_threshold is not None:
             similarity_threshold = float(rule.similarity_threshold)
 
-        top_k_chunks: int = 3
-        if rule.top_k_chunks is not None:
-            top_k_chunks = int(rule.top_k_chunks)
+        # TODO: fix double cast
+        top_k_chunks: int = cast(int, cast(object, rule.top_k_chunks))
 
         use_streaming: bool = bool(rule.use_streaming)
 
@@ -238,7 +242,7 @@ class PluginCore:
         )
         context = response.context
         citations = self._get_citations(response.used_context)
-        system_prompt = self.get_system_prompt(caller_id, document_id)
+        system_prompt = self.get_system_prompt(rule.system_prompt_path)
 
         msg_data = MessageData(
             user_prompt=validated_input,
@@ -771,12 +775,10 @@ class PluginCore:
         return providers
 
     @cache.memoize(timeout=DEFAULT_CACHE_TIMEOUT, args_to_ignore=["self", "caller_id"])
-    def get_system_prompt(self, caller_id: int, document_id: int) -> str | None:
-        llmrule = self.tim_database.get_llm_rule(document_id)
-        prompt_path = llmrule.system_prompt_path if llmrule else ""
-        if not prompt_path:
+    def get_system_prompt(self, system_prompt_path: str) -> str | None:
+        if not system_prompt_path:
             return None
-        prompt_doc = self.tim_database.get_tim_document_by_path(prompt_path)
+        prompt_doc = self.tim_database.get_tim_document_by_path(system_prompt_path)
         if not prompt_doc:
             return None
         content = prompt_doc.export_markdown(export_ids=False).strip()
