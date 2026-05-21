@@ -104,7 +104,6 @@ export interface ControlPanelData extends ControlPanelSettings {
 @Component({
     selector: "chattim-runner",
     encapsulation: ViewEncapsulation.None,
-    // TODO: Display message datetime from the timestamp with `dateString()`
     template: `
         <div class="chattim-block-anchor"
              *ngIf="(markup.blockContent ?? '').trim().length > 0"
@@ -125,15 +124,22 @@ export interface ControlPanelData extends ControlPanelSettings {
                                 </ng-template>
                             </div>
                             <div *ngFor="let entry of conversation">
-                                <div class="chat-user">{{ entry.user.content }}</div>
-                                <div class="chat-bot">
-                                    <div [innerHTML]="entry.agent.content | purify"></div>
-                                    <span *ngIf="entry.agent.citations && entry.agent.citations.length > 0">
+                                <div class="chat-bubble-wrapper">
+                                    <div class="chat-user">{{ entry.user.content }}</div>
+                                </div>
+                                <div class="chat-bubble-wrapper">
+                                    <div class="chat-bot">
+                                        <div [innerHTML]="entry.agent.content | purify"></div>
+                                        <div class="answer-footer">
+                                        <span *ngIf="entry.agent.citations && entry.agent.citations.length > 0">
                                         <ng-container *ngFor="let citation of entry.agent.citations; let i = index">
                                             <a [href]="citation" target="_blank">[{{ i + 1 }}]</a>
                                             <ng-container *ngIf="i < entry.agent.citations.length - 1">, </ng-container>
                                         </ng-container>
-                                    </span>
+                                    </span><span
+                                            class="chat-timestamp">{{ dateString(entry.agent.timestamp_ms) }}</span>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
