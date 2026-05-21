@@ -21,7 +21,8 @@ export interface TokenLimitForUser extends Record<string, JsonValue> {
                 <div class="checkbox">
                     <label>
                         <input type="checkbox"
-                               [(ngModel)]="userLimits.token_cap_enabled">
+                               [(ngModel)]="userLimits.token_cap_enabled"
+                                (ngModelChange)="emitValidity()">
                         Enable timeless token limit
                     </label>
                 </div>
@@ -34,12 +35,14 @@ export interface TokenLimitForUser extends Record<string, JsonValue> {
                     >
                 </div>
                 <div class="error" *ngIf="isInvalidTokenCap">
-                    Input should be a positive integer
+                    Input should be a positive integer or zero
                 </div>
 
                 <div class="checkbox">
                     <label>
-                        <input type="checkbox" [(ngModel)]="userLimits.time_window_enabled">
+                        <input type="checkbox" 
+                               [(ngModel)]="userLimits.time_window_enabled"
+                                (ngModelChange)="emitValidity()">
                         Enable time window token limits
                     </label>
                 </div>
@@ -110,18 +113,18 @@ export class UserPolicyComponent {
         value: number | null,
         biggerThanZero: boolean = false
     ): boolean {
-        return enabled && !this.isValidNonNegativeInt(value, biggerThanZero);
+        return !enabled || this.isValidNonNegativeInt(value, biggerThanZero);
     }
 
     get isInvalidTokenCap(): boolean {
-        return this.isValidNumberInput(
+        return !this.isValidNumberInput(
             this.userLimits.token_cap_enabled,
             this.userLimits.token_cap
         );
     }
 
     get isInvalidWindowTokens(): boolean {
-        return this.isValidNumberInput(
+        return !this.isValidNumberInput(
             this.userLimits.time_window_enabled,
             this.userLimits.token_cap_for_window,
             true
@@ -129,7 +132,7 @@ export class UserPolicyComponent {
     }
 
     get isInvalidWindowTime(): boolean {
-        return this.isValidNumberInput(
+        return !this.isValidNumberInput(
             this.userLimits.time_window_enabled,
             this.userLimits.window_value,
             true

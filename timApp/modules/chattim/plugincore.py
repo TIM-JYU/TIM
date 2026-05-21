@@ -57,8 +57,8 @@ class GenericPolicy:
     token_cap: int | None = 0
     time_window_enabled: bool = False
     window_unit: str = "h"
-    window_value: int | None = 0
-    token_cap_for_window: int | None = 0
+    window_value: int | None = None
+    token_cap_for_window: int | None = None
 
 
 @dataclass()
@@ -592,11 +592,11 @@ class PluginCore:
 
             if max_tokens_per_user == -1:
                 token_cap_enabled = False
-                max_tokens_per_user = 0
+                max_tokens_per_user = None
 
             if time_window_tokens == -1:
                 time_window_enabled = False
-                time_window_tokens = 0
+                time_window_tokens = None
 
             return GenericPolicy(
                 token_cap_enabled=token_cap_enabled,
@@ -657,6 +657,7 @@ class PluginCore:
         :param user_data: user data that policy applies for
         :return:
         """
+
         llm_rule = self.tim_database.get_llm_rule(document_id)
         if not llm_rule:
             raise LookupError("Instance has not been created yet")
@@ -964,13 +965,13 @@ class PluginCore:
         if cap_enabled and token_cap < 0:
             return f"Given token cap [{token_cap}] cannot be negative"
 
-        if window_enabled and time_value <= 0:
+        if window_enabled and (time_value is None or time_value <= 0):
             return f"Given time value [{time_value}] should be greater than 0"
 
         if window_enabled and (time_type not in valid_time_types):
             return f"Given time type [{time_type}] is not valid"
 
-        if window_enabled and window_token_cap <= 0:
+        if window_enabled and (window_token_cap is None or window_token_cap <= 0):
             return f"Given time cap [{window_token_cap}] should be greater than 0"
 
         return None

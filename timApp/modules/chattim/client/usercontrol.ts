@@ -1,4 +1,11 @@
-import {Component, EventEmitter, Input, Output} from "@angular/core";
+import {
+    Component,
+    ElementRef,
+    EventEmitter,
+    Input,
+    Output,
+    ViewChild,
+} from "@angular/core";
 import {DialogModule} from "tim/ui/angulardialog/dialog.module";
 import {NgForOf, NgIf} from "@angular/common";
 import {PurifyModule} from "tim/util/purify.module";
@@ -24,84 +31,97 @@ export interface UserData extends Record<string, JsonValue> {
     selector: "usercontrol",
     standalone: true,
     template: `
-        <div class="user-table">
+        <div class="usercontrol-body" (click)="clearMessages()">
+            <div class="user-table">
 
-            <div class="table-row header-row">
+                <div class="table-row header-row">
 
-                <button
-                    type="button"
-                    class="header-button"
-                    (click)="clickedSort(UserSortMode.Username)"
-                >
-                    Username {{ getSortArrow(UserSortMode.Username) }}
-                </button>
+                    <button
+                        type="button"
+                        class="header-button"
+                        (click)="clickedSort(UserSortMode.Username)"
+                    >
+                        Username {{ getSortArrow(UserSortMode.Username) }}
+                    </button>
 
-                <button
-                    type="button"
-                    class="header-button"
-                    (click)="clickedSort(UserSortMode.TokensSpent)"
-                >
-                    Spent Tokens {{ getSortArrow(UserSortMode.TokensSpent) }}
-                </button>
+                    <button
+                        type="button"
+                        class="header-button"
+                        (click)="clickedSort(UserSortMode.TokensSpent)"
+                    >
+                        Spent Tokens {{ getSortArrow(UserSortMode.TokensSpent) }}
+                    </button>
 
-                <button
-                    type="button"
-                    class="header-button"
-                    (click)="clickedSort(UserSortMode.HasPolicy)"
-                >
-                    Policy {{ getSortArrow(UserSortMode.HasPolicy) }}
-                </button>
+                    <button
+                        type="button"
+                        class="header-button"
+                        (click)="clickedSort(UserSortMode.HasPolicy)"
+                    >
+                        Policy {{ getSortArrow(UserSortMode.HasPolicy) }}
+                    </button>
+
+                </div>
+
+                <div class="usercontrol-table-body" #scrollContainer>
+                    <button
+                        *ngFor="let user of userData"
+                        type="button"
+                        class="table-row user-row"
+                        [class.selected]="selectedUser === user"
+                        (click)="clickedOnUser(user)"
+                    >
+
+                        <div>
+                            {{ user.username }}
+                        </div>
+
+                        <div>
+                            {{ user.tokens_spent }}
+                        </div>
+
+                        <div>
+                            {{ user.hasPolicy ? '●' : '' }}
+                        </div>
+
+                    </button>
+                </div>
 
             </div>
 
-            <button
-                *ngFor="let user of userData"
-                type="button"
-                class="table-row user-row"
-                [class.selected]="selectedUser === user"
-                (click)="clickedOnUser(user)"
-            >
-
-                <div>
-                    {{ user.username }}
+            <div class="usercontrol-policy-modify">
+                <div class="usercontrol-main-content">
+                    <div *ngIf="!selectedUser" class="usercontrol-no-user-selection">
+                        No user selected
+                    </div>
+                    <userpolicy *ngIf="selectedUser != null"
+                                [userLimits]="currentUserLimit"
+                                (isInInvalidState)="invalidUserPolicyState = $event"
+                    >
+                    </userpolicy>
                 </div>
-
-                <div>
-                    {{ user.tokens_spent }}
+                <div class="usercontrol-footer">
+                    <div class="error controlpanel-save-result" *ngIf="this.localPolicySaveResponse.error"
+                         [innerHTML]="this.localPolicySaveResponse.error | purify"></div>
+                    <div class="controlpanel-save-result" *ngIf="this.localPolicySaveResponse.result"
+                         [innerHTML]="this.localPolicySaveResponse.result | purify"></div>
+                    <div class="usercontrol-save-button-div">
+                        <button class="btn btn-primary usercontrol-save-button" style="margin: 2px;"
+                                *ngIf="selectedUser != null"
+                                [disabled]="invalidUserPolicyState"
+                                (click)="clickedPolicySave()">
+                            Save
+                        </button>
+                    </div>
                 </div>
-
-                <div>
-                    {{ user.hasPolicy ? 'YES' : 'NO' }}
-                </div>
-
-            </button>
-
-        </div>
-
-        <div>
-            <userpolicy *ngIf="selectedUser != null"
-                        [userLimits]="currentUserLimit"
-                        (isInInvalidState)="invalidUserPolicyState = $event"
-            >
-            </userpolicy>
-            <div class="usercontrol-save-button-div">
-                <button class="btn btn-primary usercontrol-save-button" style="margin: 2px;"
-                        *ngIf="selectedUser != null"
-                        [disabled]="invalidUserPolicyState"
-                        (click)="clickedPolicySave()">
-                    Save
-                </button>
             </div>
-            <div class="error" *ngIf="this.localPolicySaveResponse.error"
-                 [innerHTML]="this.localPolicySaveResponse.error | purify"></div>
-            <div *ngIf="this.localPolicySaveResponse.result"
-                 [innerHTML]="this.localPolicySaveResponse.result | purify"></div>
+        
         </div>
 
     `,
     imports: [DialogModule, NgForOf, UserPolicyComponent, NgIf, PurifyModule],
 })
 export class UserControlComponent {
+    @ViewChild("scrollContainer") scrollContainer!: ElementRef<HTMLElement>;
     readonly UserSortMode = UserSortMode;
     invalidUserPolicyState: boolean = false;
 
@@ -127,9 +147,18 @@ export class UserControlComponent {
     @Output() policySaveRequest = new EventEmitter<UserData>();
     @Output() userDataRequest = new EventEmitter<void>();
 
-    @Input() set policySaveResponse(v: {result: string; error: string}) {
-        this.localPolicySaveResponse.result = v.result;
-        this.localPolicySaveResponse.error = v.error;
+    @Input() set policySaveResponse(
+        v: {result: string; error: string} | null | undefined
+    ) {
+        if (!v) {
+            this.localPolicySaveResponse = {result: "", error: ""};
+            return;
+        }
+
+        this.localPolicySaveResponse = {
+            result: v.result ?? "",
+            error: v.error ?? "",
+        };
 
         if (!v.error && this.selectedUser) {
             this.updatePolicyState();
@@ -137,6 +166,10 @@ export class UserControlComponent {
     }
     @Input() set setUserData(value: undefined | UserData[]) {
         this.userData = value;
+    }
+
+    ngOnInit() {
+        this.localPolicySaveResponse = {result: "", error: ""};
     }
 
     getSortArrow(mode: UserSortMode): string {
@@ -156,6 +189,7 @@ export class UserControlComponent {
         }
 
         this.sortUsers();
+        this.scrollContainer.nativeElement.scrollTop = 0;
     }
 
     sortUsers(): void {

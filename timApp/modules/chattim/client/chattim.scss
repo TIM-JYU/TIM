@@ -120,23 +120,30 @@
 }
 
 
-// usercontrol stuff //
+// usercontrol //
+.usercontrol-body {
+  width: 80%;
+}
 .user-table {
   display: flex;
   flex-direction: column;
-  width: 100%;
   border: 1px solid #ddd;
   border-radius: 6px;
   overflow: hidden;
   background: white;
 }
 
+.usercontrol-table-body {
+  max-height: 200px;
+  overflow-y: auto;
+}
+
 .table-row {
   display: grid;
   grid-template-columns:
-        minmax(180px, 1fr)
-        140px
-        120px;
+    minmax(0, 1fr)
+    minmax(0, 140px)
+    minmax(0, 120px);
 
   align-items: center;
   width: 100%;
@@ -159,8 +166,6 @@
   background: white;
   text-align: left;
   cursor: pointer;
-  border-bottom: 1px solid #eee;
-  transition: background 0.15s ease;
 }
 
 .user-row:last-child {
@@ -182,9 +187,11 @@
 }
 
 .usercontrol-save-button-div {
+  display: flex;
+  justify-content: flex-end;
   text-align: right;
+  margin-top: auto;
 }
-
 
 .header-button {
     appearance: none;
@@ -196,6 +203,41 @@
     cursor: pointer;
     padding: 0;
     width: 100%;
+}
+
+.usercontrol-no-user-selection {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    color: #888;
+    font-style: italic;
+}
+
+.usercontrol-main-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.usercontrol-footer {
+  margin-top: auto;
+
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+
+  gap: 0.5rem;
+}
+
+.usercontrol-policy-modify {
+  display: flex;
+  flex-direction: column;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  min-height: 350px;
 }
 
 // usercontrol ends //
