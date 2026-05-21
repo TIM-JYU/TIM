@@ -461,10 +461,6 @@ class PluginCore:
             )
             return Result(data)
 
-        if not self._instance_exists(document_id):
-            # TODO: get settings from db
-            pass
-
         user_keys = self.tim_database.get_user_api_keys(user_id)
         shared_keys = self.tim_database.get_shared_api_keys(user_id)
 
