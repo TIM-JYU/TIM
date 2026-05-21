@@ -6,9 +6,14 @@
   padding-right: 15px;
 }
 
+.chat-bubble-wrapper {
+  display: block;
+  width: 100%;
+}
+
 .chat-bot {
   margin-left: 1em;
-  white-space: pre-wrap;
+  white-space: pre-line;
   word-break: break-word;
   color: #d4450f;
   background-color: #fff0e8;
@@ -20,6 +25,7 @@
 }
 
 .chat-user {
+  white-space: pre-line;
   word-break: break-word;
   color: #0d3b5e;
   background-color: rgba(190, 210, 235, 0.4);
