@@ -198,7 +198,6 @@ class PluginCore:
         # TODO: remember to fetch with timestamps when the time comes
         chat_history = self.get_history(caller_id_str, document_id_str)
 
-        # TODO: fetch mode for instance
         if rule.current_mode == "Creative":
             mode: RagMode = RagMode.CREATIVE
         else:
@@ -209,15 +208,17 @@ class PluginCore:
 
         temperature: float | None = 0.2
         if rule.temperature is not None:
-            temperature = rule.temperature
+            temperature = float(rule.temperature)
 
-        similarity_threshold: float | None = rule.similarity_threshold
+        similarity_threshold: float | None = None
+        if rule.similarity_threshold is not None:
+            similarity_threshold = float(rule.similarity_threshold)
 
         top_k_chunks: int = 3
         if rule.top_k_chunks is not None:
-            top_k_chunks = rule.top_k_chunks
+            top_k_chunks = int(rule.top_k_chunks)
 
-        use_streaming: bool = rule.use_streaming
+        use_streaming: bool = bool(rule.use_streaming)
 
         include_citations: bool = (
             rule.include_citations and rule.current_mode == RagMode.RETRIEVE

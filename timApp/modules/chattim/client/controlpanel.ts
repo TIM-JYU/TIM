@@ -85,7 +85,8 @@ type SimilarityMode = "none" | "loose" | "balanced" | "strict" | "custom";
                     </button>
                     <div *ngIf="keyOpen" class="settings-section-body">
                         <select class="form-control"
-                                [(ngModel)]="selectedPublicKey">
+                                [ngModel]="selectedPublicKey"
+                                (ngModelChange)="onPublicKeyChange($event)">
                             <option *ngFor="let key of availablePublicKeys"
                                     [ngValue]="key.public_key">{{
                                     key.public_key + " - " + key.provider + (key.is_shared ? " " +
@@ -237,14 +238,18 @@ type SimilarityMode = "none" | "loose" | "balanced" | "strict" | "custom";
               [class.glyphicon-chevron-down]="modeOpen">
         </span>
                         Mode: <strong>{{ selectedMode }}</strong>
+                        <span *ngIf="isAnthropicKeySelected" style="margin-left: 6px; font-size: 0.85em; color: #888;">
+                            (Summarizing not available with Anthropic)
+                        </span>
                     </button>
                     <div *ngIf="modeOpen" class="settings-section-body">
                         <div class="radio" *ngFor="let mode of availableModes">
-                            <label>
+                            <label [class.disabled-label]="isAnthropicKeySelected && mode !== 'Creative'">
                                 <input type="radio"
                                        name="modeRadio"
                                        [value]="mode"
-                                       [(ngModel)]="selectedMode">
+                                       [(ngModel)]="selectedMode"
+                                       [disabled]="isAnthropicKeySelected && mode !== 'Creative'">
                                 {{ mode }}
                             </label>
                         </div>
@@ -743,5 +748,19 @@ export class ChatControlPanelComponent implements OnChanges {
 
     get getTopKTooltip(): string {
         return "Specify the number of top chunks to consider for context selection.";
+    }
+
+    get isAnthropicKeySelected() {
+        const key = this.availablePublicKeys.find(
+            (k) => k.public_key === this.selectedPublicKey
+        );
+        return key?.provider.toLowerCase() === "anthropic";
+    }
+
+    onPublicKeyChange(key: string): void {
+        this.selectedPublicKey = key;
+        if (this.isAnthropicKeySelected) {
+            this.selectedMode = "Creative";
+        }
     }
 }
