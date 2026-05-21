@@ -713,9 +713,11 @@ class PluginCore:
         rule = self.tim_database.get_llm_rule(document_id)
         if not rule:
             return []
-        include_citations = (
-            rule.include_citations and rule.current_mode == RagMode.RETRIEVE
-        )
+        try:
+            rag_mode = self._parse_rag_mode(str(rule.current_mode))
+            include_citations = rule.include_citations and rag_mode == RagMode.RETRIEVE
+        except ValueError:
+            include_citations = False
 
         messages = self.history_manager.get_history_time_window(
             str(document_id), str(caller_id), None, ts_end, max_count
