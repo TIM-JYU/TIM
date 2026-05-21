@@ -65,6 +65,19 @@
   visibility: hidden;
 }
 
+.answer-footer {
+  font-size: 0.7em;
+  display: flex;
+  flex-direction: row;
+  margin-top: 0.1em;
+}
+
+.chat-timestamp {
+  color: #aaa;
+  text-align: right;
+  margin-left: auto;
+}
+
 .chat-row {
   display: flex;
   flex-direction: row;
