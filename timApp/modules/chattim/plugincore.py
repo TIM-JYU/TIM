@@ -513,6 +513,7 @@ class PluginCore:
             use_streaming=bool(plugin_data.use_streaming),
             selectedModel=selected_model,
             allowedItemPaths=None,  # TODO: from the API key restrictions?
+            llm_mode=str(plugin_data.current_mode),
             system_prompt_path=plugin_data.system_prompt_path,
             model_temperature=plugin_data.temperature,
             include_citations=bool(plugin_data.include_citations),
@@ -660,15 +661,16 @@ class PluginCore:
             max_tokens,
         )
 
-        error: str | None = None
         if failed_embeddings > 0:
+            # TODO: bring the error to the ui but still bring the saved data
             error = f"Failed to create embeddings for {failed_embeddings} documents."
+            return Result(error=error)
 
         data: SaveInstanceResult = {
             "supported_models": supported_models,
             "model_id": model_id,
         }
-        return Result(value=data, error=error)
+        return Result(value=data)
 
     def delete_instance(self, owner_id: int, document_id: int) -> None:
         self.tim_database.delete_llm_rule(owner_id, document_id)

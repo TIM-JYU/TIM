@@ -187,7 +187,6 @@ export interface ControlPanelData extends ControlPanelSettings {
                             (saveSettingsClick)="onSaveSettings($event)"
                             (panelToggled)="onControlPanelToggle($event)"
                             (fetchModelsClick)="onFetchModels($event)"
-                            (fetchControlPanelData)="getControlPanelData()"
                             [selectedModel]="selectedModel"
                             [setModelTemperature]="modelTemperature"
                             [useStreaming]="useStreaming"
@@ -233,6 +232,7 @@ export class ChatTIMComponent
 {
     @ViewChild(ChatControlPanelComponent)
     controlPanel!: ChatControlPanelComponent;
+    controlPanelOpen: boolean = false;
     private hostElement!: ElementRef<HTMLElement>;
 
     onControlPanelToggle(isOpen: boolean) {
@@ -240,6 +240,7 @@ export class ChatTIMComponent
         if (!dialog) {
             return;
         }
+        this.controlPanelOpen = isOpen;
         const panelEl: HTMLElement | null =
             this.hostElement.nativeElement.querySelector(".settings-panel");
 
@@ -342,6 +343,8 @@ export class ChatTIMComponent
          early crashes thus we call in ngAfterViewInit */
         this.initDocId();
         await this.initScrollContainer();
+        // TODO: separate control panel data and client data fetch
+        await this.getControlPanelData();
         await this.fetchRights();
         console.log(this.isTeacher);
     }
@@ -929,7 +932,7 @@ export class ChatTIMComponent
         if (!el) {
             return;
         }
-        if (this.controlPanel.settingsOpen) {
+        if (this.controlPanelOpen) {
             return;
         }
 
