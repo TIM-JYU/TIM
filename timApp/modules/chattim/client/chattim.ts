@@ -16,6 +16,7 @@ import {
     ViewEncapsulation,
 } from "@angular/core";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
+import {showConfirm} from "tim/ui/showConfirmDialog";
 import {AngularPluginBase} from "tim/plugin/angular-plugin-base.directive";
 import {DialogModule} from "tim/ui/angulardialog/dialog.module";
 import {PurifyModule} from "tim/util/purify.module";
@@ -167,12 +168,26 @@ export interface ControlPanelData extends ControlPanelSettings {
                     </div>
 
                     <div class="control-panel-container">
-                        <chattim-control-panel
+                        
+                        <ng-container *ngIf="!isTeacher">
+                            <div class="settings-row">
+                                <p>Tämä näkymä on opiskelijalle</p>
+                                <span>Käytetyt tokenit: <strong>TODO!</strong></span>
+                            </div>
+                            <div class="settings-row">
+                                <button class="btn btn-warning"
+                                        (click)="clearConversationClicked()">
+                                    Clear conversation
+                                </button>
+                            </div>
+                        </ng-container>
+                            
+                        <chattim-control-panel *ngIf="isTeacher"
                             [isTeacher]="isTeacher"
                             (saveSettingsClick)="onSaveSettings($event)"
-                            (clearConversationClick)="onClearConversation()"
                             (panelToggled)="onControlPanelToggle($event)"
                             (fetchModelsClick)="onFetchModels($event)"
+                            (fetchControlPanelData)="getControlPanelData()"
                             [selectedModel]="selectedModel"
                             [setModelTemperature]="modelTemperature"
                             [useStreaming]="useStreaming"
@@ -327,9 +342,8 @@ export class ChatTIMComponent
          early crashes thus we call in ngAfterViewInit */
         this.initDocId();
         await this.initScrollContainer();
-        await this.getControlPanelData();
-        await this.getUserData();
         await this.fetchRights();
+        console.log(this.isTeacher);
     }
     async fetchRights(): Promise<void> {
         if (this.document_id <= 0) {
@@ -1018,6 +1032,17 @@ export class ChatTIMComponent
             this.userUsageAndPolicyData = data.result;
         } else {
             this.controlpanelError = response.result.error.error;
+        }
+    }
+
+    async clearConversationClicked() {
+        if (
+            !(await showConfirm(
+                "Clear conversation?",
+                "Are you sure you want to clear the conversation?"
+            ))
+        ) {
+            return;
         }
     }
 }

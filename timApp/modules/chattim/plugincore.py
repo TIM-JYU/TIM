@@ -777,6 +777,7 @@ class PluginCore:
         if not llm_rule:
             raise LookupError("Instance has not been created yet")
 
+        # TODO: unify permissions checking to account for teachers too
         owner = llm_rule.owner
         if owner != caller_id:  # this should never happen since we have UI-limitations
             raise PermissionError("You have no access to this resource")

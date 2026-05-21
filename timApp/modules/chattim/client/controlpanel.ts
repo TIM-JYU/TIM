@@ -1,6 +1,5 @@
 import type {OnChanges, SimpleChanges} from "@angular/core";
 import {Component, EventEmitter, Input, Output} from "@angular/core";
-import {showConfirm} from "tim/ui/showConfirmDialog";
 import type {JsonValue} from "tim/util/jsonvalue";
 import {FormsModule} from "@angular/forms";
 import {NgForOf, NgIf} from "@angular/common";
@@ -69,21 +68,6 @@ type SimilarityMode = "none" | "loose" | "balanced" | "strict" | "custom";
 
 
         <div class="settings-panel" [style.display]="settingsOpen ? 'block' : 'none'">
-
-
-            <ng-container *ngIf="!isTeacher">
-                <div class="settings-row">
-                    <p>Tämä näkymä on opiskelijalle</p>
-                    <span>Käytetyt tokenit: <strong>TODO!</strong></span>
-                </div>
-                <div class="settings-row">
-                    <button class="btn btn-warning"
-                            (click)="clearConversationClicked()">
-                        Clear conversation
-                    </button>
-                </div>
-            </ng-container>
-            <ng-container *ngIf="isTeacher">
 
                 <!-- Choose API-key -->
                 <div class="settings-row">
@@ -383,7 +367,6 @@ type SimilarityMode = "none" | "loose" | "balanced" | "strict" | "custom";
                 </div>
                 <div class="error" *ngIf="error && !response" [innerHTML]="error | purify"></div>
                 <div *ngIf="response && !error" [innerHTML]="response | purify"></div>
-            </ng-container>
         </div>
     `,
 })
@@ -406,6 +389,8 @@ export class ChatControlPanelComponent implements OnChanges {
     @Input() userUsageAndPolicyData: undefined | UserData[];
     @Output() userDataRequest = new EventEmitter<number>();
     @Output() policySaveRequest = new EventEmitter<UserData>();
+
+    @Output() fetchControlPanelData = new EventEmitter<void>();
 
     isInvalidMaxTokens = false;
     invalidUserPolicyState: boolean = false;
@@ -447,12 +432,6 @@ export class ChatControlPanelComponent implements OnChanges {
     readonly SIMILARITY_OPTION_LIST = Object.entries(
         this.SIMILARITY_OPTIONS
     ).map(([mode, opt]) => ({mode: mode as SimilarityMode, ...opt}));
-
-    timeUnitOptions: {value: string; label: string}[] = [
-        {value: "min", label: "Minutes"},
-        {value: "h", label: "Hours"},
-        {value: "d", label: "Days"},
-    ];
 
     allEmbedderProviders: string[] = ["OpenAI", "Google"];
 
@@ -515,7 +494,6 @@ export class ChatControlPanelComponent implements OnChanges {
     @Output() fetchModelsClick = new EventEmitter<string>();
     @Output() saveSettingsClick = new EventEmitter<ControlPanelSettings>();
     @Output() panelToggled = new EventEmitter<boolean>();
-    @Output() clearConversationClick = new EventEmitter<void>();
 
     ngOnChanges(changes: SimpleChanges): void {
         if (changes.availableModels) {
@@ -529,6 +507,10 @@ export class ChatControlPanelComponent implements OnChanges {
                 this.selectFirstFilteredModel();
             }
         }
+    }
+
+    ngOnInit(): void {
+        this.fetchControlPanelData.emit();
     }
 
     selectFirstFilteredModel(): void {
@@ -558,18 +540,6 @@ export class ChatControlPanelComponent implements OnChanges {
     togglePanel() {
         this.settingsOpen = !this.settingsOpen;
         this.panelToggled.emit(this.settingsOpen);
-    }
-
-    async clearConversationClicked() {
-        if (
-            !(await showConfirm(
-                "Clear conversation?",
-                "Are you sure you want to clear the conversation?"
-            ))
-        ) {
-            return;
-        }
-        this.clearConversationClick.emit();
     }
 
     saveSettingsClicked() {
