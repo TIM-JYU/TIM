@@ -191,18 +191,28 @@ class PluginCore:
         document_id_str = str(document_id)
         caller_id_str = str(caller_id)
 
+        llmrule = self.tim_database.get_llm_rule(document_id)
+
         # TODO: remember to fetch with timestamps when the time comes
         chat_history = self.get_history(caller_id_str, document_id_str)
 
         # TODO: fetch mode for instance
-        mode: RagMode = RagMode.RETRIEVE
+        if llmrule.current_mode == "Creative":
+            mode: RagMode = RagMode.CREATIVE
+        else:
+            mode: RagMode = RagMode.RETRIEVE
+
+        print("mode")
+        print(mode)
         # TODO: No need for this attribute if we have character limit for input? Maybe keep as is for an option
         max_tokens_for_req = 99999
         # TODO: get these from the LLMRule table
-        temperature: float | None = None
+        temperature: float | None = 0.2
+        if llmrule.temperature is not None:
+            temperature = float(llmrule.temperature)
         similarity_threshold: float | None = None
         top_k_chunks: int = 3
-        use_streaming: bool = stream
+        use_streaming: bool = llmrule.use_streaming
         # TODO: replace with this
         # include_citations: bool = (
         #     rule.include_citations and rule.current_mode == RagMode.RETRIEVE
@@ -755,9 +765,8 @@ class PluginCore:
 
     @cache.memoize(timeout=DEFAULT_CACHE_TIMEOUT, args_to_ignore=["self", "caller_id"])
     def get_system_prompt(self, caller_id: int, document_id: int) -> str | None:
-        # TODO: Fetch from the database. If the caller fetches the whole table for other info as well,
-        # then this function should probably only take the prompt path as a parameter.
-        prompt_path = ""
+        llmrule = self.tim_database.get_llm_rule(document_id)
+        prompt_path = llmrule.system_prompt_path if llmrule else ""
         if not prompt_path:
             return None
         prompt_doc = self.tim_database.get_tim_document_by_path(prompt_path)
