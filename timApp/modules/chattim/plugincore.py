@@ -105,10 +105,10 @@ class UserKey:
 
 @dataclass
 class InstanceSettingsData(InstanceAttributes):
-    availableModels: list[ChatModel] = field(kw_only=True)
-    availableModes: list[str] = field(kw_only=True)
-    availableKeys: list[UserKey] = field(kw_only=True)
-    availableEmbedderProviders: list[str] = field(kw_only=True)
+    availableModels: list[ChatModel] = field(kw_only=True, default_factory=list)
+    availableModes: list[str] = field(kw_only=True, default_factory=list)
+    availableKeys: list[UserKey] = field(kw_only=True, default_factory=list)
+    availableEmbedderProviders: list[str] = field(kw_only=True, default_factory=list)
     selectedModel: str | None = None
     allowedItemPaths: list[str] | None = None
 
@@ -448,15 +448,20 @@ class PluginCore:
         if not self._document_exists(document_id):
             return Result(None, f"Document [{document_id}] does not exist")
 
+        plugin_data = self.tim_database.get_llm_rule(document_id)
+
         if not self._owns_document(user_id, document_id):
-            # TODO: should return only the values that are needed for the client
-            return Result(None, "Insufficient rights")
+            # Return only data the client needs
+            data = InstanceSettingsData(
+                use_streaming=bool(plugin_data.use_streaming),
+                include_citations=bool(plugin_data.include_citations),
+            )
+            return Result(data)
 
         if not self._instance_exists(document_id):
             # TODO: get settings from db
             pass
 
-        plugin_data = self.tim_database.get_llm_rule(document_id)
         user_keys = self.tim_database.get_user_api_keys(user_id)
         shared_keys = self.tim_database.get_shared_api_keys(user_id)
 
@@ -508,6 +513,11 @@ class PluginCore:
             use_streaming=bool(plugin_data.use_streaming),
             selectedModel=selected_model,
             allowedItemPaths=None,  # TODO: from the API key restrictions?
+            system_prompt_path=plugin_data.system_prompt_path,
+            model_temperature=plugin_data.temperature,
+            include_citations=bool(plugin_data.include_citations),
+            similarity_threshold=plugin_data.similarity_threshold,
+            top_k_chunks=plugin_data.top_k_chunks,
         )
 
         return Result(value=data)
