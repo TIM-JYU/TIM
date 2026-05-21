@@ -32,6 +32,7 @@ from timApp.modules.chattim.plugincore import (
     PluginCore,
     InstanceAttributes,
     APIKey,
+    UserData,
 )
 from .model import ModelError
 
@@ -59,6 +60,11 @@ class GenericParams:
 @dataclass
 class GetRightsParams(GenericParams):
     pass
+
+
+@dataclass
+class SaveUserPolicyParams(GenericParams):
+    user_data: UserData
 
 
 def get_rights(params: GetRightsParams) -> dict:
@@ -268,6 +274,42 @@ def get_settings(params: GenericParams) -> ChatTIMGetSettingsResponse:
     return ret
 
 
+def get_user_data(params: GenericParams) -> dict:
+    """
+    Gets user data (policy and usage) for all users that have chatted with the instance
+    :param params:
+    :return:
+    """
+    document_id = params.document_id
+    session_user_id = get_current_user_id()
+    ret: dict = {}
+
+    try:
+        data_list = plugincore.get_user_data(session_user_id, document_id)
+        ret["result"] = data_list
+    except LookupError as e:
+        ret["error"] = e
+
+    return ret
+
+
+def save_user_policy(params: SaveUserPolicyParams) -> dict:
+    document_id = params.document_id
+    user_data = params.user_data
+    session_user_id = get_current_user_id()
+    operation_result: dict = {"error": "", "result": ""}
+
+    try:
+        result_msg = plugincore.save_user_policy(
+            session_user_id, document_id, user_data
+        )
+        operation_result["result"] = result_msg
+    except (LookupError, ValueError) as e:
+        operation_result["error"] = str(e)
+
+    return operation_result
+
+
 def save_settings(params: ChatTimSaveSettingsParams) -> PluginAnswerResp:
     web: ChatTimAnswerWeb = {}
     result: PluginAnswerResp = {"web": web}
@@ -433,6 +475,10 @@ register_route(chattim, "post", "getMessages", GetMessagesParams, get_messages)
 register_route(chattim, "post", "clearMessages", GenericParams, clear_messages)
 register_route(chattim, "post", "validateApi", APIKeyParams, save_api_key)
 register_route(chattim, "get", "getProviders", None, get_providers)
+register_route(chattim, "post", "getUserPolicyData", GenericParams, get_user_data)
+register_route(
+    chattim, "post", "saveUserPolicy", SaveUserPolicyParams, save_user_policy
+)
 register_route(
     chattim,
     "post",

@@ -1,8 +1,17 @@
 import type {OnChanges, SimpleChanges} from "@angular/core";
 import {Component, EventEmitter, Input, Output} from "@angular/core";
-import {showConfirm} from "tim/ui/showConfirmDialog";
 import type {JsonValue} from "tim/util/jsonvalue";
-import {DirectoryPickerRestrictions} from "tim/folder/directory-picker.component";
+import {FormsModule} from "@angular/forms";
+import {NgForOf, NgIf} from "@angular/common";
+import {PurifyModule} from "tim/util/purify.module";
+import {
+    DirectoryPickerComponent,
+    DirectoryPickerRestrictions,
+} from "tim/folder/directory-picker.component";
+import {TooltipModule} from "ngx-bootstrap/tooltip";
+import {TokenLimitForUser, UserPolicyComponent} from "./userpolicy";
+import {UserControlComponent} from "./usercontrol";
+import type {UserData} from "./usercontrol";
 
 export interface ChatModel extends Record<string, JsonValue> {
     label: string;
@@ -34,19 +43,21 @@ export interface ControlPanelSettings extends Record<string, JsonValue> {
     similarity_threshold: number | null;
 }
 
-export interface TokenLimitForUser extends Record<string, JsonValue> {
-    token_cap_enabled: boolean;
-    token_cap: number | null;
-    time_window_enabled: boolean;
-    window_unit: string;
-    window_value: number | null;
-    token_cap_for_window: number | null;
-}
-
 type SimilarityMode = "none" | "loose" | "balanced" | "strict" | "custom";
 
 @Component({
     selector: "chattim-control-panel",
+    standalone: true,
+    imports: [
+        UserPolicyComponent,
+        FormsModule,
+        NgIf,
+        NgForOf,
+        PurifyModule,
+        UserControlComponent,
+        TooltipModule,
+        DirectoryPickerComponent,
+    ],
     template: `
         <button class="btn btn-link settings-btn"
                 (click)="togglePanel()"
@@ -57,21 +68,6 @@ type SimilarityMode = "none" | "loose" | "balanced" | "strict" | "custom";
 
 
         <div class="settings-panel" [style.display]="settingsOpen ? 'block' : 'none'">
-
-
-            <ng-container *ngIf="!isTeacher">
-                <div class="settings-row">
-                    <p>Tämä näkymä on opiskelijalle</p>
-                    <span>Käytetyt tokenit: <strong>TODO!</strong></span>
-                </div>
-                <div class="settings-row">
-                    <button class="btn btn-warning"
-                            (click)="clearConversationClicked()">
-                        Clear conversation
-                    </button>
-                </div>
-            </ng-container>
-            <ng-container *ngIf="isTeacher">
 
                 <!-- Choose API-key -->
                 <div class="settings-row">
@@ -335,63 +331,30 @@ type SimilarityMode = "none" | "loose" | "balanced" | "strict" | "custom";
                     </button>
 
                     <ng-container *ngIf="globalPolicyOpen">
-                        <div class="checkbox">
-                            <label>
-                                <input type="checkbox"
-                                       [(ngModel)]="tokenLimitAllUsers.token_cap_enabled">
-                                Enable token limits per user
-                            </label>
-                        </div>
-
-                        <div *ngIf="tokenLimitAllUsers.token_cap_enabled" class="settings-section-body">
-                            <input type="number"
-                                   class="form-control"
-                                   [(ngModel)]="tokenLimitAllUsers.token_cap"
-                            >
-                        </div>
-                        <div class="error" *ngIf="isInvalidTokenCap">
-                            Input should be a positive integer
-                        </div>
-
-                        <div class="checkbox">
-                            <label>
-                                <input type="checkbox" [(ngModel)]="tokenLimitAllUsers.time_window_enabled">
-                                Enable time window token limits
-                            </label>
-                        </div>
-
-                        <div *ngIf="tokenLimitAllUsers.time_window_enabled">
-                            <div class="form-group">
-                                <label class="col-sm-2 control-label time-window-label">
-                                    <span class="time-window-label-span">Tokens</span>
-                                    <input type="number" class="form-control restriction-inputs"
-                                           placeholder="5000"
-                                           [(ngModel)]="tokenLimitAllUsers.token_cap_for_window">
-                                </label>
-                                <div class="error" *ngIf="isInvalidWindowTokens">
-                                    Input should be a positive integer
-                                </div>
-                                <div>
-                                    <label class="col-sm-2 control-label time-window-label">
-                                        <span class="time-window-label-span">Window</span>
-                                        <input type="number" class="form-control restriction-inputs"
-                                               placeholder="5"
-                                               [(ngModel)]="tokenLimitAllUsers.window_value"
+                            <userpolicy [userLimits]="tokenLimitAllUsers"
+                                        (isInInvalidState)="invalidUserPolicyState = $event"
                                         >
-                                        <select class="form-control restriction-inputs"
-                                                [(ngModel)]="tokenLimitAllUsers.window_unit">
-                                            <option *ngFor="let timeUnit of timeUnitOptions"
-                                                    [ngValue]="timeUnit.value">{{ timeUnit.label }}
-                                            </option>
-                                        </select>
-                                    </label>
-                                </div>
-                                <div class="error" *ngIf="isInvalidWindowTime">
-                                    Input should be a positive integer
-                                </div>
-                            </div>
-                        </div>
+                            </userpolicy>
                     </ng-container>
+                </div>
+
+                <!-- Open dialog to view user token usage and policy modifications -->
+                <div class="settings-row"  >
+                    <button class="btn btn-link settings-section-btn"
+                            (click)="userControlOpen = !userControlOpen">
+                        <span class="glyphicon"
+                              [class.glyphicon-chevron-right]="!userControlOpen"
+                              [class.glyphicon-chevron-down]="userControlOpen">
+                        </span>
+                        Token consumption & per-user policies:
+                    </button>
+                    <usercontrol *ngIf="userControlOpen"
+                                 [setUserData]="userUsageAndPolicyData"
+                                 (userDataRequest)="userDataRequest.emit()"
+                                 (policySaveRequest)="policySaveRequest.emit($event)"
+                                 [policySaveResponse]="policySaveResponse"
+                                 >
+                    </usercontrol>
                 </div>
 
                 <!-- Save button that sends the chosen stuff -->
@@ -404,7 +367,6 @@ type SimilarityMode = "none" | "loose" | "balanced" | "strict" | "custom";
                 </div>
                 <div class="error" *ngIf="error && !response" [innerHTML]="error | purify"></div>
                 <div *ngIf="response && !error" [innerHTML]="response | purify"></div>
-            </ng-container>
         </div>
     `,
 })
@@ -418,8 +380,20 @@ export class ChatControlPanelComponent implements OnChanges {
     filesOpen = false;
     promptOpen = false;
     globalPolicyOpen = false;
+    userControlOpen = false;
+
+    @Input() policySaveResponse!: {
+        result: string;
+        error: string;
+    };
+    @Input() userUsageAndPolicyData: undefined | UserData[];
+    @Output() userDataRequest = new EventEmitter<number>();
+    @Output() policySaveRequest = new EventEmitter<UserData>();
+
+    @Output() fetchControlPanelData = new EventEmitter<void>();
 
     isInvalidMaxTokens = false;
+    invalidUserPolicyState: boolean = false;
     maxTokensLocal = "";
     maxTokensValue: number | null = null;
 
@@ -458,12 +432,6 @@ export class ChatControlPanelComponent implements OnChanges {
     readonly SIMILARITY_OPTION_LIST = Object.entries(
         this.SIMILARITY_OPTIONS
     ).map(([mode, opt]) => ({mode: mode as SimilarityMode, ...opt}));
-
-    timeUnitOptions: {value: string; label: string}[] = [
-        {value: "min", label: "Minutes"},
-        {value: "h", label: "Hours"},
-        {value: "d", label: "Days"},
-    ];
 
     allEmbedderProviders: string[] = ["OpenAI", "Google"];
 
@@ -515,6 +483,7 @@ export class ChatControlPanelComponent implements OnChanges {
     @Input() selectedMode!: string;
     @Input() selectedEmbedderProvider!: string;
     @Input() isTeacher: boolean = false;
+
     @Input() tokenLimitAllUsers!: TokenLimitForUser;
     @Input() availableModels?: ChatModel[];
     @Input() availableModes?: string[];
@@ -525,7 +494,6 @@ export class ChatControlPanelComponent implements OnChanges {
     @Output() fetchModelsClick = new EventEmitter<string>();
     @Output() saveSettingsClick = new EventEmitter<ControlPanelSettings>();
     @Output() panelToggled = new EventEmitter<boolean>();
-    @Output() clearConversationClick = new EventEmitter<void>();
 
     ngOnChanges(changes: SimpleChanges): void {
         if (changes.availableModels) {
@@ -539,6 +507,10 @@ export class ChatControlPanelComponent implements OnChanges {
                 this.selectFirstFilteredModel();
             }
         }
+    }
+
+    ngOnInit(): void {
+        this.fetchControlPanelData.emit();
     }
 
     selectFirstFilteredModel(): void {
@@ -568,18 +540,6 @@ export class ChatControlPanelComponent implements OnChanges {
     togglePanel() {
         this.settingsOpen = !this.settingsOpen;
         this.panelToggled.emit(this.settingsOpen);
-    }
-
-    async clearConversationClicked() {
-        if (
-            !(await showConfirm(
-                "Clear conversation?",
-                "Are you sure you want to clear the conversation?"
-            ))
-        ) {
-            return;
-        }
-        this.clearConversationClick.emit();
     }
 
     saveSettingsClicked() {
@@ -638,27 +598,6 @@ export class ChatControlPanelComponent implements OnChanges {
         );
     }
 
-    get isInvalidTokenCap(): boolean {
-        return this.isValidNumberInput(
-            this.tokenLimitAllUsers.token_cap_enabled,
-            this.tokenLimitAllUsers.token_cap
-        );
-    }
-
-    get isInvalidWindowTokens(): boolean {
-        return this.isValidNumberInput(
-            this.tokenLimitAllUsers.time_window_enabled,
-            this.tokenLimitAllUsers.token_cap_for_window
-        );
-    }
-
-    get isInvalidWindowTime(): boolean {
-        return this.isValidNumberInput(
-            this.tokenLimitAllUsers.time_window_enabled,
-            this.tokenLimitAllUsers.window_value
-        );
-    }
-
     get isInvalidModelTemperature(): boolean {
         return (
             this.enabledTemperature &&
@@ -680,21 +619,11 @@ export class ChatControlPanelComponent implements OnChanges {
     get invalidInputState(): boolean {
         return (
             this.isInvalidMaxTokens ||
-            this.isInvalidTokenCap ||
-            this.isInvalidWindowTime ||
-            this.isInvalidWindowTokens ||
             this.isInvalidModelTemperature ||
             this.isInvalidSimilarityThreshold ||
-            this.isInvalidTopChunks
+            this.isInvalidTopChunks ||
+            this.invalidUserPolicyState
         );
-    }
-
-    isValidNonNegativeInt(value: number | null): boolean {
-        return value !== null && Number.isInteger(value) && value >= 0;
-    }
-
-    isValidNumberInput(enabled: boolean, value: number | null): boolean {
-        return enabled && !this.isValidNonNegativeInt(value);
     }
 
     isValidFloatBetween(

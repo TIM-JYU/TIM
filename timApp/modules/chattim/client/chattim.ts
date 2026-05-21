@@ -16,6 +16,7 @@ import {
     ViewEncapsulation,
 } from "@angular/core";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
+import {showConfirm} from "tim/ui/showConfirmDialog";
 import {AngularPluginBase} from "tim/plugin/angular-plugin-base.directive";
 import {DialogModule} from "tim/ui/angulardialog/dialog.module";
 import {PurifyModule} from "tim/util/purify.module";
@@ -34,13 +35,10 @@ import type {DirectoryPickerRestrictions} from "tim/folder/directory-picker.comp
 import {DirectoryPickerComponent} from "tim/folder/directory-picker.component";
 import {itemglobals} from "tim/util/globals";
 import {TooltipModule} from "ngx-bootstrap/tooltip";
-import type {
-    ChatModel,
-    ControlPanelSettings,
-    TokenLimitForUser,
-    UserKey,
-} from "./controlpanel";
+import type {ChatModel, ControlPanelSettings, UserKey} from "./controlpanel";
 import {ChatControlPanelComponent} from "./controlpanel";
+import type {TokenLimitForUser} from "./userpolicy";
+import type {UserData} from "./usercontrol";
 
 const PluginMarkupFields = t.intersection([
     t.partial({
@@ -99,8 +97,6 @@ export interface ControlPanelData extends ControlPanelSettings {
     allowedItemPaths?: string[];
 }
 
-// Huom: <tim-dialog-frame ei sisällä markupError attribuuttia
-// joten täytyy joka tehdä oma versio tai muuten markupErroria ei nähdä
 @Component({
     selector: "chattim-runner",
     encapsulation: ViewEncapsulation.None,
@@ -172,12 +168,26 @@ export interface ControlPanelData extends ControlPanelSettings {
                     </div>
 
                     <div class="control-panel-container">
-                        <chattim-control-panel
+                        
+                        <ng-container *ngIf="!isTeacher">
+                            <div class="settings-row">
+                                <p>Tämä näkymä on opiskelijalle</p>
+                                <span>Käytetyt tokenit: <strong>TODO!</strong></span>
+                            </div>
+                            <div class="settings-row">
+                                <button class="btn btn-warning"
+                                        (click)="clearConversationClicked()">
+                                    Clear conversation
+                                </button>
+                            </div>
+                        </ng-container>
+                            
+                        <chattim-control-panel *ngIf="isTeacher"
                             [isTeacher]="isTeacher"
                             (saveSettingsClick)="onSaveSettings($event)"
-                            (clearConversationClick)="onClearConversation()"
                             (panelToggled)="onControlPanelToggle($event)"
                             (fetchModelsClick)="onFetchModels($event)"
+                            (fetchControlPanelData)="getControlPanelData()"
                             [selectedModel]="selectedModel"
                             [setModelTemperature]="modelTemperature"
                             [useStreaming]="useStreaming"
@@ -196,6 +206,11 @@ export interface ControlPanelData extends ControlPanelSettings {
                             [availableEmbedderProviders]="availableEmbedderProviders"
                             [selectedEmbedderProvider]="selectedEmbedderProvider"
                             [availableModes]="availableModes"
+                            [tokenLimitAllUsers]="globalPolicy"
+                            [userUsageAndPolicyData]="userUsageAndPolicyData"
+                            (userDataRequest)="getUserData()"
+                            (policySaveRequest)="handleUserPolicySave($event)" 
+                            [policySaveResponse]="policySaveResponse" 
                             [tokenLimitAllUsers]="globalPolicy"
                             [selectedPublicKey]="selectedPublicKey"
                             [availablePublicKeys]="availablePublicKeys">
@@ -276,6 +291,12 @@ export class ChatTIMComponent
     selectedEmbedderProvider = "";
     selectedModel = "";
 
+    policySaveResponse = {
+        result: "",
+        error: "",
+    };
+    userUsageAndPolicyData: undefined | UserData[] = [];
+
     maxTokens: number | null = 1000;
     controlpanelError?: string;
     controlpanelResponse?: string;
@@ -321,8 +342,8 @@ export class ChatTIMComponent
          early crashes thus we call in ngAfterViewInit */
         this.initDocId();
         await this.initScrollContainer();
-        await this.getControlPanelData();
         await this.fetchRights();
+        console.log(this.isTeacher);
     }
     async fetchRights(): Promise<void> {
         if (this.document_id <= 0) {
@@ -972,10 +993,63 @@ export class ChatTIMComponent
             this.controlpanelError = response.result.error.error;
         }
     }
+
+    async handleUserPolicySave(userData: UserData) {
+        this.isRunning = true;
+        const save_request = {
+            document_id: this.document_id,
+            user_data: userData,
+        };
+        const response = await this.httpPost<{
+            result: string;
+            error: string;
+        }>(this.route("saveUserPolicy"), save_request);
+        this.isRunning = false;
+        if (response.ok) {
+            const data = response.result;
+            this.policySaveResponse = {
+                error: data.error,
+                result: data.result,
+            };
+        } else {
+            this.controlpanelError = response.result.error.error;
+        }
+    }
+
+    async getUserData() {
+        this.isRunning = true;
+        const data_request = {
+            document_id: this.document_id,
+        };
+        const response = await this.httpPost<{
+            result: UserData[];
+            error?: string;
+        }>(this.route("getUserPolicyData"), data_request);
+        this.isRunning = false;
+        if (response.ok) {
+            const data = response.result;
+            this.controlpanelError = data.error;
+            this.userUsageAndPolicyData = data.result;
+        } else {
+            this.controlpanelError = response.result.error.error;
+        }
+    }
+
+    async clearConversationClicked() {
+        if (
+            !(await showConfirm(
+                "Clear conversation?",
+                "Are you sure you want to clear the conversation?"
+            ))
+        ) {
+            return;
+        }
+        await this.onClearConversation();
+    }
 }
 
 @NgModule({
-    declarations: [ChatTIMComponent, ChatControlPanelComponent],
+    declarations: [ChatTIMComponent],
     imports: [
         CommonModule,
         HttpClientModule,
@@ -983,6 +1057,7 @@ export class ChatTIMComponent
         PurifyModule,
         DialogModule,
         FormsModule,
+        ChatControlPanelComponent,
         DirectoryPickerComponent,
         TooltipModule,
     ],

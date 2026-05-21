@@ -7,8 +7,10 @@ from unicodedata import normalize, category
 
 from timApp.modules.chattim.dbmodels import LLMRule
 from timApp.plugin.containerLink import call_plugin_resource
+from timApp.modules.chattim.dbmodels import LLMRule, Policy
 from timApp.util.flask.cache import cache
 from timApp.timdb.dbaccess import get_files_path
+from timApp.user.user import User, UserInfo
 from timApp.auth.get_user_rights_for_item import UserItemRights
 from timApp.item.item import Item
 from timApp.document.docinfo import DocInfo
@@ -29,7 +31,6 @@ from timApp.modules.chattim.rag import (
     Message,
     Iterable,
 )
-from timApp.user.user import User
 from typing import Generic, TypeVar, TypedDict, cast
 
 from timApp.modules.chattim.model import (
@@ -53,13 +54,22 @@ class ChatModel(TypedDict):
 
 
 @dataclass()
-class Policy:
+class GenericPolicy:
     token_cap_enabled: bool = False
     token_cap: int | None = 0
     time_window_enabled: bool = False
     window_unit: str = "h"
-    window_value: int | None = 0
-    token_cap_for_window: int | None = 100
+    window_value: int | None = None
+    token_cap_for_window: int | None = None
+
+
+@dataclass()
+class UserData:
+    username: str
+    user_id: int
+    tokens_spent: int
+    hasPolicy: bool
+    policy: GenericPolicy
 
 
 @dataclass()
@@ -76,7 +86,7 @@ class InstanceAttributes:
     include_citations: bool = False
     similarity_threshold: float | None = None
     top_k_chunks: int = 3
-    global_policy: Policy = field(default_factory=Policy)
+    global_policy: GenericPolicy = field(default_factory=GenericPolicy)
     embedder_provider: str = "dummy"
 
     @classmethod
@@ -509,7 +519,7 @@ class PluginCore:
         max_tokens: int | None = instance_settings.max_tokens
         tim_paths: list[str] = instance_settings.tim_paths
         system_prompt_path: str = instance_settings.system_prompt_path.strip()
-        global_policy: Policy = instance_settings.global_policy
+        global_policy: GenericPolicy = instance_settings.global_policy
         use_streaming: bool = instance_settings.use_streaming
         temperature: float | None = instance_settings.model_temperature
         include_citations: bool = instance_settings.include_citations
@@ -728,6 +738,125 @@ class PluginCore:
     def get_supported_providers() -> list[Provider]:
         """Get the list of supported API providers."""
         return list(PROVIDERS.keys())
+
+    def get_user_data(self, caller_id, document_id) -> list[UserData]:
+        """
+        Returns set policy and token usage for each user that has interacted with the plugin.
+        For users that have no policy set, a default GenericPolicy is sent back.
+        Owner's data is not sent.
+        :param caller_id: The plugin owner that is using the component
+        :param document_id: The document id where instance is located
+        :return: list of UserData objects
+        """
+
+        def convert_sqlpolicy_to_userpolicy(sql_policy: Policy) -> GenericPolicy:
+            max_tokens_per_user = sql_policy.max_tokens_per_user
+            time_window_tokens = sql_policy.time_window_tokens
+            time_window_value = sql_policy.token_time_window_num
+            token_cap_enabled = True
+            time_window_enabled = True
+
+            if max_tokens_per_user == -1:
+                token_cap_enabled = False
+                max_tokens_per_user = None
+
+            if time_window_tokens == -1:
+                time_window_enabled = False
+                time_window_tokens = None
+
+            return GenericPolicy(
+                token_cap_enabled=token_cap_enabled,
+                token_cap=max_tokens_per_user,
+                time_window_enabled=time_window_enabled,
+                window_unit=sql_policy.token_time_window_type,
+                window_value=time_window_value,
+                token_cap_for_window=time_window_tokens,
+            )
+
+        llm_rule = self.tim_database.get_llm_rule(document_id)
+        if not llm_rule:
+            raise LookupError("Instance has not been created yet")
+
+        # TODO: unify permissions checking to account for teachers too
+        owner = llm_rule.owner
+        if owner != caller_id:  # this should never happen since we have UI-limitations
+            raise PermissionError("You have no access to this resource")
+
+        user_data: list[UserData] = []
+        usages = self.tim_database.get_usages(llm_rule)
+        for usage in usages:
+            user_id = usage.user
+            user = User.get_by_id(user_id)
+            username = user.name
+
+            if user_id == caller_id:
+                continue
+
+            user_policy: GenericPolicy
+            user_policy_sql = self.tim_database.get_user_policy(llm_rule, user_id)
+
+            if user_policy_sql:
+                user_policy = convert_sqlpolicy_to_userpolicy(user_policy_sql)
+            else:
+                user_policy = GenericPolicy()
+
+            policy_enabled: bool = (
+                user_policy.time_window_enabled or user_policy.token_cap_enabled
+            )
+
+            data = UserData(
+                username=username,
+                user_id=user_id,
+                tokens_spent=usage.used_tokens,
+                hasPolicy=policy_enabled,
+                policy=user_policy,
+            )
+
+            user_data.append(data)
+
+        return user_data
+
+    def save_user_policy(self, caller_id, document_id, user_data) -> str:
+        """
+        Saves given user policy for the given user
+        :param caller_id: the user who is saving
+        :param document_id: document id for the plugin associated with policy
+        :param user_data: user data that policy applies for
+        :return:
+        """
+
+        llm_rule = self.tim_database.get_llm_rule(document_id)
+        if not llm_rule:
+            raise LookupError("Instance has not been created yet")
+
+        owner = llm_rule.owner
+        if owner != caller_id:  # this should never happen since we have UI-limitations
+            raise PermissionError("You have no access to this resource")
+
+        user_id = user_data.user_id
+        if not User.get_by_id(user_id):
+            raise LookupError("This user no longer exists")
+
+        policy: GenericPolicy = user_data.policy
+        if (valid := self._validate_policy(policy)) is not None:
+            raise ValueError(valid)
+
+        if not policy.token_cap_enabled:
+            policy.token_cap = -1
+
+        if not policy.time_window_enabled:
+            policy.token_cap_for_window = -1
+
+        self.tim_database.set_user_policy(
+            user=user_id,
+            llm_rule=llm_rule,
+            token_time_window_type=policy.window_unit,
+            token_time_window_num=policy.window_value,
+            time_window_tokens=policy.token_cap_for_window,
+            max_tokens_per_user=policy.token_cap,
+        )
+
+        return "Save successful"
 
     @staticmethod
     def _get_supported_models(provider: Provider, api_key: str) -> list[str]:
@@ -1034,7 +1163,7 @@ class PluginCore:
         self.tim_database.remove_api_key_group(owner_id, public_key, group_id)
 
     @staticmethod
-    def _validate_policy(policy: Policy) -> None | str:
+    def _validate_policy(policy: GenericPolicy) -> None | str:
         """Validates policy. None is returned if everything is ok otherwise error string is returned"""
         valid_time_types = ["d", "h", "min"]
         cap_enabled = policy.token_cap_enabled
@@ -1045,16 +1174,16 @@ class PluginCore:
         time_value = policy.window_value
         window_token_cap = policy.token_cap_for_window
 
-        if cap_enabled and token_cap and token_cap < 0:
+        if cap_enabled and (token_cap is None or token_cap < 0):
             return f"Given token cap [{token_cap}] cannot be negative"
 
-        if window_enabled and time_value and time_value <= 0:
+        if window_enabled and (time_value is None or time_value <= 0):
             return f"Given time value [{time_value}] should be greater than 0"
 
         if window_enabled and (time_type not in valid_time_types):
             return f"Given time type [{time_type}] is not valid"
 
-        if window_enabled and window_token_cap and window_token_cap <= 0:
+        if window_enabled and (window_token_cap is None or window_token_cap <= 0):
             return f"Given time cap [{window_token_cap}] should be greater than 0"
 
         return None
