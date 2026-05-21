@@ -202,8 +202,6 @@ class PluginCore:
         else:
             mode: RagMode = RagMode.RETRIEVE
 
-        print("mode")
-        print(mode)
         # TODO: No need for this attribute if we have character limit for input? Maybe keep as is for an option
         max_tokens_for_req = 99999
         # TODO: get these from the LLMRule table
