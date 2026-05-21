@@ -61,6 +61,10 @@
   padding-top: 4px;
 }
 
+.previewDiv .chattim-dialog-frame {
+  visibility: hidden;
+}
+
 .chat-row {
   display: flex;
   flex-direction: row;
