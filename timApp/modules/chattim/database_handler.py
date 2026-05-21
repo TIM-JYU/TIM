@@ -232,7 +232,6 @@ class TimDatabase:
         include_citations: bool,
         similarity_threshold: float | None,
         top_k_chunks: int,
-        teachers: list[int],
         current_mode: str,
         total_tokens_spent: int,
         indexed_document_ids: list[int],
@@ -252,7 +251,6 @@ class TimDatabase:
         :param include_citations: Whether to include citations.
         :param similarity_threshold: The similarity threshold for context inclusion.
         :param top_k_chunks: The number of top chunks to include.
-        :param teachers: The ids of the teachers allowed to use the plugin instance.
         :param current_mode: Mode of the plugin instance: summarizing, creative or balanced.
         :param total_tokens_spent: The total number of tokens spent.
         :param indexed_document_ids:
@@ -274,7 +272,6 @@ class TimDatabase:
                 include_citations=include_citations,
                 similarity_threshold=similarity_threshold,
                 top_k_chunks=top_k_chunks,
-                teachers=teachers,
                 current_mode=current_mode,
                 total_tokens_spent=total_tokens_spent,
                 indexed_document_ids=indexed_document_ids,
@@ -285,18 +282,17 @@ class TimDatabase:
             db.session.add(rule)
         else:
             rule.public_key = public_key
-            rule.teachers = teachers
-            rule.current_mode = current_mode
-            rule.total_tokens_spent = total_tokens_spent
-            rule.indexed_document_ids = indexed_document_ids
-            rule.agent = agent
-            rule.conv_time_window = conv_time_window
-            rule.system_prompt_path = system_prompt_path
             rule.use_streaming = use_streaming
             rule.temperature = temperature
             rule.include_citations = include_citations
             rule.similarity_threshold = similarity_threshold
             rule.top_k_chunks = top_k_chunks
+            rule.current_mode = current_mode
+            rule.total_tokens_spent = total_tokens_spent
+            rule.indexed_document_ids = indexed_document_ids
+            rule.system_prompt_path = system_prompt_path
+            rule.agent = agent
+            rule.conv_time_window = conv_time_window
         rule.policy.extend(policy)
         rule.usage.extend(usage)
         db.session.commit()
@@ -449,7 +445,6 @@ class TimDatabase:
         time_window_tokens: int | None,
         max_tokens_per_user: int | None,
         token_pool: int | None,
-        policy_type: str,  # global or user
     ) -> Policy:
         """
         Sets a new policy for the LLM rule. Policy can be a global policy for the whole LLM rule or a student policy
@@ -469,7 +464,6 @@ class TimDatabase:
                 time_window_tokens=time_window_tokens,
                 max_tokens_per_user=max_tokens_per_user,
                 token_pool=token_pool,
-                policy_type=policy_type,
             )
             db.session.add(policy)
         else:
@@ -507,7 +501,6 @@ class TimDatabase:
             time_window_tokens,
             max_tokens_per_user,
             token_pool,
-            "global",
         )
         return policy
 
@@ -532,7 +525,6 @@ class TimDatabase:
             time_window_tokens,
             max_tokens_per_user,
             0,
-            "user",
         )
         return policy
 

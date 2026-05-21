@@ -666,7 +666,6 @@ class PluginCore:
             include_citations=include_citations,
             similarity_threshold=similarity_threshold,
             top_k_chunks=top_k_chunks,
-            teachers=[],
             current_mode=llm_mode,
             total_tokens_spent=0,
             indexed_document_ids=document_ids,
@@ -934,7 +933,6 @@ class PluginCore:
 
     def _instance_exists(self, document_id: int) -> bool:
         # TODO: todnäk pitää muistissa tiedetyt instanssi-idt jottei haeta aina tietokannalta turhaan
-        # TODO: korvaa db haulla
         if not self.tim_database.get_llm_rule(document_id):
             return False
         return True
