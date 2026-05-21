@@ -1044,6 +1044,7 @@ export class ChatTIMComponent
         ) {
             return;
         }
+        await this.onClearConversation();
     }
 }
 
