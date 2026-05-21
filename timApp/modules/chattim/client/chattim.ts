@@ -8,7 +8,6 @@ import {
     nullable,
 } from "tim/plugin/attributes";
 import type {AfterViewInit, ApplicationRef, DoBootstrap} from "@angular/core";
-import {Input} from "@angular/core";
 import {ViewChild} from "@angular/core";
 import {
     Component,
@@ -853,8 +852,10 @@ export class ChatTIMComponent
         this.isRunning = false;
         if (response.ok) {
             const data = response.result;
-            this.policySaveResponse.error = data.error;
-            this.policySaveResponse.result = data.result;
+            this.policySaveResponse = {
+                error: data.error,
+                result: data.result,
+            };
         } else {
             this.controlpanelError = response.result.error.error;
         }

@@ -231,7 +231,7 @@ export interface ControlPanelSettings extends Record<string, JsonValue> {
                     </ng-container>
                 </div>
 
-                <!-- Open dialog to view user token usage and policy modif -->
+                <!-- Open dialog to view user token usage and policy modifications -->
                 <div class="settings-row"  >
                     <button class="btn btn-link settings-section-btn"
                             (click)="userControlOpen = !userControlOpen">
@@ -330,10 +330,6 @@ export class ChatControlPanelComponent {
     togglePanel() {
         this.settingsOpen = !this.settingsOpen;
         this.panelToggled.emit(this.settingsOpen);
-    }
-
-    openUsageViewClicked() {
-        this.userControlOpen = !this.userControlOpen;
     }
 
     saveSettingsClicked() {

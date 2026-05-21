@@ -92,8 +92,10 @@ export interface UserData extends Record<string, JsonValue> {
                     Save
                 </button>
             </div>
-            <div class="error" *ngIf="policySaveResponse.error" [innerHTML]="policySaveResponse.error | purify"></div>
-            <div *ngIf="policySaveResponse.result" [innerHTML]="policySaveResponse.result | purify"></div>
+            <div class="error" *ngIf="this.localPolicySaveResponse.error"
+                 [innerHTML]="this.localPolicySaveResponse.error | purify"></div>
+            <div *ngIf="this.localPolicySaveResponse.result"
+                 [innerHTML]="this.localPolicySaveResponse.result | purify"></div>
         </div>
 
     `,
@@ -117,13 +119,22 @@ export class UserControlComponent {
     private reverseSort: boolean = false;
     userData: undefined | UserData[];
 
-    @Input() policySaveResponse!: {
-        result: string;
-        error: string;
+    localPolicySaveResponse: {result: string; error: string} = {
+        result: "",
+        error: "",
     };
+
     @Output() policySaveRequest = new EventEmitter<UserData>();
     @Output() userDataRequest = new EventEmitter<void>();
 
+    @Input() set policySaveResponse(v: {result: string; error: string}) {
+        this.localPolicySaveResponse.result = v.result;
+        this.localPolicySaveResponse.error = v.error;
+
+        if (!v.error && this.selectedUser) {
+            this.updatePolicyState();
+        }
+    }
     @Input() set setUserData(value: undefined | UserData[]) {
         this.userData = value;
     }
@@ -141,7 +152,6 @@ export class UserControlComponent {
             this.reverseSort = !this.reverseSort;
         } else {
             this.currentSort = mode;
-
             this.reverseSort = false;
         }
 
@@ -178,6 +188,31 @@ export class UserControlComponent {
 
         this.selectedUser = user;
         this.currentUserLimit = user.policy;
+
+        this.clearMessages();
+    }
+
+    updatePolicyState() {
+        const selectedUser = this.selectedUser;
+
+        if (!selectedUser || !this.userData) {
+            return;
+        }
+
+        const hasPolicy =
+            selectedUser.policy.time_window_enabled ||
+            selectedUser.policy.token_cap_enabled;
+
+        const updatedUser: UserData = {
+            ...selectedUser,
+            hasPolicy,
+        };
+
+        this.selectedUser = updatedUser;
+
+        this.userData = this.userData.map((u) =>
+            u.user_id === selectedUser.user_id ? updatedUser : u
+        );
     }
 
     clickedPolicySave(): void {
@@ -185,5 +220,10 @@ export class UserControlComponent {
             return;
         }
         this.policySaveRequest.emit(this.selectedUser);
+    }
+
+    clearMessages(): void {
+        this.localPolicySaveResponse.error = "";
+        this.localPolicySaveResponse.result = "";
     }
 }

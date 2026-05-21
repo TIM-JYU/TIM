@@ -142,7 +142,9 @@
   width: 100%;
   box-sizing: border-box;
   gap: 12px;
-  padding: 10px 14px;
+  padding: 6px 14px;
+  line-height: 1.2;
+  font-size: 13px;
 }
 
 .header-row {
@@ -166,11 +168,11 @@
 }
 
 .user-row:hover {
-  background: black;
+  background: #94b0d1;
 }
 
 .user-row.selected {
-  background: green;
+  background: #596d87;
 }
 
 .user-row div {

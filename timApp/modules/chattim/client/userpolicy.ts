@@ -94,12 +94,23 @@ export class UserPolicyComponent {
 
     @Output() userLimitsChange = new EventEmitter<TokenLimitForUser>();
 
-    isValidNonNegativeInt(value: number | null): boolean {
-        return value !== null && Number.isInteger(value) && value >= 0;
+    isValidNonNegativeInt(
+        value: number | null,
+        biggerThanZero: boolean = false
+    ): boolean {
+        const result = value !== null && Number.isInteger(value);
+        if (biggerThanZero) {
+            return result && value > 0;
+        }
+        return result && value >= 0;
     }
 
-    isValidNumberInput(enabled: boolean, value: number | null): boolean {
-        return enabled && !this.isValidNonNegativeInt(value);
+    isValidNumberInput(
+        enabled: boolean,
+        value: number | null,
+        biggerThanZero: boolean = false
+    ): boolean {
+        return enabled && !this.isValidNonNegativeInt(value, biggerThanZero);
     }
 
     get isInvalidTokenCap(): boolean {
@@ -112,14 +123,16 @@ export class UserPolicyComponent {
     get isInvalidWindowTokens(): boolean {
         return this.isValidNumberInput(
             this.userLimits.time_window_enabled,
-            this.userLimits.token_cap_for_window
+            this.userLimits.token_cap_for_window,
+            true
         );
     }
 
     get isInvalidWindowTime(): boolean {
         return this.isValidNumberInput(
             this.userLimits.time_window_enabled,
-            this.userLimits.window_value
+            this.userLimits.window_value,
+            true
         );
     }
 

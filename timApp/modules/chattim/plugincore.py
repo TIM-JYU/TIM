@@ -627,7 +627,6 @@ class PluginCore:
 
             user_policy: GenericPolicy
             user_policy_sql = self.tim_database.get_user_policy(llm_rule, user_id)
-            print(user_id, user_policy_sql.max_tokens_per_user)
 
             if user_policy_sql:
                 user_policy = convert_sqlpolicy_to_userpolicy(user_policy_sql)
@@ -679,8 +678,6 @@ class PluginCore:
 
         if not policy.time_window_enabled:
             policy.token_cap_for_window = -1
-
-        print(policy)
 
         self.tim_database.set_user_policy(
             user=user_id,
