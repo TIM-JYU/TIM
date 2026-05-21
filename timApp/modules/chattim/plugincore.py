@@ -1,6 +1,8 @@
 import os
 import uuid
 from dataclasses import dataclass, field
+
+from rapidfuzz.distance.DamerauLevenshtein_py import similarity
 from unicodedata import normalize, category
 
 from timApp.modules.chattim.dbmodels import LLMRule
@@ -191,31 +193,37 @@ class PluginCore:
         document_id_str = str(document_id)
         caller_id_str = str(caller_id)
 
-        llmrule = self.tim_database.get_llm_rule(document_id)
+        rule = self.tim_database.get_llm_rule(document_id)
 
         # TODO: remember to fetch with timestamps when the time comes
         chat_history = self.get_history(caller_id_str, document_id_str)
 
         # TODO: fetch mode for instance
-        if llmrule.current_mode == "Creative":
+        if rule.current_mode == "Creative":
             mode: RagMode = RagMode.CREATIVE
         else:
             mode: RagMode = RagMode.RETRIEVE
 
         # TODO: No need for this attribute if we have character limit for input? Maybe keep as is for an option
         max_tokens_for_req = 99999
-        # TODO: get these from the LLMRule table
+
         temperature: float | None = 0.2
-        if llmrule.temperature is not None:
-            temperature = float(llmrule.temperature)
-        similarity_threshold: float | None = None
+        if rule.temperature is not None:
+            temperature = rule.temperature
+
+        similarity_threshold: float | None = rule.similarity_threshold
+
         top_k_chunks: int = 3
-        use_streaming: bool = llmrule.use_streaming
-        # TODO: replace with this
-        # include_citations: bool = (
-        #     rule.include_citations and rule.current_mode == RagMode.RETRIEVE
-        # )
-        include_citations: bool = mode == RagMode.RETRIEVE
+        if rule.top_k_chunks is not None:
+            top_k_chunks = rule.top_k_chunks
+
+        use_streaming: bool = rule.use_streaming
+
+        include_citations: bool = (
+            rule.include_citations and rule.current_mode == RagMode.RETRIEVE
+        )
+
+        # include_citations: bool = mode == RagMode.RETRIEVE
 
         # Validate that the user has the correct generate mode
         if stream != use_streaming:
