@@ -161,15 +161,18 @@ class Rag:
         )
         content: str = message_data.user_prompt
         history: list[Message] = message_data.chat_history
-        context: str = message_data.context
-        context_msg: Message = Message(
-            role="user",
-            content=f"<CONTEXT> {context} </CONTEXT>",
-        )
         user_msg: Message = Message(role="user", content=content)
         prompt: list[Message] = system_prompt
         prompt.extend(history)
-        prompt.append(context_msg)
+
+        if mode == RagMode.RETRIEVE:
+            context: str = message_data.context
+            context_msg: Message = Message(
+                role="user",
+                content=f"<CONTEXT> {context} </CONTEXT>",
+            )
+            prompt.append(context_msg)
+
         prompt.append(user_msg)
         return prompt
 
