@@ -66,7 +66,7 @@ class RagMode(Enum):
 class MessageData:
     user_prompt: str
     system_prompt: str | None
-    context: str
+    context: str | None
     chat_history: list[Message]
     mode: RagMode
     max_tokens: int | None
@@ -135,7 +135,7 @@ class Rag:
         prompt.extend(history)
 
         if mode == RagMode.RETRIEVE:
-            context: str = message_data.context
+            context: str = message_data.context or ""
             context_msg: Message = Message(
                 role="user",
                 content=f"<CONTEXT> {context} </CONTEXT>",

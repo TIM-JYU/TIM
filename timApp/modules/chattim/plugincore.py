@@ -142,7 +142,7 @@ class PreparedChatRequest:
     document_id: str
     user_input: str
     response: Iterable[ModelResponse] | ModelResponse
-    citations: list[str]
+    citations: list[str] | None
     include_citations: bool = False
 
 
@@ -155,7 +155,6 @@ class PluginCore:
     history_manager: ConversationManager
     tim_database: TimDatabase = TimDatabase()
     indexer: Indexer
-    list_of_instance_ids: list[int] = []  # TODO: poista kun db:ssa rulet
     # TODO: a plugin instance specific variable? In global policy?
     max_input_len: int = 1024
 
@@ -237,14 +236,26 @@ class PluginCore:
         if stream != use_streaming:
             return Result(error="Bad request. Mismatching generation mode.")
 
-        response = self.indexer.get_context(
-            prompt=validated_input,
-            identifier=document_id,
-            k=top_k_chunks,
-            threshold=similarity_threshold,
-        )
-        context = response.context
-        citations = self._get_citations(response.used_context)
+        api_key = self.get_api_key(str(rule.public_key))
+        model_id = rule.agent
+
+        context: str | None = None
+        citations: list[str] | None = None
+
+        if rag_mode == RagMode.RETRIEVE:
+            if api_key[0] == "anthropic":
+                # TODO: implement embedding model picking
+                return Result(error="Can't use summarizing mode on Anthropic API keys.")
+
+            response = self.indexer.get_context(
+                prompt=validated_input,
+                api_key=api_key,
+                k=top_k_chunks,
+                threshold=similarity_threshold,
+            )
+            context = response.context
+            citations = self._get_citations(response.used_context)
+
         system_prompt = self.get_system_prompt(rule.system_prompt_path)
 
         msg_data = MessageData(
@@ -256,14 +267,11 @@ class PluginCore:
             max_tokens=max_tokens_for_req,
         )
 
-        api_key = self.get_api_key(rule.public_key)
-        model_id = rule.agent
-
         try:
             answer = self.rag.answer(
                 msg_data,
                 api_key=api_key,
-                model_id=model_id,
+                model_id=str(model_id),
                 stream=stream,
                 temperature=temperature,
             )
@@ -441,15 +449,13 @@ class PluginCore:
             return Result(None, f"Document [{document_id}] does not exist")
 
         if not self._owns_document(user_id, document_id):
+            # TODO: should return only the values that are needed for the client
             return Result(None, "Insufficient rights")
 
         if not self._instance_exists(document_id):
             # TODO: get settings from db
             pass
 
-        # If the teacher has not yet saved the settings after setting an API-key alias,
-        # the list should be empty.
-        # Or should we just disable the model selection in the UI until an API-key alias has been set?
         plugin_data = self.tim_database.get_llm_rule(document_id)
         user_keys = self.tim_database.get_user_api_keys(user_id)
         shared_keys = self.tim_database.get_shared_api_keys(user_id)
@@ -479,22 +485,27 @@ class PluginCore:
                 )
             )
 
-        api_key = ""
-        provider = "openai"
-        selected_model = str(plugin_data.agent) if plugin_data is not None else None
+        provider: Provider | None = None
+        api_key: str = ""
 
-        if plugin_data is not None:
-            for key in user_keys:
-                if key.public_key == plugin_data.public_key:
-                    api_key = key.api_key
-                    provider = key.provider
+        api_key_row = self.tim_database.get_api_key_by_alias(
+            str(plugin_data.public_key)
+        )
+        if api_key_row is not None:
+            provider = self._parse_provider(str(api_key_row.provider))
+            api_key = str(api_key_row.api_key)
+
+        selected_model = str(plugin_data.agent)
+        supported_models = (
+            self._get_supported_chat_models(provider, api_key) if provider else []
+        )
 
         data = InstanceSettingsData(
             availableModes=RagMode.supported_modes(),
-            availableModels=self._get_supported_chat_models(provider, api_key),
+            availableModels=supported_models,
             availableKeys=available_keys,
             availableEmbedderProviders=self._get_available_embedder_providers(user_id),
-            use_streaming=True,  # TODO: from db
+            use_streaming=bool(plugin_data.use_streaming),
             selectedModel=selected_model,
             allowedItemPaths=None,  # TODO: from the API key restrictions?
         )
@@ -553,16 +564,6 @@ class PluginCore:
             return Result(None, f"Invalid provider [{provider_str}] given")
         provider = provider_str
 
-        supported_models = PluginCore._get_supported_models(provider, api_key)
-        provider_changed = old_provider is not None and old_provider != provider_str
-        if provider_changed:
-            if provider == "openai":
-                model_id = "gpt-4.1-mini"
-            else:
-                model_id = supported_models[0] if supported_models else model_id
-        elif model_id not in supported_models:
-            return Result(None, f"Given model [{model_id}] not supported")
-
         paths_for_indexing = tim_paths
         if not paths_for_indexing and rag_mode == RagMode.RETRIEVE:
             return Result(None, "Give at least one path when using summarizing mode")
@@ -601,51 +602,25 @@ class PluginCore:
         if top_k_chunks < 1 or top_k_chunks > 20:
             return Result(None, "Top-K must be between 1 and 20")
 
-        # TODO: update system prompt path in the db row
-
         if (valid := self._validate_policy(global_policy)) is not None:
             return Result(error=valid)
 
-        # TODO: if instance exists -> update OTHERIWISE create
-
-        kwargs_model = dict(provider=provider, model_id=model_id, api_key=api_key)
+        supported_models = PluginCore._get_supported_models(provider, api_key)
+        provider_changed = old_provider is not None and old_provider != provider_str
 
         try:
-            GenericApiClient.check_access(**kwargs_model)
-            # TODO: add embedder check
+            if provider_changed:
+                GenericApiClient.check_access(
+                    provider=provider, model_id=model_id, api_key=api_key
+                )
+            tokens_used, failed_embeddings = self.indexer.create_embeddings(
+                api_key=(provider_str, api_key),
+                documents=docs,
+            )
         except ValueError as e:
             return Result(None, str(e))
 
-        # TODO: api key from db, change create_embedder to take api key as parameter
-        llm_provider = kwargs_model["provider"]
-        available_keys: list[APIKey] = self.get_user_api_keys(owner_id=caller_id)
-
-        for key in available_keys:
-            if key[1].lower() == embedder_provider.lower():
-                emb_model = create_embedder(
-                    embedder_provider=embedder_provider, api_key=key[2]
-                )
-                break
-            # return Result(None, f"Failed to create embedder, No available API key")
-
-        self.indexer.add_embedder(document_id, emb_model)
-
-        tokens_used, failed_embeddings = self.indexer.create_embeddings(
-            identifier=document_id, documents=docs
-        )
-        # probably better ways to do this
-
-        if failed_embeddings > 0:
-            return Result(
-                None, f"Failed to create embeddings for {failed_embeddings} documents."
-            )
         print(f"Tokens used for indexing: {tokens_used}")
-        self.list_of_instance_ids.append(
-            document_id
-        )  # TODO: for testing purposes remove when db ok or cache
-
-        # TODO: hae aliasta vastaava API-avain
-        # TODO: tarkista onko aliasta vastaava API-avain olemassa
 
         rule = self.tim_database.set_llm_rule(
             document_id=document_id,
@@ -675,11 +650,15 @@ class PluginCore:
             max_tokens,
         )
 
+        error: str | None = None
+        if failed_embeddings > 0:
+            error = f"Failed to create embeddings for {failed_embeddings} documents."
+
         data: SaveInstanceResult = {
             "supported_models": supported_models,
             "model_id": model_id,
         }
-        return Result(value=data, error=None)
+        return Result(value=data, error=error)
 
     def delete_instance(self, owner_id: int, document_id: int) -> None:
         self.tim_database.delete_llm_rule(owner_id, document_id)
@@ -709,7 +688,6 @@ class PluginCore:
         max_count: int = 128,
     ) -> list[dict]:
         """Retrieve the wanted message window to the UI."""
-        # TODO: get the LLMRule from cache
         rule = self.tim_database.get_llm_rule(document_id)
         if not rule:
             return []
