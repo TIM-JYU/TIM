@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from flask import request, Response, stream_with_context
-from typing import Any, TypedDict, Callable
+from typing import Any, TypedDict, Callable, Iterator, cast, Literal
 from webargs.flaskparser import use_args
 import json
 from flask_babel import gettext
@@ -42,6 +42,9 @@ plugincore = PluginCore()
 @dataclass
 class ChatTimMarkupModel(GenericMarkupModel):
     welcomeText: str = "Welcome to use TIM's helper chatbot!"
+    apiAlias: str = ""
+    defaultWindowSize: Literal["sm", "md", "lg", "xs"] = "md"
+    blockContent: str = ""
 
 
 # TODO: make proper dataclasses
@@ -77,13 +80,18 @@ def get_rights(params: GetRightsParams) -> dict:
 
 class ChatTimAskResponse(TypedDict, total=False):
     answer: str | None
-    usage: int | None
+    citations: list[str] | None
     error: str | None
 
 
 @dataclass
 class ChatTimAskParams(GenericParams):
     input: str
+
+
+@dataclass
+class GetModelsParams:
+    public_key: str
 
 
 @dataclass
@@ -120,6 +128,11 @@ class ChatTimHtmlModel(
         return "chattim-runner"
 
 
+class ChatTimAnswerWeb(PluginAnswerWeb, total=False):
+    availableModels: list[dict[str, str]]
+    selectedModel: str
+
+
 # Leave "welcomeText" empty to use default localized welcome text
 def reqs() -> PluginReqs:
     templates = [
@@ -127,6 +140,9 @@ def reqs() -> PluginReqs:
 ``` {plugin="chattim" #taskidhere}
 header: ChatTIM
 welcomeText: ""  
+apiAlias: ""
+defaultWindowSize: "md" # [sm, md, lg, xs]
+blockContent: ""
 ```
 """,
     ]
@@ -147,10 +163,10 @@ welcomeText: ""
             ],
         },
     ]
-    result: PluginReqs = {
-        "js": ["js/build/chattim.js"],
-        "multihtml": True,
-    }
+    result: PluginReqs = PluginReqs(
+        js=["js/build/chattim.js"],
+        multihtml=True,
+    )
 
     result["editor_tabs"] = editor_tabs
     return result
@@ -169,7 +185,7 @@ def register_route(
     app: Flask | Blueprint,
     method: str,
     route: str,
-    route_model: type | tuple[type] | None,
+    route_model: type | None,
     route_handler: Callable[..., Any],
 ) -> None:
     def to_response(r: Any) -> Response:
@@ -181,14 +197,14 @@ def register_route(
     if route_model is None:
 
         @app.route(f"/{route}", methods=[method], endpoint=route)
-        def define() -> Response:
+        def handler() -> Response:
             return to_response(route_handler())
 
         return
 
     @app.route(f"/{route}", methods=[method], endpoint=route)
     @use_args(class_schema(route_model)(), locations=("json",))
-    def define(m: Any) -> Response:
+    def handler_args(m: Any) -> Response:
         return to_response(route_handler(m))
 
 
@@ -198,12 +214,13 @@ def ask_route(params: ChatTimAskParams) -> ChatTimAskResponse:
     session_user_id = get_current_user_id()
 
     resp = plugincore.chat_request(session_user_id, document_id, user_input)
-
-    response = ChatTimAskResponse(
-        answer=resp.value,
-        error=resp.error,
-    )
-    return response
+    if resp.ok():
+        message, context = resp.value
+        return ChatTimAskResponse(
+            answer=message,
+            citations=context,
+        )
+    return ChatTimAskResponse(error=resp.error)
 
 
 def ask_stream_route(params: ChatTimAskParams) -> Response:
@@ -212,26 +229,28 @@ def ask_stream_route(params: ChatTimAskParams) -> Response:
 
     session_user_id = get_current_user_id()
 
-    def generate():
+    def generate() -> Iterator[str]:
         resp = plugincore.chat_request_stream(session_user_id, document_id, user_input)
         if not resp.ok() or not resp.value:
             yield to_ndjson_str(ChatTimAskResponse(error=resp.error))
             return
 
+        citations: list[str] | None = None
+
         try:
-            for chunk in resp.value:
-                if chunk.delta:
-                    yield to_ndjson_str(ChatTimAskResponse(answer=chunk.delta))
-                if chunk.usage:
-                    yield to_ndjson_str(
-                        ChatTimAskResponse(usage=chunk.usage.total_tokens)
-                    )
+            stream, context = resp.value
+            citations = context
+            for chunk in stream:
+                yield to_ndjson_str(ChatTimAskResponse(answer=chunk))
         except ModelError as e:
-            yield to_ndjson_str(ChatTimAskResponse(error=e.text()))
+            error = f"{e.text()} {str(e.cause)}"
+            yield to_ndjson_str(ChatTimAskResponse(error=error))
             return
         except Exception as e:
             yield to_ndjson_str(ChatTimAskResponse(error=str(e)))
             return
+        finally:
+            yield to_ndjson_str(ChatTimAskResponse(citations=citations))
 
     return Response(
         stream_with_context(generate()),
@@ -245,12 +264,13 @@ def get_settings(params: GenericParams) -> ChatTIMGetSettingsResponse:
     document_id = params.document_id
     session_user_id = get_current_user_id()
 
-    error_or_ok = plugincore.get_plugin_settings(session_user_id, document_id)
-    if not error_or_ok.ok():
-        ret["error"] = error_or_ok.error
+    get_result = plugincore.get_plugin_settings(session_user_id, document_id)
+    if not get_result.ok():
+        ret["error"] = get_result.error
         return ret
 
-    ret["result"] = error_or_ok.value
+    ret["result"] = get_result.value or InstanceAttributes.default()
+
     return ret
 
 
@@ -291,37 +311,43 @@ def save_user_policy(params: SaveUserPolicyParams) -> dict:
 
 
 def save_settings(params: ChatTimSaveSettingsParams) -> PluginAnswerResp:
-    web: PluginAnswerWeb = {}
+    web: ChatTimAnswerWeb = {}
     result: PluginAnswerResp = {"web": web}
 
     panel_data = params.control_panel_settings
     document_id = params.document_id
     session_user_id = get_current_user_id()
 
-    error_or_ok = plugincore.save_instance(session_user_id, document_id, panel_data)
-    if not error_or_ok.ok():
-        web["error"] = error_or_ok.error
+    save_result = plugincore.save_instance(session_user_id, document_id, panel_data)
+    if not save_result.ok():
+        web["error"] = save_result.error or ""
         return result
 
+    data = save_result.value
+
     web["result"] = "Settings saved!"
+    web["availableModels"] = [
+        {"label": m, "value": m} for m in data["supported_models"]
+    ]
+    web["selectedModel"] = data["model_id"]
     return result
 
 
 def get_messages(params: GetMessagesParams) -> dict:
-    user_id = str(get_current_user_id())
-    document_id = str(params.document_id)
+    user_id = get_current_user_id()
+    document_id = params.document_id
     amount = params.amount
     ts_end = params.timestamp_end_ms
-
-    chat_messages = plugincore.get_messages_tw(
-        user_id, document_id, None, ts_end, amount
-    )
-    messages = [
-        {"content": m.content, "role": m.role, "timestamp_ms": m.timestamp}
-        for m in chat_messages
-        if m.role in ("user", "assistant")
-    ]
+    messages = plugincore.get_messages_ui(user_id, document_id, ts_end, amount)
     return {"messages": messages}
+
+
+def clear_messages(params: GenericParams) -> Response:
+    user_id = str(get_current_user_id())
+    document_id = str(params.document_id)
+
+    plugincore.clear_history(user_id, document_id)
+    return ok_response()
 
 
 def save_api_key(params: APIKeyParams) -> Response:
@@ -338,10 +364,10 @@ def save_api_key(params: APIKeyParams) -> Response:
 
     if valid:
         try:
-            key = plugincore.add_api_key(
+            api_key = plugincore.add_api_key(
                 userid, provider, alias, key, group_names=groups
             )
-            return json_response(_api_key_to_dict(key))
+            return json_response(_api_key_to_dict(api_key))
         except Exception as e:
             raise RouteException(description=str(e))
     else:
@@ -381,7 +407,7 @@ def remove_key_group_right(group_id: int) -> Response:
 
 def get_providers() -> list[str]:
     response = plugincore.get_supported_providers()
-    return response
+    return cast(list[str], response)
 
 
 def get_existing_keys() -> list[dict]:
@@ -429,6 +455,16 @@ def _api_key_to_dict(key: APIKey) -> dict:
     }
 
 
+def get_models(params: GetModelsParams) -> dict:
+    user_id = get_current_user_id()
+    try:
+        provider, api_key = plugincore.try_access_api_key(user_id, params.public_key)
+    except Exception as e:
+        return {"error": str(e), "models": []}
+    models = plugincore.get_models(provider, api_key)
+    return {"models": models}
+
+
 register_route(chattim, "post", "ask", ChatTimAskParams, ask_route)
 register_route(chattim, "post", "askStream", ChatTimAskParams, ask_stream_route)
 register_route(chattim, "post", "getSettings", GenericParams, get_settings)
@@ -436,6 +472,7 @@ register_route(
     chattim, "post", "saveSettings", ChatTimSaveSettingsParams, save_settings
 )
 register_route(chattim, "post", "getMessages", GetMessagesParams, get_messages)
+register_route(chattim, "post", "clearMessages", GenericParams, clear_messages)
 register_route(chattim, "post", "validateApi", APIKeyParams, save_api_key)
 register_route(chattim, "get", "getProviders", None, get_providers)
 register_route(chattim, "post", "getUserPolicyData", GenericParams, get_user_data)
@@ -452,3 +489,4 @@ register_route(
 register_route(chattim, "post", "getRights", GetRightsParams, get_rights)
 register_route(chattim, "get", "getExistingKeys", None, get_existing_keys)
 register_route(chattim, "delete", "deleteKey", APIKeyParams, delete_existing_key)
+register_route(chattim, "post", "getModels", GetModelsParams, get_models)

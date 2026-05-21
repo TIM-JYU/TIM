@@ -20,28 +20,13 @@ from timApp.auth.get_user_rights_for_item import (
 @dataclass
 class TimDatabase:
     @staticmethod
-    def identify_user(user_id: int) -> str:
-        """
-        Checks if the given user is a teacher or a student
-        """
-        user = User.get_by_id(user_id)
-        if user:
-            teacher = user.is_sisu_teacher
-            if teacher:
-                return "teacher"
-            student = User.get_home_org_student_id(user)
-            if student:
-                return "student"
-        return "user"  # TODO: better options
-
-    @staticmethod
     def get_tim_document_by_id(doc_id: int) -> Document | None:
         """
         Returns a document corresponding to the given id.
         """
-        doc_entry = docentry.DocEntry.find_all_by_id(doc_id)
+        doc_entry = TimDatabase.get_doc_entry_by_id(doc_id)
         if doc_entry:
-            return doc_entry[0].document  # paragraphs -> .get_paragraphs()
+            return doc_entry.document  # paragraphs -> .get_paragraphs()
         return None
 
     @staticmethod
@@ -68,6 +53,13 @@ class TimDatabase:
         for d in doc_entries if doc_entries else []:
             documents.append(d.document)  # paragraphs -> .get_paragraphs()
         return documents
+
+    @staticmethod
+    def get_doc_entry_by_id(doc_id: int) -> DocEntry | None:
+        entries = docentry.DocEntry.find_all_by_id(doc_id)
+        if not entries:
+            return None
+        return entries[0]
 
     @staticmethod
     def check_rights(user_id: int, doc_id: int) -> UserItemRights | None:
@@ -184,8 +176,8 @@ class TimDatabase:
             folder = cast(Folder, item)
             docs = folder.get_all_documents()
             # TODO: can probably be done more efficiently
-            for doc in docs:
-                if doc.document.doc_id == doc.id:
+            for doc_info in docs:
+                if doc_info.document.doc_id == doc_id:
                     return True
         return False
 
@@ -224,6 +216,9 @@ class TimDatabase:
         public_key: str,
         use_streaming: bool,
         temperature: float | None,
+        include_citations: bool,
+        similarity_threshold: float | None,
+        top_k_chunks: int,
         teachers: list[int],
         current_mode: str,
         total_tokens_spent: int,
@@ -241,6 +236,9 @@ class TimDatabase:
         :param public_key: The alias of the chosen API key for the instance.
         :param use_streaming: Use streaming for model answers.
         :param temperature: The temperature parameter for the model.
+        :param include_citations: Whether to include citations.
+        :param similarity_threshold: The similarity threshold for context inclusion.
+        :param top_k_chunks: The number of top chunks to include.
         :param teachers: The ids of the teachers allowed to use the plugin instance.
         :param current_mode: Mode of the plugin instance: summarizing, creative or balanced.
         :param total_tokens_spent: The total number of tokens spent.
@@ -260,6 +258,9 @@ class TimDatabase:
                 public_key=public_key,
                 use_streaming=use_streaming,
                 temperature=temperature,
+                include_citations=include_citations,
+                similarity_threshold=similarity_threshold,
+                top_k_chunks=top_k_chunks,
                 teachers=teachers,
                 current_mode=current_mode,
                 total_tokens_spent=total_tokens_spent,
@@ -270,23 +271,19 @@ class TimDatabase:
             )
             db.session.add(rule)
         else:
-            if public_key:
-                rule.public_key = public_key
-            if teachers:
-                rule.teachers = teachers
-            if current_mode:
-                rule.current_mode = current_mode
-            if total_tokens_spent:
-                rule.total_tokens_spent = total_tokens_spent
-            if indexed_document_ids:
-                rule.indexed_chunk_ids = indexed_document_ids
-            if agent:
-                rule.agent = agent
-            if conv_time_window:
-                rule.conv_time_window = conv_time_window
+            rule.public_key = public_key
+            rule.teachers = teachers
+            rule.current_mode = current_mode
+            rule.total_tokens_spent = total_tokens_spent
+            rule.indexed_document_ids = indexed_document_ids
+            rule.agent = agent
+            rule.conv_time_window = conv_time_window
             rule.system_prompt_path = system_prompt_path
             rule.use_streaming = use_streaming
             rule.temperature = temperature
+            rule.include_citations = include_citations
+            rule.similarity_threshold = similarity_threshold
+            rule.top_k_chunks = top_k_chunks
         rule.policy.extend(policy)
         rule.usage.extend(usage)
         db.session.commit()
@@ -420,15 +417,14 @@ class TimDatabase:
         db.session.commit()
         return rule
 
-    def remove_api_key_group(
-        self, owner_id: int, public_key: str, group_id: int
-    ) -> None:
+    @staticmethod
+    def remove_api_key_group(owner_id: int, public_key: str, group_id: int) -> None:
         """Remove access to the API key from the given user group."""
         rule = TimDatabase.get_owner_api_key(owner_id, public_key)
         if not rule:
             raise Exception("No API-key with the alias found")
         groups = rule.groups
-        rule.groups = filter(lambda id: id != group_id, groups)
+        rule.groups = filter(lambda gid: gid != group_id, groups)  # type: ignore
         db.session.commit()
 
     @staticmethod
@@ -446,7 +442,6 @@ class TimDatabase:
         Sets a new policy for the LLM rule. Policy can be a global policy for the whole LLM rule or a student policy
         for the given user.
         """
-        print(max_tokens_per_user)
         if user:
             policy = TimDatabase.get_user_policy(llm_rule, user)
         else:
@@ -543,7 +538,7 @@ class TimDatabase:
         Deletes the given global policy.
         """
         stmt = delete(Policy).where(
-            Policy.llm_rule == llm_rule,
+            Policy.llm_rule_id == llm_rule.id,
             Policy.for_user.is_(None),
         )
         db.session.execute(stmt)
@@ -555,7 +550,7 @@ class TimDatabase:
         Deletes the user policy of the given user.
         """
         stmt = delete(Policy).where(
-            Policy.llm_rule == llm_rule,
+            Policy.llm_rule_id == llm_rule.id,
             Policy.for_user == user_id,
         )
         db.session.execute(stmt)
@@ -567,7 +562,7 @@ class TimDatabase:
         Gets the given global policy.
         """
         stmt = select(Policy).where(
-            Policy.llm_rule == llm_rule,
+            Policy.llm_rule_id == llm_rule.id,
             Policy.for_user.is_(None),
         )
         return db.session.scalar(stmt)
@@ -578,19 +573,16 @@ class TimDatabase:
         Gets the user policy of the given user.
         """
         stmt = select(Policy).where(
-            Policy.llm_rule == llm_rule,
+            Policy.llm_rule_id == llm_rule.id,
             Policy.for_user == user_id,
         )
         return db.session.scalar(stmt)
 
     @staticmethod
-    def set_usage(
-        user: int, conv_id: int, llm_rule: LLMRule, used_tokens: int
-    ) -> Usage:
+    def set_usage(user: int, llm_rule: LLMRule, used_tokens: int) -> Usage:
         """
         Sets the usage for the given user in the given LLM rule context.
         :param user: ID of the user for the usage.
-        :param conv_id: ID of the conversation of the user.
         :param llm_rule: LLM rule instance.
         :param used_tokens: Number of used tokens.
         :return: Usage of the given user.
@@ -599,7 +591,6 @@ class TimDatabase:
         if not usage:
             usage = Usage(
                 user=user,
-                conversation_id=conv_id,
                 llm_rule_id=llm_rule.id,
                 llm_rule=llm_rule,
                 used_tokens=used_tokens,
@@ -616,7 +607,7 @@ class TimDatabase:
         Deletes the usage of the given user in the given LLM rule instance.
         """
         stmt = delete(Usage).where(
-            Usage.llm_rule == llm_rule,
+            Usage.llm_rule_id == llm_rule.id,
             Usage.user == user_id,
         )
         db.session.execute(stmt)
@@ -628,10 +619,27 @@ class TimDatabase:
         Gets the usage of the given user in the given LLM rule instance.
         """
         stmt = select(Usage).where(
-            Usage.llm_rule == llm_rule,
+            Usage.llm_rule_id == llm_rule.id,
             Usage.user == user_id,
         )
         return db.session.scalar(stmt)
+
+    @staticmethod
+    def get_shared_api_keys(user_id: int) -> list[LLMRule]:
+        """Get API keys shared with the user via user groups."""
+        user = User.get_by_id(user_id)
+        if not user:
+            return []
+        user_group_ids = [g.id for g in user.groups]
+        if not user_group_ids:
+            return []
+
+        stmt = select(LLMRule).where(
+            LLMRule.owner != user_id,
+            LLMRule.document_id <= 0,
+            LLMRule.groups.overlap(user_group_ids),
+        )
+        return db.session.execute(stmt).scalars().all()
 
     @staticmethod
     def get_usages(llm_rule: LLMRule) -> list[Usage] | None:

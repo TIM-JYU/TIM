@@ -286,9 +286,8 @@ class GenericApiChatModel(ChatModel):
         self._api_key = api_key
         self._base_url = base_url
         self._client = OpenAI(
-            api_key=_sdk_api_key(provider, api_key),
+            api_key=api_key,
             base_url=self._base_url,
-            default_headers=_default_headers(provider, api_key),
         )
 
     def generate(
@@ -338,9 +337,8 @@ class AsyncGenericApiChatModel(AsyncChatModel):
         self._api_key = api_key
         self._base_url = base_url
         self._client = AsyncOpenAI(
-            api_key=_sdk_api_key(provider, api_key),
+            api_key=api_key,
             base_url=self._base_url,
-            default_headers=_default_headers(provider, api_key),
         )
 
     async def generate(
@@ -447,7 +445,7 @@ class GenericApiClient:
         self._api_key = api_key
         self._base_url = _resolve_base_url(provider, base_url)
         self._client = OpenAI(
-            api_key=_sdk_api_key(provider, api_key),
+            api_key=api_key,
             base_url=self._base_url,
             default_headers=_default_headers(provider, api_key),
         )
@@ -571,28 +569,10 @@ def _openai_to_model_error(e: BaseException) -> ModelError:
     return ModelError(kind=ModelErrorKind.Unknown, description=str(e), cause=e)
 
 
-class AuthScheme(str, Enum):
-    """Expected API authentication scheme."""
-
-    Bearer = "bearer"
-    XApiKey = "x-api-key"
-
-
-def _auth_scheme(provider: Provider) -> AuthScheme:
-    """Return the auth scheme for the given provider."""
-    if provider == "anthropic":
-        return AuthScheme.XApiKey
-    return AuthScheme.Bearer
-
-
-def _sdk_api_key(provider: Provider, api_key: str) -> str | None:
-    return api_key if _auth_scheme(provider) == AuthScheme.Bearer else None
-
-
 def _default_headers(provider: Provider, api_key: str) -> dict[str, str]:
-    """Provider-specific default headers for OpenAI-compatible APIs."""
+    """Provider-specific default headers."""
     if provider == "anthropic":
-        return {"X-Api-Key": api_key, "anthropic-version": "2023-06-01"}
+        return {"x-api-key": api_key, "anthropic-version": "2023-06-01"}
     return {}
 
 

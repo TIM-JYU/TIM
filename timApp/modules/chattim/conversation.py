@@ -6,6 +6,7 @@ import time
 from dataclasses import dataclass, asdict
 from collections import deque
 from timApp.util.flask.cache import cache
+from timApp.util.utils import get_current_time
 from typing import BinaryIO, Iterator, Any, Callable
 from .model import Message, Usage
 
@@ -22,6 +23,8 @@ class ChatMessage:
     """Timestamp of when the message was sent in milliseconds."""
     usage: Usage | None = None
     """Tokens used for generating the message."""
+    citations: list[str] | None = None
+    """Cited materials for the agent message."""
 
     def to_dict(self) -> dict:
         """Convert `ChatMessage` object to a `dict`.
@@ -80,6 +83,16 @@ class ConversationManager:
         if not json_messages:
             return
         self._append_to_cache(plugin_id, user_id, json_messages)
+
+    def clear_history(self, plugin_id: str, user_id: str) -> None:
+        """
+        Clear the conversation history of the user.
+
+        :param plugin_id: The ID of the plugin instance.
+        :param user_id: The ID of the user.
+        """
+        self._store.archive_messages(plugin_id, user_id)
+        cache.delete(self._cache_key_tail(plugin_id, user_id))
 
     def get_history(
         self,
@@ -380,6 +393,23 @@ class ConversationStore:
 
         return json_messages
 
+    def archive_messages(self, plugin_id: str, user_id: str) -> None:
+        """
+        Create an archive of the current conversation file.
+
+        :param plugin_id: Plugin instance ID.
+        :param user_id: User ID.
+        """
+        file_path = self.resolve_conversation_path(plugin_id, user_id)
+        archive_path = self._resolve_archive_path(plugin_id, user_id)
+        try:
+            stat = os.stat(file_path)
+            if stat.st_size == 0:
+                return
+            os.rename(file_path, archive_path)
+        except FileNotFoundError:
+            return
+
     def load_messages(
         self, plugin_id: str, user_id: str, last_n: int | None = None, offset: int = 0
     ) -> list[ChatMessage] | None:
@@ -576,3 +606,11 @@ class ConversationStore:
         """
         file_name = "messages.jsonl"
         return os.path.join(self.root_path, plugin_id, user_id, file_name)
+
+    def _resolve_archive_path(self, plugin_id: str, user_id: str) -> str:
+        """Create a unique path for the conversation archive file."""
+        dt = get_current_time()
+        dt_str = dt.isoformat()
+        return os.path.join(
+            self.root_path, plugin_id, user_id, f"messages_{dt_str}.jsonl"
+        )

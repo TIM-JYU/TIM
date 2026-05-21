@@ -9,6 +9,7 @@ import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import type {IGroup, IUserLLMApiKey} from "tim/user/IUser";
 import {TooltipModule} from "ngx-bootstrap/tooltip";
 import {PurifyModule} from "tim/util/purify.module";
+import {DirectoryPickerComponent} from "tim/folder/directory-picker.component";
 
 /**
  * User can edit LLM model API key permissions.
@@ -23,9 +24,9 @@ import {PurifyModule} from "tim/util/purify.module";
             <ng-container body>
                 <form>
                     <div class="form-group input-group-sm">
-
-                        <label for="{{ listMode ? 'groupNameList' : 'groupName' }}">User groups:</label>
-
+                        <label i18n for="{{ listMode ? 'groupNameList' : 'groupName' }}">User groups
+                            <a tooltip="{{ getGroupTooltip }}"><i class="glyphicon glyphicon-info-sign"></i></a>
+                        </label>
                         <ul class="rights-list">
                             <li *ngFor="let group of groups">
                                 <span class="flex align-center">
@@ -38,16 +39,19 @@ import {PurifyModule} from "tim/util/purify.module";
                                 </span>
                             </li>
                         </ul>
- 
+                    </div>
+
+                    <div class="form-group input-group-sm">
                         <div class="input-group">
                             <input name="groupName" class="form-control" type="text"
                                    [hidden]="listMode"
+                                   (keydown.enter)="$event.preventDefault()"
                                    [(ngModel)]="groupNamesInput"
-                                   placeholder="{{ getPlaceholderGroups() }}">
+                                   placeholder="{{ getPlaceholderGroups }}">
                             <textarea name="groupNameList" class="form-control" type="text"
                                       [hidden]="!listMode"
                                       [(ngModel)]="groupNamesInput"
-                                      placeholder="{{ getPlaceholderGroups() }}"></textarea>
+                                      placeholder="{{ getPlaceholderGroups }}"></textarea>
                             <span class="input-group-addon btn btn-default"
                                   (click)="this.listMode = !this.listMode"
                                   tooltip="Toggle multiline mode"
@@ -55,26 +59,25 @@ import {PurifyModule} from "tim/util/purify.module";
                             <i class="glyphicon glyphicon-align-left"></i>
                             </span>
                         </div>
+                    </div>
 
-                        <label for="docPaths">Folder or document paths:</label>
-                        <div class="input-group" style="width: 100%">
-                            <textarea name="docPaths" class="form-control" type="text"
-                                      placeholder="{{getPlaceholderDocs()}}"
-                                      [(ngModel)]="itemPathsInput">
-                            </textarea>
-                        </div>
-
-                        <tim-alert *ngIf="editError" severity="danger" i18n>
-                            Failed to save: {{ editError }}
-                        </tim-alert>
+                    <div class="form-group input-group-sm">
+                        <label i18n for="docPaths">Folder or document paths
+                            <a tooltip="{{ getPathTooltip }}"><i class="glyphicon glyphicon-info-sign"></i></a>
+                        </label>
+                        <tim-directory-picker
+                            [(selection)]="paths"
+                        ></tim-directory-picker>
                     </div>
                 </form>
+                <tim-alert *ngIf="editError" severity="danger">
+                    Failed to save: {{ editError }}
+                </tim-alert>
             </ng-container>
             <ng-container footer>
                 <tim-loading *ngIf="saving" style="margin-right: 1em;"></tim-loading>
                 <button class="timButton"
-                        (click)="savePermissions()"
-                        [disabled]="" i18n>
+                        (click)="savePermissions()" i18n>
                     Save
                 </button>
                 <button class="timButton" (click)="dismiss()">Close</button>
@@ -88,16 +91,15 @@ export class EditLLMAPIKeyDialogComponent extends AngularDialogComponent<
 > {
     ngOnInit() {
         this.groups = this.data.key.groups ?? [];
-        const paths = this.data.key.itemPaths ?? [];
+        this.paths = this.data.key.itemPaths ?? [];
         this.groupNamesInput = "";
-        this.itemPathsInput = paths.join("\n");
     }
 
     dialogName: string = "EditLLMAPIKey";
     groupNamesInput: string = "";
-    itemPathsInput: string = "";
 
     groups: IGroup[] = [];
+    paths: string[] = [];
 
     removingRight?: IGroup;
     loading: boolean = false;
@@ -115,7 +117,7 @@ export class EditLLMAPIKeyDialogComponent extends AngularDialogComponent<
         this.saving = true;
         const key: IUserLLMApiKey = this.data.key;
         const groups: string[] = this.splitInput(this.groupNamesInput, "\n;");
-        const paths: string[] = this.splitInput(this.itemPathsInput, "\n");
+        const paths: string[] = this.paths;
 
         const res = await toPromise(
             this.http.post<{groups: IGroup[]; paths: string[]}>(
@@ -137,6 +139,7 @@ export class EditLLMAPIKeyDialogComponent extends AngularDialogComponent<
                 itemPaths: res.result.paths,
             });
             this.groups = res.result.groups;
+            this.paths = res.result.paths;
             this.groupNamesInput = "";
             this.editError = undefined;
             return;
@@ -163,7 +166,7 @@ export class EditLLMAPIKeyDialogComponent extends AngularDialogComponent<
 
     /* Confirm the removal of access right. */
     async removeConfirm(group: IGroup) {
-        if (window.confirm(`${this.getConfirmDesc(group)}?`)) {
+        if (window.confirm(`${this.getConfirmDesc(group)}`)) {
             this.removingRight = group;
             await this.removeRight(group);
             this.removingRight = undefined;
@@ -171,7 +174,7 @@ export class EditLLMAPIKeyDialogComponent extends AngularDialogComponent<
     }
 
     getConfirmDesc(group: IGroup): string {
-        return `Remove rights from ${group.name}`;
+        return `Remove rights from ${group.name}?`;
     }
 
     splitInput(input: string, splitter: string): string[] {
@@ -181,15 +184,22 @@ export class EditLLMAPIKeyDialogComponent extends AngularDialogComponent<
             .filter((n) => n);
     }
 
-    getPlaceholderGroups(): string {
+    get getPlaceholderGroups(): string {
         return (
             "enter username(s)/group name(s) separated by semicolons" +
             (this.listMode ? " or newlines" : "")
         );
     }
 
-    getPlaceholderDocs(): string {
-        return "enter folder or document paths separated by newlines";
+    get getGroupTooltip(): string {
+        return "User groups that have access to the API key using the alias.";
+    }
+
+    get getPathTooltip(): string {
+        return (
+            "Specify folders or documents where the API key is permitted. " +
+            "Selecting a folder grants access to all documents directly within it."
+        );
     }
 }
 
@@ -202,6 +212,7 @@ export class EditLLMAPIKeyDialogComponent extends AngularDialogComponent<
         CommonModule,
         TooltipModule,
         PurifyModule,
+        DirectoryPickerComponent,
     ],
 })
 export class EditLLMAPIKeyDialogModule {}

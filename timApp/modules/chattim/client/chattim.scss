@@ -23,12 +23,8 @@
   color: #0B0A09;
 }
 
-.par.chattim{
-  min-height: 1em;
-}
-
 .chattim-dialog-frame .modal-dialog {
-  min-width: 35vh;
+  min-width: 20vh;
   min-height: 32vh;
   max-height: 90vh;
   height: 50vh;
@@ -55,6 +51,18 @@
   display: flex;
   flex-direction: column;
   height: 100%;
+}
+
+.sticky-chat-row {
+  position: sticky;
+  z-index: 1;
+  bottom: 0;
+  background: white;
+  padding-top: 4px;
+}
+
+.previewDiv .chattim-dialog-frame {
+  visibility: hidden;
 }
 
 .chat-row {
@@ -87,17 +95,17 @@
 }
 
 
-
 .control-panel-container {
   align-items: start;
   flex: 0 0 auto;
+  max-height: 60%
 }
 
 .time-window-label {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
 }
 
 .restriction-inputs {
@@ -107,17 +115,42 @@
 .time-window-label-span {
   flex: 0 0 15ch;
 }
-.embedder-buttons{
-  display:flex;
-  gap:15px;
-  align-items: center;
 
+.inline-field {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: nowrap;
+  width: 100%;
 }
+
+.inline-field-label {
+  margin: 0;
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
+
+.inline-field-control {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.embedder-buttons {
+  display: flex;
+  gap: 15px;
+  align-items: center;
+}
+
 .disabled-label {
   color: gray;
   opacity: 0.6;
   cursor: not-allowed;
 }
+
+.settings-panel tim-directory-picker table {
+  width: 100%;
+}
+
 
 
 // usercontrol //

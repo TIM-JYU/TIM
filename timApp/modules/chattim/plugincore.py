@@ -3,6 +3,8 @@ import uuid
 from dataclasses import dataclass, field
 from unicodedata import normalize, category
 
+from timApp.modules.chattim.dbmodels import LLMRule
+from timApp.plugin.containerLink import call_plugin_resource
 from timApp.modules.chattim.dbmodels import LLMRule, Policy
 from timApp.util.flask.cache import cache
 from timApp.timdb.dbaccess import get_files_path
@@ -35,9 +37,7 @@ from timApp.modules.chattim.model import (
     GenericApiClient,
     Provider,
     ModelError,
-    ModelErrorKind,
     PROVIDERS,
-    ModelErrorKind,
 )
 from timApp.modules.chattim.conversation import ConversationManager, ChatMessage
 
@@ -72,13 +72,18 @@ class UserData:
 
 @dataclass()
 class InstanceAttributes:
-    model_id: str = "gpt-4.1-mini"
+    public_key: str = ""
+    # model_id: str = "gpt-4.1-mini"
+    model_id: str = ""
     llm_mode: str = "Creative"
     max_tokens: int | None = 2000
-    tim_paths: str = ""
+    tim_paths: list[str] = field(default_factory=list)
     system_prompt_path: str = ""
     use_streaming: bool = False
     model_temperature: float | None = None
+    include_citations: bool = False
+    similarity_threshold: float | None = None
+    top_k_chunks: int = 3
     global_policy: GenericPolicy = field(default_factory=GenericPolicy)
     embedder_provider: str = "dummy"
 
@@ -88,14 +93,31 @@ class InstanceAttributes:
 
 
 @dataclass
+class UserKey:
+    provider: str
+    public_key: str
+    is_selected: bool
+    is_shared: bool = False
+    shared_by: str = ""
+
+
+@dataclass
 class InstanceSettingsData(InstanceAttributes):
     availableModels: list[ChatModel] = field(kw_only=True)
     availableModes: list[str] = field(kw_only=True)
+    availableKeys: list[UserKey] = field(kw_only=True)
     availableEmbedderProviders: list[str] = field(kw_only=True)
+    selectedModel: str | None = None
+    allowedItemPaths: list[str] | None = None
 
 
 T = TypeVar("T")
 E = TypeVar("E")
+
+
+class SaveInstanceResult(TypedDict):
+    supported_models: list[str]
+    model_id: str
 
 
 class Result(Generic[T, E]):
@@ -108,7 +130,7 @@ class Result(Generic[T, E]):
     def ok(self) -> bool:
         return self.error is None
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"Ok({self.value})" if self.ok() else f"Err({self.error})"
 
 
@@ -118,6 +140,8 @@ class PreparedChatRequest:
     document_id: str
     user_input: str
     response: Iterable[ModelResponse] | ModelResponse
+    citations: list[str]
+    include_citations: bool = False
 
 
 # TODO: maybe a dict or dataclass would be more descriptive
@@ -133,7 +157,7 @@ class PluginCore:
     # TODO: a plugin instance specific variable? In global policy?
     max_input_len: int = 1024
 
-    def __init__(self):
+    def __init__(self) -> None:
         file_path = get_files_path().as_posix()
         self.history_manager = ConversationManager(
             file_path,
@@ -184,21 +208,29 @@ class PluginCore:
         mode: RagMode = RagMode.RETRIEVE
         # TODO: No need for this attribute if we have character limit for input? Maybe keep as is for an option
         max_tokens_for_req = 99999
-        # TODO: from the LLMRule table here or bring as arg
-        temperature: float | None = 0.2
-
-        # TODO: get this from the LLMRule table
+        # TODO: get these from the LLMRule table
+        temperature: float | None = None
+        similarity_threshold: float | None = None
+        top_k_chunks: int = 3
         use_streaming: bool = stream
+        # TODO: replace with this
+        # include_citations: bool = (
+        #     rule.include_citations and rule.current_mode == RagMode.RETRIEVE
+        # )
+        include_citations: bool = mode == RagMode.RETRIEVE
+
         # Validate that the user has the correct generate mode
         if stream != use_streaming:
             return Result(error="Bad request. Mismatching generation mode.")
 
-        # response = self.rag.get_context(prompt=validated_input, identifier=document_id)
         response = self.indexer.get_context(
-            prompt=validated_input, identifier=document_id
+            prompt=validated_input,
+            identifier=document_id,
+            k=top_k_chunks,
+            threshold=similarity_threshold,
         )
         context = response.context
-
+        citations = self._get_citations(response.used_context)
         system_prompt = self.get_system_prompt(caller_id, document_id)
 
         msg_data = MessageData(
@@ -215,18 +247,19 @@ class PluginCore:
                 msg_data, identifier=document_id, stream=stream, temperature=temperature
             )
         except ModelError as e:
-            return Result(error=e.text())
+            # TODO: Leave out extra info if not teacher or no access to plugin
+            error = f"{e.text()} {str(e.cause)}"
+            return Result(error=error)
         except Exception as e:
             return Result(error=str(e))
 
-        # TODO: answer post processing
-        # Add the citations to the context used
-        # Include TIM doc ids etc, and convert to TIM paths
         prepared = PreparedChatRequest(
             caller_id=caller_id_str,
             document_id=document_id_str,
             user_input=validated_input,
             response=answer,
+            citations=citations,
+            include_citations=include_citations,
         )
         return Result(value=prepared)
 
@@ -240,6 +273,7 @@ class PluginCore:
         timestamp_user: int,
         timestamp_answer: int,
         usage: Usage | None,
+        citations: list[str] | None,
     ) -> None:
         """Save the messages.
 
@@ -266,20 +300,21 @@ class PluginCore:
                     content=assistant_answer,
                     usage=usage,
                     timestamp=timestamp_answer,
+                    citations=citations,
                 ),
             ],
         )
+        if usage:
+            self.update_usage(int(caller_id), int(plugin_id), usage.total_tokens)
 
-    # TODO: palautetaan token usage tätä kautta tai muualta?
     def chat_request(
         self,
         caller_id: int,
         document_id: int,
         user_input: str,
-    ) -> Result[str | None, str | None]:
+    ) -> Result[tuple[str, list[str] | None], str]:
         """Generate a model response."""
         timestamp_user = ChatMessage.ts_ms()
-        # TODO: Do we save user messages to disk if error occurred from some of the checks or just discard?
         prep = self._prepare_chat_request(
             caller_id, document_id, user_input, stream=False
         )
@@ -291,8 +326,7 @@ class PluginCore:
         response: ModelResponse = p.response
         whole_msg = response.content or ""
         usage = response.usage
-
-        # TODO: viestit arkistoidaan
+        citations = p.citations
 
         # TODO: save user message even if model response fails?
         timestamp_answer = ChatMessage.ts_ms()
@@ -304,16 +338,18 @@ class PluginCore:
             timestamp_user=timestamp_user,
             timestamp_answer=timestamp_answer,
             usage=usage,
+            citations=citations,
         )
 
-        return Result(value=whole_msg, error=None)
+        context = citations if p.include_citations else None
+        return Result(value=(whole_msg, context))
 
     def chat_request_stream(
         self,
         caller_id: int,
         document_id: int,
         user_input: str,
-    ) -> Result[Iterable[ModelResponse], str]:
+    ) -> Result[tuple[Iterable[str], list[str] | None], str]:
         """Generate a model response using streaming.
 
         :param caller_id: The id of the caller.
@@ -329,12 +365,12 @@ class PluginCore:
         if not prep.ok() or not prep.value:
             return Result(error=prep.error)
         p = prep.value
+        citations = p.citations
 
         assert isinstance(p.response, Iterable)
         stream: Iterable[ModelResponse] = p.response
 
-        # TODO: return only the string chunks or the usage as well?
-        def gen() -> Iterable[ModelResponse]:
+        def gen() -> Iterable[str]:
             full_answer: str = ""
             usage: Usage | None = None
 
@@ -350,7 +386,7 @@ class PluginCore:
                 # Yield chunks to the caller
                 for chunk in stream:
                     apply_chunk(chunk)
-                    yield chunk
+                    yield chunk.delta
             finally:
                 # Drain the remaining chunks if the client disconnected mid-stream
                 try:
@@ -367,13 +403,15 @@ class PluginCore:
                     timestamp_user=timestamp_user,
                     timestamp_answer=timestamp_answer,
                     usage=usage,
+                    citations=citations,
                 )
 
-        return Result(value=gen(), error=None)
+        context = citations if p.include_citations else None
+        return Result(value=(gen(), context))
 
     def get_plugin_settings(
         self, user_id: int, document_id: int
-    ) -> Result[InstanceAttributes | None, str | None]:
+    ) -> Result[InstanceAttributes, str]:
         """
         Get the settings for the plugin.
         """
@@ -388,25 +426,63 @@ class PluginCore:
             # TODO: get settings from db
             pass
 
-        # TODO: Need to get the used API-key from the db
         # If the teacher has not yet saved the settings after setting an API-key alias,
         # the list should be empty.
         # Or should we just disable the model selection in the UI until an API-key alias has been set?
-        api_key = os.getenv("OPENAI_API_KEY") or ""
-        provider: Provider = "openai"
+        plugin_data = self.tim_database.get_llm_rule(document_id)
+        user_keys = self.tim_database.get_user_api_keys(user_id)
+        shared_keys = self.tim_database.get_shared_api_keys(user_id)
+
+        # Options for selecting key for plugin, no apikey shown
+        available_keys = [
+            UserKey(
+                provider=str(k.provider),
+                public_key=str(k.public_key),
+                is_selected=plugin_data is not None
+                and k.public_key == plugin_data.public_key,
+            )
+            for k in user_keys
+        ]
+
+        for k in shared_keys:
+            owner = User.get_by_id(k.owner)
+            owner_name = owner.name if owner else "unknown"
+            available_keys.append(
+                UserKey(
+                    provider=str(k.provider),
+                    public_key=str(k.public_key),
+                    is_selected=plugin_data is not None
+                    and k.public_key == plugin_data.public_key,
+                    is_shared=True,
+                    shared_by=owner_name,
+                )
+            )
+
+        api_key = ""
+        provider = "openai"
+        selected_model = str(plugin_data.agent) if plugin_data is not None else None
+
+        if plugin_data is not None:
+            for key in user_keys:
+                if key.public_key == plugin_data.public_key:
+                    api_key = key.api_key
+                    provider = key.provider
 
         data = InstanceSettingsData(
             availableModes=RagMode.supported_modes(),
             availableModels=self._get_supported_chat_models(provider, api_key),
+            availableKeys=available_keys,
             availableEmbedderProviders=self._get_available_embedder_providers(user_id),
             use_streaming=True,  # TODO: from db
+            selectedModel=selected_model,
+            allowedItemPaths=None,  # TODO: from the API key restrictions?
         )
 
         return Result(value=data)
 
     def save_instance(
         self, caller_id: int, document_id: int, instance_settings: InstanceAttributes
-    ) -> Result[bool | None, str | None]:
+    ) -> Result[SaveInstanceResult, str | None]:
         """
         Create instance if it doesn't exist. New settings are saved if valid.
         Adds a new model instance to RAG and a new llmrule table to database
@@ -415,21 +491,32 @@ class PluginCore:
         :param instance_settings:
         :return: On error: Result(None, error_reason) On success (True, None)
         """
+        public_key: str = instance_settings.public_key
         model_id: str = instance_settings.model_id
         embedder_provider: str = instance_settings.embedder_provider
         llm_mode: str = instance_settings.llm_mode
-        max_tokens: int = instance_settings.max_tokens
-        tim_paths: str = instance_settings.tim_paths
+        max_tokens: int | None = instance_settings.max_tokens
+        tim_paths: list[str] = instance_settings.tim_paths
         system_prompt_path: str = instance_settings.system_prompt_path.strip()
         global_policy: GenericPolicy = instance_settings.global_policy
         use_streaming: bool = instance_settings.use_streaming
         temperature: float | None = instance_settings.model_temperature
+        include_citations: bool = instance_settings.include_citations
+        similarity_threshold: float | None = instance_settings.similarity_threshold
+        top_k_chunks: int = instance_settings.top_k_chunks
 
-        # TODO: Remove hard coded API-key, provider and model_id.
-        # Fetch from the database.
-        api_key = os.getenv("OPENAI_API_KEY")
-        provider_str: str = "openai"
-        model_id: str = "gpt-4.1-nano"
+        old_plugin_rule = self.tim_database.get_llm_rule(document_id)
+        old_provider = None
+        if old_plugin_rule is not None and old_plugin_rule.public_key:
+            try:
+                old_provider, _ = self.get_api_key(str(old_plugin_rule.public_key))
+            except Exception:
+                old_provider = None
+
+        try:
+            provider_str, api_key = self.try_access_api_key(caller_id, public_key)
+        except Exception as e:
+            return Result(None, str(e))
 
         if not self._document_exists(document_id):
             return Result(None, f"Document [{document_id}] does not exist")
@@ -443,20 +530,26 @@ class PluginCore:
 
         if provider_str not in Provider.__args__:
             return Result(None, f"Invalid provider [{provider_str}] given")
-        provider = cast(Provider, provider_str)
+        provider = provider_str
 
         supported_models = PluginCore._get_supported_models(provider, api_key)
-        if model_id not in supported_models:
+        provider_changed = old_provider is not None and old_provider != provider_str
+        if provider_changed:
+            if provider == "openai":
+                model_id = "gpt-4.1-mini"
+            else:
+                model_id = supported_models[0] if supported_models else model_id
+        elif model_id not in supported_models:
             return Result(None, f"Given model [{model_id}] not supported")
 
-        paths_for_indexing = self._parse_paths(tim_paths)
+        paths_for_indexing = tim_paths
         if not paths_for_indexing and rag_mode == RagMode.RETRIEVE:
             return Result(None, "Give at least one path when using summarizing mode")
 
-        docs = self._fetch_docs_by_paths(paths_for_indexing)
-        if not docs.ok():
-            return Result(None, docs.error)
-        docs = docs.value
+        docs_result = self._fetch_docs_by_paths(paths_for_indexing)
+        if not docs_result.ok():
+            return Result(None, docs_result.error)
+        docs = docs_result.value or []
 
         document_ids = [doc.id for doc in docs]
 
@@ -480,6 +573,14 @@ class PluginCore:
         if temperature is not None and (temperature < 0 or temperature > 2):
             return Result(None, "Temperature must be between 0 and 2")
 
+        if similarity_threshold is not None and (
+            similarity_threshold < -1 or similarity_threshold > 1
+        ):
+            return Result(None, "Similarity threshold must be between -1 and 1")
+
+        if top_k_chunks < 1 or top_k_chunks > 20:
+            return Result(None, "Top-K must be between 1 and 20")
+
         # TODO: update system prompt path in the db row
 
         if (valid := self._validate_policy(global_policy)) is not None:
@@ -488,6 +589,7 @@ class PluginCore:
         # TODO: if instance exists -> update OTHERIWISE create
 
         kwargs_model = dict(provider=provider, model_id=model_id, api_key=api_key)
+
         try:
             self.rag.add_model(identifier=document_id, **kwargs_model)
         except ValueError as e:
@@ -525,20 +627,23 @@ class PluginCore:
         # TODO: tarkista onko aliasta vastaava API-avain olemassa
 
         rule = self.tim_database.set_llm_rule(
-            document_id,
-            caller_id,
-            "",
-            use_streaming,
-            temperature,
-            [],
-            llm_mode,
-            0,
-            document_ids,
-            system_prompt_path,
-            model_id,
-            0,
-            [],
-            [],
+            document_id=document_id,
+            owner=caller_id,
+            public_key=public_key,
+            use_streaming=use_streaming,
+            temperature=temperature,
+            include_citations=include_citations,
+            similarity_threshold=similarity_threshold,
+            top_k_chunks=top_k_chunks,
+            teachers=[],
+            current_mode=llm_mode,
+            total_tokens_spent=0,
+            indexed_document_ids=document_ids,
+            system_prompt_path=system_prompt_path,
+            agent=model_id,
+            conv_time_window=0,
+            policy=[],
+            usage=[],
         )
         self.tim_database.set_global_policy(
             rule,
@@ -549,7 +654,14 @@ class PluginCore:
             max_tokens,
         )
 
-        return Result(True, None)
+        data: SaveInstanceResult = {
+            "supported_models": supported_models,
+            "model_id": model_id,
+        }
+        return Result(value=data, error=None)
+
+    def delete_instance(self, owner_id: int, document_id: int) -> None:
+        self.tim_database.delete_llm_rule(owner_id, document_id)
 
     def get_history(self, caller_id: str, document_id: str) -> list[Message]:
         # TODO: fetch with time window
@@ -567,6 +679,39 @@ class PluginCore:
         return self.history_manager.get_history_time_window(
             document_id, caller_id, ts_begin, ts_end, max_count
         )
+
+    def get_messages_ui(
+        self,
+        caller_id: int,
+        document_id: int,
+        ts_end: int | None = None,
+        max_count: int = 128,
+    ) -> list[dict]:
+        """Retrieve the wanted message window to the UI."""
+        # TODO: get the LLMRule from cache
+        rule = self.tim_database.get_llm_rule(document_id)
+        if not rule:
+            return []
+        include_citations = (
+            rule.include_citations and rule.current_mode == RagMode.RETRIEVE
+        )
+
+        messages = self.history_manager.get_history_time_window(
+            str(document_id), str(caller_id), None, ts_end, max_count
+        )
+        return [
+            {
+                "content": m.content,
+                "role": m.role,
+                "timestamp_ms": m.timestamp,
+                "citations": m.citations if include_citations else None,
+            }
+            for m in messages
+            if m.role in ("user", "assistant")
+        ]
+
+    def clear_history(self, caller_id: str, document_id: str) -> None:
+        self.history_manager.clear_history(document_id, caller_id)
 
     @staticmethod
     def get_supported_providers() -> list[Provider]:
@@ -692,18 +837,26 @@ class PluginCore:
         return "Save successful"
 
     @staticmethod
-    @cache.memoize(timeout=DEFAULT_CACHE_TIMEOUT)
     def _get_supported_models(provider: Provider, api_key: str) -> list[str]:
         """Get all the models the given API-key has access to.
         :param provider: Provider name.
         :param api_key: API key, must match the given provider.
         :return: List of all supported model IDs.
         """
+        try:
+            return PluginCore._get_supported_models_cache(provider, api_key)
+        except ModelError:
+            cache.delete_memoized(
+                PluginCore._get_supported_models_cache, provider, api_key
+            )
+            return []
+
+    @staticmethod
+    @cache.memoize(timeout=DEFAULT_CACHE_TIMEOUT)
+    def _get_supported_models_cache(provider: Provider, api_key: str) -> list[str]:
         client = GenericApiClient(provider, api_key)
         try:
             return client.list_models()
-        except ModelError:
-            return []
         finally:
             client.close()
 
@@ -741,7 +894,7 @@ class PluginCore:
         content = prompt_doc.export_markdown(export_ids=False).strip()
         return content if len(content) > 0 else None
 
-    def _instance_exists(self, document_id) -> bool:
+    def _instance_exists(self, document_id: int) -> bool:
         # TODO: todnäk pitää muistissa tiedetyt instanssi-idt jottei haeta aina tietokannalta turhaan
         # TODO: korvaa db haulla
         if not self.tim_database.get_llm_rule(document_id):
@@ -765,30 +918,72 @@ class PluginCore:
 
         return True
 
-    @staticmethod
-    def _parse_paths(paths: str) -> list[str]:
+    def set_user_policy(
+        self, caller_id: int, document_id: int, policy_settings: Policy
+    ) -> Result[bool | None, str | None]:
         """
-        Gets a string, splits it with separator as "\n", removes empty entries and trims each entry
-        :param paths:
-        :return: list of paths or an empty list
+        Sets the user's policy for the given user in the given document. Adds new policy row to the database.
+        :param caller_id: The user for the policy.
+        :param document_id: The document of the plugin.
+        :param policy_settings: Settings for the user policy.
+        :return: On error: Result(None, error_reason) On success Result(True, None)
         """
-        return [x.strip() for x in paths.split("\n") if x.strip()]
+        rule = self.tim_database.get_llm_rule(document_id)
+        if not rule:
+            return Result(None, "No LLMRule found for this document")
+
+        self.tim_database.set_user_policy(
+            caller_id,
+            rule,
+            policy_settings.window_unit,
+            policy_settings.window_value,
+            policy_settings.token_cap_for_window,
+            policy_settings.token_cap,
+        )
+
+        return Result(True, None)
+
+    def update_usage(
+        self,
+        caller_id: int,
+        document_id: int,
+        used_tokens: int,
+    ) -> int | None:
+        """
+        Updates the usage of the given user in the given document.
+        :param caller_id: The user of the tokens.
+        :param document_id: The document of the plugin.
+        :param used_tokens: Tokens used.
+        :return: The complete amount of tokens used by the user.
+        """
+        rule = self.tim_database.get_llm_rule(document_id)
+        if not rule:
+            return None
+        usage = self.tim_database.get_usage(rule, caller_id)
+        if not usage:
+            self.tim_database.set_usage(caller_id, rule, used_tokens)
+            return used_tokens
+        tokens = usage.used_tokens + used_tokens
+        self.tim_database.set_usage(caller_id, rule, tokens)
+        return tokens
 
     def _policy_checks(
         self, caller_id: int, document_id: int
     ) -> Result[str | None, str | None]:
         """
-        Checks token limits as per global and user policies
+        Checks token limits as per global and user policies.
         :param caller_id:  the user that is making the request
         :param document_id:  instance for the plugin
         :return: (can_make_req: bool, reason_for_deny: str)
         """
-        # check userpolicy (if exists)
+        # check user policy (if exists)
         rule = self.tim_database.get_llm_rule(document_id)
+        if not rule:
+            return Result(None, "No LLMRule found for this document")
         usage = self.tim_database.get_usage(rule, caller_id)
 
         if not usage:
-            self.tim_database.set_usage(caller_id, 0, rule, 0)  # TODO: conv_id?
+            self.update_usage(caller_id, document_id, 0)
             return Result(value="ok")
 
         used_tokens = usage.used_tokens
@@ -797,18 +992,15 @@ class PluginCore:
         if policy:
             token_limit = policy.max_tokens_per_user
         else:
-            # check globalpolicy
+            # check global policy
             policy = self.tim_database.get_global_policy(rule)
             if policy:
                 token_limit = policy.max_tokens_per_user
             else:
-                policy = self.tim_database.get_global_policy(rule)
-                if policy:
-                    token_limit = policy.token_pool
-                else:
-                    return Result(value="ok")
-        if used_tokens >= token_limit:
-            return Result(error="No more tokens")
+                return Result(value="ok")
+        if used_tokens and token_limit:
+            if used_tokens >= token_limit:
+                return Result(error="No more tokens")
 
         return Result(value="ok")
 
@@ -826,7 +1018,8 @@ class PluginCore:
         for path in paths:
             found_documents = self.tim_database.get_tim_documents_by_path(path)
             if not found_documents:
-                return Result(error=f"Given path [{path}] does not exist")
+                continue  # Might be just empty
+                # return Result(error=f"Given path [{path}] does not exist")
             documents.extend(found_documents)
 
         doc_set = list(set(documents))
@@ -881,7 +1074,7 @@ class PluginCore:
 
     @staticmethod
     def _parse_provider(provider_str: str) -> Provider | None:
-        if provider_str not in Provider.__args__:
+        if provider_str not in PluginCore.get_supported_providers():
             return None
         return cast(Provider, provider_str)
 
@@ -962,7 +1155,7 @@ class PluginCore:
         time_value = policy.window_value
         window_token_cap = policy.token_cap_for_window
 
-        if cap_enabled and token_cap < 0:
+        if cap_enabled and (token_cap is None or token_cap < 0):
             return f"Given token cap [{token_cap}] cannot be negative"
 
         if window_enabled and (time_value is None or time_value <= 0):
@@ -1045,8 +1238,8 @@ class PluginCore:
     def delete_api_key(self, owner_id: int, public_key: str) -> None:
         self.tim_database.delete_api_key(owner_id, public_key)
 
-    def get_llmrule(self, documentid: int) -> LLMRule:
-        return self.tim_database.get_llm_rule(documentid)
+    def get_llm_rule(self, document_id: int) -> LLMRule:
+        return self.tim_database.get_llm_rule(document_id)
 
     @staticmethod
     def _api_row_to_tuple(rule: LLMRule) -> APIKey:
@@ -1061,3 +1254,23 @@ class PluginCore:
             get_groups_by_ids(rule.groups),
             [str(p) for p in rule.paths],
         )
+
+    def get_models(self, provider_str: str, api_key: str) -> list[ChatModel]:
+        provider = self._parse_provider(provider_str)
+        if provider is not None:
+            return self._get_supported_chat_models(provider, api_key)
+        else:
+            return []
+
+    def _get_citations(self, blocks: list[tuple[int, int]]) -> list[str]:
+        citations: list[str] = []
+        for doc_id, block_id in blocks:
+            doc = self.tim_database.get_doc_entry_by_id(doc_id)
+            if not doc:
+                continue
+            citations.append(self._get_block_view_addr(doc.path, block_id))
+        return list(set(citations))
+
+    @staticmethod
+    def _get_block_view_addr(document_path: str, block_id: int) -> str:
+        return "/view/" + document_path + "#" + str(block_id)

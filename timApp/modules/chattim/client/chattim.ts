@@ -30,7 +30,11 @@ import {
 import {DomSanitizer} from "@angular/platform-browser";
 import {FormsModule} from "@angular/forms";
 import {Users} from "tim/user/userService";
-import type {ChatModel, ControlPanelSettings} from "./controlpanel";
+import type {DirectoryPickerRestrictions} from "tim/folder/directory-picker.component";
+import {DirectoryPickerComponent} from "tim/folder/directory-picker.component";
+import {itemglobals} from "tim/util/globals";
+import {TooltipModule} from "ngx-bootstrap/tooltip";
+import type {ChatModel, ControlPanelSettings, UserKey} from "./controlpanel";
 import {ChatControlPanelComponent} from "./controlpanel";
 import type {TokenLimitForUser} from "./userpolicy";
 import type {UserData} from "./usercontrol";
@@ -38,6 +42,14 @@ import type {UserData} from "./usercontrol";
 const PluginMarkupFields = t.intersection([
     t.partial({
         welcomeText: t.string,
+        apiAlias: t.string,
+        defaultWindowSize: t.union([
+            t.literal("sm"),
+            t.literal("md"),
+            t.literal("lg"),
+            t.literal("xs"),
+        ]),
+        blockContent: t.string,
     }),
     GenericPluginMarkup,
     t.type({
@@ -55,6 +67,7 @@ export interface Message {
     content: string;
     role: string;
     timestamp_ms?: number;
+    citations?: string[];
 }
 
 export interface ChatEntry {
@@ -64,7 +77,7 @@ export interface ChatEntry {
 
 export interface AskResponse {
     answer?: string;
-    usage?: number;
+    citations?: string[];
     error?: string;
 }
 
@@ -77,6 +90,10 @@ export interface ControlPanelData extends ControlPanelSettings {
     availableModels: ChatModel[];
     availableModes: string[];
     availableEmbedderProviders: string[];
+    availableKeys: UserKey[];
+    chosenKey: string;
+    selectedModel: string | null;
+    allowedItemPaths?: string[];
 }
 
 @Component({
@@ -84,61 +101,86 @@ export interface ControlPanelData extends ControlPanelSettings {
     encapsulation: ViewEncapsulation.None,
     // TODO: Display message datetime from the timestamp with `dateString()`
     template: `
-        <tim-dialog-frame class="chattim-dialog-frame" [size]="'md'">
+        <div class="chattim-block-anchor"
+             *ngIf="(markup.blockContent ?? '').trim().length > 0"
+             [innerHTML]="markup.blockContent | purify">
+        </div>
+        <tim-dialog-frame class="chattim-dialog-frame" [size]="windowSize">
             <ng-container header> {{ header }}</ng-container>
             <ng-container body>
-                <div class="chattim-body scroll-box">
-                    <div class="scroll-box" #conversationScroll>
-                        <div *ngIf="conversation.length === 0" class="chat-welcome">
-                            <ng-container *ngIf="markup.welcomeText; else localizedWelcome">
-                                {{ markup.welcomeText }}
-                            </ng-container>
-                            <ng-template #localizedWelcome>
-                                <span i18n>"Welcome to use TIM's helper chatbot!"</span>
-                            </ng-template>
+                <div class="chattim-body scroll-box" #conversationScroll>
+                    <div class="upper-area">
+                        <div>
+                            <div *ngIf="conversation.length === 0" class="chat-welcome">
+                                <ng-container *ngIf="markup.welcomeText; else localizedWelcome">
+                                    {{ markup.welcomeText }}
+                                </ng-container>
+                                <ng-template #localizedWelcome>
+                                    <span i18n>"Welcome to use TIM's helper chatbot!"</span>
+                                </ng-template>
+                            </div>
+                            <div *ngFor="let entry of conversation">
+                                <div class="chat-user">{{ entry.user.content }}</div>
+                                <div class="chat-bot">
+                                    <div [innerHTML]="entry.agent.content | purify"></div>
+                                    <span *ngIf="entry.agent.citations && entry.agent.citations.length > 0">
+                                        <ng-container *ngFor="let citation of entry.agent.citations; let i = index">
+                                            <a [href]="citation" target="_blank">[{{ i + 1 }}]</a>
+                                            <ng-container *ngIf="i < entry.agent.citations.length - 1">, </ng-container>
+                                        </ng-container>
+                                    </span>
+                                </div>
+                            </div>
                         </div>
-                        <div *ngFor="let entry of conversation">
-                            <div class="chat-user">{{ entry.user.content }}</div>
-                            <div class="chat-bot" [innerHTML]="entry.agent.content | purify"></div>
-                        </div>
-                    </div>
 
-                    <div>
-                        <tim-loading *ngIf="isRunning"></tim-loading>
-                        <div *ngIf="error" [innerHTML]="error | purify"></div>
-                    </div>
-                    <label class="justify-center w-100">{{ inputStem }} </label>
-                    <div class="d-flex flex-row w-100 justify-content-center chat-row">
+                        <div>
+                            <tim-loading *ngIf="isRunning"></tim-loading>
+                            <div *ngIf="error" [innerHTML]="error | purify"></div>
+                        </div>
+                        <label class="justify-center w-100">{{ inputStem }} </label>
+                        <div class="sticky-chat-row">
+                            <div class="d-flex flex-row w-100 justify-content-center chat-row">
                     <textarea i18n-placeholder class="form-control chat-textarea"
                               rows="2"
                               placeholder="Ask me about TIM related things"
                               style="resize: none; overflow: hidden; min-width: 0;"
                               [(ngModel)]="userInput"
-                              (keyup.enter)="onEnter()"
+                              (keydown.enter)="onEnter($event)"
+                              onkeyup="this.style.height='auto'; this.style.height=this.scrollHeight+'px'"
                               oninput="this.style.height='auto'; this.style.height=this.scrollHeight+'px'">
                     </textarea>
 
-                        <button class="timButton flex-shrink-0 ms-2"
-                                *ngIf="buttonText()"
-                                [disabled]="!canSendInput()"
-                                (click)="sendUserInput()"
-                                [innerHTML]="buttonText() | purify">
-                        </button>
+                                <button class="timButton flex-shrink-0 ms-2"
+                                        *ngIf="buttonText()"
+                                        [disabled]="!canSendInput()"
+                                        (click)="sendUserInput()"
+                                        [innerHTML]="buttonText() | purify">
+                                </button>
+                            </div>
+                        </div>
                     </div>
+
                     <div class="control-panel-container">
                         <chattim-control-panel
                             [isTeacher]="isTeacher"
                             (saveSettingsClick)="onSaveSettings($event)"
+                            (clearConversationClick)="onClearConversation()"
                             (panelToggled)="onControlPanelToggle($event)"
+                            (fetchModelsClick)="onFetchModels($event)"
                             [selectedModel]="selectedModel"
                             [setModelTemperature]="modelTemperature"
                             [useStreaming]="useStreaming"
+                            [includeCitations]="includeCitations"
+                            [setSimilarityThreshold]="similarityThreshold"
+                            [topKChunks]="topKChunks"
                             [systemPromptPath]="systemPromptPath"
                             [selectedMode]="selectedMode"
                             [maxTokens]="maxTokens"
                             [response]="controlpanelResponse"
                             [error]="controlpanelError"
-                            [localFilePaths]="localFilePaths"
+                            [selectedItemPaths]="selectedItemPaths"
+                            [pathRestrictions]="pathRestrictions"
+                            [currentFolder]="getCurrentFolder"
                             [availableModels]="availableModels"
                             [availableEmbedderProviders]="availableEmbedderProviders"
                             [selectedEmbedderProvider]="selectedEmbedderProvider"
@@ -148,9 +190,12 @@ export interface ControlPanelData extends ControlPanelSettings {
                             (userDataRequest)="getUserData()"
                             (policySaveRequest)="handleUserPolicySave($event)" 
                             [policySaveResponse]="policySaveResponse" 
-                        >
+                            [tokenLimitAllUsers]="globalPolicy"
+                            [selectedPublicKey]="selectedPublicKey"
+                            [availablePublicKeys]="availablePublicKeys">
                         </chattim-control-panel>
                     </div>
+
                 </div>
             </ng-container>
         </tim-dialog-frame>
@@ -216,11 +261,14 @@ export class ChatTIMComponent
     inputStem = ""; // TODO: do something with this or remove?
     document_id = -1;
     isTeacher: boolean = false;
-
+    selectedItemPaths: string[] = [];
+    pathRestrictions?: DirectoryPickerRestrictions;
     localFilePaths = "";
+    selectedPublicKey: string = "";
+    availablePublicKeys: UserKey[] = [];
     selectedMode = "Creative";
-    selectedModel = "gpt-4.1-mini";
     selectedEmbedderProvider = "";
+    selectedModel = "";
 
     policySaveResponse = {
         result: "",
@@ -235,6 +283,13 @@ export class ChatTIMComponent
     availableModes?: string[];
     availableEmbedderProviders: string[] = [];
 
+    useStreaming: boolean = false;
+    modelTemperature: number | null = null;
+    systemPromptPath: string = "";
+    includeCitations: boolean = false;
+    similarityThreshold: number | null = null;
+    topKChunks: number = 3;
+
     globalPolicy: TokenLimitForUser = {
         token_cap_enabled: false,
         token_cap: 1000,
@@ -243,10 +298,6 @@ export class ChatTIMComponent
         window_value: 5,
         token_cap_for_window: 5000,
     };
-
-    useStreaming: boolean = false;
-    modelTemperature: number | null = null;
-    systemPromptPath: string = "";
 
     constructor(
         el: ElementRef<HTMLElement>,
@@ -291,7 +342,8 @@ export class ChatTIMComponent
         }
     }
 
-    async onEnter() {
+    async onEnter(e: Event) {
+        e.preventDefault();
         await this.sendUserInput();
     }
 
@@ -320,12 +372,22 @@ export class ChatTIMComponent
         await this.doSendUserInput();
     }
 
+    /* used to set the default window size from markup */
+    get windowSize(): "sm" | "md" | "lg" | "xs" {
+        return this.markup.defaultWindowSize ?? "md";
+    }
+
     getAttributeType() {
         return PluginFields;
     }
 
     initDocId() {
         this.document_id = this.pluginMeta.getDocumentId() ?? -1;
+    }
+
+    get getCurrentFolder(): string {
+        const it = itemglobals().curr_item;
+        return it.isFolder ? it.path : it.location;
     }
 
     /* Initialize the scrollable chat box. */
@@ -487,6 +549,7 @@ export class ChatTIMComponent
 
     async doSendUserInput(): Promise<void> {
         this.isRunning = true;
+        this.error = undefined;
         this.answer = undefined;
 
         const input: string = this.userInput;
@@ -536,11 +599,7 @@ export class ChatTIMComponent
             const message: Message = this.conversation[entry_index].agent;
             message.content = this.answer ?? "";
             message.timestamp_ms = Date.now();
-            // TODO: For testing purposes
-            if (data.usage != undefined) {
-                this.conversation[entry_index].agent.content +=
-                    "\nTokens used: " + data.usage ?? "";
-            }
+            message.citations = data.citations;
             this.scheduleAutoScroll(false, pinned);
         } else {
             this.handleError(response.result.error.error, "http");
@@ -597,13 +656,13 @@ export class ChatTIMComponent
                     break;
                 }
 
+                if (res.citations) {
+                    entry.agent.citations = res.citations;
+                }
+
                 entry.agent.content += res.answer ?? "";
                 processedIdx += idx + 1;
                 didAppend = true;
-                // TODO: For dev purposes. Handle tokens somehow else
-                if (res.usage) {
-                    entry.agent.content += "\nTokens used: " + res.usage;
-                }
                 this.handleError(res.error, "server");
             }
             if (didAppend) {
@@ -620,7 +679,6 @@ export class ChatTIMComponent
                     reject();
                 },
                 complete: () => {
-                    console.log("Answer completed");
                     entry.agent.timestamp_ms = Date.now();
                     sub.unsubscribe();
                     resolve();
@@ -650,24 +708,39 @@ export class ChatTIMComponent
             const data = response.result;
             const result = data.result;
             this.controlpanelError = data.error;
+
             if (
                 this.controlpanelError === undefined ||
                 this.controlpanelError === ""
             ) {
-                this.selectedModel = result.model_id;
+                this.selectedModel = result.selectedModel ?? result.model_id;
                 this.selectedMode = result.llm_mode;
                 this.maxTokens = result.max_tokens;
-                this.localFilePaths = result.tim_paths;
+                this.selectedItemPaths = result.tim_paths;
+                this.pathRestrictions = {
+                    allowedPaths: result.allowedItemPaths,
+                    maxDepth: 1,
+                    selectable: "both",
+                    behavior: "disable",
+                };
                 this.availableModels = result.availableModels;
                 this.availableEmbedderProviders =
                     result.availableEmbedderProviders;
                 this.selectedEmbedderProvider ||=
                     this.availableEmbedderProviders[0];
                 this.availableModes = result.availableModes;
+                this.availablePublicKeys = result.availableKeys;
+                this.selectedPublicKey =
+                    result.availableKeys.find((k) => k.is_selected)
+                        ?.public_key ?? "";
+
                 this.globalPolicy = result.global_policy;
                 this.useStreaming = result.use_streaming;
                 this.modelTemperature = result.model_temperature;
                 this.systemPromptPath = result.system_prompt_path;
+                this.includeCitations = result.include_citations;
+                this.similarityThreshold = result.similarity_threshold;
+                this.topKChunks = result.top_k_chunks;
             }
         } else {
             this.controlpanelError = response.result.error.error;
@@ -687,7 +760,12 @@ export class ChatTIMComponent
         };
 
         const response = await this.httpPost<{
-            web: {result: string; error?: string};
+            web: {
+                result: string;
+                error?: string;
+                availableModels?: ChatModel[];
+                selectedModel?: string;
+            };
         }>(this.route("saveSettings"), save_request);
 
         this.isRunning = false;
@@ -695,11 +773,41 @@ export class ChatTIMComponent
             const data = response.result;
             this.controlpanelError = data.web.error;
             this.controlpanelResponse = data.web.result;
+            if (data.web.availableModels) {
+                this.availableModels = data.web.availableModels;
+            }
+            if (data.web.selectedModel) {
+                this.selectedModel = data.web.selectedModel;
+            }
             this.error = undefined; // on successful save we clear chattim-error, maybe not great
             this.useStreaming = controlPanelSettings.use_streaming;
         } else {
             this.controlpanelError = response.result.error.error;
         }
+    }
+
+    async onClearConversation(): Promise<void> {
+        if (this.isRunning || this.document_id <= 0) {
+            return;
+        }
+        if (this.conversation.length == 0) {
+            return;
+        }
+        this.isRunning = true;
+        const response = await this.httpPost(this.route("clearMessages"), {
+            document_id: this.document_id,
+        });
+        this.isRunning = false;
+
+        if (response.ok) {
+            this.conversation = [];
+            this.hasMoreHistory = false;
+            this.answer = undefined;
+            this.error = undefined;
+            return;
+        }
+
+        this.handleError(response.result.error.error, "http");
     }
 
     /**
@@ -839,6 +947,33 @@ export class ChatTIMComponent
         return ts ? new Date(ts).toLocaleString() : "";
     }
 
+    async onFetchModels(publicKey: string) {
+        this.isRunning = true;
+        this.controlpanelError = undefined;
+
+        const response = await this.httpPost<{
+            models: ChatModel[];
+            error?: string;
+        }>(this.route("getModels"), {public_key: publicKey});
+
+        this.isRunning = false;
+        if (response.ok) {
+            const data = response.result;
+            if (data.error) {
+                this.controlpanelError = data.error;
+                return;
+            }
+            this.availableModels = data.models;
+            if (this.availableModels.length > 0) {
+                this.controlPanel.selectFirstFilteredModel();
+            } else {
+                this.controlpanelError = "No models found for this API key.";
+            }
+        } else {
+            this.controlpanelError = response.result.error.error;
+        }
+    }
+
     async handleUserPolicySave(userData: UserData) {
         this.isRunning = true;
         const save_request = {
@@ -891,6 +1026,8 @@ export class ChatTIMComponent
         DialogModule,
         FormsModule,
         ChatControlPanelComponent,
+        DirectoryPickerComponent,
+        TooltipModule,
     ],
 })
 export class ChatTIMModule implements DoBootstrap {
