@@ -210,6 +210,13 @@ class TimDatabase:
         return None
 
     @staticmethod
+    def create_plugin(document_id: int, owner: int) -> LLMRule:
+        rule = LLMRule(document_id=document_id, owner=owner)
+        db.session.add(rule)
+        db.session.commit()
+        return rule
+
+    @staticmethod
     def set_llm_rule(
         document_id: int,
         owner: int,

@@ -449,6 +449,8 @@ class PluginCore:
             return Result(None, f"Document [{document_id}] does not exist")
 
         plugin_data = self.tim_database.get_llm_rule(document_id)
+        if plugin_data is None:
+            return Result(value=InstanceSettingsData.default())
 
         if not self._owns_document(user_id, document_id):
             # Return only data the client needs
@@ -548,9 +550,21 @@ class PluginCore:
         similarity_threshold: float | None = instance_settings.similarity_threshold
         top_k_chunks: int = instance_settings.top_k_chunks
 
+        if not self._document_exists(document_id):
+            return Result(None, f"Document [{document_id}] does not exist")
+
+        if not self._owns_document(caller_id, document_id):
+            return Result(None, "Insufficient rights")
+
         old_plugin_rule = self.tim_database.get_llm_rule(document_id)
+
+        # Need to create before checking any other input
+        if old_plugin_rule is None:
+            self.tim_database.create_plugin(owner=caller_id, document_id=document_id)
+            return Result(value=SaveInstanceResult(supported_models=[], model_id=""))
+
         old_provider = None
-        if old_plugin_rule is not None and old_plugin_rule.public_key:
+        if old_plugin_rule.public_key:
             try:
                 old_provider, _ = self.get_api_key(str(old_plugin_rule.public_key))
             except Exception:
@@ -560,12 +574,6 @@ class PluginCore:
             provider_str, api_key = self.try_access_api_key(caller_id, public_key)
         except Exception as e:
             return Result(None, str(e))
-
-        if not self._document_exists(document_id):
-            return Result(None, f"Document [{document_id}] does not exist")
-
-        if not self._owns_document(caller_id, document_id):
-            return Result(None, "Insufficient rights")
 
         rag_mode = self._parse_rag_mode(llm_mode)
         if rag_mode is None:
