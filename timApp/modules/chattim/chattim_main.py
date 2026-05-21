@@ -43,6 +43,7 @@ class ChatTimMarkupModel(GenericMarkupModel):
     welcomeText: str = "Welcome to use TIM's helper chatbot!"
     apiAlias: str = ""
     defaultWindowSize: Literal["sm", "md", "lg", "xs"] = "md"
+    blockContent: str = ""
 
 
 # TODO: make proper dataclasses
@@ -73,9 +74,8 @@ def get_rights(params: GetRightsParams) -> dict:
 
 class ChatTimAskResponse(TypedDict, total=False):
     answer: str | None
-    usage: int | None
+    citations: list[str] | None
     error: str | None
-    used_chunks: list[str] | None
 
 
 @dataclass
@@ -136,6 +136,7 @@ header: ChatTIM
 welcomeText: ""  
 apiAlias: ""
 defaultWindowSize: "md" # [sm, md, lg, xs]
+blockContent: ""
 ```
 """,
     ]
@@ -207,13 +208,13 @@ def ask_route(params: ChatTimAskParams) -> ChatTimAskResponse:
     session_user_id = get_current_user_id()
 
     resp = plugincore.chat_request(session_user_id, document_id, user_input)
-
-    response = ChatTimAskResponse(
-        answer=resp.value.whole_msg,
-        used_chunks=resp.value.used_chunks,
-        error=resp.error,
-    )
-    return response
+    if resp.ok():
+        message, context = resp.value
+        return ChatTimAskResponse(
+            answer=message,
+            citations=context,
+        )
+    return ChatTimAskResponse(error=resp.error)
 
 
 def ask_stream_route(params: ChatTimAskParams) -> Response:
@@ -228,20 +229,22 @@ def ask_stream_route(params: ChatTimAskParams) -> Response:
             yield to_ndjson_str(ChatTimAskResponse(error=resp.error))
             return
 
+        citations: list[str] | None = None
+
         try:
-            for chunk in resp.value:
-                if chunk.delta:
-                    yield to_ndjson_str(ChatTimAskResponse(answer=chunk.delta))
-                if chunk.usage:
-                    yield to_ndjson_str(
-                        ChatTimAskResponse(usage=chunk.usage.total_tokens)
-                    )
+            stream, context = resp.value
+            citations = context
+            for chunk in stream:
+                yield to_ndjson_str(ChatTimAskResponse(answer=chunk))
         except ModelError as e:
-            yield to_ndjson_str(ChatTimAskResponse(error=e.text()))
+            error = f"{e.text()} {str(e.cause)}"
+            yield to_ndjson_str(ChatTimAskResponse(error=error))
             return
         except Exception as e:
             yield to_ndjson_str(ChatTimAskResponse(error=str(e)))
             return
+        finally:
+            yield to_ndjson_str(ChatTimAskResponse(citations=citations))
 
     return Response(
         stream_with_context(generate()),
@@ -289,19 +292,11 @@ def save_settings(params: ChatTimSaveSettingsParams) -> PluginAnswerResp:
 
 
 def get_messages(params: GetMessagesParams) -> dict:
-    user_id = str(get_current_user_id())
-    document_id = str(params.document_id)
+    user_id = get_current_user_id()
+    document_id = params.document_id
     amount = params.amount
     ts_end = params.timestamp_end_ms
-
-    chat_messages = plugincore.get_messages_tw(
-        user_id, document_id, None, ts_end, amount
-    )
-    messages = [
-        {"content": m.content, "role": m.role, "timestamp_ms": m.timestamp}
-        for m in chat_messages
-        if m.role in ("user", "assistant")
-    ]
+    messages = plugincore.get_messages_ui(user_id, document_id, ts_end, amount)
     return {"messages": messages}
 
 

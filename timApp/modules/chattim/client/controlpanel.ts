@@ -1,11 +1,5 @@
-import {
-    Component,
-    EventEmitter,
-    Input,
-    OnChanges,
-    Output,
-    SimpleChanges,
-} from "@angular/core";
+import type {OnChanges, SimpleChanges} from "@angular/core";
+import {Component, EventEmitter, Input, Output} from "@angular/core";
 import {showConfirm} from "tim/ui/showConfirmDialog";
 import type {JsonValue} from "tim/util/jsonvalue";
 import {DirectoryPickerRestrictions} from "tim/folder/directory-picker.component";
@@ -35,6 +29,9 @@ export interface ControlPanelSettings extends Record<string, JsonValue> {
     global_policy: TokenLimitForUser;
     use_streaming: boolean;
     model_temperature: number | null;
+    top_k_chunks: number;
+    include_citations: boolean;
+    similarity_threshold: number | null;
 }
 
 export interface TokenLimitForUser extends Record<string, JsonValue> {
@@ -45,6 +42,8 @@ export interface TokenLimitForUser extends Record<string, JsonValue> {
     window_value: number | null;
     token_cap_for_window: number | null;
 }
+
+type SimilarityMode = "none" | "loose" | "balanced" | "strict" | "custom";
 
 @Component({
     selector: "chattim-control-panel",
@@ -73,7 +72,7 @@ export interface TokenLimitForUser extends Record<string, JsonValue> {
                 </div>
             </ng-container>
             <ng-container *ngIf="isTeacher">
-                
+
                 <!-- Choose API-key -->
                 <div class="settings-row">
                     <button class="btn btn-link settings-section-btn"
@@ -87,10 +86,13 @@ export interface TokenLimitForUser extends Record<string, JsonValue> {
                     <div *ngIf="keyOpen" class="settings-section-body">
                         <select class="form-control"
                                 [(ngModel)]="selectedPublicKey">
-                           <option *ngFor="let key of availablePublicKeys" 
-                                   [ngValue]="key.public_key">{{ key.public_key + " - " + key.provider + (key.is_shared ? " " +
-                                   "(shared by " + key.shared_by + ")" : "") }}
-                            </option>z§
+                            <option *ngFor="let key of availablePublicKeys"
+                                    [ngValue]="key.public_key">{{
+                                    key.public_key + " - " + key.provider + (key.is_shared ? " " +
+                                        "(shared by " + key.shared_by + ")" : "")
+                                }}
+                            </option>
+                            z§
                         </select>
                         <button class="btn btn-default"
                                 style="margin-top: 6px;"
@@ -100,8 +102,8 @@ export interface TokenLimitForUser extends Record<string, JsonValue> {
                         </button>
                     </div>
                 </div>
-                                
-                
+
+
                 <!-- Choose the LLM -->
                 <div class="settings-row">
                     <button class="btn btn-link settings-section-btn"
@@ -124,36 +126,90 @@ export interface TokenLimitForUser extends Record<string, JsonValue> {
                         </select>
 
                         <!-- Model parameters -->
-                        <div class="settings-section-body">
-                            <div class="checkbox">
-                                <label>
-                                    <input type="checkbox"
-                                           [(ngModel)]="useStreaming">
-                                    Use streaming responses
+                        <div class="checkbox">
+                            <label>
+                                <input type="checkbox"
+                                       [(ngModel)]="useStreaming">
+                                Use streaming responses
+                                <a tooltip="{{getStreamTooltip}}"><i class="glyphicon glyphicon-info-sign"></i></a>
+                            </label>
+                        </div>
+
+                        <div class="checkbox">
+                            <label>
+                                <input type="checkbox"
+                                       [(ngModel)]="enabledTemperature">
+                                Enable temperature parameter
+                                <a tooltip="{{getTemperatureTooltip}}"><i class="glyphicon glyphicon-info-sign"></i></a>
+                            </label>
+                        </div>
+                        <div *ngIf="enabledTemperature" class="settings-section-body">
+                            <input type="number"
+                                   class="form-control"
+                                   [(ngModel)]="modelTemperature"
+                                   [min]="0"
+                                   [max]="2"
+                                   [step]="0.1"
+                            >
+                        </div>
+                        <div class="error" *ngIf="isInvalidModelTemperature">
+                            Temperature input should be between 0 and 2
+                        </div>
+
+                        <div class="checkbox">
+                            <label>
+                                <input type="checkbox"
+                                       [(ngModel)]="includeCitations">
+                                Include citations
+                                <a tooltip="{{getCitationTooltip}}"><i class="glyphicon glyphicon-info-sign"></i></a>
+                            </label>
+                        </div>
+
+                        <div class="form-group">
+                            <div class="inline-field">
+                                <label class="inline-field-label">Similarity threshold
+                                    <a tooltip="{{getSimilarityTooltip}}"><i class="glyphicon glyphicon-info-sign"></i></a>
                                 </label>
+                                <select class="form-control inline-field-control"
+                                        [(ngModel)]="similarityThresholdMode">
+                                    <option *ngFor="let o of SIMILARITY_OPTION_LIST" [ngValue]="o.mode">
+                                        {{ o.label }}
+                                    </option>
+                                </select>
                             </div>
-                            <div class="checkbox">
-                                <label>
-                                    <input type="checkbox"
-                                           [(ngModel)]="enabledTemperature">
-                                    Enable temperature parameter
-                                </label>
+
+                            <div *ngIf="similarityThresholdMode === 'custom'" style="margin-top: 6px;">
+                                <input
+                                    type="number"
+                                    class="form-control"
+                                    [(ngModel)]="similarityThreshold"
+                                    min="-1"
+                                    max="1"
+                                    step="0.05"
+                                />
                             </div>
-                            <div *ngIf="enabledTemperature" class="settings-section-body">
-                                <input type="number"
-                                       class="form-control"
-                                       [(ngModel)]="modelTemperature"
-                                       [min]="0"
-                                       [max]="2"
-                                       [step]="0.1"
-                                >
-                            </div>
-                            <div class="error" *ngIf="isInvalidModelTemperature">
-                                Input should be between 0 and 2
+                            <div class="error" *ngIf="isInvalidSimilarityThreshold">
+                                Similarity input should be between -1 and 1
                             </div>
                         </div>
 
-                        Provider for embedding creation: <strong>{{ selectedEmbedderProvider }}</strong> 
+                        <div class="inline-field">
+                            <label class="inline-field-label">Top-K chunks
+                                <a tooltip="{{getTopKTooltip}}"><i class="glyphicon glyphicon-info-sign"></i></a>
+                            </label>
+                            <input
+                                type="number"
+                                class="form-control inline-field-control"
+                                [(ngModel)]="topKChunks"
+                                min="1"
+                                max="20"
+                            />
+                        </div>
+                        <div class="error" *ngIf="isInvalidTopChunks">
+                            Top-K should be between 1 and 20
+                        </div>
+
+                        Provider for embedding creation: <strong>{{ selectedEmbedderProvider }}</strong>
                         <div class="embedder-buttons">
                             <div class="form-check" *ngFor="let provider of allEmbedderProviders">
                                 <label class="form-check-label" [class.disabled-label]="!embedderAvailable(provider)"
@@ -162,17 +218,16 @@ export interface TokenLimitForUser extends Record<string, JsonValue> {
                                            class="form-check-input"
                                            name="embedderProviderRadio"
                                            [disabled]="!embedderAvailable(provider)"
-                                           [value]="provider" 
+                                           [value]="provider"
                                            [(ngModel)]="selectedEmbedderProvider">
                                     {{ provider }}
                                 </label>
                             </div>
                         </div>
-                        
+
                     </div>
                 </div>
 
- 
                 <!-- Switch between summarizing, (balanced) and creative -->
                 <div class="settings-row">
                     <button class="btn btn-link settings-section-btn"
@@ -227,7 +282,7 @@ export interface TokenLimitForUser extends Record<string, JsonValue> {
                           [class.glyphicon-chevron-right]="!filesOpen"
                           [class.glyphicon-chevron-down]="filesOpen">
                     </span>
-                        Add TIM-documents: {{selectedItemPaths.length}}
+                        Add TIM-documents: {{ selectedItemPaths.length }}
                     </button>
                     <div *ngIf="filesOpen" class="settings-section-body">
                         <tim-directory-picker
@@ -249,7 +304,7 @@ export interface TokenLimitForUser extends Record<string, JsonValue> {
                           [class.glyphicon-chevron-right]="!promptOpen"
                           [class.glyphicon-chevron-down]="promptOpen">
                     </span>
-                        Set system prompt path: {{systemPrompt}}
+                        Set system prompt path: {{ systemPrompt }}
                     </button>
                     <div *ngIf="promptOpen" class="settings-section-body">
                         <tim-directory-picker
@@ -258,7 +313,7 @@ export interface TokenLimitForUser extends Record<string, JsonValue> {
                                         : undefined"
                             [(selection)]="systemPromptSelection"
                             [restrictions]="{maxSelectedCount: 1, selectable: 'documents'}"
-                        ></tim-directory-picker> 
+                        ></tim-directory-picker>
                     </div>
                 </div>
 
@@ -366,6 +421,8 @@ export class ChatControlPanelComponent implements OnChanges {
     enabledTemperature: boolean = false;
     modelTemperature: number | null = 0.2;
     filterModels = true;
+    similarityThreshold: number | null = 0.3;
+    similarityThresholdMode: SimilarityMode = "none";
 
     systemPromptSelection: string[] = [];
 
@@ -381,6 +438,21 @@ export class ChatControlPanelComponent implements OnChanges {
         "dall-e",
         "moderation",
     ];
+
+    readonly SIMILARITY_OPTIONS: Record<
+        SimilarityMode,
+        {label: string; value: number | null}
+    > = {
+        none: {label: "None", value: null},
+        loose: {label: "Loose (0.3)", value: 0.3},
+        balanced: {label: "Balanced (0.5)", value: 0.5},
+        strict: {label: "Strict (0.7)", value: 0.7},
+        custom: {label: "Custom…", value: null},
+    };
+
+    readonly SIMILARITY_OPTION_LIST = Object.entries(
+        this.SIMILARITY_OPTIONS
+    ).map(([mode, opt]) => ({mode: mode as SimilarityMode, ...opt}));
 
     timeUnitOptions: {value: string; label: string}[] = [
         {value: "min", label: "Minutes"},
@@ -403,6 +475,23 @@ export class ChatControlPanelComponent implements OnChanges {
         this.modelTemperature = value;
     }
 
+    @Input() set setSimilarityThreshold(value: number | null) {
+        if (value == null) {
+            this.similarityThresholdMode = "none";
+            this.similarityThreshold = 0.3;
+            return;
+        }
+        for (const entry of this.SIMILARITY_OPTION_LIST) {
+            if (entry.value == value) {
+                this.similarityThresholdMode = entry.mode;
+                this.similarityThreshold = value;
+                return;
+            }
+        }
+        this.similarityThresholdMode = "custom";
+        this.similarityThreshold = value;
+    }
+
     @Input() set systemPromptPath(path: string) {
         if (path) {
             this.systemPromptSelection = [path.trim()];
@@ -410,6 +499,8 @@ export class ChatControlPanelComponent implements OnChanges {
     }
 
     @Input() useStreaming: boolean = false;
+    @Input() includeCitations: boolean = false;
+    @Input() topKChunks: number = 3;
     @Input() selectedItemPaths!: string[];
     @Input() pathRestrictions?: DirectoryPickerRestrictions;
     @Input() currentFolder?: string;
@@ -432,11 +523,11 @@ export class ChatControlPanelComponent implements OnChanges {
     @Output() clearConversationClick = new EventEmitter<void>();
 
     ngOnChanges(changes: SimpleChanges): void {
-        if (changes["availableModels"]) {
-            const prev = changes["availableModels"].previousValue as
+        if (changes.availableModels) {
+            const prev = changes.availableModels.previousValue as
                 | ChatModel[]
                 | undefined;
-            const curr = changes["availableModels"].currentValue as
+            const curr = changes.availableModels.currentValue as
                 | ChatModel[]
                 | undefined;
             if (curr && curr.length > 0 && curr !== prev) {
@@ -497,9 +588,12 @@ export class ChatControlPanelComponent implements OnChanges {
             system_prompt_path: this.systemPrompt ?? "",
             global_policy: this.tokenLimitAllUsers,
             use_streaming: this.useStreaming,
+            include_citations: this.includeCitations,
+            similarity_threshold: this.similarityThresholdValue,
             model_temperature: this.enabledTemperature
                 ? this.modelTemperature
                 : null,
+            top_k_chunks: this.topKChunks,
         };
         console.log("sending: ", data);
         this.saveSettingsClick.emit(data);
@@ -519,9 +613,21 @@ export class ChatControlPanelComponent implements OnChanges {
         return this.systemPromptSelection[0];
     }
 
+    get similarityThresholdValue(): number | null {
+        const preset: number | null =
+            this.SIMILARITY_OPTIONS[this.similarityThresholdMode].value;
+        return this.similarityThresholdMode === "custom"
+            ? this.similarityThreshold
+            : preset;
+    }
+
     get filteredModels(): ChatModel[] {
-        if (!this.availableModels) return [];
-        if (!this.filterModels) return this.availableModels;
+        if (!this.availableModels) {
+            return [];
+        }
+        if (!this.filterModels) {
+            return this.availableModels;
+        }
         return this.availableModels.filter(
             (m) => !this.NON_CHAT_PREFIXES.some((p) => m.value.includes(p))
         );
@@ -555,13 +661,26 @@ export class ChatControlPanelComponent implements OnChanges {
         );
     }
 
+    get isInvalidSimilarityThreshold(): boolean {
+        if (this.similarityThresholdMode == "none") {
+            return false;
+        }
+        return !this.isValidFloatBetween(this.similarityThresholdValue, -1, 1);
+    }
+
+    get isInvalidTopChunks(): boolean {
+        return !this.isValidFloatBetween(this.topKChunks, 1, 20);
+    }
+
     get invalidInputState(): boolean {
         return (
             this.isInvalidMaxTokens ||
             this.isInvalidTokenCap ||
             this.isInvalidWindowTime ||
             this.isInvalidWindowTokens ||
-            this.isInvalidModelTemperature
+            this.isInvalidModelTemperature ||
+            this.isInvalidSimilarityThreshold ||
+            this.isInvalidTopChunks
         );
     }
 
@@ -598,5 +717,31 @@ export class ChatControlPanelComponent implements OnChanges {
         if (!this.isInvalidMaxTokens) {
             this.maxTokensValue = parsed;
         }
+    }
+
+    get getStreamTooltip(): string {
+        return "Enable streaming to receive responses incrementally.";
+    }
+
+    get getTemperatureTooltip(): string {
+        return (
+            "Adjust the randomness of the model's responses." +
+            " Higher values result in more random outputs."
+        );
+    }
+
+    get getCitationTooltip(): string {
+        return "Include citations in the responses to provide references for the used context.";
+    }
+
+    get getSimilarityTooltip(): string {
+        return (
+            "Affects the selection of found context." +
+            " The higher the value, the stricter the similarity requirement for context selection."
+        );
+    }
+
+    get getTopKTooltip(): string {
+        return "Specify the number of top chunks to consider for context selection.";
     }
 }

@@ -24,9 +24,9 @@ class TimDatabase:
         """
         Returns a document corresponding to the given id.
         """
-        doc_entry = docentry.DocEntry.find_all_by_id(doc_id)
+        doc_entry = TimDatabase.get_doc_entry_by_id(doc_id)
         if doc_entry:
-            return doc_entry[0].document  # paragraphs -> .get_paragraphs()
+            return doc_entry.document  # paragraphs -> .get_paragraphs()
         return None
 
     @staticmethod
@@ -53,6 +53,13 @@ class TimDatabase:
         for d in doc_entries if doc_entries else []:
             documents.append(d.document)  # paragraphs -> .get_paragraphs()
         return documents
+
+    @staticmethod
+    def get_doc_entry_by_id(doc_id: int) -> DocEntry | None:
+        entries = docentry.DocEntry.find_all_by_id(doc_id)
+        if not entries:
+            return None
+        return entries[0]
 
     @staticmethod
     def check_rights(user_id: int, doc_id: int) -> UserItemRights | None:
@@ -209,6 +216,9 @@ class TimDatabase:
         public_key: str,
         use_streaming: bool,
         temperature: float | None,
+        include_citations: bool,
+        similarity_threshold: float | None,
+        top_k_chunks: int,
         teachers: list[int],
         current_mode: str,
         total_tokens_spent: int,
@@ -226,6 +236,9 @@ class TimDatabase:
         :param public_key: The alias of the chosen API key for the instance.
         :param use_streaming: Use streaming for model answers.
         :param temperature: The temperature parameter for the model.
+        :param include_citations: Whether to include citations.
+        :param similarity_threshold: The similarity threshold for context inclusion.
+        :param top_k_chunks: The number of top chunks to include.
         :param teachers: The ids of the teachers allowed to use the plugin instance.
         :param current_mode: Mode of the plugin instance: summarizing, creative or balanced.
         :param total_tokens_spent: The total number of tokens spent.
@@ -245,6 +258,9 @@ class TimDatabase:
                 public_key=public_key,
                 use_streaming=use_streaming,
                 temperature=temperature,
+                include_citations=include_citations,
+                similarity_threshold=similarity_threshold,
+                top_k_chunks=top_k_chunks,
                 teachers=teachers,
                 current_mode=current_mode,
                 total_tokens_spent=total_tokens_spent,
@@ -265,6 +281,9 @@ class TimDatabase:
             rule.system_prompt_path = system_prompt_path
             rule.use_streaming = use_streaming
             rule.temperature = temperature
+            rule.include_citations = include_citations
+            rule.similarity_threshold = similarity_threshold
+            rule.top_k_chunks = top_k_chunks
         rule.policy.extend(policy)
         rule.usage.extend(usage)
         db.session.commit()

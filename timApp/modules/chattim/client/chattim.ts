@@ -33,6 +33,7 @@ import {Users} from "tim/user/userService";
 import type {DirectoryPickerRestrictions} from "tim/folder/directory-picker.component";
 import {DirectoryPickerComponent} from "tim/folder/directory-picker.component";
 import {itemglobals} from "tim/util/globals";
+import {TooltipModule} from "ngx-bootstrap/tooltip";
 import type {
     ChatModel,
     ControlPanelSettings,
@@ -51,6 +52,7 @@ const PluginMarkupFields = t.intersection([
             t.literal("lg"),
             t.literal("xs"),
         ]),
+        blockContent: t.string,
     }),
     GenericPluginMarkup,
     t.type({
@@ -68,6 +70,7 @@ export interface Message {
     content: string;
     role: string;
     timestamp_ms?: number;
+    citations?: string[];
 }
 
 export interface ChatEntry {
@@ -77,9 +80,8 @@ export interface ChatEntry {
 
 export interface AskResponse {
     answer?: string;
-    usage?: number;
+    citations?: string[];
     error?: string;
-    used_chunks?: string[];
 }
 
 export interface AskParams {
@@ -104,6 +106,10 @@ export interface ControlPanelData extends ControlPanelSettings {
     encapsulation: ViewEncapsulation.None,
     // TODO: Display message datetime from the timestamp with `dateString()`
     template: `
+        <div class="chattim-block-anchor"
+             *ngIf="(markup.blockContent ?? '').trim().length > 0"
+             [innerHTML]="markup.blockContent | purify">
+        </div>
         <tim-dialog-frame class="chattim-dialog-frame" [size]="windowSize">
             <ng-container header> {{ header }}</ng-container>
             <ng-container body>
@@ -120,7 +126,15 @@ export interface ControlPanelData extends ControlPanelSettings {
                             </div>
                             <div *ngFor="let entry of conversation">
                                 <div class="chat-user">{{ entry.user.content }}</div>
-                                <div class="chat-bot" [innerHTML]="entry.agent.content | purify"></div>
+                                <div class="chat-bot">
+                                    <div [innerHTML]="entry.agent.content | purify"></div>
+                                    <span *ngIf="entry.agent.citations && entry.agent.citations.length > 0">
+                                        <ng-container *ngFor="let citation of entry.agent.citations; let i = index">
+                                            <a [href]="citation" target="_blank">[{{ i + 1 }}]</a>
+                                            <ng-container *ngIf="i < entry.agent.citations.length - 1">, </ng-container>
+                                        </ng-container>
+                                    </span>
+                                </div>
                             </div>
                         </div>
 
@@ -150,7 +164,7 @@ export interface ControlPanelData extends ControlPanelSettings {
                             </div>
                         </div>
                     </div>
-                    
+
                     <div class="control-panel-container">
                         <chattim-control-panel
                             [isTeacher]="isTeacher"
@@ -161,6 +175,9 @@ export interface ControlPanelData extends ControlPanelSettings {
                             [selectedModel]="selectedModel"
                             [setModelTemperature]="modelTemperature"
                             [useStreaming]="useStreaming"
+                            [includeCitations]="includeCitations"
+                            [setSimilarityThreshold]="similarityThreshold"
+                            [topKChunks]="topKChunks"
                             [systemPromptPath]="systemPromptPath"
                             [selectedMode]="selectedMode"
                             [maxTokens]="maxTokens"
@@ -178,7 +195,7 @@ export interface ControlPanelData extends ControlPanelSettings {
                             [availablePublicKeys]="availablePublicKeys">
                         </chattim-control-panel>
                     </div>
-                    
+
                 </div>
             </ng-container>
         </tim-dialog-frame>
@@ -244,7 +261,6 @@ export class ChatTIMComponent
     inputStem = ""; // TODO: do something with this or remove?
     document_id = -1;
     isTeacher: boolean = false;
-    used_chunks?: string[];
     selectedItemPaths: string[] = [];
     pathRestrictions?: DirectoryPickerRestrictions;
     localFilePaths = "";
@@ -261,6 +277,13 @@ export class ChatTIMComponent
     availableModes?: string[];
     availableEmbedderProviders: string[] = [];
 
+    useStreaming: boolean = false;
+    modelTemperature: number | null = null;
+    systemPromptPath: string = "";
+    includeCitations: boolean = false;
+    similarityThreshold: number | null = null;
+    topKChunks: number = 3;
+
     globalPolicy: TokenLimitForUser = {
         token_cap_enabled: false,
         token_cap: 1000,
@@ -269,11 +292,6 @@ export class ChatTIMComponent
         window_value: 5,
         token_cap_for_window: 5000,
     };
-
-    useStreaming: boolean = false;
-    modelTemperature: number | null = null;
-    systemPromptPath: string = "";
-    // TODO: make a configurable option for user in settings?
 
     constructor(
         el: ElementRef<HTMLElement>,
@@ -571,16 +589,10 @@ export class ChatTIMComponent
             }
 
             this.answer = data.answer;
-            this.used_chunks = data.used_chunks;
-            //console.log("used_chunks: ", this.used_chunks);
             const message: Message = this.conversation[entry_index].agent;
             message.content = this.answer ?? "";
             message.timestamp_ms = Date.now();
-            // TODO: For testing purposes
-            if (data.usage != undefined) {
-                this.conversation[entry_index].agent.content +=
-                    "\nTokens used: " + data.usage ?? "";
-            }
+            message.citations = data.citations;
             this.scheduleAutoScroll(false, pinned);
         } else {
             this.handleError(response.result.error.error, "http");
@@ -637,13 +649,13 @@ export class ChatTIMComponent
                     break;
                 }
 
+                if (res.citations) {
+                    entry.agent.citations = res.citations;
+                }
+
                 entry.agent.content += res.answer ?? "";
                 processedIdx += idx + 1;
                 didAppend = true;
-                // TODO: For dev purposes. Handle tokens somehow else
-                if (res.usage) {
-                    entry.agent.content += "\nTokens used: " + res.usage;
-                }
                 this.handleError(res.error, "server");
             }
             if (didAppend) {
@@ -660,7 +672,6 @@ export class ChatTIMComponent
                     reject();
                 },
                 complete: () => {
-                    console.log("Answer completed");
                     entry.agent.timestamp_ms = Date.now();
                     sub.unsubscribe();
                     resolve();
@@ -720,6 +731,9 @@ export class ChatTIMComponent
                 this.useStreaming = result.use_streaming;
                 this.modelTemperature = result.model_temperature;
                 this.systemPromptPath = result.system_prompt_path;
+                this.includeCitations = result.include_citations;
+                this.similarityThreshold = result.similarity_threshold;
+                this.topKChunks = result.top_k_chunks;
             }
         } else {
             this.controlpanelError = response.result.error.error;
@@ -781,7 +795,6 @@ export class ChatTIMComponent
         if (response.ok) {
             this.conversation = [];
             this.hasMoreHistory = false;
-            this.used_chunks = undefined;
             this.answer = undefined;
             this.error = undefined;
             return;
@@ -965,6 +978,7 @@ export class ChatTIMComponent
         DialogModule,
         FormsModule,
         DirectoryPickerComponent,
+        TooltipModule,
     ],
 })
 export class ChatTIMModule implements DoBootstrap {

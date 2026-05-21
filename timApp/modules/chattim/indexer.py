@@ -38,7 +38,8 @@ class ContextResponse:
 
     context: str
     tokens_used: int
-    used_chunks: list[str]
+    used_context: list[tuple[int, int]]
+    """A list of tuples of document IDs and block IDs."""
 
 
 # maybe useless?
@@ -397,22 +398,26 @@ class Indexer:
     def calculate_similarity(
         embeddings: list[list[float]], prompt_embedding: list[float]
     ) -> list[float]:
-        embeddings = np.array(embeddings)
-        prompt_embedding = np.array(prompt_embedding)
+        """Compute cosine similarity between a prompt embedding and
+        each row vector in the embeddings list."""
+        embeddings_np = np.array(embeddings)
+        prompt_embedding_np = np.array(prompt_embedding)
 
-        dot_product = embeddings @ prompt_embedding
-        norm_embeddings = np.linalg.norm(embeddings, axis=1)
-        norm_prompt = float(np.linalg.norm(prompt_embedding))
+        dot_product = embeddings_np @ prompt_embedding_np
+        norm_embeddings = np.linalg.norm(embeddings_np, axis=1)
+        norm_prompt = float(np.linalg.norm(prompt_embedding_np))
         similarities = dot_product / (norm_embeddings * norm_prompt)
-        # print(f"similarities {similarities}")
-        return similarities
+        return similarities.tolist()
 
-    def get_context(self, prompt: str, identifier: int, k: int = 3) -> ContextResponse:
+    def get_context(
+        self, prompt: str, identifier: int, k: int = 3, threshold: float | None = None
+    ) -> ContextResponse:
         """returns the context for the prompt as list of text,and the number of tokens used
 
         :param prompt: prompt that is used to search for context
         :param identifier id of the plugin instance
         :param k: number of tim chunks to return
+        :param threshold: Threshold for the similarity values of the chunks. Between -1 and 1.
         :return: ContextResponse object containing the context and the number of tokens used
         """
         embedding_model = self.embedding_models[identifier]
@@ -433,34 +438,44 @@ class Indexer:
 
         embeddings: list[list[float]] = []
         texts: list[str] = []
+        blocks: list[tuple[int, int]] = []
 
         for page in page_embeddings:
             for chunk in page.get("embeddings", []):
                 embedding = chunk.get("embedding")
                 text = chunk.get("text")
+                doc_id = chunk.get("document_id", -1)
+                tim_block_id = chunk.get("tim_block_id", -1)
                 if not embedding or not text:
                     continue
                 embeddings.append(embedding)
                 texts.append(text)
+                blocks.append((doc_id, tim_block_id))
 
         if not embeddings or not prompt_embedding:
-            return ContextResponse(context="", tokens_used=tokens_used, used_chunks=[])
+            return ContextResponse(context="", tokens_used=tokens_used, used_context=[])
 
-        similarities = self.calculate_similarity(
+        similarities: list[float] = self.calculate_similarity(
             embeddings=embeddings, prompt_embedding=prompt_embedding
         )
-        data = [[t, e] for t, e in zip(texts, similarities)]
+        data: list[tuple[float, int]] = [
+            (e, i) for e, i in zip(similarities, range(0, len(similarities)))
+        ]
 
-        data.sort(key=lambda x: x[1], reverse=True)
+        data.sort(key=lambda x: x[0], reverse=True)
 
         best_chunks = data[0:k]
-        context = []
-        for text, similarity in best_chunks:
-            context.append(text)
-        context_string = ", ".join(context)
+        context: str = ""
+        context_ids: list[tuple[int, int]] = []
+        for similarity, index in best_chunks:
+            if threshold is not None and similarity < threshold:
+                continue
+            content = texts[index]
+            context += f"{content}\n\n"
+            context_ids.append(blocks[index])
 
         return ContextResponse(
-            context=context_string, tokens_used=tokens_used, used_chunks=context
+            context=context, tokens_used=tokens_used, used_context=context_ids
         )
 
     def add_embedder(self, identifier: int, embedder: EmbeddingModel) -> None:

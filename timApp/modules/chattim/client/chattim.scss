@@ -23,10 +23,6 @@
   color: #0B0A09;
 }
 
-.par.chattim {
-  min-height: 1em;
-}
-
 .chattim-dialog-frame .modal-dialog {
   min-width: 20vh;
   min-height: 32vh;
@@ -63,6 +59,10 @@
   bottom: 0;
   background: white;
   padding-top: 4px;
+}
+
+.previewDiv .chattim-dialog-frame {
+  visibility: hidden;
 }
 
 .chat-row {
@@ -114,6 +114,25 @@
 
 .time-window-label-span {
   flex: 0 0 15ch;
+}
+
+.inline-field {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: nowrap;
+  width: 100%;
+}
+
+.inline-field-label {
+  margin: 0;
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
+
+.inline-field-control {
+  flex: 1 1 auto;
+  min-width: 0;
 }
 
 .embedder-buttons {

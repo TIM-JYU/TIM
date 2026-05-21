@@ -36,19 +36,11 @@ from timApp.modules.chattim.model import (
     GenericApiClient,
     Provider,
     ModelError,
-    ModelErrorKind,
     PROVIDERS,
-    ModelErrorKind,
 )
 from timApp.modules.chattim.conversation import ConversationManager, ChatMessage
 
 DEFAULT_CACHE_TIMEOUT = 60 * 15  # seconds
-
-
-@dataclass
-class ChatResponse:
-    whole_msg: str
-    used_chunks: list[str] | None = None
 
 
 # TODO: Is this needed if we have no model labels anymore?
@@ -79,6 +71,9 @@ class InstanceAttributes:
     system_prompt_path: str = ""
     use_streaming: bool = False
     model_temperature: float | None = None
+    include_citations: bool = False
+    similarity_threshold: float | None = None
+    top_k_chunks: int = 3
     global_policy: Policy = field(default_factory=Policy)
     embedder_provider: str = "dummy"
 
@@ -135,7 +130,8 @@ class PreparedChatRequest:
     document_id: str
     user_input: str
     response: Iterable[ModelResponse] | ModelResponse
-    used_chunks: list[str]
+    citations: list[str]
+    include_citations: bool = False
 
 
 # TODO: maybe a dict or dataclass would be more descriptive
@@ -202,21 +198,29 @@ class PluginCore:
         mode: RagMode = RagMode.RETRIEVE
         # TODO: No need for this attribute if we have character limit for input? Maybe keep as is for an option
         max_tokens_for_req = 99999
-        # TODO: from the LLMRule table here or bring as arg
-        temperature: float | None = 0.2
-
-        # TODO: get this from the LLMRule table
+        # TODO: get these from the LLMRule table
+        temperature: float | None = None
+        similarity_threshold: float | None = None
+        top_k_chunks: int = 3
         use_streaming: bool = stream
+        # TODO: replace with this
+        # include_citations: bool = (
+        #     rule.include_citations and rule.current_mode == RagMode.RETRIEVE
+        # )
+        include_citations: bool = mode == RagMode.RETRIEVE
+
         # Validate that the user has the correct generate mode
         if stream != use_streaming:
             return Result(error="Bad request. Mismatching generation mode.")
 
-        # response = self.rag.get_context(prompt=validated_input, identifier=document_id)
         response = self.indexer.get_context(
-            prompt=validated_input, identifier=document_id
+            prompt=validated_input,
+            identifier=document_id,
+            k=top_k_chunks,
+            threshold=similarity_threshold,
         )
         context = response.context
-        used_chunks = response.used_chunks
+        citations = self._get_citations(response.used_context)
         system_prompt = self.get_system_prompt(caller_id, document_id)
 
         msg_data = MessageData(
@@ -233,19 +237,19 @@ class PluginCore:
                 msg_data, identifier=document_id, stream=stream, temperature=temperature
             )
         except ModelError as e:
-            return Result(error=e.text())
+            # TODO: Leave out extra info if not teacher or no access to plugin
+            error = f"{e.text()} {str(e.cause)}"
+            return Result(error=error)
         except Exception as e:
             return Result(error=str(e))
 
-        # TODO: answer post processing
-        # Add the citations to the context used
-        # Include TIM doc ids etc, and convert to TIM paths
         prepared = PreparedChatRequest(
             caller_id=caller_id_str,
             document_id=document_id_str,
             user_input=validated_input,
             response=answer,
-            used_chunks=used_chunks,
+            citations=citations,
+            include_citations=include_citations,
         )
         return Result(value=prepared)
 
@@ -259,6 +263,7 @@ class PluginCore:
         timestamp_user: int,
         timestamp_answer: int,
         usage: Usage | None,
+        citations: list[str] | None,
     ) -> None:
         """Save the messages.
 
@@ -285,23 +290,21 @@ class PluginCore:
                     content=assistant_answer,
                     usage=usage,
                     timestamp=timestamp_answer,
+                    citations=citations,
                 ),
             ],
         )
         if usage:
             self.update_usage(int(caller_id), int(plugin_id), usage.total_tokens)
 
-    # TODO: palautetaan token usage tätä kautta tai muualta?
-
     def chat_request(
         self,
         caller_id: int,
         document_id: int,
         user_input: str,
-    ) -> Result[ChatResponse | None, str | None]:
+    ) -> Result[tuple[str, list[str] | None], str]:
         """Generate a model response."""
         timestamp_user = ChatMessage.ts_ms()
-        # TODO: Do we save user messages to disk if error occurred from some of the checks or just discard?
         prep = self._prepare_chat_request(
             caller_id, document_id, user_input, stream=False
         )
@@ -313,8 +316,7 @@ class PluginCore:
         response: ModelResponse = p.response
         whole_msg = response.content or ""
         usage = response.usage
-
-        # TODO: viestit arkistoidaan
+        citations = p.citations
 
         # TODO: save user message even if model response fails?
         timestamp_answer = ChatMessage.ts_ms()
@@ -326,20 +328,18 @@ class PluginCore:
             timestamp_user=timestamp_user,
             timestamp_answer=timestamp_answer,
             usage=usage,
+            citations=citations,
         )
-        used_chunks = p.used_chunks
 
-        return Result(
-            value=ChatResponse(whole_msg=whole_msg, used_chunks=used_chunks), error=None
-        )
+        context = citations if p.include_citations else None
+        return Result(value=(whole_msg, context))
 
     def chat_request_stream(
         self,
         caller_id: int,
         document_id: int,
         user_input: str,
-        used_chunks: list[str] | None = None,
-    ) -> Result[Iterable[ModelResponse], str]:
+    ) -> Result[tuple[Iterable[str], list[str] | None], str]:
         """Generate a model response using streaming.
 
         :param caller_id: The id of the caller.
@@ -355,12 +355,12 @@ class PluginCore:
         if not prep.ok() or not prep.value:
             return Result(error=prep.error)
         p = prep.value
+        citations = p.citations
 
         assert isinstance(p.response, Iterable)
         stream: Iterable[ModelResponse] = p.response
 
-        # TODO: return only the string chunks or the usage as well?
-        def gen() -> Iterable[ModelResponse]:
+        def gen() -> Iterable[str]:
             full_answer: str = ""
             usage: Usage | None = None
 
@@ -376,7 +376,7 @@ class PluginCore:
                 # Yield chunks to the caller
                 for chunk in stream:
                     apply_chunk(chunk)
-                    yield chunk
+                    yield chunk.delta
             finally:
                 # Drain the remaining chunks if the client disconnected mid-stream
                 try:
@@ -393,9 +393,11 @@ class PluginCore:
                     timestamp_user=timestamp_user,
                     timestamp_answer=timestamp_answer,
                     usage=usage,
+                    citations=citations,
                 )
 
-        return Result(value=gen(), error=None)
+        context = citations if p.include_citations else None
+        return Result(value=(gen(), context))
 
     def get_plugin_settings(
         self, user_id: int, document_id: int
@@ -489,6 +491,9 @@ class PluginCore:
         global_policy: Policy = instance_settings.global_policy
         use_streaming: bool = instance_settings.use_streaming
         temperature: float | None = instance_settings.model_temperature
+        include_citations: bool = instance_settings.include_citations
+        similarity_threshold: float | None = instance_settings.similarity_threshold
+        top_k_chunks: int = instance_settings.top_k_chunks
 
         old_plugin_rule = self.tim_database.get_llm_rule(document_id)
         old_provider = None
@@ -558,6 +563,14 @@ class PluginCore:
         if temperature is not None and (temperature < 0 or temperature > 2):
             return Result(None, "Temperature must be between 0 and 2")
 
+        if similarity_threshold is not None and (
+            similarity_threshold < -1 or similarity_threshold > 1
+        ):
+            return Result(None, "Similarity threshold must be between -1 and 1")
+
+        if top_k_chunks < 1 or top_k_chunks > 20:
+            return Result(None, "Top-K must be between 1 and 20")
+
         # TODO: update system prompt path in the db row
 
         if (valid := self._validate_policy(global_policy)) is not None:
@@ -609,6 +622,9 @@ class PluginCore:
             public_key=public_key,
             use_streaming=use_streaming,
             temperature=temperature,
+            include_citations=include_citations,
+            similarity_threshold=similarity_threshold,
+            top_k_chunks=top_k_chunks,
             teachers=[],
             current_mode=llm_mode,
             total_tokens_spent=0,
@@ -654,6 +670,36 @@ class PluginCore:
             document_id, caller_id, ts_begin, ts_end, max_count
         )
 
+    def get_messages_ui(
+        self,
+        caller_id: int,
+        document_id: int,
+        ts_end: int | None = None,
+        max_count: int = 128,
+    ) -> list[dict]:
+        """Retrieve the wanted message window to the UI."""
+        # TODO: get the LLMRule from cache
+        rule = self.tim_database.get_llm_rule(document_id)
+        if not rule:
+            return []
+        include_citations = (
+            rule.include_citations and rule.current_mode == RagMode.RETRIEVE
+        )
+
+        messages = self.history_manager.get_history_time_window(
+            str(document_id), str(caller_id), None, ts_end, max_count
+        )
+        return [
+            {
+                "content": m.content,
+                "role": m.role,
+                "timestamp_ms": m.timestamp,
+                "citations": m.citations if include_citations else None,
+            }
+            for m in messages
+            if m.role in ("user", "assistant")
+        ]
+
     def clear_history(self, caller_id: str, document_id: str) -> None:
         self.history_manager.clear_history(document_id, caller_id)
 
@@ -663,18 +709,26 @@ class PluginCore:
         return list(PROVIDERS.keys())
 
     @staticmethod
-    @cache.memoize(timeout=DEFAULT_CACHE_TIMEOUT)
     def _get_supported_models(provider: Provider, api_key: str) -> list[str]:
         """Get all the models the given API-key has access to.
         :param provider: Provider name.
         :param api_key: API key, must match the given provider.
         :return: List of all supported model IDs.
         """
+        try:
+            return PluginCore._get_supported_models_cache(provider, api_key)
+        except ModelError:
+            cache.delete_memoized(
+                PluginCore._get_supported_models_cache, provider, api_key
+            )
+            return []
+
+    @staticmethod
+    @cache.memoize(timeout=DEFAULT_CACHE_TIMEOUT)
+    def _get_supported_models_cache(provider: Provider, api_key: str) -> list[str]:
         client = GenericApiClient(provider, api_key)
         try:
             return client.list_models()
-        except ModelError:
-            return []
         finally:
             client.close()
 
@@ -1079,3 +1133,16 @@ class PluginCore:
             return self._get_supported_chat_models(provider, api_key)
         else:
             return []
+
+    def _get_citations(self, blocks: list[tuple[int, int]]) -> list[str]:
+        citations: list[str] = []
+        for doc_id, block_id in blocks:
+            doc = self.tim_database.get_doc_entry_by_id(doc_id)
+            if not doc:
+                continue
+            citations.append(self._get_block_view_addr(doc.path, block_id))
+        return list(set(citations))
+
+    @staticmethod
+    def _get_block_view_addr(document_path: str, block_id: int) -> str:
+        return "/view/" + document_path + "#" + str(block_id)
