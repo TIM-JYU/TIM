@@ -472,7 +472,7 @@ class GenericApiClient:
                 return False
             raise e
 
-    def check_model_access(self, model_id: str) -> bool:
+    def _check_model_access(self, model_id: str) -> bool:
         """Check if the API key has access to the given model id.
 
         :param model_id: The model id to check.
@@ -484,13 +484,13 @@ class GenericApiClient:
             return False
 
     @staticmethod
-    def create_chat_model(
+    def check_access(
         provider: Provider,
         model_id: str,
         api_key: str,
         base_url: str | None = None,
-    ) -> ChatModel:
-        """Create a new chat model.
+    ) -> None:
+        """Check access to the given model id.
 
         :param provider: Provider name of the model.
         :param model_id: The model id of the model to create.
@@ -498,24 +498,39 @@ class GenericApiClient:
         :param base_url: The base URL of the provider.
         :raises ValueError: If the provider or the model is not supported.
                             Or if the provided api key has no access to the model.
-        :return: Created ChatModel instance.
         """
-        init_fn = PROVIDERS.get(provider)
-        if init_fn is None:
-            raise ValueError(f"Unknown provider: {provider}")
-
         # Check if the api key has access to the given model
         client = GenericApiClient(provider, api_key, base_url)
-        has_access = client.check_model_access(model_id)
+        has_access = client._check_model_access(model_id)
         client.close()
         if not has_access:
             raise ValueError(f"Unknown model or no access: {model_id}")
 
-        return init_fn(provider, model_id, api_key, base_url)
-
     def close(self) -> None:
         """Close the underlying HTTPX client."""
         self._client.close()
+
+
+def create_chat_model(
+    provider: Provider,
+    model_id: str,
+    api_key: str,
+    base_url: str | None = None,
+) -> ChatModel:
+    """Create a new chat model.
+
+    :param provider: Provider name of the model.
+    :param model_id: The model id of the model to create.
+    :param api_key: The API key matching the provider.
+    :param base_url: The base URL of the provider.
+    :raises ValueError: If the provider or the model is not supported.
+    :return: Created ChatModel instance.
+    """
+    init_fn = PROVIDERS.get(provider)
+    if init_fn is None:
+        raise ValueError(f"Unknown provider: {provider}")
+
+    return init_fn(provider, model_id, api_key, base_url)
 
 
 def _split_keep_left(data: str, d: str) -> list[str]:

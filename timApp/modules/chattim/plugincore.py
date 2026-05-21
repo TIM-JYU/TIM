@@ -208,18 +208,13 @@ class PluginCore:
         # TODO: remember to fetch with timestamps when the time comes
         chat_history = self.get_history(caller_id_str, document_id_str)
 
-        if rule.current_mode == "Creative":
-            mode: RagMode = RagMode.CREATIVE
-        else:
-            mode: RagMode = RagMode.RETRIEVE
-
         try:
-            mode: RagMode = self._parse_rag_mode(str(rule.current_mode))
+            rag_mode: RagMode = self._parse_rag_mode(str(rule.current_mode))
         except ValueError as e:
             return Result(error=str(e))
 
         # TODO: No need for this attribute if we have character limit for input? Maybe keep as is for an option
-        max_tokens_for_req = 99999
+        max_tokens_for_req = None
 
         temperature: float | None = None
         if rule.temperature is not None:
@@ -235,10 +230,8 @@ class PluginCore:
         use_streaming: bool = bool(rule.use_streaming)
 
         include_citations: bool = (
-            rule.include_citations and rule.current_mode == RagMode.RETRIEVE
+            rule.include_citations and rag_mode == RagMode.RETRIEVE
         )
-
-        # include_citations: bool = mode == RagMode.RETRIEVE
 
         # Validate that the user has the correct generate mode
         if stream != use_streaming:
@@ -259,16 +252,23 @@ class PluginCore:
             system_prompt=system_prompt,
             context=context,
             chat_history=chat_history,
-            mode=mode,
+            mode=rag_mode,
             max_tokens=max_tokens_for_req,
         )
 
+        api_key = self.get_api_key(rule.public_key)
+        model_id = rule.agent
+
         try:
             answer = self.rag.answer(
-                msg_data, identifier=document_id, stream=stream, temperature=temperature
+                msg_data,
+                api_key=api_key,
+                model_id=model_id,
+                stream=stream,
+                temperature=temperature,
             )
         except ModelError as e:
-            # TODO: Leave out extra info if not teacher or no access to plugin
+            # TODO: Leave out extra info if not owner or no access to plugin
             error = f"{e.text()} {str(e.cause)}"
             return Result(error=error)
         except Exception as e:
@@ -589,7 +589,6 @@ class PluginCore:
             prompt_doc = self.tim_database.get_tim_document_by_path(system_prompt_path)
             if not prompt_doc:
                 return Result(None, "Invalid system prompt path")
-            cache.delete_memoized(PluginCore.get_system_prompt, document_id=document_id)
 
         if temperature is not None and (temperature < 0 or temperature > 2):
             return Result(None, "Temperature must be between 0 and 2")
@@ -612,7 +611,8 @@ class PluginCore:
         kwargs_model = dict(provider=provider, model_id=model_id, api_key=api_key)
 
         try:
-            self.rag.add_model(identifier=document_id, **kwargs_model)
+            GenericApiClient.check_access(**kwargs_model)
+            # TODO: add embedder check
         except ValueError as e:
             return Result(None, str(e))
 
@@ -905,7 +905,6 @@ class PluginCore:
 
         return providers
 
-    @cache.memoize(timeout=DEFAULT_CACHE_TIMEOUT, args_to_ignore=["self", "caller_id"])
     def get_system_prompt(self, system_prompt_path: str) -> str | None:
         if not system_prompt_path:
             return None

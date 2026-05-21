@@ -2,15 +2,13 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from typing import Iterable
-from timApp.modules.chattim.indexer import EmbeddingModel, ContextResponse, Indexer
 from timApp.modules.chattim.model import (
-    ChatModel,
-    GenericApiClient,
     GenerateOptions,
     Message,
     ModelResponse,
-    Usage,
     Provider,
+    create_chat_model,
+    ModelError,
 )
 from enum import Enum
 
@@ -71,87 +69,58 @@ class MessageData:
     context: str
     chat_history: list[Message]
     mode: RagMode
-    max_tokens: int
+    max_tokens: int | None
 
 
 class Rag:
-    models: dict[int, ChatModel] = {}
-
-    def add_model(
-        self,
-        identifier: int,
-        *,
-        provider: Provider,
-        model_id: str,
-        api_key: str,
-        base_url: str | None = None,
-    ) -> None:
-        """
-        Model spec need not specify the base_url.
-        Note that if model with identifier exists it is overwritten.
-        :param identifier: identifier of the model, used for answer calls etc
-        :param provider: Provider name of the model.
-        :param model_id: The model id of the model to create.
-        :param api_key: The API key matching the provider.
-        :param base_url: The base URL of the provider.
-        Raises:
-            ValueError: If the provider or model is unknown
-        """
-
-        model = GenericApiClient.create_chat_model(
-            provider, model_id, api_key, base_url
-        )
-        self.models[identifier] = model
-
-    def remove_model(self, identifier: int) -> None:
-        """
-        Model spec need not specify the base_url.
-        Nothing is done if model with identifier doesn't exist.
-        :param identifier: identifier of the model
-        Raises:
-            ValueError: If the provider or model is unknown
-        """
-        if identifier in self.models:
-            self.models[identifier].close()
-            del self.models[identifier]
-
-    def model_exists(self, identifier: int) -> bool:
-        if identifier in self.models:
-            return True
-        return False
-
     def answer(
         self,
         request_data: MessageData,
-        identifier: int,
+        api_key: tuple[Provider, str],
+        model_id: str,
         *,
         stream: bool = False,
         temperature: float | None = None,
-        max_tokens: int | None = None,
     ) -> Iterable[ModelResponse] | ModelResponse:
         """
         Give an answer to the user using the model.
 
         :param request_data: Information for the prompt.
-        :param identifier: identifier of the model to be used.
+        :param api_key: Used API key.
+        :param model_id: The model id of the model to use.
         :param stream: Return iterable model answer.
         :param temperature: Temperature parameter for the model.
-        :param max_tokens: Maximum number of tokens to use for generating answer.
         :raises KeyError: If the model isn't created.
         :raises ModelError: If failed to generate an answer.
         :return: Model answer in iterable chunks.
         """
-
-        if identifier not in self.models:
-            raise KeyError(f"Key '{identifier}' not found in the dictionary")
-
-        model = self.models[identifier]
+        provider, key = api_key
+        model = create_chat_model(provider, model_id, key)
         messages = self.build_prompt(request_data)
-        options = GenerateOptions(temperature=temperature, max_tokens=max_tokens)
 
-        if stream:
-            return model.generate_stream(messages, options)
-        return model.generate(messages, options)
+        options = GenerateOptions(
+            temperature=temperature, max_tokens=request_data.max_tokens
+        )
+
+        if not stream:
+            try:
+                return model.generate(messages, options)
+            finally:
+                model.close()
+        try:
+            inner = model.generate_stream(messages, options)
+        except ModelError:
+            model.close()
+            raise
+
+        def gen() -> Iterable[ModelResponse]:
+            try:
+                for chunk in inner:
+                    yield chunk
+            finally:
+                model.close()
+
+        return gen()
 
     def build_prompt(self, message_data: MessageData) -> list[Message]:
         """Build the message list to send to the model."""
