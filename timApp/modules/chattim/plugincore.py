@@ -1,6 +1,8 @@
 import os
 import uuid
 from dataclasses import dataclass, field
+
+from rapidfuzz.distance.DamerauLevenshtein_py import similarity
 from unicodedata import normalize, category
 
 from timApp.modules.chattim.dbmodels import LLMRule
@@ -201,23 +203,42 @@ class PluginCore:
         document_id_str = str(document_id)
         caller_id_str = str(caller_id)
 
+        rule = self.tim_database.get_llm_rule(document_id)
+
         # TODO: remember to fetch with timestamps when the time comes
         chat_history = self.get_history(caller_id_str, document_id_str)
 
-        # TODO: fetch mode for instance
-        mode: RagMode = RagMode.RETRIEVE
+        if rule.current_mode == "Creative":
+            mode: RagMode = RagMode.CREATIVE
+        else:
+            mode: RagMode = RagMode.RETRIEVE
+
+        try:
+            mode: RagMode = self._parse_rag_mode(str(rule.current_mode))
+        except ValueError as e:
+            return Result(error=str(e))
+
         # TODO: No need for this attribute if we have character limit for input? Maybe keep as is for an option
         max_tokens_for_req = 99999
-        # TODO: get these from the LLMRule table
+
         temperature: float | None = None
+        if rule.temperature is not None:
+            temperature = float(rule.temperature)
+
         similarity_threshold: float | None = None
-        top_k_chunks: int = 3
-        use_streaming: bool = stream
-        # TODO: replace with this
-        # include_citations: bool = (
-        #     rule.include_citations and rule.current_mode == RagMode.RETRIEVE
-        # )
-        include_citations: bool = mode == RagMode.RETRIEVE
+        if rule.similarity_threshold is not None:
+            similarity_threshold = float(rule.similarity_threshold)
+
+        # TODO: fix double cast
+        top_k_chunks: int = cast(int, cast(object, rule.top_k_chunks))
+
+        use_streaming: bool = bool(rule.use_streaming)
+
+        include_citations: bool = (
+            rule.include_citations and rule.current_mode == RagMode.RETRIEVE
+        )
+
+        # include_citations: bool = mode == RagMode.RETRIEVE
 
         # Validate that the user has the correct generate mode
         if stream != use_streaming:
@@ -231,7 +252,7 @@ class PluginCore:
         )
         context = response.context
         citations = self._get_citations(response.used_context)
-        system_prompt = self.get_system_prompt(caller_id, document_id)
+        system_prompt = self.get_system_prompt(rule.system_prompt_path)
 
         msg_data = MessageData(
             user_prompt=validated_input,
@@ -882,13 +903,10 @@ class PluginCore:
         return providers
 
     @cache.memoize(timeout=DEFAULT_CACHE_TIMEOUT, args_to_ignore=["self", "caller_id"])
-    def get_system_prompt(self, caller_id: int, document_id: int) -> str | None:
-        # TODO: Fetch from the database. If the caller fetches the whole table for other info as well,
-        # then this function should probably only take the prompt path as a parameter.
-        prompt_path = ""
-        if not prompt_path:
+    def get_system_prompt(self, system_prompt_path: str) -> str | None:
+        if not system_prompt_path:
             return None
-        prompt_doc = self.tim_database.get_tim_document_by_path(prompt_path)
+        prompt_doc = self.tim_database.get_tim_document_by_path(system_prompt_path)
         if not prompt_doc:
             return None
         content = prompt_doc.export_markdown(export_ids=False).strip()
