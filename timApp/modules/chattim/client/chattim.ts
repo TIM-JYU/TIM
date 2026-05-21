@@ -929,6 +929,9 @@ export class ChatTIMComponent
         if (!el) {
             return;
         }
+        if (this.controlPanel.settingsOpen) {
+            return;
+        }
 
         const shouldScroll = forceNewEntry
             ? true

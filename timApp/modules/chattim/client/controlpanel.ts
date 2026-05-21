@@ -441,10 +441,11 @@ export class ChatControlPanelComponent implements OnChanges {
     }
 
     @Input() set setModelTemperature(value: number | null) {
-        if (!value) {
+        if (value == null) {
             this.enabledTemperature = false;
             return;
         }
+        this.enabledTemperature = true;
         this.modelTemperature = value;
     }
 
