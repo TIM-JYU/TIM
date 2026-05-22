@@ -143,10 +143,18 @@ class MacroInfo:
             self.macro_delimiter, self.user_ctx, self.view_ctx, self.macro_map, self.doc
         )
 
-    def get_macros_preserving_user(self) -> dict[str, object]:
-        """Gets the macros and defines user-specific variables in such a way that the macro replacement for user
-        variables does effectively nothing."""
-        macros = deepcopy(self.macro_map)
+    def update_with_preserving_user_macros(
+        self, macros: dict[str, object]
+    ) -> dict[str, object]:
+        """
+        Adds user preserving macros to the given macros.
+        This is useful when the given macros are used for
+        macro replacement, and we want to
+        preserve the user-specific macros in such a way
+        that the macro replacement for user variables does effectively nothing.
+        :param macros: where to add user_preserving macros
+        :return: same macros filled with user_preserving macros
+        """
         macros.update(
             {
                 "userid": f"{self.macro_delimiter}userid{self.macro_delimiter}",
@@ -158,6 +166,12 @@ class MacroInfo:
             }
         )
         return macros
+
+    def get_macros_preserving_user(self) -> dict[str, object]:
+        """Gets the macros and defines user-specific variables in such a way that the macro replacement for user
+        variables does effectively nothing."""
+        macros = deepcopy(self.macro_map)
+        return self.update_with_preserving_user_macros(macros)
 
     def get_macros_with_user_specific(
         self, user: UserContext | None = None
