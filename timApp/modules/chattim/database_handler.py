@@ -156,12 +156,12 @@ class TimDatabase:
         return items
 
     @staticmethod
-    def api_key_valid_in_doc(key: LLMRule, doc_id: int) -> bool:
+    def api_key_valid_in_doc(key: LLMRule, doc_id: int) -> None:
         """Check if the API key can be used in the given document."""
         if key.document_id > 0:
-            return False
+            raise ValueError("Not an API key")
         if len(key.paths) == 0:
-            return False
+            raise PermissionError("API key is not valid in any document.")
 
         for path in key.paths:
             item = Item.find_by_path(path)
@@ -182,7 +182,10 @@ class TimDatabase:
             for doc_info in docs:
                 if doc_info.document.doc_id == doc_id:
                     return True
-        return False
+        entry = TimDatabase.get_doc_entry_by_id(doc_id)
+        if entry is None:
+            raise ValueError(f"No document with ID {doc_id}")
+        raise PermissionError(f"API key has no access to document '{entry.path}'")
 
     @staticmethod
     def access_api_key(user_id: int, public_key: str) -> LLMRule | None:

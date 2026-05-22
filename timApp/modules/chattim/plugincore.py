@@ -527,6 +527,11 @@ class PluginCore:
 
         return Result(value=data)
 
+    def check_api_key_doc_access(self, key: LLMRule, document_ids: list[int]) -> None:
+        """Check that the API key has access to the given documents."""
+        for doc_id in document_ids:
+            self.tim_database.api_key_valid_in_doc(key, doc_id)
+
     def save_instance(
         self, caller_id: int, document_id: int, instance_settings: InstanceAttributes
     ) -> Result[SaveInstanceResult, str | None]:
@@ -573,7 +578,9 @@ class PluginCore:
                 old_provider = None
 
         try:
-            provider_str, api_key = self.try_access_api_key(caller_id, public_key)
+            api_key_rule, provider_str, api_key = self.try_access_api_key_row(
+                caller_id, public_key
+            )
         except Exception as e:
             return Result(None, str(e))
 
@@ -603,6 +610,14 @@ class PluginCore:
                 return Result(None, owns_all.error)
         else:
             return Result(None, "Internal error")
+
+        # Check if the API key is valid in these documents
+        try:
+            self.check_api_key_doc_access(api_key_rule, document_ids)
+        except PermissionError as e:
+            return Result(None, str(e))
+        except ValueError as e:
+            return Result(None, str(e))
 
         # validating max tokens
         if max_tokens is not None and max_tokens < 0:
@@ -1220,6 +1235,17 @@ class PluginCore:
             keys.append(self._api_row_to_tuple(row))
         return keys
 
+    def try_access_api_key_row(
+        self, user_id: int, public_key: str
+    ) -> tuple[LLMRule, Provider, str]:
+        key = self.tim_database.access_api_key(user_id, public_key)
+        if not key:
+            raise Exception(f"No access to the API key.")
+        provider = PluginCore._parse_provider(str(key.provider))
+        if not provider:
+            raise Exception(f"No provider found for API key.")
+        return key, provider, str(key.api_key)
+
     def try_access_api_key(self, user_id: int, public_key: str) -> tuple[Provider, str]:
         """
         Try to access the API key. Checks that the user has access to it.
@@ -1231,13 +1257,8 @@ class PluginCore:
                            Or the API key provider is invalid.
         :return: A tuple (provider, api_key)
         """
-        key = self.tim_database.access_api_key(user_id, public_key)
-        if not key:
-            raise Exception(f"No access to the API key.")
-        provider = PluginCore._parse_provider(key.provider)
-        if not provider:
-            raise Exception(f"No provider found for API key.")
-        return provider, key.api_key
+        row, provider, api_key = self.try_access_api_key_row(user_id, public_key)
+        return provider, api_key
 
     def get_api_key(self, public_key: str) -> tuple[Provider, str]:
         """
