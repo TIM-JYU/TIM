@@ -103,7 +103,9 @@ export interface ControlPanelData extends ControlPanelSettings {
     template: `
         <div class="chattim-block-anchor"
              *ngIf="(markup.blockContent ?? '').trim().length > 0"
-             [innerHTML]="markup.blockContent | purify">
+             [innerHTML]="markup.blockContent | purify"
+             [hidden]="!hasManageRights"
+        >
         </div>
         <tim-dialog-frame class="chattim-dialog-frame" [size]="windowSize">
             <ng-container header> {{ header }}</ng-container>
@@ -283,6 +285,7 @@ export class ChatTIMComponent
     inputStem = ""; // TODO: do something with this or remove?
     document_id = -1;
     isTeacher: boolean = false;
+    hasManageRights: boolean = false;
     selectedItemPaths: string[] = [];
     pathRestrictions?: DirectoryPickerRestrictions;
     localFilePaths = "";
@@ -352,6 +355,7 @@ export class ChatTIMComponent
         if (this.document_id <= 0) {
             return;
         }
+        this.hasManageRights = itemglobals().curr_item.rights.manage;
         const user_id: number = Users.getCurrent().id;
         const response = await this.httpPost<{is_teacher: boolean}>(
             this.route("getRights"),
