@@ -1373,6 +1373,13 @@ export class SettingsComponent implements DoCheck, AfterViewInit {
     }
 
     async deleteLLMKey(key: IUserLLMApiKey) {
+        if (
+            !window.confirm(
+                `Are you sure you want to delete this LLM API key (${key.alias})?`
+            )
+        ) {
+            return;
+        }
         this.saving = true;
         const r = await toPromise(
             this.http.delete("/chattim/deleteKey", {
