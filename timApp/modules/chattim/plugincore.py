@@ -494,6 +494,7 @@ class PluginCore:
 
         provider: Provider | None = None
         api_key: str = ""
+        allowed_paths: list[str] = []
 
         api_key_row = self.tim_database.get_api_key_by_alias(
             str(plugin_data.public_key)
@@ -501,6 +502,7 @@ class PluginCore:
         if api_key_row is not None:
             provider = self._parse_provider(str(api_key_row.provider))
             api_key = str(api_key_row.api_key)
+            allowed_paths = api_key_row.paths
 
         selected_model = str(plugin_data.agent)
         supported_models = (
@@ -514,7 +516,7 @@ class PluginCore:
             availableEmbedderProviders=self._get_available_embedder_providers(user_id),
             use_streaming=bool(plugin_data.use_streaming),
             selectedModel=selected_model,
-            allowedItemPaths=None,  # TODO: from the API key restrictions?
+            allowedItemPaths=allowed_paths,
             llm_mode=str(plugin_data.current_mode),
             system_prompt_path=plugin_data.system_prompt_path,
             model_temperature=plugin_data.temperature,
@@ -594,6 +596,7 @@ class PluginCore:
 
         document_ids = [doc.id for doc in docs]
 
+        # TODO: maybe add manage rights
         owns_all = self._owns_all_items(caller_id, docs)
         if owns_all.ok():
             if not owns_all.value:

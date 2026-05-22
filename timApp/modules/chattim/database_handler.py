@@ -35,12 +35,13 @@ class TimDatabase:
         return doc.document if doc else None
 
     @staticmethod
-    def get_tim_documents_by_path(path: str) -> list[Document]:
+    def get_tim_documents_by_path(path: str, recursive: bool = False) -> list[Document]:
         """
         Returns all documents in the given path recursively.
         If no documents are found, returns empty list.
         If path is a document the document is returned.
-        If path is a folder all the documents in the folder and it's subfolders are returned recursively.
+        If path is a folder all the documents in the folder are returned.
+        If recursive is True, all subfolders are returned recursively.
         If path is neither a folder nor a document, returns empty list.
         """
         documents: list[Document] = []
@@ -49,7 +50,9 @@ class TimDatabase:
             documents.append(document)
             return documents
 
-        doc_entries = docentry.get_documents(filter_folder=path)
+        doc_entries = docentry.get_documents(
+            filter_folder=path, search_recursively=recursive
+        )
         for d in doc_entries if doc_entries else []:
             documents.append(d.document)  # paragraphs -> .get_paragraphs()
         return documents
