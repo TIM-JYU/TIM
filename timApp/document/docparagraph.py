@@ -61,7 +61,7 @@ ENABLE_LOG_FOR_PERSON_SHORT = 1
 # Special handling is needed for cache headers with macros.
 # The text must start with 'f' to be interpreted as false
 # in par attribute nocache="f...".
-FORCE_MACROS_HEADDER = "force_macros_header"
+FORCE_MACROS_HEADER = "force_macros_header"
 
 SKIPPED_ATTRS = {"r", "rd", "rp", "ra", "rt", "rtask", "mt", "settings"}
 
@@ -731,7 +731,7 @@ class DocParagraph:
             # depends on macros, is static enough?
             static_md = expand_macros(
                 md,
-                settings.get_static_macros(),
+                settings.get_static_macros_optionally_preserving_user_macros(macroinfo),
                 settings,
                 ignore_errors=ignore_errors,
                 env=env,
@@ -1016,8 +1016,8 @@ class DocParagraph:
                             # to get autnumbers
                             par.attrs[
                                 "nocache"
-                            ] = FORCE_MACROS_HEADDER  # f matches false
-                            need_write = nocache != FORCE_MACROS_HEADDER
+                            ] = FORCE_MACROS_HEADER  # f matches false
+                            need_write = nocache != FORCE_MACROS_HEADER
                         else:
                             par.attrs["nocache"] = "auto"
                             need_write = True
@@ -1085,7 +1085,7 @@ class DocParagraph:
             if clear_cache:
                 # clear automatically set nocache value
                 nocache = par.get_attr("nocache")
-                if nocache == FORCE_MACROS_HEADDER or nocache == "auto":
+                if nocache == FORCE_MACROS_HEADER or nocache == "auto":
                     if par.attrs:
                         par.attrs.pop("nocache", None)
 
@@ -1174,7 +1174,7 @@ class DocParagraph:
             else:
                 old_html = None
                 if (
-                    par.get_attr("nocache") != FORCE_MACROS_HEADDER
+                    par.get_attr("nocache") != FORCE_MACROS_HEADER
                     and flask.has_request_context()
                     and flask.request.path.startswith("/view")
                     and not par.from_preamble()

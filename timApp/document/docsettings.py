@@ -1,4 +1,5 @@
 import functools
+from copy import deepcopy
 from dataclasses import dataclass, fields
 from datetime import timedelta, datetime, timezone
 from typing import Optional, Iterable, TypeVar, Any, TYPE_CHECKING, Union
@@ -76,6 +77,8 @@ DISABLE_ANSWER_REVIEW_MODE = "answer_review"
 
 # Change the following if the calculation method of the HTML cache changes.
 HASH_SYSTEM_VERSION = "0.1"
+
+MacroInfoCacheKey = tuple[ViewContext, tuple[int, int] | None]
 
 
 # TODO: Start moving DocSettings keys to this dataclass
@@ -289,9 +292,10 @@ class DocSettings:
     def __init__(self, doc: "Document", settings_dict: YamlBlock | None = None):
         self.doc = doc
         self.__dict = settings_dict if settings_dict else YamlBlock()
-        self.macroinfo_cache = {}
+        self.macroinfo_cache: dict[MacroInfoCacheKey, MacroInfo] = {}
         self._normal_par_cache_key_hash = None
         self._static_macros_cache = {}
+        self._static_macros_pum_cache = {}
         self._static_macros_hash_cache = None
 
     def to_paragraph(self) -> DocParagraph:
@@ -326,8 +330,8 @@ class DocSettings:
             view_ctx,
             (user_ctx.user.id, user_ctx.logged_user.id) if user_ctx else None,
         )
-        cached = self.macroinfo_cache.get(cache_key)
-        if cached:
+        cached: MacroInfo | None = self.macroinfo_cache.get(cache_key)
+        if cached is not None:
             return cached
         mi = MacroInfo(
             view_ctx,
@@ -558,6 +562,7 @@ class DocSettings:
         psr_dict = self.__dict.get(self.point_sum_rule_key, default)
         if not psr_dict:
             return None
+        # noinspection PyBroadException
         try:
             return PointSumRule(psr_dict)
         except:
@@ -650,6 +655,17 @@ class DocSettings:
         self._static_macros_cache = macros
         return self._static_macros_cache
 
+    def get_static_macros_optionally_preserving_user_macros(self, macroinfo: MacroInfo):
+        static_macros = self.get_static_macros()
+        if not macroinfo.preserve_user_macros:
+            return static_macros
+        if self._static_macros_pum_cache:
+            return self._static_macros_pum_cache
+        static_macros_pum = deepcopy(static_macros)
+        macroinfo.update_with_preserving_user_macros(static_macros_pum)
+        self._static_macros_pum_cache = static_macros_pum
+        return static_macros_pum
+
     def get_static_macros_hash(self):
         if self._static_macros_hash_cache:
             return self._static_macros_hash_cache
@@ -659,7 +675,10 @@ class DocSettings:
         macro_delim = macroinfo.get_macro_delimiter()
         autocounters = self.autocounters()
         self._static_macros_hash_cache = hashfunc(
-            f"{macros}{macro_delim}{charmacros}{self.auto_number_headings()}{self.heading_format()}{self.mathtype()}{self.get_globalmacros()}{self.preamble()}{self.input_format()}{self.smart_punct()}{autocounters}{self.macro_lstrip_blocks()}{self.macro_trim_blocks()}"
+            f"{macros}{macro_delim}{charmacros}{self.auto_number_headings()}"
+            f"{self.heading_format()}{self.mathtype()}{self.get_globalmacros()}"
+            f"{self.preamble()}{self.input_format()}{self.smart_punct()}"
+            f"{autocounters}{self.macro_lstrip_blocks()}{self.macro_trim_blocks()}"
         )
         return self._static_macros_hash_cache
 
@@ -909,7 +928,11 @@ def __resolve_final_settings_impl(
     """
     If settings par, gets the setting dict.  If recursive settimgs par,
     gets the Markdown and returns it as a dict under
-    the key "recursive_settings".  If reference par, resolves the reference and gets the settings from there.  If translation or citation par, first tries to get settings from the par itself and then resolves reference and gets settings from there.  Returns the merged settings from all pars and whether any settings were found.
+    the key "recursive_settings".  If reference par, resolves the reference
+    and gets the settings from there.
+    If translation or citation par, first tries to get settings
+    from the par itself and then resolves reference and
+    gets settings from there.  Returns the merged settings from all pars and whether any settings were found.
     :param pars: paragraphs to resolve settings for
     :return: settings dict and true if had settings in any of pars.
     """
@@ -942,9 +965,10 @@ def __resolve_final_settings_impl(
             curr_own_settings = None
 
             is_tr_or_cit = curr.is_translation() or curr.is_citation()
-            if is_tr_or_cit:
+            curr_settings = DocSettings.from_paragraph(curr)
+            if is_tr_or_cit and curr_settings:
                 try:
-                    curr_own_settings = DocSettings.from_paragraph(curr).get_dict()
+                    curr_own_settings = curr_settings.get_dict()
                 except TimDbException:
                     curr_own_settings = YamlBlock()
 
@@ -963,15 +987,15 @@ def __resolve_final_settings_impl(
                 break
             ref_settings, ref_had_settings = __resolve_final_settings_impl(refs)
             if ref_had_settings:
-                rec = ref_settings.pop(RECURSIVE_SETTINGS_KEY, None)
-                if rec:
-                    rec_settings.append(rec)
+                recursive = ref_settings.pop(RECURSIVE_SETTINGS_KEY, None)
+                if recursive:
+                    rec_settings.append(recursive)
                 result = result.merge_with(ref_settings)
                 had_settings = True
-                if is_tr_or_cit:
-                    rec = curr_own_settings.pop(RECURSIVE_SETTINGS_KEY, None)
-                    if rec:
-                        rec_settings.append(rec)
+                if is_tr_or_cit and curr_own_settings:
+                    recursive = curr_own_settings.pop(RECURSIVE_SETTINGS_KEY, None)
+                    if recursive:
+                        rec_settings.append(recursive)
                     result = result.merge_with(curr_own_settings)
             else:
                 break
