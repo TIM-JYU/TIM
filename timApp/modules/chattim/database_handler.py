@@ -156,7 +156,7 @@ class TimDatabase:
         return items
 
     @staticmethod
-    def api_key_valid_in_doc(key: LLMRule, doc_id: int) -> None:
+    def api_key_valid_in_doc(key: LLMRule, doc_id: int) -> bool:
         """Check if the API key can be used in the given document."""
         if key.document_id > 0:
             raise ValueError("Not an API key")

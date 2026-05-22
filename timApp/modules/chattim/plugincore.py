@@ -207,10 +207,9 @@ class PluginCore:
         # TODO: remember to fetch with timestamps when the time comes
         chat_history = self.get_history(caller_id_str, document_id_str)
 
-        try:
-            rag_mode: RagMode = self._parse_rag_mode(str(rule.current_mode))
-        except ValueError as e:
-            return Result(error=str(e))
+        rag_mode: RagMode = self._parse_rag_mode(str(rule.current_mode))
+        if rag_mode is None:
+            return Result(error=f"Invalid mode '{rag_mode}'")
 
         # TODO: No need for this attribute if we have character limit for input? Maybe keep as is for an option
         max_tokens_for_req = None
@@ -1171,8 +1170,8 @@ class PluginCore:
         key = self.tim_database.update_api_key_permissions(
             owner_id, public_key, filtered_groups, filtered_paths
         )
-        groups = get_groups_by_ids(key.groups)
-        return groups, key.paths
+        user_groups = get_groups_by_ids(key.groups)
+        return user_groups, key.paths
 
     def remove_api_key_group(
         self, owner_id: int, public_key: str, group_id: int
@@ -1280,7 +1279,7 @@ class PluginCore:
     def delete_api_key(self, owner_id: int, public_key: str) -> None:
         self.tim_database.delete_api_key(owner_id, public_key)
 
-    def get_llm_rule(self, document_id: int) -> LLMRule:
+    def get_llm_rule(self, document_id: int) -> LLMRule | None:
         return self.tim_database.get_llm_rule(document_id)
 
     @staticmethod

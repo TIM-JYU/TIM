@@ -215,7 +215,8 @@ def ask_route(params: ChatTimAskParams) -> ChatTimAskResponse:
 
     resp = plugincore.chat_request(session_user_id, document_id, user_input)
     if resp.ok():
-        message, context = resp.value
+        value: tuple[str, list[str] | None] = resp.value or ("", None)
+        message, context = value
         return ChatTimAskResponse(
             answer=message,
             citations=context,
@@ -319,7 +320,7 @@ def save_settings(params: ChatTimSaveSettingsParams) -> PluginAnswerResp:
     session_user_id = get_current_user_id()
 
     save_result = plugincore.save_instance(session_user_id, document_id, panel_data)
-    if not save_result.ok():
+    if not save_result.ok() or save_result.value is None:
         web["error"] = save_result.error or ""
         return result
 
