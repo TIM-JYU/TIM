@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import shelve
 import shutil
 import tempfile
@@ -55,7 +56,7 @@ if TYPE_CHECKING:
     from timApp.document.docinfo import DocInfo
 
 # Enable user personal logs with url param ?userlogs=TAG
-ENABLE_LOG_FOR_PERSON_LONG = 0
+ENABLE_LOG_FOR_PERSON_LONG = 1
 ENABLE_LOG_FOR_PERSON_SHORT = 1
 
 # Special handling is needed for cache headers with macros.
@@ -128,32 +129,67 @@ def _log_filename_for_person(file_name: str):
     log_info(f"DZW ({tag}): {file_name}  {DocParagraph.get_stack_str(15, 1)}")
 
 
-def _log_for_person(msg_func):
+def _log_for_person(msg_func, tag: str):
+    """
+    Logs msg_func if there is url parameter
+       debug_writes_long=user_tag,{log_tag}[&debug_reg=regular_expression]
+    Possible log tags are (find all calls for this function):
+        dic - Creating par from dict
+        unl - List of unloaded pars
+        upd - Updating par cache HTML
+        cha - list of changed pars
+        pre - Pars to prealod
+        che - Check cache for par
+        wri - Writing par
+        cle - Clear HTML cache for par
+        stack - print also call stack
+    debug_reg = optional regular expression for printing
+    :param msg_func: lambda text to log
+    :param tag: condition to log this message,
+                if log_tag is in debug_writes_long,
+                then log this message, otherwise skip
+    :return: Nothing
+    """
     if not flask.has_request_context():
         return
     # If url_param "debug_writes", log the filename and stack trace for debugging purposes
-    tag = flask.request.args.get("debug_writes_long")
-    if tag is None:
+    tags = flask.request.args.get("debug_writes_long")
+    if tags is None:
         return
+
+    parts = [p.strip() for p in tags.split(",") if p.strip()]
+
+    if tag not in parts:
+        return
+
+    user_tag: str = parts[0]
+    text = msg_func()
+
+    debug_reg = flask.request.args.get("debug_reg")
+    if debug_reg:
+        if re.search(debug_reg, text) is None:
+            return
 
     from timApp.util.logger import log_info
 
-    # log_info(f"DZW ({tag}): {msg_func()}  {DocParagraph.get_stack_str(15, 1)}")
-    log_info(f"DZW ({tag}): {msg_func()}")
+    if "stack" in parts:
+        log_info(f"DZWL ({user_tag}): {text}  {DocParagraph.get_stack_str(15, 1)}")
+    else:
+        log_info(f"DZWL ({user_tag}): {text}")
 
 
 def _log_for_person_short(msg_func):
     if not flask.has_request_context():
         return
     # If url_param "debug_writes", log the filename and stack trace for debugging purposes
-    tag = flask.request.args.get("debug_writes")
-    if tag is None:
+    user_tag = flask.request.args.get("debug_writes")
+    if user_tag is None:
         return
 
     from timApp.util.logger import log_info
 
     # log_info(f"DZW ({tag}): {msg_func()}  {DocParagraph.get_stack_str(15, 1)}")
-    log_info(f"DZW ({tag}): {msg_func()}")
+    log_info(f"DZW ({user_tag}): {msg_func()}")
 
 
 log_filename_for_person = (
@@ -236,7 +272,9 @@ class DocParagraph:
         self.attrs: dict[str, str] | None = None
         self.nomacros = None
         self.ref_chain = None
-        self.answer_nr: int | None = None  # needed if variable tasks, None = not task at all or not variable task
+        self.answer_nr: int | None = (
+            None  # needed if variable tasks, None = not task at all or not variable task
+        )
         self.md = ""
         self.id = None
         self.ask_new: bool | None = None  # to send for plugins to force new question
@@ -258,6 +296,16 @@ class DocParagraph:
     def help_par():
         """Returns a dummy paragraph with id 'HELP_PAR' that is used as a placeholder for an empty document."""
         return DocParagraph.create(doc=None, par_id="HELP_PAR")
+
+    def __repr__(self) -> str:
+        return (
+            f"DocParagraph(id={self.id!r}, "
+            f"doc_id={self.get_doc_id()!r}, "
+            f"md={self.md!r})"
+            f"html={self.html!r})"
+            f"attrs={self.attrs!r})"
+            f"html_cache={self.html_cache!r})"
+        )
 
     @classmethod
     def create(
@@ -359,8 +407,9 @@ class DocParagraph:
         par.attrs = d.get("attrs", {})
         par.html_cache = d.get("h")
         log_for_person(
-            lambda: f"Creating par from dict {par.get_doc_id()}/{par.get_id()} "
-            f"from dict with html cache {par.html_cache}"
+            lambda: f"Creating par {par.get_doc_id()}/{par.get_id()} "
+            f"from dict {d!r}",
+            "dic",
         )
         par._cache_props()
         par._compute_hash()
@@ -918,7 +967,8 @@ class DocParagraph:
                         heading_cache[k] = v
         log_for_person(
             lambda: f"preload_htmls {doc_id}/{pars[0].get_id()}, ch: {clear_cache}, "
-            f"persist: {persist}, unloaded pars: {unloaded_pars}"
+            f"persist: {persist}, unloaded pars: {unloaded_pars}",
+            "unl",
         )
         changed_pars = []
         if len(unloaded_pars) > 0:
@@ -1014,9 +1064,9 @@ class DocParagraph:
                         if is_heading:
                             # heading with dynamic macros needs different handling
                             # to get autnumbers
-                            par.attrs[
-                                "nocache"
-                            ] = FORCE_MACROS_HEADER  # f matches false
+                            par.attrs["nocache"] = (
+                                FORCE_MACROS_HEADER  # f matches false
+                            )
                             need_write = nocache != FORCE_MACROS_HEADER
                         else:
                             par.attrs["nocache"] = "auto"
@@ -1029,13 +1079,14 @@ class DocParagraph:
                         lambda: f"Updating par {par.get_doc_id()}/{par.get_id()} "
                         f"with par_html_hash {par_html_hash}, "
                         f"old html: {old_html}, new html: {h}, "
-                        f"new cache: {par.html_cache}, persist: {persist}"
+                        f"new cache: {par.html_cache}, persist: {persist}",
+                        "upd",
                     )
                 # noinspection PyProtectedMember
                 par._set_html(h, sanitized=True)
                 if persist and not is_from_preamble and need_write:
                     par.__write()
-        log_for_person(lambda: f"changed pars: {changed_pars}")
+        log_for_person(lambda: f"changed pars: {changed_pars}", "cha")
         return changed_pars
 
     @classmethod
@@ -1074,13 +1125,14 @@ class DocParagraph:
             lambda: f"Preloading {len(pars)} paragraphs "
             f"({', '.join(f'{p.get_doc_id()}/{p.get_id()}' for p in pars)}) "
             f"with settings hash {static_macros_hash} and "
-            f"macros {macros}, clear cache: {clear_cache}"
+            f"macros {macros}, clear cache: {clear_cache}",
+            "pre",
         )
         for par in pars:
             cache_hashes: list[str] = [""] * (len(CacheHashNames) - 1)
-            cache_hashes[
-                CacheHashNames.NORMAL_PAR_HASH
-            ] = settings.get_normal_par_cache_key_hash()
+            cache_hashes[CacheHashNames.NORMAL_PAR_HASH] = (
+                settings.get_normal_par_cache_key_hash()
+            )
             cache_index: CacheHashNames = CacheHashNames.NO_CACHE
             if clear_cache:
                 # clear automatically set nocache value
@@ -1140,7 +1192,8 @@ class DocParagraph:
                 log_for_person(
                     lambda: f"check cache: {cache_hashes} "
                     f"cache: {cached} of type {type(cached)} "
-                    f"auto_macros: {str(auto_macros)}"
+                    f"auto_macros: {str(auto_macros)}",
+                    "che",
                 )
                 if isinstance(cached, str):  # Compatibility
                     old_html = cached
@@ -1463,7 +1516,9 @@ class DocParagraph:
                 os.makedirs(base_path)
 
         d = self.dict(include_html_cache=True)
-        log_for_person(lambda: f"Writing par {self.get_doc_id()}/{self.get_id()}: {d}")
+        log_for_person(
+            lambda: f"Writing par {self.get_doc_id()}/{self.get_id()}: {d}", "wri"
+        )
         write_atomic(file_name, json.dumps(d))
 
     def set_latest(self):
@@ -1495,7 +1550,7 @@ class DocParagraph:
     def clear_cache(self) -> None:
         """Clears the HTML cache of this paragraph."""
         log_for_person(
-            lambda: f"Clearing cache for par {self.get_doc_id()}/{self.get_id()}"
+            lambda: f"Clearing cache for par {self.get_doc_id()}/{self.get_id()}", "cle"
         )
         self.html_cache = None
 
