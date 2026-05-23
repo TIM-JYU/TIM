@@ -145,8 +145,8 @@ class MacroInfo:
         )
 
     @staticmethod
-    def get_user_preserving_macros_def(delimiter="%%") -> dict[str, object]:
-        upm = {
+    def get_user_preserving_macros_def(delimiter: str = "%%") -> dict[str, object]:
+        upm: dict[str, object] = {
             "userid": f"{delimiter}userid{delimiter}",
             "username": f"{delimiter}username{delimiter}",
             "realname": f"{delimiter}realname{delimiter}",
