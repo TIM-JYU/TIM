@@ -186,12 +186,19 @@ class PluginCore:
         if not self._instance_exists(document_id):
             return Result(error=f"Instance has not been created yet")
 
+        rule = self.tim_database.get_llm_rule(document_id)
+        if not rule:
+            return Result(None, "No LLMRule found for this document")
+
+        usage = self.tim_database.get_usage(rule, caller_id)
+        used_tokens = 0 if usage is None else usage.used_tokens
+
         # policy check
-        policy_result: Result[str | None, str | None] = self._policy_checks(
-            caller_id, document_id
-        )
+        policy_result = self._calculate_remaining_tokens(rule, used_tokens, caller_id)
         if not policy_result.ok():
             return Result(error=policy_result.error)
+
+        tokens_left = policy_result.value
 
         # Validate input
         try:
@@ -201,8 +208,6 @@ class PluginCore:
 
         document_id_str = str(document_id)
         caller_id_str = str(caller_id)
-
-        rule = self.tim_database.get_llm_rule(document_id)
 
         # TODO: remember to fetch with timestamps when the time comes
         chat_history = self.get_history(caller_id_str, document_id_str)
@@ -1002,40 +1007,47 @@ class PluginCore:
         self.tim_database.set_usage(caller_id, rule, tokens)
         return tokens
 
-    def _policy_checks(
-        self, caller_id: int, document_id: int
-    ) -> Result[str | None, str | None]:
+    def _calculate_remaining_tokens(
+        self, llm_rule: LLMRule, used_tokens: int, caller_id: int
+    ) -> Result[int | None, str | None]:
         """
         Checks token limits as per global and user policies.
-        :param caller_id:  the user that is making the request
-        :param document_id:  instance for the plugin
-        :return: (can_make_req: bool, reason_for_deny: str)
+        Result is the amount of tokens left for the user to use.
+        Per-user policy rules over global settings always when defined.
+        This means that if Global Policy has max tokens and User Policy
+        does not, the Global Policy will be applied. If both have it defined,
+        User Policy is applied over Global Policy.
+        :param llm_rule: The LLMRule object.
+        :param used_tokens: Tokens used.
+        :param caller_id: The user of the tokens.
+        :return: The complete amount of tokens left. If zero, an explanation is given to user.
         """
-        # check user policy (if exists)
-        rule = self.tim_database.get_llm_rule(document_id)
-        if not rule:
-            return Result(None, "No LLMRule found for this document")
-        usage = self.tim_database.get_usage(rule, caller_id)
 
-        if not usage:
-            self.update_usage(caller_id, document_id, 0)
-            return Result(value="ok")
+        user_policy = self.tim_database.get_user_policy(llm_rule, caller_id)
+        global_policy = self.tim_database.get_global_policy(llm_rule)
 
-        used_tokens = usage.used_tokens
-        policy = self.tim_database.get_user_policy(rule, caller_id)
+        if not global_policy:
+            raise LookupError("Could not find global policy for this instance")
 
-        if policy:
-            token_limit = policy.max_tokens_per_user
-        else:
-            # check global policy
-            policy = self.tim_database.get_global_policy(rule)
-            if policy:
-                token_limit = policy.max_tokens_per_user
-            else:
-                return Result(value="ok")
-        if used_tokens and token_limit:
-            if used_tokens >= token_limit:
-                return Result(error="No more tokens")
+        up_token_cap_enabled = False
+        up_window_enabled = False
+        gp_token_cap_enabled = False
+        gp_window_enabled = False
+
+        if user_policy is not None:
+            up_max_tokens_per_user = user_policy.max_tokens_per_user
+            if up_max_tokens_per_user is not None and up_max_tokens_per_user != -1:
+                up_token_cap_enabled = True
+            up_time_window_tokens = user_policy.time_window_tokens
+            if up_time_window_tokens is not None and up_time_window_tokens != -1:
+                up_token_cap_enabled = True
+
+            gp_max_tokens_per_user = global_policy.max_tokens_per_user
+            if gp_max_tokens_per_user is not None and gp_max_tokens_per_user != -1:
+                gp_token_cap_enabled = True
+            gp_time_window_tokens = global_policy.time_window_tokens
+            if gp_time_window_tokens is not None and gp_time_window_tokens != -1:
+                gp_token_cap_enabled = True
 
         return Result(value="ok")
 
