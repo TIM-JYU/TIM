@@ -1,5 +1,6 @@
 import functools
-from copy import deepcopy
+
+# from copy import deepcopy
 from dataclasses import dataclass, fields
 from datetime import timedelta, datetime, timezone
 from typing import Optional, Iterable, TypeVar, Any, TYPE_CHECKING, Union
@@ -661,7 +662,8 @@ class DocSettings:
             return static_macros
         if self._static_macros_pum_cache:
             return self._static_macros_pum_cache
-        static_macros_pum = deepcopy(static_macros)
+        # static_macros_pum = deepcopy(static_macros)
+        static_macros_pum = static_macros  # maybe enough to not deepcopy if we are careful to not modify the dict
         macroinfo.update_with_preserving_user_macros(static_macros_pum)
         self._static_macros_pum_cache = static_macros_pum
         return static_macros_pum
