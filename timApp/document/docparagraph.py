@@ -1182,6 +1182,7 @@ class DocParagraph:
                 ):
                     log_for_person_short(
                         lambda: f"CACHE SKIP: par {par.get_doc_id()}/{par.get_id()} "
+                        f"par {par} "
                         f"with cache: {cached} of type {type(cached)}; "
                         f"clear_cache: {clear_cache}"
                     )
