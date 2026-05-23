@@ -114,7 +114,10 @@ type SimilarityMode = "none" | "loose" | "balanced" | "strict" | "custom";
                     <div *ngIf="modelOpen" class="settings-section-body">
                         <div class="checkbox">
                             <label>
-                                <input type="checkbox" [(ngModel)]="filterModels">
+                                <input type="checkbox"
+                                       [(ngModel)]="filterModels"
+                                       (change)="onFilterModelsChanged()"
+                                >
                                 Filter non-chat models
                             </label>
                         </div>
@@ -370,7 +373,7 @@ type SimilarityMode = "none" | "loose" | "balanced" | "strict" | "custom";
         </div>
     `,
 })
-export class ChatControlPanelComponent implements OnChanges {
+export class ChatControlPanelComponent {
     settingsOpen = false;
     modelOpen = false;
     modeOpen = false;
@@ -441,10 +444,11 @@ export class ChatControlPanelComponent implements OnChanges {
     }
 
     @Input() set setModelTemperature(value: number | null) {
-        if (!value) {
+        if (value == null) {
             this.enabledTemperature = false;
             return;
         }
+        this.enabledTemperature = true;
         this.modelTemperature = value;
     }
 
@@ -495,20 +499,6 @@ export class ChatControlPanelComponent implements OnChanges {
     @Output() saveSettingsClick = new EventEmitter<ControlPanelSettings>();
     @Output() panelToggled = new EventEmitter<boolean>();
 
-    ngOnChanges(changes: SimpleChanges): void {
-        if (changes.availableModels) {
-            const prev = changes.availableModels.previousValue as
-                | ChatModel[]
-                | undefined;
-            const curr = changes.availableModels.currentValue as
-                | ChatModel[]
-                | undefined;
-            if (curr && curr.length > 0 && curr !== prev) {
-                this.selectFirstFilteredModel();
-            }
-        }
-    }
-
     ngOnInit(): void {
         this.fetchControlPanelData.emit();
     }
@@ -521,6 +511,10 @@ export class ChatControlPanelComponent implements OnChanges {
     }
 
     onFilterModelsChanged(): void {
+        this.filterModels = !this.filterModels;
+        if (!this.filterModels) {
+            return;
+        }
         const stillVisible = this.filteredModels.some(
             (m) => m.value === this.selectedModel
         );

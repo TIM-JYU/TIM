@@ -105,10 +105,10 @@ class UserKey:
 
 @dataclass
 class InstanceSettingsData(InstanceAttributes):
-    availableModels: list[ChatModel] = field(kw_only=True)
-    availableModes: list[str] = field(kw_only=True)
-    availableKeys: list[UserKey] = field(kw_only=True)
-    availableEmbedderProviders: list[str] = field(kw_only=True)
+    availableModels: list[ChatModel] = field(kw_only=True, default_factory=list)
+    availableModes: list[str] = field(kw_only=True, default_factory=list)
+    availableKeys: list[UserKey] = field(kw_only=True, default_factory=list)
+    availableEmbedderProviders: list[str] = field(kw_only=True, default_factory=list)
     selectedModel: str | None = None
     allowedItemPaths: list[str] | None = None
 
@@ -142,7 +142,7 @@ class PreparedChatRequest:
     document_id: str
     user_input: str
     response: Iterable[ModelResponse] | ModelResponse
-    citations: list[str]
+    citations: list[str] | None
     include_citations: bool = False
 
 
@@ -155,7 +155,6 @@ class PluginCore:
     history_manager: ConversationManager
     tim_database: TimDatabase = TimDatabase()
     indexer: Indexer
-    list_of_instance_ids: list[int] = []  # TODO: poista kun db:ssa rulet
     # TODO: a plugin instance specific variable? In global policy?
     max_input_len: int = 1024
 
@@ -208,18 +207,12 @@ class PluginCore:
         # TODO: remember to fetch with timestamps when the time comes
         chat_history = self.get_history(caller_id_str, document_id_str)
 
-        if rule.current_mode == "Creative":
-            mode: RagMode = RagMode.CREATIVE
-        else:
-            mode: RagMode = RagMode.RETRIEVE
-
-        try:
-            mode: RagMode = self._parse_rag_mode(str(rule.current_mode))
-        except ValueError as e:
-            return Result(error=str(e))
+        rag_mode: RagMode = self._parse_rag_mode(str(rule.current_mode))
+        if rag_mode is None:
+            return Result(error=f"Invalid mode '{rag_mode}'")
 
         # TODO: No need for this attribute if we have character limit for input? Maybe keep as is for an option
-        max_tokens_for_req = 99999
+        max_tokens_for_req = None
 
         temperature: float | None = None
         if rule.temperature is not None:
@@ -235,23 +228,33 @@ class PluginCore:
         use_streaming: bool = bool(rule.use_streaming)
 
         include_citations: bool = (
-            rule.include_citations and rule.current_mode == RagMode.RETRIEVE
+            rule.include_citations and rag_mode == RagMode.RETRIEVE
         )
-
-        # include_citations: bool = mode == RagMode.RETRIEVE
 
         # Validate that the user has the correct generate mode
         if stream != use_streaming:
             return Result(error="Bad request. Mismatching generation mode.")
 
-        response = self.indexer.get_context(
-            prompt=validated_input,
-            identifier=document_id,
-            k=top_k_chunks,
-            threshold=similarity_threshold,
-        )
-        context = response.context
-        citations = self._get_citations(response.used_context)
+        api_key = self.get_api_key(str(rule.public_key))
+        model_id = rule.agent
+
+        context: str | None = None
+        citations: list[str] | None = None
+
+        if rag_mode == RagMode.RETRIEVE:
+            if api_key[0] == "anthropic":
+                # TODO: implement embedding model picking
+                return Result(error="Can't use summarizing mode on Anthropic API keys.")
+
+            response = self.indexer.get_context(
+                prompt=validated_input,
+                api_key=api_key,
+                k=top_k_chunks,
+                threshold=similarity_threshold,
+            )
+            context = response.context
+            citations = self._get_citations(response.used_context)
+
         system_prompt = self.get_system_prompt(rule.system_prompt_path)
 
         msg_data = MessageData(
@@ -259,16 +262,20 @@ class PluginCore:
             system_prompt=system_prompt,
             context=context,
             chat_history=chat_history,
-            mode=mode,
+            mode=rag_mode,
             max_tokens=max_tokens_for_req,
         )
 
         try:
             answer = self.rag.answer(
-                msg_data, identifier=document_id, stream=stream, temperature=temperature
+                msg_data,
+                api_key=api_key,
+                model_id=str(model_id),
+                stream=stream,
+                temperature=temperature,
             )
         except ModelError as e:
-            # TODO: Leave out extra info if not teacher or no access to plugin
+            # TODO: Leave out extra info if not owner or no access to plugin
             error = f"{e.text()} {str(e.cause)}"
             return Result(error=error)
         except Exception as e:
@@ -440,17 +447,22 @@ class PluginCore:
         if not self._document_exists(document_id):
             return Result(None, f"Document [{document_id}] does not exist")
 
+        plugin_data = self.tim_database.get_llm_rule(document_id)
+        if plugin_data is None:
+            return Result(value=InstanceSettingsData.default())
+
         if not self._owns_document(user_id, document_id):
-            return Result(None, "Insufficient rights")
+            # Return only data the client needs
+            data = InstanceSettingsData(
+                use_streaming=bool(plugin_data.use_streaming),
+                include_citations=bool(plugin_data.include_citations),
+            )
+            return Result(data)
 
         if not self._instance_exists(document_id):
             # TODO: get settings from db
             pass
 
-        # If the teacher has not yet saved the settings after setting an API-key alias,
-        # the list should be empty.
-        # Or should we just disable the model selection in the UI until an API-key alias has been set?
-        plugin_data = self.tim_database.get_llm_rule(document_id)
         user_keys = self.tim_database.get_user_api_keys(user_id)
         shared_keys = self.tim_database.get_shared_api_keys(user_id)
 
@@ -479,27 +491,45 @@ class PluginCore:
                 )
             )
 
-        api_key = ""
-        provider = "openai"
-        selected_model = str(plugin_data.agent) if plugin_data is not None else None
+        provider: Provider | None = None
+        api_key: str = ""
+        allowed_paths: list[str] = []
 
-        if plugin_data is not None:
-            for key in user_keys:
-                if key.public_key == plugin_data.public_key:
-                    api_key = key.api_key
-                    provider = key.provider
+        api_key_row = self.tim_database.get_api_key_by_alias(
+            str(plugin_data.public_key)
+        )
+        if api_key_row is not None:
+            provider = self._parse_provider(str(api_key_row.provider))
+            api_key = str(api_key_row.api_key)
+            allowed_paths = api_key_row.paths
+
+        selected_model = str(plugin_data.agent)
+        supported_models = (
+            self._get_supported_chat_models(provider, api_key) if provider else []
+        )
 
         data = InstanceSettingsData(
             availableModes=RagMode.supported_modes(),
-            availableModels=self._get_supported_chat_models(provider, api_key),
+            availableModels=supported_models,
             availableKeys=available_keys,
             availableEmbedderProviders=self._get_available_embedder_providers(user_id),
-            use_streaming=True,  # TODO: from db
+            use_streaming=bool(plugin_data.use_streaming),
             selectedModel=selected_model,
-            allowedItemPaths=None,  # TODO: from the API key restrictions?
+            allowedItemPaths=allowed_paths,
+            llm_mode=str(plugin_data.current_mode),
+            system_prompt_path=plugin_data.system_prompt_path,
+            model_temperature=plugin_data.temperature,
+            include_citations=bool(plugin_data.include_citations),
+            similarity_threshold=plugin_data.similarity_threshold,
+            top_k_chunks=plugin_data.top_k_chunks,
         )
 
         return Result(value=data)
+
+    def check_api_key_doc_access(self, key: LLMRule, document_ids: list[int]) -> None:
+        """Check that the API key has access to the given documents."""
+        for doc_id in document_ids:
+            self.tim_database.api_key_valid_in_doc(key, doc_id)
 
     def save_instance(
         self, caller_id: int, document_id: int, instance_settings: InstanceAttributes
@@ -526,24 +556,32 @@ class PluginCore:
         similarity_threshold: float | None = instance_settings.similarity_threshold
         top_k_chunks: int = instance_settings.top_k_chunks
 
+        if not self._document_exists(document_id):
+            return Result(None, f"Document [{document_id}] does not exist")
+
+        if not self._owns_document(caller_id, document_id):
+            return Result(None, "Insufficient rights")
+
         old_plugin_rule = self.tim_database.get_llm_rule(document_id)
+
+        # Need to create before checking any other input
+        if old_plugin_rule is None:
+            self.tim_database.create_plugin(owner=caller_id, document_id=document_id)
+            return Result(value=SaveInstanceResult(supported_models=[], model_id=""))
+
         old_provider = None
-        if old_plugin_rule is not None and old_plugin_rule.public_key:
+        if old_plugin_rule.public_key:
             try:
                 old_provider, _ = self.get_api_key(str(old_plugin_rule.public_key))
             except Exception:
                 old_provider = None
 
         try:
-            provider_str, api_key = self.try_access_api_key(caller_id, public_key)
+            api_key_rule, provider_str, api_key = self.try_access_api_key_row(
+                caller_id, public_key
+            )
         except Exception as e:
             return Result(None, str(e))
-
-        if not self._document_exists(document_id):
-            return Result(None, f"Document [{document_id}] does not exist")
-
-        if not self._owns_document(caller_id, document_id):
-            return Result(None, "Insufficient rights")
 
         rag_mode = self._parse_rag_mode(llm_mode)
         if rag_mode is None:
@@ -552,16 +590,6 @@ class PluginCore:
         if provider_str not in Provider.__args__:
             return Result(None, f"Invalid provider [{provider_str}] given")
         provider = provider_str
-
-        supported_models = PluginCore._get_supported_models(provider, api_key)
-        provider_changed = old_provider is not None and old_provider != provider_str
-        if provider_changed:
-            if provider == "openai":
-                model_id = "gpt-4.1-mini"
-            else:
-                model_id = supported_models[0] if supported_models else model_id
-        elif model_id not in supported_models:
-            return Result(None, f"Given model [{model_id}] not supported")
 
         paths_for_indexing = tim_paths
         if not paths_for_indexing and rag_mode == RagMode.RETRIEVE:
@@ -574,12 +602,21 @@ class PluginCore:
 
         document_ids = [doc.id for doc in docs]
 
+        # TODO: maybe add manage rights
         owns_all = self._owns_all_items(caller_id, docs)
         if owns_all.ok():
             if not owns_all.value:
                 return Result(None, owns_all.error)
         else:
             return Result(None, "Internal error")
+
+        # Check if the API key is valid in these documents
+        try:
+            self.check_api_key_doc_access(api_key_rule, document_ids)
+        except PermissionError as e:
+            return Result(None, str(e))
+        except ValueError as e:
+            return Result(None, str(e))
 
         # validating max tokens
         if max_tokens is not None and max_tokens < 0:
@@ -589,7 +626,6 @@ class PluginCore:
             prompt_doc = self.tim_database.get_tim_document_by_path(system_prompt_path)
             if not prompt_doc:
                 return Result(None, "Invalid system prompt path")
-            cache.delete_memoized(PluginCore.get_system_prompt, document_id=document_id)
 
         if temperature is not None and (temperature < 0 or temperature > 2):
             return Result(None, "Temperature must be between 0 and 2")
@@ -602,50 +638,25 @@ class PluginCore:
         if top_k_chunks < 1 or top_k_chunks > 20:
             return Result(None, "Top-K must be between 1 and 20")
 
-        # TODO: update system prompt path in the db row
-
         if (valid := self._validate_policy(global_policy)) is not None:
             return Result(error=valid)
 
-        # TODO: if instance exists -> update OTHERIWISE create
-
-        kwargs_model = dict(provider=provider, model_id=model_id, api_key=api_key)
+        supported_models = PluginCore._get_supported_models(provider, api_key)
+        provider_changed = old_provider is not None and old_provider != provider_str
 
         try:
-            self.rag.add_model(identifier=document_id, **kwargs_model)
+            if provider_changed:
+                GenericApiClient.check_access(
+                    provider=provider, model_id=model_id, api_key=api_key
+                )
+            tokens_used, failed_embeddings = self.indexer.create_embeddings(
+                api_key=(provider_str, api_key),
+                documents=docs,
+            )
         except ValueError as e:
             return Result(None, str(e))
 
-        # TODO: api key from db, change create_embedder to take api key as parameter
-        llm_provider = kwargs_model["provider"]
-        available_keys: list[APIKey] = self.get_user_api_keys(owner_id=caller_id)
-
-        for key in available_keys:
-            if key[1].lower() == embedder_provider.lower():
-                emb_model = create_embedder(
-                    embedder_provider=embedder_provider, api_key=key[2]
-                )
-                break
-            # return Result(None, f"Failed to create embedder, No available API key")
-
-        self.indexer.add_embedder(document_id, emb_model)
-
-        tokens_used, failed_embeddings = self.indexer.create_embeddings(
-            identifier=document_id, documents=docs
-        )
-        # probably better ways to do this
-
-        if failed_embeddings > 0:
-            return Result(
-                None, f"Failed to create embeddings for {failed_embeddings} documents."
-            )
         print(f"Tokens used for indexing: {tokens_used}")
-        self.list_of_instance_ids.append(
-            document_id
-        )  # TODO: for testing purposes remove when db ok or cache
-
-        # TODO: hae aliasta vastaava API-avain
-        # TODO: tarkista onko aliasta vastaava API-avain olemassa
 
         rule = self.tim_database.set_llm_rule(
             document_id=document_id,
@@ -675,11 +686,16 @@ class PluginCore:
             max_tokens,
         )
 
+        if failed_embeddings > 0:
+            # TODO: bring the error to the ui but still bring the saved data
+            error = f"Failed to create embeddings for {failed_embeddings} documents."
+            return Result(error=error)
+
         data: SaveInstanceResult = {
             "supported_models": supported_models,
             "model_id": model_id,
         }
-        return Result(value=data, error=None)
+        return Result(value=data)
 
     def delete_instance(self, owner_id: int, document_id: int) -> None:
         self.tim_database.delete_llm_rule(owner_id, document_id)
@@ -709,13 +725,14 @@ class PluginCore:
         max_count: int = 128,
     ) -> list[dict]:
         """Retrieve the wanted message window to the UI."""
-        # TODO: get the LLMRule from cache
         rule = self.tim_database.get_llm_rule(document_id)
         if not rule:
             return []
-        include_citations = (
-            rule.include_citations and rule.current_mode == RagMode.RETRIEVE
-        )
+        try:
+            rag_mode = self._parse_rag_mode(str(rule.current_mode))
+            include_citations = rule.include_citations and rag_mode == RagMode.RETRIEVE
+        except ValueError:
+            include_citations = False
 
         messages = self.history_manager.get_history_time_window(
             str(document_id), str(caller_id), None, ts_end, max_count
@@ -903,7 +920,6 @@ class PluginCore:
 
         return providers
 
-    @cache.memoize(timeout=DEFAULT_CACHE_TIMEOUT, args_to_ignore=["self", "caller_id"])
     def get_system_prompt(self, system_prompt_path: str) -> str | None:
         if not system_prompt_path:
             return None
@@ -1154,8 +1170,8 @@ class PluginCore:
         key = self.tim_database.update_api_key_permissions(
             owner_id, public_key, filtered_groups, filtered_paths
         )
-        groups = get_groups_by_ids(key.groups)
-        return groups, key.paths
+        user_groups = get_groups_by_ids(key.groups)
+        return user_groups, key.paths
 
     def remove_api_key_group(
         self, owner_id: int, public_key: str, group_id: int
@@ -1218,6 +1234,17 @@ class PluginCore:
             keys.append(self._api_row_to_tuple(row))
         return keys
 
+    def try_access_api_key_row(
+        self, user_id: int, public_key: str
+    ) -> tuple[LLMRule, Provider, str]:
+        key = self.tim_database.access_api_key(user_id, public_key)
+        if not key:
+            raise Exception(f"No access to the API key.")
+        provider = PluginCore._parse_provider(str(key.provider))
+        if not provider:
+            raise Exception(f"No provider found for API key.")
+        return key, provider, str(key.api_key)
+
     def try_access_api_key(self, user_id: int, public_key: str) -> tuple[Provider, str]:
         """
         Try to access the API key. Checks that the user has access to it.
@@ -1229,13 +1256,8 @@ class PluginCore:
                            Or the API key provider is invalid.
         :return: A tuple (provider, api_key)
         """
-        key = self.tim_database.access_api_key(user_id, public_key)
-        if not key:
-            raise Exception(f"No access to the API key.")
-        provider = PluginCore._parse_provider(key.provider)
-        if not provider:
-            raise Exception(f"No provider found for API key.")
-        return provider, key.api_key
+        row, provider, api_key = self.try_access_api_key_row(user_id, public_key)
+        return provider, api_key
 
     def get_api_key(self, public_key: str) -> tuple[Provider, str]:
         """
@@ -1257,7 +1279,7 @@ class PluginCore:
     def delete_api_key(self, owner_id: int, public_key: str) -> None:
         self.tim_database.delete_api_key(owner_id, public_key)
 
-    def get_llm_rule(self, document_id: int) -> LLMRule:
+    def get_llm_rule(self, document_id: int) -> LLMRule | None:
         return self.tim_database.get_llm_rule(document_id)
 
     @staticmethod

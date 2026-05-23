@@ -8,6 +8,7 @@ import os
 
 from timApp.document.document import Document
 from datetime import datetime
+from .model import Provider
 
 # Max tokens for API requests. Approximately 32000 characters
 MAX_TOKENS_CHUNK = 8192
@@ -158,7 +159,6 @@ class Indexer:
         """
         :param file_path: root directory for storing index files
         """
-        self.embedding_models: dict[int, EmbeddingModel] = {}
         self.root_path = os.path.join(file_path, "embeddings", "chattim")
         self.indexed_page_ids: list[int] = []
         os.makedirs(self.root_path, exist_ok=True)
@@ -286,15 +286,22 @@ class Indexer:
         return batches
 
     def create_embeddings(
-        self, identifier: int, documents: list[Document]
+        self,
+        api_key: tuple[Provider, str],
+        documents: list[Document],
     ) -> tuple[int, int]:
         """generates the data object containing embeddings and corresponding text chunks
         Throws on non-existing embedder
-        :param identifier id of the plugin instance
+        :param api_key: API key to use for generating embeddings.
         :param documents: list of tim documents
         :return: number of tokens used"""
 
-        embedding_model: EmbeddingModel = self.embedding_models[identifier]
+        embedding_model = create_embedder(
+            embedder_provider=api_key[0], api_key=api_key[1]
+        )
+        if embedding_model is None:
+            raise ValueError("No embedding model found")
+
         model_type: str = embedding_model.get_model_type()
 
         tokens_used = 0
@@ -410,17 +417,24 @@ class Indexer:
         return similarities.tolist()
 
     def get_context(
-        self, prompt: str, identifier: int, k: int = 3, threshold: float | None = None
+        self,
+        prompt: str,
+        api_key: tuple[Provider, str],
+        k: int = 3,
+        threshold: float | None = None,
     ) -> ContextResponse:
         """returns the context for the prompt as list of text,and the number of tokens used
 
         :param prompt: prompt that is used to search for context
-        :param identifier id of the plugin instance
+        :param api_key: The used API key.
         :param k: number of tim chunks to return
         :param threshold: Threshold for the similarity values of the chunks. Between -1 and 1.
         :return: ContextResponse object containing the context and the number of tokens used
         """
-        embedding_model = self.embedding_models[identifier]
+
+        embedding_model = create_embedder(api_key[0], api_key[1])
+        if embedding_model is None:
+            raise ValueError("No embedding model found")
 
         tokens_used = 0
 
@@ -477,15 +491,6 @@ class Indexer:
         return ContextResponse(
             context=context, tokens_used=tokens_used, used_context=context_ids
         )
-
-    def add_embedder(self, identifier: int, embedder: EmbeddingModel) -> None:
-        self.embedding_models[identifier] = embedder
-
-    def remove_embedder(self, identifier: int) -> None:
-        del self.embedding_models[identifier]
-
-    def change_key(self, identifier: int, key: str) -> None:
-        self.embedding_models[identifier].change_key(key)
 
     def _get_file_name(self, doc_id: int, model_type: str) -> str:
         return f"{self.root_path}/{doc_id}_{model_type}.json"

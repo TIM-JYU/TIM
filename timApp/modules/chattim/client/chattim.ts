@@ -103,7 +103,9 @@ export interface ControlPanelData extends ControlPanelSettings {
     template: `
         <div class="chattim-block-anchor"
              *ngIf="(markup.blockContent ?? '').trim().length > 0"
-             [innerHTML]="markup.blockContent | purify">
+             [innerHTML]="markup.blockContent | purify"
+             [hidden]="!hasManageRights"
+        >
         </div>
         <tim-dialog-frame class="chattim-dialog-frame" [size]="windowSize">
             <ng-container header> {{ header }}</ng-container>
@@ -187,7 +189,6 @@ export interface ControlPanelData extends ControlPanelSettings {
                             (saveSettingsClick)="onSaveSettings($event)"
                             (panelToggled)="onControlPanelToggle($event)"
                             (fetchModelsClick)="onFetchModels($event)"
-                            (fetchControlPanelData)="getControlPanelData()"
                             [selectedModel]="selectedModel"
                             [setModelTemperature]="modelTemperature"
                             [useStreaming]="useStreaming"
@@ -233,6 +234,7 @@ export class ChatTIMComponent
 {
     @ViewChild(ChatControlPanelComponent)
     controlPanel!: ChatControlPanelComponent;
+    controlPanelOpen: boolean = false;
     private hostElement!: ElementRef<HTMLElement>;
 
     onControlPanelToggle(isOpen: boolean) {
@@ -240,6 +242,7 @@ export class ChatTIMComponent
         if (!dialog) {
             return;
         }
+        this.controlPanelOpen = isOpen;
         const panelEl: HTMLElement | null =
             this.hostElement.nativeElement.querySelector(".settings-panel");
 
@@ -282,6 +285,7 @@ export class ChatTIMComponent
     inputStem = ""; // TODO: do something with this or remove?
     document_id = -1;
     isTeacher: boolean = false;
+    hasManageRights: boolean = false;
     selectedItemPaths: string[] = [];
     pathRestrictions?: DirectoryPickerRestrictions;
     localFilePaths = "";
@@ -342,6 +346,8 @@ export class ChatTIMComponent
          early crashes thus we call in ngAfterViewInit */
         this.initDocId();
         await this.initScrollContainer();
+        // TODO: separate control panel data and client data fetch
+        await this.getControlPanelData();
         await this.fetchRights();
         console.log(this.isTeacher);
     }
@@ -349,6 +355,7 @@ export class ChatTIMComponent
         if (this.document_id <= 0) {
             return;
         }
+        this.hasManageRights = itemglobals().curr_item.rights.manage;
         const user_id: number = Users.getCurrent().id;
         const response = await this.httpPost<{is_teacher: boolean}>(
             this.route("getRights"),
@@ -927,6 +934,9 @@ export class ChatTIMComponent
     ) {
         const el = this.scrollContainer;
         if (!el) {
+            return;
+        }
+        if (this.controlPanelOpen) {
             return;
         }
 
