@@ -1195,7 +1195,7 @@ class DocParagraph:
                     old_html = cached
                     log_for_person_short(
                         lambda: f"OLD CACHE MISS: par {par.get_doc_id()}/{par.get_id()} "
-                        f"with cache: {cached} of type {type(cached)}"
+                        f"{par}"
                     )
                 else:
                     par.html = None
@@ -1216,10 +1216,9 @@ class DocParagraph:
                     ):  # The preamble leads to many misses.
                         log_for_person_short(
                             lambda: f"CACHE MISS: par {par.get_doc_id()}/{par.get_id()} "
-                            f"par {par} "
+                            f"{par} "
                             f"with hashes {cache_hashes}, "
-                            f"auto macros: {auto_macros}, and "
-                            f"cache: {cached} of type {type(cached)}"
+                            f"auto macros: {auto_macros}"
                         )
             else:
                 old_html = None
@@ -1231,10 +1230,8 @@ class DocParagraph:
                 ):
                     log_for_person_short(
                         lambda: f"CACHE SKIP: par {par.get_doc_id()}/{par.get_id()} "
-                        f"par {par} "
-                        f"with cache: {cached} of type {type(cached)}; "
+                        f"{par} "
                         f"clear_cache: {clear_cache} "
-                        f"t: {par.t} hash: {par.hash}"
                     )
 
             unloaded_par = cls.UnloadedParInfo(
