@@ -47,6 +47,7 @@ from timApp.util.utils import (
     title_to_id,
     get_boolean,
     add_g_error,
+    short_repr,
 )
 from tim_common.dumboclient import DumboOptions, MathType, InputFormat
 from tim_common.html_sanitize import sanitize_html, strip_div
@@ -287,12 +288,11 @@ class DocParagraph:
         return (
             f"DocParagraph(id={self.id!r}, "
             f"doc_id={self.get_doc_id()!r}, "
-            f"md={self.md!r}, "
-            f"html={self.html!r}, "
+            f"md={short_repr(self.md)}, "
+            f"html={short_repr(self.html)}, "
             f"attrs={self.attrs!r}, "
-            f"attrs={self.t!r}, "
-            f"html_cache={self.html_cache!r}"
-            ")"
+            f"t={self.t!r}, "
+            f"html_cache={short_repr(self.html_cache)})"
         )
 
     @classmethod

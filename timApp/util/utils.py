@@ -615,3 +615,36 @@ def get_g_errors(sep: str = "<br>") -> str:
     if not errors:
         return ""
     return sep.join(errors)
+
+
+def short_repr(value: object, n: int = 40) -> str:
+    def shorten_str(s: str) -> str:
+        return s if len(s) <= n else s[:n] + "..."
+
+    if isinstance(value, str):
+        return repr(shorten_str(value))
+
+    if value is None or isinstance(value, (int, float, bool)):
+        return repr(value)
+
+    if isinstance(value, dict):
+        items = ", ".join(
+            f"{short_repr(k, n)}: {short_repr(v, n)}" for k, v in value.items()
+        )
+        return "{" + items + "}"
+
+    if isinstance(value, list):
+        items = ", ".join(short_repr(v, n) for v in value)
+        return "[" + items + "]"
+
+    if isinstance(value, tuple):
+        items = ", ".join(short_repr(v, n) for v in value)
+        if len(value) == 1:
+            items += ","
+        return "(" + items + ")"
+
+    if isinstance(value, set):
+        items = ", ".join(short_repr(v, n) for v in value)
+        return "{" + items + "}"
+
+    return repr(shorten_str(repr(value)))
