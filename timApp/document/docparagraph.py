@@ -1,4 +1,5 @@
 from __future__ import annotations
+from flask import g
 
 import json
 import os
@@ -109,27 +110,21 @@ def write_atomic(path: str, data: str, encoding: str = "utf-8") -> None:
     os.chmod(path, 0o664)
 
 
+def get_username() -> str:
+    user = g.get("user", None)
+    if user is None:
+        return "???"
+    return user.name
+
+
 def log_filename(file_name: str):
     from timApp.util.logger import log_info
 
     # log_info(f"W: {file_name}  {DocParagraph.get_stack_str(15, 1)}")
-    log_info(f"W: {file_name} __write_")
+    log_info(f"{get_username()} W: {file_name} __write_")
 
 
-def _log_filename_for_person(file_name: str):
-    if not flask.has_request_context():
-        return
-    # If url_param "debug_writes", log the filename and stack trace for debugging purposes
-    tag = flask.request.args.get("debug_writes_long")
-    if tag is None:
-        return
-
-    from timApp.util.logger import log_info
-
-    log_info(f"DZW ({tag}): {file_name}  {DocParagraph.get_stack_str(15, 1)}")
-
-
-def _log_for_person(msg_func, tag: str):
+def _log_for_person(msg_func, tag: str | None = None):
     """
     Logs msg_func if there is url parameter
        debug_writes_long=user_tag,{log_tag}[&debug_reg=regular_expression]
@@ -143,23 +138,27 @@ def _log_for_person(msg_func, tag: str):
         wri - Writing par
         cle - Clear HTML cache for par
         stack - print also call stack
-    debug_reg = optional regular expression for printing
+    To log for example just some par operations, one van use
+        debug_reg = optional regular expression for printing
+    and give the par id as regular expression
+
     :param msg_func: lambda text to log
     :param tag: condition to log this message,
                 if log_tag is in debug_writes_long,
-                then log this message, otherwise skip
+                then log this message, otherwise skip.
+                If tag is missing, print anyway.
     :return: Nothing
     """
     if not flask.has_request_context():
         return
     # If url_param "debug_writes", log the filename and stack trace for debugging purposes
-    tags = flask.request.args.get("debug_writes_long")
+    tags = flask.request.args.get("debug_writes_long" if tag else "debug_writes")
     if tags is None:
         return
 
     parts = [p.strip() for p in tags.split(",") if p.strip()]
 
-    if tag not in parts:
+    if tag and tag not in parts:
         return
 
     user_tag: str = parts[0]
@@ -169,35 +168,22 @@ def _log_for_person(msg_func, tag: str):
     if debug_reg:
         if re.search(debug_reg, text) is None:
             return
+    stack = flask.request.args.get("debug_stack")
+    username = get_username()
 
     from timApp.util.logger import log_info
 
-    if "stack" in parts:
-        log_info(f"DZWL ({user_tag}): {text}  {DocParagraph.get_stack_str(15, 1)}")
+    if stack:
+        log_info(
+            f"{username} DZW ({user_tag}): {text}  {DocParagraph.get_stack_str(15, 1)}"
+        )
     else:
-        log_info(f"DZWL ({user_tag}): {text}")
+        log_info(f"{username} DZW ({user_tag}): {text}")
 
 
-def _log_for_person_short(msg_func):
-    if not flask.has_request_context():
-        return
-    # If url_param "debug_writes", log the filename and stack trace for debugging purposes
-    user_tag = flask.request.args.get("debug_writes")
-    if user_tag is None:
-        return
-
-    from timApp.util.logger import log_info
-
-    # log_info(f"DZW ({tag}): {msg_func()}  {DocParagraph.get_stack_str(15, 1)}")
-    log_info(f"DZW ({user_tag}): {msg_func()}")
-
-
-log_filename_for_person = (
-    _log_filename_for_person if ENABLE_LOG_FOR_PERSON_LONG else lambda *a, **k: None
-)
 log_for_person = _log_for_person if ENABLE_LOG_FOR_PERSON_LONG else lambda *a, **k: None
 log_for_person_short = (
-    _log_for_person_short if ENABLE_LOG_FOR_PERSON_SHORT else lambda *a, **k: None
+    _log_for_person if ENABLE_LOG_FOR_PERSON_SHORT else lambda *a, **k: None
 )
 
 
@@ -249,6 +235,7 @@ class DocParagraph:
         "md",
         "depends_on_macros",
         "orig_par",
+        "t",
     }
 
     def __init__(self, doc: Document):
@@ -262,6 +249,7 @@ class DocParagraph:
         self.original: DocParagraph | None = None
         self.html_sanitized = False
         self.html = None
+        self.t = ""
         self.prepared_par: PreparedPar | None = None
 
         # Cache for referenced paragraphs. Keys {True, False} correspond to the values of set_html parameter in
@@ -404,6 +392,7 @@ class DocParagraph:
         par = DocParagraph(doc)
         par.id = d["id"]
         par.md = d["md"]
+        par.t = d.get("t", "")
         par.attrs = d.get("attrs", {})
         par.html_cache = d.get("h")
         log_for_person(
@@ -700,6 +689,8 @@ class DocParagraph:
         """Inserts Jinja rnd variable as a list of random numbers based to attribute rnd and rnd_seed
         return True if attribute rnd found and OK, else False
         """
+        if self.attrs is None:
+            return False
         self.__rands, self.__rnd_seed, state = get_rands_as_dict(
             self.attrs, rnd_seed, None
         )
@@ -1085,7 +1076,11 @@ class DocParagraph:
                 # noinspection PyProtectedMember
                 par._set_html(h, sanitized=True)
                 if persist and not is_from_preamble and need_write:
-                    par.__write()
+                    if par.t and par.t != par.hash:
+                        # old hash counted wrong
+                        par.doc.modify_paragraph_obj(par.id, par, True)
+                    else:
+                        par.__write()
         log_for_person(lambda: f"changed pars: {changed_pars}", "cha")
         return changed_pars
 
@@ -1238,6 +1233,7 @@ class DocParagraph:
                         f"par {par} "
                         f"with cache: {cached} of type {type(cached)}; "
                         f"clear_cache: {clear_cache}"
+                        f"t: {par.t} hash: {par.hash}"
                     )
 
             unloaded_par = cls.UnloadedParInfo(
@@ -1507,7 +1503,6 @@ class DocParagraph:
     def __write(self):
         file_name = self.get_path()
         log_filename(file_name)
-        log_filename_for_person(file_name)
         does_exist = os.path.isfile(file_name)
 
         if not does_exist:
@@ -1517,7 +1512,9 @@ class DocParagraph:
 
         d = self.dict(include_html_cache=True)
         log_for_person(
-            lambda: f"Writing par {self.get_doc_id()}/{self.get_id()}: {d}", "wri"
+            lambda: f"Writing par {self.get_doc_id()}/{self.get_id()}: {d} "
+            f"with filename {file_name}",
+            "wri",
         )
         write_atomic(file_name, json.dumps(d))
 
