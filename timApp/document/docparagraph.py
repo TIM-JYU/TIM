@@ -39,7 +39,7 @@ from timApp.markdown.markdownconverter import (
     HeadingHtml,
 )
 from timApp.timdb.exceptions import TimDbException, InvalidReferenceException
-from timApp.util.logger import log_error
+from timApp.util.logger import log_error, log_info
 from timApp.util.rndutils import get_rands_as_dict, SeedType
 from timApp.util.utils import (
     count_chars_from_beginning,
@@ -260,9 +260,7 @@ class DocParagraph:
         self.attrs: dict[str, str] | None = None
         self.nomacros = None
         self.ref_chain = None
-        self.answer_nr: int | None = (
-            None  # needed if variable tasks, None = not task at all or not variable task
-        )
+        self.answer_nr: int | None = None  # needed if variable tasks, None = not task at all or not variable task
         self.md = ""
         self.id = None
         self.ask_new: bool | None = None  # to send for plugins to force new question
@@ -1055,9 +1053,9 @@ class DocParagraph:
                         if is_heading:
                             # heading with dynamic macros needs different handling
                             # to get autnumbers
-                            par.attrs["nocache"] = (
-                                FORCE_MACROS_HEADER  # f matches false
-                            )
+                            par.attrs[
+                                "nocache"
+                            ] = FORCE_MACROS_HEADER  # f matches false
                             need_write = nocache != FORCE_MACROS_HEADER
                         else:
                             par.attrs["nocache"] = "auto"
@@ -1078,6 +1076,7 @@ class DocParagraph:
                 if persist and not is_from_preamble and need_write:
                     if par.t and par.t != par.hash:
                         # old hash counted wrong
+                        log_info(f"t counted wrong {par}")
                         par.doc.modify_paragraph_obj(par.id, par, True)
                     else:
                         par.__write()
@@ -1125,9 +1124,9 @@ class DocParagraph:
         )
         for par in pars:
             cache_hashes: list[str] = [""] * (len(CacheHashNames) - 1)
-            cache_hashes[CacheHashNames.NORMAL_PAR_HASH] = (
-                settings.get_normal_par_cache_key_hash()
-            )
+            cache_hashes[
+                CacheHashNames.NORMAL_PAR_HASH
+            ] = settings.get_normal_par_cache_key_hash()
             cache_index: CacheHashNames = CacheHashNames.NO_CACHE
             if clear_cache:
                 # clear automatically set nocache value
@@ -1232,7 +1231,7 @@ class DocParagraph:
                         lambda: f"CACHE SKIP: par {par.get_doc_id()}/{par.get_id()} "
                         f"par {par} "
                         f"with cache: {cached} of type {type(cached)}; "
-                        f"clear_cache: {clear_cache}"
+                        f"clear_cache: {clear_cache} "
                         f"t: {par.t} hash: {par.hash}"
                     )
 

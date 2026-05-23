@@ -237,6 +237,7 @@ class DocSettings:
         #    return
         env = TimSandboxedEnvironment()
         doc_macros = MacroInfo.get_doc_related_macros(self.doc)
+        user_preserving_macros = MacroInfo.get_user_preserving_macros_def()
         changes = True
         loops = 0
         errors = ""
@@ -254,7 +255,9 @@ class DocSettings:
                         yml = rec_set.get("yaml", None)
                         if not yml:
                             continue
-                        yml = expand_macros(yml, doc_macros | macros, self, env)
+                        yml = expand_macros(
+                            yml, doc_macros | macros | user_preserving_macros, self, env
+                        )
                         if yml != rec_set.get("prevyaml", ""):
                             changes = True
                             rec_set["prevyaml"] = yml

@@ -38,6 +38,7 @@ class MacroInfo:
     preserve_user_macros: bool = False
     """If True and user is not provided, get_macros() will preserve the user-specific-macros
      (instead of replacing them with empty values)."""
+    user_preserving_macros_cache: dict[str, object] | None = None
 
     def with_field_macros(self) -> Self:
         from timApp.auth.accesshelper import AccessDenied
@@ -143,6 +144,25 @@ class MacroInfo:
             self.macro_delimiter, self.user_ctx, self.view_ctx, self.macro_map, self.doc
         )
 
+    @staticmethod
+    def get_user_preserving_macros_def(delimiter="%%") -> dict[str, object]:
+        upm = {
+            "userid": f"{delimiter}userid{delimiter}",
+            "username": f"{delimiter}username{delimiter}",
+            "realname": f"{delimiter}realname{delimiter}",
+            "useremail": f"{delimiter}useremail{delimiter}",
+            "loggedUsername": f"{delimiter}loggedUsername{delimiter}",
+            "userfolder": f"{delimiter}userfolder{delimiter}",
+        }
+        return upm
+
+    def get_user_preserving_macros(self) -> dict[str, object]:
+        if self.user_preserving_macros_cache:
+            return self.user_preserving_macros_cache
+        cache = MacroInfo.get_user_preserving_macros_def(self.macro_delimiter)
+        self.user_preserving_macros_cache = cache
+        return cache
+
     def update_with_preserving_user_macros(
         self, macros: dict[str, object]
     ) -> dict[str, object]:
@@ -155,16 +175,7 @@ class MacroInfo:
         :param macros: where to add user_preserving macros
         :return: same macros filled with user_preserving macros
         """
-        macros.update(
-            {
-                "userid": f"{self.macro_delimiter}userid{self.macro_delimiter}",
-                "username": f"{self.macro_delimiter}username{self.macro_delimiter}",
-                "realname": f"{self.macro_delimiter}realname{self.macro_delimiter}",
-                "useremail": f"{self.macro_delimiter}useremail{self.macro_delimiter}",
-                "loggedUsername": f"{self.macro_delimiter}loggedUsername{self.macro_delimiter}",
-                "userfolder": f"{self.macro_delimiter}userfolder{self.macro_delimiter}",
-            }
-        )
+        macros.update(self.get_user_preserving_macros())
         return macros
 
     def get_macros_preserving_user(self) -> dict[str, object]:
