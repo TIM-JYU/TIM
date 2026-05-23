@@ -287,10 +287,12 @@ class DocParagraph:
         return (
             f"DocParagraph(id={self.id!r}, "
             f"doc_id={self.get_doc_id()!r}, "
-            f"md={self.md!r})"
-            f"html={self.html!r})"
-            f"attrs={self.attrs!r})"
-            f"html_cache={self.html_cache!r})"
+            f"md={self.md!r}, "
+            f"html={self.html!r}, "
+            f"attrs={self.attrs!r}, "
+            f"attrs={self.t!r}, "
+            f"html_cache={self.html_cache!r}"
+            ")"
         )
 
     @classmethod
