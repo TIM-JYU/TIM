@@ -1167,6 +1167,7 @@ class DocParagraph:
                     ):  # The preamble leads to many misses.
                         log_for_person_short(
                             lambda: f"CACHE MISS: par {par.get_doc_id()}/{par.get_id()} "
+                            f"par {par} "
                             f"with hashes {cache_hashes}, "
                             f"auto macros: {auto_macros}, and "
                             f"cache: {cached} of type {type(cached)}"
