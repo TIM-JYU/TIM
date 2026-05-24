@@ -128,7 +128,8 @@ def log_filename(file_name: str):
 def _log_for_person(msg_func, tag: str | None = None):
     """
     Logs msg_func if there is url parameter
-       debug_writes_long=user_tag,{log_tag}[&debug_reg=regular_expression]
+       debug_writes=user_tag[&debug_reg=regular_expression][&debug_stack=true]
+       debug_writes_long=user_tag,{log_tag}[&debug_reg=regular_expression][&debug_stack=true]
     Possible log tags are (find all calls for this function):
         dic - Creating par from dict
         unl - List of unloaded pars
@@ -1075,6 +1076,9 @@ class DocParagraph:
                     )
                 # noinspection PyProtectedMember
                 par._set_html(h, sanitized=True)
+                if get_username() == "Anonymous":
+                    # anonymous is not allowed to change files
+                    continue
                 if persist and not is_from_preamble and need_write:
                     if par.t and par.t != par.hash:
                         # old hash counted wrong
