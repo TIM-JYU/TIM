@@ -516,6 +516,14 @@ class PluginCore:
             global_policy_ui = self._convert_sql_policy_to_generic_policy(global_policy)
             max_token_pool = global_policy.token_pool
 
+        # Turn selected TIM documents from IDs to paths
+        doc_paths: list[str] = []
+        for doc_id in llm_rule.indexed_document_ids:
+            doc = self.tim_database.get_doc_entry_by_id(doc_id)
+            if not doc:
+                continue
+            doc_paths.append(doc.path)
+
         data = InstanceSettingsData(
             availableModes=RagMode.supported_modes(),
             availableModels=supported_models,
@@ -526,6 +534,7 @@ class PluginCore:
             allowedItemPaths=allowed_paths,
             llm_mode=str(llm_rule.current_mode),
             system_prompt_path=llm_rule.system_prompt_path,
+            tim_paths=doc_paths,
             model_temperature=llm_rule.temperature,
             include_citations=bool(llm_rule.include_citations),
             similarity_threshold=llm_rule.similarity_threshold,
