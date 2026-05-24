@@ -806,10 +806,23 @@ export class ChatTIMComponent
             if (data.web.selectedModel) {
                 this.selectedModel = data.web.selectedModel;
             }
-            this.error = undefined; // on successful save we clear chattim-error, maybe not great
+            this.error = undefined;
             this.useStreaming = controlPanelSettings.use_streaming;
         } else {
             this.controlpanelError = response.result.error.error;
+        }
+
+        if (this.controlpanelError) {
+            const el = this.scrollContainer;
+            if (!el) {
+                return;
+            }
+            requestAnimationFrame(() => {
+                el.scrollTo({
+                    top: el.scrollHeight,
+                    behavior: "smooth",
+                });
+            });
         }
     }
 

@@ -658,22 +658,30 @@ type StyleSelectionType =
                                     <progressbar tooltip="{{APIkey.usedTokens}} / {{APIkey.availableTokens}}"
                                                  [value]="APIkey.usedTokens" [max]="APIkey.availableTokens"></progressbar>
                                 </div>
-                                <button *ngIf="!APIkey.tokensChecked" class="btn" type="button"
-                                        (click)="checkTokens(APIkey)" i18n>
-                                    Check key's quota
-                                </button>
-                                <button *ngIf="APIkey.tokensChecked" class="btn" type="button"
-                                        (click)="checkTokens(APIkey)">
-                                    <i class="glyphicon glyphicon-refresh"></i>
-                                </button>
-                                <button *ngIf="true" class="btn" type="button"
-                                        (click)="openEditLLMAPIKeyDialog(APIkey)" i18n>
-                                    Edit permissions
-                                </button>
-                                <button class="btn btn-danger" type="button"
-                                        (click)="deleteLLMKey(APIkey)">
-                                    <i class="glyphicon glyphicon-trash"></i>
-                                </button>
+                                <ng-container *ngIf="deletingLLMKey !== APIkey">
+                                    <button *ngIf="!APIkey.tokensChecked" class="btn" type="button"
+                                            (click)="checkTokens(APIkey)" i18n>
+                                        Check key's quota
+                                    </button>
+                                    <button *ngIf="APIkey.tokensChecked" class="btn" type="button"
+                                            (click)="checkTokens(APIkey)">
+                                        <i class="glyphicon glyphicon-refresh"></i>
+                                    </button>
+                                    <button *ngIf="true" class="btn" type="button"
+                                            (click)="openEditLLMAPIKeyDialog(APIkey)" i18n>
+                                        Edit permissions
+                                    </button>
+                                    <button class="btn btn-danger" type="button" (click)="deleteLLMKey(APIkey)">
+                                        <i class="glyphicon glyphicon-trash"></i>
+                                    </button>
+                                </ng-container>
+                                <ng-container *ngIf="deletingLLMKey === APIkey">
+                                    <span i18n>Delete "{{ APIkey.alias }}"?</span>
+                                    <button class="btn btn-danger" type="button"
+                                            (click)="confirmDeleteLLMKey(APIkey)" i18n>Yes, delete</button>
+                                    <button class="btn btn-default" type="button"
+                                            (click)="cancelDeletingLLMKey()" i18n>Cancel</button>
+                                </ng-container>
                             </div>
                         </div>
                     </ng-container>
@@ -755,6 +763,7 @@ export class SettingsComponent implements DoCheck, AfterViewInit {
     loadingUserStyle = false;
     @ViewChild("stylesTabs", {static: false}) stylesTabs!: TabsetComponent;
     styleError?: {title: string; message: string};
+    deletingLLMKey?: IUserLLMApiKey;
 
     constructor(private http: HttpClient, private cdr: ChangeDetectorRef) {
         this.getKeys();
@@ -1372,14 +1381,13 @@ export class SettingsComponent implements DoCheck, AfterViewInit {
         this.cdr.detectChanges();
     }
 
-    async deleteLLMKey(key: IUserLLMApiKey) {
-        if (
-            !window.confirm(
-                `Are you sure you want to delete this LLM API key (${key.alias})?`
-            )
-        ) {
-            return;
-        }
+    deleteLLMKey(key: IUserLLMApiKey) {
+        this.deletingLLMKey = key;
+        this.cdr.detectChanges();
+    }
+
+    async confirmDeleteLLMKey(key: IUserLLMApiKey) {
+        this.deletingLLMKey = undefined;
         this.saving = true;
         const r = await toPromise(
             this.http.delete("/chattim/deleteKey", {
@@ -1396,6 +1404,11 @@ export class SettingsComponent implements DoCheck, AfterViewInit {
         } else {
             await showMessageDialog(r.result.error.error);
         }
+        this.cdr.detectChanges();
+    }
+
+    cancelDeletingLLMKey() {
+        this.deletingLLMKey = undefined;
         this.cdr.detectChanges();
     }
 
