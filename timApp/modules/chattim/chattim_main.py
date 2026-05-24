@@ -33,6 +33,7 @@ from timApp.modules.chattim.plugincore import (
     InstanceAttributes,
     APIKey,
     UserData,
+    InstanceSettingsData,
 )
 from .model import ModelError
 
@@ -270,7 +271,7 @@ def get_settings(params: GenericParams) -> ChatTIMGetSettingsResponse:
         ret["error"] = get_result.error
         return ret
 
-    ret["result"] = get_result.value or InstanceAttributes.default()
+    ret["result"] = get_result.value or InstanceSettingsData.default()
 
     return ret
 
@@ -311,9 +312,8 @@ def save_user_policy(params: SaveUserPolicyParams) -> dict:
     return operation_result
 
 
-def save_settings(params: ChatTimSaveSettingsParams) -> PluginAnswerResp:
-    web: ChatTimAnswerWeb = {}
-    result: PluginAnswerResp = {"web": web}
+def save_settings(params: ChatTimSaveSettingsParams) -> ChatTIMGetSettingsResponse:
+    res: ChatTIMGetSettingsResponse = {}
 
     panel_data = params.control_panel_settings
     document_id = params.document_id
@@ -321,17 +321,11 @@ def save_settings(params: ChatTimSaveSettingsParams) -> PluginAnswerResp:
 
     save_result = plugincore.save_instance(session_user_id, document_id, panel_data)
     if not save_result.ok() or save_result.value is None:
-        web["error"] = save_result.error or ""
-        return result
+        res["error"] = save_result.error or ""
+        return res
 
-    data = save_result.value
-
-    web["result"] = "Settings saved!"
-    web["availableModels"] = [
-        {"label": m, "value": m} for m in data["supported_models"]
-    ]
-    web["selectedModel"] = data["model_id"]
-    return result
+    res["result"] = save_result.value or InstanceSettingsData.default()
+    return res
 
 
 def get_messages(params: GetMessagesParams) -> dict:

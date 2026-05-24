@@ -439,7 +439,7 @@ class PluginCore:
 
     def get_plugin_settings(
         self, user_id: int, document_id: int
-    ) -> Result[InstanceAttributes, str]:
+    ) -> Result[InstanceSettingsData, str]:
         """
         Get the settings for the plugin.
         """
@@ -533,7 +533,7 @@ class PluginCore:
 
     def save_instance(
         self, caller_id: int, document_id: int, instance_settings: InstanceAttributes
-    ) -> Result[SaveInstanceResult, str | None]:
+    ) -> Result[InstanceSettingsData, str]:
         """
         Create instance if it doesn't exist. New settings are saved if valid.
         Adds a new model instance to RAG and a new llmrule table to database
@@ -567,7 +567,7 @@ class PluginCore:
         # Need to create before checking any other input
         if old_plugin_rule is None:
             self.tim_database.create_plugin(owner=caller_id, document_id=document_id)
-            return Result(value=SaveInstanceResult(supported_models=[], model_id=""))
+            return self.get_plugin_settings(caller_id, document_id)
 
         old_provider = None
         if old_plugin_rule.public_key:
@@ -592,8 +592,6 @@ class PluginCore:
         provider = provider_str
 
         paths_for_indexing = tim_paths
-        if not paths_for_indexing and rag_mode == RagMode.RETRIEVE:
-            return Result(None, "Give at least one path when using summarizing mode")
 
         docs_result = self._fetch_docs_by_paths(paths_for_indexing)
         if not docs_result.ok():
@@ -641,7 +639,6 @@ class PluginCore:
         if (valid := self._validate_policy(global_policy)) is not None:
             return Result(error=valid)
 
-        supported_models = PluginCore._get_supported_models(provider, api_key)
         provider_changed = old_provider is not None and old_provider != provider_str
 
         try:
@@ -691,11 +688,7 @@ class PluginCore:
             error = f"Failed to create embeddings for {failed_embeddings} documents."
             return Result(error=error)
 
-        data: SaveInstanceResult = {
-            "supported_models": supported_models,
-            "model_id": model_id,
-        }
-        return Result(value=data)
+        return self.get_plugin_settings(caller_id, document_id)
 
     def delete_instance(self, owner_id: int, document_id: int) -> None:
         self.tim_database.delete_llm_rule(owner_id, document_id)
