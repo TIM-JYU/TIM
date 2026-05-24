@@ -35,11 +35,11 @@ import type {DirectoryPickerRestrictions} from "tim/folder/directory-picker.comp
 import {DirectoryPickerComponent} from "tim/folder/directory-picker.component";
 import {itemglobals} from "tim/util/globals";
 import {TooltipModule} from "ngx-bootstrap/tooltip";
+import type {AngularError, Result} from "tim/util/utils";
 import type {ChatModel, ControlPanelSettings, UserKey} from "./controlpanel";
 import {ChatControlPanelComponent} from "./controlpanel";
 import type {TokenLimitForUser} from "./userpolicy";
 import type {UserData} from "./usercontrol";
-import {AngularError, Result} from "tim/util/utils";
 
 const PluginMarkupFields = t.intersection([
     t.partial({
@@ -173,11 +173,14 @@ export interface ControlPanelData extends ControlPanelSettings {
                     <div class="control-panel-container">
                         
                         <ng-container *ngIf="!isTeacher">
-                            <div class="settings-row">
-                                <p>Tämä näkymä on opiskelijalle</p>
-                                <span>Käytetyt tokenit: <strong>TODO!</strong></span>
-                            </div>
-                            <div class="settings-row">
+                            <button class="btn btn-link settings-btn"
+                                    (click)="onControlPanelToggle(!controlPanelOpen)"
+                                    [attr.aria-expanded]="controlPanelOpen"
+                                    title="Avaa asetukset">
+                                <span class="glyphicon glyphicon-cog" style="font-size: 1.8em;"></span>
+                            </button>
+                            
+                            <div class="settings-panel" *ngIf="controlPanelOpen">
                                 <button class="btn btn-warning"
                                         (click)="clearConversationClicked()">
                                     Clear conversation
