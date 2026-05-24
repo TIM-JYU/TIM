@@ -659,31 +659,29 @@ type StyleSelectionType =
                                                  [value]="APIkey.usedTokens" [max]="APIkey.availableTokens"></progressbar>
                                 </div>
                                 <ng-container *ngIf="deletingLLMKey !== APIkey">
-                                <button *ngIf="!APIkey.tokensChecked" class="btn" type="button"
-                                        (click)="checkTokens(APIkey)" i18n>
-                                    Check key's quota
-                                </button>
-                                <button *ngIf="APIkey.tokensChecked" class="btn" type="button"
-                                        (click)="checkTokens(APIkey)">
-                                    <i class="glyphicon glyphicon-refresh"></i>
-                                </button>
-                                <button *ngIf="true" class="btn" type="button"
-                                        (click)="openEditLLMAPIKeyDialog(APIkey)" i18n>
-                                    Edit permissions
-                                </button>
-                                    
-                                        <button class="btn btn-danger" type="button"
-                                                (click)="deleteLLMKey(APIkey)">
-                                            <i class="glyphicon glyphicon-trash"></i>
-                                        </button>
-                                    </ng-container>
-                                    <ng-container *ngIf="deletingLLMKey === APIkey">
-                                        <span i18n>Delete "{{ APIkey.alias }}"?</span>
-                                        <button class="btn btn-danger" type="button"
-                                                (click)="confirmDeleteLLMKey(APIkey)" i18n>Yes, delete</button>
-                                        <button class="btn btn-default" type="button"
-                                                (click)="cancelDeletingLLMKey()" i18n>Cancel</button>
-                                    </ng-container>
+                                    <button *ngIf="!APIkey.tokensChecked" class="btn" type="button"
+                                            (click)="checkTokens(APIkey)" i18n>
+                                        Check key's quota
+                                    </button>
+                                    <button *ngIf="APIkey.tokensChecked" class="btn" type="button"
+                                            (click)="checkTokens(APIkey)">
+                                        <i class="glyphicon glyphicon-refresh"></i>
+                                    </button>
+                                    <button *ngIf="true" class="btn" type="button"
+                                            (click)="openEditLLMAPIKeyDialog(APIkey)" i18n>
+                                        Edit permissions
+                                    </button>
+                                    <button class="btn btn-danger" type="button" (click)="deleteLLMKey(APIkey)">
+                                        <i class="glyphicon glyphicon-trash"></i>
+                                    </button>
+                                </ng-container>
+                                <ng-container *ngIf="deletingLLMKey === APIkey">
+                                    <span i18n>Delete "{{ APIkey.alias }}"?</span>
+                                    <button class="btn btn-danger" type="button"
+                                            (click)="confirmDeleteLLMKey(APIkey)" i18n>Yes, delete</button>
+                                    <button class="btn btn-default" type="button"
+                                            (click)="cancelDeletingLLMKey()" i18n>Cancel</button>
+                                </ng-container>
                             </div>
                         </div>
                     </ng-container>
