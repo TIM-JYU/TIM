@@ -180,7 +180,7 @@ export interface ControlPanelData extends ControlPanelSettings {
                                 <span class="glyphicon glyphicon-cog" style="font-size: 1.8em;"></span>
                             </button>
                             
-                            <div class="settings-panel" *ngIf="controlPanelOpen">
+                            <div class="settings-panel" [style.display]="controlPanelOpen ? 'block' : 'none'">
                                 <button class="btn btn-warning"
                                         (click)="clearConversationClicked()">
                                     Clear conversation
