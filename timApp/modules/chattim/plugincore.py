@@ -1,10 +1,13 @@
+import math
 import os
+import sys
 import uuid
 from dataclasses import dataclass, field
 
 from rapidfuzz.distance.DamerauLevenshtein_py import similarity
 from unicodedata import normalize, category
 
+from timApp.messaging.messagelist.emaillist import get_email_list_by_name
 from timApp.modules.chattim.dbmodels import LLMRule
 from timApp.plugin.containerLink import call_plugin_resource
 from timApp.modules.chattim.dbmodels import LLMRule, Policy
@@ -190,15 +193,25 @@ class PluginCore:
         if not rule:
             return Result(None, "No LLMRule found for this document")
 
-        usage = self.tim_database.get_usage(rule, caller_id)
-        used_tokens = 0 if usage is None else usage.used_tokens
+        # policy checking
+        try:
+            usage = self.tim_database.get_usage(rule, caller_id)
+            left_tokens_result = self._calculate_remaining_tokens(
+                rule, usage, caller_id
+            )
+        except (LookupError, TypeError, ValueError) as e:
+            return Result(error=str(e))
 
-        # policy check
-        policy_result = self._calculate_remaining_tokens(rule, used_tokens, caller_id)
-        if not policy_result.ok():
-            return Result(error=policy_result.error)
+        remaining_tokens = left_tokens_result[0]
+        explanation_for_user = left_tokens_result[1]
 
-        tokens_left = policy_result.value
+        if remaining_tokens is not None and remaining_tokens == 0:
+            return Result(error=explanation_for_user)
+
+        if (
+            remaining_tokens > 4096
+        ):  # can we get the max_token upper limit support somewhere?
+            remaining_tokens = 4096
 
         # Validate input
         try:
@@ -215,9 +228,6 @@ class PluginCore:
         rag_mode: RagMode = self._parse_rag_mode(str(rule.current_mode))
         if rag_mode is None:
             return Result(error=f"Invalid mode '{rag_mode}'")
-
-        # TODO: No need for this attribute if we have character limit for input? Maybe keep as is for an option
-        max_tokens_for_req = None
 
         temperature: float | None = None
         if rule.temperature is not None:
@@ -268,7 +278,7 @@ class PluginCore:
             context=context,
             chat_history=chat_history,
             mode=rag_mode,
-            max_tokens=max_tokens_for_req,
+            max_tokens=remaining_tokens,
         )
 
         try:
@@ -682,13 +692,20 @@ class PluginCore:
             policy=[],
             usage=[],
         )
-        self.tim_database.set_global_policy(
-            rule,
-            global_policy.window_unit,
-            global_policy.window_value,
-            global_policy.token_cap_for_window,
-            global_policy.token_cap,
-            max_tokens,
+
+        if not global_policy.token_cap_enabled:
+            global_policy.token_cap = -1
+
+        if not global_policy.time_window_enabled:
+            global_policy.token_cap_for_window = -1
+
+        policy = self.tim_database.set_global_policy(
+            llm_rule=rule,
+            token_time_window_type=global_policy.window_unit,
+            token_time_window_num=global_policy.window_value,
+            time_window_tokens=global_policy.token_cap_for_window,
+            max_tokens_per_user=global_policy.token_cap,
+            token_pool=max_tokens,
         )
 
         if failed_embeddings > 0:
@@ -990,7 +1007,8 @@ class PluginCore:
         used_tokens: int,
     ) -> int | None:
         """
-        Updates the usage of the given user in the given document.
+        Updates the usage of the given user in the given document and
+        the total usage per LLMRule.
         :param caller_id: The user of the tokens.
         :param document_id: The document of the plugin.
         :param used_tokens: Tokens used.
@@ -999,17 +1017,20 @@ class PluginCore:
         rule = self.tim_database.get_llm_rule(document_id)
         if not rule:
             return None
+
         usage = self.tim_database.get_usage(rule, caller_id)
         if not usage:
             self.tim_database.set_usage(caller_id, rule, used_tokens)
             return used_tokens
+
         tokens = usage.used_tokens + used_tokens
         self.tim_database.set_usage(caller_id, rule, tokens)
+
         return tokens
 
     def _calculate_remaining_tokens(
-        self, llm_rule: LLMRule, used_tokens: int, caller_id: int
-    ) -> Result[int | None, str | None]:
+        self, llm_rule: LLMRule, usage: Usage | None, caller_id: int
+    ) -> tuple[int | None, str]:
         """
         Checks token limits as per global and user policies.
         Result is the amount of tokens left for the user to use.
@@ -1018,15 +1039,15 @@ class PluginCore:
         does not, the Global Policy will be applied. If both have it defined,
         User Policy is applied over Global Policy.
         :param llm_rule: The LLMRule object.
-        :param used_tokens: Tokens used.
+        :param usage: User's usage
         :param caller_id: The user of the tokens.
-        :return: The complete amount of tokens left. If zero, an explanation is given to user.
+        :return: The complete amount of tokens left or None in the case of unlimited. If zero, an explanation is added as string.
         """
 
         user_policy = self.tim_database.get_user_policy(llm_rule, caller_id)
         global_policy = self.tim_database.get_global_policy(llm_rule)
 
-        if not global_policy:
+        if global_policy is None:
             raise LookupError("Could not find global policy for this instance")
 
         up_token_cap_enabled = False
@@ -1034,22 +1055,133 @@ class PluginCore:
         gp_token_cap_enabled = False
         gp_window_enabled = False
 
+        up_max_tokens_per_user = None
         if user_policy is not None:
             up_max_tokens_per_user = user_policy.max_tokens_per_user
+            up_time_window_tokens = user_policy.time_window_tokens
+
             if up_max_tokens_per_user is not None and up_max_tokens_per_user != -1:
                 up_token_cap_enabled = True
-            up_time_window_tokens = user_policy.time_window_tokens
             if up_time_window_tokens is not None and up_time_window_tokens != -1:
-                up_token_cap_enabled = True
+                up_window_enabled = True
 
-            gp_max_tokens_per_user = global_policy.max_tokens_per_user
-            if gp_max_tokens_per_user is not None and gp_max_tokens_per_user != -1:
-                gp_token_cap_enabled = True
-            gp_time_window_tokens = global_policy.time_window_tokens
-            if gp_time_window_tokens is not None and gp_time_window_tokens != -1:
-                gp_token_cap_enabled = True
+        gp_max_tokens_per_user = global_policy.max_tokens_per_user
+        gp_time_window_tokens = global_policy.time_window_tokens
+        if gp_max_tokens_per_user is not None and gp_max_tokens_per_user != -1:
+            gp_token_cap_enabled = True
+        if gp_time_window_tokens is not None and gp_time_window_tokens != -1:
+            gp_window_enabled = True
 
-        return Result(value="ok")
+        all_used_tokens = 0
+        if usage is not None:
+            all_used_tokens = usage.used_tokens
+
+        tokens_cap: int | None = None
+        if up_token_cap_enabled:
+            tokens_cap = up_max_tokens_per_user
+        elif gp_token_cap_enabled:
+            tokens_cap = gp_max_tokens_per_user
+
+        tokens_allowance_general: int | None = (
+            None if tokens_cap is None else (tokens_cap - all_used_tokens)
+        )
+        window_allowance: int | None = None
+
+        ts_now_ms = ChatMessage.ts_ms()
+        max_messages = sys.maxsize  # TODO: make history take None instead
+        if up_window_enabled:
+            window_duration_ms = self._policy_window_as_ms(user_policy)
+            ts_begin = ts_now_ms - window_duration_ms
+            tokens_used_in_window = self._calculate_tokens_from_chathistory(
+                llm_rule.document_id, caller_id, ts_begin, ts_now_ms, max_messages
+            )
+            window_allowance = user_policy.time_window_tokens - tokens_used_in_window
+
+        elif gp_window_enabled:
+            window_duration_ms = self._policy_window_as_ms(global_policy)
+            ts_begin = ts_now_ms - window_duration_ms
+            tokens_used_in_window = self._calculate_tokens_from_chathistory(
+                llm_rule.document_id, caller_id, ts_begin, ts_now_ms, max_messages
+            )
+            window_allowance = global_policy.time_window_tokens - tokens_used_in_window
+
+        if window_allowance is not None and window_allowance < 0:
+            window_allowance = 0
+
+        if tokens_allowance_general is not None and tokens_allowance_general < 0:
+            tokens_allowance_general = 0
+
+        message_to_user = ""
+        if window_allowance == 0:
+            message_to_user = "You have no more chats left for now, come back later"
+
+        if tokens_allowance_general == 0:
+            message_to_user = "You have no more chats left"
+
+        candidates = [
+            x
+            for x in (
+                tokens_allowance_general,
+                window_allowance,
+            )
+            if x is not None
+        ]
+
+        remaining_tokens = min(candidates) if candidates else None
+
+        return remaining_tokens, message_to_user
+
+    def _calculate_tokens_from_chathistory(
+        self,
+        document_id: int,
+        caller_id: int,
+        ts_begin: int,
+        ts_end: int,
+        max_messages: int,
+    ) -> int:
+        if ts_begin > ts_end:
+            raise ValueError("ts_begin must be greater than or equal to ts_end")
+
+        chat_history = self.history_manager.get_history_time_window(
+            plugin_id=str(document_id),
+            user_id=str(caller_id),
+            ts_begin=ts_begin,
+            ts_end=None,
+            max_messages=max_messages,
+        )
+
+        used_tokens = 0
+        for message in chat_history:
+            usage = 0 if message.usage is None else message.usage.total_tokens
+            used_tokens += usage
+
+        return used_tokens
+
+    @staticmethod
+    def _policy_window_as_ms(policy: Policy) -> int:
+        """Gives the duration of the time window of the given policy in milliseconds"""
+        if not Policy:
+            raise TypeError("_policy_window_as_ms: Policy was None")
+
+        time_type = policy.token_time_window_type
+        time_value = policy.token_time_window_num
+
+        if time_type is None or time_value is None:
+            raise TypeError(
+                "_policy_window_as_ms: time_type or/and time_value was None"
+            )
+
+        multiplier = 1000
+        if time_type == "d":
+            multiplier *= 24 * 60 * 60
+        if time_type == "h":
+            multiplier *= 60 * 60
+        if time_type == "min":
+            multiplier *= 60
+
+        window_duration_ms = time_value * multiplier
+
+        return window_duration_ms
 
     def _fetch_docs_by_paths(
         self, paths: list[str]

@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 
-from sqlalchemy import select, delete
+from sqlalchemy import select, delete, false
 from typing import cast
 from timApp.document.document import Document
 from timApp.document import docentry
@@ -473,16 +473,11 @@ class TimDatabase:
             )
             db.session.add(policy)
         else:
-            if token_time_window_type is not None:
-                policy.token_time_window_type = token_time_window_type
-            if token_time_window_num is not None:
-                policy.token_time_window_num = token_time_window_num
-            if time_window_tokens is not None:
-                policy.time_window_tokens = time_window_tokens
-            if max_tokens_per_user is not None:
-                policy.max_tokens_per_user = max_tokens_per_user
-            if token_pool is not None:
-                policy.token_pool = token_pool
+            policy.token_time_window_type = token_time_window_type
+            policy.token_time_window_num = token_time_window_num
+            policy.time_window_tokens = time_window_tokens
+            policy.max_tokens_per_user = max_tokens_per_user
+            policy.token_pool = token_pool
         db.session.commit()
         return policy
 
@@ -576,7 +571,7 @@ class TimDatabase:
         """
         stmt = select(Policy).where(
             Policy.llm_rule_id == llm_rule.id,
-            Policy.for_user.is_(None),
+            Policy.policy_type == "global",
         )
         return db.session.scalar(stmt)
 
