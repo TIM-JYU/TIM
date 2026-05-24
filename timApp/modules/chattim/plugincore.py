@@ -687,8 +687,15 @@ class PluginCore:
 
         return self.get_plugin_settings(caller_id, document_id)
 
-    def delete_instance(self, owner_id: int, document_id: int) -> None:
-        self.tim_database.delete_llm_rule(owner_id, document_id)
+    def delete_instance(self, caller_id: int, document_id: int) -> Result[str, str]:
+        rule = self.tim_database.get_llm_rule(document_id)
+        if not rule:
+            return Result(error=f"No plugin instance in document [{document_id}]")
+        if rule.owner != caller_id:
+            return Result(error="Insufficient rights to delete plugin instance")
+
+        self.tim_database.delete_llm_rule(caller_id, document_id)
+        return Result(value="Plugin instance deleted")
 
     def get_history(self, caller_id: str, document_id: str) -> list[Message]:
         # TODO: fetch with time window

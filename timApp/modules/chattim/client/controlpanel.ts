@@ -11,6 +11,7 @@ import {TooltipModule} from "ngx-bootstrap/tooltip";
 import {TokenLimitForUser, UserPolicyComponent} from "./userpolicy";
 import {UserControlComponent} from "./usercontrol";
 import type {UserData} from "./usercontrol";
+import {showConfirm} from "tim/ui/showConfirmDialog";
 
 export interface ChatModel extends Record<string, JsonValue> {
     label: string;
@@ -340,12 +341,17 @@ type SimilarityMode = "none" | "loose" | "balanced" | "strict" | "custom";
                     </usercontrol>
                 </div>
 
-                <!-- Save button that sends the chosen stuff -->
                 <div class="settings-row">
+                    <!-- Save button that sends the chosen stuff -->
                     <button class="btn btn-primary" style="margin: 2px;"
                             [disabled]="invalidInputState"
                             (click)="saveSettingsClicked()">
                         Save
+                    </button>
+                    <!-- Delete button that deletes the plugin instance -->
+                    <button class="btn btn-danger" style="margin: 2px;"
+                            (click)="deletePluginClicked()">
+                        Delete
                     </button>
                 </div>
                  <div class="error" *ngIf="error && !response" [innerHTML]="error | purify"></div> 
@@ -477,6 +483,7 @@ export class ChatControlPanelComponent {
     @Output() fetchModelsClick = new EventEmitter<string>();
     @Output() saveSettingsClick = new EventEmitter<ControlPanelSettings>();
     @Output() panelToggled = new EventEmitter<boolean>();
+    @Output() deletePluginClick = new EventEmitter<void>();
 
     ngOnInit(): void {
         this.fetchControlPanelData.emit();
@@ -663,5 +670,17 @@ export class ChatControlPanelComponent {
         if (this.isAnthropicKeySelected) {
             this.selectedMode = "Creative";
         }
+    }
+
+    async deletePluginClicked() {
+        if (
+            !(await showConfirm(
+                "Delete plugin?",
+                "Are you sure you want to delete the plugin?"
+            ))
+        ) {
+            return;
+        }
+        this.deletePluginClick.emit();
     }
 }

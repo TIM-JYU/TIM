@@ -460,6 +460,14 @@ def get_models(params: GetModelsParams) -> dict:
     return {"models": models}
 
 
+def delete_plugin(params: GenericParams) -> Response:
+    user_id = get_current_user_id()
+    document_id = params.document_id
+
+    plugincore.delete_instance(user_id, document_id)
+    return ok_response()
+
+
 register_route(chattim, "post", "ask", ChatTimAskParams, ask_route)
 register_route(chattim, "post", "askStream", ChatTimAskParams, ask_stream_route)
 register_route(chattim, "post", "getSettings", GenericParams, get_settings)
@@ -468,6 +476,7 @@ register_route(
 )
 register_route(chattim, "post", "getMessages", GetMessagesParams, get_messages)
 register_route(chattim, "post", "clearMessages", GenericParams, clear_messages)
+register_route(chattim, "post", "deletePlugin", GenericParams, delete_plugin)
 register_route(chattim, "post", "validateApi", APIKeyParams, save_api_key)
 register_route(chattim, "get", "getProviders", None, get_providers)
 register_route(chattim, "post", "getUserPolicyData", GenericParams, get_user_data)

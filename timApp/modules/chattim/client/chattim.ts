@@ -191,6 +191,7 @@ export interface ControlPanelData extends ControlPanelSettings {
                         <chattim-control-panel *ngIf="isTeacher"
                             [isTeacher]="isTeacher"
                             (saveSettingsClick)="onSaveSettings($event)"
+                            (deletePluginClick)="onDeletePlugin()"
                             (panelToggled)="onControlPanelToggle($event)"
                             (fetchModelsClick)="onFetchModels($event)"
                             [selectedModel]="selectedModel"
@@ -839,6 +840,26 @@ export class ChatTIMComponent
         if (response.ok) {
             this.conversation = [];
             this.hasMoreHistory = false;
+            this.answer = undefined;
+            this.error = undefined;
+            return;
+        }
+
+        this.handleError(response.result.error.error, "http");
+    }
+
+    async onDeletePlugin(): Promise<void> {
+        if (this.isRunning || this.document_id <= 0) {
+            return;
+        }
+        this.isRunning = true;
+        const response = await this.httpPost(this.route("deletePlugin"), {
+            document_id: this.document_id,
+        });
+
+        this.isRunning = false;
+
+        if (response.ok) {
             this.answer = undefined;
             this.error = undefined;
             return;
