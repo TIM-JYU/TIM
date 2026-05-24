@@ -813,16 +813,16 @@ export class ChatTIMComponent
         }
 
         if (this.controlpanelError) {
-            setTimeout(() => {
-                const element = this.scrollContainer;
-                if (!element) {
-                    return;
-                }
-                element.scrollTo({
-                    top: element.scrollHeight,
+            const el = this.scrollContainer;
+            if (!el) {
+                return;
+            }
+            requestAnimationFrame(() => {
+                el.scrollTo({
+                    top: el.scrollHeight,
                     behavior: "smooth",
                 });
-            }, 0);
+            });
         }
     }
 
