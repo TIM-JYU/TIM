@@ -258,14 +258,20 @@ export class ChatTIMComponent
                 panelEl.style.position = "";
                 panelEl.style.visibility = "";
                 panelEl.style.display = "";
+                requestAnimationFrame(() => {
+                    dialog.style.height = `${
+                        dialog.offsetHeight + panelHeight
+                    }px`;
+                });
             }
-            requestAnimationFrame(() => {
-                const panelHeight = panelEl ? panelEl.scrollHeight : 200;
-                dialog.style.height = `${dialog.offsetHeight + panelHeight}px`;
-            });
         } else {
-            const panelHeight = panelEl ? panelEl.scrollHeight : 200;
-            dialog.style.height = `${dialog.offsetHeight - panelHeight}px`;
+            if (!panelEl) {
+                return;
+            }
+            const panelHeight = panelEl.scrollHeight;
+            requestAnimationFrame(() => {
+                dialog.style.height = `${dialog.offsetHeight - panelHeight}px`;
+            });
         }
     }
 
