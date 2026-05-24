@@ -288,11 +288,9 @@ export class ChatTIMComponent
     hasManageRights: boolean = false;
     selectedItemPaths: string[] = [];
     pathRestrictions?: DirectoryPickerRestrictions;
-    localFilePaths = "";
     selectedPublicKey: string = "";
     availablePublicKeys: UserKey[] = [];
     selectedMode = "Creative";
-    selectedEmbedderProvider = "";
     selectedModel = "";
 
     policySaveResponse = {
@@ -802,9 +800,6 @@ export class ChatTIMComponent
         };
         this.availableModels = data.availableModels;
         this.availableEmbedderProviders = data.availableEmbedderProviders;
-        if (this.availableEmbedderProviders) {
-            this.selectedEmbedderProvider = this.availableEmbedderProviders[0];
-        }
         this.availableModes = data.availableModes;
         this.availablePublicKeys = data.availableKeys;
         this.selectedPublicKey =

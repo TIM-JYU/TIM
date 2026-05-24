@@ -87,7 +87,6 @@ class InstanceAttributes:
     similarity_threshold: float | None = None
     top_k_chunks: int = 3
     global_policy: GenericPolicy = field(default_factory=GenericPolicy)
-    embedder_provider: str = "dummy"
 
     @classmethod
     def default(cls) -> "InstanceAttributes":
@@ -544,7 +543,6 @@ class PluginCore:
         """
         public_key: str = instance_settings.public_key
         model_id: str = instance_settings.model_id
-        embedder_provider: str = instance_settings.embedder_provider
         llm_mode: str = instance_settings.llm_mode
         max_tokens: int | None = instance_settings.max_tokens
         tim_paths: list[str] = instance_settings.tim_paths

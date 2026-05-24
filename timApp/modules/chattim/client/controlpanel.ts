@@ -30,7 +30,6 @@ export interface ControlPanelSettings extends Record<string, JsonValue> {
     public_key: string;
     model_id: string;
     llm_mode: string;
-    embedder_provider: string;
 
     max_tokens: number | null;
     tim_paths: string[];
@@ -137,6 +136,15 @@ type SimilarityMode = "none" | "loose" | "balanced" | "strict" | "custom";
                         <div class="checkbox">
                             <label>
                                 <input type="checkbox"
+                                       [(ngModel)]="includeCitations">
+                                Include citations
+                                <a tooltip="{{getCitationTooltip}}"><i class="glyphicon glyphicon-info-sign"></i></a>
+                            </label>
+                        </div>
+
+                        <div class="checkbox">
+                            <label>
+                                <input type="checkbox"
                                        [(ngModel)]="enabledTemperature">
                                 Enable temperature parameter
                                 <a tooltip="{{getTemperatureTooltip}}"><i class="glyphicon glyphicon-info-sign"></i></a>
@@ -154,16 +162,7 @@ type SimilarityMode = "none" | "loose" | "balanced" | "strict" | "custom";
                         <div class="error" *ngIf="isInvalidModelTemperature">
                             Temperature input should be between 0 and 2
                         </div>
-
-                        <div class="checkbox">
-                            <label>
-                                <input type="checkbox"
-                                       [(ngModel)]="includeCitations">
-                                Include citations
-                                <a tooltip="{{getCitationTooltip}}"><i class="glyphicon glyphicon-info-sign"></i></a>
-                            </label>
-                        </div>
-
+ 
                         <div class="form-group">
                             <div class="inline-field">
                                 <label class="inline-field-label">Similarity threshold
@@ -206,24 +205,7 @@ type SimilarityMode = "none" | "loose" | "balanced" | "strict" | "custom";
                         </div>
                         <div class="error" *ngIf="isInvalidTopChunks">
                             Top-K should be between 1 and 20
-                        </div>
-
-                        Provider for embedding creation: <strong>{{ selectedEmbedderProvider }}</strong>
-                        <div class="embedder-buttons">
-                            <div class="form-check" *ngFor="let provider of allEmbedderProviders">
-                                <label class="form-check-label" [class.disabled-label]="!embedderAvailable(provider)"
-                                       [title]="embedderAvailable(provider) ? '' : 'No API key for ' + provider">
-                                    <input type="radio"
-                                           class="form-check-input"
-                                           name="embedderProviderRadio"
-                                           [disabled]="!embedderAvailable(provider)"
-                                           [value]="provider"
-                                           [(ngModel)]="selectedEmbedderProvider">
-                                    {{ provider }}
-                                </label>
-                            </div>
-                        </div>
-
+                        </div> 
                     </div>
                 </div>
 
@@ -484,7 +466,6 @@ export class ChatControlPanelComponent {
     @Input() response?: string;
     @Input() selectedModel!: string;
     @Input() selectedMode!: string;
-    @Input() selectedEmbedderProvider!: string;
     @Input() isTeacher: boolean = false;
 
     @Input() tokenLimitAllUsers!: TokenLimitForUser;
@@ -540,7 +521,6 @@ export class ChatControlPanelComponent {
             public_key: this.selectedPublicKey,
             model_id: this.selectedModel,
             llm_mode: this.selectedMode,
-            embedder_provider: this.selectedEmbedderProvider,
             max_tokens: this.maxTokensValue,
             tim_paths: this.selectedItemPaths,
             system_prompt_path: this.systemPrompt ?? "",
