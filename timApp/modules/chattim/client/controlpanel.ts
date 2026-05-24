@@ -68,8 +68,6 @@ type SimilarityMode = "none" | "loose" | "balanced" | "strict" | "custom";
 
 
         <div class="settings-panel" [style.display]="settingsOpen ? 'block' : 'none'">
-                <div *ngIf="response && !error" [innerHTML]="response | purify"></div>
-                <div class="error" *ngIf="error && !response" [innerHTML]="error | purify"></div>
                 <!-- Choose API-key -->
                 <div class="settings-row">
                     <button class="btn btn-link settings-section-btn"
