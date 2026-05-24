@@ -812,7 +812,6 @@ export class ChatTIMComponent
             this.controlpanelError = response.result.error.error;
         }
 
-        // Scroll AFTER all assignments, only if there's something to show
         if (this.controlpanelError) {
             setTimeout(() => {
                 const element = this.scrollContainer;
