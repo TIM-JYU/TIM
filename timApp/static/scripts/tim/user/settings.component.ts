@@ -673,7 +673,7 @@ type StyleSelectionType =
                                 </button>
                                     
                                         <button class="btn btn-danger" type="button"
-                                                (click)="beginDeleteLLMKey(APIkey)">
+                                                (click)="deleteLLMKey(APIkey)">
                                             <i class="glyphicon glyphicon-trash"></i>
                                         </button>
                                     </ng-container>
@@ -682,7 +682,7 @@ type StyleSelectionType =
                                         <button class="btn btn-danger" type="button"
                                                 (click)="confirmDeleteLLMKey(APIkey)" i18n>Yes, delete</button>
                                         <button class="btn btn-default" type="button"
-                                                (click)="deletingLLMKey = undefined" i18n>Cancel</button>
+                                                (click)="cancelDeletingLLMKey()" i18n>Cancel</button>
                                     </ng-container>
                             </div>
                         </div>
@@ -1383,8 +1383,9 @@ export class SettingsComponent implements DoCheck, AfterViewInit {
         this.cdr.detectChanges();
     }
 
-    beginDeleteLLMKey(key: IUserLLMApiKey) {
+    deleteLLMKey(key: IUserLLMApiKey) {
         this.deletingLLMKey = key;
+        this.cdr.detectChanges();
     }
 
     async confirmDeleteLLMKey(key: IUserLLMApiKey) {
@@ -1405,6 +1406,11 @@ export class SettingsComponent implements DoCheck, AfterViewInit {
         } else {
             await showMessageDialog(r.result.error.error);
         }
+        this.cdr.detectChanges();
+    }
+
+    cancelDeletingLLMKey() {
+        this.deletingLLMKey = undefined;
         this.cdr.detectChanges();
     }
 
