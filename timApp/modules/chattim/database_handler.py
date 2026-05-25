@@ -587,7 +587,9 @@ class TimDatabase:
         return db.session.scalar(stmt)
 
     @staticmethod
-    def set_usage(user: int, llm_rule: LLMRule, used_tokens: int) -> Usage:
+    def set_usage(
+        user: int, llm_rule: LLMRule, used_tokens: int, usage_time_stamp: int
+    ) -> Usage:
         """
         Sets the usage for the given user in the given LLM rule context.
         If usage does not exist for this user, it is created with used_tokens.
