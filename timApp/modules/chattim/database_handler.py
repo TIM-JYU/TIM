@@ -590,6 +590,7 @@ class TimDatabase:
     def set_usage(user: int, llm_rule: LLMRule, used_tokens: int) -> Usage:
         """
         Sets the usage for the given user in the given LLM rule context.
+        If usage does not exist for this user, it is created with used_tokens.
         :param user: ID of the user for the usage.
         :param llm_rule: LLM rule instance.
         :param used_tokens: Number of used tokens.
@@ -608,6 +609,17 @@ class TimDatabase:
             usage.used_tokens = used_tokens
         db.session.commit()
         return usage
+
+    @staticmethod
+    def set_instance_usage(llm_rule: LLMRule, used_tokens: int) -> None:
+        """
+        Sets the usage in the given LLM rule context.
+        :param llm_rule: LLM rule instance.
+        :param used_tokens: Number of used tokens.
+        :return: Usage of the given user.
+        """
+        llm_rule.total_tokens_spent = used_tokens
+        db.session.commit()
 
     @staticmethod
     def delete_usage(llm_rule: LLMRule, user_id: int) -> None:

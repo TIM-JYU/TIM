@@ -349,7 +349,6 @@ export class ChatTIMComponent
         // TODO: separate control panel data and client data fetch
         await this.getControlPanelData();
         await this.fetchRights();
-        console.log(this.isTeacher);
     }
     async fetchRights(): Promise<void> {
         if (this.document_id <= 0) {
