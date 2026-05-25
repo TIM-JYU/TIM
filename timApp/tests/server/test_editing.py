@@ -720,6 +720,29 @@ class EditTest(TimRouteTest):
         self.delete_area(d, par1.get_id(), par3.get_id())
         self.json_post(f"/unwrap_area/{d.id}/a")
 
+    def test_par_edit_requires_doc_edit_for_structural_changes(self):
+        self.login_test1()
+        d = self.create_doc(initial_par=["#- {edit=testuser2}\noriginal"])
+        self.test_user_2.grant_access(d, AccessType.view)
+        db.session.commit()
+
+        par = d.document.get_paragraphs()[0]
+        same_block_text = d.document.export_section(par.get_id(), par.get_id()).replace(
+            "original", "edited"
+        )
+        added_block_text = same_block_text + "\n#-\nnew block"
+
+        self.login_test2()
+        self.post_area(d, same_block_text, par.get_id(), par.get_id())
+        self.post_area(
+            d,
+            added_block_text,
+            par.get_id(),
+            par.get_id(),
+            expect_status=403,
+            expect_content="Sorry, you don't have permission to add or remove paragraphs.",
+        )
+
     def test_download(self):
         self.login_test1()
         d = self.create_doc(initial_par="test")
