@@ -422,9 +422,39 @@ def verify_par_edit_access(par: DocParagraph):
         raise RouteException(f"No edit access for paragraph {par.get_id()}!")
 
 
+def verify_area_structure_edit_access(
+    docinfo: DocInfo,
+    curr_section: list[DocParagraph],
+    editor_pars: list[DocParagraph],
+) -> None:
+    """
+    Throw exception if the user does not have edit access to the area structure,
+    meaning that they are trying to add, remove or change the id's
+    of paragraphs in the area without having edit access to all
+    paragraphs.
+    If the user has edit access to all paragraphs
+    in the area, we allow any structural changes in the area,
+    because int hte future they would be able to do those changes through
+    UI as well.
+    So user may delete pars he has edit access or reorder pars.
+    But isnot allowed to add new pars.
+    :param docinfo: where to check edit rights if adding new pars
+    :param curr_section: area pars in current document
+    :param editor_pars:  pars from editor
+    :return: None
+    """
+    curr_ids = {p.get_id() for p in curr_section}
+    editor_ids = {p.get_id() for p in editor_pars}
+    if editor_ids - curr_ids:
+        verify_edit_access(
+            docinfo,
+            message="Sorry, you don't have permission to add or remove paragraphs.",
+        )
+
+
 def modify_paragraph_common(doc_id: int, md: str, par_id: str, par_next_id: str | None):
     docinfo = get_doc_or_abort(doc_id)
-    # verify_edit_access(docinfo)
+    # verify_edit_access(docinfo)  # Checked later for area and single
 
     doc = docinfo.document_as_current_user
 
@@ -441,11 +471,26 @@ def modify_paragraph_common(doc_id: int, md: str, par_id: str, par_next_id: str 
 
     # editor_pars = check_and_rename_pluginnamehere(editor_pars, doc)
 
+    access_verified = False
     if editing_area:
         try:
             curr_section = doc.get_section(area_start, area_end)
+            # If one do not have normal edit access, but have
+            # special edit access to every par in area.
+            # In this case it is not possible to edit area through UI,
+            # but one may do it by
+            # direct post or if area is opened before edit access is removed.
+            # So there migth be access problems if one tries to add
+            # or remove pars or change pars id's.
+            # It would be easier just to deny edit access to area in
+            # this case, but we might allow edit area in UI in the future.
+
+            # First check user has rigth for every original par in area
             for p in curr_section:
                 verify_par_edit_access(p)
+            # Then check all editor par is included in set of current pars
+            # if not, then user should have normal edit right
+            verify_area_structure_edit_access(docinfo, curr_section, editor_pars)
             new_start, new_end, edit_result = doc.update_section(
                 editor_pars, area_start, area_end, do_validation=DoValidation.NONE
             )
@@ -472,6 +517,11 @@ def modify_paragraph_common(doc_id: int, md: str, par_id: str, par_next_id: str 
         )
         edit_result.warnings = list_to_html(changes)
         pars_to_add = editor_pars[1:]
+        if pars_to_add:
+            verify_edit_access(
+                docinfo,
+                message="Sorry, you don't have permission to add new paragraphs.",
+            )
 
         p = editor_pars[0]
         # The ID of the first paragraph needs to match the ID of the paragraph to modify
@@ -492,8 +542,9 @@ def modify_paragraph_common(doc_id: int, md: str, par_id: str, par_next_id: str 
         if p.is_translation():
             mark_translation_as_checked(p)
 
+        verify_par_edit_access(original_par)
+
         if p.is_different_from(original_par):
-            verify_par_edit_access(original_par)
             par = doc.modify_paragraph_obj(par_id=par_id, p=p)
             pars.append(par)
             edit_result.changed.append(par)
