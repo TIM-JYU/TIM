@@ -675,8 +675,8 @@ export class ChatControlPanelComponent {
     async deletePluginClicked() {
         if (
             !(await showConfirm(
-                "Delete plugin?",
-                "Are you sure you want to permanently delete this plugin from the document?"
+                $localize`Delete plugin?`,
+                $localize`Are you sure you want to permanently delete this plugin from the document?`
             ))
         ) {
             return;
