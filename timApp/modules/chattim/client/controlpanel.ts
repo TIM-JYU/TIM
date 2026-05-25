@@ -676,7 +676,7 @@ export class ChatControlPanelComponent {
         if (
             !(await showConfirm(
                 "Delete plugin?",
-                "Are you sure you want to delete the plugin?"
+                "Are you sure you want to permanently delete this plugin from the document?"
             ))
         ) {
             return;

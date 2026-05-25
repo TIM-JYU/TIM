@@ -464,7 +464,9 @@ def delete_plugin(params: GenericParams) -> Response:
     user_id = get_current_user_id()
     document_id = params.document_id
 
-    plugincore.delete_instance(user_id, document_id)
+    result = plugincore.delete_instance(user_id, document_id)
+    if result.error is not None:
+        raise Exception(result.error)
     return ok_response()
 
 

@@ -694,6 +694,22 @@ class PluginCore:
         if rule.owner != caller_id:
             return Result(error="Insufficient rights to delete plugin instance")
 
+        document = self.tim_database.get_tim_document_by_id(document_id)
+        if document is None:
+            return Result(error=f"Document [{document_id}] does not exist")
+
+        par_id = None
+        for par in document.get_paragraphs(False):
+            md = par.get_markdown()
+            if "header: ChatTIM" in md:
+                par_id = par.get_id()
+                break
+
+        if par_id is None:
+            return Result(error=f"Paragraph with plugin instance does not exist")
+
+        document.delete_paragraph(par_id)
+
         self.tim_database.delete_llm_rule(caller_id, document_id)
         return Result(value="Plugin instance deleted")
 
