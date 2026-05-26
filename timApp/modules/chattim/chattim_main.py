@@ -70,7 +70,7 @@ class SaveUserPolicyParams(GenericParams):
 
 @dataclass
 class DeletePluginParams(GenericParams):
-    paragraph_id: str
+    par_id: str
 
 
 def get_rights(params: GetRightsParams) -> dict:
@@ -468,7 +468,7 @@ def get_models(params: GetModelsParams) -> dict:
 def delete_plugin(params: DeletePluginParams) -> Response:
     user_id = get_current_user_id()
     document_id = params.document_id
-    par_id = params.paragraph_id
+    par_id = params.par_id
 
     result = plugincore.delete_instance(user_id, document_id, par_id)
 

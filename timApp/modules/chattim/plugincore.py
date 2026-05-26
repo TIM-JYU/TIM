@@ -687,7 +687,9 @@ class PluginCore:
 
         return self.get_plugin_settings(caller_id, document_id)
 
-    def delete_instance(self, caller_id: int, document_id: int, par_id: str) -> Result[str, str]:
+    def delete_instance(
+        self, caller_id: int, document_id: int, par_id: str
+    ) -> Result[str, str]:
         rule = self.tim_database.get_llm_rule(document_id)
         if not rule:
             return Result(error=f"No plugin instance in document [{document_id}]")
@@ -704,7 +706,9 @@ class PluginCore:
         par = document.get_paragraph(par_id)
         plugin_type = par.get_attr("plugin")
         if plugin_type is not None and plugin_type == "chattim":
-            document.delete_paragraph(par_id)
+            deleted = document.delete_paragraph(par_id)
+            if not deleted:
+                return Result(error="Failed to delete plugin paragraph")
             self.tim_database.delete_llm_rule(caller_id, document_id)
             return Result(value="Plugin instance deleted")
 
