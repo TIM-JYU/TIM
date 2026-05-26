@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 
-from sqlalchemy import select, delete
+from sqlalchemy import select, delete, false
 from typing import cast
 from timApp.document.document import Document
 from timApp.document import docentry
@@ -473,16 +473,11 @@ class TimDatabase:
             )
             db.session.add(policy)
         else:
-            if token_time_window_type is not None:
-                policy.token_time_window_type = token_time_window_type
-            if token_time_window_num is not None:
-                policy.token_time_window_num = token_time_window_num
-            if time_window_tokens is not None:
-                policy.time_window_tokens = time_window_tokens
-            if max_tokens_per_user is not None:
-                policy.max_tokens_per_user = max_tokens_per_user
-            if token_pool is not None:
-                policy.token_pool = token_pool
+            policy.token_time_window_type = token_time_window_type
+            policy.token_time_window_num = token_time_window_num
+            policy.time_window_tokens = time_window_tokens
+            policy.max_tokens_per_user = max_tokens_per_user
+            policy.token_pool = token_pool
         db.session.commit()
         return policy
 
@@ -576,7 +571,7 @@ class TimDatabase:
         """
         stmt = select(Policy).where(
             Policy.llm_rule_id == llm_rule.id,
-            Policy.for_user.is_(None),
+            Policy.for_user == 0,
         )
         return db.session.scalar(stmt)
 
@@ -595,6 +590,7 @@ class TimDatabase:
     def set_usage(user: int, llm_rule: LLMRule, used_tokens: int) -> Usage:
         """
         Sets the usage for the given user in the given LLM rule context.
+        If usage does not exist for this user, it is created with used_tokens.
         :param user: ID of the user for the usage.
         :param llm_rule: LLM rule instance.
         :param used_tokens: Number of used tokens.
@@ -613,6 +609,17 @@ class TimDatabase:
             usage.used_tokens = used_tokens
         db.session.commit()
         return usage
+
+    @staticmethod
+    def set_instance_usage(llm_rule: LLMRule, used_tokens: int) -> None:
+        """
+        Sets the usage in the given LLM rule context.
+        :param llm_rule: LLM rule instance.
+        :param used_tokens: Number of used tokens.
+        :return: Usage of the given user.
+        """
+        llm_rule.total_tokens_spent = used_tokens
+        db.session.commit()
 
     @staticmethod
     def delete_usage(llm_rule: LLMRule, user_id: int) -> None:

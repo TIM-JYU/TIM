@@ -532,7 +532,6 @@ export class ChatControlPanelComponent {
                 : null,
             top_k_chunks: this.topKChunks,
         };
-        console.log("sending: ", data);
         this.saveSettingsClick.emit(data);
     }
 
