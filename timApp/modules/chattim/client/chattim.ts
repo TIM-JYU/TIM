@@ -7,7 +7,12 @@ import {
     getTopLevelFields,
     nullable,
 } from "tim/plugin/attributes";
-import type {AfterViewInit, ApplicationRef, DoBootstrap} from "@angular/core";
+import type {
+    AfterViewInit,
+    ApplicationRef,
+    DoBootstrap,
+    OnDestroy,
+} from "@angular/core";
 import {ViewChild} from "@angular/core";
 import {
     Component,
@@ -103,129 +108,134 @@ export interface ControlPanelData extends ControlPanelSettings {
     encapsulation: ViewEncapsulation.None,
     template: `
         <ng-container *ngIf="!pluginDeleted">
-            <div class="chattim-block-anchor"
-                 *ngIf="(markup.blockContent ?? '').trim().length > 0"
-                 [innerHTML]="markup.blockContent | purify"
-                 [hidden]="!hasManageRights"
-            >
-            </div>
-            <tim-dialog-frame class="chattim-dialog-frame" [size]="windowSize">
-                <ng-container header> {{ header }}</ng-container>
-                <ng-container body>
-                    <div class="chattim-body scroll-box" #conversationScroll>
-                        <div class="upper-area">
-                            <div>
-                                <div *ngIf="conversation.length === 0" class="chat-welcome">
-                                    <ng-container *ngIf="markup.welcomeText; else localizedWelcome">
-                                        {{ markup.welcomeText }}
-                                    </ng-container>
-                                    <ng-template #localizedWelcome>
-                                        <span i18n>"Welcome to use TIM's helper chatbot!"</span>
-                                    </ng-template>
+        <div class="chattim-block-anchor"
+             *ngIf="(markup.blockContent ?? '').trim().length > 0"
+             [innerHTML]="markup.blockContent | purify"
+             [hidden]="!hasManageRights"
+        >
+        </div>
+        <tim-dialog-frame class="chattim-dialog-frame" [size]="windowSize">
+            <ng-container header> {{ header }}</ng-container>
+            <ng-container body>
+                <div class="chattim-body scroll-box" #conversationScroll>
+                    <div class="upper-area">
+                        <div>
+                            <div *ngIf="conversation.length === 0" class="chat-welcome">
+                                <ng-container *ngIf="markup.welcomeText; else localizedWelcome">
+                                    {{ markup.welcomeText }}
+                                </ng-container>
+                                <ng-template #localizedWelcome>
+                                    <span i18n>"Welcome to use TIM's helper chatbot!"</span>
+                                </ng-template>
+                            </div>
+                            <div *ngFor="let entry of conversation; let i = index">
+                                <div *ngIf="convHistoryMarkerIndex === i" class="conv-history-marker">
+                                    <span class="conv-history-marker-text">
+                                        Memory: {{ formatDurationSeconds(convTimeWindow) }}
+                                    </span>
                                 </div>
-                                <div *ngFor="let entry of conversation">
-                                    <div class="chat-bubble-wrapper">
-                                        <div class="chat-user">{{ entry.user.content }}</div>
-                                    </div>
-                                    <div class="chat-bubble-wrapper">
-                                        <div class="chat-bot">
-                                            <div [innerHTML]="entry.agent.content | purify"></div>
-                                            <div class="answer-footer">
-                                            <span *ngIf="entry.agent.citations && entry.agent.citations.length > 0">
-                                            <ng-container *ngFor="let citation of entry.agent.citations; let i = index">
-                                                <a [href]="citation" target="_blank">[{{ i + 1 }}]</a>
-                                                <ng-container *ngIf="i < entry.agent.citations.length - 1">, </ng-container>
-                                            </ng-container>
-                                        </span><span
-                                                class="chat-timestamp">{{ dateString(entry.agent.timestamp_ms) }}</span>
-                                            </div>
+                                <div class="chat-bubble-wrapper">
+                                    <div class="chat-user">{{ entry.user.content }}</div>
+                                </div>
+                                <div class="chat-bubble-wrapper">
+                                    <div class="chat-bot">
+                                        <div [innerHTML]="entry.agent.content | purify"></div>
+                                        <div class="answer-footer">
+                                        <span *ngIf="entry.agent.citations && entry.agent.citations.length > 0">
+                                        <ng-container *ngFor="let citation of entry.agent.citations; let i = index">
+                                            <a [href]="citation" target="_blank">[{{ i + 1 }}]</a>
+                                            <ng-container *ngIf="i < entry.agent.citations.length - 1">, </ng-container>
+                                        </ng-container>
+                                    </span><span
+                                            class="chat-timestamp">{{ dateString(entry.agent.timestamp_ms) }}</span>
                                         </div>
                                     </div>
                                 </div>
-                            </div>
-    
-                            <div>
-                                <tim-loading *ngIf="isRunning"></tim-loading>
-                                <div *ngIf="error" [innerHTML]="error | purify"></div>
-                            </div>
-                            <label class="justify-center w-100">{{ inputStem }} </label>
-                            <div class="sticky-chat-row">
-                                <div class="d-flex flex-row w-100 justify-content-center chat-row">
-                        <textarea i18n-placeholder class="form-control chat-textarea"
-                                  rows="2"
-                                  placeholder="Ask me about TIM related things"
-                                  style="resize: none; overflow: hidden; min-width: 0;"
-                                  [(ngModel)]="userInput"
-                                  (keydown.enter)="onEnter($event)"
-                                  onkeyup="this.style.height='auto'; this.style.height=this.scrollHeight+'px'"
-                                  oninput="this.style.height='auto'; this.style.height=this.scrollHeight+'px'">
-                        </textarea>
-    
-                                    <button class="timButton flex-shrink-0 ms-2"
-                                            *ngIf="buttonText()"
-                                            [disabled]="!canSendInput()"
-                                            (click)="sendUserInput()"
-                                            [innerHTML]="buttonText() | purify">
-                                    </button>
-                                </div>
-                            </div>
+                            </div> 
                         </div>
-    
-                        <div class="control-panel-container">
-                            
-                            <ng-container *ngIf="!isTeacher">
-                                <button class="btn btn-link settings-btn"
-                                        (click)="onControlPanelToggle(!controlPanelOpen)"
-                                        [attr.aria-expanded]="controlPanelOpen"
-                                        title="Avaa asetukset">
-                                    <span class="glyphicon glyphicon-cog" style="font-size: 1.8em;"></span>
+
+                        <div>
+                            <tim-loading *ngIf="isRunning"></tim-loading>
+                            <div *ngIf="error" [innerHTML]="error | purify"></div>
+                        </div>
+                        <label class="justify-center w-100">{{ inputStem }} </label>
+                        <div class="sticky-chat-row">
+                            <div class="d-flex flex-row w-100 justify-content-center chat-row">
+                    <textarea i18n-placeholder class="form-control chat-textarea"
+                              rows="2"
+                              placeholder="Ask me about TIM related things"
+                              style="resize: none; overflow: hidden; min-width: 0;"
+                              [(ngModel)]="userInput"
+                              (keydown.enter)="onEnter($event)"
+                              onkeyup="this.style.height='auto'; this.style.height=this.scrollHeight+'px'"
+                              oninput="this.style.height='auto'; this.style.height=this.scrollHeight+'px'">
+                    </textarea>
+
+                                <button class="timButton flex-shrink-0 ms-2"
+                                        *ngIf="buttonText()"
+                                        [disabled]="!canSendInput()"
+                                        (click)="sendUserInput()"
+                                        [innerHTML]="buttonText() | purify">
                                 </button>
-                                
-                                <div class="settings-panel" [style.display]="controlPanelOpen ? 'block' : 'none'">
-                                    <button class="btn btn-warning"
-                                            (click)="clearConversationClicked()">
-                                        Clear conversation
-                                    </button>
-                                </div>
-                            </ng-container>
-                                
-                            <chattim-control-panel *ngIf="isTeacher"
-                                [isTeacher]="isTeacher"
-                                (saveSettingsClick)="onSaveSettings($event)"
-                                (deletePluginClick)="onDeletePlugin()"
-                                (panelToggled)="onControlPanelToggle($event)"
-                                (fetchModelsClick)="onFetchModels($event)"
-                                [selectedModel]="selectedModel"
-                                [setModelTemperature]="modelTemperature"
-                                [useStreaming]="useStreaming"
-                                [includeCitations]="includeCitations"
-                                [setSimilarityThreshold]="similarityThreshold"
-                                [topKChunks]="topKChunks"
-                                [systemPromptPath]="systemPromptPath"
-                                [selectedMode]="selectedMode"
-                                [maxTokens]="maxTokens"
-                                [response]="controlpanelResponse"
-                                [error]="controlpanelError"
-                                [selectedItemPaths]="selectedItemPaths"
-                                [pathRestrictions]="pathRestrictions"
-                                [currentFolder]="getCurrentFolder"
-                                [availableModels]="availableModels"
-                                [availableEmbedderProviders]="availableEmbedderProviders"
-                                [availableModes]="availableModes"
-                                [tokenLimitAllUsers]="globalPolicy"
-                                [userUsageAndPolicyData]="userUsageAndPolicyData"
-                                (userDataRequest)="getUserData()"
-                                (policySaveRequest)="handleUserPolicySave($event)" 
-                                [policySaveResponse]="policySaveResponse" 
-                                [tokenLimitAllUsers]="globalPolicy"
-                                [selectedPublicKey]="selectedPublicKey"
-                                [availablePublicKeys]="availablePublicKeys">
-                            </chattim-control-panel>
+                            </div>
                         </div>
-    
                     </div>
-                </ng-container>
-            </tim-dialog-frame>
+
+                    <div class="control-panel-container">
+
+                        <ng-container *ngIf="!isTeacher">
+                            <button class="btn btn-link settings-btn"
+                                    (click)="onControlPanelToggle(!controlPanelOpen)"
+                                    [attr.aria-expanded]="controlPanelOpen"
+                                    title="Avaa asetukset">
+                                <span class="glyphicon glyphicon-cog" style="font-size: 1.8em;"></span>
+                            </button>
+
+                            <div class="settings-panel" [style.display]="controlPanelOpen ? 'block' : 'none'">
+                                <button class="btn btn-warning"
+                                        (click)="clearConversationClicked()">
+                                    Clear conversation
+                                </button>
+                            </div>
+                        </ng-container>
+
+                        <chattim-control-panel *ngIf="isTeacher"
+                                               [isTeacher]="isTeacher"
+                                               (saveSettingsClick)="onSaveSettings($event)"
+                                               (deletePluginClick)="onDeletePlugin()"
+                                               (panelToggled)="onControlPanelToggle($event)"
+                                               (fetchModelsClick)="onFetchModels($event)"
+                                               [selectedModel]="selectedModel"
+                                               [setModelTemperature]="modelTemperature"
+                                               [useStreaming]="useStreaming"
+                                               [includeCitations]="includeCitations"
+                                               [setSimilarityThreshold]="similarityThreshold"
+                                               [topKChunks]="topKChunks"
+                                               [systemPromptPath]="systemPromptPath"
+                                               [selectedMode]="selectedMode"
+                                               [maxTokens]="maxTokens"
+                                               [convTimeWindow]="convTimeWindow"
+                                               [response]="controlpanelResponse"
+                                               [error]="controlpanelError"
+                                               [selectedItemPaths]="selectedItemPaths"
+                                               [pathRestrictions]="pathRestrictions"
+                                               [currentFolder]="getCurrentFolder"
+                                               [availableModels]="availableModels"
+                                               [availableEmbedderProviders]="availableEmbedderProviders"
+                                               [availableModes]="availableModes"
+                                               [tokenLimitAllUsers]="globalPolicy"
+                                               [userUsageAndPolicyData]="userUsageAndPolicyData"
+                                               (userDataRequest)="getUserData()"
+                                               (policySaveRequest)="handleUserPolicySave($event)"
+                                               [policySaveResponse]="policySaveResponse"
+                                               [selectedPublicKey]="selectedPublicKey"
+                                               [availablePublicKeys]="availablePublicKeys">
+                        </chattim-control-panel>
+                    </div>
+
+                </div>
+            </ng-container>
+        </tim-dialog-frame>
         </ng-container> 
     `,
     styleUrls: ["./chattim.scss"],
@@ -236,7 +246,7 @@ export class ChatTIMComponent
         t.TypeOf<typeof PluginFields>,
         typeof PluginFields
     >
-    implements AfterViewInit
+    implements AfterViewInit, OnDestroy
 {
     @ViewChild(ChatControlPanelComponent)
     controlPanel!: ChatControlPanelComponent;
@@ -319,6 +329,9 @@ export class ChatTIMComponent
     availableModes?: string[];
     availableEmbedderProviders: string[] = [];
 
+    convTimeWindow: number = 0;
+    convHistoryMarkerIndex: number | null = null;
+
     useStreaming: boolean = false;
     modelTemperature: number | null = null;
     systemPromptPath: string = "";
@@ -361,6 +374,13 @@ export class ChatTIMComponent
         await this.getControlPanelData();
         await this.fetchRights();
     }
+
+    ngOnDestroy(): void {
+        if (this.scrollContainer) {
+            this.scrollContainer.removeEventListener("scroll", this.onScroll);
+        }
+    }
+
     async fetchRights(): Promise<void> {
         if (this.document_id <= 0) {
             return;
@@ -468,6 +488,7 @@ export class ChatTIMComponent
         );
         this.hasMoreHistory = messages.length >= this.historyPageSize;
         this.conversation = this.messagesToEntries(messages);
+        this.updateHistoryMarker();
     }
 
     /**
@@ -572,6 +593,8 @@ export class ChatTIMComponent
             this.conversation = olderEntries.concat(existing);
         }
 
+        this.updateHistoryMarker();
+
         await this.nextAnimationFrame(() => {
             const delta: number = el.scrollHeight - prevScrollHeight;
             el.scrollTop = prevScrollTop + delta;
@@ -600,6 +623,7 @@ export class ChatTIMComponent
         };
         const len: number = this.conversation.push(entry);
         const index: number = len - 1;
+        this.updateHistoryMarker();
         this.scheduleAutoScroll(true);
 
         if (this.useStreaming) {
@@ -607,6 +631,7 @@ export class ChatTIMComponent
         } else {
             await this.askPost(body, index);
         }
+        this.updateHistoryMarker();
         this.isRunning = false;
     }
 
@@ -803,6 +828,7 @@ export class ChatTIMComponent
         this.selectedModel = data.selectedModel ?? data.model_id;
         this.selectedMode = data.llm_mode;
         this.maxTokens = data.max_tokens;
+        this.convTimeWindow = data.conv_time_window;
         this.selectedItemPaths = data.tim_paths;
         this.pathRestrictions = {
             allowedPaths: data.allowedItemPaths,
@@ -824,6 +850,8 @@ export class ChatTIMComponent
         this.includeCitations = data.include_citations;
         this.similarityThreshold = data.similarity_threshold;
         this.topKChunks = data.top_k_chunks;
+
+        this.updateHistoryMarker();
     }
 
     async onClearConversation(): Promise<void> {
@@ -844,6 +872,7 @@ export class ChatTIMComponent
             this.hasMoreHistory = false;
             this.answer = undefined;
             this.error = undefined;
+            this.updateHistoryMarker();
             return;
         }
 
@@ -1012,6 +1041,51 @@ export class ChatTIMComponent
      */
     dateString(ts: number | undefined): string {
         return ts ? new Date(ts).toLocaleString() : "";
+    }
+
+    /* Return the closest string representation of the time in seconds. */
+    formatDurationSeconds(seconds: number): string {
+        const s = Math.max(0, Math.trunc(seconds));
+        if (s < 60) {
+            return `${s} s`;
+        }
+        const m = Math.trunc(s / 60);
+        if (m < 60) {
+            return `${m} min`;
+        }
+        const h = Math.trunc(m / 60);
+        if (h < 48) {
+            return `${h} h`;
+        }
+        const d = Math.trunc(h / 24);
+        return `${d} d`;
+    }
+
+    /* Update the conversation time window marker index. */
+    private updateHistoryMarker(): void {
+        const active = this.convTimeWindow > 0 && this.conversation.length > 0;
+        if (!active) {
+            this.convHistoryMarkerIndex = null;
+            return;
+        }
+
+        const cutoff: number = Math.max(
+            0,
+            Date.now() - this.convTimeWindow * 1000
+        );
+
+        let index: number = this.conversation.length;
+        for (let i: number = 0; i < this.conversation.length; i++) {
+            const e: ChatEntry = this.conversation[i];
+            const userTs: number = e.user.timestamp_ms ?? 0;
+            const agentTs: number = e.agent.timestamp_ms ?? 0;
+            if (Math.max(userTs, agentTs) >= cutoff) {
+                index = i;
+                break;
+            }
+        }
+        this.convHistoryMarkerIndex =
+            index > 0 && index < this.conversation.length - 1 ? index : null;
     }
 
     async onFetchModels(publicKey: string) {

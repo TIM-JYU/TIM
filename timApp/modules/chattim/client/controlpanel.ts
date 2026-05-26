@@ -32,6 +32,7 @@ export interface ControlPanelSettings extends Record<string, JsonValue> {
     llm_mode: string;
 
     max_tokens: number | null;
+    conv_time_window: number;
     tim_paths: string[];
     system_prompt_path: string;
     global_policy: TokenLimitForUser;
@@ -133,7 +134,7 @@ type SimilarityMode = "none" | "loose" | "balanced" | "strict" | "custom";
                             </label>
                         </div>
 
-                        <div class="checkbox">
+                        <div class="checkbox" [hidden]="selectedMode != 'Summarizing'">
                             <label>
                                 <input type="checkbox"
                                        [(ngModel)]="includeCitations">
@@ -163,7 +164,7 @@ type SimilarityMode = "none" | "loose" | "balanced" | "strict" | "custom";
                             Temperature input should be between 0 and 2
                         </div>
  
-                        <div class="form-group">
+                        <div class="form-group" [hidden]="selectedMode != 'Summarizing'">
                             <div class="inline-field">
                                 <label class="inline-field-label">Similarity threshold
                                     <a tooltip="{{getSimilarityTooltip}}"><i class="glyphicon glyphicon-info-sign"></i></a>
@@ -254,15 +255,39 @@ type SimilarityMode = "none" | "loose" | "balanced" | "strict" | "custom";
                         >
                     </div>
 
-                    <div class="error" *ngIf="isInvalidMaxTokens">
-                        Input should be a positive integer
-                    </div>
-                </div>
+                     <div class="error" *ngIf="isInvalidMaxTokens">
+                         Input should be a positive integer
+                     </div>
+                 </div>
 
-                <!-- Add more documents to the model (TIM - filepath) -->
-                <div class="settings-row">
-                    <button class="btn btn-link settings-section-btn"
-                            (click)="filesOpen = !filesOpen">
+                 <!-- Conversation time window (seconds) -->
+                 <div class="settings-row">
+                     <button class="btn btn-link settings-section-btn"
+                             (click)="convWindowOpen = !convWindowOpen">
+                     <span class="glyphicon"
+                           [class.glyphicon-chevron-right]="!convWindowOpen"
+                           [class.glyphicon-chevron-down]="convWindowOpen">
+                     </span>
+                         Conversation time window:
+                         <strong>{{ convTimeWindowValue === 0 ? "Disabled" : (convTimeWindowValue + " s") }}</strong>
+                     </button>
+                     <div *ngIf="convWindowOpen" class="settings-section-body">
+                         <input type="number"
+                                class="form-control"
+                                [(ngModel)]="convTimeWindowSeconds"
+                                min="0"
+                                step="60"
+                         >
+                     </div> 
+                     <div class="error" *ngIf="isInvalidConvTimeWindow">
+                         Input should be a non-negative integer
+                     </div>
+                 </div>
+
+                 <!-- Add more documents to the model (TIM - filepath) -->
+                 <div class="settings-row">
+                     <button class="btn btn-link settings-section-btn"
+                             (click)="filesOpen = !filesOpen">
                     <span class="glyphicon"
                           [class.glyphicon-chevron-right]="!filesOpen"
                           [class.glyphicon-chevron-down]="filesOpen">
@@ -366,6 +391,7 @@ export class ChatControlPanelComponent {
     keyOpen = false;
 
     tokensOpen = false;
+    convWindowOpen = false;
     filesOpen = false;
     promptOpen = false;
     globalPolicyOpen = false;
@@ -385,6 +411,8 @@ export class ChatControlPanelComponent {
     invalidUserPolicyState: boolean = false;
     maxTokensLocal = "";
     maxTokensValue: number | null = null;
+
+    convTimeWindowSeconds: number | null = 0;
 
     enabledTemperature: boolean = false;
     modelTemperature: number | null = 0.2;
@@ -427,6 +455,10 @@ export class ChatControlPanelComponent {
     @Input() set maxTokens(value: number | null) {
         this.maxTokensValue = value;
         this.maxTokensLocal = value != null ? String(value) : "";
+    }
+
+    @Input() set convTimeWindow(value: number | null) {
+        this.convTimeWindowSeconds = value ?? 0;
     }
 
     @Input() set setModelTemperature(value: number | null) {
@@ -528,6 +560,7 @@ export class ChatControlPanelComponent {
             model_id: this.selectedModel,
             llm_mode: this.selectedMode,
             max_tokens: this.maxTokensValue,
+            conv_time_window: this.convTimeWindowValue,
             tim_paths: this.selectedItemPaths,
             system_prompt_path: this.systemPrompt ?? "",
             global_policy: this.tokenLimitAllUsers,
@@ -597,11 +630,30 @@ export class ChatControlPanelComponent {
     get invalidInputState(): boolean {
         return (
             this.isInvalidMaxTokens ||
+            this.isInvalidConvTimeWindow ||
             this.isInvalidModelTemperature ||
             this.isInvalidSimilarityThreshold ||
             this.isInvalidTopChunks ||
             this.invalidUserPolicyState
         );
+    }
+
+    get isInvalidConvTimeWindow(): boolean {
+        if (this.convTimeWindowSeconds == null) {
+            return false;
+        }
+        return (
+            !Number.isInteger(this.convTimeWindowSeconds) ||
+            this.convTimeWindowSeconds < 0
+        );
+    }
+
+    get convTimeWindowValue(): number {
+        const v = this.convTimeWindowSeconds;
+        if (v == null || Number.isNaN(v)) {
+            return 0;
+        }
+        return v < 0 ? 0 : Math.trunc(v);
     }
 
     isValidFloatBetween(

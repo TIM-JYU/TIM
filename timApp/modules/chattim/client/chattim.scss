@@ -109,6 +109,26 @@
   color: #999;
   opacity: 1;
 }
+
+.conv-history-marker {
+  display: flex;
+  align-items: center;
+  color: #999;
+  font-size: 0.6em;
+}
+
+.conv-history-marker::before,
+.conv-history-marker::after {
+  content: "";
+  flex: 1 1 auto;
+  border-top: 1px dashed #999;
+}
+
+.conv-history-marker-text {
+  flex: 0 0 auto;
+  padding: 1px 6px;
+}
+
 .upper-area{
     flex: 1 1 auto;
     display: flex;
@@ -307,5 +327,3 @@
 }
 
 // usercontrol ends //
-
-

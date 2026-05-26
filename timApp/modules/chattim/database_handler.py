@@ -256,7 +256,7 @@ class TimDatabase:
         :param indexed_document_ids:
         :param system_prompt_path: TIM path for an optional custom system prompt.
         :param agent: LLm agent.
-        :param conv_time_window: Time window for the conversation in minutes.
+        :param conv_time_window: Time window for the conversation in seconds.
         :param policy: List of policies related to the LLMRule instance.
         :param usage: List of usages related to the LLMRule instance.
         :return: created LLMRule instance
