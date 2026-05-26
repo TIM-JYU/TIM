@@ -698,13 +698,6 @@ class PluginCore:
         if document is None:
             return Result(error=f"Document [{document_id}] does not exist")
 
-        #par_id = None
-        #for par in document.get_paragraphs(False):
-        #    md = par.get_markdown()
-        #    if "header: ChatTIM" in md:
-        #        par_id = par.get_id()
-        #        break
-
         if par_id is None:
             return Result(error=f"Plugin paragraph not found")
 
