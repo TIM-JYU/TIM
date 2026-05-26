@@ -141,6 +141,7 @@ class PreparedChatRequest:
     response: Iterable[ModelResponse] | ModelResponse
     citations: list[str] | None
     include_citations: bool = False
+    verbose: bool = False
 
 
 # TODO: maybe a dict or dataclass would be more descriptive
@@ -186,6 +187,8 @@ class PluginCore:
         rule = self.tim_database.get_llm_rule(document_id)
         if not rule:
             return Result(None, "No LLMRule found for this document")
+
+        verbose_errors: bool = caller_id == rule.owner
 
         # policy checking
         remaining_tokens = (
@@ -285,7 +288,7 @@ class PluginCore:
             context = response.context
             citations = self._get_citations(response.used_context)
 
-        system_prompt = self.get_system_prompt(rule.system_prompt_path)
+        system_prompt = self.get_system_prompt(str(rule.system_prompt_path))
 
         msg_data = MessageData(
             user_prompt=validated_input,
@@ -305,8 +308,9 @@ class PluginCore:
                 temperature=temperature,
             )
         except ModelError as e:
-            # TODO: Leave out extra info if not owner or no access to plugin
-            error = f"{e.text()} {str(e.cause)}"
+            error = e.text()
+            if verbose_errors:
+                error += f" {str(e.cause)}"
             return Result(error=error)
         except Exception as e:
             return Result(error=str(e))
@@ -318,6 +322,7 @@ class PluginCore:
             response=answer,
             citations=citations,
             include_citations=include_citations,
+            verbose=verbose_errors,
         )
         return Result(value=prepared)
 
@@ -445,6 +450,11 @@ class PluginCore:
                 for chunk in stream:
                     apply_chunk(chunk)
                     yield chunk.delta or ""
+            except ModelError as e:
+                error = e.text()
+                if p.verbose:
+                    error += f" {str(e.cause)}"
+                raise Exception(error) from e
             finally:
                 # Drain the remaining chunks if the client disconnected mid-stream
                 try:

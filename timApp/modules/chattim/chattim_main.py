@@ -254,10 +254,6 @@ def ask_stream_route(params: ChatTimAskParams) -> Response:
             citations = context
             for chunk in stream:
                 yield to_ndjson_str(ChatTimAskResponse(answer=chunk))
-        except ModelError as e:
-            error = f"{e.text()} {str(e.cause)}"
-            yield to_ndjson_str(ChatTimAskResponse(error=error))
-            return
         except Exception as e:
             yield to_ndjson_str(ChatTimAskResponse(error=str(e)))
             return
