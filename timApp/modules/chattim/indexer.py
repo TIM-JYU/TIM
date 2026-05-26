@@ -8,7 +8,7 @@ import os
 
 from timApp.document.document import Document
 from datetime import datetime
-from .model import Provider
+from .model import Provider, _DEFAULT_BASE_URL_BY_PROVIDER
 
 # Max tokens for API requests. Approximately 32000 characters
 MAX_TOKENS_CHUNK = 8192
@@ -114,10 +114,15 @@ class GeminiEmbeddingModel(EmbeddingModel):
 class OpenAiEmbeddingModel(EmbeddingModel):
     """openai implementation of embedding model"""
 
-    def __init__(self, api_key: str, model_type: str = "text-embedding-3-small"):
+    def __init__(
+        self,
+        api_key: str,
+        model_type: str = "text-embedding-3-small",
+        base_url: str | None = None,
+    ):
         self.model_type = model_type
         self.api_key = api_key
-        self.client = OpenAI(api_key=self.api_key)
+        self.client = OpenAI(api_key=self.api_key, base_url=base_url)
 
     def generate(self, chunks: list[str]) -> EmbeddingResponse:
         """generates embeddings from provided chunks"""
@@ -148,6 +153,12 @@ def create_embedder(embedder_provider: str, api_key: str) -> EmbeddingModel | No
     :param provider: provider of the embedding model"""
     if embedder_provider.lower() == "openai":
         return OpenAiEmbeddingModel(api_key=api_key)
+    elif embedder_provider.lower() == "openrouter":
+        return OpenAiEmbeddingModel(
+            api_key=api_key,
+            model_type="openai/text-embedding-3-small",
+            base_url=_DEFAULT_BASE_URL_BY_PROVIDER["openrouter"],
+        )
     elif embedder_provider.lower() == "google":
         return GeminiEmbeddingModel(api_key=api_key)
 
@@ -295,12 +306,10 @@ class Indexer:
         :param api_key: API key to use for generating embeddings.
         :param documents: list of tim documents
         :return: number of tokens used"""
-
-        embedding_model = create_embedder(
-            embedder_provider=api_key[0], api_key=api_key[1]
-        )
+        provider, key = api_key
+        embedding_model = create_embedder(embedder_provider=provider, api_key=key)
         if embedding_model is None:
-            raise ValueError("No embedding model found")
+            raise ValueError(f"No embedding model found for [{provider}]")
 
         model_type: str = embedding_model.get_model_type()
 
@@ -493,7 +502,8 @@ class Indexer:
         )
 
     def _get_file_name(self, doc_id: int, model_type: str) -> str:
-        return f"{self.root_path}/{doc_id}_{model_type}.json"
+        model_name = model_type.split("/")[-1] if "/" in model_type else model_type
+        return f"{self.root_path}/{doc_id}_{model_name}.json"
 
     @property
     def _chunk_size_characters(self) -> int:

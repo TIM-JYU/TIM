@@ -241,9 +241,12 @@ class PluginCore:
         citations: list[str] | None = None
 
         if rag_mode == RagMode.RETRIEVE:
-            if api_key[0] == "anthropic":
+            provider = api_key[0]
+            if provider not in self.supported_embedding_providers():
                 # TODO: implement embedding model picking
-                return Result(error="Can't use summarizing mode on Anthropic API keys.")
+                return Result(
+                    error=f"Can't use summarizing mode on [{provider}] API keys."
+                )
 
             response = self.indexer.get_context(
                 prompt=validated_input,
@@ -639,19 +642,20 @@ class PluginCore:
 
         provider_changed = old_provider is not None and old_provider != provider_str
 
+        tokens_used, failed_embeddings = 0, 0
         try:
             if provider_changed:
                 GenericApiClient.check_access(
                     provider=provider, model_id=model_id, api_key=api_key
                 )
-            tokens_used, failed_embeddings = self.indexer.create_embeddings(
-                api_key=(provider_str, api_key),
-                documents=docs,
-            )
+            if rag_mode == RagMode.RETRIEVE:
+                tokens_used, failed_embeddings = self.indexer.create_embeddings(
+                    api_key=(provider_str, api_key),
+                    documents=docs,
+                )
+                print(f"Tokens used for indexing: {tokens_used}")
         except ValueError as e:
             return Result(None, str(e))
-
-        print(f"Tokens used for indexing: {tokens_used}")
 
         rule = self.tim_database.set_llm_rule(
             document_id=document_id,
@@ -746,6 +750,14 @@ class PluginCore:
     def get_supported_providers() -> list[Provider]:
         """Get the list of supported API providers."""
         return list(PROVIDERS.keys())
+
+    @staticmethod
+    def supported_embedding_providers() -> list[Provider]:
+        unsupported_embedding_providers: list[Provider] = ["anthropic"]
+        supported_providers: list[Provider] = PluginCore.get_supported_providers()
+        return [
+            p for p in supported_providers if p not in unsupported_embedding_providers
+        ]
 
     def get_user_data(self, caller_id, document_id) -> list[UserData]:
         """

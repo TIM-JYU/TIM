@@ -591,7 +591,7 @@ def _default_headers(provider: Provider, api_key: str) -> dict[str, str]:
     return {}
 
 
-Provider = Literal["openai", "anthropic", "google", "dummy"]
+Provider = Literal["openai", "anthropic", "google", "openrouter", "dummy"]
 
 ProviderInitFn = Callable[[Provider, str, str, str | None], ChatModel]
 """Function type for initializing `ChatModel` instances from different providers.
@@ -609,6 +609,9 @@ PROVIDERS: dict[Provider, ProviderInitFn] = {
     "google": lambda provider, model_id, key, url: GenericApiChatModel(
         provider, model_id, key, _resolve_base_url("google", url)
     ),
+    "openrouter": lambda provider, model_id, key, url: GenericApiChatModel(
+        provider, model_id, key, _resolve_base_url("openrouter", url)
+    ),
 }
 """All the supported providers."""
 
@@ -616,4 +619,5 @@ _DEFAULT_BASE_URL_BY_PROVIDER: dict[Provider, str] = {
     "openai": "https://api.openai.com/v1",
     "anthropic": "https://api.anthropic.com/v1",
     "google": "https://generativelanguage.googleapis.com/v1beta/openai",
+    "openrouter": "https://openrouter.ai/api/v1",
 }
