@@ -204,14 +204,20 @@ def register_route(
 
         @app.route(f"/{route}", methods=[method], endpoint=route)
         def handler() -> Response:
-            return to_response(route_handler())
+            try:
+                return to_response(route_handler())
+            except Exception as e:
+                raise RouteException(str(e))
 
         return
 
     @app.route(f"/{route}", methods=[method], endpoint=route)
     @use_args(class_schema(route_model)(), locations=("json",))
     def handler_args(m: Any) -> Response:
-        return to_response(route_handler(m))
+        try:
+            return to_response(route_handler(m))
+        except Exception as e:
+            raise RouteException(str(e))
 
 
 def ask_route(params: ChatTimAskParams) -> ChatTimAskResponse:
