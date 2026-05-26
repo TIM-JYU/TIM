@@ -4,7 +4,7 @@ import os
 import re
 import tempfile
 import zipfile
-from dataclasses import field
+from dataclasses import field, dataclass as py_dataclass
 
 from flask import Blueprint, render_template
 from flask import current_app
@@ -434,10 +434,10 @@ def verify_area_structure_edit_access(
     paragraphs.
     If the user has edit access to all paragraphs
     in the area, we allow any structural changes in the area,
-    because int hte future they would be able to do those changes through
+    because in the future they would be able to do those changes through
     UI as well.
-    So user may delete pars he has edit access or reorder pars.
-    But isnot allowed to add new pars.
+    So user may delete or reorder pars if he has edit access to those.
+    But he is not allowed to add new pars without normal edit access.
     :param docinfo: where to check edit rights if adding new pars
     :param curr_section: area pars in current document
     :param editor_pars:  pars from editor
@@ -448,7 +448,7 @@ def verify_area_structure_edit_access(
     if editor_ids - curr_ids:
         verify_edit_access(
             docinfo,
-            message="Sorry, you don't have permission to add or remove paragraphs.",
+            message="Sorry, you don't have permission to add paragraphs.",
         )
 
 
@@ -471,24 +471,25 @@ def modify_paragraph_common(doc_id: int, md: str, par_id: str, par_next_id: str 
 
     # editor_pars = check_and_rename_pluginnamehere(editor_pars, doc)
 
-    access_verified = False
     if editing_area:
+        assert area_start is not None
+        assert area_end is not None
         try:
             curr_section = doc.get_section(area_start, area_end)
-            # If one do not have normal edit access, but have
+            # User may not have normal edit access, but has
             # special edit access to every par in area.
             # In this case it is not possible to edit area through UI,
             # but one may do it by
             # direct post or if area is opened before edit access is removed.
-            # So there migth be access problems if one tries to add
-            # or remove pars or change pars id's.
+            # So there might be access problems if one tries to add pars
+            # or change pars id's.
             # It would be easier just to deny edit access to area in
             # this case, but we might allow edit area in UI in the future.
 
-            # First check user has rigth for every original par in area
+            # First check user has right for every original par in area
             for p in curr_section:
                 verify_par_edit_access(p)
-            # Then check all editor par is included in set of current pars
+            # Then check all editor pars are included in set of current pars
             # if not, then user should have normal edit right
             verify_area_structure_edit_access(docinfo, curr_section, editor_pars)
             new_start, new_end, edit_result = doc.update_section(
@@ -652,6 +653,7 @@ def update_associated_uploads(pars: list[DocParagraph], doc: DocInfo):
             for m in c.finditer(md):
                 u_id = m.group("id").strip()
                 name = m.group("name").strip()
+                assert isinstance(name, str)
                 up = UploadedFile.get_by_id_and_filename(int(u_id), name)
                 if not up:
                     continue
@@ -673,7 +675,7 @@ def par_response(
     partial_doc_pars: bool = False,
     extra_doc_settings: YamlBlock | None = None,
     for_view: ViewRoute | None = None,
-    show_errors: bool = False,
+    show_errors: bool = False,  # noqa
 ):
     """Return a JSON response containing updated paragraphs and updated HTMLs.
 
@@ -762,7 +764,7 @@ def par_response(
                     LAST_EDITED_GROUP,
                     docu.title,
                     docu.get_relative_url_for_view(
-                        (edit_request.viewname or ViewRoute.View).value
+                        (edit_request.viewname or ViewRoute.View).value  # noqa
                     ),
                     move_to_top=True,
                     limit=current_app.config["LAST_EDITED_BOOKMARK_LIMIT"],
@@ -1291,7 +1293,7 @@ class ImportDocumentModel:
     doc_id: int
 
 
-@dataclass
+@py_dataclass
 class ImportedImageFile:
     filename: str
 
@@ -1301,11 +1303,14 @@ class ImportedImageFile:
 def import_document_from_file(m: ImportDocumentModel) -> Response:
     verify_logged_in()
     d = DocEntry.find_by_id(m.doc_id)
+    if d is None:
+        raise RouteException(f"Document not found {m.doc_id}")
     verify_edit_access(d)
 
     file = request.files.get("file")
     if file is None:
         raise RouteException("Missing file")
+    assert file.filename is not None
 
     filetype = file.filename.split(".")[-1]
     expected_mimetype = ALLOWED_DOC_IMPORT_EXT_MIMETYPES.get(filetype)
