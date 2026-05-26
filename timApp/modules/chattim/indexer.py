@@ -91,16 +91,14 @@ class GeminiEmbeddingModel(EmbeddingModel):
         try:
             result = self.client.embeddings.create(input=text, model=self.model_type)
             # result = self.client.models.embed_content(model="gemini-embedding-001",contents=text,)
-        except Exception as e:
-            print(f"Error generating embeddings {e}")
+        except Exception:
             return EmbeddingResponse(embeddings=[], used_tokens=0)
 
         embeddings = [x.embedding for x in result.data]
         # Usage field seems to be missing from the response when using gemini with openai library
         try:
             tokens_used = result.usage.total_tokens
-        except Exception as e:
-            print(f"Error getting tokens used {e}")
+        except Exception:
             tokens_used = 0
         return EmbeddingResponse(embeddings=embeddings, used_tokens=tokens_used)
 
@@ -132,7 +130,6 @@ class OpenAiEmbeddingModel(EmbeddingModel):
         try:
             result = self.client.embeddings.create(input=text, model=self.model_type)
         except Exception as r:
-            print("Error generating embeddings", r)
             return EmbeddingResponse(embeddings=[], used_tokens=0)
 
         embeddings = [x.embedding for x in result.data]
@@ -257,22 +254,23 @@ class Indexer:
 
         return chunks, len(text)
 
-    # TODO ei haeta mahdollisia plugin lohkoja
     def get_blocks(self, doc: Document) -> tuple[list[TextBlock], int]:
         """returns the text chunks from provided tim document and splits long chunks into smaller chunks"""
         total_content_len: int = 0
         blocks: list[TextBlock] = []
         try:
-            tim_blocks = doc.export_raw_data()
+            # TODO: get paragraphs
+            tim_blocks: list[dict] = doc.export_raw_data()
 
             for tim_block in tim_blocks:
+                # TODO: Ignore plugin blocks
                 sub_blocks, content_len = self.chunk_block(
                     tim_block, self._chunk_size_characters
                 )
                 blocks.extend(sub_blocks)
                 total_content_len += content_len
-        except Exception as e:
-            print(f"Error getting tim blocks {e}")
+        except Exception:
+            pass
 
         return blocks, total_content_len
 
@@ -342,7 +340,6 @@ class Indexer:
 
                             continue
             except FileNotFoundError as e:
-                print(e)
                 pass
             except JSONDecodeError:  # Invalid embeddings file
                 pass
@@ -383,12 +380,10 @@ class Indexer:
 
             try:
                 with open(file_name, "w") as f:
-                    # print(self.root_path)
                     json.dump(data, f, indent=2)
                     self.indexed_page_ids.append(document.doc_id)
             except Exception as e:
                 failed_embeddings += 1
-                print(f"Error saving embeddings {e}")
 
         return tokens_used, failed_embeddings
 
@@ -405,8 +400,8 @@ class Indexer:
             try:
                 with open(file_name, "r") as file:
                     page_embeddings.append(json.load(file))
-            except Exception as e:
-                print(f"Error retrieving embeddings {e}")
+            except Exception:
+                pass
 
         return page_embeddings
 
@@ -451,9 +446,8 @@ class Indexer:
             prompt_result = embedding_model.generate([prompt])
             tokens_used = prompt_result.used_tokens
             prompt_embedding = prompt_result.embeddings[0]
-        except Exception as e:
-            print(f"Prompt embedding error: {e}")
-            return ContextResponse(context="", tokens_used=tokens_used, used_chunks=[])
+        except Exception:
+            return ContextResponse(context="", tokens_used=tokens_used, used_context=[])
 
         page_embeddings = self.get_embeddings(
             self.indexed_page_ids, embedding_model.get_model_type()

@@ -103,6 +103,10 @@ class InstanceSettingsData(InstanceAttributes):
     selectedModel: str | None = None
     allowedItemPaths: list[str] | None = None
 
+    @classmethod
+    def default(cls) -> "InstanceSettingsData":
+        return cls()
+
 
 T = TypeVar("T")
 E = TypeVar("E")
@@ -214,7 +218,7 @@ class PluginCore:
         # TODO: remember to fetch with timestamps when the time comes
         chat_history = self.get_history(caller_id_str, document_id_str)
 
-        rag_mode: RagMode = self._parse_rag_mode(str(rule.current_mode))
+        rag_mode: RagMode | None = self._parse_rag_mode(str(rule.current_mode))
         if rag_mode is None:
             return Result(error=f"Invalid mode '{rag_mode}'")
 
@@ -421,7 +425,7 @@ class PluginCore:
                 # Yield chunks to the caller
                 for chunk in stream:
                     apply_chunk(chunk)
-                    yield chunk.delta
+                    yield chunk.delta or ""
             finally:
                 # Drain the remaining chunks if the client disconnected mid-stream
                 try:
@@ -605,9 +609,9 @@ class PluginCore:
         if rag_mode is None:
             return Result(None, f"Invalid rag mode [{llm_mode}] given")
 
-        if provider_str not in Provider.__args__:
+        provider = self._parse_provider(provider_str)
+        if provider is None:
             return Result(None, f"Invalid provider [{provider_str}] given")
-        provider = provider_str
 
         paths_for_indexing = tim_paths
 
@@ -667,7 +671,6 @@ class PluginCore:
                     api_key=(provider_str, api_key),
                     documents=docs,
                 )
-                print(f"Tokens used for indexing: {tokens_used}")
         except ValueError as e:
             return Result(None, str(e))
 
@@ -960,13 +963,10 @@ class PluginCore:
 
     def _get_available_embedder_providers(self, caller_id: int) -> list[str]:
         """Returns a list of available embedding providers based on API keys."""
-        print("================================")
         keys = self.get_user_api_keys(owner_id=caller_id)
         providers = []
         for key in keys:
             providers.append(key[1])
-        print(f"Providers from DB{providers}")
-        print("================================")
 
         return providers
 
@@ -1295,7 +1295,6 @@ class PluginCore:
         try:
             return RagMode(mode)
         except ValueError:
-            print(f"Invalid rag mode given: {mode}")
             return None
 
     @staticmethod

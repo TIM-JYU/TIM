@@ -5,7 +5,7 @@ from typing import cast
 from timApp.document.document import Document
 from timApp.document import docentry
 from timApp.document.docentry import DocEntry, get_documents_in_folder
-from timApp.folder.folder import Folder, path_includes, get_documents
+from timApp.folder.folder import Folder
 from timApp.item.item import Item
 from timApp.modules.chattim.dbmodels import LLMRule, Policy, Usage
 from timApp.timdb.sqa import db

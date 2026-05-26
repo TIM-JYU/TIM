@@ -3,7 +3,6 @@ from flask import request, Response, stream_with_context
 from typing import Any, TypedDict, Callable, Iterator, cast, Literal
 from webargs.flaskparser import use_args
 import json
-from flask_babel import gettext
 
 from timApp.auth.accesshelper import (
     verify_logged_in,
@@ -19,7 +18,6 @@ from timApp.util.flask.responsehelper import json_response, to_json_str, ok_resp
 from tim_common.markupmodels import GenericMarkupModel
 from tim_common.pluginserver_flask import (
     GenericHtmlModel,
-    PluginAnswerResp,
     PluginReqs,
     EditorTab,
     PluginAnswerWeb,
@@ -75,7 +73,6 @@ class DeletePluginParams(GenericParams):
 
 def get_rights(params: GetRightsParams) -> dict:
     doc = get_doc_or_abort(params.document_id)
-    print(doc)
     # verify_teacher_access returns the access object if teacher, None if not
     teacher_access = verify_teacher_access(doc, require=False)
 
