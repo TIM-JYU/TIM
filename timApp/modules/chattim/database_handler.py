@@ -571,7 +571,7 @@ class TimDatabase:
         """
         stmt = select(Policy).where(
             Policy.llm_rule_id == llm_rule.id,
-            Policy.policy_type == "global",
+            Policy.for_user == 0,
         )
         return db.session.scalar(stmt)
 

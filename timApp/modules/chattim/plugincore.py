@@ -184,9 +184,9 @@ class PluginCore:
 
         # policy checking
         remaining_tokens = (
-            4096  # can we get the max_token upper limit support somewhere?
+            4096  # TODO: can we get the max_token upper limit support somewhere?
         )
-        if caller_id != rule.owner:  # TODO: teachers are also exempted?
+        if caller_id != rule.owner:
             try:
                 usage = self.tim_database.get_usage(rule, caller_id)
                 left_tokens_result = self._calculate_remaining_tokens(
