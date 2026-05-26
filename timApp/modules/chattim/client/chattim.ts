@@ -142,16 +142,19 @@ export interface ControlPanelData extends ControlPanelSettings {
                                         <div [innerHTML]="entry.agent.content | purify"></div>
                                         <div class="answer-footer">
                                         <span *ngIf="entry.agent.citations && entry.agent.citations.length > 0">
-                                        <ng-container *ngFor="let citation of entry.agent.citations; let i = index">
-                                            <a [href]="citation" target="_blank">[{{ i + 1 }}]</a>
-                                            <ng-container *ngIf="i < entry.agent.citations.length - 1">, </ng-container>
-                                        </ng-container>
-                                    </span><span
-                                            class="chat-timestamp">{{ dateString(entry.agent.timestamp_ms) }}</span>
+                                            <ng-container *ngFor="let citation of entry.agent.citations; let i = index">
+                                                <a [href]="citation" target="_blank">[{{ i + 1 }}]</a>
+                                                <ng-container
+                                                    *ngIf="i < entry.agent.citations.length - 1">, </ng-container>
+                                            </ng-container>
+                                        </span>
+                                            <span
+                                                class="chat-timestamp">{{ dateString(entry.agent.timestamp_ms) }}
+                                            </span>
                                         </div>
                                     </div>
                                 </div>
-                            </div> 
+                            </div>
                         </div>
 
                         <div>

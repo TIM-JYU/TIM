@@ -129,12 +129,13 @@
   padding: 1px 6px;
 }
 
-.upper-area{
-    flex: 1 1 auto;
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-end;
+.upper-area {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
 }
+
 .chat-welcome {
   display: flex;
   align-items: center;
@@ -205,11 +206,11 @@
 }
 
 
-
 // usercontrol //
 .usercontrol-body {
   width: 80%;
 }
+
 .user-table {
   display: flex;
   flex-direction: column;
@@ -280,25 +281,25 @@
 }
 
 .header-button {
-    appearance: none;
-    border: none;
-    background: transparent;
-    font: inherit;
-    font-weight: bold;
-    text-align: left;
-    cursor: pointer;
-    padding: 0;
-    width: 100%;
+  appearance: none;
+  border: none;
+  background: transparent;
+  font: inherit;
+  font-weight: bold;
+  text-align: left;
+  cursor: pointer;
+  padding: 0;
+  width: 100%;
 }
 
 .usercontrol-no-user-selection {
-    flex: 1;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    width: 100%;
-    color: #888;
-    font-style: italic;
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  color: #888;
+  font-style: italic;
 }
 
 .usercontrol-main-content {
