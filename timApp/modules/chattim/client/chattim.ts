@@ -35,6 +35,7 @@ import type {DirectoryPickerRestrictions} from "tim/folder/directory-picker.comp
 import {DirectoryPickerComponent} from "tim/folder/directory-picker.component";
 import {itemglobals} from "tim/util/globals";
 import {TooltipModule} from "ngx-bootstrap/tooltip";
+import type {AngularError, Result} from "tim/util/utils";
 import type {ChatModel, ControlPanelSettings, UserKey} from "./controlpanel";
 import {ChatControlPanelComponent} from "./controlpanel";
 import type {TokenLimitForUser} from "./userpolicy";
@@ -172,11 +173,14 @@ export interface ControlPanelData extends ControlPanelSettings {
                     <div class="control-panel-container">
                         
                         <ng-container *ngIf="!isTeacher">
-                            <div class="settings-row">
-                                <p>Tämä näkymä on opiskelijalle</p>
-                                <span>Käytetyt tokenit: <strong>TODO!</strong></span>
-                            </div>
-                            <div class="settings-row">
+                            <button class="btn btn-link settings-btn"
+                                    (click)="onControlPanelToggle(!controlPanelOpen)"
+                                    [attr.aria-expanded]="controlPanelOpen"
+                                    title="Avaa asetukset">
+                                <span class="glyphicon glyphicon-cog" style="font-size: 1.8em;"></span>
+                            </button>
+                            
+                            <div class="settings-panel" *ngIf="controlPanelOpen">
                                 <button class="btn btn-warning"
                                         (click)="clearConversationClicked()">
                                     Clear conversation
@@ -205,7 +209,6 @@ export interface ControlPanelData extends ControlPanelSettings {
                             [currentFolder]="getCurrentFolder"
                             [availableModels]="availableModels"
                             [availableEmbedderProviders]="availableEmbedderProviders"
-                            [selectedEmbedderProvider]="selectedEmbedderProvider"
                             [availableModes]="availableModes"
                             [tokenLimitAllUsers]="globalPolicy"
                             [userUsageAndPolicyData]="userUsageAndPolicyData"
@@ -255,14 +258,20 @@ export class ChatTIMComponent
                 panelEl.style.position = "";
                 panelEl.style.visibility = "";
                 panelEl.style.display = "";
+                requestAnimationFrame(() => {
+                    dialog.style.height = `${
+                        dialog.offsetHeight + panelHeight
+                    }px`;
+                });
             }
-            requestAnimationFrame(() => {
-                const panelHeight = panelEl ? panelEl.scrollHeight : 200;
-                dialog.style.height = `${dialog.offsetHeight + panelHeight}px`;
-            });
         } else {
-            const panelHeight = panelEl ? panelEl.scrollHeight : 200;
-            dialog.style.height = `${dialog.offsetHeight - panelHeight}px`;
+            if (!panelEl) {
+                return;
+            }
+            const panelHeight = panelEl.scrollHeight;
+            requestAnimationFrame(() => {
+                dialog.style.height = `${dialog.offsetHeight - panelHeight}px`;
+            });
         }
     }
 
@@ -288,11 +297,9 @@ export class ChatTIMComponent
     hasManageRights: boolean = false;
     selectedItemPaths: string[] = [];
     pathRestrictions?: DirectoryPickerRestrictions;
-    localFilePaths = "";
     selectedPublicKey: string = "";
     availablePublicKeys: UserKey[] = [];
     selectedMode = "Creative";
-    selectedEmbedderProvider = "";
     selectedModel = "";
 
     policySaveResponse = {
@@ -728,49 +735,8 @@ export class ChatTIMComponent
             result: ControlPanelData;
             error?: string;
         }>(this.route("getSettings"), getRequest);
-
         this.isRunning = false;
-        if (response.ok) {
-            const data = response.result;
-            const result = data.result;
-            this.controlpanelError = data.error;
-
-            if (
-                this.controlpanelError === undefined ||
-                this.controlpanelError === ""
-            ) {
-                this.selectedModel = result.selectedModel ?? result.model_id;
-                this.selectedMode = result.llm_mode;
-                this.maxTokens = result.max_tokens;
-                this.selectedItemPaths = result.tim_paths;
-                this.pathRestrictions = {
-                    allowedPaths: result.allowedItemPaths,
-                    maxDepth: 1,
-                    selectable: "both",
-                    behavior: "disable",
-                };
-                this.availableModels = result.availableModels;
-                this.availableEmbedderProviders =
-                    result.availableEmbedderProviders;
-                this.selectedEmbedderProvider ||=
-                    this.availableEmbedderProviders[0];
-                this.availableModes = result.availableModes;
-                this.availablePublicKeys = result.availableKeys;
-                this.selectedPublicKey =
-                    result.availableKeys.find((k) => k.is_selected)
-                        ?.public_key ?? "";
-
-                this.globalPolicy = result.global_policy;
-                this.useStreaming = result.use_streaming;
-                this.modelTemperature = result.model_temperature;
-                this.systemPromptPath = result.system_prompt_path;
-                this.includeCitations = result.include_citations;
-                this.similarityThreshold = result.similarity_threshold;
-                this.topKChunks = result.top_k_chunks;
-            }
-        } else {
-            this.controlpanelError = response.result.error.error;
-        }
+        this.handleControlPanelResponse(response);
     }
 
     /**
@@ -786,30 +752,74 @@ export class ChatTIMComponent
         };
 
         const response = await this.httpPost<{
-            web: {
-                result: string;
-                error?: string;
-                availableModels?: ChatModel[];
-                selectedModel?: string;
-            };
+            result: ControlPanelData;
+            error?: string;
         }>(this.route("saveSettings"), save_request);
-
         this.isRunning = false;
+        this.handleControlPanelResponse(response);
+    }
+
+    handleControlPanelResponse(
+        response: Result<
+            {result: ControlPanelData; error?: string},
+            AngularError
+        >
+    ) {
         if (response.ok) {
             const data = response.result;
-            this.controlpanelError = data.web.error;
-            this.controlpanelResponse = data.web.result;
-            if (data.web.availableModels) {
-                this.availableModels = data.web.availableModels;
+            const result = data.result;
+            this.controlpanelError = data.error;
+
+            if (
+                this.controlpanelError === undefined ||
+                this.controlpanelError === ""
+            ) {
+                this.error = undefined;
+                this.setControlPanelData(result);
             }
-            if (data.web.selectedModel) {
-                this.selectedModel = data.web.selectedModel;
-            }
-            this.error = undefined; // on successful save we clear chattim-error, maybe not great
-            this.useStreaming = controlPanelSettings.use_streaming;
         } else {
             this.controlpanelError = response.result.error.error;
         }
+
+        if (this.controlpanelError) {
+            const el = this.scrollContainer;
+            if (!el) {
+                return;
+            }
+            requestAnimationFrame(() => {
+                el.scrollTo({
+                    top: el.scrollHeight,
+                    behavior: "smooth",
+                });
+            });
+        }
+    }
+
+    private setControlPanelData(data: ControlPanelData) {
+        this.selectedModel = data.selectedModel ?? data.model_id;
+        this.selectedMode = data.llm_mode;
+        this.maxTokens = data.max_tokens;
+        this.selectedItemPaths = data.tim_paths;
+        this.pathRestrictions = {
+            allowedPaths: data.allowedItemPaths,
+            maxDepth: 1,
+            selectable: "both",
+            behavior: "disable",
+        };
+        this.availableModels = data.availableModels;
+        this.availableEmbedderProviders = data.availableEmbedderProviders;
+        this.availableModes = data.availableModes;
+        this.availablePublicKeys = data.availableKeys;
+        this.selectedPublicKey =
+            data.availableKeys.find((k) => k.is_selected)?.public_key ?? "";
+
+        this.globalPolicy = data.global_policy;
+        this.useStreaming = data.use_streaming;
+        this.modelTemperature = data.model_temperature;
+        this.systemPromptPath = data.system_prompt_path;
+        this.includeCitations = data.include_citations;
+        this.similarityThreshold = data.similarity_threshold;
+        this.topKChunks = data.top_k_chunks;
     }
 
     async onClearConversation(): Promise<void> {
