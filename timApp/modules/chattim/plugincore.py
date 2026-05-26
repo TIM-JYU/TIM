@@ -510,7 +510,7 @@ class PluginCore:
         global_policy_ui = GenericPolicy()
         max_token_pool = InstanceAttributes().max_tokens
         if global_policy is not None:
-            global_policy_ui = self._convert_sqlpolicy_to_userpolicy(global_policy)
+            global_policy_ui = self._convert_sql_policy_to_generic_policy(global_policy)
             max_token_pool = global_policy.token_pool
 
         data = InstanceSettingsData(
@@ -795,7 +795,9 @@ class PluginCore:
             user_policy_sql = self.tim_database.get_user_policy(llm_rule, user_id)
 
             if user_policy_sql:
-                user_policy = self._convert_sqlpolicy_to_userpolicy(user_policy_sql)
+                user_policy = self._convert_sql_policy_to_generic_policy(
+                    user_policy_sql
+                )
             else:
                 user_policy = GenericPolicy()
 
@@ -858,18 +860,18 @@ class PluginCore:
         return "Save successful"
 
     @staticmethod
-    def _convert_sqlpolicy_to_userpolicy(sql_policy: Policy) -> GenericPolicy:
+    def _convert_sql_policy_to_generic_policy(sql_policy: Policy) -> GenericPolicy:
         max_tokens_per_user = sql_policy.max_tokens_per_user
         time_window_tokens = sql_policy.time_window_tokens
         time_window_value = sql_policy.token_time_window_num
         token_cap_enabled = True
         time_window_enabled = True
 
-        if max_tokens_per_user == -1:
+        if max_tokens_per_user is None or max_tokens_per_user == -1:
             token_cap_enabled = False
             max_tokens_per_user = None
 
-        if time_window_tokens == -1:
+        if time_window_tokens is None or time_window_tokens == -1:
             time_window_enabled = False
             time_window_tokens = None
 
