@@ -2,7 +2,7 @@
  * The dialog component for adding llm model API keys to user settings
  *
  * Based on_ add-api-key-dialog.component.ts from TIMTra
- * original authos:
+ * original authors:
  * @author Noora Jokela
  * @author Sami Viitanen
  * @licence MIT
@@ -84,7 +84,7 @@ export class AddLLMAPIKeyDialogComponent extends AngularDialogComponent<
     {onAdd: (key: IUserLLMApiKey) => void; existingKeys?: IUserLLMApiKey[]},
     void
 > {
-    async ngOnInit() {
+    ngOnInit() {
         void this.getLLMProviders();
     }
 
