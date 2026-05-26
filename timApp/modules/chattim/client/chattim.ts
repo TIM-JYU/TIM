@@ -57,6 +57,7 @@ const PluginMarkupFields = t.intersection([
             t.literal("xs"),
         ]),
         blockContent: t.string,
+        previewVisible: t.boolean,
     }),
     GenericPluginMarkup,
     t.type({
@@ -114,7 +115,11 @@ export interface ControlPanelData extends ControlPanelSettings {
              [hidden]="!hasManageRights"
         >
         </div>
-        <tim-dialog-frame class="chattim-dialog-frame" [size]="windowSize">
+        <tim-dialog-frame
+            class="chattim-dialog-frame"
+            [size]="windowSize"
+            [class.hide-in-preview]="!markup.previewVisible"
+        >
             <ng-container header> {{ header }}</ng-container>
             <ng-container body>
                 <div class="chattim-body scroll-box" #conversationScroll>

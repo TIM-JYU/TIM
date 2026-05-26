@@ -44,6 +44,7 @@ class ChatTimMarkupModel(GenericMarkupModel):
     apiAlias: str = ""
     defaultWindowSize: Literal["sm", "md", "lg", "xs"] = "md"
     blockContent: str = ""
+    previewVisible: bool = False
 
 
 # TODO: make proper dataclasses
@@ -142,10 +143,11 @@ def reqs() -> PluginReqs:
         """
 ``` {plugin="chattim" #taskidhere}
 header: ChatTIM
-welcomeText: ""  
+welcomeText: ""
 apiAlias: ""
 defaultWindowSize: "md" # [sm, md, lg, xs]
 blockContent: ""
+previewVisible: false
 ```
 """,
     ]
