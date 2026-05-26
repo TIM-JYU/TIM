@@ -618,13 +618,10 @@ class PluginCore:
 
         document_ids = [doc.id for doc in docs]
 
-        # TODO: maybe add manage rights
-        owns_all = self._owns_all_items(caller_id, docs)
-        if owns_all.ok():
-            if not owns_all.value:
-                return Result(None, owns_all.error)
-        else:
-            return Result(None, "Internal error")
+        try:
+            self._has_rights_one_of(caller_id, docs, ["owner", "manage"])
+        except (PermissionError, ValueError) as e:
+            return Result(None, str(e))
 
         # Check if the API key is valid in these documents
         try:
@@ -1257,32 +1254,37 @@ class PluginCore:
 
         return True
 
-    def _owns_all_items(
-        self, user_id: int, documents: list[Document]
-    ) -> Result[bool | None, str | None]:
+    def _has_rights_one_of(
+        self,
+        user_id: int,
+        documents: list[Document],
+        rights: list[str],
+    ) -> bool:
         """
-        Checks for all documents that the given user owns them. Expects that user and given documents exist.
+        Checks that the user has one of the rights in all the documents.
+        Expects that user and given documents exist.
+
         :param user_id: User for which the right is checked
         :param documents: Document for which the user has or has no right
-        :return: If all documents are owned [True, None]
-                 If no documents are provided [True, None]
-                 If not all documents are owned [False, msg on item not owned]
-                 If error happens:
+        :param rights: Rights to check for.
+        :raises ValueError: If failed to find rights for documents.
+        :raises PermissionError: If insufficient rights for some document.
+        :return: True if sufficient rights in all documents.
         """
 
         for document in documents:
             doc_id = document.id
             right = self.tim_database.check_rights(user_id, doc_id)
             if not right:
-                return Result(
-                    error=f"Could not get rights for document [{document}] for user [{user_id}]"
+                raise ValueError(
+                    f"Could not get rights for document [{document}] for user [{user_id}]"
                 )
 
-            is_owner: bool = right.get("owner")
-            if not is_owner:
-                return Result(False, f"No owner rights for [{document.docinfo.path}]")
+            has_rights = any(right.get(r) is not None for r in rights)
+            if not has_rights:
+                raise PermissionError(f"No rights for [{document.docinfo.path}]")
 
-        return Result(value=True)
+        return True
 
     @staticmethod
     def _generate_id() -> str:
