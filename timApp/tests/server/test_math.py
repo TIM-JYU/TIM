@@ -70,7 +70,8 @@ class MathTest(TimRouteTest):
         d = self.impl_test_svg_math()
         d.document.set_settings({"math_type": "mathjax"})
         self.assert_same_html(
-            self.get(d.url, as_tree=True).cssselect(".parContent")[1], mathjax_html
+            self.get(d.url, as_tree=True).cssselect(".parContent")[1],
+            mathjax_html,
         )
 
     def test_math_preamble(self):

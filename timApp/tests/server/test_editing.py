@@ -1,5 +1,5 @@
 from lxml import html
-from lxml.html import HtmlElement
+from lxml.html import HtmlElement  # noqa
 
 from timApp.auth.accesstype import AccessType
 from timApp.document.docparagraph import DocParagraph
@@ -16,6 +16,7 @@ class EditTest(TimRouteTest):
     def test_nonexistent_edit(self):
         self.login_test1()
         d = self.create_doc(initial_par="test")
+        assert d is not None
         par_id = d.document.get_paragraphs()[0].get_id()
         invalid_par = "nonexistent"
         self.delete_par(
@@ -53,6 +54,7 @@ class EditTest(TimRouteTest):
     def test_drop_illegal_chars(self):
         self.login_test1()
         d = self.create_doc()
+        assert d is not None
         self.new_par(d.document, "``` {#@@!!tes.t^-9?a&&& plugin=showVideo}\n```")
         d.document.clear_mem_cache()
         pars = d.document.get_paragraphs()
@@ -61,6 +63,7 @@ class EditTest(TimRouteTest):
     def test_duplicate_task_ids(self):
         self.login_test1()
         d = self.create_doc()
+        assert d is not None
         r = self.new_par(d.document, "``` {#test plugin=showVideo}\n```")
         self.assertEqual([], r["duplicates"])
         r = self.new_par(d.document, "``` {#test plugin=showVideo}\n```")
@@ -74,6 +77,7 @@ class EditTest(TimRouteTest):
     def test_edit_block_with_taskid(self):
         self.login_test1()
         d = self.create_doc()
+        assert d is not None
         self.new_par(d.document, "#- {#test}\ntest")
         pars = d.document.get_paragraphs()
         id0 = pars[0].get_id()
@@ -97,6 +101,7 @@ class EditTest(TimRouteTest):
     def test_edit_simple_block(self):
         self.login_test1()
         d = self.create_doc(initial_par=["a1par"])
+        assert d is not None
         pars = d.document.get_paragraphs()
         new_text = d.document.export_markdown()
         ln = new_text.splitlines()
@@ -134,11 +139,10 @@ class EditTest(TimRouteTest):
     def test_edit_add_block_before(self):
         self.login_test1()
         d = self.create_doc(initial_par=["#- {#test1}\na1par"])
+        assert d is not None
         pars = d.document.get_paragraphs()
         p1ar_id = pars[0].get_id()
         new_text = d.document.export_markdown()
-        ln = new_text.splitlines()
-        id_line = ln[0]
         new_text = "#- {#test1}\na0par\n" + new_text
         self.json_post(
             "/postParagraph/",
@@ -182,9 +186,10 @@ class EditTest(TimRouteTest):
            #test2: apar3, id=par2id
            #test1: apar2, id=par1id
 
-        """
+        """  # noqa
         self.login_test1()
         d = self.create_doc(initial_par=["#- {#test}\na1par"])
+        assert d is not None
         pars = d.document.get_paragraphs()
         new_text = d.document.export_markdown()
         ln = new_text.splitlines()
@@ -234,6 +239,7 @@ class EditTest(TimRouteTest):
     def test_add_same_block_many_times(self):
         self.login_test1()
         d = self.create_doc(initial_par=["#- {#test}\na1par"])
+        assert d is not None
         pars = d.document.get_paragraphs()
         pid = pars[0].get_id()
         new_text = d.document.export_markdown()
@@ -263,6 +269,7 @@ class EditTest(TimRouteTest):
         """
         self.login_test1()
         d = self.create_doc(initial_par=["a1par", "a2par"])
+        assert d is not None
         pars = d.document.get_paragraphs()
         new_text = d.document.export_markdown()
         ln = new_text.splitlines()
@@ -293,6 +300,7 @@ class EditTest(TimRouteTest):
         """
         self.login_test1()
         d = self.create_doc(initial_par=["#- {#test1}\na1par", "\n#- {#test2}\na3par"])
+        assert d is not None
         pars = d.document.get_paragraphs()
         par1_id = pars[0].get_id()
         par4_id = pars[1].get_id()
@@ -330,6 +338,7 @@ class EditTest(TimRouteTest):
     def test_edit_change_order_of_2_blocks_add_new_before_in_and_end(self):
         self.login_test1()
         d = self.create_doc(initial_par=["#- {#test1}\na1par", "#- {#test2}\na2par"])
+        assert d is not None
         pars = d.document.get_paragraphs()
         par1_id = pars[0].get_id()
         par2_id = pars[1].get_id()
@@ -376,6 +385,7 @@ class EditTest(TimRouteTest):
     def test_illegal_chars_in_task_id(self):
         self.login_test1()
         d = self.create_doc(initial_par=["test1"])
+        assert d is not None
         self.json_post(
             f"/update/{d.id}",
             {
@@ -401,6 +411,7 @@ class EditTest(TimRouteTest):
     def test_illegal_chars_in_area(self):
         self.login_test1()
         d = self.create_doc(initial_par=["test1"])
+        assert d is not None
         self.json_post(
             f"/update/{d.id}",
             {
@@ -414,6 +425,7 @@ class EditTest(TimRouteTest):
     def test_area_editing(self):
         self.login_test1()
         d = self.create_doc(initial_par=["a1par", "a2par", "a3par"])
+        assert d is not None
         pars = d.document.get_paragraphs()
         new_text = (
             d.document.export_markdown()
@@ -441,7 +453,9 @@ class EditTest(TimRouteTest):
     def test_get_updates_pars_translation(self):
         self.login_test1()
         d = self.create_doc(initial_par=["kissa"])
+        assert d is not None
         t = self.create_translation(d)
+        assert t is not None
         e = self.get(t.url, as_tree=True)
         self.assert_content(e, ["kissa"])
         tr_pars = t.document.get_paragraphs()
@@ -461,6 +475,7 @@ class EditTest(TimRouteTest):
         """
         self.login_test1()
         d = self.create_doc()
+        assert d is not None
         for i in range(0, 2):
             d.document.add_text("#- {area=a}")
             d.document.add_text("#- {area_end=a}")
@@ -531,6 +546,7 @@ class EditTest(TimRouteTest):
     def test_new_from_help_par(self):
         self.login_test1()
         d = self.create_doc()
+        assert d is not None
         e = self.json_post(
             f"/newParagraph/",
             {"docId": d.id, "text": "test", "par": "HELP_PAR", "par_next": None},
@@ -544,6 +560,8 @@ class EditTest(TimRouteTest):
         self.login_test1()
         t = self.create_doc(initial_par=["p1", "p2"])
         d = self.create_doc()
+        assert t is not None
+        assert d is not None
         template_pars = t.document.get_paragraphs()
         d.document.add_paragraph("p1", template_pars[0].get_id())
         d.document.add_paragraph("p2", template_pars[1].get_id())
@@ -561,6 +579,7 @@ class EditTest(TimRouteTest):
         """Trying to load a non-existent template gives 404."""
         self.login_test1()
         d = self.create_doc()
+        assert d is not None
         self.json_post(
             f"/update/{d.id}",
             {"template_name": "xxx"},
@@ -571,11 +590,13 @@ class EditTest(TimRouteTest):
     def test_invalid_add(self):
         self.login_test1()
         d = self.create_doc()
+        assert d is not None
         self.new_par(d.document, "test", next_id="xxx", expect_status=400)
 
     def test_invalid_update(self):
         self.login_test1()
         d = self.create_doc(initial_par="test")
+        assert d is not None
         # par = d.document.get_paragraphs()[0]
         md = d.document.export_markdown()
         self.json_post(
@@ -596,6 +617,7 @@ class EditTest(TimRouteTest):
     def test_duplicate_par_ids(self):
         self.login_test1()
         d = self.create_doc(initial_par=["test1", "test2"])
+        assert d is not None
         pars = d.document.get_paragraphs()
         par1 = pars[0]
         par2 = pars[1]
@@ -626,12 +648,14 @@ class EditTest(TimRouteTest):
     def test_version(self):
         self.login_test1()
         d = self.create_doc()
+        assert d is not None
         j = self.new_par(d.document, "test")
         self.assertEqual(j["version"], [1, 0])
 
     def test_mark_read(self):
         self.login_test1()
         d = self.create_doc()
+        assert d is not None
         self.new_par(d.document, "test", additional_data={"tags": {"markread": True}})
 
     def test_xml_encoding(self):
@@ -639,6 +663,7 @@ class EditTest(TimRouteTest):
         d = self.create_doc(
             initial_par="""<?xml version="1.0" encoding="iso-8859-1"?>"""
         )
+        assert d is not None
         self.get(d.url)
 
     def test_edit_attribute(self):
@@ -653,7 +678,9 @@ class EditTest(TimRouteTest):
                 "#- {area_end=a}",
             ]
         )
+        assert d is not None
         pars = d.document.get_paragraphs()
+        assert d is not None
         par1 = pars[0]
         par_manage = pars[1]
         par3 = pars[2]
@@ -720,9 +747,106 @@ class EditTest(TimRouteTest):
         self.delete_area(d, par1.get_id(), par3.get_id())
         self.json_post(f"/unwrap_area/{d.id}/a")
 
+    def test_edit_block_with_special_edit_access(self):
+        # user is allowed to eidt if he has spceial edit rights
+        # but not allowed to edit other pars
+        self.login_test1()
+        d = self.create_doc(
+            initial_par=["#- {edit=testuser2,akankka}\noriginal\n#-\nNot for user 2"]
+        )
+        assert d is not None
+        par0 = d.document.get_paragraphs()[0]
+        par1 = d.document.get_paragraphs()[1]
+        id0 = par0.get_id()
+        id1 = par1.get_id()
+        new_text = "changed"
+        self.login_test2()
+        # user is allowed to edit par he has special edit access
+        self.json_post(
+            "/postParagraph/",
+            {
+                "text": new_text,
+                "docId": d.id,
+                "par": id0,
+            },
+        )
+        d.document.clear_mem_cache()
+        pars = d.document.get_paragraphs()
+        self.assertEqual(2, len(pars))
+        self.assertEqual("changed", pars[0].md)
+        self.assertEqual("Not for user 2", pars[1].md)
+        self.assertEqual(id0, pars[0].get_id())
+        self.assertEqual(id1, pars[1].get_id())
+
+        # but not any more when he removed his rights
+        self.json_post(
+            "/postParagraph/",
+            {
+                "text": "again",
+                "docId": d.id,
+                "par": id0,
+            },
+            expect_status=403,
+            expect_content=f"Only users with edit access can edit this paragraph ({id0}).",
+        )
+
+        # neither can edit other pars
+        self.json_post(
+            "/postParagraph/",
+            {
+                "text": new_text,
+                "docId": d.id,
+                "par": id1,
+            },
+            expect_status=403,
+            expect_content=f"Only users with edit access can edit this paragraph ({id1}).",
+        )
+
+    def test_par_edit_requires_doc_edit_for_structural_changes(self):
+        self.login_test1()
+        d = self.create_doc(
+            initial_par=["#- {edit=testuser2}\noriginal\n#-\nNot for user 2"]
+        )
+        assert d is not None
+        self.test_user_2.grant_access(d, AccessType.view)
+        db.session.commit()
+
+        par = d.document.get_paragraphs()[0]
+        par2 = d.document.get_paragraphs()[1]
+        same_block_text = d.document.export_section(par.get_id(), par.get_id()).replace(
+            "original", "edited"
+        )
+        block2_text = d.document.export_section(par2.get_id(), par2.get_id()).replace(
+            "Not for user 2", "It is for me"
+        )
+        added_block_text = same_block_text + "\n#-\nnew block"
+
+        self.login_test2()
+        # user without normal edit access can edit block he has special edit access
+        self.post_area(d, same_block_text, par.get_id(), par.get_id())
+        # but he can not add new blocks
+        self.post_area(
+            d,
+            added_block_text,
+            par.get_id(),
+            par.get_id(),
+            expect_status=403,
+            expect_content="Sorry, you don't have permission to add paragraphs.",
+        )
+        # And he can not edit area that do not belong to him
+        self.post_area(
+            d,
+            block2_text,
+            par2.get_id(),
+            par2.get_id(),
+            expect_status=403,
+            expect_content=f"Only users with edit access can edit this paragraph ({par2.get_id()}).",
+        )
+
     def test_download(self):
         self.login_test1()
         d = self.create_doc(initial_par="test")
+        assert d is not None
         par_id = d.document.get_paragraphs()[0].get_id()
         self.get(
             f"/download/{d.id}",
@@ -746,8 +870,10 @@ test
     def test_download_with_tls(self):
         self.login_test1()
         d1 = self.create_doc(initial_par="Original text")
+        assert d1 is not None
         d1_par = d1.document.get_last_par()
         d2 = self.create_translation(d1)
+        assert d2 is not None
         d2_par = d2.document.get_last_par()
         self.get(
             f"/download/{d2.id}",
@@ -760,6 +886,7 @@ Original text
     def test_no_unnecessary_update(self):
         self.login_test1()
         d = self.create_doc(initial_par="test")
+        assert d is not None
         self.get(d.url)
         self.new_par(
             d.document,
@@ -775,6 +902,7 @@ macros:
     def test_no_unnecessary_update_with_preamble(self):
         self.login_test1()
         d = self.create_doc(initial_par="test")
+        assert d is not None
         self.create_preamble_for(d, initial_par="pr")
         self.get(d.url)
         pid = d.document.get_paragraphs()[0].get_id()
@@ -796,6 +924,7 @@ title
 #- {area_end=a}
         """
         )
+        assert d is not None
         self.get_updated_pars(d)  # refresh cache
         pars = d.document.get_paragraphs()
         md = d.document.export_markdown().replace("title", "titleedit")
@@ -806,6 +935,7 @@ title
     def test_cache_no_extra_div(self):
         self.login_test1()
         d = self.create_doc()
+        assert d is not None
         p = DocParagraph.from_dict(
             d.document,
             {
@@ -829,6 +959,7 @@ title
 <h1>x</h1>
         """
         )
+        assert d is not None
         e = self.get(d.url, as_tree=True)
         content = e.cssselect(".parContent")
         p1: HtmlElement = content[0].getchildren()[0]
@@ -846,6 +977,7 @@ title
 test
         """
         )
+        assert d is not None
         d_id = d.id
         self.test_user_2.grant_access(d, AccessType.view)
         db.session.commit()
@@ -875,8 +1007,10 @@ type: drawio
 
 """
         )
+        assert d is not None
         orig_pars = d.document.get_paragraphs()
         t = self.create_translation(d)
+        assert t is not None
         pars = t.document.get_paragraphs()
         self.post_par(
             t.document,
@@ -936,6 +1070,7 @@ table:
         - cell: 'hi'
 ```"""
         )
+        assert d is not None
         par = d.document.get_paragraphs()[0]
         par_id = par.get_id()
         ver1 = d.document.get_version()

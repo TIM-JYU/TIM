@@ -57,7 +57,7 @@ from timApp.util.utils import get_current_time
 from tim_common.markupmodels import AccessField, PreviousTaskInfo
 
 
-def get_doc_or_abort(doc_id: int, msg: str | None = None) -> DocInfo:
+def get_doc_or_abort(doc_id: int, msg: str | None = None) -> DocEntry:
     d = DocEntry.find_by_id(doc_id)
     if not d:
         raise NotExist(msg or "Document not found")

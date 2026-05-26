@@ -244,14 +244,14 @@ globalmacros:
         )
         grant_access(UserGroup.get_anonymous_group(), d, AccessType.view)
         db.session.commit()
-
+        # Automatic nocache for fields
         pars = d.document.add_text(
             """
-#- {nocache="true" #fieldNoCache}
+#- { #fieldNoCache}
 Field (nocache): %%field1%%
 Field points (nocache): %%f1p%%
 
-#-
+#- {nocache="false" #fieldWithCache}
 Field: %%field1%%
 Field points: %%f1p%%
 """
@@ -297,4 +297,59 @@ Field points: %%f1p%%
             "Field: Field points:",
             r.cssselect(f"#{pars[1].id} .parContent")[0].text_content().strip(),
             "Anonymous users should not see any answers",
+        )
+
+    def test_recursive_macros(self):
+        self.login_test1()
+        d = self.create_doc(
+            title="d1",
+            initial_par=r"""
+``` {settings=""}
+charmacros:
+  §: "4"
+macros:
+  p: Cat
+  color: red
+```
+
+``` {settings="rec"}
+charmacros:
+  W: t 
+macros:
+  first: §
+  animal: %%p%%
+```
+``` {settings="rec"}
+macros:
+  What: %%animal%% 
+  name: "doc: %%doctitle%%"
+  smallAnimal: "small %%What%%"
+  verySmallAnimal: "very %%smallAnimal%%"
+  %%p%%: %%color%%
+css: |!!
+   .red { color: %%color%% !important; }
+!!  
+```
+""",
+        )
+        if d is None:
+            return
+        settings = d.document.get_settings()
+        self.assertEqual(
+            {
+                "charmacros": {"§": "4", "W": "t"},
+                "macros": {
+                    "p": "Cat",
+                    "color": "red",
+                    "first": 4,
+                    "animal": "Cat",
+                    "that": "Cat",
+                    "name": "doc: d1",
+                    "smallAnimal": "small Cat",
+                    "verySmallAnimal": "very small Cat",
+                    "Cat": "red",
+                },
+                "css": ".red { color: red !important; }",
+            },
+            settings.get_dict(),
         )

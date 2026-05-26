@@ -1,4 +1,6 @@
 import functools
+
+# from copy import deepcopy
 from dataclasses import dataclass, fields
 from datetime import timedelta, datetime, timezone
 from typing import Optional, Iterable, TypeVar, Any, TYPE_CHECKING, Union
@@ -7,6 +9,8 @@ import yaml
 from marshmallow import ValidationError, EXCLUDE
 from marshmallow.fields import Field
 
+from timApp.markdown.autocounters import TimSandboxedEnvironment
+from timApp.markdown.markdownconverter import expand_macros
 from timApp.answer.pointsumrule import PointSumRule
 from timApp.document.docparagraph import DocParagraph
 from timApp.document.macroinfo import MacroInfo
@@ -23,6 +27,8 @@ from tim_common.marshmallow_dataclass import field_for_schema
 if TYPE_CHECKING:
     from timApp.document.document import Document
     from timApp.user.preferences import BookmarkCollection
+
+RECURSIVE_SETTINGS_KEY = "recursive_settings"
 
 
 @dataclass
@@ -69,6 +75,11 @@ class IdeDocument:
 
 
 DISABLE_ANSWER_REVIEW_MODE = "answer_review"
+
+# Change the following if the calculation method of the HTML cache changes.
+HASH_SYSTEM_VERSION = "0.1"
+
+MacroInfoCacheKey = tuple[ViewContext, tuple[int, int] | None]
 
 
 # TODO: Start moving DocSettings keys to this dataclass
@@ -124,6 +135,8 @@ class DocSettingTypes:
     showSettingsTypes: list[str]
     macro_lstrip_blocks: bool
     macro_trim_blocks: bool
+    __static_macros: dict[str, Any]
+    __static_macros_hash: str
 
 
 doc_setting_field_map: dict[str, Field] = {
@@ -165,6 +178,7 @@ class DocSettings:
     print_settings_key = "print_settings"
     preamble_key = "preamble"
     show_authors_key = "show_authors"
+    par_author_only_edit_key = "parAuthorOnlyEdit"
     read_expiry_key = "read_expiry"
     add_par_button_text_key = "add_par_button_text"
     mathtype_key = "math_type"
@@ -187,7 +201,7 @@ class DocSettings:
     answer_grace_period_key = "answer_grace_period"
 
     @classmethod
-    def from_paragraph(cls, par: DocParagraph):
+    def from_paragraph(cls, par: DocParagraph) -> "DocSettings | None":
         """Constructs DocSettings from the given DocParagraph.
 
         :param par: The DocParagraph to extract settings from.
@@ -203,9 +217,75 @@ class DocSettings:
         else:
             return DocSettings(par.doc, settings_dict=yaml_vals)
 
+    def check_recursive_settings(self):
+        d = self.get_dict()
+        rec = d.pop(RECURSIVE_SETTINGS_KEY)
+        if not rec:
+            return
+        ds = self.doc.get_settings()
+        settings = DocSettings(self.doc, ds.get_dict())
+        if rec:
+            settings.do_recursive_settings([[rec]])
+
+    def do_recursive_settings(self, rec_settings: list[list[dict[str, str]]]):
+        # Change to code below if you want fieldmacros and urlmacros to be
+        # resolved in recursive settings, but it might lead to some
+        # security issues
+        #
+        # macroinfo = self.get_macroinfo(default_view_ctx)
+        # if not macroinfo.macro_map:
+        #    return
+        env = TimSandboxedEnvironment()
+        doc_macros = MacroInfo.get_doc_related_macros(self.doc)
+        user_preserving_macros = MacroInfo.get_user_preserving_macros_def()
+        changes = True
+        loops = 0
+        errors = ""
+        while changes and loops < 10:
+            changes = False
+            loops += 1
+            errors = ""
+            for rec_sets in rec_settings:
+                for rec_set in rec_sets:
+                    # macroinfo = self.get_macroinfo(default_view_ctx)
+                    # macros = macroinfo.macro_map
+                    final_settings = self.__dict
+                    macros = final_settings.get("macros", {})
+                    try:
+                        yml = rec_set.get("yaml", None)
+                        if not yml:
+                            continue
+                        yml = expand_macros(
+                            yml, doc_macros | macros | user_preserving_macros, self, env
+                        )
+                        if yml != rec_set.get("prevyaml", ""):
+                            changes = True
+                            rec_set["prevyaml"] = yml
+                    except Exception as e:
+                        errors += " " + str(e)
+                        continue
+                    try:
+                        new_settings = YamlBlock.from_markdown(yml)
+
+                        charmacros = new_settings.get("charmacros", None)
+                        if charmacros:  # remove possible 't': 't' situation
+                            charmacros = {k: v for k, v in charmacros.items() if k != v}
+                            new_settings["charmacros"] = charmacros
+
+                        final_settings = final_settings.merge_with(new_settings)
+                        self.__dict = final_settings
+                    except Exception as e:
+                        errors += " " + str(e)
+        if errors:
+            raise TimDbException(f"Recursive calculation error : {errors}")
+
     @staticmethod
-    def parse_values(par) -> YamlBlock:
-        return YamlBlock.from_markdown(par.get_markdown())
+    def parse_values(par: DocParagraph) -> YamlBlock:
+        md = par.get_markdown()
+        if par.get_attr("settings", "") == "rec":
+            return YamlBlock({RECURSIVE_SETTINGS_KEY: {"yaml": md}})
+
+        return YamlBlock.from_markdown(md)
 
     def get_setting_or_default(self, name: str, default: T) -> T:
         try:
@@ -216,7 +296,11 @@ class DocSettings:
     def __init__(self, doc: "Document", settings_dict: YamlBlock | None = None):
         self.doc = doc
         self.__dict = settings_dict if settings_dict else YamlBlock()
-        self.macroinfo_cache = {}
+        self.macroinfo_cache: dict[MacroInfoCacheKey, MacroInfo] = {}
+        self._normal_par_cache_key_hash = None
+        self._static_macros_cache = {}
+        self._static_macros_pum_cache = {}
+        self._static_macros_hash_cache = None
 
     def to_paragraph(self) -> DocParagraph:
         text = "```\n" + self.__dict.to_markdown() + "\n```"
@@ -250,8 +334,8 @@ class DocSettings:
             view_ctx,
             (user_ctx.user.id, user_ctx.logged_user.id) if user_ctx else None,
         )
-        cached = self.macroinfo_cache.get(cache_key)
-        if cached:
+        cached: MacroInfo | None = self.macroinfo_cache.get(cache_key)
+        if cached is not None:
             return cached
         mi = MacroInfo(
             view_ctx,
@@ -469,10 +553,20 @@ class DocSettings:
     def exam_mode_themes(self) -> list[str]:
         return self.get_setting_or_default("exam_mode_themes", [])
 
+    def expand_rec_macros(self, s: str) -> str:
+        if s.startswith("rec:"):
+            s = s[4:]
+            macroinfo = self.get_macroinfo(default_view_ctx)
+            macros = macroinfo.get_macros()
+            env = macroinfo.jinja_env
+            s = expand_macros(s, macros, self, env)
+        return s
+
     def point_sum_rule(self, default=None) -> PointSumRule | None:
         psr_dict = self.__dict.get(self.point_sum_rule_key, default)
         if not psr_dict:
             return None
+        # noinspection PyBroadException
         try:
             return PointSumRule(psr_dict)
         except:
@@ -522,6 +616,9 @@ class DocSettings:
     def show_authors(self, default=False):
         return self.__dict.get(self.show_authors_key, default)
 
+    def par_author_only_edit(self, default=False):
+        return self.__dict.get(self.par_author_only_edit_key, default)
+
     def read_expiry(self, default=timedelta(weeks=9999)) -> timedelta:
         r = self.__dict.get(self.read_expiry_key)
         if not isinstance(r, int):
@@ -534,14 +631,89 @@ class DocSettings:
     def mathtype(self, default="mathjax") -> MathType:
         return MathType.from_string(self.__dict.get(self.mathtype_key, default))
 
-    def get_hash(self):
+    def get_static_macros(self):
+        """
+        Get macros that are not dynamic, so remove
+         - last_referrers
+         - seed
+         - rndmacros
+         - urlmacros
+        :return: static macros
+        """
+        if self._static_macros_cache:
+            return self._static_macros_cache
         macroinfo = self.get_macroinfo(default_view_ctx)
         macros = macroinfo.get_macros()
+        macros = {**macros, "last_referrers": [], "seed": 0}
+
+        def clear_macros(macs):
+            if not macs:
+                return
+            for k in macs:
+                macros[k] = "¤"
+
+        clear_macros(self.rndmacros())
+        clear_macros(self.urlmacros())
+        clear_macros(self.fieldmacros())
+
+        self._static_macros_cache = macros
+        return self._static_macros_cache
+
+    def get_static_macros_optionally_preserving_user_macros(self, macroinfo: MacroInfo):
+        static_macros = self.get_static_macros()
+        if not macroinfo.preserve_user_macros:
+            return static_macros
+        if self._static_macros_pum_cache:
+            return self._static_macros_pum_cache
+        # static_macros_pum = deepcopy(static_macros)
+        static_macros_pum = static_macros  # maybe enough to not deepcopy if we are careful to not modify the dict
+        macroinfo.update_with_preserving_user_macros(static_macros_pum)
+        self._static_macros_pum_cache = static_macros_pum
+        return static_macros_pum
+
+    def get_static_macros_hash(self):
+        if self._static_macros_hash_cache:
+            return self._static_macros_hash_cache
+        macros = self.get_static_macros()
+        macroinfo = self.get_macroinfo(default_view_ctx)
         charmacros = self.get_charmacros() or ""
         macro_delim = macroinfo.get_macro_delimiter()
         autocounters = self.autocounters()
+        self._static_macros_hash_cache = hashfunc(
+            f"{macros}{macro_delim}{charmacros}{self.auto_number_headings()}"
+            f"{self.heading_format()}{self.mathtype()}{self.get_globalmacros()}"
+            f"{self.preamble()}{self.input_format()}{self.smart_punct()}"
+            f"{autocounters}{self.macro_lstrip_blocks()}{self.macro_trim_blocks()}"
+        )
+        return self._static_macros_hash_cache
+
+    def get_normal_par_cache_key_hash(self):
+        """
+        Hash from important values that should be considered
+        when caching the document. If any of these values change,
+        the cache should be invalidated and recalculated.
+        :return: hash value for important values for normal par
+        """
+        if not self._normal_par_cache_key_hash:
+            self._normal_par_cache_key_hash = hashfunc(
+                f"{HASH_SYSTEM_VERSION}"
+                f"{self.autocounters()}{self.input_format()}{self.mathtype()}"
+                f"{self.smart_punct()}"
+                f"{self.macro_lstrip_blocks()}{self.macro_trim_blocks()}"
+            )
+        return self._normal_par_cache_key_hash
+
+    def get_heading_par_cache_key_hash(self):
+        """
+        Hash for pars that have headings either in #-format or
+        HTML <h?> format.
+        :return: main hash for pars with headings
+        """
         return hashfunc(
-            f"{macros}{macro_delim}{charmacros}{self.auto_number_headings()}{self.heading_format()}{self.mathtype()}{self.get_globalmacros()}{self.preamble()}{self.input_format()}{self.smart_punct()}{autocounters}{self.macro_lstrip_blocks()}{self.macro_trim_blocks()}"
+            f"{self.get_normal_par_cache_key_hash()}"
+            f"{self.heading_format()}"
+            f"{self.auto_number_headings()}"
+            f"{self.auto_number_start()}"
         )
 
     def math_preamble(self):
@@ -731,14 +903,8 @@ class DocSettings:
     def use_login_codes(self) -> bool:
         return self.get_setting_or_default("loginCodes", False)
 
-    def login_message(self) -> str | None:
-        return self.get_setting_or_default("loginMessage", None)
-
     def ide_course(self) -> list[IdeDocument]:
         return self.get_setting_or_default("ideCourse", [])
-
-    def use_login_codes(self) -> bool:
-        return self.get_setting_or_default("loginCodes", False)
 
     def login_message(self) -> str | None:
         return self.get_setting_or_default("loginMessage", None)
@@ -764,9 +930,34 @@ def resolve_settings_for_pars(pars: Iterable[DocParagraph]) -> YamlBlock:
 def __resolve_final_settings_impl(
     pars: Iterable[DocParagraph],
 ) -> tuple[YamlBlock, bool]:
+    """
+    If settings par, gets the setting dict.  If recursive settimgs par,
+    gets the Markdown and returns it as a dict under
+    the key "recursive_settings".  If reference par, resolves the reference
+    and gets the settings from there.
+    If translation or citation par, first tries to get settings
+    from the par itself and then resolves reference and
+    gets settings from there.  Returns the merged settings from all pars and whether any settings were found.
+    :param pars: paragraphs to resolve settings for
+    :return: settings dict and true if had settings in any of pars.
+    """
     result = YamlBlock()
     had_settings = False
+    rec_settings = []
     for curr in pars:
+
+        def add_to_result_and_rec(local_settings: DocSettings | None):
+            nonlocal result
+            nonlocal had_settings
+            if not local_settings:
+                return
+            d = local_settings.get_dict()
+            rec = d.pop(RECURSIVE_SETTINGS_KEY, None)
+            if rec:
+                rec_settings.append(rec)
+            result = result.merge_with(d)
+            had_settings = True
+
         if not curr.is_setting():
             break
         if not curr.is_reference():
@@ -774,15 +965,15 @@ def __resolve_final_settings_impl(
                 settings = DocSettings.from_paragraph(curr)
             except TimDbException:
                 break
-            result = result.merge_with(settings.get_dict())
-            had_settings = True
+            add_to_result_and_rec(settings)
         else:
             curr_own_settings = None
 
             is_tr_or_cit = curr.is_translation() or curr.is_citation()
-            if is_tr_or_cit:
+            curr_settings = DocSettings.from_paragraph(curr)
+            if is_tr_or_cit and curr_settings:
                 try:
-                    curr_own_settings = DocSettings.from_paragraph(curr).get_dict()
+                    curr_own_settings = curr_settings.get_dict()
                 except TimDbException:
                     curr_own_settings = YamlBlock()
 
@@ -801,10 +992,17 @@ def __resolve_final_settings_impl(
                 break
             ref_settings, ref_had_settings = __resolve_final_settings_impl(refs)
             if ref_had_settings:
+                recursive = ref_settings.pop(RECURSIVE_SETTINGS_KEY, None)
+                if recursive:
+                    rec_settings.append(recursive)
                 result = result.merge_with(ref_settings)
                 had_settings = True
-                if is_tr_or_cit:
+                if is_tr_or_cit and curr_own_settings:
+                    recursive = curr_own_settings.pop(RECURSIVE_SETTINGS_KEY, None)
+                    if recursive:
+                        rec_settings.append(recursive)
                     result = result.merge_with(curr_own_settings)
             else:
                 break
+    result[RECURSIVE_SETTINGS_KEY] = rec_settings
     return result, had_settings
