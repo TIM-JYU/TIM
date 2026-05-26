@@ -687,7 +687,7 @@ class PluginCore:
 
         return self.get_plugin_settings(caller_id, document_id)
 
-    def delete_instance(self, caller_id: int, document_id: int) -> Result[str, str]:
+    def delete_instance(self, caller_id: int, document_id: int, par_id: str) -> Result[str, str]:
         rule = self.tim_database.get_llm_rule(document_id)
         if not rule:
             return Result(error=f"No plugin instance in document [{document_id}]")
@@ -698,20 +698,24 @@ class PluginCore:
         if document is None:
             return Result(error=f"Document [{document_id}] does not exist")
 
-        par_id = None
-        for par in document.get_paragraphs(False):
-            md = par.get_markdown()
-            if "header: ChatTIM" in md:
-                par_id = par.get_id()
-                break
+        #par_id = None
+        #for par in document.get_paragraphs(False):
+        #    md = par.get_markdown()
+        #    if "header: ChatTIM" in md:
+        #        par_id = par.get_id()
+        #        break
 
         if par_id is None:
-            return Result(error=f"Paragraph with plugin instance does not exist")
+            return Result(error=f"Plugin paragraph not found")
 
-        document.delete_paragraph(par_id)
+        par = document.get_paragraph(par_id)
+        plugin_type = par.get_attr("plugin")
+        if plugin_type is not None and plugin_type == "chattim":
+            document.delete_paragraph(par_id)
+            self.tim_database.delete_llm_rule(caller_id, document_id)
+            return Result(value="Plugin instance deleted")
 
-        self.tim_database.delete_llm_rule(caller_id, document_id)
-        return Result(value="Plugin instance deleted")
+        return Result(error="No chattim plugin instance in document")
 
     def get_history(self, caller_id: str, document_id: str) -> list[Message]:
         # TODO: fetch with time window

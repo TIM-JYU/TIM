@@ -856,8 +856,11 @@ export class ChatTIMComponent
             return;
         }
         this.isRunning = true;
+        const par = this.getPar();
+        const par_id = par?.par.id ?? null;
         const response = await this.httpPost(this.route("deletePlugin"), {
             document_id: this.document_id,
+            par_id: par_id,
         });
 
         this.isRunning = false;
