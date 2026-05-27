@@ -256,17 +256,22 @@ def ask_stream_route(params: ChatTimAskParams) -> Response:
             return
 
         citations: list[str] | None = None
+        disconnected: bool = False
 
         try:
             stream, context = resp.value
             citations = context
             for chunk in stream:
                 yield to_ndjson_str(ChatTimAskResponse(answer=chunk))
+        except GeneratorExit:
+            disconnected = True
+            return
         except Exception as e:
             yield to_ndjson_str(ChatTimAskResponse(error=str(e)))
             return
         finally:
-            yield to_ndjson_str(ChatTimAskResponse(citations=citations))
+            if not disconnected:
+                yield to_ndjson_str(ChatTimAskResponse(citations=citations))
 
     return Response(
         stream_with_context(generate()),
