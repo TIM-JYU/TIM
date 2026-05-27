@@ -1012,12 +1012,12 @@ class PluginCore:
         if not rule:
             return False
 
-        if timestamp is None:
-            timestamp = ChatMessage.ts_ms()
-
         self.tim_database.update_instance_usage(rule, used_tokens)
 
         if user_id is not None:
+            if timestamp is None:
+                timestamp = ChatMessage.ts_ms()
+
             self.tim_database.update_usage(user_id, rule, used_tokens, timestamp)
 
         return True

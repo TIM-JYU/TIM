@@ -600,7 +600,7 @@ class TimDatabase:
         :param user: ID of the user for the usage.
         :param llm_rule: LLM rule instance.
         :param used_tokens: Number of used tokens.
-        :param token_usage_history: Token usage history. [{"timestamp": 123, "tokens": 456}]
+        :param token_usage_history: Token usage history. Example: [{"timestamp": 123, "tokens": 456}]
         :return: Usage of the given user.
         """
         if token_usage_history is None:
