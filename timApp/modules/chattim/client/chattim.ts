@@ -377,7 +377,6 @@ export class ChatTIMComponent
                 dialog.style.height = `${dialog.offsetHeight - panelHeight}px`;
             });
         }
-        void this.initDialogFrame();
     }
 
     private getModalDialog(): HTMLElement | null {
