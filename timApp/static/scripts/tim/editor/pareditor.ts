@@ -943,6 +943,11 @@ ${backTicks}
                         name: "\\",
                     },
                     {
+                        title: "En dash (Alt -)",
+                        func: ($event) => this.editor!.charClicked($event),
+                        name: "–",
+                    },
+                    {
                         title: "",
                         func: ($event) => this.editor!.insertTemplate("&shy;"),
                         name: "Soft hyphen",
@@ -2150,7 +2155,7 @@ ${backTicks}
         const interveningIndexA = partA.substring(indexA).lastIndexOf(endStr);
         const interveningIndexB = partB.substring(0, indexB).indexOf(beginStr);
 
-        // If there are any extra macro parts in between or either marcro part wasn't found at all,
+        // If there are any extra macro parts in between or either macro part wasn't found at all,
         // return undefined.
         if (
             interveningIndexA !== -1 ||

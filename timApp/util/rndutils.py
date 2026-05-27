@@ -214,7 +214,7 @@ def get_rnds(
 
     :param attrs: dict of attributes
     :param name: name in attribute dict to use as instructions for the random numbers
-    :param rnd_seed: random number initializion seed, if seed is None, use time
+    :param rnd_seed: random number initialization seed, if seed is None, use time
     :param state of last used generator
     :return: list of random numbers and used seed
     """
@@ -272,7 +272,7 @@ def get_rands_as_dict(
     """
     Returns a dict of random numbers variables (each is a list of random numbers).
 
-    :param attrs: dict where may be attrinute rndnames:"rnd1,rnd2,..,rndn".  Of no names, "rnd"
+    :param attrs: dict where may be attribute rndnames:"rnd1,rnd2,..,rndn".  Of no names, "rnd"
                   is assumed
     :param rnd_seed: seed to initialize the generator
     :param state of last used generator
@@ -299,7 +299,7 @@ def get_rands_as_str(
     """
     Returns a Jinja2 str of random numbers variables (each is a list of random numbers).
 
-    :param attrs: dict where may be attrinute rndnames:"rnd1,rnd2,..,rndn".  Of no names, "rnd"
+    :param attrs: dict where may be attribute rndnames:"rnd1,rnd2,..,rndn".  Of no names, "rnd"
                   is assumed
     :param rnd_seed: seed to initialize the generator
     :param state of last used generator

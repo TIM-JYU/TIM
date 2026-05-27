@@ -162,7 +162,7 @@ def row_key(s):
        * A => A
        * 23 => 23
 
-    :param s: string whre key is calculated
+    :param s: string where key is calculated
     :return: key for sorting by row numbers
     """
     parts = CELL_FINDER.search(s)

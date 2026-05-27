@@ -1,4 +1,4 @@
-"""The module contains the database functions related to annotations. This includes adding, modifiying and deleting
+"""The module contains the database functions related to annotations. This includes adding, modifying and deleting
 annotations as well as adding comments to the annotations. The module also retrieves the annotations from the database.
 
 :authors: Joonas Lattu, Petteri Palojärvi

@@ -11,7 +11,8 @@ import {
 } from "tim/item/access-role.service";
 import {showMessageDialog} from "tim/ui/showMessageDialog";
 import {showGroupLockDialog} from "tim/item/active-group-lock-dialog/showGroupLockDialog";
-import {to2, toPromise} from "tim/util/utils";
+import * as t from "io-ts";
+import {TimStorage, to2, toPromise} from "tim/util/utils";
 import type {IUser} from "tim/user/IUser";
 import {isAdmin, Users} from "tim/user/userService";
 import {showInputDialog} from "tim/ui/showInputDialog";
@@ -199,13 +200,16 @@ export class UserMenuComponent implements OnInit {
 
     async beginQuickLogin() {
         try {
+            const quickLoginStorage = new TimStorage("quickLogin", t.string);
+            const prev = quickLoginStorage.get();
             const quickLoginUser = await showInputDialog({
                 isInput: InputDialogKind.InputAndValidator,
-                defaultValue: "",
+                defaultValue: prev,
                 text: $localize`User name (or email) to log in as`,
                 title: $localize`Quick login`,
                 okText: $localize`Log in`,
                 validator: async (input) => {
+                    quickLoginStorage.set(input);
                     if (!input || input.trim().length == 0) {
                         return {
                             ok: false,

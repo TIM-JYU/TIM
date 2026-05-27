@@ -1943,7 +1943,7 @@ export class ImageXComponent
 
     get finalanswer() {
         // must have finalanswer-attribute
-        // if limit exeeded or in no limit case at least one answer
+        // if limit exceeded or in no limit case at least one answer
         return (
             this.markup.finalanswer &&
             ((this.max_tries && this.tries >= this.max_tries) ||

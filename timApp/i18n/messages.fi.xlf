@@ -11397,7 +11397,7 @@ Syötä useiden käyttäjien osoitteet allekkain tai pilkulla erotettuina.</targ
       </trans-unit>
       <trans-unit id="2121059493646918621" datatype="html">
         <source>This is a practice exam</source>
-        <target state="translated">Tämä on harjoituskoe</target>
+        <target state="translated">Harjoituskokeen tekeminen on päättynyt</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
           <context context-type="linenumber">496,497</context>
@@ -11405,7 +11405,7 @@ Syötä useiden käyttäjien osoitteet allekkain tai pilkulla erotettuina.</targ
       </trans-unit>
       <trans-unit id="2112778509887488400" datatype="html">
         <source> To start the main exam, select it from the dropdown menu above. </source>
-        <target state="translated">Jos haluat aloittaa varsinaisen kokeen, valitse koe yllä olevasta alasvetovalikosta. </target>
+        <target state="translated">Voit enää aloittaa vain varsinaisen kokeen valitsemalla kokeen yllä olevasta listasta. </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
           <context context-type="linenumber">498</context>
