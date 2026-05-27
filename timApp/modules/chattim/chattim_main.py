@@ -46,9 +46,7 @@ class ChatTimMarkupModel(GenericMarkupModel):
     blockContent: str = ""
     previewVisible: bool = False
     startMinimized: bool = False
-    initialCorner: Literal[
-        "none", "top-left", "top-right", "bottom-left", "bottom-right"
-    ] = "none"
+    startBottomRight: bool = False
 
 
 # TODO: make proper dataclasses
@@ -153,7 +151,7 @@ defaultWindowSize: "md" # [sm, md, lg, xs]
 blockContent: ""
 previewVisible: false
 startMinimized: false
-initialCorner: "none"
+startBottomRight: false
 ```
 """,
     ]

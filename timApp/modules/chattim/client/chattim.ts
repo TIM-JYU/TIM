@@ -47,15 +47,6 @@ import {ChatControlPanelComponent} from "./controlpanel";
 import type {TokenLimitForUser} from "./userpolicy";
 import type {UserData} from "./usercontrol";
 
-const CornerKeys = t.keyof({
-    none: null,
-    "top-left": null,
-    "top-right": null,
-    "bottom-left": null,
-    "bottom-right": null,
-});
-type Corner = t.TypeOf<typeof CornerKeys>;
-
 const PluginMarkupFields = t.intersection([
     t.partial({
         welcomeText: t.string,
@@ -69,7 +60,7 @@ const PluginMarkupFields = t.intersection([
         blockContent: t.string,
         previewVisible: t.boolean,
         startMinimized: t.boolean,
-        initialCorner: CornerKeys,
+        startBottomRight: t.boolean,
     }),
     GenericPluginMarkup,
     t.type({
@@ -408,42 +399,23 @@ export class ChatTIMComponent
     /* Initialize the position and start minimized depending on the markup. */
     async initDialogFrame() {
         await this.nextAnimationFrame();
-        const {width, height} = this.dialogFrame.resizable.getSize();
-        const p = this.cornerPos(
-            this.markup.initialCorner ?? "none",
-            window.innerWidth,
-            window.innerHeight,
-            width,
-            height
-        );
-        if (p) {
-            this.dialogFrame.setPos(p);
+
+        if (this.markup.startMinimized) {
+            this.dialogFrame.toggleMinimize();
             this.dialogFrame.resizable.doResize();
             this.dialogFrame.resizable.boundsCheck();
         }
 
-        if (this.markup.startMinimized) {
-            this.dialogFrame.toggleMinimize();
+        if (this.markup.startBottomRight) {
+            const {width, height} = this.dialogFrame.resizable.getSize();
+            const originOffset: number = window.innerWidth / 2 - width / 2;
+            const x: number = window.innerWidth - width - originOffset;
+            const y: number = window.innerHeight - height;
+            this.dialogFrame.setPos({x, y});
+            await this.nextAnimationFrame();
+            this.dialogFrame.resizable.doResize();
+            this.dialogFrame.resizable.boundsCheck();
         }
-    }
-
-    /* Return the selected corner position for the dialog frame. */
-    private cornerPos(
-        corner: Corner,
-        viewportW: number,
-        viewportH: number,
-        dialogW: number,
-        dialogH: number
-    ): {x: number; y: number} | null {
-        if (corner === "none") {
-            return null;
-        }
-        const originOffset: number = viewportW / 2 - dialogW / 2;
-        const isRight: boolean = corner.endsWith("right");
-        const isBottom: boolean = corner.startsWith("bottom");
-        const leftPx: number = isRight ? viewportW - dialogW : 0;
-        const topPx: number = isBottom ? viewportH - dialogH : 0;
-        return {x: leftPx - originOffset, y: topPx};
     }
 
     async fetchRights(): Promise<void> {
