@@ -45,6 +45,10 @@ class ChatTimMarkupModel(GenericMarkupModel):
     defaultWindowSize: Literal["sm", "md", "lg", "xs"] = "md"
     blockContent: str = ""
     previewVisible: bool = False
+    startMinimized: bool = False
+    initialCorner: Literal[
+        "none", "top-left", "top-right", "bottom-left", "bottom-right"
+    ] = "none"
 
 
 # TODO: make proper dataclasses
@@ -148,6 +152,8 @@ apiAlias: ""
 defaultWindowSize: "md" # [sm, md, lg, xs]
 blockContent: ""
 previewVisible: false
+startMinimized: false
+initialCorner: "none"
 ```
 """,
     ]

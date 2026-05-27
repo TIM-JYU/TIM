@@ -41,10 +41,20 @@ import {DirectoryPickerComponent} from "tim/folder/directory-picker.component";
 import {itemglobals} from "tim/util/globals";
 import {TooltipModule} from "ngx-bootstrap/tooltip";
 import type {AngularError, Result} from "tim/util/utils";
+import {DialogFrame} from "tim/ui/angulardialog/dialog-frame.component";
 import type {ChatModel, ControlPanelSettings, UserKey} from "./controlpanel";
 import {ChatControlPanelComponent} from "./controlpanel";
 import type {TokenLimitForUser} from "./userpolicy";
 import type {UserData} from "./usercontrol";
+
+const CornerKeys = t.keyof({
+    none: null,
+    "top-left": null,
+    "top-right": null,
+    "bottom-left": null,
+    "bottom-right": null,
+});
+type Corner = t.TypeOf<typeof CornerKeys>;
 
 const PluginMarkupFields = t.intersection([
     t.partial({
@@ -58,6 +68,8 @@ const PluginMarkupFields = t.intersection([
         ]),
         blockContent: t.string,
         previewVisible: t.boolean,
+        startMinimized: t.boolean,
+        initialCorner: CornerKeys,
     }),
     GenericPluginMarkup,
     t.type({
@@ -261,40 +273,7 @@ export class ChatTIMComponent
     controlPanelOpen: boolean = false;
     private hostElement!: ElementRef<HTMLElement>;
 
-    onControlPanelToggle(isOpen: boolean) {
-        const dialog = this.getModalDialog();
-        if (!dialog) {
-            return;
-        }
-        this.controlPanelOpen = isOpen;
-        const panelEl: HTMLElement | null =
-            this.hostElement.nativeElement.querySelector(".settings-panel");
-
-        if (isOpen) {
-            if (panelEl) {
-                panelEl.style.position = "absolute";
-                panelEl.style.visibility = "hidden";
-                panelEl.style.display = "block";
-                const panelHeight = panelEl.scrollHeight;
-                panelEl.style.position = "";
-                panelEl.style.visibility = "";
-                panelEl.style.display = "";
-                requestAnimationFrame(() => {
-                    dialog.style.height = `${
-                        dialog.offsetHeight + panelHeight
-                    }px`;
-                });
-            }
-        } else {
-            if (!panelEl) {
-                return;
-            }
-            const panelHeight = panelEl.scrollHeight;
-            requestAnimationFrame(() => {
-                dialog.style.height = `${dialog.offsetHeight - panelHeight}px`;
-            });
-        }
-    }
+    @ViewChild(DialogFrame) dialogFrame!: DialogFrame;
 
     @ViewChild("conversationScroll", {static: false}) scrollFrame!: ElementRef;
     private scrollContainer?: HTMLElement;
@@ -364,6 +343,43 @@ export class ChatTIMComponent
         super(el, http, domSanitizer);
         this.hostElement = el;
     }
+
+    onControlPanelToggle(isOpen: boolean) {
+        const dialog = this.getModalDialog();
+        if (!dialog) {
+            return;
+        }
+        this.controlPanelOpen = isOpen;
+        const panelEl: HTMLElement | null =
+            this.hostElement.nativeElement.querySelector(".settings-panel");
+
+        if (isOpen) {
+            if (panelEl) {
+                panelEl.style.position = "absolute";
+                panelEl.style.visibility = "hidden";
+                panelEl.style.display = "block";
+                const panelHeight = panelEl.scrollHeight;
+                panelEl.style.position = "";
+                panelEl.style.visibility = "";
+                panelEl.style.display = "";
+                requestAnimationFrame(() => {
+                    dialog.style.height = `${
+                        dialog.offsetHeight + panelHeight
+                    }px`;
+                });
+            }
+        } else {
+            if (!panelEl) {
+                return;
+            }
+            const panelHeight = panelEl.scrollHeight;
+            requestAnimationFrame(() => {
+                dialog.style.height = `${dialog.offsetHeight - panelHeight}px`;
+            });
+        }
+        void this.initDialogFrame();
+    }
+
     private getModalDialog(): HTMLElement | null {
         const dialogFrame =
             this.hostElement.nativeElement.querySelector("tim-dialog-frame");
@@ -377,6 +393,7 @@ export class ChatTIMComponent
         /* calling this.pluginMeta.getTaskIdUrl() too
          early crashes thus we call in ngAfterViewInit */
         this.initDocId();
+        await this.initDialogFrame();
         await this.initScrollContainer();
         // TODO: separate control panel data and client data fetch
         await this.getControlPanelData();
@@ -387,6 +404,47 @@ export class ChatTIMComponent
         if (this.scrollContainer) {
             this.scrollContainer.removeEventListener("scroll", this.onScroll);
         }
+    }
+
+    /* Initialize the position and start minimized depending on the markup. */
+    async initDialogFrame() {
+        await this.nextAnimationFrame();
+        const {width, height} = this.dialogFrame.resizable.getSize();
+        const p = this.cornerPos(
+            this.markup.initialCorner ?? "none",
+            window.innerWidth,
+            window.innerHeight,
+            width,
+            height
+        );
+        if (p) {
+            this.dialogFrame.setPos(p);
+            this.dialogFrame.resizable.doResize();
+            this.dialogFrame.resizable.boundsCheck();
+        }
+
+        if (this.markup.startMinimized) {
+            this.dialogFrame.toggleMinimize();
+        }
+    }
+
+    /* Return the selected corner position for the dialog frame. */
+    private cornerPos(
+        corner: Corner,
+        viewportW: number,
+        viewportH: number,
+        dialogW: number,
+        dialogH: number
+    ): {x: number; y: number} | null {
+        if (corner === "none") {
+            return null;
+        }
+        const originOffset: number = viewportW / 2 - dialogW / 2;
+        const isRight: boolean = corner.endsWith("right");
+        const isBottom: boolean = corner.startsWith("bottom");
+        const leftPx: number = isRight ? viewportW - dialogW : 0;
+        const topPx: number = isBottom ? viewportH - dialogH : 0;
+        return {x: leftPx - originOffset, y: topPx};
     }
 
     async fetchRights(): Promise<void> {
@@ -834,7 +892,7 @@ export class ChatTIMComponent
 
     private setControlPanelData(data: ControlPanelData) {
         this.selectedModel = data.selectedModel ?? data.model_id;
-        this.selectedMode = data.llm_mode;
+        this.selectedMode = data.llm_mode ? data.llm_mode : "Creative";
         this.maxTokens = data.max_tokens;
         this.convTimeWindow = data.conv_time_window;
         this.selectedItemPaths = data.tim_paths;
