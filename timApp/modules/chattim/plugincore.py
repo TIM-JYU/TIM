@@ -674,7 +674,6 @@ class PluginCore:
             include_citations=include_citations,
             similarity_threshold=similarity_threshold,
             top_k_chunks=top_k_chunks,
-            teachers=[],
             current_mode=llm_mode,
             total_tokens_spent=old_plugin_rule.total_tokens_spent,
             indexed_document_ids=document_ids,
@@ -707,8 +706,32 @@ class PluginCore:
 
         return self.get_plugin_settings(caller_id, document_id)
 
-    def delete_instance(self, owner_id: int, document_id: int) -> None:
-        self.tim_database.delete_llm_rule(owner_id, document_id)
+    def delete_instance(
+        self, caller_id: int, document_id: int, par_id: str
+    ) -> Result[str, str]:
+        rule = self.tim_database.get_llm_rule(document_id)
+        if not rule:
+            return Result(error=f"No plugin instance in document [{document_id}]")
+        if rule.owner != caller_id:
+            return Result(error="Insufficient rights to delete plugin instance")
+
+        document = self.tim_database.get_tim_document_by_id(document_id)
+        if document is None:
+            return Result(error=f"Document [{document_id}] does not exist")
+
+        if par_id is None:
+            return Result(error=f"Plugin paragraph not found")
+
+        par = document.get_paragraph(par_id)
+        plugin_type = par.get_attr("plugin")
+        if plugin_type is not None and plugin_type == "chattim":
+            deleted = document.delete_paragraph(par_id)
+            if not deleted:
+                return Result(error="Failed to delete plugin paragraph")
+            self.tim_database.delete_llm_rule(caller_id, document_id)
+            return Result(value="Plugin instance deleted")
+
+        return Result(error="No chattim plugin instance in document")
 
     def get_history(self, caller_id: str, document_id: str) -> list[Message]:
         # TODO: fetch with time window
@@ -952,7 +975,6 @@ class PluginCore:
 
     def _instance_exists(self, document_id: int) -> bool:
         # TODO: todnäk pitää muistissa tiedetyt instanssi-idt jottei haeta aina tietokannalta turhaan
-        # TODO: korvaa db haulla
         if not self.tim_database.get_llm_rule(document_id):
             return False
         return True

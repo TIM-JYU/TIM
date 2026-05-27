@@ -68,6 +68,11 @@ class SaveUserPolicyParams(GenericParams):
     user_data: UserData
 
 
+@dataclass
+class DeletePluginParams(GenericParams):
+    par_id: str
+
+
 def get_rights(params: GetRightsParams) -> dict:
     doc = get_doc_or_abort(params.document_id)
     print(doc)
@@ -460,6 +465,18 @@ def get_models(params: GetModelsParams) -> dict:
     return {"models": models}
 
 
+def delete_plugin(params: DeletePluginParams) -> Response:
+    user_id = get_current_user_id()
+    document_id = params.document_id
+    par_id = params.par_id
+
+    result = plugincore.delete_instance(user_id, document_id, par_id)
+
+    if result.error is not None:
+        raise RouteException(description=result.error or "")
+    return ok_response()
+
+
 register_route(chattim, "post", "ask", ChatTimAskParams, ask_route)
 register_route(chattim, "post", "askStream", ChatTimAskParams, ask_stream_route)
 register_route(chattim, "post", "getSettings", GenericParams, get_settings)
@@ -468,6 +485,7 @@ register_route(
 )
 register_route(chattim, "post", "getMessages", GetMessagesParams, get_messages)
 register_route(chattim, "post", "clearMessages", GenericParams, clear_messages)
+register_route(chattim, "post", "deletePlugin", DeletePluginParams, delete_plugin)
 register_route(chattim, "post", "validateApi", APIKeyParams, save_api_key)
 register_route(chattim, "get", "getProviders", None, get_providers)
 register_route(chattim, "post", "getUserPolicyData", GenericParams, get_user_data)
