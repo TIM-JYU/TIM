@@ -634,7 +634,7 @@ class PluginCore:
             api_key_rule, provider_str, api_key = self.try_access_api_key_row(
                 caller_id, public_key
             )
-        except Exception as e:
+        except (ValueError, PermissionError) as e:
             return Result(None, str(e))
 
         rag_mode = self._parse_rag_mode(llm_mode)
@@ -661,10 +661,9 @@ class PluginCore:
 
         # Check if the API key is valid in these documents
         try:
+            self.tim_database.api_key_valid_in_doc(api_key_rule, document_id)
             self.check_api_key_doc_access(api_key_rule, document_ids)
-        except PermissionError as e:
-            return Result(None, str(e))
-        except ValueError as e:
+        except (PermissionError, ValueError) as e:
             return Result(None, str(e))
 
         # validating max tokens
@@ -1464,10 +1463,10 @@ class PluginCore:
     ) -> tuple[LLMRule, Provider, str]:
         key = self.tim_database.access_api_key(user_id, public_key)
         if not key:
-            raise Exception(f"No access to the API key.")
+            raise PermissionError(f"No access to the API key.")
         provider = PluginCore._parse_provider(str(key.provider))
         if not provider:
-            raise Exception(f"No provider found for API key.")
+            raise ValueError(f"No provider found for API key.")
         return key, provider, str(key.api_key)
 
     def try_access_api_key(self, user_id: int, public_key: str) -> tuple[Provider, str]:
