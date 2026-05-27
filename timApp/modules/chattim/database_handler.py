@@ -547,7 +547,7 @@ class TimDatabase:
         """
         stmt = delete(Policy).where(
             Policy.llm_rule_id == llm_rule.id,
-            Policy.for_user.is_(None),
+            Policy.for_user == 0,
         )
         db.session.execute(stmt)
         db.session.commit()
@@ -588,16 +588,24 @@ class TimDatabase:
 
     @staticmethod
     def set_usage(
-        user: int, llm_rule: LLMRule, used_tokens: int, usage_time_stamp: int
+        user: int,
+        llm_rule: LLMRule,
+        used_tokens: int,
+        token_usage_history: list[dict[str, int]] | None = None,
     ) -> Usage:
         """
         Sets the usage for the given user in the given LLM rule context.
+        Values overwrite the existing ones.
         If usage does not exist for this user, it is created with used_tokens.
         :param user: ID of the user for the usage.
         :param llm_rule: LLM rule instance.
         :param used_tokens: Number of used tokens.
+        :param token_usage_history: Token usage history. [{"timestamp": 123, "tokens": 456}]
         :return: Usage of the given user.
         """
+        if token_usage_history is None:
+            token_usage_history = []
+
         usage = TimDatabase.get_usage(llm_rule, user)
         if not usage:
             usage = Usage(
@@ -605,10 +613,48 @@ class TimDatabase:
                 llm_rule_id=llm_rule.id,
                 llm_rule=llm_rule,
                 used_tokens=used_tokens,
+                token_usage_history=token_usage_history,
             )
             db.session.add(usage)
         else:
             usage.used_tokens = used_tokens
+            usage.token_usage_history = token_usage_history
+
+        db.session.commit()
+        return usage
+
+    @staticmethod
+    def update_usage(
+        user: int,
+        llm_rule: LLMRule,
+        used_tokens: int,
+        timestamp: int,
+    ) -> Usage:
+        """
+        Updates the usage for the given user in the given LLM rule context.
+        Given used tokens are added to total usage and usage added automatically with
+        timestamp to usage history. New Usage is created if one does not exist.
+        :param user: ID of the user for the usage.
+        :param llm_rule: LLM rule instance.
+        :param used_tokens: Number of used tokens.
+        :param timestamp: Timestamp of the usage.
+        :return: Usage of the given user.
+        """
+        new_history_item = {"timestamp": timestamp, "tokens": used_tokens}
+        usage = TimDatabase.get_usage(llm_rule, user)
+        if not usage:
+            usage = Usage(
+                user=user,
+                llm_rule_id=llm_rule.id,
+                llm_rule=llm_rule,
+                used_tokens=used_tokens,
+                token_usage_history=[new_history_item],
+            )
+            db.session.add(usage)
+        else:
+            usage.used_tokens = usage.used_tokens + used_tokens
+            usage.token_usage_history.append(new_history_item)
+
         db.session.commit()
         return usage
 
@@ -616,11 +662,24 @@ class TimDatabase:
     def set_instance_usage(llm_rule: LLMRule, used_tokens: int) -> None:
         """
         Sets the usage in the given LLM rule context.
+        Values are overwritten.
         :param llm_rule: LLM rule instance.
         :param used_tokens: Number of used tokens.
         :return: Usage of the given user.
         """
         llm_rule.total_tokens_spent = used_tokens
+        db.session.commit()
+
+    @staticmethod
+    def update_instance_usage(llm_rule: LLMRule, used_tokens: int) -> None:
+        """
+        Sets the usage in the given LLM rule context.
+        Given used tokens are added to the current usage.
+        :param llm_rule: LLM rule instance.
+        :param used_tokens: Number of used tokens.
+        :return: Usage of the given user.
+        """
+        llm_rule.total_tokens_spent = llm_rule.total_tokens_spent + used_tokens
         db.session.commit()
 
     @staticmethod
