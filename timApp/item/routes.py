@@ -16,6 +16,7 @@ from flask import redirect
 from flask import render_template, make_response, Response, stream_with_context
 from flask import request
 from flask import session
+from flask_babel import gettext
 from markupsafe import Markup
 from marshmallow import EXCLUDE
 from sqlalchemy import select
@@ -1154,7 +1155,11 @@ def render_doc_view(
         if is_slide
         else ["doc_head.jinja2", "doc_content.jinja2"]
     )
+
+    teacher_text = gettext("Teacher")
     tmpl_params = dict(
+        edit_buttons=doc_settings.get_edit_buttons(),
+        teacher_text=teacher_text,
         hide_links=should_hide_links(doc_settings, rights),
         hide_top_buttons=should_hide_top_buttons(doc_settings, rights),
         pars_only=m.pars_only or should_hide_paragraphs(doc_settings, rights),
