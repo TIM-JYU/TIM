@@ -209,8 +209,10 @@ def register_route(
         def handler() -> Response:
             try:
                 return to_response(route_handler())
+            except RouteException as e:
+                raise e
             except Exception as e:
-                raise RouteException(str(e))
+                raise RouteException(str(e)) from e
 
         return
 
@@ -219,8 +221,10 @@ def register_route(
     def handler_args(m: Any) -> Response:
         try:
             return to_response(route_handler(m))
+        except RouteException as e:
+            raise e
         except Exception as e:
-            raise RouteException(str(e))
+            raise RouteException(str(e)) from e
 
 
 def ask_route(params: ChatTimAskParams) -> ChatTimAskResponse:
