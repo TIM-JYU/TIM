@@ -268,6 +268,9 @@ class PluginCore:
         api_key = self.get_api_key(str(rule.public_key))
         model_id = rule.agent
 
+        if not model_id:
+            return Result(error="No model selected.")
+
         context: str | None = None
         citations: list[str] | None = None
 
