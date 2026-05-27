@@ -1,5 +1,5 @@
 from typing import Optional
-from sqlalchemy import Integer, String, ForeignKey, Float
+from sqlalchemy import Integer, String, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.dialects.postgresql import ARRAY
 from timApp.timdb.sqa import db

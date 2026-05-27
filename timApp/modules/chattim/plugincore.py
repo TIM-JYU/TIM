@@ -36,6 +36,7 @@ from timApp.modules.chattim.model import (
 from timApp.modules.chattim.conversation import ConversationManager, ChatMessage
 
 DEFAULT_CACHE_TIMEOUT = 60 * 15  # seconds
+HISTORY_MAX_MESSAGES = 64
 
 
 # TODO: Is this needed if we have no model labels anymore?
@@ -71,6 +72,7 @@ class InstanceAttributes:
     model_id: str = ""
     llm_mode: str = "Creative"
     max_tokens: int | None = 2000
+    conv_time_window: int = 0
     tim_paths: list[str] = field(default_factory=list)
     system_prompt_path: str = ""
     use_streaming: bool = False
@@ -102,6 +104,10 @@ class InstanceSettingsData(InstanceAttributes):
     availableEmbedderProviders: list[str] = field(kw_only=True, default_factory=list)
     selectedModel: str | None = None
     allowedItemPaths: list[str] | None = None
+
+    @classmethod
+    def default(cls) -> "InstanceSettingsData":
+        return cls()
 
 
 T = TypeVar("T")
@@ -135,6 +141,7 @@ class PreparedChatRequest:
     response: Iterable[ModelResponse] | ModelResponse
     citations: list[str] | None
     include_citations: bool = False
+    verbose: bool = False
 
 
 # TODO: maybe a dict or dataclass would be more descriptive
@@ -181,6 +188,8 @@ class PluginCore:
         if not rule:
             return Result(None, "No LLMRule found for this document")
 
+        verbose_errors: bool = caller_id == rule.owner
+
         # policy checking
         remaining_tokens = (
             4096  # TODO: can we get the max_token upper limit support somewhere?
@@ -211,10 +220,27 @@ class PluginCore:
         document_id_str = str(document_id)
         caller_id_str = str(caller_id)
 
-        # TODO: remember to fetch with timestamps when the time comes
-        chat_history = self.get_history(caller_id_str, document_id_str)
+        # Get conversation history
+        chat_history: list[Message]
+        conv_tw_s = rule.conv_time_window
+        if conv_tw_s > 0:
+            ts_now_ms = ChatMessage.ts_ms()
+            ts_begin_ms = max(0, ts_now_ms - (conv_tw_s * 1000))
+            history = self.get_messages_tw(
+                caller_id_str,
+                document_id_str,
+                ts_begin=ts_begin_ms,
+                ts_end=ts_now_ms,
+                max_count=HISTORY_MAX_MESSAGES,
+            )
+            chat_history = [Message(role=m.role, content=m.content) for m in history]
+        else:
+            history = self.history_manager.get_history(
+                document_id_str, caller_id_str, HISTORY_MAX_MESSAGES
+            )
+            chat_history = [Message(role=m.role, content=m.content) for m in history]
 
-        rag_mode: RagMode = self._parse_rag_mode(str(rule.current_mode))
+        rag_mode: RagMode | None = self._parse_rag_mode(str(rule.current_mode))
         if rag_mode is None:
             return Result(error=f"Invalid mode '{rag_mode}'")
 
@@ -242,6 +268,9 @@ class PluginCore:
         api_key = self.get_api_key(str(rule.public_key))
         model_id = rule.agent
 
+        if not model_id:
+            return Result(error="No model selected.")
+
         context: str | None = None
         citations: list[str] | None = None
 
@@ -262,7 +291,7 @@ class PluginCore:
             context = response.context
             citations = self._get_citations(response.used_context)
 
-        system_prompt = self.get_system_prompt(rule.system_prompt_path)
+        system_prompt = self.get_system_prompt(str(rule.system_prompt_path))
 
         msg_data = MessageData(
             user_prompt=validated_input,
@@ -282,8 +311,9 @@ class PluginCore:
                 temperature=temperature,
             )
         except ModelError as e:
-            # TODO: Leave out extra info if not owner or no access to plugin
-            error = f"{e.text()} {str(e.cause)}"
+            error = e.text()
+            if verbose_errors:
+                error += f" {str(e.cause)}"
             return Result(error=error)
         except Exception as e:
             return Result(error=str(e))
@@ -295,6 +325,7 @@ class PluginCore:
             response=answer,
             citations=citations,
             include_citations=include_citations,
+            verbose=verbose_errors,
         )
         return Result(value=prepared)
 
@@ -421,7 +452,12 @@ class PluginCore:
                 # Yield chunks to the caller
                 for chunk in stream:
                     apply_chunk(chunk)
-                    yield chunk.delta
+                    yield chunk.delta or ""
+            except ModelError as e:
+                error = e.text()
+                if p.verbose:
+                    error += f" {str(e.cause)}"
+                raise Exception(error) from e
             finally:
                 # Drain the remaining chunks if the client disconnected mid-stream
                 try:
@@ -463,6 +499,7 @@ class PluginCore:
             data = InstanceSettingsData(
                 use_streaming=bool(llm_rule.use_streaming),
                 include_citations=bool(llm_rule.include_citations),
+                conv_time_window=llm_rule.conv_time_window or 0,
             )
             return Result(data)
 
@@ -516,6 +553,14 @@ class PluginCore:
             global_policy_ui = self._convert_sql_policy_to_generic_policy(global_policy)
             max_token_pool = global_policy.token_pool
 
+        # Turn selected TIM documents from IDs to paths
+        doc_paths: list[str] = []
+        for doc_id in llm_rule.indexed_document_ids:
+            doc = self.tim_database.get_doc_entry_by_id(doc_id)
+            if not doc:
+                continue
+            doc_paths.append(doc.path)
+
         data = InstanceSettingsData(
             availableModes=RagMode.supported_modes(),
             availableModels=supported_models,
@@ -526,10 +571,12 @@ class PluginCore:
             allowedItemPaths=allowed_paths,
             llm_mode=str(llm_rule.current_mode),
             system_prompt_path=llm_rule.system_prompt_path,
+            tim_paths=doc_paths,
             model_temperature=llm_rule.temperature,
             include_citations=bool(llm_rule.include_citations),
             similarity_threshold=llm_rule.similarity_threshold,
             top_k_chunks=llm_rule.top_k_chunks,
+            conv_time_window=llm_rule.conv_time_window,
             global_policy=global_policy_ui,
             max_tokens=max_token_pool,
         )
@@ -556,6 +603,7 @@ class PluginCore:
         model_id: str = instance_settings.model_id
         llm_mode: str = instance_settings.llm_mode
         max_tokens: int | None = instance_settings.max_tokens
+        conv_time_window: int = instance_settings.conv_time_window
         tim_paths: list[str] = instance_settings.tim_paths
         system_prompt_path: str = instance_settings.system_prompt_path.strip()
         global_policy: GenericPolicy = instance_settings.global_policy
@@ -589,16 +637,16 @@ class PluginCore:
             api_key_rule, provider_str, api_key = self.try_access_api_key_row(
                 caller_id, public_key
             )
-        except Exception as e:
+        except (ValueError, PermissionError) as e:
             return Result(None, str(e))
 
         rag_mode = self._parse_rag_mode(llm_mode)
         if rag_mode is None:
             return Result(None, f"Invalid rag mode [{llm_mode}] given")
 
-        if provider_str not in Provider.__args__:
+        provider = self._parse_provider(provider_str)
+        if provider is None:
             return Result(None, f"Invalid provider [{provider_str}] given")
-        provider = provider_str
 
         paths_for_indexing = tim_paths
 
@@ -609,25 +657,24 @@ class PluginCore:
 
         document_ids = [doc.id for doc in docs]
 
-        # TODO: maybe add manage rights
-        owns_all = self._owns_all_items(caller_id, docs)
-        if owns_all.ok():
-            if not owns_all.value:
-                return Result(None, owns_all.error)
-        else:
-            return Result(None, "Internal error")
+        try:
+            self._has_rights_one_of(caller_id, docs, ["owner", "manage"])
+        except (PermissionError, ValueError) as e:
+            return Result(None, str(e))
 
         # Check if the API key is valid in these documents
         try:
+            self.tim_database.api_key_valid_in_doc(api_key_rule, document_id)
             self.check_api_key_doc_access(api_key_rule, document_ids)
-        except PermissionError as e:
-            return Result(None, str(e))
-        except ValueError as e:
+        except (PermissionError, ValueError) as e:
             return Result(None, str(e))
 
         # validating max tokens
         if max_tokens is not None and max_tokens < 0:
             return Result(None, "Give non-negative max tokens value")
+
+        if conv_time_window < 0:
+            return Result(None, "Conversation time window must be non-negative")
 
         if system_prompt_path:
             prompt_doc = self.tim_database.get_tim_document_by_path(system_prompt_path)
@@ -661,7 +708,6 @@ class PluginCore:
                     api_key=(provider_str, api_key),
                     documents=docs,
                 )
-                print(f"Tokens used for indexing: {tokens_used}")
         except ValueError as e:
             return Result(None, str(e))
 
@@ -679,7 +725,7 @@ class PluginCore:
             indexed_document_ids=document_ids,
             system_prompt_path=system_prompt_path,
             agent=model_id,
-            conv_time_window=0,
+            conv_time_window=conv_time_window,
             policy=[],
             usage=[],
         )
@@ -954,13 +1000,10 @@ class PluginCore:
 
     def _get_available_embedder_providers(self, caller_id: int) -> list[str]:
         """Returns a list of available embedding providers based on API keys."""
-        print("================================")
         keys = self.get_user_api_keys(owner_id=caller_id)
         providers = []
         for key in keys:
             providers.append(key[1])
-        print(f"Providers from DB{providers}")
-        print("================================")
 
         return providers
 
@@ -1248,32 +1291,37 @@ class PluginCore:
 
         return True
 
-    def _owns_all_items(
-        self, user_id: int, documents: list[Document]
-    ) -> Result[bool | None, str | None]:
+    def _has_rights_one_of(
+        self,
+        user_id: int,
+        documents: list[Document],
+        rights: list[str],
+    ) -> bool:
         """
-        Checks for all documents that the given user owns them. Expects that user and given documents exist.
+        Checks that the user has one of the rights in all the documents.
+        Expects that user and given documents exist.
+
         :param user_id: User for which the right is checked
         :param documents: Document for which the user has or has no right
-        :return: If all documents are owned [True, None]
-                 If no documents are provided [True, None]
-                 If not all documents are owned [False, msg on item not owned]
-                 If error happens:
+        :param rights: Rights to check for.
+        :raises ValueError: If failed to find rights for documents.
+        :raises PermissionError: If insufficient rights for some document.
+        :return: True if sufficient rights in all documents.
         """
 
         for document in documents:
             doc_id = document.id
             right = self.tim_database.check_rights(user_id, doc_id)
             if not right:
-                return Result(
-                    error=f"Could not get rights for document [{document}] for user [{user_id}]"
+                raise ValueError(
+                    f"Could not get rights for document [{document}] for user [{user_id}]"
                 )
 
-            is_owner: bool = right.get("owner")
-            if not is_owner:
-                return Result(False, f"No owner rights for [{document.docinfo.path}]")
+            has_rights = any(right.get(r) is not None for r in rights)
+            if not has_rights:
+                raise PermissionError(f"No rights for [{document.docinfo.path}]")
 
-        return Result(value=True)
+        return True
 
     @staticmethod
     def _generate_id() -> str:
@@ -1284,7 +1332,6 @@ class PluginCore:
         try:
             return RagMode(mode)
         except ValueError:
-            print(f"Invalid rag mode given: {mode}")
             return None
 
     @staticmethod
@@ -1419,10 +1466,10 @@ class PluginCore:
     ) -> tuple[LLMRule, Provider, str]:
         key = self.tim_database.access_api_key(user_id, public_key)
         if not key:
-            raise Exception(f"No access to the API key.")
+            raise PermissionError(f"No access to the API key.")
         provider = PluginCore._parse_provider(str(key.provider))
         if not provider:
-            raise Exception(f"No provider found for API key.")
+            raise ValueError(f"No provider found for API key.")
         return key, provider, str(key.api_key)
 
     def try_access_api_key(self, user_id: int, public_key: str) -> tuple[Provider, str]:

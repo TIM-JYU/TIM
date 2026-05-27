@@ -8,10 +8,10 @@ import {
     DirectoryPickerRestrictions,
 } from "tim/folder/directory-picker.component";
 import {TooltipModule} from "ngx-bootstrap/tooltip";
+import {showConfirm} from "tim/ui/showConfirmDialog";
 import {TokenLimitForUser, UserPolicyComponent} from "./userpolicy";
 import {UserControlComponent} from "./usercontrol";
 import type {UserData} from "./usercontrol";
-import {showConfirm} from "tim/ui/showConfirmDialog";
 
 export interface ChatModel extends Record<string, JsonValue> {
     label: string;
@@ -32,6 +32,7 @@ export interface ControlPanelSettings extends Record<string, JsonValue> {
     llm_mode: string;
 
     max_tokens: number | null;
+    conv_time_window: number;
     tim_paths: string[];
     system_prompt_path: string;
     global_policy: TokenLimitForUser;
@@ -67,279 +68,309 @@ type SimilarityMode = "none" | "loose" | "balanced" | "strict" | "custom";
 
 
         <div class="settings-panel" [style.display]="settingsOpen ? 'block' : 'none'">
-                <!-- Choose API-key -->
-                <div class="settings-row">
-                    <button class="btn btn-link settings-section-btn"
-                            (click)="keyOpen = !keyOpen">
+            <!-- Choose API-key -->
+            <div class="settings-row">
+                <button class="btn btn-link settings-section-btn"
+                        (click)="keyOpen = !keyOpen">
                     <span class="glyphicon"
                           [class.glyphicon-chevron-right]="!keyOpen"
                           [class.glyphicon-chevron-down]="keyOpen">
                     </span>
-                        API-alias: <strong>{{ selectedPublicKey }}</strong>
+                    API-alias: <strong>{{ selectedPublicKey }}</strong>
+                </button>
+                <div *ngIf="keyOpen" class="settings-section-body">
+                    <select class="form-control"
+                            [ngModel]="selectedPublicKey"
+                            (ngModelChange)="onPublicKeyChange($event)">
+                        <option *ngFor="let key of availablePublicKeys"
+                                [ngValue]="key.public_key">{{
+                                key.public_key + " - " + key.provider + (key.is_shared ? " " +
+                                    "(shared by " + key.shared_by + ")" : "")
+                            }}
+                        </option>
+                        z§
+                    </select>
+                    <button class="btn btn-default"
+                            style="margin-top: 6px;"
+                            [disabled]="!selectedPublicKey"
+                            (click)="fetchModelsClicked()">
+                        Fetch models
                     </button>
-                    <div *ngIf="keyOpen" class="settings-section-body">
-                        <select class="form-control"
-                                [ngModel]="selectedPublicKey"
-                                (ngModelChange)="onPublicKeyChange($event)">
-                            <option *ngFor="let key of availablePublicKeys"
-                                    [ngValue]="key.public_key">{{
-                                    key.public_key + " - " + key.provider + (key.is_shared ? " " +
-                                        "(shared by " + key.shared_by + ")" : "")
-                                }}
-                            </option>
-                            z§
-                        </select>
-                        <button class="btn btn-default"
-                                style="margin-top: 6px;"
-                                [disabled]="!selectedPublicKey"
-                                (click)="fetchModelsClicked()">
-                            Fetch models
-                        </button>
-                    </div>
                 </div>
+            </div>
 
 
-                <!-- Choose the LLM -->
-                <div class="settings-row">
-                    <button class="btn btn-link settings-section-btn"
-                            (click)="modelOpen = !modelOpen">
+            <!-- Choose the LLM -->
+            <div class="settings-row">
+                <button class="btn btn-link settings-section-btn"
+                        (click)="modelOpen = !modelOpen">
                     <span class="glyphicon"
                           [class.glyphicon-chevron-right]="!modelOpen"
                           [class.glyphicon-chevron-down]="modelOpen">
                     </span>
-                        Model: <strong>{{ selectedModelLabel }}</strong>
-                    </button>
-                    <div *ngIf="modelOpen" class="settings-section-body">
-                        <div class="checkbox">
-                            <label>
-                                <input type="checkbox"
-                                       [(ngModel)]="filterModels"
-                                       (change)="onFilterModelsChanged()"
-                                >
-                                Filter non-chat models
-                            </label>
-                        </div>
-                        <select class="form-control" [(ngModel)]="selectedModel">
-                            <option *ngFor="let m of filteredModels" [ngValue]="m.value">{{ m.label }}</option>
-                        </select>
-
-                        <!-- Model parameters -->
-                        <div class="checkbox">
-                            <label>
-                                <input type="checkbox"
-                                       [(ngModel)]="useStreaming">
-                                Use streaming responses
-                                <a tooltip="{{getStreamTooltip}}"><i class="glyphicon glyphicon-info-sign"></i></a>
-                            </label>
-                        </div>
-
-                        <div class="checkbox">
-                            <label>
-                                <input type="checkbox"
-                                       [(ngModel)]="includeCitations">
-                                Include citations
-                                <a tooltip="{{getCitationTooltip}}"><i class="glyphicon glyphicon-info-sign"></i></a>
-                            </label>
-                        </div>
-
-                        <div class="checkbox">
-                            <label>
-                                <input type="checkbox"
-                                       [(ngModel)]="enabledTemperature">
-                                Enable temperature parameter
-                                <a tooltip="{{getTemperatureTooltip}}"><i class="glyphicon glyphicon-info-sign"></i></a>
-                            </label>
-                        </div>
-                        <div *ngIf="enabledTemperature" class="settings-section-body">
-                            <input type="number"
-                                   class="form-control"
-                                   [(ngModel)]="modelTemperature"
-                                   [min]="0"
-                                   [max]="2"
-                                   [step]="0.1"
+                    Model: <strong>{{ selectedModelLabel }}</strong>
+                </button>
+                <div *ngIf="modelOpen" class="settings-section-body">
+                    <div class="checkbox">
+                        <label>
+                            <input type="checkbox"
+                                   [(ngModel)]="filterModels"
+                                   (change)="onFilterModelsChanged()"
                             >
-                        </div>
-                        <div class="error" *ngIf="isInvalidModelTemperature">
-                            Temperature input should be between 0 and 2
-                        </div>
- 
-                        <div class="form-group">
-                            <div class="inline-field">
-                                <label class="inline-field-label">Similarity threshold
-                                    <a tooltip="{{getSimilarityTooltip}}"><i class="glyphicon glyphicon-info-sign"></i></a>
-                                </label>
-                                <select class="form-control inline-field-control"
-                                        [(ngModel)]="similarityThresholdMode">
-                                    <option *ngFor="let o of SIMILARITY_OPTION_LIST" [ngValue]="o.mode">
-                                        {{ o.label }}
-                                    </option>
-                                </select>
-                            </div>
+                            Filter non-chat models
+                        </label>
+                    </div>
+                    <select class="form-control" [(ngModel)]="selectedModel">
+                        <option *ngFor="let m of filteredModels" [ngValue]="m.value">{{ m.label }}</option>
+                    </select>
 
-                            <div *ngIf="similarityThresholdMode === 'custom'" style="margin-top: 6px;">
-                                <input
-                                    type="number"
-                                    class="form-control"
-                                    [(ngModel)]="similarityThreshold"
-                                    min="-1"
-                                    max="1"
-                                    step="0.05"
-                                />
-                            </div>
-                            <div class="error" *ngIf="isInvalidSimilarityThreshold">
-                                Similarity input should be between -1 and 1
-                            </div>
-                        </div>
+                    <!-- Model parameters -->
+                    <div class="checkbox">
+                        <label>
+                            <input type="checkbox"
+                                   [(ngModel)]="useStreaming">
+                            Use streaming responses
+                            <a tooltip="{{getStreamTooltip}}"><i class="glyphicon glyphicon-info-sign"></i></a>
+                        </label>
+                    </div>
 
+                    <div class="checkbox">
+                        <label>
+                            <input type="checkbox"
+                                   [(ngModel)]="includeCitations">
+                            Include citations
+                            <a tooltip="{{getCitationTooltip}}"><i class="glyphicon glyphicon-info-sign"></i></a>
+                        </label>
+                    </div>
+
+                    <div class="checkbox">
+                        <label>
+                            <input type="checkbox"
+                                   [(ngModel)]="enabledTemperature">
+                            Enable temperature parameter
+                            <a tooltip="{{getTemperatureTooltip}}"><i class="glyphicon glyphicon-info-sign"></i></a>
+                        </label>
+                    </div>
+                    <div *ngIf="enabledTemperature" class="settings-section-body">
+                        <input type="number"
+                               class="form-control"
+                               [(ngModel)]="modelTemperature"
+                               [min]="0"
+                               [max]="2"
+                               [step]="0.1"
+                        >
+                    </div>
+                    <div class="error" *ngIf="isInvalidModelTemperature">
+                        Temperature input should be between 0 and 2
+                    </div>
+
+                    <div class="form-group">
                         <div class="inline-field">
-                            <label class="inline-field-label">Top-K chunks
-                                <a tooltip="{{getTopKTooltip}}"><i class="glyphicon glyphicon-info-sign"></i></a>
+                            <label class="inline-field-label">Similarity threshold
+                                <a tooltip="{{getSimilarityTooltip}}"><i class="glyphicon glyphicon-info-sign"></i></a>
                             </label>
+                            <select class="form-control inline-field-control"
+                                    [(ngModel)]="similarityThresholdMode">
+                                <option *ngFor="let o of SIMILARITY_OPTION_LIST" [ngValue]="o.mode">
+                                    {{ o.label }}
+                                </option>
+                            </select>
+                        </div>
+
+                        <div *ngIf="similarityThresholdMode === 'custom'" style="margin-top: 6px;">
                             <input
                                 type="number"
-                                class="form-control inline-field-control"
-                                [(ngModel)]="topKChunks"
-                                min="1"
-                                max="20"
+                                class="form-control"
+                                [(ngModel)]="similarityThreshold"
+                                min="-1"
+                                max="1"
+                                step="0.05"
                             />
                         </div>
-                        <div class="error" *ngIf="isInvalidTopChunks">
-                            Top-K should be between 1 and 20
-                        </div> 
+                        <div class="error" *ngIf="isInvalidSimilarityThreshold">
+                            Similarity input should be between -1 and 1
+                        </div>
+                    </div>
+
+                    <div class="inline-field">
+                        <label class="inline-field-label">Top-K chunks
+                            <a tooltip="{{getTopKTooltip}}"><i class="glyphicon glyphicon-info-sign"></i></a>
+                        </label>
+                        <input
+                            type="number"
+                            class="form-control inline-field-control"
+                            [(ngModel)]="topKChunks"
+                            min="1"
+                            max="20"
+                        />
+                    </div>
+                    <div class="error" *ngIf="isInvalidTopChunks">
+                        Top-K should be between 1 and 20
                     </div>
                 </div>
+            </div>
 
-                <!-- Switch between summarizing, (balanced) and creative -->
-                <div class="settings-row">
-                    <button class="btn btn-link settings-section-btn"
-                            (click)="modeOpen = !modeOpen">
+            <!-- Switch between summarizing, (balanced) and creative -->
+            <div class="settings-row">
+                <button class="btn btn-link settings-section-btn"
+                        (click)="modeOpen = !modeOpen">
         <span class="glyphicon"
               [class.glyphicon-chevron-right]="!modeOpen"
               [class.glyphicon-chevron-down]="modeOpen">
         </span>
-                        Mode: <strong>{{ selectedMode }}</strong>
-                        <span *ngIf="isAnthropicKeySelected" style="margin-left: 6px; font-size: 0.85em; color: #888;">
+                    Mode: <strong>{{ selectedMode }}</strong>
+                    <span *ngIf="isAnthropicKeySelected" style="margin-left: 6px; font-size: 0.85em; color: #888;">
                             (Summarizing not available with Anthropic)
                         </span>
-                    </button>
-                    <div *ngIf="modeOpen" class="settings-section-body">
-                        <div class="radio" *ngFor="let mode of availableModes">
-                            <label [class.disabled-label]="isAnthropicKeySelected && mode !== 'Creative'">
-                                <input type="radio"
-                                       name="modeRadio"
-                                       [value]="mode"
-                                       [(ngModel)]="selectedMode"
-                                       [disabled]="isAnthropicKeySelected && mode !== 'Creative'">
-                                {{ mode }}
-                            </label>
-                        </div>
+                </button>
+                <div *ngIf="modeOpen" class="settings-section-body">
+                    <div class="radio" *ngFor="let mode of availableModes">
+                        <label [class.disabled-label]="isAnthropicKeySelected && mode !== 'Creative'">
+                            <input type="radio"
+                                   name="modeRadio"
+                                   [value]="mode"
+                                   [(ngModel)]="selectedMode"
+                                   [disabled]="isAnthropicKeySelected && mode !== 'Creative'">
+                            {{ mode }}
+                        </label>
                     </div>
                 </div>
+            </div>
 
-                <!-- Set max tokens for the instance -->
-                <div class="settings-row">
-                    <button class="btn btn-link settings-section-btn"
-                            (click)="tokensOpen = !tokensOpen">
+            <!-- Set max tokens for the instance -->
+            <div class="settings-row">
+                <button class="btn btn-link settings-section-btn"
+                        (click)="tokensOpen = !tokensOpen">
                     <span class="glyphicon"
                           [class.glyphicon-chevron-right]="!tokensOpen"
                           [class.glyphicon-chevron-down]="tokensOpen">
                     </span>
-                        Max tokens: <strong>{{ maxTokensValue }}</strong>
-                    </button>
-                    <div *ngIf="tokensOpen" class="settings-section-body">
-                        <input type="text"
-                               class="form-control"
-                               [(ngModel)]="maxTokensLocal"
-                               (ngModelChange)="onMaxTokensChanged()"
-                        >
-                    </div>
-
-                    <div class="error" *ngIf="isInvalidMaxTokens">
-                        Input should be a positive integer
-                    </div>
+                    Max tokens: <strong>{{ maxTokensValue }}</strong>
+                </button>
+                <div *ngIf="tokensOpen" class="settings-section-body">
+                    <input type="text"
+                           class="form-control"
+                           [(ngModel)]="maxTokensLocal"
+                           (ngModelChange)="onMaxTokensChanged()"
+                    >
                 </div>
 
-                <!-- Add more documents to the model (TIM - filepath) -->
-                <div class="settings-row">
-                    <button class="btn btn-link settings-section-btn"
-                            (click)="filesOpen = !filesOpen">
+                <div class="error" *ngIf="isInvalidMaxTokens">
+                    Input should be a positive integer
+                </div>
+            </div>
+
+            <!-- Conversation time window (seconds) -->
+            <div class="settings-row">
+                <button class="btn btn-link settings-section-btn"
+                        (click)="convWindowOpen = !convWindowOpen">
+                      <span class="glyphicon"
+                            [class.glyphicon-chevron-right]="!convWindowOpen"
+                            [class.glyphicon-chevron-down]="convWindowOpen">
+                      </span>
+                    Conversation time window:
+                    <strong>{{ convTimeWindowLabel }}</strong>
+                </button>
+                <div *ngIf="convWindowOpen" class="settings-section-body">
+                    <input
+                        type="number"
+                        class="form-control"
+                        [(ngModel)]="convTimeWindowAmount"
+                        min="0"
+                        step="1"
+                    />
+                    <select class="form-control" [(ngModel)]="convTimeWindowUnit">
+                        <option *ngFor="let timeUnit of timeUnitOptions" [ngValue]="timeUnit.value">
+                            {{ timeUnit.label }}
+                        </option>
+                    </select>
+                </div>
+                <div class="error" *ngIf="isInvalidConvTimeWindow">
+                    Input should be a non-negative integer
+                </div>
+            </div>
+
+            <!-- Add more documents to the model (TIM - filepath) -->
+            <div class="settings-row">
+                <button class="btn btn-link settings-section-btn"
+                        (click)="filesOpen = !filesOpen">
                     <span class="glyphicon"
                           [class.glyphicon-chevron-right]="!filesOpen"
                           [class.glyphicon-chevron-down]="filesOpen">
                     </span>
-                        Add TIM-documents: {{ selectedItemPaths.length }}
-                    </button>
-                    <div *ngIf="filesOpen" class="settings-section-body">
-                        <tim-directory-picker
-                            [startItem]="currentFolder 
+                    Add TIM-documents: {{ selectedItemPaths.length }}
+                </button>
+                <div *ngIf="filesOpen" class="settings-section-body">
+                    <tim-directory-picker
+                        [startItem]="currentFolder 
                                         ? {itemPath: currentFolder, isFolder: true} 
                                         : undefined"
-                            [(selection)]="selectedItemPaths"
-                            [restrictions]="pathRestrictions"
-                        ></tim-directory-picker>
-                    </div>
+                        [(selection)]="selectedItemPaths"
+                        [restrictions]="pathRestrictions"
+                    ></tim-directory-picker>
                 </div>
+            </div>
 
 
-                <!-- Add a custom system prompt -->
-                <div class="settings-row">
-                    <button class="btn btn-link settings-section-btn"
-                            (click)="promptOpen = !promptOpen">
+            <!-- Add a custom system prompt -->
+            <div class="settings-row">
+                <button class="btn btn-link settings-section-btn"
+                        (click)="promptOpen = !promptOpen">
                     <span class="glyphicon"
                           [class.glyphicon-chevron-right]="!promptOpen"
                           [class.glyphicon-chevron-down]="promptOpen">
                     </span>
-                        Set system prompt path: {{ systemPrompt }}
-                    </button>
-                    <div *ngIf="promptOpen" class="settings-section-body">
-                        <tim-directory-picker
-                            [startItem]="systemPrompt 
+                    Set system prompt path: {{ systemPrompt }}
+                </button>
+                <div *ngIf="promptOpen" class="settings-section-body">
+                    <tim-directory-picker
+                        [startItem]="systemPrompt 
                                         ? {itemPath: systemPrompt, isFolder: false} 
                                         : undefined"
-                            [(selection)]="systemPromptSelection"
-                            [restrictions]="{maxSelectedCount: 1, selectable: 'documents'}"
-                        ></tim-directory-picker>
-                    </div>
+                        [(selection)]="systemPromptSelection"
+                        [restrictions]="{maxSelectedCount: 1, selectable: 'documents'}"
+                    ></tim-directory-picker>
                 </div>
+            </div>
 
 
-                <!-- Add time window restrictions for users -->
-                <div class="settings-row">
-                    <button class="btn btn-link settings-section-btn"
-                            (click)="globalPolicyOpen = !globalPolicyOpen">
+            <!-- Add time window restrictions for users -->
+            <div class="settings-row">
+                <button class="btn btn-link settings-section-btn"
+                        (click)="globalPolicyOpen = !globalPolicyOpen">
                     <span class="glyphicon"
                           [class.glyphicon-chevron-right]="!globalPolicyOpen"
                           [class.glyphicon-chevron-down]="globalPolicyOpen">
                     </span>
-                        Restrictions for all users:
-                    </button>
+                    Restrictions for all users:
+                </button>
 
-                    <ng-container *ngIf="globalPolicyOpen">
-                            <userpolicy [userLimits]="tokenLimitAllUsers"
-                                        (isInInvalidState)="invalidUserPolicyState = $event"
-                                        >
-                            </userpolicy>
-                    </ng-container>
-                </div>
+                <ng-container *ngIf="globalPolicyOpen">
+                    <userpolicy [userLimits]="tokenLimitAllUsers"
+                                (isInInvalidState)="invalidUserPolicyState = $event"
+                    >
+                    </userpolicy>
+                </ng-container>
+            </div>
 
-                <!-- Open dialog to view user token usage and policy modifications -->
-                <div class="settings-row"  >
-                    <button class="btn btn-link settings-section-btn"
-                            (click)="userControlOpen = !userControlOpen">
+            <!-- Open dialog to view user token usage and policy modifications -->
+            <div class="settings-row">
+                <button class="btn btn-link settings-section-btn"
+                        (click)="userControlOpen = !userControlOpen">
                         <span class="glyphicon"
                               [class.glyphicon-chevron-right]="!userControlOpen"
                               [class.glyphicon-chevron-down]="userControlOpen">
                         </span>
-                        Token consumption & per-user policies:
-                    </button>
-                    <usercontrol *ngIf="userControlOpen"
-                                 [setUserData]="userUsageAndPolicyData"
-                                 (userDataRequest)="userDataRequest.emit()"
-                                 (policySaveRequest)="policySaveRequest.emit($event)"
-                                 [policySaveResponse]="policySaveResponse"
-                                 >
-                    </usercontrol>
-                </div>
+                    Token consumption & per-user policies:
+                </button>
+                <usercontrol *ngIf="userControlOpen"
+                             [setUserData]="userUsageAndPolicyData"
+                             (userDataRequest)="userDataRequest.emit()"
+                             (policySaveRequest)="policySaveRequest.emit($event)"
+                             [policySaveResponse]="policySaveResponse"
+                >
+                </usercontrol>
+            </div>
 
                 <div class="settings-row">
                     <!-- Save button that sends the chosen stuff -->
@@ -366,6 +397,7 @@ export class ChatControlPanelComponent {
     keyOpen = false;
 
     tokensOpen = false;
+    convWindowOpen = false;
     filesOpen = false;
     promptOpen = false;
     globalPolicyOpen = false;
@@ -385,6 +417,16 @@ export class ChatControlPanelComponent {
     invalidUserPolicyState: boolean = false;
     maxTokensLocal = "";
     maxTokensValue: number | null = null;
+
+    convTimeWindowAmount: number | null = 0;
+    convTimeWindowUnit: string = "min";
+
+    timeUnitOptions: {value: string; label: string}[] = [
+        {value: "s", label: "Seconds"},
+        {value: "min", label: "Minutes"},
+        {value: "h", label: "Hours"},
+        {value: "d", label: "Days"},
+    ];
 
     enabledTemperature: boolean = false;
     modelTemperature: number | null = 0.2;
@@ -427,6 +469,10 @@ export class ChatControlPanelComponent {
     @Input() set maxTokens(value: number | null) {
         this.maxTokensValue = value;
         this.maxTokensLocal = value != null ? String(value) : "";
+    }
+
+    @Input() set convTimeWindow(value: number | null) {
+        this.setConvTimeWindowFromSeconds(value ?? 0);
     }
 
     @Input() set setModelTemperature(value: number | null) {
@@ -509,10 +555,6 @@ export class ChatControlPanelComponent {
         }
     }
 
-    embedderAvailable(provider: string): boolean {
-        return this.availableEmbedderProviders.includes(provider.toLowerCase());
-    }
-
     fetchModelsClicked() {
         this.fetchModelsClick.emit(this.selectedPublicKey);
     }
@@ -528,6 +570,7 @@ export class ChatControlPanelComponent {
             model_id: this.selectedModel,
             llm_mode: this.selectedMode,
             max_tokens: this.maxTokensValue,
+            conv_time_window: this.convTimeWindowValue,
             tim_paths: this.selectedItemPaths,
             system_prompt_path: this.systemPrompt ?? "",
             global_policy: this.tokenLimitAllUsers,
@@ -597,11 +640,97 @@ export class ChatControlPanelComponent {
     get invalidInputState(): boolean {
         return (
             this.isInvalidMaxTokens ||
+            this.isInvalidConvTimeWindow ||
             this.isInvalidModelTemperature ||
             this.isInvalidSimilarityThreshold ||
             this.isInvalidTopChunks ||
             this.invalidUserPolicyState
         );
+    }
+
+    get isInvalidConvTimeWindow(): boolean {
+        if (this.convTimeWindowAmount == null) {
+            return false;
+        }
+        return (
+            !Number.isInteger(this.convTimeWindowAmount) ||
+            this.convTimeWindowAmount < 0
+        );
+    }
+
+    /* Get the current conversation time window value in seconds. */
+    get convTimeWindowValue(): number {
+        const v = this.convTimeWindowAmount;
+        if (v == null || Number.isNaN(v)) {
+            return 0;
+        }
+
+        const amount = Math.trunc(v);
+        if (amount <= 0) {
+            return 0;
+        }
+        return amount * this.timeUnitToSeconds(this.convTimeWindowUnit);
+    }
+
+    /* Get the label for the selected conversation time window. */
+    get convTimeWindowLabel(): string {
+        if (this.convTimeWindowValue === 0) {
+            return "Disabled";
+        }
+        const amount: number = Math.trunc(this.convTimeWindowAmount ?? 0);
+        const unitLabel: string =
+            this.timeUnitOptions.find(
+                (o) => o.value === this.convTimeWindowUnit
+            )?.label ?? this.convTimeWindowUnit;
+        return `${amount} ${unitLabel}`;
+    }
+
+    /* Get the multiplier corresponding the given time unit. */
+    private timeUnitToSeconds(unit: string): number {
+        switch (unit) {
+            case "s":
+                return 1;
+            case "min":
+                return 60;
+            case "h":
+                return 60 * 60;
+            case "d":
+                return 60 * 60 * 24;
+            default:
+                return 60;
+        }
+    }
+
+    /* Set the closest time window unit and value from seconds. */
+    private setConvTimeWindowFromSeconds(seconds: number): void {
+        if (!seconds || Number.isNaN(seconds) || seconds <= 0) {
+            this.convTimeWindowAmount = 0;
+            this.convTimeWindowUnit = "min";
+            return;
+        }
+
+        const units = this.timeUnitOptions.map((u) => u.value);
+        let bestUnit: string = "s";
+        let bestAmount: number = Math.max(1, Math.round(seconds));
+        let bestDiff: number = Math.abs(bestAmount - seconds);
+
+        for (const unit of units) {
+            const mult: number = this.timeUnitToSeconds(unit);
+            const amount: number = Math.max(1, Math.round(seconds / mult));
+            const candidateSeconds: number = amount * mult;
+            const diff: number = Math.abs(candidateSeconds - seconds);
+            if (
+                diff < bestDiff ||
+                (diff === bestDiff && mult > this.timeUnitToSeconds(bestUnit))
+            ) {
+                bestDiff = diff;
+                bestUnit = unit;
+                bestAmount = amount;
+            }
+        }
+
+        this.convTimeWindowUnit = bestUnit;
+        this.convTimeWindowAmount = bestAmount;
     }
 
     isValidFloatBetween(

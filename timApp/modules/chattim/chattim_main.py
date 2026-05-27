@@ -3,7 +3,6 @@ from flask import request, Response, stream_with_context
 from typing import Any, TypedDict, Callable, Iterator, cast, Literal
 from webargs.flaskparser import use_args
 import json
-from flask_babel import gettext
 
 from timApp.auth.accesshelper import (
     verify_logged_in,
@@ -19,7 +18,6 @@ from timApp.util.flask.responsehelper import json_response, to_json_str, ok_resp
 from tim_common.markupmodels import GenericMarkupModel
 from tim_common.pluginserver_flask import (
     GenericHtmlModel,
-    PluginAnswerResp,
     PluginReqs,
     EditorTab,
     PluginAnswerWeb,
@@ -46,6 +44,9 @@ class ChatTimMarkupModel(GenericMarkupModel):
     apiAlias: str = ""
     defaultWindowSize: Literal["sm", "md", "lg", "xs"] = "md"
     blockContent: str = ""
+    previewVisible: bool = False
+    startMinimized: bool = False
+    startBottomRight: bool = False
 
 
 # TODO: make proper dataclasses
@@ -75,7 +76,6 @@ class DeletePluginParams(GenericParams):
 
 def get_rights(params: GetRightsParams) -> dict:
     doc = get_doc_or_abort(params.document_id)
-    print(doc)
     # verify_teacher_access returns the access object if teacher, None if not
     teacher_access = verify_teacher_access(doc, require=False)
 
@@ -145,10 +145,13 @@ def reqs() -> PluginReqs:
         """
 ``` {plugin="chattim" #taskidhere}
 header: ChatTIM
-welcomeText: ""  
+welcomeText: ""
 apiAlias: ""
 defaultWindowSize: "md" # [sm, md, lg, xs]
 blockContent: ""
+previewVisible: false
+startMinimized: false
+startBottomRight: false
 ```
 """,
     ]
@@ -204,14 +207,20 @@ def register_route(
 
         @app.route(f"/{route}", methods=[method], endpoint=route)
         def handler() -> Response:
-            return to_response(route_handler())
+            try:
+                return to_response(route_handler())
+            except Exception as e:
+                raise RouteException(str(e))
 
         return
 
     @app.route(f"/{route}", methods=[method], endpoint=route)
     @use_args(class_schema(route_model)(), locations=("json",))
     def handler_args(m: Any) -> Response:
-        return to_response(route_handler(m))
+        try:
+            return to_response(route_handler(m))
+        except Exception as e:
+            raise RouteException(str(e))
 
 
 def ask_route(params: ChatTimAskParams) -> ChatTimAskResponse:
@@ -249,10 +258,6 @@ def ask_stream_route(params: ChatTimAskParams) -> Response:
             citations = context
             for chunk in stream:
                 yield to_ndjson_str(ChatTimAskResponse(answer=chunk))
-        except ModelError as e:
-            error = f"{e.text()} {str(e.cause)}"
-            yield to_ndjson_str(ChatTimAskResponse(error=error))
-            return
         except Exception as e:
             yield to_ndjson_str(ChatTimAskResponse(error=str(e)))
             return
