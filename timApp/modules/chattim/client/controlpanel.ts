@@ -8,10 +8,10 @@ import {
     DirectoryPickerRestrictions,
 } from "tim/folder/directory-picker.component";
 import {TooltipModule} from "ngx-bootstrap/tooltip";
+import {showConfirm} from "tim/ui/showConfirmDialog";
 import {TokenLimitForUser, UserPolicyComponent} from "./userpolicy";
 import {UserControlComponent} from "./usercontrol";
 import type {UserData} from "./usercontrol";
-import {showConfirm} from "tim/ui/showConfirmDialog";
 
 export interface ChatModel extends Record<string, JsonValue> {
     label: string;
