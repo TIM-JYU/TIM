@@ -1506,9 +1506,6 @@ class PluginCore:
     def delete_api_key(self, owner_id: int, public_key: str) -> None:
         self.tim_database.delete_api_key(owner_id, public_key)
 
-    def get_llm_rule(self, document_id: int) -> LLMRule | None:
-        return self.tim_database.get_llm_rule(document_id)
-
     @staticmethod
     def _api_row_to_tuple(rule: LLMRule) -> APIKey:
         """
