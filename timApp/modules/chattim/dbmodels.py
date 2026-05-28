@@ -48,10 +48,6 @@ class LLMRule(db.Model):
     total_tokens_spent: Mapped[int] = mapped_column(Integer, default=0)
     indexed_document_ids: Mapped[list[int]] = mapped_column(ARRAY(Integer), default=[])
     system_prompt_path: Mapped[str] = mapped_column(String, default="")
-    # TODO: this should probably be something like:
-    # system_prompt_doc: Mapped[Optional[str]] = mapped_column(
-    #     String, ForeignKey("docentry.name"), nullable=True
-    # )
 
     agent: Mapped[str] = mapped_column(String, default="")
     conv_time_window: Mapped[int] = mapped_column(Integer, default=0)
