@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from json import JSONDecodeError
 from typing import Protocol
 import json
-from openai import OpenAI
+from openai import OpenAI  # type: ignore
 import numpy as np
 import os
 

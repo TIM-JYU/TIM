@@ -7,7 +7,7 @@ from dataclasses import dataclass, asdict
 from collections import deque
 from timApp.util.flask.cache import cache
 from timApp.util.utils import get_current_time
-from typing import BinaryIO, Iterator, Any, Callable
+from typing import BinaryIO, Iterator, Callable
 from .model import Message, ModelUsage
 
 
@@ -147,13 +147,7 @@ class ConversationManager:
         """
         ts_b = ts_begin or 0
         ts_e = ts_end or ChatMessage.ts_ms()
-        kwargs_id = dict(plugin_id=plugin_id, user_id=user_id)
-        kwargs: dict[str, Any] = dict(
-            **kwargs_id,
-            ts_begin=ts_b,
-            ts_end=ts_e,
-            max_messages=max_messages,
-        )
+        kwargs_id: dict[str, str] = dict(plugin_id=plugin_id, user_id=user_id)
 
         cached = self._get_from_cache(**kwargs_id) or self._update_cache(**kwargs_id)
         if cached is not None:
@@ -171,7 +165,12 @@ class ConversationManager:
                 start = None if len(cached_slice) < max_messages else -max_messages
                 return self._parse_raw_messages(cached_slice[start:])
 
-        return self._store.load_messages_time_window(**kwargs) or []
+        return (
+            self._store.load_messages_time_window(
+                **kwargs_id, ts_begin=ts_b, ts_end=ts_e, max_messages=max_messages
+            )
+            or []
+        )
 
     def _get_from_cache(self, plugin_id: str, user_id: str) -> list[dict] | None:
         """Get the message list tail from the cache if it exists and is up to date."""
@@ -237,7 +236,7 @@ class ConversationManager:
         result = os.stat(path)
         return result.st_mtime_ns, result.st_size
 
-    def _set_cache(self, key: str, value: Any) -> None:
+    def _set_cache(self, key: str, value: dict) -> None:
         cache.set(key, value, timeout=self.ttl)
 
     @staticmethod
