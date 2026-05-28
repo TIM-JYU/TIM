@@ -210,7 +210,9 @@ class PluginCore:
                     break
 
         if not plugin_found:
-            return Result(None, f"No ChatTIM plugin found in the document {document_id}")
+            return Result(
+                None, f"No ChatTIM plugin found in the document {document_id}"
+            )
 
         # policy checking
         remaining_tokens = (
