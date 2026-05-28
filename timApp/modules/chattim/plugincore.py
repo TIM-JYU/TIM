@@ -897,7 +897,9 @@ class PluginCore:
 
         return user_data
 
-    def save_user_policy(self, caller_id: int, document_id: int, user_data: UserData) -> str:
+    def save_user_policy(
+        self, caller_id: int, document_id: int, user_data: UserData
+    ) -> str:
         """
         Saves given user policy for the given user
         :param caller_id: the user who is saving
@@ -1167,7 +1169,9 @@ class PluginCore:
                 llm_rule.document_id, caller_id, ts_begin, ts_now_ms, max_messages
             )
             if user_policy is not None and user_policy.time_window_tokens is not None:
-                window_allowance = user_policy.time_window_tokens - tokens_used_in_window
+                window_allowance = (
+                    user_policy.time_window_tokens - tokens_used_in_window
+                )
 
         elif gp_window_enabled:
             window_duration_ms = self._policy_window_as_ms(global_policy)
@@ -1175,8 +1179,13 @@ class PluginCore:
             tokens_used_in_window = self._calculate_tokens_from_chathistory(
                 llm_rule.document_id, caller_id, ts_begin, ts_now_ms, max_messages
             )
-            if global_policy is not None and global_policy.time_window_tokens is not None:
-                window_allowance = global_policy.time_window_tokens - tokens_used_in_window
+            if (
+                global_policy is not None
+                and global_policy.time_window_tokens is not None
+            ):
+                window_allowance = (
+                    global_policy.time_window_tokens - tokens_used_in_window
+                )
 
         if window_allowance is not None and window_allowance < 0:
             window_allowance = 0
