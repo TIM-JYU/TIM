@@ -4,7 +4,7 @@ from dataclasses import dataclass, field
 
 from unicodedata import normalize, category
 
-from timApp.modules.chattim.dbmodels import LLMRule, Policy
+from timApp.modules.chattim.dbmodels import LLMRule, Policy, Usage
 from timApp.util.flask.cache import cache
 from timApp.timdb.dbaccess import get_files_path
 from timApp.user.user import User
@@ -27,7 +27,6 @@ from typing import Generic, TypeVar, TypedDict, cast
 
 from timApp.modules.chattim.model import (
     ModelResponse,
-    Usage,
     GenericApiClient,
     Provider,
     ModelError,
@@ -843,7 +842,7 @@ class PluginCore:
             p for p in supported_providers if p not in unsupported_embedding_providers
         ]
 
-    def get_user_data(self, caller_id, document_id) -> list[UserData]:
+    def get_user_data(self, caller_id: int, document_id: int) -> list[UserData]:
         """
         Returns set policy and token usage for each user that has interacted with the plugin.
         For users that have no policy set, a default GenericPolicy is sent back.
@@ -867,7 +866,7 @@ class PluginCore:
         for usage in usages:
             user_id = usage.user
             user = User.get_by_id(user_id)
-            username = user.name
+            username = user.name if user is not None else ""
 
             if user_id == caller_id:
                 continue
@@ -898,7 +897,7 @@ class PluginCore:
 
         return user_data
 
-    def save_user_policy(self, caller_id, document_id, user_data) -> str:
+    def save_user_policy(self, caller_id: int, document_id: int, user_data: UserData) -> str:
         """
         Saves given user policy for the given user
         :param caller_id: the user who is saving
@@ -960,7 +959,7 @@ class PluginCore:
             token_cap_enabled=token_cap_enabled,
             token_cap=max_tokens_per_user,
             time_window_enabled=time_window_enabled,
-            window_unit=sql_policy.token_time_window_type,
+            window_unit=sql_policy.token_time_window_type or "h",
             window_value=time_window_value,
             token_cap_for_window=time_window_tokens,
         )
@@ -1167,7 +1166,8 @@ class PluginCore:
             tokens_used_in_window = self._calculate_tokens_from_chathistory(
                 llm_rule.document_id, caller_id, ts_begin, ts_now_ms, max_messages
             )
-            window_allowance = user_policy.time_window_tokens - tokens_used_in_window
+            if user_policy is not None and user_policy.time_window_tokens is not None:
+                window_allowance = user_policy.time_window_tokens - tokens_used_in_window
 
         elif gp_window_enabled:
             window_duration_ms = self._policy_window_as_ms(global_policy)
@@ -1175,7 +1175,8 @@ class PluginCore:
             tokens_used_in_window = self._calculate_tokens_from_chathistory(
                 llm_rule.document_id, caller_id, ts_begin, ts_now_ms, max_messages
             )
-            window_allowance = global_policy.time_window_tokens - tokens_used_in_window
+            if global_policy is not None and global_policy.time_window_tokens is not None:
+                window_allowance = global_policy.time_window_tokens - tokens_used_in_window
 
         if window_allowance is not None and window_allowance < 0:
             window_allowance = 0
@@ -1237,9 +1238,9 @@ class PluginCore:
         return used_tokens
 
     @staticmethod
-    def _policy_window_as_ms(policy: Policy) -> int:
+    def _policy_window_as_ms(policy: Policy | None) -> int:
         """Gives the duration of the time window of the given policy in milliseconds"""
-        if not Policy:
+        if not policy:
             raise TypeError("_policy_window_as_ms: Policy was None")
 
         time_type = policy.token_time_window_type
@@ -1318,6 +1319,10 @@ class PluginCore:
                 )
 
             has_rights = any(right.get(r) is not None for r in rights)
+            if document.docinfo is None:
+                raise ValueError(
+                    f"Could not get rights for document [{document}] for user [{user_id}]"
+                )
             if not has_rights:
                 raise PermissionError(f"No rights for [{document.docinfo.path}]")
 

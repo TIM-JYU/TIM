@@ -654,7 +654,7 @@ class TimDatabase:
         return db.session.execute(stmt).scalars().all()
 
     @staticmethod
-    def get_usages(llm_rule: LLMRule) -> list[Usage] | None:
+    def get_usages(llm_rule: LLMRule) -> list[Usage]:
         """
         Gets all usages associated with llm rule.
         :param llm_rule:
