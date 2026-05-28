@@ -1,19 +1,17 @@
 from __future__ import annotations
 
 from flask_babel import gettext
-from dataclasses import dataclass, asdict
+from dataclasses import dataclass
 from typing import (
     Literal,
     Protocol,
     Callable,
     Iterable,
-    Any,
-    cast,
     AsyncIterator,
 )
 from typing_extensions import TypeAlias
 from enum import Enum
-from openai import (
+from openai import (  # type: ignore
     OpenAI,
     AsyncOpenAI,
     AuthenticationError,
@@ -24,8 +22,23 @@ from openai import (
     NotFoundError,
     BadRequestError,
     APIStatusError,
-    types,
 )
+from openai.types.chat import (  # type: ignore
+    ChatCompletion,
+    ChatCompletionChunk,
+    ChatCompletionMessageParam,
+    ChatCompletionUserMessageParam,
+    ChatCompletionAssistantMessageParam,
+    ChatCompletionSystemMessageParam,
+)
+from openai.types.chat.completion_create_params import (  # type: ignore
+    CompletionCreateParamsStreaming,
+    CompletionCreateParamsNonStreaming,
+)
+from openai.types.chat.chat_completion_stream_options_param import (  # type: ignore
+    ChatCompletionStreamOptionsParam,
+)
+from openai.types.completion_usage import CompletionUsage  # type: ignore
 
 DEFAULT_COMPLETION_TIMEOUT_S = 60
 
@@ -241,7 +254,7 @@ class ModelResponse:
     """Usage statistics."""
 
 
-def _convert_usage(usage: types.CompletionUsage | None) -> Usage | None:
+def _convert_usage(usage: CompletionUsage | None) -> Usage | None:
     """
     Convert completion usage from the API response to `Usage`
 
@@ -262,7 +275,7 @@ def _completion_kwargs(
     messages: list[Message],
     options: GenerateOptions,
     stream: bool,
-) -> dict[str, Any]:
+) -> CompletionCreateParamsNonStreaming | CompletionCreateParamsStreaming:
     """
     Prepare the keyword arguments for a completion request.
 
@@ -272,21 +285,38 @@ def _completion_kwargs(
     :param stream: Whether to use streaming for the response.
     :return: A dictionary of keyword arguments for the completion request.
     """
-    msgs: list[dict[str, str]] = [asdict(m) for m in messages]
-    stream_options = (
-        {"stream": True, "stream_options": {"include_usage": True}} if stream else {}
-    )
-    return dict(
+    msgs: list[ChatCompletionMessageParam] = []
+    for m in messages:
+        if m.role == "user":
+            msgs.append(ChatCompletionUserMessageParam(role="user", content=m.content))
+        elif m.role == "assistant":
+            msgs.append(
+                ChatCompletionAssistantMessageParam(role="assistant", content=m.content)
+            )
+        elif m.role == "system":
+            msgs.append(
+                ChatCompletionSystemMessageParam(role="system", content=m.content)
+            )
+
+    if stream:
+        return CompletionCreateParamsStreaming(
+            model=model_id,
+            messages=msgs,
+            temperature=options.temperature,
+            max_completion_tokens=options.max_tokens,
+            stream=True,
+            stream_options=ChatCompletionStreamOptionsParam(include_usage=True),
+        )
+
+    return CompletionCreateParamsNonStreaming(
         model=model_id,
-        messages=cast(Any, msgs),
+        messages=msgs,
         temperature=options.temperature,
         max_completion_tokens=options.max_tokens,
-        timeout=DEFAULT_COMPLETION_TIMEOUT_S,
-        **stream_options,
     )
 
 
-def _parse_completion_response(res: Any) -> ModelResponse:
+def _parse_completion_response(res: ChatCompletion) -> ModelResponse:
     """
     Parse the API response from the LLM to `ModelResponse`.
 
@@ -300,7 +330,7 @@ def _parse_completion_response(res: Any) -> ModelResponse:
     return ModelResponse(content=choice.message.content or "", usage=usage)
 
 
-def _parse_stream_chunk(chunk: Any) -> ModelResponse:
+def _parse_stream_chunk(chunk: ChatCompletionChunk) -> ModelResponse:
     """
     Parse the streaming API response from the LLM to `ModelResponse`.
 
@@ -336,7 +366,9 @@ class GenericApiChatModel(ChatModel):
         """Generate a model response from the given messages."""
         kwargs = _completion_kwargs(self._model_id, messages, options, False)
         try:
-            res = self._client.chat.completions.create(**kwargs)
+            res = self._client.chat.completions.create(
+                **kwargs, timeout=DEFAULT_COMPLETION_TIMEOUT_S
+            )
         except Exception as e:
             raise _openai_to_model_error(e) from e
         return _parse_completion_response(res)
@@ -350,7 +382,9 @@ class GenericApiChatModel(ChatModel):
         """
         kwargs = _completion_kwargs(self._model_id, messages, options, True)
         try:
-            stream = self._client.chat.completions.create(**kwargs)
+            stream = self._client.chat.completions.create(
+                **kwargs, timeout=DEFAULT_COMPLETION_TIMEOUT_S
+            )
         except Exception as e:
             raise _openai_to_model_error(e) from e
 
@@ -387,7 +421,9 @@ class AsyncGenericApiChatModel(AsyncChatModel):
         """Generate a model response from the given messages."""
         kwargs = _completion_kwargs(self._model_id, messages, options, False)
         try:
-            res = await self._client.chat.completions.create(**kwargs)
+            res = await self._client.chat.completions.create(
+                **kwargs, timeout=DEFAULT_COMPLETION_TIMEOUT_S
+            )
         except Exception as e:
             raise _openai_to_model_error(e) from e
         return _parse_completion_response(res)
@@ -403,7 +439,9 @@ class AsyncGenericApiChatModel(AsyncChatModel):
         async def gen() -> AsyncIterator[ModelResponse]:
             kwargs = _completion_kwargs(self._model_id, messages, options, True)
             try:
-                stream = await self._client.chat.completions.create(**kwargs)
+                stream = await self._client.chat.completions.create(
+                    **kwargs, timeout=DEFAULT_COMPLETION_TIMEOUT_S
+                )
             except Exception as e:
                 raise _openai_to_model_error(e) from e
 
