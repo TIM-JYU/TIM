@@ -33,6 +33,9 @@ from timApp.modules.chattim.model import (
     PROVIDERS,
 )
 from timApp.modules.chattim.conversation import ConversationManager, ChatMessage
+from timApp.plugin.plugin import Plugin
+from timApp.document.usercontext import UserContext
+from timApp.document.viewcontext import ViewContext, ViewRoute
 
 DEFAULT_CACHE_TIMEOUT = 60 * 15  # seconds
 HISTORY_MAX_MESSAGES = 64
@@ -180,14 +183,34 @@ class PluginCore:
         :param stream: Use streaming for model response.
         :return: Result of the prepared chat request.
         """
-        if not self._instance_exists(document_id):
-            return Result(error=f"Instance has not been created yet")
-
         rule = self.tim_database.get_llm_rule(document_id)
         if not rule:
-            return Result(None, "No LLMRule found for this document")
+            return Result(error="Instance has not been created yet")
 
         verbose_errors: bool = caller_id == rule.owner
+
+        document = TimDatabase.get_tim_document_by_id(document_id)
+        if document is None:
+            return Result(error=f"Document with id {document_id} not found")
+
+        user = User.get_by_id(caller_id)
+        if user is None:
+            return Result(error=f"User with id {caller_id} not found")
+
+        view_ctx = ViewContext(ViewRoute.View, preview=False)
+        user_ctx = UserContext(user=user, logged_user=user)
+
+        plugin_found: bool = False
+        for paragraph in document.get_paragraphs():
+            is_plugin = paragraph.is_plugin()
+            if is_plugin:
+                plugin = Plugin.from_paragraph(paragraph, view_ctx, user_ctx)
+                if plugin.type == "chattim":
+                    plugin_found = True
+                    break
+
+        if not plugin_found:
+            return Result(None, f"No ChatTIM plugin found in the document {document_id}")
 
         # policy checking
         remaining_tokens = (
@@ -1016,12 +1039,6 @@ class PluginCore:
             return None
         content = prompt_doc.export_markdown(export_ids=False).strip()
         return content if len(content) > 0 else None
-
-    def _instance_exists(self, document_id: int) -> bool:
-        # TODO: todnäk pitää muistissa tiedetyt instanssi-idt jottei haeta aina tietokannalta turhaan
-        if not self.tim_database.get_llm_rule(document_id):
-            return False
-        return True
 
     def _owns_document(self, caller_id: int, document_id: int) -> bool:
         """Expects that you have checked already that doc and user exist, throws otherwise"""

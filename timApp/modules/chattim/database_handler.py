@@ -26,7 +26,7 @@ class TimDatabase:
         """
         doc_entry = TimDatabase.get_doc_entry_by_id(doc_id)
         if doc_entry:
-            return doc_entry.document  # paragraphs -> .get_paragraphs()
+            return doc_entry.document
         return None
 
     @staticmethod
