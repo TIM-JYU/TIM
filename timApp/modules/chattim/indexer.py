@@ -16,6 +16,8 @@ MAX_TOKENS_CHUNK = 8192
 CHUNK_TOKEN_TARGET = 512
 CHARACTERS_PER_TOKEN = 3
 
+SUPPORTED_EMBEDDING_PROVIDERS: list[Provider] = ["openai", "google", "openrouter"]
+
 
 @dataclass
 class TextBlock:

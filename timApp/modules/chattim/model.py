@@ -2,7 +2,16 @@ from __future__ import annotations
 
 from flask_babel import gettext
 from dataclasses import dataclass, asdict
-from typing import Literal, Protocol, Callable, Iterable, Any, cast, AsyncIterator
+from typing import (
+    Literal,
+    Protocol,
+    Callable,
+    Iterable,
+    Any,
+    cast,
+    AsyncIterator,
+)
+from typing_extensions import TypeAlias
 from enum import Enum
 from openai import (
     OpenAI,
@@ -19,6 +28,37 @@ from openai import (
 )
 
 DEFAULT_COMPLETION_TIMEOUT_S = 60
+
+Provider = Literal["openai", "anthropic", "google", "openrouter", "dummy"]
+
+ProviderInitFn: TypeAlias = Callable[[Provider, str, str, str | None], "ChatModel"]
+"""Function type for initializing `ChatModel` instances from different providers.
+
+`ProviderInitFn(provider: Provider, model_id: str, api_key: str, base_url: str | None)`
+"""
+
+PROVIDERS: dict[Provider, ProviderInitFn] = {
+    "openai": lambda provider, model_id, key, url: GenericApiChatModel(
+        provider, model_id, key, _resolve_base_url("openai", url)
+    ),
+    "anthropic": lambda provider, model_id, key, url: GenericApiChatModel(
+        provider, model_id, key, _resolve_base_url("anthropic", url)
+    ),
+    "google": lambda provider, model_id, key, url: GenericApiChatModel(
+        provider, model_id, key, _resolve_base_url("google", url)
+    ),
+    "openrouter": lambda provider, model_id, key, url: GenericApiChatModel(
+        provider, model_id, key, _resolve_base_url("openrouter", url)
+    ),
+}
+"""All the supported providers."""
+
+_DEFAULT_BASE_URL_BY_PROVIDER: dict[Provider, str] = {
+    "openai": "https://api.openai.com/v1",
+    "anthropic": "https://api.anthropic.com/v1",
+    "google": "https://generativelanguage.googleapis.com/v1beta/openai",
+    "openrouter": "https://openrouter.ai/api/v1",
+}
 
 
 class ModelErrorKind(Enum):
@@ -589,35 +629,3 @@ def _default_headers(provider: Provider, api_key: str) -> dict[str, str]:
     if provider == "anthropic":
         return {"x-api-key": api_key, "anthropic-version": "2023-06-01"}
     return {}
-
-
-Provider = Literal["openai", "anthropic", "google", "openrouter", "dummy"]
-
-ProviderInitFn = Callable[[Provider, str, str, str | None], ChatModel]
-"""Function type for initializing `ChatModel` instances from different providers.
-
-`ProviderInitFn(provider: Provider, model_id: str, api_key: str, base_url: str | None)`
-"""
-
-PROVIDERS: dict[Provider, ProviderInitFn] = {
-    "openai": lambda provider, model_id, key, url: GenericApiChatModel(
-        provider, model_id, key, _resolve_base_url("openai", url)
-    ),
-    "anthropic": lambda provider, model_id, key, url: GenericApiChatModel(
-        provider, model_id, key, _resolve_base_url("anthropic", url)
-    ),
-    "google": lambda provider, model_id, key, url: GenericApiChatModel(
-        provider, model_id, key, _resolve_base_url("google", url)
-    ),
-    "openrouter": lambda provider, model_id, key, url: GenericApiChatModel(
-        provider, model_id, key, _resolve_base_url("openrouter", url)
-    ),
-}
-"""All the supported providers."""
-
-_DEFAULT_BASE_URL_BY_PROVIDER: dict[Provider, str] = {
-    "openai": "https://api.openai.com/v1",
-    "anthropic": "https://api.anthropic.com/v1",
-    "google": "https://generativelanguage.googleapis.com/v1beta/openai",
-    "openrouter": "https://openrouter.ai/api/v1",
-}
