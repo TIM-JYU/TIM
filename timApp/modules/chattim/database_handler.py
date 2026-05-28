@@ -661,6 +661,6 @@ class TimDatabase:
         :return:
         """
         stmt = select(Usage).where(
-            Usage.llm_rule == llm_rule,
+            Usage.llm_rule_id == llm_rule.id,
         )
         return db.session.scalars(stmt).all()
