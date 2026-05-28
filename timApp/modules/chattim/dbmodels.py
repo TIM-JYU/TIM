@@ -84,8 +84,8 @@ class Policy(db.Model):
     time_window_tokens: Mapped[Optional[int]] = mapped_column(
         Integer, nullable=True
     )  # token limit for the window
-    max_tokens_per_user: Mapped[int] = mapped_column(Integer, nullable=True)
-    token_pool: Mapped[int] = mapped_column(Integer, nullable=True)
+    max_tokens_per_user: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+    token_pool: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
 
 
 class Usage(db.Model):
