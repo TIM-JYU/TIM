@@ -8,7 +8,7 @@ from collections import deque
 from timApp.util.flask.cache import cache
 from timApp.util.utils import get_current_time
 from typing import BinaryIO, Iterator, Any, Callable
-from .model import Message, Usage
+from .model import Message, ModelUsage
 
 
 @dataclass
@@ -21,7 +21,7 @@ class ChatMessage:
     """Role of the message sender."""
     timestamp: int
     """Timestamp of when the message was sent in milliseconds."""
-    usage: Usage | None = None
+    usage: ModelUsage | None = None
     """Tokens used for generating the message."""
     citations: list[str] | None = None
     """Cited materials for the agent message."""
@@ -42,7 +42,7 @@ class ChatMessage:
         message_dict = dict(d)
         if isinstance(usage, dict):
             try:
-                message_dict["usage"] = Usage(**usage)
+                message_dict["usage"] = ModelUsage(**usage)
             except TypeError:
                 message_dict["usage"] = None
         return ChatMessage(**message_dict)

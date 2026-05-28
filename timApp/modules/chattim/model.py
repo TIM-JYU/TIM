@@ -228,7 +228,7 @@ class GenerateOptions:
 
 
 @dataclass(frozen=True)
-class Usage:
+class ModelUsage:
     """Usage statistics for the completion request."""
 
     completion_tokens: int
@@ -250,11 +250,11 @@ class ModelResponse:
     """The full response from the model."""
     delta: str | None = None
     """A chunk of the response content."""
-    usage: Usage | None = None
+    usage: ModelUsage | None = None
     """Usage statistics."""
 
 
-def _convert_usage(usage: CompletionUsage | None) -> Usage | None:
+def _convert_usage(usage: CompletionUsage | None) -> ModelUsage | None:
     """
     Convert completion usage from the API response to `Usage`
 
@@ -263,7 +263,7 @@ def _convert_usage(usage: CompletionUsage | None) -> Usage | None:
     """
     if not usage:
         return None
-    return Usage(
+    return ModelUsage(
         completion_tokens=usage.completion_tokens,
         prompt_tokens=usage.prompt_tokens,
         total_tokens=usage.total_tokens,
@@ -469,14 +469,14 @@ class DummyChatModel(ChatModel):
     def generate(
         self, messages: list[Message], options: GenerateOptions
     ) -> ModelResponse:
-        return ModelResponse(content=self.response, usage=Usage(0, 0, 0))
+        return ModelResponse(content=self.response, usage=ModelUsage(0, 0, 0))
 
     def generate_stream(
         self, messages: list[Message], options: GenerateOptions
     ) -> Iterable[ModelResponse]:
         for part in _split_keep_left(self.response, " "):
             yield ModelResponse(delta=part)
-        yield ModelResponse(usage=Usage(0, 0, 0))
+        yield ModelResponse(usage=ModelUsage(0, 0, 0))
 
     def get_info(self) -> tuple[Provider, str]:
         return self._provider, self._model_id
@@ -496,7 +496,7 @@ class DummyAsyncChatModel(AsyncChatModel):
     async def generate(
         self, messages: list[Message], options: GenerateOptions
     ) -> ModelResponse:
-        return ModelResponse(content=self.response, usage=Usage(0, 0, 0))
+        return ModelResponse(content=self.response, usage=ModelUsage(0, 0, 0))
 
     def generate_stream(
         self, messages: list[Message], options: GenerateOptions
@@ -504,7 +504,7 @@ class DummyAsyncChatModel(AsyncChatModel):
         async def gen() -> AsyncIterator[ModelResponse]:
             for part in _split_keep_left(self.response, " "):
                 yield ModelResponse(delta=part)
-            yield ModelResponse(usage=Usage(0, 0, 0))
+            yield ModelResponse(usage=ModelUsage(0, 0, 0))
 
         return gen()
 

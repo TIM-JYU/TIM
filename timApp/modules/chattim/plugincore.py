@@ -4,7 +4,7 @@ from dataclasses import dataclass, field
 
 from unicodedata import normalize, category
 
-from timApp.modules.chattim.dbmodels import LLMRule, Policy
+from timApp.modules.chattim.dbmodels import LLMRule, Policy, Usage
 from timApp.util.flask.cache import cache
 from timApp.timdb.dbaccess import get_files_path
 from timApp.user.user import User
@@ -28,7 +28,7 @@ from typing import Generic, TypeVar, TypedDict, cast
 
 from timApp.modules.chattim.model import (
     ModelResponse,
-    Usage,
+    ModelUsage,
     GenericApiClient,
     Provider,
     ModelError,
@@ -339,7 +339,7 @@ class PluginCore:
         assistant_answer: str,
         timestamp_user: int,
         timestamp_answer: int,
-        usage: Usage | None,
+        usage: ModelUsage | None,
         citations: list[str] | None,
     ) -> None:
         """Save the messages.
@@ -439,7 +439,7 @@ class PluginCore:
 
         def gen() -> Iterable[str]:
             full_answer: str = ""
-            usage: Usage | None = None
+            usage: ModelUsage | None = None
 
             # Collect the chunk message and usage
             def apply_chunk(c: ModelResponse) -> None:
