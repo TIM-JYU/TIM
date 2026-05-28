@@ -33,9 +33,6 @@ from timApp.modules.chattim.model import (
     PROVIDERS,
 )
 from timApp.modules.chattim.conversation import ConversationManager, ChatMessage
-from timApp.plugin.plugin import Plugin
-from timApp.document.usercontext import UserContext
-from timApp.document.viewcontext import ViewContext, ViewRoute
 
 DEFAULT_CACHE_TIMEOUT = 60 * 15  # seconds
 HISTORY_MAX_MESSAGES = 64
@@ -188,31 +185,6 @@ class PluginCore:
             return Result(error="Instance has not been created yet")
 
         verbose_errors: bool = caller_id == rule.owner
-
-        document = TimDatabase.get_tim_document_by_id(document_id)
-        if document is None:
-            return Result(error=f"Document with id {document_id} not found")
-
-        user = User.get_by_id(caller_id)
-        if user is None:
-            return Result(error=f"User with id {caller_id} not found")
-
-        view_ctx = ViewContext(ViewRoute.View, preview=False)
-        user_ctx = UserContext(user=user, logged_user=user)
-
-        plugin_found: bool = False
-        for paragraph in document.get_paragraphs():
-            is_plugin = paragraph.is_plugin()
-            if is_plugin:
-                plugin = Plugin.from_paragraph(paragraph, view_ctx, user_ctx)
-                if plugin.type == "chattim":
-                    plugin_found = True
-                    break
-
-        if not plugin_found:
-            return Result(
-                None, f"No ChatTIM plugin found in the document {document_id}"
-            )
 
         # policy checking
         remaining_tokens = (
