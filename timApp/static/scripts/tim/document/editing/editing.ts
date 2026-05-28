@@ -435,7 +435,8 @@ export class EditingHandler {
                 buttonsText += `[${button.text}]{.timButton .deleteChat}\n`;
             }
         }
-        return "    \\\n" + buttonsText;
+        // return "    \\\n" + buttonsText;
+        return "\n\\\n" + buttonsText;
     }
 
     /**
