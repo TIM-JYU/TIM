@@ -26,7 +26,7 @@ class TimDatabase:
         """
         doc_entry = TimDatabase.get_doc_entry_by_id(doc_id)
         if doc_entry:
-            return doc_entry.document  # paragraphs -> .get_paragraphs()
+            return doc_entry.document
         return None
 
     @staticmethod
@@ -649,13 +649,13 @@ class TimDatabase:
         return db.session.execute(stmt).scalars().all()
 
     @staticmethod
-    def get_usages(llm_rule: LLMRule) -> list[Usage] | None:
+    def get_usages(llm_rule: LLMRule) -> list[Usage]:
         """
         Gets all usages associated with llm rule.
         :param llm_rule:
         :return:
         """
         stmt = select(Usage).where(
-            Usage.llm_rule == llm_rule,
+            Usage.llm_rule_id == llm_rule.id,
         )
         return db.session.scalars(stmt).all()

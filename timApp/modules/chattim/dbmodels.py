@@ -48,7 +48,7 @@ class LLMRule(db.Model):
     indexed_document_ids: Mapped[list[int]] = mapped_column(ARRAY(Integer), default=[])
     system_prompt_path: Mapped[str] = mapped_column(String, default="")
     # TODO: this should probably be something like:
-    # system_prompt_doc: Mapped[str] = mapped_column(
+    # system_prompt_doc: Mapped[Optional[str]] = mapped_column(
     #     String, ForeignKey("docentry.name"), nullable=True
     # )
 
@@ -75,17 +75,17 @@ class Policy(db.Model):
         ForeignKey("llm_rule.id", ondelete="CASCADE")
     )
     llm_rule: Mapped["LLMRule"] = relationship("LLMRule", back_populates="policy")
-    token_time_window_type: Mapped[str] = mapped_column(
+    token_time_window_type: Mapped[Optional[str]] = mapped_column(
         String, nullable=True
     )  # d,h,min,sec
-    token_time_window_num: Mapped[int] = mapped_column(
+    token_time_window_num: Mapped[Optional[int]] = mapped_column(
         Integer, nullable=True
     )  # 5 of type
-    time_window_tokens: Mapped[int] = mapped_column(
+    time_window_tokens: Mapped[Optional[int]] = mapped_column(
         Integer, nullable=True
     )  # token limit for the window
-    max_tokens_per_user: Mapped[int] = mapped_column(Integer, nullable=True)
-    token_pool: Mapped[int] = mapped_column(Integer, nullable=True)
+    max_tokens_per_user: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+    token_pool: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
 
 
 class Usage(db.Model):

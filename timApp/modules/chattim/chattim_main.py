@@ -40,6 +40,12 @@ from timApp.modules.chattim.plugincore import (
     UserData,
     InstanceSettingsData,
 )
+from .database_handler import TimDatabase
+from .model import ModelError
+from timApp.plugin.plugin import Plugin
+from timApp.document.usercontext import UserContext
+from timApp.document.viewcontext import ViewContext, ViewRoute
+from timApp.user.user import User
 
 plugincore = PluginCore()
 
@@ -233,6 +239,8 @@ def ask_route(params: ChatTimAskParams) -> ChatTimAskResponse:
     document_id = params.document_id
     session_user_id = get_current_user_id()
 
+    document_has_chattim_plugin(document_id, session_user_id)
+
     resp = plugincore.chat_request(session_user_id, document_id, user_input)
     if resp.ok():
         value: tuple[str, list[str] | None] = resp.value or ("", None)
@@ -247,8 +255,9 @@ def ask_route(params: ChatTimAskParams) -> ChatTimAskResponse:
 def ask_stream_route(params: ChatTimAskParams) -> Response:
     user_input = params.input
     document_id = params.document_id
-
     session_user_id = get_current_user_id()
+
+    document_has_chattim_plugin(document_id, session_user_id)
 
     def generate() -> Iterator[str]:
         resp = plugincore.chat_request_stream(session_user_id, document_id, user_input)
@@ -304,6 +313,9 @@ def get_user_data(params: GenericParams) -> dict:
     """
     document_id = params.document_id
     session_user_id = get_current_user_id()
+
+    document_has_chattim_plugin(document_id, session_user_id)
+
     ret: dict = {}
 
     try:
@@ -320,6 +332,8 @@ def save_user_policy(params: SaveUserPolicyParams) -> dict:
     user_data = params.user_data
     session_user_id = get_current_user_id()
     operation_result: dict = {"error": "", "result": ""}
+
+    document_has_chattim_plugin(document_id, session_user_id)
 
     try:
         result_msg = plugincore.save_user_policy(
@@ -338,6 +352,8 @@ def save_settings(params: ChatTimSaveSettingsParams) -> ChatTIMGetSettingsRespon
     panel_data = params.control_panel_settings
     document_id = params.document_id
     session_user_id = get_current_user_id()
+
+    document_has_chattim_plugin(document_id, session_user_id)
 
     save_result = plugincore.save_instance(session_user_id, document_id, panel_data)
     if not save_result.ok() or save_result.value is None:
@@ -358,10 +374,12 @@ def get_messages(params: GetMessagesParams) -> dict:
 
 
 def clear_messages(params: GenericParams) -> Response:
-    user_id = str(get_current_user_id())
-    document_id = str(params.document_id)
+    user_id = get_current_user_id()
+    document_id = params.document_id
 
-    plugincore.clear_history(user_id, document_id)
+    document_has_chattim_plugin(document_id, user_id)
+
+    plugincore.clear_history(str(user_id), str(document_id))
     return ok_response()
 
 
@@ -481,15 +499,39 @@ def get_models(params: GetModelsParams) -> dict:
 
 
 def delete_plugin(params: DeletePluginParams) -> Response:
-    user_id = get_current_user_id()
+    session_user_id = get_current_user_id()
     document_id = params.document_id
     par_id = params.par_id
 
-    result = plugincore.delete_instance(user_id, document_id, par_id)
+    document_has_chattim_plugin(document_id, session_user_id)
+
+    result = plugincore.delete_instance(session_user_id, document_id, par_id)
 
     if result.error is not None:
         raise RouteException(description=result.error or "")
     return ok_response()
+
+
+def document_has_chattim_plugin(document_id: int, caller_id: int) -> None:
+    document = TimDatabase.get_tim_document_by_id(document_id)
+    if document is None:
+        raise LookupError(f"Document with id {document_id} not found")
+
+    user = User.get_by_id(caller_id)
+    if user is None:
+        raise LookupError(f"User with id {caller_id} not found")
+
+    view_ctx = ViewContext(ViewRoute.View, preview=False)
+    user_ctx = UserContext(user=user, logged_user=user)
+
+    for paragraph in document.get_paragraphs():
+        is_plugin = paragraph.is_plugin()
+        if is_plugin:
+            plugin = Plugin.from_paragraph(paragraph, view_ctx, user_ctx)
+            if plugin.type == "chattim":
+                return
+
+    raise RouteException(f"No ChatTIM plugin found in the document {document_id}")
 
 
 register_route(chattim, "post", "ask", ChatTimAskParams, ask_route)
