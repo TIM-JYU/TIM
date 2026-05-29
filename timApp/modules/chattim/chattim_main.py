@@ -12,7 +12,8 @@ from timApp.auth.accesshelper import (
 )
 from timApp.util.flask.requesthelper import RouteException
 from tim_common.marshmallow_dataclass import class_schema
-
+from timApp.user.user import User
+from timApp.document.document import Document
 from timApp.auth.sessioninfo import get_current_user_id, get_current_user_name
 from timApp.tim_app import csrf
 from timApp.util.flask.responsehelper import json_response, to_json_str, ok_response
@@ -213,7 +214,12 @@ def ask_route(params: ChatTimAskParams) -> ChatTimAskResponse:
     user_input = params.input
     document_id = params.document_id
     session_user_id = get_current_user_id()
+    user = User.get_by_id(session_user_id)
+    doc = get_doc_or_abort(document_id)
+    # check if user has access to document where plugin is added
 
+    if not user.has_view_access(doc):
+        return ChatTimAskResponse(error="You dont have access to this document")
     resp = plugincore.chat_request(session_user_id, document_id, user_input)
     if resp.ok():
         value: tuple[str, list[str] | None] = resp.value or ("", None)
@@ -230,8 +236,17 @@ def ask_stream_route(params: ChatTimAskParams) -> Response:
     document_id = params.document_id
 
     session_user_id = get_current_user_id()
+    user = User.get_by_id(session_user_id)
+    doc = get_doc_or_abort(document_id)
 
     def generate() -> Iterator[str]:
+        # check if user has access to document where plugin is added
+        if not user.has_view_access(doc):
+            yield to_ndjson_str(
+                ChatTimAskResponse(error="You dont have access to this document")
+            )
+            return
+
         resp = plugincore.chat_request_stream(session_user_id, document_id, user_input)
         if not resp.ok() or not resp.value:
             yield to_ndjson_str(ChatTimAskResponse(error=resp.error))
