@@ -1,6 +1,13 @@
 from dataclasses import dataclass
 from flask import request, Response, stream_with_context
-from typing import Any, TypedDict, Callable, Iterator, cast, Literal
+from typing import (
+    TypedDict,
+    Callable,
+    Iterator,
+    cast,
+    Literal,
+    TypeAlias,
+)
 from webargs.flaskparser import use_args
 import json
 
@@ -33,9 +40,10 @@ from timApp.modules.chattim.plugincore import (
     UserData,
     InstanceSettingsData,
 )
-from .model import ModelError
 
 plugincore = PluginCore()
+
+RouteReturn: TypeAlias = Response | list | object
 
 
 @dataclass
@@ -47,11 +55,6 @@ class ChatTimMarkupModel(GenericMarkupModel):
     previewVisible: bool = False
     startMinimized: bool = False
     startBottomRight: bool = False
-
-
-# TODO: make proper dataclasses
-ChatTimInputModel = dict[str, Any]
-ChatTimStateModel = dict[str, Any]
 
 
 @dataclass
@@ -127,9 +130,7 @@ class ChatTIMGetSettingsResponse(TypedDict, total=False):
 
 
 @dataclass
-class ChatTimHtmlModel(
-    GenericHtmlModel[ChatTimInputModel, ChatTimMarkupModel, ChatTimStateModel]
-):
+class ChatTimHtmlModel(GenericHtmlModel[dict, ChatTimMarkupModel, dict]):
     def get_component_html_name(self) -> str:
         return "chattim-runner"
 
@@ -195,9 +196,9 @@ def register_route(
     method: str,
     route: str,
     route_model: type | None,
-    route_handler: Callable[..., Any],
+    route_handler: Callable[..., RouteReturn],
 ) -> None:
-    def to_response(r: Any) -> Response:
+    def to_response(r: RouteReturn) -> Response:
         # Allow handlers to define their own Flask Response
         if isinstance(r, Response):
             return r
@@ -209,18 +210,22 @@ def register_route(
         def handler() -> Response:
             try:
                 return to_response(route_handler())
+            except RouteException as e:
+                raise e
             except Exception as e:
-                raise RouteException(str(e))
+                raise RouteException(str(e)) from e
 
         return
 
     @app.route(f"/{route}", methods=[method], endpoint=route)
     @use_args(class_schema(route_model)(), locations=("json",))
-    def handler_args(m: Any) -> Response:
+    def handler_args(m: object) -> Response:
         try:
             return to_response(route_handler(m))
+        except RouteException as e:
+            raise e
         except Exception as e:
-            raise RouteException(str(e))
+            raise RouteException(str(e)) from e
 
 
 def ask_route(params: ChatTimAskParams) -> ChatTimAskResponse:
@@ -252,17 +257,22 @@ def ask_stream_route(params: ChatTimAskParams) -> Response:
             return
 
         citations: list[str] | None = None
+        disconnected: bool = False
 
         try:
             stream, context = resp.value
             citations = context
             for chunk in stream:
                 yield to_ndjson_str(ChatTimAskResponse(answer=chunk))
+        except GeneratorExit:
+            disconnected = True
+            return
         except Exception as e:
             yield to_ndjson_str(ChatTimAskResponse(error=str(e)))
             return
         finally:
-            yield to_ndjson_str(ChatTimAskResponse(citations=citations))
+            if not disconnected:
+                yield to_ndjson_str(ChatTimAskResponse(citations=citations))
 
     return Response(
         stream_with_context(generate()),
@@ -439,7 +449,7 @@ def delete_existing_key(key: APIKeyParams) -> Response:
     return ok_response()
 
 
-def to_ndjson_str(json_data: Any) -> str:
+def to_ndjson_str(json_data: object) -> str:
     """Return a newline delimited JSON string.
 
     :param json_data: The data to be converted.

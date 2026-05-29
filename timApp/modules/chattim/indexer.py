@@ -2,18 +2,21 @@ from dataclasses import dataclass
 from json import JSONDecodeError
 from typing import Protocol
 import json
-from openai import OpenAI
+from openai import OpenAI  # type: ignore
 import numpy as np
 import os
 
 from timApp.document.document import Document
 from datetime import datetime
 from .model import Provider, _DEFAULT_BASE_URL_BY_PROVIDER
+from ...document.docparagraph import DocParagraph
 
 # Max tokens for API requests. Approximately 32000 characters
 MAX_TOKENS_CHUNK = 8192
 CHUNK_TOKEN_TARGET = 512
 CHARACTERS_PER_TOKEN = 3
+
+SUPPORTED_EMBEDDING_PROVIDERS: list[Provider] = ["openai", "google", "openrouter"]
 
 
 @dataclass
@@ -197,17 +200,17 @@ class Indexer:
         return chunks
 
     def chunk_block(
-        self, block: dict, max_chunk_size: int = 2500, overlap: int = 200
+        self, block: DocParagraph, max_chunk_size: int = 2500, overlap: int = 200
     ) -> tuple[list[TextBlock], int]:
         """ " splits a chunk into smaller chunks
         :param block: tim block
         :param max_chunk_size: maximum size of the chunk
         :param overlap: overlap between chunks"""
         chunks: list[TextBlock] = []
-        text = block["md"]
+        text = block.get_markdown()
         if not text:
             return chunks, 0
-        block_id = block["id"]
+        block_id = block.id or ""
         sub_block_id = 0
         sentences = text.split(". ")
         if not sentences:
@@ -259,13 +262,14 @@ class Indexer:
         total_content_len: int = 0
         blocks: list[TextBlock] = []
         try:
-            # TODO: get paragraphs
-            tim_blocks: list[dict] = doc.export_raw_data()
+            paragraphs: list[DocParagraph] = doc.get_paragraphs()
 
-            for tim_block in tim_blocks:
-                # TODO: Ignore plugin blocks
+            for par in paragraphs:
+                if par.get_attr("plugin") is not None:
+                    # Skip plugins
+                    continue
                 sub_blocks, content_len = self.chunk_block(
-                    tim_block, self._chunk_size_characters
+                    par, self._chunk_size_characters
                 )
                 blocks.extend(sub_blocks)
                 total_content_len += content_len
@@ -349,7 +353,6 @@ class Indexer:
             chunks, content_len = self.get_blocks(doc=document)
             texts = [chunk.text for chunk in chunks]
             if len(texts) == 0:
-                failed_embeddings += 1
                 continue
 
             embeddings: list[list[float]] = []

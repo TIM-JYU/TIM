@@ -1,10 +1,17 @@
 from __future__ import annotations
 
 from flask_babel import gettext
-from dataclasses import dataclass, asdict
-from typing import Literal, Protocol, Callable, Iterable, Any, cast, AsyncIterator
+from dataclasses import dataclass
+from typing import (
+    Literal,
+    Protocol,
+    Callable,
+    Iterable,
+    AsyncIterator,
+)
+from typing_extensions import TypeAlias
 from enum import Enum
-from openai import (
+from openai import (  # type: ignore
     OpenAI,
     AsyncOpenAI,
     AuthenticationError,
@@ -15,10 +22,56 @@ from openai import (
     NotFoundError,
     BadRequestError,
     APIStatusError,
-    types,
 )
+from openai.types.chat import (  # type: ignore
+    ChatCompletion,
+    ChatCompletionChunk,
+    ChatCompletionMessageParam,
+    ChatCompletionUserMessageParam,
+    ChatCompletionAssistantMessageParam,
+    ChatCompletionSystemMessageParam,
+)
+from openai.types.chat.completion_create_params import (  # type: ignore
+    CompletionCreateParamsStreaming,
+    CompletionCreateParamsNonStreaming,
+)
+from openai.types.chat.chat_completion_stream_options_param import (  # type: ignore
+    ChatCompletionStreamOptionsParam,
+)
+from openai.types.completion_usage import CompletionUsage  # type: ignore
 
 DEFAULT_COMPLETION_TIMEOUT_S = 60
+
+Provider = Literal["openai", "anthropic", "google", "openrouter", "dummy"]
+
+ProviderInitFn: TypeAlias = Callable[[Provider, str, str, str | None], "ChatModel"]
+"""Function type for initializing `ChatModel` instances from different providers.
+
+`ProviderInitFn(provider: Provider, model_id: str, api_key: str, base_url: str | None)`
+"""
+
+PROVIDERS: dict[Provider, ProviderInitFn] = {
+    "openai": lambda provider, model_id, key, url: GenericApiChatModel(
+        provider, model_id, key, _resolve_base_url("openai", url)
+    ),
+    "anthropic": lambda provider, model_id, key, url: GenericApiChatModel(
+        provider, model_id, key, _resolve_base_url("anthropic", url)
+    ),
+    "google": lambda provider, model_id, key, url: GenericApiChatModel(
+        provider, model_id, key, _resolve_base_url("google", url)
+    ),
+    "openrouter": lambda provider, model_id, key, url: GenericApiChatModel(
+        provider, model_id, key, _resolve_base_url("openrouter", url)
+    ),
+}
+"""All the supported providers."""
+
+_DEFAULT_BASE_URL_BY_PROVIDER: dict[Provider, str] = {
+    "openai": "https://api.openai.com/v1",
+    "anthropic": "https://api.anthropic.com/v1",
+    "google": "https://generativelanguage.googleapis.com/v1beta/openai",
+    "openrouter": "https://openrouter.ai/api/v1",
+}
 
 
 class ModelErrorKind(Enum):
@@ -175,7 +228,7 @@ class GenerateOptions:
 
 
 @dataclass(frozen=True)
-class Usage:
+class ModelUsage:
     """Usage statistics for the completion request."""
 
     completion_tokens: int
@@ -197,11 +250,11 @@ class ModelResponse:
     """The full response from the model."""
     delta: str | None = None
     """A chunk of the response content."""
-    usage: Usage | None = None
+    usage: ModelUsage | None = None
     """Usage statistics."""
 
 
-def _convert_usage(usage: types.CompletionUsage | None) -> Usage | None:
+def _convert_usage(usage: CompletionUsage | None) -> ModelUsage | None:
     """
     Convert completion usage from the API response to `Usage`
 
@@ -210,7 +263,7 @@ def _convert_usage(usage: types.CompletionUsage | None) -> Usage | None:
     """
     if not usage:
         return None
-    return Usage(
+    return ModelUsage(
         completion_tokens=usage.completion_tokens,
         prompt_tokens=usage.prompt_tokens,
         total_tokens=usage.total_tokens,
@@ -222,7 +275,7 @@ def _completion_kwargs(
     messages: list[Message],
     options: GenerateOptions,
     stream: bool,
-) -> dict[str, Any]:
+) -> CompletionCreateParamsNonStreaming | CompletionCreateParamsStreaming:
     """
     Prepare the keyword arguments for a completion request.
 
@@ -232,21 +285,38 @@ def _completion_kwargs(
     :param stream: Whether to use streaming for the response.
     :return: A dictionary of keyword arguments for the completion request.
     """
-    msgs: list[dict[str, str]] = [asdict(m) for m in messages]
-    stream_options = (
-        {"stream": True, "stream_options": {"include_usage": True}} if stream else {}
-    )
-    return dict(
+    msgs: list[ChatCompletionMessageParam] = []
+    for m in messages:
+        if m.role == "user":
+            msgs.append(ChatCompletionUserMessageParam(role="user", content=m.content))
+        elif m.role == "assistant":
+            msgs.append(
+                ChatCompletionAssistantMessageParam(role="assistant", content=m.content)
+            )
+        elif m.role == "system":
+            msgs.append(
+                ChatCompletionSystemMessageParam(role="system", content=m.content)
+            )
+
+    if stream:
+        return CompletionCreateParamsStreaming(
+            model=model_id,
+            messages=msgs,
+            temperature=options.temperature,
+            max_completion_tokens=options.max_tokens,
+            stream=True,
+            stream_options=ChatCompletionStreamOptionsParam(include_usage=True),
+        )
+
+    return CompletionCreateParamsNonStreaming(
         model=model_id,
-        messages=cast(Any, msgs),
+        messages=msgs,
         temperature=options.temperature,
         max_completion_tokens=options.max_tokens,
-        timeout=DEFAULT_COMPLETION_TIMEOUT_S,
-        **stream_options,
     )
 
 
-def _parse_completion_response(res: Any) -> ModelResponse:
+def _parse_completion_response(res: ChatCompletion) -> ModelResponse:
     """
     Parse the API response from the LLM to `ModelResponse`.
 
@@ -260,7 +330,7 @@ def _parse_completion_response(res: Any) -> ModelResponse:
     return ModelResponse(content=choice.message.content or "", usage=usage)
 
 
-def _parse_stream_chunk(chunk: Any) -> ModelResponse:
+def _parse_stream_chunk(chunk: ChatCompletionChunk) -> ModelResponse:
     """
     Parse the streaming API response from the LLM to `ModelResponse`.
 
@@ -296,7 +366,9 @@ class GenericApiChatModel(ChatModel):
         """Generate a model response from the given messages."""
         kwargs = _completion_kwargs(self._model_id, messages, options, False)
         try:
-            res = self._client.chat.completions.create(**kwargs)
+            res = self._client.chat.completions.create(
+                **kwargs, timeout=DEFAULT_COMPLETION_TIMEOUT_S
+            )
         except Exception as e:
             raise _openai_to_model_error(e) from e
         return _parse_completion_response(res)
@@ -310,7 +382,9 @@ class GenericApiChatModel(ChatModel):
         """
         kwargs = _completion_kwargs(self._model_id, messages, options, True)
         try:
-            stream = self._client.chat.completions.create(**kwargs)
+            stream = self._client.chat.completions.create(
+                **kwargs, timeout=DEFAULT_COMPLETION_TIMEOUT_S
+            )
         except Exception as e:
             raise _openai_to_model_error(e) from e
 
@@ -347,7 +421,9 @@ class AsyncGenericApiChatModel(AsyncChatModel):
         """Generate a model response from the given messages."""
         kwargs = _completion_kwargs(self._model_id, messages, options, False)
         try:
-            res = await self._client.chat.completions.create(**kwargs)
+            res = await self._client.chat.completions.create(
+                **kwargs, timeout=DEFAULT_COMPLETION_TIMEOUT_S
+            )
         except Exception as e:
             raise _openai_to_model_error(e) from e
         return _parse_completion_response(res)
@@ -363,7 +439,9 @@ class AsyncGenericApiChatModel(AsyncChatModel):
         async def gen() -> AsyncIterator[ModelResponse]:
             kwargs = _completion_kwargs(self._model_id, messages, options, True)
             try:
-                stream = await self._client.chat.completions.create(**kwargs)
+                stream = await self._client.chat.completions.create(
+                    **kwargs, timeout=DEFAULT_COMPLETION_TIMEOUT_S
+                )
             except Exception as e:
                 raise _openai_to_model_error(e) from e
 
@@ -391,14 +469,14 @@ class DummyChatModel(ChatModel):
     def generate(
         self, messages: list[Message], options: GenerateOptions
     ) -> ModelResponse:
-        return ModelResponse(content=self.response, usage=Usage(0, 0, 0))
+        return ModelResponse(content=self.response, usage=ModelUsage(0, 0, 0))
 
     def generate_stream(
         self, messages: list[Message], options: GenerateOptions
     ) -> Iterable[ModelResponse]:
         for part in _split_keep_left(self.response, " "):
             yield ModelResponse(delta=part)
-        yield ModelResponse(usage=Usage(0, 0, 0))
+        yield ModelResponse(usage=ModelUsage(0, 0, 0))
 
     def get_info(self) -> tuple[Provider, str]:
         return self._provider, self._model_id
@@ -418,7 +496,7 @@ class DummyAsyncChatModel(AsyncChatModel):
     async def generate(
         self, messages: list[Message], options: GenerateOptions
     ) -> ModelResponse:
-        return ModelResponse(content=self.response, usage=Usage(0, 0, 0))
+        return ModelResponse(content=self.response, usage=ModelUsage(0, 0, 0))
 
     def generate_stream(
         self, messages: list[Message], options: GenerateOptions
@@ -426,7 +504,7 @@ class DummyAsyncChatModel(AsyncChatModel):
         async def gen() -> AsyncIterator[ModelResponse]:
             for part in _split_keep_left(self.response, " "):
                 yield ModelResponse(delta=part)
-            yield ModelResponse(usage=Usage(0, 0, 0))
+            yield ModelResponse(usage=ModelUsage(0, 0, 0))
 
         return gen()
 
@@ -589,35 +667,3 @@ def _default_headers(provider: Provider, api_key: str) -> dict[str, str]:
     if provider == "anthropic":
         return {"x-api-key": api_key, "anthropic-version": "2023-06-01"}
     return {}
-
-
-Provider = Literal["openai", "anthropic", "google", "openrouter", "dummy"]
-
-ProviderInitFn = Callable[[Provider, str, str, str | None], ChatModel]
-"""Function type for initializing `ChatModel` instances from different providers.
-
-`ProviderInitFn(provider: Provider, model_id: str, api_key: str, base_url: str | None)`
-"""
-
-PROVIDERS: dict[Provider, ProviderInitFn] = {
-    "openai": lambda provider, model_id, key, url: GenericApiChatModel(
-        provider, model_id, key, _resolve_base_url("openai", url)
-    ),
-    "anthropic": lambda provider, model_id, key, url: GenericApiChatModel(
-        provider, model_id, key, _resolve_base_url("anthropic", url)
-    ),
-    "google": lambda provider, model_id, key, url: GenericApiChatModel(
-        provider, model_id, key, _resolve_base_url("google", url)
-    ),
-    "openrouter": lambda provider, model_id, key, url: GenericApiChatModel(
-        provider, model_id, key, _resolve_base_url("openrouter", url)
-    ),
-}
-"""All the supported providers."""
-
-_DEFAULT_BASE_URL_BY_PROVIDER: dict[Provider, str] = {
-    "openai": "https://api.openai.com/v1",
-    "anthropic": "https://api.anthropic.com/v1",
-    "google": "https://generativelanguage.googleapis.com/v1beta/openai",
-    "openrouter": "https://openrouter.ai/api/v1",
-}
