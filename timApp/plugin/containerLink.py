@@ -28,6 +28,7 @@ IMAGEXPLUGIN_DOMAIN = "imagex"
 JSRUNNERPLUGIN_DOMAIN = "jsrunner"
 PALIPLUGIN_DOMAIN = "pali"
 SVNPLUGIN_DOMAIN = "showfile"
+CHATTIM_DOMAIN = "chattim"
 
 MARKUP = "markup"
 
@@ -215,6 +216,7 @@ def get_plugins() -> dict[str, PluginReg]:
             regexattrs=FBMDATTRS,
             automd=True,
         ),
+        PluginReg(name="chattim", domain=internal_domain, path="/chattim/"),
         PluginReg(
             name="drag", domain=DRAGPLUGIN_DOMAIN, regexattrs=DRAGATTRS, automd=True
         ),

@@ -11538,6 +11538,126 @@ Separate multiple addresses with commas or write each address on a new line.</so
           <context context-type="linenumber">618,620</context>
         </context-group>
       </trans-unit>
+      <trans-unit id="2826207906526690644" datatype="html">
+        <source> Add new LLM model API key </source>
+        <target state="new"> Add new LLM model API key </target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/user/add-llm-api-key-dialog.component.ts</context>
+          <context context-type="linenumber">36</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="1447970220734495682" datatype="html">
+        <source>LLM model provider</source>
+        <target state="new">LLM model provider</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/user/add-llm-api-key-dialog.component.ts</context>
+          <context context-type="linenumber">42,43</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="1965206604774400" datatype="html">
+        <source>Alias</source>
+        <target state="new">Alias</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/user/add-llm-api-key-dialog.component.ts</context>
+          <context context-type="linenumber">50,51</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="7991621302184166089" datatype="html">
+        <source>Chattim API Keys</source>
+        <target state="new">Chattim API Keys</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
+          <context context-type="linenumber">646</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="5748930443215474942" datatype="html">
+        <source>Help with setting up LLM-helper for document</source>
+        <target state="new">Help with setting up LLM-helper for document</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
+          <context context-type="linenumber">647</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="6070908791363978183" datatype="html">
+        <source>Ask me about TIM related things</source>
+        <target state="new">Ask me about TIM related things</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">modules/chattim/client/chattim.ts</context>
+          <context context-type="linenumber">108,109</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="3508463255780493045" datatype="html">
+        <source>&quot;Welcome to use TIM&apos;s helper chatbot!&quot;</source>
+        <target state="new">&quot;Welcome to use TIM&apos;s helper chatbot!&quot;</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">modules/chattim/client/chattim.ts</context>
+          <context context-type="linenumber">100,101</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="2443492338531163252" datatype="html">
+        <source> Edit LLM API-key permissions </source>
+        <target state="new"> Edit LLM API-key permissions </target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/user/edit-llm-api-key-dialog.component.ts</context>
+          <context context-type="linenumber">20</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="1703325564855070585" datatype="html">
+        <source> Edit permissions </source>
+        <target state="new"> Edit permissions </target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
+          <context context-type="linenumber">671</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="2010276630010118162" datatype="html">
+        <source>User groups <x id="START_LINK" ctype="x-a" equiv-text="&lt;a tooltip=&quot;{{ getGroupTooltip }}&quot;&gt;"/><x id="START_ITALIC_TEXT" ctype="x-i" equiv-text="icon glyphicon-info-sign&quot;&gt;"/><x id="CLOSE_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;/a&gt;"/><x id="CLOSE_LINK" ctype="x-a"/></source>
+        <target state="new">User groups <x id="START_LINK" ctype="x-a" equiv-text="&lt;a tooltip=&quot;{{ getGroupTooltip }}&quot;&gt;"/><x id="START_ITALIC_TEXT" ctype="x-i" equiv-text="icon glyphicon-info-sign&quot;&gt;"/><x id="CLOSE_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;/a&gt;"/><x id="CLOSE_LINK" ctype="x-a"/></target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/user/edit-llm-api-key-dialog.component.ts</context>
+          <context context-type="linenumber">27,29</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="1559641532022753511" datatype="html">
+        <source>Folder or document paths <x id="START_LINK" ctype="x-a" equiv-text="&lt;a tooltip=&quot;{{ getPathTooltip }}&quot;&gt;"/><x id="START_ITALIC_TEXT" ctype="x-i" equiv-text="icon glyphicon-info-sign&quot;&gt;"/><x id="CLOSE_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;/a&gt;"/><x id="CLOSE_LINK" ctype="x-a"/></source>
+        <target state="new">Folder or document paths <x id="START_LINK" ctype="x-a" equiv-text="&lt;a tooltip=&quot;{{ getPathTooltip }}&quot;&gt;"/><x id="START_ITALIC_TEXT" ctype="x-i" equiv-text="icon glyphicon-info-sign&quot;&gt;"/><x id="CLOSE_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;/a&gt;"/><x id="CLOSE_LINK" ctype="x-a"/></target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/user/edit-llm-api-key-dialog.component.ts</context>
+          <context context-type="linenumber">65,67</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="290676371449555090" datatype="html">
+        <source>Delete plugin?</source>
+        <target state="new">Delete plugin?</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">modules/chattim/client/controlpanel.ts</context>
+          <context context-type="linenumber">678,677</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="4773987860540236308" datatype="html">
+        <source>Are you sure you want to permanently delete this plugin from the document?</source>
+        <target state="new">Are you sure you want to permanently delete this plugin from the document?</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">modules/chattim/client/controlpanel.ts</context>
+          <context context-type="linenumber">679,677</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="3696676113519785199" datatype="html">
+        <source>Delete &quot;<x id="INTERPOLATION" equiv-text="{{ APIkey.alias }}"/>&quot;?</source>
+        <target state="new">Delete &quot;<x id="INTERPOLATION" equiv-text="{{ APIkey.alias }}"/>&quot;?</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
+          <context context-type="linenumber">679,680</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="7442929916086166398" datatype="html">
+        <source>Yes, delete</source>
+        <target state="new">Yes, delete</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
+          <context context-type="linenumber">681,682</context>
+        </context-group>
+      </trans-unit>
     </body>
   </file>
 </xliff>

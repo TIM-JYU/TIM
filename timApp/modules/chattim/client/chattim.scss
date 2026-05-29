@@ -1,0 +1,330 @@
+.scroll-box {
+  flex: 1 1 0;
+  min-height: 100px;
+  overflow-y: scroll;
+  overflow-x: hidden;
+  padding-right: 15px;
+}
+
+.chat-bubble-wrapper {
+  display: block;
+  width: 100%;
+}
+
+.chat-bot {
+  margin-left: 1em;
+  white-space: pre-line;
+  word-break: break-word;
+  color: #d4450f;
+  background-color: #fff0e8;
+
+  padding: 10px 14px;
+  border-radius: 16px;
+  display: inline-block;
+  margin-bottom: 10px;
+}
+
+.chat-user {
+  white-space: pre-line;
+  word-break: break-word;
+  color: #0d3b5e;
+  background-color: rgba(190, 210, 235, 0.4);
+
+  padding: 1rem;
+  display: inline-block;
+  max-width: 90%;
+  margin: 0.5em 3em 0.2em 0.1em;
+  border-radius: 16px;
+}
+
+.chattim-dialog-frame .modal-dialog {
+  min-width: 20vh;
+  min-height: 32vh;
+  max-height: 90vh;
+  height: 50vh;
+  /// transition: height 0.3s ease;
+}
+
+.settings-panel {
+  overflow: hidden;
+}
+
+.chattim-dialog-frame .modal-body {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  min-height: 0;
+}
+
+
+.form-inline {
+  margin-top: auto;
+}
+
+.chattim-body {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.sticky-chat-row {
+  position: sticky;
+  z-index: 1;
+  bottom: 0;
+  background: white;
+  padding-top: 4px;
+}
+
+.previewDiv .chattim-dialog-frame.hide-in-preview {
+  visibility: hidden;
+}
+
+.answer-footer {
+  font-size: 0.7em;
+  display: flex;
+  flex-direction: row;
+  margin-top: 0.1em;
+}
+
+.chat-timestamp {
+  color: #aaa;
+  text-align: right;
+  margin-left: auto;
+}
+
+.chat-row {
+  display: flex;
+  flex-direction: row;
+  width: 100%;
+  align-items: flex-end;
+  gap: 8px;
+}
+
+.chat-textarea {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.chat-textarea::placeholder {
+  color: #999;
+  opacity: 1;
+}
+
+.conv-history-marker {
+  display: flex;
+  align-items: center;
+  color: #999;
+  font-size: 0.6em;
+}
+
+.conv-history-marker::before,
+.conv-history-marker::after {
+  content: "";
+  flex: 1 1 auto;
+  border-top: 1px dashed #999;
+}
+
+.conv-history-marker-text {
+  flex: 0 0 auto;
+  padding: 1px 6px;
+}
+
+.upper-area {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+}
+
+.chat-welcome {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  min-height: 20vh;
+  color: #888;
+  font-size: 14px;
+  text-align: center;
+}
+
+
+.control-panel-container {
+  align-items: start;
+  flex: 0 0 auto;
+  max-height: 60%
+}
+
+.time-window-label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+}
+
+.restriction-inputs {
+  font-weight: normal;
+}
+
+.time-window-label-span {
+  flex: 0 0 15ch;
+}
+
+.inline-field {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: nowrap;
+  width: 100%;
+}
+
+.inline-field-label {
+  margin: 0;
+  flex: 0 0 auto;
+  white-space: nowrap;
+  font-weight: normal;
+}
+
+.inline-field-control {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.embedder-buttons {
+  display: flex;
+  gap: 15px;
+  align-items: center;
+}
+
+.disabled-label {
+  color: gray;
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.settings-panel tim-directory-picker table {
+  width: 100%;
+}
+
+
+// usercontrol //
+.usercontrol-body {
+  width: 80%;
+}
+
+.user-table {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  overflow: hidden;
+  background: white;
+}
+
+.usercontrol-table-body {
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.table-row {
+  display: grid;
+  grid-template-columns:
+    minmax(0, 1fr)
+    minmax(0, 140px)
+    minmax(0, 120px);
+
+  align-items: center;
+  width: 100%;
+  box-sizing: border-box;
+  gap: 12px;
+  padding: 6px 14px;
+  line-height: 1.2;
+  font-size: 13px;
+}
+
+.header-row {
+  font-weight: bold;
+  background: #f5f5f5;
+  border-bottom: 2px solid #ccc;
+}
+
+.user-row {
+  appearance: none;
+  border: none;
+  background: white;
+  text-align: left;
+  cursor: pointer;
+}
+
+.user-row:last-child {
+  border-bottom: none;
+}
+
+.user-row:hover {
+  background: #94b0d1;
+}
+
+.user-row.selected {
+  background: #596d87;
+}
+
+.user-row div {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.usercontrol-save-button-div {
+  display: flex;
+  justify-content: flex-end;
+  text-align: right;
+  margin-top: auto;
+}
+
+.header-button {
+  appearance: none;
+  border: none;
+  background: transparent;
+  font: inherit;
+  font-weight: bold;
+  text-align: left;
+  cursor: pointer;
+  padding: 0;
+  width: 100%;
+}
+
+.usercontrol-no-user-selection {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  color: #888;
+  font-style: italic;
+}
+
+.usercontrol-main-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.usercontrol-footer {
+  margin-top: auto;
+
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+
+  gap: 0.5rem;
+}
+
+.usercontrol-policy-modify {
+  display: flex;
+  flex-direction: column;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  min-height: 350px;
+}
+
+// usercontrol ends //

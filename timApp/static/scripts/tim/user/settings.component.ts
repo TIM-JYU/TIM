@@ -17,6 +17,8 @@ import {
 import {showMessageDialog} from "tim/ui/showMessageDialog";
 import {showAddContactDialog} from "tim/user/showAddContactDialog";
 import {showAddAPIKeyDialog} from "tim/user/showAddAPIDialog";
+import {showAddLLMAPIKeyDialog} from "tim/user/showAddLLMAPIDialog";
+import {showEditLLMAPIKeyDialog} from "tim/user/showEditLLMAPIDialog";
 import {Channel} from "tim/messaging/listOptionTypes";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {createDowngradedModule, doDowngrade} from "tim/downgrade";
@@ -37,7 +39,12 @@ import {NotificationType, settingsglobals} from "tim/util/globals";
 import type {IOkResponse} from "tim/util/utils";
 import {isIOS, replaceStyle, timeout, to2, toPromise} from "tim/util/utils";
 import type {DocumentOrFolder, ITranslatorUsage} from "tim/item/IItem";
-import type {IFullUser, IUserApiKey, IUserContact} from "tim/user/IUser";
+import type {
+    IFullUser,
+    IUserApiKey,
+    IUserLLMApiKey,
+    IUserContact,
+} from "tim/user/IUser";
 import {ContactOrigin} from "tim/user/IUser";
 import type {TimTable} from "tim/plugin/timTable/tim-table.component";
 import {
@@ -592,6 +599,8 @@ type StyleSelectionType =
                             </div>
                         </div>
                     </ng-container>
+                    </div>
+                <div>
                     <ng-container>
                         <span class="form-label">
                             <ng-container i18n>Machine translator API Keys</ng-container>
@@ -624,11 +633,62 @@ type StyleSelectionType =
                             </div>
                         </div>
                     </ng-container>
-                </div>
+                
                 <settings-button-panel [saved]="saveUserAccountInfo">
                     <button class="timButton" (click)="openContactInfoDialog()" i18n>Add new contact</button>
                     <button class="timButton" (click)="openAPIKeyDialog()" i18n>Add new API key</button>
                 </settings-button-panel>
+                </div>
+                <div>
+                    <ng-container>
+                        <span class="form-label">
+                            <ng-container i18n>Chattim API Keys</ng-container>
+                            <a href="https://tim.jyu.fi/view/tim/ohjeita/tekoalyavustaja/adding-llm-api-keys">
+                                <span class="glyphicon glyphicon-question-sign" style="margin-left: 0.2em;"
+                                      title="Help with setting up LLM-helper for document" i18n-title></span>
+                            </a>
+                        </span>
+                        <div class="contact-collection">
+                            <div class="contact-info" *ngFor="let APIkey of userLLMAPIKeys">
+                                <input type="text" class="form-control" [value]="APIkey.alias" disabled>
+                                <input type="text" class="form-control" [value]="APIkey.APIkey" disabled>
+                                <input type="text" class="form-control buttonBorder" [value]="APIkey.provider"
+                                       disabled>
+                                <div *ngIf="APIkey.tokensChecked" class="stacked quotaProgressBar">
+                                    <progressbar tooltip="{{APIkey.usedTokens}} / {{APIkey.availableTokens}}"
+                                                 [value]="APIkey.usedTokens" [max]="APIkey.availableTokens"></progressbar>
+                                </div>
+                                <ng-container *ngIf="deletingLLMKey !== APIkey">
+                                    <button *ngIf="!APIkey.tokensChecked" class="btn" type="button"
+                                            (click)="checkTokens(APIkey)" i18n>
+                                        Check key's quota
+                                    </button>
+                                    <button *ngIf="APIkey.tokensChecked" class="btn" type="button"
+                                            (click)="checkTokens(APIkey)">
+                                        <i class="glyphicon glyphicon-refresh"></i>
+                                    </button>
+                                    <button *ngIf="true" class="btn" type="button"
+                                            (click)="openEditLLMAPIKeyDialog(APIkey)" i18n>
+                                        Edit permissions
+                                    </button>
+                                    <button class="btn btn-danger" type="button" (click)="deleteLLMKey(APIkey)">
+                                        <i class="glyphicon glyphicon-trash"></i>
+                                    </button>
+                                </ng-container>
+                                <ng-container *ngIf="deletingLLMKey === APIkey">
+                                    <span i18n>Delete "{{ APIkey.alias }}"?</span>
+                                    <button class="btn btn-danger" type="button"
+                                            (click)="confirmDeleteLLMKey(APIkey)" i18n>Yes, delete</button>
+                                    <button class="btn btn-default" type="button"
+                                            (click)="cancelDeletingLLMKey()" i18n>Cancel</button>
+                                </ng-container>
+                            </div>
+                        </div>
+                    </ng-container>
+                    <settings-button-panel [saved]="saveUserAccountInfo">
+                    <button class="timButton" (click)="openLLMAPIKeyDialog()" i18n>Add new API key</button>
+                    </settings-button-panel>
+                </div>
             </bootstrap-form-panel>
             <bootstrap-form-panel [disabled]="saving" title="Delete your account" i18n-title anchorId="prefs_delAcc"
                                   [showHeadingAnchors]="true">
@@ -654,7 +714,7 @@ type StyleSelectionType =
                     </div>
                 </div>
             </bootstrap-form-panel>
-        </div>
+        </div>  
     `,
     styleUrls: ["settings.component.scss"],
 })
@@ -669,6 +729,7 @@ export class SettingsComponent implements DoCheck, AfterViewInit {
     contacts: IUserContact[];
     userContacts = new Map<Channel, IUserContact[]>();
     userAPIKeys: IUserApiKey[] = [];
+    userLLMAPIKeys: IUserLLMApiKey[] = [];
     userEmailContacts: IUserContact[] = [];
     canRemoveCustomContacts = true;
     primaryEmail!: IUserContact;
@@ -702,9 +763,11 @@ export class SettingsComponent implements DoCheck, AfterViewInit {
     loadingUserStyle = false;
     @ViewChild("stylesTabs", {static: false}) stylesTabs!: TabsetComponent;
     styleError?: {title: string; message: string};
+    deletingLLMKey?: IUserLLMApiKey;
 
     constructor(private http: HttpClient, private cdr: ChangeDetectorRef) {
         this.getKeys();
+        this.getLLMKeys();
         this.user = settingsglobals().current_user;
         this.consent = this.user.consent;
         this.settings = settingsglobals().userPrefs;
@@ -742,6 +805,15 @@ export class SettingsComponent implements DoCheck, AfterViewInit {
         );
         if (r.ok) {
             this.userAPIKeys = r.result;
+        }
+    }
+
+    async getLLMKeys() {
+        const r = await toPromise(
+            this.http.get<IUserLLMApiKey[]>("/chattim/getExistingKeys")
+        );
+        if (r.ok) {
+            this.userLLMAPIKeys = r.result;
         }
     }
 
@@ -1185,6 +1257,27 @@ export class SettingsComponent implements DoCheck, AfterViewInit {
             })
         );
     }
+    openLLMAPIKeyDialog() {
+        void to2(
+            showAddLLMAPIKeyDialog((key) => {
+                this.userLLMAPIKeys.push(key);
+                this.cdr.detectChanges();
+            }, this.userLLMAPIKeys)
+        );
+    }
+
+    openEditLLMAPIKeyDialog(key: IUserLLMApiKey) {
+        void to2(
+            showEditLLMAPIKeyDialog(key, (editedKey: IUserLLMApiKey) => {
+                const index = this.userLLMAPIKeys.indexOf(key);
+                if (index < 0) {
+                    return;
+                }
+                this.userLLMAPIKeys[index] = editedKey;
+                this.cdr.detectChanges();
+            })
+        );
+    }
 
     private getContactsFor(channel: Channel): IUserContact[] {
         if (!EDITABLE_CONTACT_CHANNELS[channel]) {
@@ -1288,6 +1381,37 @@ export class SettingsComponent implements DoCheck, AfterViewInit {
         this.cdr.detectChanges();
     }
 
+    deleteLLMKey(key: IUserLLMApiKey) {
+        this.deletingLLMKey = key;
+        this.cdr.detectChanges();
+    }
+
+    async confirmDeleteLLMKey(key: IUserLLMApiKey) {
+        this.deletingLLMKey = undefined;
+        this.saving = true;
+        const r = await toPromise(
+            this.http.delete("/chattim/deleteKey", {
+                body: {
+                    provider: key.provider,
+                    apikey: key.APIkey,
+                    alias: key.alias,
+                },
+            })
+        );
+        this.saving = false;
+        if (r.ok) {
+            this.userLLMAPIKeys.splice(this.userLLMAPIKeys.indexOf(key), 1);
+        } else {
+            await showMessageDialog(r.result.error.error);
+        }
+        this.cdr.detectChanges();
+    }
+
+    cancelDeletingLLMKey() {
+        this.deletingLLMKey = undefined;
+        this.cdr.detectChanges();
+    }
+
     /**
      * Checks the quota left for the chosen key and updates it to the progress bar.
      * @param key the key the quota of which is checked
@@ -1309,6 +1433,10 @@ export class SettingsComponent implements DoCheck, AfterViewInit {
         } else {
             await showMessageDialog(r.result.error.error);
         }
+    }
+
+    async checkTokens(key: IUserLLMApiKey) {
+        // TODO Check used tokens for LLM API key
     }
 
     saveUserAccountInfo = async () => {
