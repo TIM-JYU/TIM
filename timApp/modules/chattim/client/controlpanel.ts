@@ -3,6 +3,7 @@ import type {JsonValue} from "tim/util/jsonvalue";
 import {FormsModule} from "@angular/forms";
 import {NgForOf, NgIf} from "@angular/common";
 import {PurifyModule} from "tim/util/purify.module";
+import moment from "moment";
 import {
     DirectoryPickerComponent,
     DirectoryPickerRestrictions,
@@ -44,6 +45,7 @@ export interface ControlPanelSettings extends Record<string, JsonValue> {
 }
 
 type SimilarityMode = "none" | "loose" | "balanced" | "strict" | "custom";
+type TimeUnit = "seconds" | "minutes" | "hours" | "days";
 
 @Component({
     selector: "chattim-control-panel",
@@ -419,13 +421,13 @@ export class ChatControlPanelComponent {
     maxTokensValue: number | null = null;
 
     convTimeWindowAmount: number | null = 0;
-    convTimeWindowUnit: string = "min";
+    convTimeWindowUnit: TimeUnit = "minutes";
 
-    timeUnitOptions: {value: string; label: string}[] = [
-        {value: "s", label: "Seconds"},
-        {value: "min", label: "Minutes"},
-        {value: "h", label: "Hours"},
-        {value: "d", label: "Days"},
+    timeUnitOptions: {value: TimeUnit; label: string}[] = [
+        {value: "seconds", label: "Seconds"},
+        {value: "minutes", label: "Minutes"},
+        {value: "hours", label: "Hours"},
+        {value: "days", label: "Days"},
     ];
 
     enabledTemperature: boolean = false;
@@ -669,7 +671,9 @@ export class ChatControlPanelComponent {
         if (amount <= 0) {
             return 0;
         }
-        return amount * this.timeUnitToSeconds(this.convTimeWindowUnit);
+        return Math.trunc(
+            moment.duration(amount, this.convTimeWindowUnit).asSeconds()
+        );
     }
 
     /* Get the label for the selected conversation time window. */
@@ -685,43 +689,28 @@ export class ChatControlPanelComponent {
         return `${amount} ${unitLabel}`;
     }
 
-    /* Get the multiplier corresponding the given time unit. */
-    private timeUnitToSeconds(unit: string): number {
-        switch (unit) {
-            case "s":
-                return 1;
-            case "min":
-                return 60;
-            case "h":
-                return 60 * 60;
-            case "d":
-                return 60 * 60 * 24;
-            default:
-                return 60;
-        }
-    }
-
     /* Set the closest time window unit and value from seconds. */
     private setConvTimeWindowFromSeconds(seconds: number): void {
         if (!seconds || Number.isNaN(seconds) || seconds <= 0) {
             this.convTimeWindowAmount = 0;
-            this.convTimeWindowUnit = "min";
+            this.convTimeWindowUnit = "minutes";
             return;
         }
 
-        const units = this.timeUnitOptions.map((u) => u.value);
-        let bestUnit: string = "s";
+        const units: TimeUnit[] = this.timeUnitOptions.map((u) => u.value);
+        let bestUnit: TimeUnit = "seconds";
         let bestAmount: number = Math.max(1, Math.round(seconds));
         let bestDiff: number = Math.abs(bestAmount - seconds);
 
         for (const unit of units) {
-            const mult: number = this.timeUnitToSeconds(unit);
+            const mult: number = moment.duration(1, unit).asSeconds();
             const amount: number = Math.max(1, Math.round(seconds / mult));
             const candidateSeconds: number = amount * mult;
             const diff: number = Math.abs(candidateSeconds - seconds);
             if (
                 diff < bestDiff ||
-                (diff === bestDiff && mult > this.timeUnitToSeconds(bestUnit))
+                (diff === bestDiff &&
+                    mult > moment.duration(1, bestUnit).asSeconds())
             ) {
                 bestDiff = diff;
                 bestUnit = unit;

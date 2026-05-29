@@ -39,6 +39,7 @@ import {Users} from "tim/user/userService";
 import type {DirectoryPickerRestrictions} from "tim/folder/directory-picker.component";
 import {DirectoryPickerComponent} from "tim/folder/directory-picker.component";
 import {itemglobals} from "tim/util/globals";
+import {secondsToShortTime} from "tim/util/utils";
 import {TooltipModule} from "ngx-bootstrap/tooltip";
 import type {AngularError, Result} from "tim/util/utils";
 import {DialogFrame} from "tim/ui/angulardialog/dialog-frame.component";
@@ -1082,20 +1083,7 @@ export class ChatTIMComponent
 
     /* Return the closest string representation of the time in seconds. */
     formatDurationSeconds(seconds: number): string {
-        const s = Math.max(0, Math.trunc(seconds));
-        if (s < 60) {
-            return `${s} s`;
-        }
-        const m = Math.trunc(s / 60);
-        if (m < 60) {
-            return `${m} min`;
-        }
-        const h = Math.trunc(m / 60);
-        if (h < 48) {
-            return `${h} h`;
-        }
-        const d = Math.trunc(h / 24);
-        return `${d} d`;
+        return secondsToShortTime(seconds, ["h", "m", "s"]);
     }
 
     /* Update the conversation time window marker index. */

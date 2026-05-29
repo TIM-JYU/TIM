@@ -78,14 +78,6 @@ class TimDatabase:
             return None
 
     @staticmethod
-    def in_user_group(group: UserGroup, user_id: int) -> bool:
-        """Check if the user is in the given user group."""
-        # TODO: is there a TIM function for this?
-        if group.is_personal_group and group.personal_user.id == user_id:
-            return True
-        return any(u.id == user_id for u in group.users)
-
-    @staticmethod
     def get_user_groups(groups: list[str]) -> list[UserGroup]:
         """Check if all the user groups exists and return them."""
         user_groups: list[UserGroup] = []
@@ -198,21 +190,24 @@ class TimDatabase:
         :param public_key: The associated public key for the desired API key.
         :return: The API key or None if it does not exist or the user has no access.
         """
+        user = User.get_by_id(user_id)
+        if not user:
+            return None
+
         api_key = TimDatabase.get_api_key_by_alias(public_key)
         if not api_key:
             return None
         if user_id == api_key.owner:
             return api_key
-        group_ids = api_key.groups
+        group_ids: list[int] = api_key.groups or []
 
         if not group_ids:
             return None
-        for group_id in group_ids:
-            group = UserGroup.get_by_id(group_id)
-            if not group:
-                continue
-            if TimDatabase.in_user_group(group, user_id):
-                return api_key
+
+        user_group_ids = {g.id for g in user.groups}
+        if user_group_ids & set(group_ids):
+            return api_key
+
         return None
 
     @staticmethod
