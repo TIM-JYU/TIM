@@ -890,7 +890,7 @@ def add_paragraph_common(md: str, doc_id: int, par_next_id: str | None):
 
     changes = abort_if_duplicate_ids(doc, editor_pars, auto_rename_ids=True)
 
-    # TODO: next should not be needed, because it is done already in previuos
+    # TODO: next should not be needed, because it is done already in previous
     # editor_pars = check_and_rename_pluginnamehere(editor_pars, doc)
 
     pars = []

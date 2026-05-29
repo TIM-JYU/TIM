@@ -236,6 +236,7 @@ def post_note(
     view: ViewRoute = field(default=ViewRoute.View, metadata={"by_value": True}),
 ) -> Response:
     is_public = access == "everyone"
+    is_teacher = access == "teachers"
     got_tags = []
     for tag in KNOWN_TAGS:
         if tags and tags.get(tag):
@@ -256,9 +257,9 @@ def post_note(
     )
     db.session.add(n)
 
-    if is_public:
+    if is_public or is_teacher:
         notify_doc_watchers(orig_docinfo, text, NotificationType.CommentAdded, p)
-    clear_doc_cache_after_comment(orig_docinfo, curr_user, is_public)
+    clear_doc_cache_after_comment(orig_docinfo, curr_user, is_public or is_teacher)
     return comment_response(ctx, orig_docinfo, p, view)
 
 
@@ -287,6 +288,7 @@ def check_permissions_and_get_orig(
     return orig_docinfo, p
 
 
+# noinspection PyShadowingBuiltins
 @notes.post("/editNote")
 def edit_note(
     id: int,
@@ -318,12 +320,13 @@ def edit_note(
     n.tags = tagstostr(got_tags)
     n.modified = get_current_time()
 
-    if n.is_public:
+    if n.is_public or n.is_teachers:
         notify_doc_watchers(d, text, NotificationType.CommentModified, par)
     clear_doc_cache_after_comment(d, get_current_user_object(), is_public or was_public)
     return comment_response(ctx, orig_docinfo, p, view)
 
 
+# noinspection PyShadowingBuiltins
 @notes.post("/deleteNote")
 def delete_note(
     id: int,
@@ -344,7 +347,7 @@ def delete_note(
             "Cannot delete the note because the paragraph has been deleted."
         )
     db.session.delete(note)
-    is_public = note.is_public
+    is_public = note.is_public or note.is_teachers
     if is_public:
         notify_doc_watchers(
             orig_docinfo, note.content, NotificationType.CommentDeleted, orig_p
@@ -359,9 +362,11 @@ def comment_response(
     return par_response(
         [orig_docinfo.document.get_paragraph(ctx.orig.par_id)],
         orig_docinfo,
-        filter_return=ctx.curr
-        if not p.is_translation()
-        else GlobalParId(doc_id=ctx.orig.doc_id, par_id=ctx.curr.par_id),
+        filter_return=(
+            ctx.curr
+            if not p.is_translation()
+            else GlobalParId(doc_id=ctx.orig.doc_id, par_id=ctx.curr.par_id)
+        ),
         for_view=view,
     )
 

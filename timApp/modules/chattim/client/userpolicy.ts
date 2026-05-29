@@ -18,69 +18,69 @@ export interface TokenLimitForUser extends Record<string, JsonValue> {
     template: `
         <!-- Add time window restrictions for users -->
         <div class="settings-row">
-                <div class="checkbox">
-                    <label>
-                        <input type="checkbox"
-                               [(ngModel)]="userLimits.token_cap_enabled"
-                                (ngModelChange)="emitValidity()">
-                        Enable timeless token limit
+            <div class="checkbox">
+                <label>
+                    <input type="checkbox"
+                           [(ngModel)]="userLimits.token_cap_enabled"
+                           (ngModelChange)="emitValidity()">
+                    Enable timeless token limit
+                </label>
+            </div>
+
+            <div *ngIf="userLimits.token_cap_enabled" class="settings-section-body">
+                <input type="number"
+                       class="form-control"
+                       [(ngModel)]="userLimits.token_cap"
+                       (ngModelChange)="emitValidity()"
+                >
+            </div>
+            <div class="error" *ngIf="isInvalidTokenCap">
+                Input should be a positive integer or zero
+            </div>
+
+            <div class="checkbox">
+                <label>
+                    <input type="checkbox"
+                           [(ngModel)]="userLimits.time_window_enabled"
+                           (ngModelChange)="emitValidity()">
+                    Enable time window token limits
+                </label>
+            </div>
+
+            <div *ngIf="userLimits.time_window_enabled">
+                <div class="form-group">
+                    <label class="col-sm-2 control-label time-window-label">
+                        <span class="time-window-label-span">Tokens</span>
+                        <input type="number" class="form-control restriction-inputs"
+                               placeholder="5000"
+                               [(ngModel)]="userLimits.token_cap_for_window"
+                               (ngModelChange)="emitValidity()"
+                        >
                     </label>
-                </div>
-
-                <div *ngIf="userLimits.token_cap_enabled" class="settings-section-body">
-                    <input type="number"
-                           class="form-control"
-                           [(ngModel)]="userLimits.token_cap"
-                           (ngModelChange)="emitValidity()"
-                    >
-                </div>
-                <div class="error" *ngIf="isInvalidTokenCap">
-                    Input should be a positive integer or zero
-                </div>
-
-                <div class="checkbox">
-                    <label>
-                        <input type="checkbox" 
-                               [(ngModel)]="userLimits.time_window_enabled"
-                                (ngModelChange)="emitValidity()">
-                        Enable time window token limits
-                    </label>
-                </div>
-
-                <div *ngIf="userLimits.time_window_enabled">
-                    <div class="form-group">
+                    <div class="error" *ngIf="isInvalidWindowTokens">
+                        Input should be a positive integer
+                    </div>
+                    <div>
                         <label class="col-sm-2 control-label time-window-label">
-                            <span class="time-window-label-span">Tokens</span>
+                            <span class="time-window-label-span">Window</span>
                             <input type="number" class="form-control restriction-inputs"
-                                   placeholder="5000"
-                                   [(ngModel)]="userLimits.token_cap_for_window"
-                                    (ngModelChange)="emitValidity()"
+                                   placeholder="5"
+                                   [(ngModel)]="userLimits.window_value"
+                                   (ngModelChange)="emitValidity()"
                             >
+                            <select class="form-control restriction-inputs"
+                                    [(ngModel)]="userLimits.window_unit">
+                                <option *ngFor="let timeUnit of timeUnitOptions"
+                                        [ngValue]="timeUnit.value">{{ timeUnit.label }}
+                                </option>
+                            </select>
                         </label>
-                        <div class="error" *ngIf="isInvalidWindowTokens">
-                            Input should be a positive integer
-                        </div>
-                        <div>
-                            <label class="col-sm-2 control-label time-window-label">
-                                <span class="time-window-label-span">Window</span>
-                                <input type="number" class="form-control restriction-inputs"
-                                       placeholder="5"
-                                       [(ngModel)]="userLimits.window_value"
-                                       (ngModelChange)="emitValidity()"
-                                >
-                                <select class="form-control restriction-inputs"
-                                        [(ngModel)]="userLimits.window_unit">
-                                    <option *ngFor="let timeUnit of timeUnitOptions"
-                                            [ngValue]="timeUnit.value">{{ timeUnit.label }}
-                                    </option>
-                                </select>
-                            </label>
-                        </div>
-                        <div class="error" *ngIf="isInvalidWindowTime">
-                            Input should be a positive integer
-                        </div>
+                    </div>
+                    <div class="error" *ngIf="isInvalidWindowTime">
+                        Input should be a positive integer
                     </div>
                 </div>
+            </div>
         </div>
     `,
     imports: [FormsModule, NgIf, NgForOf],

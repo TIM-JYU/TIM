@@ -609,7 +609,7 @@ export class GamificationMapComponent {
         canvas: HTMLCanvasElement,
         layer: number
     ) {
-        // Get all keys from the data dictionarty
+        // Get all keys from the data dictionary
         const keys: string[] = Object.keys(dict);
 
         // Go through every key and select appropriate spreadsheet for the tile

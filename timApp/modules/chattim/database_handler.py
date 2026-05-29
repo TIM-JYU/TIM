@@ -5,7 +5,7 @@ from typing import cast
 from timApp.document.document import Document
 from timApp.document import docentry
 from timApp.document.docentry import DocEntry, get_documents_in_folder
-from timApp.folder.folder import Folder, path_includes, get_documents
+from timApp.folder.folder import Folder
 from timApp.item.item import Item
 from timApp.modules.chattim.dbmodels import LLMRule, Policy, Usage
 from timApp.timdb.sqa import db
@@ -76,14 +76,6 @@ class TimDatabase:
             return rights
         else:
             return None
-
-    @staticmethod
-    def in_user_group(group: UserGroup, user_id: int) -> bool:
-        """Check if the user is in the given user group."""
-        # TODO: is there a TIM function for this?
-        if group.is_personal_group and group.personal_user.id == user_id:
-            return True
-        return any(u.id == user_id for u in group.users)
 
     @staticmethod
     def get_user_groups(groups: list[str]) -> list[UserGroup]:
@@ -198,21 +190,24 @@ class TimDatabase:
         :param public_key: The associated public key for the desired API key.
         :return: The API key or None if it does not exist or the user has no access.
         """
+        user = User.get_by_id(user_id)
+        if not user:
+            return None
+
         api_key = TimDatabase.get_api_key_by_alias(public_key)
         if not api_key:
             return None
         if user_id == api_key.owner:
             return api_key
-        group_ids = api_key.groups
+        group_ids: list[int] = api_key.groups or []
 
         if not group_ids:
             return None
-        for group_id in group_ids:
-            group = UserGroup.get_by_id(group_id)
-            if not group:
-                continue
-            if TimDatabase.in_user_group(group, user_id):
-                return api_key
+
+        user_group_ids = {g.id for g in user.groups}
+        if user_group_ids & set(group_ids):
+            return api_key
+
         return None
 
     @staticmethod
@@ -232,7 +227,6 @@ class TimDatabase:
         include_citations: bool,
         similarity_threshold: float | None,
         top_k_chunks: int,
-        teachers: list[int],
         current_mode: str,
         total_tokens_spent: int,
         indexed_document_ids: list[int],
@@ -252,13 +246,12 @@ class TimDatabase:
         :param include_citations: Whether to include citations.
         :param similarity_threshold: The similarity threshold for context inclusion.
         :param top_k_chunks: The number of top chunks to include.
-        :param teachers: The ids of the teachers allowed to use the plugin instance.
         :param current_mode: Mode of the plugin instance: summarizing, creative or balanced.
         :param total_tokens_spent: The total number of tokens spent.
         :param indexed_document_ids:
         :param system_prompt_path: TIM path for an optional custom system prompt.
         :param agent: LLm agent.
-        :param conv_time_window: Time window for the conversation in minutes.
+        :param conv_time_window: Time window for the conversation in seconds.
         :param policy: List of policies related to the LLMRule instance.
         :param usage: List of usages related to the LLMRule instance.
         :return: created LLMRule instance
@@ -274,7 +267,6 @@ class TimDatabase:
                 include_citations=include_citations,
                 similarity_threshold=similarity_threshold,
                 top_k_chunks=top_k_chunks,
-                teachers=teachers,
                 current_mode=current_mode,
                 total_tokens_spent=total_tokens_spent,
                 indexed_document_ids=indexed_document_ids,
@@ -285,18 +277,17 @@ class TimDatabase:
             db.session.add(rule)
         else:
             rule.public_key = public_key
-            rule.teachers = teachers
-            rule.current_mode = current_mode
-            rule.total_tokens_spent = total_tokens_spent
-            rule.indexed_document_ids = indexed_document_ids
-            rule.agent = agent
-            rule.conv_time_window = conv_time_window
-            rule.system_prompt_path = system_prompt_path
             rule.use_streaming = use_streaming
             rule.temperature = temperature
             rule.include_citations = include_citations
             rule.similarity_threshold = similarity_threshold
             rule.top_k_chunks = top_k_chunks
+            rule.current_mode = current_mode
+            rule.total_tokens_spent = total_tokens_spent
+            rule.indexed_document_ids = indexed_document_ids
+            rule.system_prompt_path = system_prompt_path
+            rule.agent = agent
+            rule.conv_time_window = conv_time_window
         rule.policy.extend(policy)
         rule.usage.extend(usage)
         db.session.commit()
@@ -449,7 +440,6 @@ class TimDatabase:
         time_window_tokens: int | None,
         max_tokens_per_user: int | None,
         token_pool: int | None,
-        policy_type: str,  # global or user
     ) -> Policy:
         """
         Sets a new policy for the LLM rule. Policy can be a global policy for the whole LLM rule or a student policy
@@ -469,7 +459,6 @@ class TimDatabase:
                 time_window_tokens=time_window_tokens,
                 max_tokens_per_user=max_tokens_per_user,
                 token_pool=token_pool,
-                policy_type=policy_type,
             )
             db.session.add(policy)
         else:
@@ -502,7 +491,6 @@ class TimDatabase:
             time_window_tokens,
             max_tokens_per_user,
             token_pool,
-            "global",
         )
         return policy
 
@@ -527,7 +515,6 @@ class TimDatabase:
             time_window_tokens,
             max_tokens_per_user,
             0,
-            "user",
         )
         return policy
 

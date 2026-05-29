@@ -1,9 +1,15 @@
 from dataclasses import dataclass
 from flask import request, Response, stream_with_context
-from typing import Any, TypedDict, Callable, Iterator, cast, Literal
+from typing import (
+    TypedDict,
+    Callable,
+    Iterator,
+    cast,
+    Literal,
+    TypeAlias,
+)
 from webargs.flaskparser import use_args
 import json
-from flask_babel import gettext
 
 from timApp.auth.accesshelper import (
     verify_logged_in,
@@ -19,7 +25,6 @@ from timApp.util.flask.responsehelper import json_response, to_json_str, ok_resp
 from tim_common.markupmodels import GenericMarkupModel
 from tim_common.pluginserver_flask import (
     GenericHtmlModel,
-    PluginAnswerResp,
     PluginReqs,
     EditorTab,
     PluginAnswerWeb,
@@ -35,9 +40,10 @@ from timApp.modules.chattim.plugincore import (
     UserData,
     InstanceSettingsData,
 )
-from .model import ModelError
 
 plugincore = PluginCore()
+
+RouteReturn: TypeAlias = Response | list | object
 
 
 @dataclass
@@ -46,11 +52,9 @@ class ChatTimMarkupModel(GenericMarkupModel):
     apiAlias: str = ""
     defaultWindowSize: Literal["sm", "md", "lg", "xs"] = "md"
     blockContent: str = ""
-
-
-# TODO: make proper dataclasses
-ChatTimInputModel = dict[str, Any]
-ChatTimStateModel = dict[str, Any]
+    previewVisible: bool = False
+    startMinimized: bool = False
+    startBottomRight: bool = False
 
 
 @dataclass
@@ -68,9 +72,13 @@ class SaveUserPolicyParams(GenericParams):
     user_data: UserData
 
 
+@dataclass
+class DeletePluginParams(GenericParams):
+    par_id: str
+
+
 def get_rights(params: GetRightsParams) -> dict:
     doc = get_doc_or_abort(params.document_id)
-    print(doc)
     # verify_teacher_access returns the access object if teacher, None if not
     teacher_access = verify_teacher_access(doc, require=False)
 
@@ -122,9 +130,7 @@ class ChatTIMGetSettingsResponse(TypedDict, total=False):
 
 
 @dataclass
-class ChatTimHtmlModel(
-    GenericHtmlModel[ChatTimInputModel, ChatTimMarkupModel, ChatTimStateModel]
-):
+class ChatTimHtmlModel(GenericHtmlModel[dict, ChatTimMarkupModel, dict]):
     def get_component_html_name(self) -> str:
         return "chattim-runner"
 
@@ -140,10 +146,13 @@ def reqs() -> PluginReqs:
         """
 ``` {plugin="chattim" #taskidhere}
 header: ChatTIM
-welcomeText: ""  
+welcomeText: ""
 apiAlias: ""
 defaultWindowSize: "md" # [sm, md, lg, xs]
 blockContent: ""
+previewVisible: false
+startMinimized: false
+startBottomRight: false
 ```
 """,
     ]
@@ -187,9 +196,9 @@ def register_route(
     method: str,
     route: str,
     route_model: type | None,
-    route_handler: Callable[..., Any],
+    route_handler: Callable[..., RouteReturn],
 ) -> None:
-    def to_response(r: Any) -> Response:
+    def to_response(r: RouteReturn) -> Response:
         # Allow handlers to define their own Flask Response
         if isinstance(r, Response):
             return r
@@ -199,14 +208,24 @@ def register_route(
 
         @app.route(f"/{route}", methods=[method], endpoint=route)
         def handler() -> Response:
-            return to_response(route_handler())
+            try:
+                return to_response(route_handler())
+            except RouteException as e:
+                raise e
+            except Exception as e:
+                raise RouteException(str(e)) from e
 
         return
 
     @app.route(f"/{route}", methods=[method], endpoint=route)
     @use_args(class_schema(route_model)(), locations=("json",))
-    def handler_args(m: Any) -> Response:
-        return to_response(route_handler(m))
+    def handler_args(m: object) -> Response:
+        try:
+            return to_response(route_handler(m))
+        except RouteException as e:
+            raise e
+        except Exception as e:
+            raise RouteException(str(e)) from e
 
 
 def ask_route(params: ChatTimAskParams) -> ChatTimAskResponse:
@@ -238,21 +257,22 @@ def ask_stream_route(params: ChatTimAskParams) -> Response:
             return
 
         citations: list[str] | None = None
+        disconnected: bool = False
 
         try:
             stream, context = resp.value
             citations = context
             for chunk in stream:
                 yield to_ndjson_str(ChatTimAskResponse(answer=chunk))
-        except ModelError as e:
-            error = f"{e.text()} {str(e.cause)}"
-            yield to_ndjson_str(ChatTimAskResponse(error=error))
+        except GeneratorExit:
+            disconnected = True
             return
         except Exception as e:
             yield to_ndjson_str(ChatTimAskResponse(error=str(e)))
             return
         finally:
-            yield to_ndjson_str(ChatTimAskResponse(citations=citations))
+            if not disconnected:
+                yield to_ndjson_str(ChatTimAskResponse(citations=citations))
 
     return Response(
         stream_with_context(generate()),
@@ -429,7 +449,7 @@ def delete_existing_key(key: APIKeyParams) -> Response:
     return ok_response()
 
 
-def to_ndjson_str(json_data: Any) -> str:
+def to_ndjson_str(json_data: object) -> str:
     """Return a newline delimited JSON string.
 
     :param json_data: The data to be converted.
@@ -460,6 +480,18 @@ def get_models(params: GetModelsParams) -> dict:
     return {"models": models}
 
 
+def delete_plugin(params: DeletePluginParams) -> Response:
+    user_id = get_current_user_id()
+    document_id = params.document_id
+    par_id = params.par_id
+
+    result = plugincore.delete_instance(user_id, document_id, par_id)
+
+    if result.error is not None:
+        raise RouteException(description=result.error or "")
+    return ok_response()
+
+
 register_route(chattim, "post", "ask", ChatTimAskParams, ask_route)
 register_route(chattim, "post", "askStream", ChatTimAskParams, ask_stream_route)
 register_route(chattim, "post", "getSettings", GenericParams, get_settings)
@@ -468,6 +500,7 @@ register_route(
 )
 register_route(chattim, "post", "getMessages", GetMessagesParams, get_messages)
 register_route(chattim, "post", "clearMessages", GenericParams, clear_messages)
+register_route(chattim, "post", "deletePlugin", DeletePluginParams, delete_plugin)
 register_route(chattim, "post", "validateApi", APIKeyParams, save_api_key)
 register_route(chattim, "get", "getProviders", None, get_providers)
 register_route(chattim, "post", "getUserPolicyData", GenericParams, get_user_data)

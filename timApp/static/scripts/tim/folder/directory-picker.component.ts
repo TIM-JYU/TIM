@@ -1,4 +1,4 @@
-import type {OnInit} from "@angular/core";
+import type {OnInit, SimpleChanges} from "@angular/core";
 import {Component, EventEmitter, Input, Output} from "@angular/core";
 import type {DocumentOrFolder} from "tim/item/IItem";
 import {toPromise} from "tim/util/utils";
@@ -131,6 +131,19 @@ export class DirectoryPickerComponent implements OnInit {
         }
         void this.loadFolder(this.currentFolder);
         this.rebuildSelectedUnderCount();
+    }
+
+    ngOnChanges(changes: SimpleChanges) {
+        if (changes.selection) {
+            this.selected = new Set(this.selection ?? []);
+            this.rebuildSelectedUnderCount();
+        }
+        if (
+            changes.restrictions &&
+            this.restrictions?.allowedPaths != undefined
+        ) {
+            this.allowedPaths = new Set(this.restrictions.allowedPaths);
+        }
     }
 
     isSelected(item: DocumentOrFolder): boolean {

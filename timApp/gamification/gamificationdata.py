@@ -69,7 +69,7 @@ def get_lecture_data(lecture_paths):
 def get_sorted_lists(items, item_name: str):
     """
     Fetches document list from a dictionary list and sorts it and the dictionary list.
-    Checks also whether every path was founf from database and raises error accordingly.
+    Checks also whether every path was found from database and raises error accordingly.
 
     :param items: Dictionary list with 'path' keys.
     :param item_name: Name of the item type (demo, lecture, etc.).
@@ -85,7 +85,7 @@ def get_sorted_lists(items, item_name: str):
         if path is not None:
             item_path_list.append(path)
             filtered_items.append(item)
-        # Sort both so they can be looped simultaneusly without value mismatches.
+        # Sort both so they can be looped simultaneously without value mismatches.
     docs = sorted(
         run_sql(select(DocEntry).filter(DocEntry.name.in_(item_path_list)))
         .scalars()

@@ -42,8 +42,6 @@ class LLMRule(db.Model):
     top_k_chunks: Mapped[int] = mapped_column(Integer, default=3)
     """Number of most relevant chunks to retrieve for context."""
 
-    # TODO: Should this be combined with `groups` or kept separate?
-    teachers: Mapped[list[int]] = mapped_column(ARRAY(Integer), default=[])
     current_mode: Mapped[str] = mapped_column(
         String, default=""
     )  # summarizing or creative
@@ -89,7 +87,6 @@ class Policy(db.Model):
     )  # token limit for the window
     max_tokens_per_user: Mapped[int] = mapped_column(Integer, nullable=True)
     token_pool: Mapped[int] = mapped_column(Integer, nullable=True)
-    policy_type: Mapped[str] = mapped_column(String)  # global or user
 
 
 class Usage(db.Model):

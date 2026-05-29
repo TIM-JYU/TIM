@@ -75,7 +75,7 @@
   padding-top: 4px;
 }
 
-.previewDiv .chattim-dialog-frame {
+.previewDiv .chattim-dialog-frame.hide-in-preview {
   visibility: hidden;
 }
 
@@ -109,12 +109,33 @@
   color: #999;
   opacity: 1;
 }
-.upper-area{
-    flex: 1 1 auto;
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-end;
+
+.conv-history-marker {
+  display: flex;
+  align-items: center;
+  color: #999;
+  font-size: 0.6em;
 }
+
+.conv-history-marker::before,
+.conv-history-marker::after {
+  content: "";
+  flex: 1 1 auto;
+  border-top: 1px dashed #999;
+}
+
+.conv-history-marker-text {
+  flex: 0 0 auto;
+  padding: 1px 6px;
+}
+
+.upper-area {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+}
+
 .chat-welcome {
   display: flex;
   align-items: center;
@@ -185,11 +206,11 @@
 }
 
 
-
 // usercontrol //
 .usercontrol-body {
   width: 80%;
 }
+
 .user-table {
   display: flex;
   flex-direction: column;
@@ -260,25 +281,25 @@
 }
 
 .header-button {
-    appearance: none;
-    border: none;
-    background: transparent;
-    font: inherit;
-    font-weight: bold;
-    text-align: left;
-    cursor: pointer;
-    padding: 0;
-    width: 100%;
+  appearance: none;
+  border: none;
+  background: transparent;
+  font: inherit;
+  font-weight: bold;
+  text-align: left;
+  cursor: pointer;
+  padding: 0;
+  width: 100%;
 }
 
 .usercontrol-no-user-selection {
-    flex: 1;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    width: 100%;
-    color: #888;
-    font-style: italic;
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  color: #888;
+  font-style: italic;
 }
 
 .usercontrol-main-content {
@@ -307,5 +328,3 @@
 }
 
 // usercontrol ends //
-
-
