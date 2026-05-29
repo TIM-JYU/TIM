@@ -72,7 +72,7 @@ class InstanceAttributes:
     # model_id: str = "gpt-4.1-mini"
     model_id: str = ""
     llm_mode: str = "Creative"
-    max_tokens: int | None = 2000
+    max_tokens: int | None = None
     conv_time_window: int = 0
     tim_paths: list[str] = field(default_factory=list)
     system_prompt_path: str = ""
@@ -288,6 +288,7 @@ class PluginCore:
             )
             context = response.context
             citations = self._get_citations(response.used_context)
+            self.update_usage(caller_id, document_id, response.tokens_used)
 
         system_prompt = self.get_system_prompt(str(rule.system_prompt_path))
 
@@ -369,7 +370,9 @@ class PluginCore:
             ],
         )
         if usage:
-            self.update_usage(int(caller_id), int(plugin_id), usage.total_tokens)
+            self.update_usage(
+                int(caller_id), int(plugin_id), usage.total_tokens, timestamp_answer
+            )
 
     def chat_request(
         self,
@@ -709,6 +712,7 @@ class PluginCore:
         except ValueError as e:
             return Result(None, str(e))
 
+        currently_used_tokens = old_plugin_rule.total_tokens_spent + tokens_used
         rule = self.tim_database.set_llm_rule(
             document_id=document_id,
             owner=caller_id,
@@ -719,7 +723,7 @@ class PluginCore:
             similarity_threshold=similarity_threshold,
             top_k_chunks=top_k_chunks,
             current_mode=llm_mode,
-            total_tokens_spent=old_plugin_rule.total_tokens_spent,
+            total_tokens_spent=currently_used_tokens,
             indexed_document_ids=document_ids,
             system_prompt_path=system_prompt_path,
             agent=model_id,
@@ -1052,44 +1056,44 @@ class PluginCore:
 
     def update_usage(
         self,
-        caller_id: int,
+        user_id: int | None,
         document_id: int,
         used_tokens: int,
-    ) -> int | None:
+        timestamp: int | None = None,
+    ) -> bool:
         """
-        Updates the usage of the given user in the given document and
-        the total usage per LLMRule.
-        :param caller_id: The user of the tokens.
+        When caller_id is given the Usage table of the user and LLMRule of the
+        instance are updated with the used tokens.
+        When caller_id None, only the LLMRule tokens are updated.
+        :param user_id: The user of the tokens.
         :param document_id: The document of the plugin.
-        :param used_tokens: Tokens used.
+        :param used_tokens: Tokens used by user.
+        :param timestamp: The timestamp of the usage. Is "now" when not given.
         :return: The complete amount of tokens used by the user.
         """
         rule = self.tim_database.get_llm_rule(document_id)
         if not rule:
-            return None
+            return False
 
-        rule_tokens = rule.total_tokens_spent + used_tokens
-        self.tim_database.set_instance_usage(rule, rule_tokens)
+        self.tim_database.update_instance_usage(rule, used_tokens)
 
-        usage = self.tim_database.get_usage(rule, caller_id)
-        if not usage:
-            self.tim_database.set_usage(caller_id, rule, used_tokens)
-            return used_tokens
+        if user_id is not None:
+            if timestamp is None:
+                timestamp = ChatMessage.ts_ms()
 
-        tokens = usage.used_tokens + used_tokens
-        self.tim_database.set_usage(caller_id, rule, tokens)
+            self.tim_database.update_usage(user_id, rule, used_tokens, timestamp)
 
-        return tokens
+        return True
 
     def _calculate_remaining_tokens(
         self, llm_rule: LLMRule, usage: Usage | None, caller_id: int
     ) -> tuple[int | None, str]:
         """
-        Checks token limits as per global and user policies.
+        Calculates the tokens left for user to use based on set policies.
         Result is the amount of tokens left for the user to use.
         Per-user policy rules over global settings always when defined.
         This means that if Global Policy has max tokens and User Policy
-        does not, the Global Policy will be applied. If both have it defined,
+        does not, the Global Policy will be applied. If both have it defined
         User Policy is applied over Global Policy.
         :param llm_rule: The LLMRule object.
         :param usage: User's usage
@@ -1146,12 +1150,11 @@ class PluginCore:
             token_pool_cap_allowance = token_pool_cap - llm_rule.total_tokens_spent
 
         ts_now_ms = ChatMessage.ts_ms()
-        max_messages = sys.maxsize  # TODO: make history take None instead
         if up_window_enabled:
             window_duration_ms = self._policy_window_as_ms(user_policy)
             ts_begin = ts_now_ms - window_duration_ms
-            tokens_used_in_window = self._calculate_tokens_from_chathistory(
-                llm_rule.document_id, caller_id, ts_begin, ts_now_ms, max_messages
+            tokens_used_in_window = self._calculate_usage_in_window(
+                usage, ts_begin=ts_begin, ts_end=ts_now_ms
             )
             if user_policy is not None and user_policy.time_window_tokens is not None:
                 window_allowance = (
@@ -1161,8 +1164,8 @@ class PluginCore:
         elif gp_window_enabled:
             window_duration_ms = self._policy_window_as_ms(global_policy)
             ts_begin = ts_now_ms - window_duration_ms
-            tokens_used_in_window = self._calculate_tokens_from_chathistory(
-                llm_rule.document_id, caller_id, ts_begin, ts_now_ms, max_messages
+            tokens_used_in_window = self._calculate_usage_in_window(
+                usage, ts_begin=ts_begin, ts_end=ts_now_ms
             )
             if (
                 global_policy is not None
@@ -1205,31 +1208,40 @@ class PluginCore:
 
         return remaining_tokens, message_to_user
 
-    def _calculate_tokens_from_chathistory(
-        self,
-        document_id: int,
-        caller_id: int,
+    @staticmethod
+    def _calculate_usage_in_window(
+        usage: Usage,
         ts_begin: int,
         ts_end: int,
-        max_messages: int,
     ) -> int:
+        """
+        Returns the token usage in the table during the given time window.
+        Assumes that the timestamps are in rising order within the Usage table.
+        Timestamps have to be in milliseconds.
+        :param usage: The usage table from which the usage is calculated
+        :param ts_begin: the earliest point in time from which to start counting
+        :param ts_end: the last point in time to which to stop counting
+        :return:
+        """
+        if usage is None:
+            raise ValueError("Given usage is None")
+
         if ts_begin > ts_end:
-            raise ValueError("ts_begin must be greater than or equal to ts_end")
+            raise ValueError("ts_begin must be less than or equal to ts_end")
 
-        chat_history = self.history_manager.get_history_time_window(
-            plugin_id=str(document_id),
-            user_id=str(caller_id),
-            ts_begin=ts_begin,
-            ts_end=None,
-            max_messages=max_messages,
-        )
+        total_tokens = 0
+        usage_history = usage.token_usage_history
 
-        used_tokens = 0
-        for message in chat_history:
-            usage = 0 if message.usage is None else message.usage.total_tokens
-            used_tokens += usage
+        for usage_event in reversed(usage_history):
+            timestamp = usage_event["timestamp"]
 
-        return used_tokens
+            if timestamp < ts_begin:
+                break
+
+            if timestamp <= ts_end:
+                total_tokens += usage_event["tokens"]
+
+        return total_tokens
 
     @staticmethod
     def _policy_window_as_ms(policy: Policy | None) -> int:
