@@ -239,14 +239,12 @@ def ask_route(params: ChatTimAskParams) -> ChatTimAskResponse:
     user_input = params.input
     document_id = params.document_id
     session_user_id = get_current_user_id()
-    user = User.get_by_id(session_user_id)
-    doc = get_doc_or_abort(document_id)
+    check_view_rights(user_id=session_user_id, document_id=document_id)
+
     # check if user has access to document where plugin is added
 
     document_has_chattim_plugin(document_id, session_user_id)
 
-    if not user.has_view_access(doc):
-        return ChatTimAskResponse(error="You dont have access to this document")
     resp = plugincore.chat_request(session_user_id, document_id, user_input)
     if resp.ok():
         value: tuple[str, list[str] | None] = resp.value or ("", None)
@@ -262,18 +260,12 @@ def ask_stream_route(params: ChatTimAskParams) -> Response:
     user_input = params.input
     document_id = params.document_id
     session_user_id = get_current_user_id()
-    user = User.get_by_id(session_user_id)
-    doc = get_doc_or_abort(document_id)
+    check_view_rights(user_id=session_user_id, document_id=document_id)
 
     document_has_chattim_plugin(document_id, session_user_id)
 
     def generate() -> Iterator[str]:
         # check if user has access to document where plugin is added
-        if not user.has_view_access(doc):
-            yield to_ndjson_str(
-                ChatTimAskResponse(error="You dont have access to this document")
-            )
-            return
 
         resp = plugincore.chat_request_stream(session_user_id, document_id, user_input)
         if not resp.ok() or not resp.value:
@@ -309,7 +301,7 @@ def get_settings(params: GenericParams) -> ChatTIMGetSettingsResponse:
     ret: ChatTIMGetSettingsResponse = {}
     document_id = params.document_id
     session_user_id = get_current_user_id()
-
+    check_view_rights(user_id=session_user_id, document_id=document_id)
     get_result = plugincore.get_plugin_settings(session_user_id, document_id)
     if not get_result.ok():
         ret["error"] = get_result.error
@@ -328,6 +320,7 @@ def get_user_data(params: GenericParams) -> dict:
     """
     document_id = params.document_id
     session_user_id = get_current_user_id()
+    check_view_rights(user_id=session_user_id, document_id=document_id)
 
     document_has_chattim_plugin(document_id, session_user_id)
 
@@ -346,7 +339,9 @@ def save_user_policy(params: SaveUserPolicyParams) -> dict:
     document_id = params.document_id
     user_data = params.user_data
     session_user_id = get_current_user_id()
+    check_view_rights(user_id=session_user_id, document_id=document_id)
     operation_result: dict = {"error": "", "result": ""}
+    check_view_rights(user_id=session_user_id, document_id=document_id)
 
     document_has_chattim_plugin(document_id, session_user_id)
 
@@ -367,6 +362,7 @@ def save_settings(params: ChatTimSaveSettingsParams) -> ChatTIMGetSettingsRespon
     panel_data = params.control_panel_settings
     document_id = params.document_id
     session_user_id = get_current_user_id()
+    check_view_rights(user_id=session_user_id, document_id=document_id)
 
     document_has_chattim_plugin(document_id, session_user_id)
 
@@ -382,6 +378,7 @@ def save_settings(params: ChatTimSaveSettingsParams) -> ChatTIMGetSettingsRespon
 def get_messages(params: GetMessagesParams) -> dict:
     user_id = get_current_user_id()
     document_id = params.document_id
+    check_view_rights(user_id=user_id, document_id=document_id)
     amount = params.amount
     ts_end = params.timestamp_end_ms
     messages = plugincore.get_messages_ui(user_id, document_id, ts_end, amount)
@@ -391,7 +388,7 @@ def get_messages(params: GetMessagesParams) -> dict:
 def clear_messages(params: GenericParams) -> Response:
     user_id = get_current_user_id()
     document_id = params.document_id
-
+    check_view_rights(user_id=user_id, document_id=document_id)
     document_has_chattim_plugin(document_id, user_id)
 
     plugincore.clear_history(str(user_id), str(document_id))
@@ -547,6 +544,16 @@ def document_has_chattim_plugin(document_id: int, caller_id: int) -> None:
                 return
 
     raise RouteException(f"No ChatTIM plugin found in the document {document_id}")
+
+
+def check_view_rights(document_id: int, user_id: int) -> None:
+    """Check if the user has view rights to the document
+    :param document_id:id of the document to check
+    :param user_id:id of the user to check"""
+    user = User.get_by_id(user_id)
+    doc = get_doc_or_abort(document_id)
+    if not user.has_view_access(doc):
+        raise RouteException(f"You dont have access to this document")
 
 
 register_route(chattim, "post", "ask", ChatTimAskParams, ask_route)
