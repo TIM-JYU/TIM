@@ -245,6 +245,21 @@ export async function initSlideView(d: IDocument) {
     } else {
         console.error("Did not find reveal element");
     }
+    document.addEventListener("mousedown", (e) => {
+        const target = e.target as HTMLElement;
+        if (target.closest("a, button, .controls")) {
+            return;
+        }
+
+        if (e.button === 0) {
+            rv.next(); // vasen klikkaus
+        } else if (e.button === 2) {
+            rv.prev(); // oikea klikkaus
+        }
+    });
+    document.addEventListener("contextmenu", (e) => {
+        e.preventDefault();
+    });
 }
 
 function fitCurrentSlide() {

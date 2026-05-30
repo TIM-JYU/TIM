@@ -7,7 +7,12 @@ import {
     getTopLevelFields,
     nullable,
 } from "tim/plugin/attributes";
-import type {AfterViewInit, ApplicationRef, DoBootstrap} from "@angular/core";
+import type {
+    AfterViewInit,
+    ApplicationRef,
+    DoBootstrap,
+    OnDestroy,
+} from "@angular/core";
 import {ViewChild} from "@angular/core";
 import {
     Component,
@@ -34,8 +39,10 @@ import {Users} from "tim/user/userService";
 import type {DirectoryPickerRestrictions} from "tim/folder/directory-picker.component";
 import {DirectoryPickerComponent} from "tim/folder/directory-picker.component";
 import {itemglobals} from "tim/util/globals";
+import {secondsToShortTime} from "tim/util/utils";
 import {TooltipModule} from "ngx-bootstrap/tooltip";
 import type {AngularError, Result} from "tim/util/utils";
+import {DialogFrame} from "tim/ui/angulardialog/dialog-frame.component";
 import type {ChatModel, ControlPanelSettings, UserKey} from "./controlpanel";
 import {ChatControlPanelComponent} from "./controlpanel";
 import type {TokenLimitForUser} from "./userpolicy";
@@ -52,6 +59,9 @@ const PluginMarkupFields = t.intersection([
             t.literal("xs"),
         ]),
         blockContent: t.string,
+        previewVisible: t.boolean,
+        startMinimized: t.boolean,
+        startBottomRight: t.boolean,
     }),
     GenericPluginMarkup,
     t.type({
@@ -102,13 +112,18 @@ export interface ControlPanelData extends ControlPanelSettings {
     selector: "chattim-runner",
     encapsulation: ViewEncapsulation.None,
     template: `
+        <ng-container *ngIf="!pluginDeleted">
         <div class="chattim-block-anchor"
              *ngIf="(markup.blockContent ?? '').trim().length > 0"
              [innerHTML]="markup.blockContent | purify"
              [hidden]="!hasManageRights"
         >
         </div>
-        <tim-dialog-frame class="chattim-dialog-frame" [size]="windowSize">
+        <tim-dialog-frame
+            class="chattim-dialog-frame"
+            [size]="windowSize"
+            [class.hide-in-preview]="!markup.previewVisible"
+        >
             <ng-container header> {{ header }}</ng-container>
             <ng-container body>
                 <div class="chattim-body scroll-box" #conversationScroll>
@@ -122,7 +137,12 @@ export interface ControlPanelData extends ControlPanelSettings {
                                     <span i18n>"Welcome to use TIM's helper chatbot!"</span>
                                 </ng-template>
                             </div>
-                            <div *ngFor="let entry of conversation">
+                            <div *ngFor="let entry of conversation; let i = index">
+                                <div *ngIf="convHistoryMarkerIndex === i" class="conv-history-marker">
+                                    <span class="conv-history-marker-text">
+                                        Memory: {{ formatDurationSeconds(convTimeWindow) }}
+                                    </span>
+                                </div>
                                 <div class="chat-bubble-wrapper">
                                     <div class="chat-user">{{ entry.user.content }}</div>
                                 </div>
@@ -131,12 +151,15 @@ export interface ControlPanelData extends ControlPanelSettings {
                                         <div [innerHTML]="entry.agent.content | purify"></div>
                                         <div class="answer-footer">
                                         <span *ngIf="entry.agent.citations && entry.agent.citations.length > 0">
-                                        <ng-container *ngFor="let citation of entry.agent.citations; let i = index">
-                                            <a [href]="citation" target="_blank">[{{ i + 1 }}]</a>
-                                            <ng-container *ngIf="i < entry.agent.citations.length - 1">, </ng-container>
-                                        </ng-container>
-                                    </span><span
-                                            class="chat-timestamp">{{ dateString(entry.agent.timestamp_ms) }}</span>
+                                            <ng-container *ngFor="let citation of entry.agent.citations; let i = index">
+                                                <a [href]="citation" target="_blank">[{{ i + 1 }}]</a>
+                                                <ng-container
+                                                    *ngIf="i < entry.agent.citations.length - 1">, </ng-container>
+                                            </ng-container>
+                                        </span>
+                                            <span
+                                                class="chat-timestamp">{{ dateString(entry.agent.timestamp_ms) }}
+                                            </span>
                                         </div>
                                     </div>
                                 </div>
@@ -171,7 +194,7 @@ export interface ControlPanelData extends ControlPanelSettings {
                     </div>
 
                     <div class="control-panel-container">
-                        
+
                         <ng-container *ngIf="!isTeacher">
                             <button class="btn btn-link settings-btn"
                                     (click)="onControlPanelToggle(!controlPanelOpen)"
@@ -179,7 +202,7 @@ export interface ControlPanelData extends ControlPanelSettings {
                                     title="Avaa asetukset">
                                 <span class="glyphicon glyphicon-cog" style="font-size: 1.8em;"></span>
                             </button>
-                            
+
                             <div class="settings-panel" [style.display]="controlPanelOpen ? 'block' : 'none'">
                                 <button class="btn btn-warning"
                                         (click)="clearConversationClicked()">
@@ -187,43 +210,45 @@ export interface ControlPanelData extends ControlPanelSettings {
                                 </button>
                             </div>
                         </ng-container>
-                            
+
                         <chattim-control-panel *ngIf="isTeacher"
-                            [isTeacher]="isTeacher"
-                            (saveSettingsClick)="onSaveSettings($event)"
-                            (panelToggled)="onControlPanelToggle($event)"
-                            (fetchModelsClick)="onFetchModels($event)"
-                            [selectedModel]="selectedModel"
-                            [setModelTemperature]="modelTemperature"
-                            [useStreaming]="useStreaming"
-                            [includeCitations]="includeCitations"
-                            [setSimilarityThreshold]="similarityThreshold"
-                            [topKChunks]="topKChunks"
-                            [systemPromptPath]="systemPromptPath"
-                            [selectedMode]="selectedMode"
-                            [maxTokens]="maxTokens"
-                            [response]="controlpanelResponse"
-                            [error]="controlpanelError"
-                            [selectedItemPaths]="selectedItemPaths"
-                            [pathRestrictions]="pathRestrictions"
-                            [currentFolder]="getCurrentFolder"
-                            [availableModels]="availableModels"
-                            [availableEmbedderProviders]="availableEmbedderProviders"
-                            [availableModes]="availableModes"
-                            [tokenLimitAllUsers]="globalPolicy"
-                            [userUsageAndPolicyData]="userUsageAndPolicyData"
-                            (userDataRequest)="getUserData()"
-                            (policySaveRequest)="handleUserPolicySave($event)" 
-                            [policySaveResponse]="policySaveResponse" 
-                            [tokenLimitAllUsers]="globalPolicy"
-                            [selectedPublicKey]="selectedPublicKey"
-                            [availablePublicKeys]="availablePublicKeys">
+                                               [isTeacher]="isTeacher"
+                                               (saveSettingsClick)="onSaveSettings($event)"
+                                               (deletePluginClick)="onDeletePlugin()"
+                                               (panelToggled)="onControlPanelToggle($event)"
+                                               (fetchModelsClick)="onFetchModels($event)"
+                                               [selectedModel]="selectedModel"
+                                               [setModelTemperature]="modelTemperature"
+                                               [useStreaming]="useStreaming"
+                                               [includeCitations]="includeCitations"
+                                               [setSimilarityThreshold]="similarityThreshold"
+                                               [topKChunks]="topKChunks"
+                                               [systemPromptPath]="systemPromptPath"
+                                               [selectedMode]="selectedMode"
+                                               [maxTokens]="maxTokens"
+                                               [convTimeWindow]="convTimeWindow"
+                                               [response]="controlpanelResponse"
+                                               [error]="controlpanelError"
+                                               [selectedItemPaths]="selectedItemPaths"
+                                               [pathRestrictions]="pathRestrictions"
+                                               [currentFolder]="getCurrentFolder"
+                                               [availableModels]="availableModels"
+                                               [availableEmbedderProviders]="availableEmbedderProviders"
+                                               [availableModes]="availableModes"
+                                               [tokenLimitAllUsers]="globalPolicy"
+                                               [userUsageAndPolicyData]="userUsageAndPolicyData"
+                                               (userDataRequest)="getUserData()"
+                                               (policySaveRequest)="handleUserPolicySave($event)"
+                                               [policySaveResponse]="policySaveResponse"
+                                               [selectedPublicKey]="selectedPublicKey"
+                                               [availablePublicKeys]="availablePublicKeys">
                         </chattim-control-panel>
                     </div>
 
                 </div>
             </ng-container>
         </tim-dialog-frame>
+        </ng-container> 
     `,
     styleUrls: ["./chattim.scss"],
 })
@@ -233,12 +258,83 @@ export class ChatTIMComponent
         t.TypeOf<typeof PluginFields>,
         typeof PluginFields
     >
-    implements AfterViewInit
+    implements AfterViewInit, OnDestroy
 {
     @ViewChild(ChatControlPanelComponent)
     controlPanel!: ChatControlPanelComponent;
     controlPanelOpen: boolean = false;
     private hostElement!: ElementRef<HTMLElement>;
+
+    @ViewChild(DialogFrame) dialogFrame!: DialogFrame;
+
+    @ViewChild("conversationScroll", {static: false}) scrollFrame!: ElementRef;
+    private scrollContainer?: HTMLElement;
+    private scrollScheduled: boolean = false;
+    private scrollWanted: boolean = false;
+
+    private loadingOlder: boolean = false;
+    private hasMoreHistory: boolean = true;
+    private readonly historyPageSize: number = 20;
+    private readonly scrollUpThreshold: number = 50;
+
+    conversation: ChatEntry[] = [];
+
+    answer?: string;
+    error?: string;
+    isRunning: boolean = false;
+    userInput = "";
+    inputStem = ""; // TODO: do something with this or remove?
+    document_id = -1;
+    isTeacher: boolean = false;
+    hasManageRights: boolean = false;
+    selectedItemPaths: string[] = [];
+    pathRestrictions?: DirectoryPickerRestrictions;
+    selectedPublicKey: string = "";
+    availablePublicKeys: UserKey[] = [];
+    selectedMode = "Creative";
+    selectedModel = "";
+    pluginDeleted = false;
+
+    policySaveResponse = {
+        result: "",
+        error: "",
+    };
+    userUsageAndPolicyData: undefined | UserData[] = [];
+
+    maxTokens: number | null = 1000;
+    controlpanelError?: string;
+    controlpanelResponse?: string;
+    availableModels?: ChatModel[];
+    availableModes?: string[];
+    availableEmbedderProviders: string[] = [];
+
+    convTimeWindow: number = 0;
+    convHistoryMarkerIndex: number | null = null;
+
+    useStreaming: boolean = false;
+    modelTemperature: number | null = null;
+    systemPromptPath: string = "";
+    includeCitations: boolean = false;
+    similarityThreshold: number | null = null;
+    topKChunks: number = 3;
+
+    globalPolicy: TokenLimitForUser = {
+        token_cap_enabled: false,
+        token_cap: 1000,
+        time_window_enabled: false,
+        window_unit: "h",
+        window_value: 5,
+        token_cap_for_window: 5000,
+    };
+
+    constructor(
+        el: ElementRef<HTMLElement>,
+        http: HttpClient,
+        domSanitizer: DomSanitizer
+    ) {
+        super(el, http, domSanitizer);
+        this.hostElement = el;
+    }
 
     onControlPanelToggle(isOpen: boolean) {
         const dialog = this.getModalDialog();
@@ -275,70 +371,6 @@ export class ChatTIMComponent
         }
     }
 
-    @ViewChild("conversationScroll", {static: false}) scrollFrame!: ElementRef;
-    private scrollContainer?: HTMLElement;
-    private scrollScheduled: boolean = false;
-    private scrollWanted: boolean = false;
-
-    private loadingOlder: boolean = false;
-    private hasMoreHistory: boolean = true;
-    private readonly historyPageSize: number = 20;
-    private readonly scrollUpThreshold: number = 50;
-
-    conversation: ChatEntry[] = [];
-
-    answer?: string;
-    error?: string;
-    isRunning: boolean = false;
-    userInput = "";
-    inputStem = ""; // TODO: do something with this or remove?
-    document_id = -1;
-    isTeacher: boolean = false;
-    hasManageRights: boolean = false;
-    selectedItemPaths: string[] = [];
-    pathRestrictions?: DirectoryPickerRestrictions;
-    selectedPublicKey: string = "";
-    availablePublicKeys: UserKey[] = [];
-    selectedMode = "Creative";
-    selectedModel = "";
-
-    policySaveResponse = {
-        result: "",
-        error: "",
-    };
-    userUsageAndPolicyData: undefined | UserData[] = [];
-
-    maxTokens: number | null = 1000;
-    controlpanelError?: string;
-    controlpanelResponse?: string;
-    availableModels?: ChatModel[];
-    availableModes?: string[];
-    availableEmbedderProviders: string[] = [];
-
-    useStreaming: boolean = false;
-    modelTemperature: number | null = null;
-    systemPromptPath: string = "";
-    includeCitations: boolean = false;
-    similarityThreshold: number | null = null;
-    topKChunks: number = 3;
-
-    globalPolicy: TokenLimitForUser = {
-        token_cap_enabled: false,
-        token_cap: 1000,
-        time_window_enabled: false,
-        window_unit: "h",
-        window_value: 5,
-        token_cap_for_window: 5000,
-    };
-
-    constructor(
-        el: ElementRef<HTMLElement>,
-        http: HttpClient,
-        domSanitizer: DomSanitizer
-    ) {
-        super(el, http, domSanitizer);
-        this.hostElement = el;
-    }
     private getModalDialog(): HTMLElement | null {
         const dialogFrame =
             this.hostElement.nativeElement.querySelector("tim-dialog-frame");
@@ -352,12 +384,41 @@ export class ChatTIMComponent
         /* calling this.pluginMeta.getTaskIdUrl() too
          early crashes thus we call in ngAfterViewInit */
         this.initDocId();
+        await this.initDialogFrame();
         await this.initScrollContainer();
         // TODO: separate control panel data and client data fetch
         await this.getControlPanelData();
         await this.fetchRights();
-        console.log(this.isTeacher);
     }
+
+    ngOnDestroy(): void {
+        if (this.scrollContainer) {
+            this.scrollContainer.removeEventListener("scroll", this.onScroll);
+        }
+    }
+
+    /* Initialize the position and start minimized depending on the markup. */
+    async initDialogFrame() {
+        await this.nextAnimationFrame();
+
+        if (this.markup.startMinimized) {
+            this.dialogFrame.toggleMinimize();
+            this.dialogFrame.resizable.doResize();
+            this.dialogFrame.resizable.boundsCheck();
+        }
+
+        if (this.markup.startBottomRight) {
+            const {width, height} = this.dialogFrame.resizable.getSize();
+            const originOffset: number = window.innerWidth / 2 - width / 2;
+            const x: number = window.innerWidth - width - originOffset;
+            const y: number = window.innerHeight - height;
+            this.dialogFrame.setPos({x, y});
+            await this.nextAnimationFrame();
+            this.dialogFrame.resizable.doResize();
+            this.dialogFrame.resizable.boundsCheck();
+        }
+    }
+
     async fetchRights(): Promise<void> {
         if (this.document_id <= 0) {
             return;
@@ -465,6 +526,7 @@ export class ChatTIMComponent
         );
         this.hasMoreHistory = messages.length >= this.historyPageSize;
         this.conversation = this.messagesToEntries(messages);
+        this.updateHistoryMarker();
     }
 
     /**
@@ -569,6 +631,8 @@ export class ChatTIMComponent
             this.conversation = olderEntries.concat(existing);
         }
 
+        this.updateHistoryMarker();
+
         await this.nextAnimationFrame(() => {
             const delta: number = el.scrollHeight - prevScrollHeight;
             el.scrollTop = prevScrollTop + delta;
@@ -597,6 +661,7 @@ export class ChatTIMComponent
         };
         const len: number = this.conversation.push(entry);
         const index: number = len - 1;
+        this.updateHistoryMarker();
         this.scheduleAutoScroll(true);
 
         if (this.useStreaming) {
@@ -604,6 +669,7 @@ export class ChatTIMComponent
         } else {
             await this.askPost(body, index);
         }
+        this.updateHistoryMarker();
         this.isRunning = false;
     }
 
@@ -798,8 +864,9 @@ export class ChatTIMComponent
 
     private setControlPanelData(data: ControlPanelData) {
         this.selectedModel = data.selectedModel ?? data.model_id;
-        this.selectedMode = data.llm_mode;
+        this.selectedMode = data.llm_mode ? data.llm_mode : "Creative";
         this.maxTokens = data.max_tokens;
+        this.convTimeWindow = data.conv_time_window;
         this.selectedItemPaths = data.tim_paths;
         this.pathRestrictions = {
             allowedPaths: data.allowedItemPaths,
@@ -821,6 +888,8 @@ export class ChatTIMComponent
         this.includeCitations = data.include_citations;
         this.similarityThreshold = data.similarity_threshold;
         this.topKChunks = data.top_k_chunks;
+
+        this.updateHistoryMarker();
     }
 
     async onClearConversation(): Promise<void> {
@@ -839,6 +908,31 @@ export class ChatTIMComponent
         if (response.ok) {
             this.conversation = [];
             this.hasMoreHistory = false;
+            this.answer = undefined;
+            this.error = undefined;
+            this.updateHistoryMarker();
+            return;
+        }
+
+        this.handleError(response.result.error.error, "http");
+    }
+
+    async onDeletePlugin(): Promise<void> {
+        if (this.isRunning || this.document_id <= 0) {
+            return;
+        }
+        this.isRunning = true;
+        const par = this.getPar();
+        const par_id = par?.par.id ?? null;
+        const response = await this.httpPost(this.route("deletePlugin"), {
+            document_id: this.document_id,
+            par_id: par_id,
+        });
+
+        this.isRunning = false;
+
+        if (response.ok) {
+            this.pluginDeleted = true;
             this.answer = undefined;
             this.error = undefined;
             return;
@@ -985,6 +1079,38 @@ export class ChatTIMComponent
      */
     dateString(ts: number | undefined): string {
         return ts ? new Date(ts).toLocaleString() : "";
+    }
+
+    /* Return the closest string representation of the time in seconds. */
+    formatDurationSeconds(seconds: number): string {
+        return secondsToShortTime(seconds, ["h", "m", "s"]);
+    }
+
+    /* Update the conversation time window marker index. */
+    private updateHistoryMarker(): void {
+        const active = this.convTimeWindow > 0 && this.conversation.length > 0;
+        if (!active) {
+            this.convHistoryMarkerIndex = null;
+            return;
+        }
+
+        const cutoff: number = Math.max(
+            0,
+            Date.now() - this.convTimeWindow * 1000
+        );
+
+        let index: number = this.conversation.length;
+        for (let i: number = 0; i < this.conversation.length; i++) {
+            const e: ChatEntry = this.conversation[i];
+            const userTs: number = e.user.timestamp_ms ?? 0;
+            const agentTs: number = e.agent.timestamp_ms ?? 0;
+            if (Math.max(userTs, agentTs) >= cutoff) {
+                index = i;
+                break;
+            }
+        }
+        this.convHistoryMarkerIndex =
+            index > 0 && index < this.conversation.length - 1 ? index : null;
     }
 
     async onFetchModels(publicKey: string) {

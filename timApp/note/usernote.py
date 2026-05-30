@@ -56,6 +56,10 @@ class UserNote(db.Model):
     def is_public(self) -> bool:
         return self.access == "everyone"
 
+    @property
+    def is_teachers(self) -> bool:
+        return self.access == "teachers"
+
     def to_json(self):
         tr = self.block.translation
         d = tr if tr else self.block.docentries[0]

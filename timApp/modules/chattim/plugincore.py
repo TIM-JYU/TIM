@@ -1,24 +1,17 @@
-import os
+import sys
 import uuid
 from dataclasses import dataclass, field
 
-from rapidfuzz.distance.DamerauLevenshtein_py import similarity
 from unicodedata import normalize, category
 
-from timApp.modules.chattim.dbmodels import LLMRule
-from timApp.plugin.containerLink import call_plugin_resource
-from timApp.modules.chattim.dbmodels import LLMRule, Policy
+from timApp.modules.chattim.dbmodels import LLMRule, Policy, Usage
 from timApp.util.flask.cache import cache
 from timApp.timdb.dbaccess import get_files_path
-from timApp.user.user import User, UserInfo
-from timApp.auth.get_user_rights_for_item import UserItemRights
-from timApp.item.item import Item
-from timApp.document.docinfo import DocInfo
+from timApp.user.user import User
 from timApp.user.usergroup import get_groups_by_ids, UserGroup
 from timApp.modules.chattim.indexer import (
-    OpenAiEmbeddingModel,
     Indexer,
-    create_embedder,
+    SUPPORTED_EMBEDDING_PROVIDERS,
 )
 from timApp.modules.chattim.database_handler import (
     TimDatabase,
@@ -35,7 +28,7 @@ from typing import Generic, TypeVar, TypedDict, cast
 
 from timApp.modules.chattim.model import (
     ModelResponse,
-    Usage,
+    ModelUsage,
     GenericApiClient,
     Provider,
     ModelError,
@@ -44,6 +37,7 @@ from timApp.modules.chattim.model import (
 from timApp.modules.chattim.conversation import ConversationManager, ChatMessage
 
 DEFAULT_CACHE_TIMEOUT = 60 * 15  # seconds
+HISTORY_MAX_MESSAGES = 64
 
 
 # TODO: Is this needed if we have no model labels anymore?
@@ -78,7 +72,8 @@ class InstanceAttributes:
     # model_id: str = "gpt-4.1-mini"
     model_id: str = ""
     llm_mode: str = "Creative"
-    max_tokens: int | None = 2000
+    max_tokens: int | None = None
+    conv_time_window: int = 0
     tim_paths: list[str] = field(default_factory=list)
     system_prompt_path: str = ""
     use_streaming: bool = False
@@ -110,6 +105,10 @@ class InstanceSettingsData(InstanceAttributes):
     availableEmbedderProviders: list[str] = field(kw_only=True, default_factory=list)
     selectedModel: str | None = None
     allowedItemPaths: list[str] | None = None
+
+    @classmethod
+    def default(cls) -> "InstanceSettingsData":
+        return cls()
 
 
 T = TypeVar("T")
@@ -143,6 +142,7 @@ class PreparedChatRequest:
     response: Iterable[ModelResponse] | ModelResponse
     citations: list[str] | None
     include_citations: bool = False
+    verbose: bool = False
 
 
 # TODO: maybe a dict or dataclass would be more descriptive
@@ -182,15 +182,32 @@ class PluginCore:
         :param stream: Use streaming for model response.
         :return: Result of the prepared chat request.
         """
-        if not self._instance_exists(document_id):
-            return Result(error=f"Instance has not been created yet")
+        rule = self.tim_database.get_llm_rule(document_id)
+        if not rule:
+            return Result(error="Instance has not been created yet")
 
-        # policy check
-        policy_result: Result[str | None, str | None] = self._policy_checks(
-            caller_id, document_id
+        verbose_errors: bool = caller_id == rule.owner
+
+        # policy checking
+        remaining_tokens = (
+            4096  # TODO: can we get the max_token upper limit support somewhere?
         )
-        if not policy_result.ok():
-            return Result(error=policy_result.error)
+        if caller_id != rule.owner:
+            try:
+                usage = self.tim_database.get_usage(rule, caller_id)
+                left_tokens_result = self._calculate_remaining_tokens(
+                    rule, usage, caller_id
+                )
+            except (LookupError, TypeError, ValueError) as e:
+                return Result(error=str(e))
+
+            tokens_left = left_tokens_result[0]
+            message_when_no_tokens = left_tokens_result[1]
+            if tokens_left == 0:
+                return Result(error=message_when_no_tokens)
+
+            if tokens_left is not None and tokens_left < remaining_tokens:
+                remaining_tokens = tokens_left
 
         # Validate input
         try:
@@ -201,17 +218,29 @@ class PluginCore:
         document_id_str = str(document_id)
         caller_id_str = str(caller_id)
 
-        rule = self.tim_database.get_llm_rule(document_id)
+        # Get conversation history
+        chat_history: list[Message]
+        conv_tw_s = rule.conv_time_window
+        if conv_tw_s > 0:
+            ts_now_ms = ChatMessage.ts_ms()
+            ts_begin_ms = max(0, ts_now_ms - (conv_tw_s * 1000))
+            history = self.get_messages_tw(
+                caller_id_str,
+                document_id_str,
+                ts_begin=ts_begin_ms,
+                ts_end=ts_now_ms,
+                max_count=HISTORY_MAX_MESSAGES,
+            )
+            chat_history = [Message(role=m.role, content=m.content) for m in history]
+        else:
+            history = self.history_manager.get_history(
+                document_id_str, caller_id_str, HISTORY_MAX_MESSAGES
+            )
+            chat_history = [Message(role=m.role, content=m.content) for m in history]
 
-        # TODO: remember to fetch with timestamps when the time comes
-        chat_history = self.get_history(caller_id_str, document_id_str)
-
-        rag_mode: RagMode = self._parse_rag_mode(str(rule.current_mode))
+        rag_mode: RagMode | None = self._parse_rag_mode(str(rule.current_mode))
         if rag_mode is None:
             return Result(error=f"Invalid mode '{rag_mode}'")
-
-        # TODO: No need for this attribute if we have character limit for input? Maybe keep as is for an option
-        max_tokens_for_req = None
 
         temperature: float | None = None
         if rule.temperature is not None:
@@ -237,12 +266,15 @@ class PluginCore:
         api_key = self.get_api_key(str(rule.public_key))
         model_id = rule.agent
 
+        if not model_id:
+            return Result(error="No model selected.")
+
         context: str | None = None
         citations: list[str] | None = None
 
         if rag_mode == RagMode.RETRIEVE:
             provider = api_key[0]
-            if provider not in self.supported_embedding_providers():
+            if provider not in SUPPORTED_EMBEDDING_PROVIDERS:
                 # TODO: implement embedding model picking
                 return Result(
                     error=f"Can't use summarizing mode on [{provider}] API keys."
@@ -256,8 +288,9 @@ class PluginCore:
             )
             context = response.context
             citations = self._get_citations(response.used_context)
+            self.update_usage(caller_id, document_id, response.tokens_used)
 
-        system_prompt = self.get_system_prompt(rule.system_prompt_path)
+        system_prompt = self.get_system_prompt(str(rule.system_prompt_path))
 
         msg_data = MessageData(
             user_prompt=validated_input,
@@ -265,7 +298,7 @@ class PluginCore:
             context=context,
             chat_history=chat_history,
             mode=rag_mode,
-            max_tokens=max_tokens_for_req,
+            max_tokens=remaining_tokens,
         )
 
         try:
@@ -277,8 +310,9 @@ class PluginCore:
                 temperature=temperature,
             )
         except ModelError as e:
-            # TODO: Leave out extra info if not owner or no access to plugin
-            error = f"{e.text()} {str(e.cause)}"
+            error = e.text()
+            if verbose_errors:
+                error += f" {str(e.cause)}"
             return Result(error=error)
         except Exception as e:
             return Result(error=str(e))
@@ -290,6 +324,7 @@ class PluginCore:
             response=answer,
             citations=citations,
             include_citations=include_citations,
+            verbose=verbose_errors,
         )
         return Result(value=prepared)
 
@@ -302,7 +337,7 @@ class PluginCore:
         assistant_answer: str,
         timestamp_user: int,
         timestamp_answer: int,
-        usage: Usage | None,
+        usage: ModelUsage | None,
         citations: list[str] | None,
     ) -> None:
         """Save the messages.
@@ -335,7 +370,9 @@ class PluginCore:
             ],
         )
         if usage:
-            self.update_usage(int(caller_id), int(plugin_id), usage.total_tokens)
+            self.update_usage(
+                int(caller_id), int(plugin_id), usage.total_tokens, timestamp_answer
+            )
 
     def chat_request(
         self,
@@ -402,7 +439,7 @@ class PluginCore:
 
         def gen() -> Iterable[str]:
             full_answer: str = ""
-            usage: Usage | None = None
+            usage: ModelUsage | None = None
 
             # Collect the chunk message and usage
             def apply_chunk(c: ModelResponse) -> None:
@@ -416,7 +453,12 @@ class PluginCore:
                 # Yield chunks to the caller
                 for chunk in stream:
                     apply_chunk(chunk)
-                    yield chunk.delta
+                    yield chunk.delta or ""
+            except ModelError as e:
+                error = e.text()
+                if p.verbose:
+                    error += f" {str(e.cause)}"
+                raise Exception(error) from e
             finally:
                 # Drain the remaining chunks if the client disconnected mid-stream
                 try:
@@ -449,21 +491,18 @@ class PluginCore:
         if not self._document_exists(document_id):
             return Result(None, f"Document [{document_id}] does not exist")
 
-        plugin_data = self.tim_database.get_llm_rule(document_id)
-        if plugin_data is None:
+        llm_rule = self.tim_database.get_llm_rule(document_id)
+        if llm_rule is None:
             return Result(value=InstanceSettingsData.default())
 
         if not self._owns_document(user_id, document_id):
             # Return only data the client needs
             data = InstanceSettingsData(
-                use_streaming=bool(plugin_data.use_streaming),
-                include_citations=bool(plugin_data.include_citations),
+                use_streaming=bool(llm_rule.use_streaming),
+                include_citations=bool(llm_rule.include_citations),
+                conv_time_window=llm_rule.conv_time_window or 0,
             )
             return Result(data)
-
-        if not self._instance_exists(document_id):
-            # TODO: get settings from db
-            pass
 
         user_keys = self.tim_database.get_user_api_keys(user_id)
         shared_keys = self.tim_database.get_shared_api_keys(user_id)
@@ -473,8 +512,8 @@ class PluginCore:
             UserKey(
                 provider=str(k.provider),
                 public_key=str(k.public_key),
-                is_selected=plugin_data is not None
-                and k.public_key == plugin_data.public_key,
+                is_selected=llm_rule is not None
+                and k.public_key == llm_rule.public_key,
             )
             for k in user_keys
         ]
@@ -486,8 +525,8 @@ class PluginCore:
                 UserKey(
                     provider=str(k.provider),
                     public_key=str(k.public_key),
-                    is_selected=plugin_data is not None
-                    and k.public_key == plugin_data.public_key,
+                    is_selected=llm_rule is not None
+                    and k.public_key == llm_rule.public_key,
                     is_shared=True,
                     shared_by=owner_name,
                 )
@@ -497,33 +536,50 @@ class PluginCore:
         api_key: str = ""
         allowed_paths: list[str] = []
 
-        api_key_row = self.tim_database.get_api_key_by_alias(
-            str(plugin_data.public_key)
-        )
+        api_key_row = self.tim_database.get_api_key_by_alias(str(llm_rule.public_key))
         if api_key_row is not None:
             provider = self._parse_provider(str(api_key_row.provider))
             api_key = str(api_key_row.api_key)
             allowed_paths = api_key_row.paths
 
-        selected_model = str(plugin_data.agent)
+        selected_model = str(llm_rule.agent)
         supported_models = (
             self._get_supported_chat_models(provider, api_key) if provider else []
         )
+
+        global_policy = self.tim_database.get_global_policy(llm_rule)
+        global_policy_ui = GenericPolicy()
+        max_token_pool = InstanceAttributes().max_tokens
+        if global_policy is not None:
+            global_policy_ui = self._convert_sql_policy_to_generic_policy(global_policy)
+            max_token_pool = global_policy.token_pool
+
+        # Turn selected TIM documents from IDs to paths
+        doc_paths: list[str] = []
+        for doc_id in llm_rule.indexed_document_ids:
+            doc = self.tim_database.get_doc_entry_by_id(doc_id)
+            if not doc:
+                continue
+            doc_paths.append(doc.path)
 
         data = InstanceSettingsData(
             availableModes=RagMode.supported_modes(),
             availableModels=supported_models,
             availableKeys=available_keys,
             availableEmbedderProviders=self._get_available_embedder_providers(user_id),
-            use_streaming=bool(plugin_data.use_streaming),
+            use_streaming=bool(llm_rule.use_streaming),
             selectedModel=selected_model,
             allowedItemPaths=allowed_paths,
-            llm_mode=str(plugin_data.current_mode),
-            system_prompt_path=plugin_data.system_prompt_path,
-            model_temperature=plugin_data.temperature,
-            include_citations=bool(plugin_data.include_citations),
-            similarity_threshold=plugin_data.similarity_threshold,
-            top_k_chunks=plugin_data.top_k_chunks,
+            llm_mode=str(llm_rule.current_mode),
+            system_prompt_path=llm_rule.system_prompt_path,
+            tim_paths=doc_paths,
+            model_temperature=llm_rule.temperature,
+            include_citations=bool(llm_rule.include_citations),
+            similarity_threshold=llm_rule.similarity_threshold,
+            top_k_chunks=llm_rule.top_k_chunks,
+            conv_time_window=llm_rule.conv_time_window,
+            global_policy=global_policy_ui,
+            max_tokens=max_token_pool,
         )
 
         return Result(value=data)
@@ -548,6 +604,7 @@ class PluginCore:
         model_id: str = instance_settings.model_id
         llm_mode: str = instance_settings.llm_mode
         max_tokens: int | None = instance_settings.max_tokens
+        conv_time_window: int = instance_settings.conv_time_window
         tim_paths: list[str] = instance_settings.tim_paths
         system_prompt_path: str = instance_settings.system_prompt_path.strip()
         global_policy: GenericPolicy = instance_settings.global_policy
@@ -581,16 +638,16 @@ class PluginCore:
             api_key_rule, provider_str, api_key = self.try_access_api_key_row(
                 caller_id, public_key
             )
-        except Exception as e:
+        except (ValueError, PermissionError) as e:
             return Result(None, str(e))
 
         rag_mode = self._parse_rag_mode(llm_mode)
         if rag_mode is None:
             return Result(None, f"Invalid rag mode [{llm_mode}] given")
 
-        if provider_str not in Provider.__args__:
+        provider = self._parse_provider(provider_str)
+        if provider is None:
             return Result(None, f"Invalid provider [{provider_str}] given")
-        provider = provider_str
 
         paths_for_indexing = tim_paths
 
@@ -601,25 +658,24 @@ class PluginCore:
 
         document_ids = [doc.id for doc in docs]
 
-        # TODO: maybe add manage rights
-        owns_all = self._owns_all_items(caller_id, docs)
-        if owns_all.ok():
-            if not owns_all.value:
-                return Result(None, owns_all.error)
-        else:
-            return Result(None, "Internal error")
+        try:
+            self._has_rights_one_of(caller_id, docs, ["owner", "manage"])
+        except (PermissionError, ValueError) as e:
+            return Result(None, str(e))
 
         # Check if the API key is valid in these documents
         try:
+            self.tim_database.api_key_valid_in_doc(api_key_rule, document_id)
             self.check_api_key_doc_access(api_key_rule, document_ids)
-        except PermissionError as e:
-            return Result(None, str(e))
-        except ValueError as e:
+        except (PermissionError, ValueError) as e:
             return Result(None, str(e))
 
         # validating max tokens
         if max_tokens is not None and max_tokens < 0:
             return Result(None, "Give non-negative max tokens value")
+
+        if conv_time_window < 0:
+            return Result(None, "Conversation time window must be non-negative")
 
         if system_prompt_path:
             prompt_doc = self.tim_database.get_tim_document_by_path(system_prompt_path)
@@ -653,10 +709,10 @@ class PluginCore:
                     api_key=(provider_str, api_key),
                     documents=docs,
                 )
-                print(f"Tokens used for indexing: {tokens_used}")
         except ValueError as e:
             return Result(None, str(e))
 
+        currently_used_tokens = old_plugin_rule.total_tokens_spent + tokens_used
         rule = self.tim_database.set_llm_rule(
             document_id=document_id,
             owner=caller_id,
@@ -666,23 +722,29 @@ class PluginCore:
             include_citations=include_citations,
             similarity_threshold=similarity_threshold,
             top_k_chunks=top_k_chunks,
-            teachers=[],
             current_mode=llm_mode,
-            total_tokens_spent=0,
+            total_tokens_spent=currently_used_tokens,
             indexed_document_ids=document_ids,
             system_prompt_path=system_prompt_path,
             agent=model_id,
-            conv_time_window=0,
+            conv_time_window=conv_time_window,
             policy=[],
             usage=[],
         )
+
+        if not global_policy.token_cap_enabled:
+            global_policy.token_cap = -1
+
+        if not global_policy.time_window_enabled:
+            global_policy.token_cap_for_window = -1
+
         self.tim_database.set_global_policy(
-            rule,
-            global_policy.window_unit,
-            global_policy.window_value,
-            global_policy.token_cap_for_window,
-            global_policy.token_cap,
-            max_tokens,
+            llm_rule=rule,
+            token_time_window_type=global_policy.window_unit,
+            token_time_window_num=global_policy.window_value,
+            time_window_tokens=global_policy.token_cap_for_window,
+            max_tokens_per_user=global_policy.token_cap,
+            token_pool=max_tokens,
         )
 
         if failed_embeddings > 0:
@@ -692,8 +754,32 @@ class PluginCore:
 
         return self.get_plugin_settings(caller_id, document_id)
 
-    def delete_instance(self, owner_id: int, document_id: int) -> None:
-        self.tim_database.delete_llm_rule(owner_id, document_id)
+    def delete_instance(
+        self, caller_id: int, document_id: int, par_id: str
+    ) -> Result[str, str]:
+        rule = self.tim_database.get_llm_rule(document_id)
+        if not rule:
+            return Result(error=f"No plugin instance in document [{document_id}]")
+        if rule.owner != caller_id:
+            return Result(error="Insufficient rights to delete plugin instance")
+
+        document = self.tim_database.get_tim_document_by_id(document_id)
+        if document is None:
+            return Result(error=f"Document [{document_id}] does not exist")
+
+        if par_id is None:
+            return Result(error=f"Plugin paragraph not found")
+
+        par = document.get_paragraph(par_id)
+        plugin_type = par.get_attr("plugin")
+        if plugin_type is not None and plugin_type == "chattim":
+            deleted = document.delete_paragraph(par_id)
+            if not deleted:
+                return Result(error="Failed to delete plugin paragraph")
+            self.tim_database.delete_llm_rule(caller_id, document_id)
+            return Result(value="Plugin instance deleted")
+
+        return Result(error="No chattim plugin instance in document")
 
     def get_history(self, caller_id: str, document_id: str) -> list[Message]:
         # TODO: fetch with time window
@@ -751,15 +837,7 @@ class PluginCore:
         """Get the list of supported API providers."""
         return list(PROVIDERS.keys())
 
-    @staticmethod
-    def supported_embedding_providers() -> list[Provider]:
-        unsupported_embedding_providers: list[Provider] = ["anthropic"]
-        supported_providers: list[Provider] = PluginCore.get_supported_providers()
-        return [
-            p for p in supported_providers if p not in unsupported_embedding_providers
-        ]
-
-    def get_user_data(self, caller_id, document_id) -> list[UserData]:
+    def get_user_data(self, caller_id: int, document_id: int) -> list[UserData]:
         """
         Returns set policy and token usage for each user that has interacted with the plugin.
         For users that have no policy set, a default GenericPolicy is sent back.
@@ -769,37 +847,13 @@ class PluginCore:
         :return: list of UserData objects
         """
 
-        def convert_sqlpolicy_to_userpolicy(sql_policy: Policy) -> GenericPolicy:
-            max_tokens_per_user = sql_policy.max_tokens_per_user
-            time_window_tokens = sql_policy.time_window_tokens
-            time_window_value = sql_policy.token_time_window_num
-            token_cap_enabled = True
-            time_window_enabled = True
-
-            if max_tokens_per_user == -1:
-                token_cap_enabled = False
-                max_tokens_per_user = None
-
-            if time_window_tokens == -1:
-                time_window_enabled = False
-                time_window_tokens = None
-
-            return GenericPolicy(
-                token_cap_enabled=token_cap_enabled,
-                token_cap=max_tokens_per_user,
-                time_window_enabled=time_window_enabled,
-                window_unit=sql_policy.token_time_window_type,
-                window_value=time_window_value,
-                token_cap_for_window=time_window_tokens,
-            )
-
         llm_rule = self.tim_database.get_llm_rule(document_id)
         if not llm_rule:
             raise LookupError("Instance has not been created yet")
 
         # TODO: unify permissions checking to account for teachers too
         owner = llm_rule.owner
-        if owner != caller_id:  # this should never happen since we have UI-limitations
+        if owner != caller_id:
             raise PermissionError("You have no access to this resource")
 
         user_data: list[UserData] = []
@@ -807,7 +861,7 @@ class PluginCore:
         for usage in usages:
             user_id = usage.user
             user = User.get_by_id(user_id)
-            username = user.name
+            username = user.name if user is not None else ""
 
             if user_id == caller_id:
                 continue
@@ -816,7 +870,9 @@ class PluginCore:
             user_policy_sql = self.tim_database.get_user_policy(llm_rule, user_id)
 
             if user_policy_sql:
-                user_policy = convert_sqlpolicy_to_userpolicy(user_policy_sql)
+                user_policy = self._convert_sql_policy_to_generic_policy(
+                    user_policy_sql
+                )
             else:
                 user_policy = GenericPolicy()
 
@@ -836,7 +892,9 @@ class PluginCore:
 
         return user_data
 
-    def save_user_policy(self, caller_id, document_id, user_data) -> str:
+    def save_user_policy(
+        self, caller_id: int, document_id: int, user_data: UserData
+    ) -> str:
         """
         Saves given user policy for the given user
         :param caller_id: the user who is saving
@@ -879,6 +937,31 @@ class PluginCore:
         return "Save successful"
 
     @staticmethod
+    def _convert_sql_policy_to_generic_policy(sql_policy: Policy) -> GenericPolicy:
+        max_tokens_per_user = sql_policy.max_tokens_per_user
+        time_window_tokens = sql_policy.time_window_tokens
+        time_window_value = sql_policy.token_time_window_num
+        token_cap_enabled = True
+        time_window_enabled = True
+
+        if max_tokens_per_user is None or max_tokens_per_user == -1:
+            token_cap_enabled = False
+            max_tokens_per_user = None
+
+        if time_window_tokens is None or time_window_tokens == -1:
+            time_window_enabled = False
+            time_window_tokens = None
+
+        return GenericPolicy(
+            token_cap_enabled=token_cap_enabled,
+            token_cap=max_tokens_per_user,
+            time_window_enabled=time_window_enabled,
+            window_unit=sql_policy.token_time_window_type or "h",
+            window_value=time_window_value,
+            token_cap_for_window=time_window_tokens,
+        )
+
+    @staticmethod
     def _get_supported_models(provider: Provider, api_key: str) -> list[str]:
         """Get all the models the given API-key has access to.
         :param provider: Provider name.
@@ -913,13 +996,10 @@ class PluginCore:
 
     def _get_available_embedder_providers(self, caller_id: int) -> list[str]:
         """Returns a list of available embedding providers based on API keys."""
-        print("================================")
         keys = self.get_user_api_keys(owner_id=caller_id)
         providers = []
         for key in keys:
             providers.append(key[1])
-        print(f"Providers from DB{providers}")
-        print("================================")
 
         return providers
 
@@ -931,13 +1011,6 @@ class PluginCore:
             return None
         content = prompt_doc.export_markdown(export_ids=False).strip()
         return content if len(content) > 0 else None
-
-    def _instance_exists(self, document_id: int) -> bool:
-        # TODO: todnäk pitää muistissa tiedetyt instanssi-idt jottei haeta aina tietokannalta turhaan
-        # TODO: korvaa db haulla
-        if not self.tim_database.get_llm_rule(document_id):
-            return False
-        return True
 
     def _owns_document(self, caller_id: int, document_id: int) -> bool:
         """Expects that you have checked already that doc and user exist, throws otherwise"""
@@ -983,64 +1056,218 @@ class PluginCore:
 
     def update_usage(
         self,
-        caller_id: int,
+        user_id: int | None,
         document_id: int,
         used_tokens: int,
-    ) -> int | None:
+        timestamp: int | None = None,
+    ) -> bool:
         """
-        Updates the usage of the given user in the given document.
-        :param caller_id: The user of the tokens.
+        When caller_id is given the Usage table of the user and LLMRule of the
+        instance are updated with the used tokens.
+        When caller_id None, only the LLMRule tokens are updated.
+        :param user_id: The user of the tokens.
         :param document_id: The document of the plugin.
-        :param used_tokens: Tokens used.
+        :param used_tokens: Tokens used by user.
+        :param timestamp: The timestamp of the usage. Is "now" when not given.
         :return: The complete amount of tokens used by the user.
         """
         rule = self.tim_database.get_llm_rule(document_id)
         if not rule:
-            return None
-        usage = self.tim_database.get_usage(rule, caller_id)
-        if not usage:
-            self.tim_database.set_usage(caller_id, rule, used_tokens)
-            return used_tokens
-        tokens = usage.used_tokens + used_tokens
-        self.tim_database.set_usage(caller_id, rule, tokens)
-        return tokens
+            return False
 
-    def _policy_checks(
-        self, caller_id: int, document_id: int
-    ) -> Result[str | None, str | None]:
+        self.tim_database.update_instance_usage(rule, used_tokens)
+
+        if user_id is not None:
+            if timestamp is None:
+                timestamp = ChatMessage.ts_ms()
+
+            self.tim_database.update_usage(user_id, rule, used_tokens, timestamp)
+
+        return True
+
+    def _calculate_remaining_tokens(
+        self, llm_rule: LLMRule, usage: Usage | None, caller_id: int
+    ) -> tuple[int | None, str]:
         """
-        Checks token limits as per global and user policies.
-        :param caller_id:  the user that is making the request
-        :param document_id:  instance for the plugin
-        :return: (can_make_req: bool, reason_for_deny: str)
+        Calculates the tokens left for user to use based on set policies.
+        Result is the amount of tokens left for the user to use.
+        Per-user policy rules over global settings always when defined.
+        This means that if Global Policy has max tokens and User Policy
+        does not, the Global Policy will be applied. If both have it defined
+        User Policy is applied over Global Policy.
+        :param llm_rule: The LLMRule object.
+        :param usage: User's usage
+        :param caller_id: The user of the tokens.
+        :return: The complete amount of tokens left or None in the case of unlimited. If zero, an explanation is added as string.
         """
-        # check user policy (if exists)
-        rule = self.tim_database.get_llm_rule(document_id)
-        if not rule:
-            return Result(None, "No LLMRule found for this document")
-        usage = self.tim_database.get_usage(rule, caller_id)
 
-        if not usage:
-            self.update_usage(caller_id, document_id, 0)
-            return Result(value="ok")
+        user_policy = self.tim_database.get_user_policy(llm_rule, caller_id)
+        global_policy = self.tim_database.get_global_policy(llm_rule)
 
-        used_tokens = usage.used_tokens
-        policy = self.tim_database.get_user_policy(rule, caller_id)
+        if global_policy is None:
+            raise LookupError("Could not find global policy for this instance")
 
-        if policy:
-            token_limit = policy.max_tokens_per_user
-        else:
-            # check global policy
-            policy = self.tim_database.get_global_policy(rule)
-            if policy:
-                token_limit = policy.max_tokens_per_user
-            else:
-                return Result(value="ok")
-        if used_tokens and token_limit:
-            if used_tokens >= token_limit:
-                return Result(error="No more tokens")
+        up_token_cap_enabled = False
+        up_window_enabled = False
+        gp_token_cap_enabled = False
+        gp_window_enabled = False
 
-        return Result(value="ok")
+        up_max_tokens_per_user = None
+        if user_policy is not None:
+            up_max_tokens_per_user = user_policy.max_tokens_per_user
+            up_time_window_tokens = user_policy.time_window_tokens
+
+            if up_max_tokens_per_user is not None and up_max_tokens_per_user != -1:
+                up_token_cap_enabled = True
+            if up_time_window_tokens is not None and up_time_window_tokens != -1:
+                up_window_enabled = True
+
+        gp_max_tokens_per_user = global_policy.max_tokens_per_user
+        gp_time_window_tokens = global_policy.time_window_tokens
+        if gp_max_tokens_per_user is not None and gp_max_tokens_per_user != -1:
+            gp_token_cap_enabled = True
+        if gp_time_window_tokens is not None and gp_time_window_tokens != -1:
+            gp_window_enabled = True
+
+        all_used_tokens = 0
+        if usage is not None:
+            all_used_tokens = usage.used_tokens
+
+        tokens_cap: int | None = None
+        if up_token_cap_enabled:
+            tokens_cap = up_max_tokens_per_user
+        elif gp_token_cap_enabled:
+            tokens_cap = gp_max_tokens_per_user
+
+        tokens_allowance_general: int | None = (
+            None if tokens_cap is None else (tokens_cap - all_used_tokens)
+        )
+        window_allowance: int | None = None
+        token_pool_cap_allowance: int | None = None
+
+        token_pool_cap = global_policy.token_pool
+        if token_pool_cap is not None:
+            token_pool_cap_allowance = token_pool_cap - llm_rule.total_tokens_spent
+
+        ts_now_ms = ChatMessage.ts_ms()
+        if up_window_enabled:
+            window_duration_ms = self._policy_window_as_ms(user_policy)
+            ts_begin = ts_now_ms - window_duration_ms
+            tokens_used_in_window = self._calculate_usage_in_window(
+                usage, ts_begin=ts_begin, ts_end=ts_now_ms
+            )
+            if user_policy is not None and user_policy.time_window_tokens is not None:
+                window_allowance = (
+                    user_policy.time_window_tokens - tokens_used_in_window
+                )
+
+        elif gp_window_enabled:
+            window_duration_ms = self._policy_window_as_ms(global_policy)
+            ts_begin = ts_now_ms - window_duration_ms
+            tokens_used_in_window = self._calculate_usage_in_window(
+                usage, ts_begin=ts_begin, ts_end=ts_now_ms
+            )
+            if (
+                global_policy is not None
+                and global_policy.time_window_tokens is not None
+            ):
+                window_allowance = (
+                    global_policy.time_window_tokens - tokens_used_in_window
+                )
+
+        if window_allowance is not None and window_allowance < 0:
+            window_allowance = 0
+
+        if tokens_allowance_general is not None and tokens_allowance_general < 0:
+            tokens_allowance_general = 0
+
+        if token_pool_cap_allowance is not None and token_pool_cap_allowance < 0:
+            token_pool_cap_allowance = 0
+
+        message_to_user = ""
+        if window_allowance == 0:
+            message_to_user = "You have no more chats left for now, come back later"
+
+        if tokens_allowance_general == 0:
+            message_to_user = "You have no more chats left"
+
+        if token_pool_cap_allowance == 0:
+            message_to_user = "This instance has no more chats left"
+
+        candidates = [
+            x
+            for x in (
+                tokens_allowance_general,
+                window_allowance,
+                token_pool_cap_allowance,
+            )
+            if x is not None
+        ]
+
+        remaining_tokens = min(candidates) if candidates else None
+
+        return remaining_tokens, message_to_user
+
+    @staticmethod
+    def _calculate_usage_in_window(
+        usage: Usage,
+        ts_begin: int,
+        ts_end: int,
+    ) -> int:
+        """
+        Returns the token usage in the table during the given time window.
+        Assumes that the timestamps are in rising order within the Usage table.
+        Timestamps have to be in milliseconds.
+        :param usage: The usage table from which the usage is calculated
+        :param ts_begin: the earliest point in time from which to start counting
+        :param ts_end: the last point in time to which to stop counting
+        :return:
+        """
+        if usage is None:
+            raise ValueError("Given usage is None")
+
+        if ts_begin > ts_end:
+            raise ValueError("ts_begin must be less than or equal to ts_end")
+
+        total_tokens = 0
+        usage_history = usage.token_usage_history
+
+        for usage_event in reversed(usage_history):
+            timestamp = usage_event["timestamp"]
+
+            if timestamp < ts_begin:
+                break
+
+            if timestamp <= ts_end:
+                total_tokens += usage_event["tokens"]
+
+        return total_tokens
+
+    @staticmethod
+    def _policy_window_as_ms(policy: Policy | None) -> int:
+        """Gives the duration of the time window of the given policy in milliseconds"""
+        if not policy:
+            raise TypeError("_policy_window_as_ms: Policy was None")
+
+        time_type = policy.token_time_window_type
+        time_value = policy.token_time_window_num
+
+        if time_type is None or time_value is None:
+            raise TypeError(
+                "_policy_window_as_ms: time_type or/and time_value was None"
+            )
+
+        multiplier = 1000
+        if time_type == "d":
+            multiplier *= 24 * 60 * 60
+        if time_type == "h":
+            multiplier *= 60 * 60
+        if time_type == "min":
+            multiplier *= 60
+
+        window_duration_ms = time_value * multiplier
+
+        return window_duration_ms
 
     def _fetch_docs_by_paths(
         self, paths: list[str]
@@ -1071,32 +1298,41 @@ class PluginCore:
 
         return True
 
-    def _owns_all_items(
-        self, user_id: int, documents: list[Document]
-    ) -> Result[bool | None, str | None]:
+    def _has_rights_one_of(
+        self,
+        user_id: int,
+        documents: list[Document],
+        rights: list[str],
+    ) -> bool:
         """
-        Checks for all documents that the given user owns them. Expects that user and given documents exist.
+        Checks that the user has one of the rights in all the documents.
+        Expects that user and given documents exist.
+
         :param user_id: User for which the right is checked
         :param documents: Document for which the user has or has no right
-        :return: If all documents are owned [True, None]
-                 If no documents are provided [True, None]
-                 If not all documents are owned [False, msg on item not owned]
-                 If error happens:
+        :param rights: Rights to check for.
+        :raises ValueError: If failed to find rights for documents.
+        :raises PermissionError: If insufficient rights for some document.
+        :return: True if sufficient rights in all documents.
         """
 
         for document in documents:
             doc_id = document.id
             right = self.tim_database.check_rights(user_id, doc_id)
             if not right:
-                return Result(
-                    error=f"Could not get rights for document [{document}] for user [{user_id}]"
+                raise ValueError(
+                    f"Could not get rights for document [{document}] for user [{user_id}]"
                 )
 
-            is_owner: bool = right.get("owner")
-            if not is_owner:
-                return Result(False, f"No owner rights for [{document.docinfo.path}]")
+            has_rights = any(right.get(r) is not None for r in rights)
+            if document.docinfo is None:
+                raise ValueError(
+                    f"Could not get rights for document [{document}] for user [{user_id}]"
+                )
+            if not has_rights:
+                raise PermissionError(f"No rights for [{document.docinfo.path}]")
 
-        return Result(value=True)
+        return True
 
     @staticmethod
     def _generate_id() -> str:
@@ -1107,7 +1343,6 @@ class PluginCore:
         try:
             return RagMode(mode)
         except ValueError:
-            print(f"Invalid rag mode given: {mode}")
             return None
 
     @staticmethod
@@ -1242,10 +1477,10 @@ class PluginCore:
     ) -> tuple[LLMRule, Provider, str]:
         key = self.tim_database.access_api_key(user_id, public_key)
         if not key:
-            raise Exception(f"No access to the API key.")
+            raise PermissionError(f"No access to the API key.")
         provider = PluginCore._parse_provider(str(key.provider))
         if not provider:
-            raise Exception(f"No provider found for API key.")
+            raise ValueError(f"No provider found for API key.")
         return key, provider, str(key.api_key)
 
     def try_access_api_key(self, user_id: int, public_key: str) -> tuple[Provider, str]:
@@ -1281,9 +1516,6 @@ class PluginCore:
 
     def delete_api_key(self, owner_id: int, public_key: str) -> None:
         self.tim_database.delete_api_key(owner_id, public_key)
-
-    def get_llm_rule(self, document_id: int) -> LLMRule | None:
-        return self.tim_database.get_llm_rule(document_id)
 
     @staticmethod
     def _api_row_to_tuple(rule: LLMRule) -> APIKey:

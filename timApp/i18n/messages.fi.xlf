@@ -11397,7 +11397,7 @@ Syötä useiden käyttäjien osoitteet allekkain tai pilkulla erotettuina.</targ
       </trans-unit>
       <trans-unit id="2121059493646918621" datatype="html">
         <source>This is a practice exam</source>
-        <target state="translated">Tämä on harjoituskoe</target>
+        <target state="translated">Harjoituskokeen tekeminen on päättynyt</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
           <context context-type="linenumber">496,497</context>
@@ -11405,7 +11405,7 @@ Syötä useiden käyttäjien osoitteet allekkain tai pilkulla erotettuina.</targ
       </trans-unit>
       <trans-unit id="2112778509887488400" datatype="html">
         <source> To start the main exam, select it from the dropdown menu above. </source>
-        <target state="translated">Jos haluat aloittaa varsinaisen kokeen, valitse koe yllä olevasta alasvetovalikosta. </target>
+        <target state="translated">Voit enää aloittaa vain varsinaisen kokeen valitsemalla kokeen yllä olevasta listasta. </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
           <context context-type="linenumber">498</context>
@@ -11601,6 +11601,38 @@ Syötä useiden käyttäjien osoitteet allekkain tai pilkulla erotettuina.</targ
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/edit-llm-api-key-dialog.component.ts</context>
           <context context-type="linenumber">65,67</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="290676371449555090" datatype="html">
+        <source>Delete plugin?</source>
+        <target state="new">Poistetaanko plugin?</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">modules/chattim/client/controlpanel.ts</context>
+          <context context-type="linenumber">678,677</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="4773987860540236308" datatype="html">
+        <source>Are you sure you want to permanently delete this plugin from the document?</source>
+        <target state="new">Haluatko varmasti poistaa tämän pluginin dokumentista pysyvästi?</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">modules/chattim/client/controlpanel.ts</context>
+          <context context-type="linenumber">679,677</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="3696676113519785199" datatype="html">
+        <source>Delete &quot;<x id="INTERPOLATION" equiv-text="{{ APIkey.alias }}"/>&quot;?</source>
+        <target state="new">Delete &quot;<x id="INTERPOLATION" equiv-text="{{ APIkey.alias }}"/>&quot;?</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
+          <context context-type="linenumber">679,680</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="7442929916086166398" datatype="html">
+        <source>Yes, delete</source>
+        <target state="new">Yes, delete</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
+          <context context-type="linenumber">681,682</context>
         </context-group>
       </trans-unit>
     </body>

@@ -322,6 +322,8 @@ def run2(
         else ["--network", f"{compose_proj}_csplugin_db"]
     )
 
+    uhome_base = os.environ.get("CS_UHOME_BASE", f"/tmp/{compose_proj}_uhome")
+
     dargs = [
         "docker",
         "run",
@@ -333,7 +335,7 @@ def run2(
         *itertools.chain.from_iterable(path_mappings),
         *itertools.chain.from_iterable(user_mappings),
         "-v",
-        f"/tmp/{compose_proj}_uhome/{udir}/:/home/agent/",
+        f"{uhome_base}/{udir}/:/home/agent/",
         "-v",
         f"{compose_proj}_csplugin_data:/cs_data:ro",
         *network_args,

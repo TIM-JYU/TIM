@@ -1,11 +1,11 @@
 from dataclasses import dataclass
 
-from sqlalchemy import select, delete
+from sqlalchemy import select, delete, false
 from typing import cast
 from timApp.document.document import Document
 from timApp.document import docentry
 from timApp.document.docentry import DocEntry, get_documents_in_folder
-from timApp.folder.folder import Folder, path_includes, get_documents
+from timApp.folder.folder import Folder
 from timApp.item.item import Item
 from timApp.modules.chattim.dbmodels import LLMRule, Policy, Usage
 from timApp.timdb.sqa import db
@@ -26,7 +26,7 @@ class TimDatabase:
         """
         doc_entry = TimDatabase.get_doc_entry_by_id(doc_id)
         if doc_entry:
-            return doc_entry.document  # paragraphs -> .get_paragraphs()
+            return doc_entry.document
         return None
 
     @staticmethod
@@ -76,14 +76,6 @@ class TimDatabase:
             return rights
         else:
             return None
-
-    @staticmethod
-    def in_user_group(group: UserGroup, user_id: int) -> bool:
-        """Check if the user is in the given user group."""
-        # TODO: is there a TIM function for this?
-        if group.is_personal_group and group.personal_user.id == user_id:
-            return True
-        return any(u.id == user_id for u in group.users)
 
     @staticmethod
     def get_user_groups(groups: list[str]) -> list[UserGroup]:
@@ -198,21 +190,24 @@ class TimDatabase:
         :param public_key: The associated public key for the desired API key.
         :return: The API key or None if it does not exist or the user has no access.
         """
+        user = User.get_by_id(user_id)
+        if not user:
+            return None
+
         api_key = TimDatabase.get_api_key_by_alias(public_key)
         if not api_key:
             return None
         if user_id == api_key.owner:
             return api_key
-        group_ids = api_key.groups
+        group_ids: list[int] = api_key.groups or []
 
         if not group_ids:
             return None
-        for group_id in group_ids:
-            group = UserGroup.get_by_id(group_id)
-            if not group:
-                continue
-            if TimDatabase.in_user_group(group, user_id):
-                return api_key
+
+        user_group_ids = {g.id for g in user.groups}
+        if user_group_ids & set(group_ids):
+            return api_key
+
         return None
 
     @staticmethod
@@ -232,7 +227,6 @@ class TimDatabase:
         include_citations: bool,
         similarity_threshold: float | None,
         top_k_chunks: int,
-        teachers: list[int],
         current_mode: str,
         total_tokens_spent: int,
         indexed_document_ids: list[int],
@@ -252,13 +246,12 @@ class TimDatabase:
         :param include_citations: Whether to include citations.
         :param similarity_threshold: The similarity threshold for context inclusion.
         :param top_k_chunks: The number of top chunks to include.
-        :param teachers: The ids of the teachers allowed to use the plugin instance.
         :param current_mode: Mode of the plugin instance: summarizing, creative or balanced.
         :param total_tokens_spent: The total number of tokens spent.
         :param indexed_document_ids:
         :param system_prompt_path: TIM path for an optional custom system prompt.
         :param agent: LLm agent.
-        :param conv_time_window: Time window for the conversation in minutes.
+        :param conv_time_window: Time window for the conversation in seconds.
         :param policy: List of policies related to the LLMRule instance.
         :param usage: List of usages related to the LLMRule instance.
         :return: created LLMRule instance
@@ -274,7 +267,6 @@ class TimDatabase:
                 include_citations=include_citations,
                 similarity_threshold=similarity_threshold,
                 top_k_chunks=top_k_chunks,
-                teachers=teachers,
                 current_mode=current_mode,
                 total_tokens_spent=total_tokens_spent,
                 indexed_document_ids=indexed_document_ids,
@@ -285,18 +277,17 @@ class TimDatabase:
             db.session.add(rule)
         else:
             rule.public_key = public_key
-            rule.teachers = teachers
-            rule.current_mode = current_mode
-            rule.total_tokens_spent = total_tokens_spent
-            rule.indexed_document_ids = indexed_document_ids
-            rule.agent = agent
-            rule.conv_time_window = conv_time_window
-            rule.system_prompt_path = system_prompt_path
             rule.use_streaming = use_streaming
             rule.temperature = temperature
             rule.include_citations = include_citations
             rule.similarity_threshold = similarity_threshold
             rule.top_k_chunks = top_k_chunks
+            rule.current_mode = current_mode
+            rule.total_tokens_spent = total_tokens_spent
+            rule.indexed_document_ids = indexed_document_ids
+            rule.system_prompt_path = system_prompt_path
+            rule.agent = agent
+            rule.conv_time_window = conv_time_window
         rule.policy.extend(policy)
         rule.usage.extend(usage)
         db.session.commit()
@@ -449,7 +440,6 @@ class TimDatabase:
         time_window_tokens: int | None,
         max_tokens_per_user: int | None,
         token_pool: int | None,
-        policy_type: str,  # global or user
     ) -> Policy:
         """
         Sets a new policy for the LLM rule. Policy can be a global policy for the whole LLM rule or a student policy
@@ -469,20 +459,14 @@ class TimDatabase:
                 time_window_tokens=time_window_tokens,
                 max_tokens_per_user=max_tokens_per_user,
                 token_pool=token_pool,
-                policy_type=policy_type,
             )
             db.session.add(policy)
         else:
-            if token_time_window_type is not None:
-                policy.token_time_window_type = token_time_window_type
-            if token_time_window_num is not None:
-                policy.token_time_window_num = token_time_window_num
-            if time_window_tokens is not None:
-                policy.time_window_tokens = time_window_tokens
-            if max_tokens_per_user is not None:
-                policy.max_tokens_per_user = max_tokens_per_user
-            if token_pool is not None:
-                policy.token_pool = token_pool
+            policy.token_time_window_type = token_time_window_type
+            policy.token_time_window_num = token_time_window_num
+            policy.time_window_tokens = time_window_tokens
+            policy.max_tokens_per_user = max_tokens_per_user
+            policy.token_pool = token_pool
         db.session.commit()
         return policy
 
@@ -507,7 +491,6 @@ class TimDatabase:
             time_window_tokens,
             max_tokens_per_user,
             token_pool,
-            "global",
         )
         return policy
 
@@ -532,7 +515,6 @@ class TimDatabase:
             time_window_tokens,
             max_tokens_per_user,
             0,
-            "user",
         )
         return policy
 
@@ -552,7 +534,7 @@ class TimDatabase:
         """
         stmt = delete(Policy).where(
             Policy.llm_rule_id == llm_rule.id,
-            Policy.for_user.is_(None),
+            Policy.for_user == 0,
         )
         db.session.execute(stmt)
         db.session.commit()
@@ -576,7 +558,7 @@ class TimDatabase:
         """
         stmt = select(Policy).where(
             Policy.llm_rule_id == llm_rule.id,
-            Policy.for_user.is_(None),
+            Policy.for_user == 0,
         )
         return db.session.scalar(stmt)
 
@@ -592,14 +574,25 @@ class TimDatabase:
         return db.session.scalar(stmt)
 
     @staticmethod
-    def set_usage(user: int, llm_rule: LLMRule, used_tokens: int) -> Usage:
+    def set_usage(
+        user: int,
+        llm_rule: LLMRule,
+        used_tokens: int,
+        token_usage_history: list[dict[str, int]] | None = None,
+    ) -> Usage:
         """
         Sets the usage for the given user in the given LLM rule context.
+        Values overwrite the existing ones.
+        If usage does not exist for this user, it is created with used_tokens.
         :param user: ID of the user for the usage.
         :param llm_rule: LLM rule instance.
         :param used_tokens: Number of used tokens.
+        :param token_usage_history: Token usage history. Example: [{"timestamp": 123, "tokens": 456}]
         :return: Usage of the given user.
         """
+        if token_usage_history is None:
+            token_usage_history = []
+
         usage = TimDatabase.get_usage(llm_rule, user)
         if not usage:
             usage = Usage(
@@ -607,12 +600,74 @@ class TimDatabase:
                 llm_rule_id=llm_rule.id,
                 llm_rule=llm_rule,
                 used_tokens=used_tokens,
+                token_usage_history=token_usage_history,
             )
             db.session.add(usage)
         else:
             usage.used_tokens = used_tokens
+            usage.token_usage_history = token_usage_history
+
         db.session.commit()
         return usage
+
+    @staticmethod
+    def update_usage(
+        user: int,
+        llm_rule: LLMRule,
+        used_tokens: int,
+        timestamp: int,
+    ) -> Usage:
+        """
+        Updates the usage for the given user in the given LLM rule context.
+        Given used tokens are added to total usage and usage added automatically with
+        timestamp to usage history. New Usage is created if one does not exist.
+        :param user: ID of the user for the usage.
+        :param llm_rule: LLM rule instance.
+        :param used_tokens: Number of used tokens.
+        :param timestamp: Timestamp of the usage.
+        :return: Usage of the given user.
+        """
+        new_history_item = {"timestamp": timestamp, "tokens": used_tokens}
+        usage = TimDatabase.get_usage(llm_rule, user)
+        if not usage:
+            usage = Usage(
+                user=user,
+                llm_rule_id=llm_rule.id,
+                llm_rule=llm_rule,
+                used_tokens=used_tokens,
+                token_usage_history=[new_history_item],
+            )
+            db.session.add(usage)
+        else:
+            usage.used_tokens = usage.used_tokens + used_tokens
+            usage.token_usage_history.append(new_history_item)
+
+        db.session.commit()
+        return usage
+
+    @staticmethod
+    def set_instance_usage(llm_rule: LLMRule, used_tokens: int) -> None:
+        """
+        Sets the usage in the given LLM rule context.
+        Values are overwritten.
+        :param llm_rule: LLM rule instance.
+        :param used_tokens: Number of used tokens.
+        :return: Usage of the given user.
+        """
+        llm_rule.total_tokens_spent = used_tokens
+        db.session.commit()
+
+    @staticmethod
+    def update_instance_usage(llm_rule: LLMRule, used_tokens: int) -> None:
+        """
+        Sets the usage in the given LLM rule context.
+        Given used tokens are added to the current usage.
+        :param llm_rule: LLM rule instance.
+        :param used_tokens: Number of used tokens.
+        :return: Usage of the given user.
+        """
+        llm_rule.total_tokens_spent = llm_rule.total_tokens_spent + used_tokens
+        db.session.commit()
 
     @staticmethod
     def delete_usage(llm_rule: LLMRule, user_id: int) -> None:
@@ -655,13 +710,13 @@ class TimDatabase:
         return db.session.execute(stmt).scalars().all()
 
     @staticmethod
-    def get_usages(llm_rule: LLMRule) -> list[Usage] | None:
+    def get_usages(llm_rule: LLMRule) -> list[Usage]:
         """
         Gets all usages associated with llm rule.
         :param llm_rule:
         :return:
         """
         stmt = select(Usage).where(
-            Usage.llm_rule == llm_rule,
+            Usage.llm_rule_id == llm_rule.id,
         )
         return db.session.scalars(stmt).all()
