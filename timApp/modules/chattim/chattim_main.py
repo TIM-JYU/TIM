@@ -337,7 +337,6 @@ def save_user_policy(params: SaveUserPolicyParams) -> dict:
     session_user_id = get_current_user_id()
     check_view_rights(user_id=session_user_id, document_id=document_id)
     operation_result: dict = {"error": "", "result": ""}
-    check_view_rights(user_id=session_user_id, document_id=document_id)
 
     document_has_chattim_plugin(document_id, session_user_id)
 
