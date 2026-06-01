@@ -241,8 +241,6 @@ def ask_route(params: ChatTimAskParams) -> ChatTimAskResponse:
     session_user_id = get_current_user_id()
     check_view_rights(user_id=session_user_id, document_id=document_id)
 
-    # check if user has access to document where plugin is added
-
     document_has_chattim_plugin(document_id, session_user_id)
 
     resp = plugincore.chat_request(session_user_id, document_id, user_input)
@@ -265,8 +263,6 @@ def ask_stream_route(params: ChatTimAskParams) -> Response:
     document_has_chattim_plugin(document_id, session_user_id)
 
     def generate() -> Iterator[str]:
-        # check if user has access to document where plugin is added
-
         resp = plugincore.chat_request_stream(session_user_id, document_id, user_input)
         if not resp.ok() or not resp.value:
             yield to_ndjson_str(ChatTimAskResponse(error=resp.error))
