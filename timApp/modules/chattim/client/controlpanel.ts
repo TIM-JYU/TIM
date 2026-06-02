@@ -34,6 +34,7 @@ export interface ControlPanelSettings extends Record<string, JsonValue> {
 
     max_tokens: number | null;
     conv_time_window: number;
+    conv_messages_max: number;
     tim_paths: string[];
     system_prompt_path: string;
     global_policy: TokenLimitForUser;
@@ -262,7 +263,7 @@ type TimeUnit = "seconds" | "minutes" | "hours" | "days";
                 </div>
             </div>
 
-            <!-- Conversation time window (seconds) -->
+            <!-- Conversation context window -->
             <div class="settings-row">
                 <button class="btn btn-link settings-section-btn"
                         (click)="convWindowOpen = !convWindowOpen">
@@ -270,26 +271,44 @@ type TimeUnit = "seconds" | "minutes" | "hours" | "days";
                             [class.glyphicon-chevron-right]="!convWindowOpen"
                             [class.glyphicon-chevron-down]="convWindowOpen">
                       </span>
-                    Conversation time window:
+                    Conversation window:
                     <strong>{{ convTimeWindowLabel }}</strong>
                 </button>
+
                 <div *ngIf="convWindowOpen" class="settings-section-body">
-                    <input
-                        type="number"
-                        class="form-control"
-                        [(ngModel)]="convTimeWindowAmount"
-                        min="0"
-                        step="1"
-                    />
-                    <select class="form-control" [(ngModel)]="convTimeWindowUnit">
-                        <option *ngFor="let timeUnit of timeUnitOptions" [ngValue]="timeUnit.value">
-                            {{ timeUnit.label }}
-                        </option>
-                    </select>
-                </div>
-                <div class="error" *ngIf="isInvalidConvTimeWindow">
-                    Input should be a non-negative integer
-                </div>
+                    <div>
+                        <label class="col-sm-2 control-label time-window-label">
+                            <span class="time-window-label-span">Max messages</span>
+                            <input type="number" class="form-control restriction-inputs"
+                                   [(ngModel)]="convMessagesMax"
+                                   min="0"
+                                   step="1"
+                            >
+                        </label>
+                    </div>
+                    <div class="error" *ngIf="isInvalidMaxMessages">
+                        Input should be a positive integer under 256
+                    </div>
+                    
+                    <div>
+                        <label class="col-sm-2 control-label time-window-label">
+                            <span class="time-window-label-span">Time window</span>
+                            <input type="number" class="form-control restriction-inputs"
+                                   [(ngModel)]="convTimeWindowAmount"
+                                   min="0"
+                                   step="1"
+                            >
+                            <select class="form-control restriction-inputs" [(ngModel)]="convTimeWindowUnit">
+                                <option *ngFor="let timeUnit of timeUnitOptions" [ngValue]="timeUnit.value">
+                                    {{ timeUnit.label }}
+                                </option>
+                            </select>
+                        </label>
+                    </div>
+                    <div class="error" *ngIf="isInvalidConvTimeWindow">
+                        Input should be a positive integer
+                    </div> 
+                </div> 
             </div>
 
             <!-- Add more documents to the model (TIM - filepath) -->
@@ -422,6 +441,8 @@ export class ChatControlPanelComponent {
 
     convTimeWindowAmount: number | null = 0;
     convTimeWindowUnit: TimeUnit = "minutes";
+
+    @Input() convMessagesMax: number = 32;
 
     timeUnitOptions: {value: TimeUnit; label: string}[] = [
         {value: "seconds", label: "Seconds"},
@@ -573,6 +594,7 @@ export class ChatControlPanelComponent {
             llm_mode: this.selectedMode,
             max_tokens: this.maxTokensValue,
             conv_time_window: this.convTimeWindowValue,
+            conv_messages_max: this.convMessagesMax,
             tim_paths: this.selectedItemPaths,
             system_prompt_path: this.systemPrompt ?? "",
             global_policy: this.tokenLimitAllUsers,
@@ -642,12 +664,17 @@ export class ChatControlPanelComponent {
     get invalidInputState(): boolean {
         return (
             this.isInvalidMaxTokens ||
+            this.isInvalidMaxMessages ||
             this.isInvalidConvTimeWindow ||
             this.isInvalidModelTemperature ||
             this.isInvalidSimilarityThreshold ||
             this.isInvalidTopChunks ||
             this.invalidUserPolicyState
         );
+    }
+
+    get isInvalidMaxMessages(): boolean {
+        return !this.isValidFloatBetween(this.convMessagesMax, 0, 256);
     }
 
     get isInvalidConvTimeWindow(): boolean {
@@ -678,7 +705,7 @@ export class ChatControlPanelComponent {
 
     /* Get the label for the selected conversation time window. */
     get convTimeWindowLabel(): string {
-        if (this.convTimeWindowValue === 0) {
+        if (this.convTimeWindowValue === 0 || this.convMessagesMax === 0) {
             return "Disabled";
         }
         const amount: number = Math.trunc(this.convTimeWindowAmount ?? 0);
@@ -686,7 +713,7 @@ export class ChatControlPanelComponent {
             this.timeUnitOptions.find(
                 (o) => o.value === this.convTimeWindowUnit
             )?.label ?? this.convTimeWindowUnit;
-        return `${amount} ${unitLabel}`;
+        return `${this.convMessagesMax} in ${amount} ${unitLabel}`;
     }
 
     /* Set the closest time window unit and value from seconds. */
