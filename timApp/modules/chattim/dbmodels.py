@@ -51,6 +51,9 @@ class LLMRule(db.Model):
 
     agent: Mapped[str] = mapped_column(String, default="")
     conv_time_window: Mapped[int] = mapped_column(Integer, default=0)
+    """Time window for messages to be considered in the conversation context."""
+    conv_messages_max: Mapped[int] = mapped_column(Integer, default=32)
+    """Maximum amount of messages in the conversation."""
     policy: Mapped[list["Policy"]] = relationship(
         "Policy", back_populates="llm_rule", cascade="all, delete-orphan"
     )
