@@ -1218,7 +1218,7 @@ class PluginCore:
 
     @staticmethod
     def _calculate_usage_in_window(
-        usage: Usage,
+        usage: Usage | None,
         ts_begin: int,
         ts_end: int,
     ) -> int:

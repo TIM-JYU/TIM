@@ -547,7 +547,7 @@ def check_view_rights(document_id: int, user_id: int) -> None:
     :param user_id:id of the user to check"""
     user = User.get_by_id(user_id)
     doc = get_doc_or_abort(document_id)
-    if not user.has_view_access(doc):
+    if user is None or not user.has_view_access(doc):
         raise RouteException(f"You dont have access to this document")
 
 
