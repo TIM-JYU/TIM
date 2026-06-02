@@ -102,6 +102,6 @@ class Usage(db.Model):
     llm_rule: Mapped[LLMRule] = relationship("LLMRule", back_populates="usage")
     used_tokens: Mapped[int] = mapped_column(Integer)
     token_usage_history: Mapped[list[dict[str, int]]] = mapped_column(
-        MutableList.as_mutable(JSON),
+        MutableList.as_mutable(JSON()),
         default=list,
     )  # [{"timestamp": 123, "tokens": 456}]
