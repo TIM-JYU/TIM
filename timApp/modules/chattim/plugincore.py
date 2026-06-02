@@ -189,7 +189,7 @@ class PluginCore:
         verbose_errors: bool = caller_id == rule.owner
 
         # policy checking
-        remaining_tokens = 4096  # Looks like this is not obtainable programmatically from the API. These change by model/provider
+        remaining_tokens = 4096  # This is the max value for API max_token_limit for completion. Varies depending on model
         if caller_id != rule.owner:
             try:
                 usage = self.tim_database.get_usage(rule, caller_id)

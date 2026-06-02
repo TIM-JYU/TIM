@@ -1204,33 +1204,24 @@ export class ChatTIMComponent
         await this.onClearConversation();
     }
 
-    /*
-    If error object contains error string it is returned. Otherwise
-    some string corresponding to the status code is returned.
-    NOTE: this exists because error.error.error is undefined on status == 0
-    (when internet is cut)
-     */
-    handleAngularError(error: AngularError): string | undefined {
+    /**
+    If error object contains an error string the string is returned.
+    If no error string is included and the status is zero, no internet connection
+    message is sent back. This exists because AngularError has the error string undefined
+    when status === 0 despite promising not to.
+     **/
+    handleAngularError(error: AngularError): string {
         const error_str_or = error.error.error;
 
         if (error_str_or) {
             return error_str_or;
         }
 
-        switch (error.status) {
-            case 0:
-                return "Can't reach server, check your internet connection";
-            case 401:
-                return "You are not authorized";
-            case 403:
-                return "Access denied";
-            case 404:
-                return "Resource not found";
-            case 500:
-                return "Internal server error";
-            default:
-                return undefined;
+        if (error.status === 0) {
+            return "Can't reach server, check your internet connection";
         }
+
+        return "Unknown error happened";
     }
 }
 
