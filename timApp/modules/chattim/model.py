@@ -22,6 +22,8 @@ from openai import (  # type: ignore
     NotFoundError,
     BadRequestError,
     APIStatusError,
+    Stream,
+    AsyncStream,
 )
 from openai.types.chat import (  # type: ignore
     ChatCompletion,
@@ -382,11 +384,14 @@ class GenericApiChatModel(ChatModel):
         """
         kwargs = _completion_kwargs(self._model_id, messages, options, True)
         try:
-            stream = self._client.chat.completions.create(
+            completion = self._client.chat.completions.create(
                 **kwargs, timeout=DEFAULT_COMPLETION_TIMEOUT_S
             )
         except Exception as e:
             raise _openai_to_model_error(e) from e
+
+        assert isinstance(completion, Stream)
+        stream: Stream[ChatCompletionChunk] = completion
 
         # Iterate the message chunks in the stream
         for chunk in stream:
@@ -439,11 +444,14 @@ class AsyncGenericApiChatModel(AsyncChatModel):
         async def gen() -> AsyncIterator[ModelResponse]:
             kwargs = _completion_kwargs(self._model_id, messages, options, True)
             try:
-                stream = await self._client.chat.completions.create(
+                completion = await self._client.chat.completions.create(
                     **kwargs, timeout=DEFAULT_COMPLETION_TIMEOUT_S
                 )
             except Exception as e:
                 raise _openai_to_model_error(e) from e
+
+            assert isinstance(completion, AsyncStream)
+            stream: AsyncStream[ChatCompletionChunk] = completion
 
             async for chunk in stream:
                 yield _parse_stream_chunk(chunk)

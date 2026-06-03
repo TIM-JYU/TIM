@@ -297,7 +297,10 @@ def get_settings(params: GenericParams) -> ChatTIMGetSettingsResponse:
     ret: ChatTIMGetSettingsResponse = {}
     document_id = params.document_id
     session_user_id = get_current_user_id()
+
     check_view_rights(user_id=session_user_id, document_id=document_id)
+    document_has_chattim_plugin(document_id, session_user_id)
+
     get_result = plugincore.get_plugin_settings(session_user_id, document_id)
     if not get_result.ok():
         ret["error"] = get_result.error
@@ -374,6 +377,8 @@ def get_messages(params: GetMessagesParams) -> dict:
     user_id = get_current_user_id()
     document_id = params.document_id
     check_view_rights(user_id=user_id, document_id=document_id)
+    document_has_chattim_plugin(document_id, user_id)
+
     amount = params.amount
     ts_end = params.timestamp_end_ms
     messages = plugincore.get_messages_ui(user_id, document_id, ts_end, amount)
@@ -510,6 +515,7 @@ def delete_plugin(params: DeletePluginParams) -> Response:
     document_id = params.document_id
     par_id = params.par_id
 
+    check_view_rights(user_id=session_user_id, document_id=document_id)
     document_has_chattim_plugin(document_id, session_user_id)
 
     result = plugincore.delete_instance(session_user_id, document_id, par_id)
@@ -547,7 +553,7 @@ def check_view_rights(document_id: int, user_id: int) -> None:
     :param user_id:id of the user to check"""
     user = User.get_by_id(user_id)
     doc = get_doc_or_abort(document_id)
-    if not user.has_view_access(doc):
+    if user is None or not user.has_view_access(doc):
         raise RouteException(f"You dont have access to this document")
 
 
