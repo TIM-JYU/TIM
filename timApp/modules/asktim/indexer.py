@@ -170,7 +170,7 @@ class Indexer:
         """
         :param file_path: root directory for storing index files
         """
-        self.root_path = os.path.join(file_path, "embeddings", "asktim")
+        self.root_path = os.path.join(file_path, "embeddings")
         self.indexed_page_ids: list[int] = []
         os.makedirs(self.root_path, exist_ok=True)
 

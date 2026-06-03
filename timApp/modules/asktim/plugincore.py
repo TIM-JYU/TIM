@@ -1,4 +1,4 @@
-import sys
+import os
 import uuid
 from dataclasses import dataclass, field
 
@@ -159,12 +159,14 @@ class PluginCore:
 
     def __init__(self) -> None:
         file_path = get_files_path().as_posix()
+        root_path = os.path.join(file_path, "asktim")
+
         self.history_manager = ConversationManager(
-            file_path,
+            root_path,
             cache_ttl_s=60 * 15,
             cache_tail_len=64,
         )
-        self.indexer = Indexer(file_path)
+        self.indexer = Indexer(root_path)
 
     def _prepare_chat_request(
         self,

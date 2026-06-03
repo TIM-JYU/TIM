@@ -169,7 +169,7 @@ startBottomRight: false
                     "items": [
                         {
                             "data": templates[0].strip(),
-                            "text": "AI-assistant",
+                            "text": "LLM assistant",
                             "expl": "Add a chatbot functionality",
                         },
                     ],

@@ -63,8 +63,7 @@ class ConversationManager:
         cache_ttl_s: int = 60 * 15,  # 15 min
         cache_tail_len: int = 64,
     ):
-        # TODO: change root path naming
-        root_path = os.path.join(root_dir, "history", "asktim")
+        root_path = os.path.join(root_dir, "history")
         self._store = ConversationStore(root_path)
         self.ttl = cache_ttl_s
         self.tail_len = cache_tail_len
