@@ -49,7 +49,7 @@ type SimilarityMode = "none" | "loose" | "balanced" | "strict" | "custom";
 type TimeUnit = "seconds" | "minutes" | "hours" | "days";
 
 @Component({
-    selector: "chattim-control-panel",
+    selector: "asktim-control-panel",
     standalone: true,
     imports: [
         UserPolicyComponent,

@@ -11445,9 +11445,9 @@ Mata in flera användares adresser på separata rader eller åtskilda med kommat
           <context context-type="linenumber">50,51</context>
         </context-group>
       </trans-unit>
-      <trans-unit id="7991621302184166089" datatype="html">
-        <source>Chattim API Keys</source>
-        <target state="translated">Chattim API-nycklar</target>
+      <trans-unit id="3252377604839292087" datatype="html">
+        <source>AskTim API Keys</source>
+        <target state="translated">AskTim API-nycklar</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
           <context context-type="linenumber">646</context>
@@ -11465,7 +11465,7 @@ Mata in flera användares adresser på separata rader eller åtskilda med kommat
         <source>Ask me about TIM related things</source>
         <target state="new">Ask me about TIM related things</target>
         <context-group purpose="location">
-          <context context-type="sourcefile">modules/chattim/client/chattim.ts</context>
+          <context context-type="sourcefile">modules/asktim/client/asktim.ts</context>
           <context context-type="linenumber">108,109</context>
         </context-group>
       </trans-unit>
@@ -11473,7 +11473,7 @@ Mata in flera användares adresser på separata rader eller åtskilda med kommat
         <source>&quot;Welcome to use TIM&apos;s helper chatbot!&quot;</source>
         <target state="new">&quot;Welcome to use TIM&apos;s helper chatbot!&quot;</target>
         <context-group purpose="location">
-          <context context-type="sourcefile">modules/chattim/client/chattim.ts</context>
+          <context context-type="sourcefile">modules/asktim/client/asktim.ts</context>
           <context context-type="linenumber">100,101</context>
         </context-group>
       </trans-unit>
@@ -11513,7 +11513,7 @@ Mata in flera användares adresser på separata rader eller åtskilda med kommat
         <source>Delete plugin?</source>
         <target state="new">Delete plugin?</target>
         <context-group purpose="location">
-          <context context-type="sourcefile">modules/chattim/client/controlpanel.ts</context>
+          <context context-type="sourcefile">modules/asktim/client/controlpanel.ts</context>
           <context context-type="linenumber">678,677</context>
         </context-group>
       </trans-unit>
@@ -11521,7 +11521,7 @@ Mata in flera användares adresser på separata rader eller åtskilda med kommat
         <source>Are you sure you want to permanently delete this plugin from the document?</source>
         <target state="new">Are you sure you want to permanently delete this plugin from the document?</target>
         <context-group purpose="location">
-          <context context-type="sourcefile">modules/chattim/client/controlpanel.ts</context>
+          <context context-type="sourcefile">modules/asktim/client/controlpanel.ts</context>
           <context context-type="linenumber">679,677</context>
         </context-group>
       </trans-unit>

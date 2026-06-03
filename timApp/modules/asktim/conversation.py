@@ -64,7 +64,7 @@ class ConversationManager:
         cache_tail_len: int = 64,
     ):
         # TODO: change root path naming
-        root_path = os.path.join(root_dir, "history", "chattim")
+        root_path = os.path.join(root_dir, "history", "asktim")
         self._store = ConversationStore(root_path)
         self.ttl = cache_ttl_s
         self.tail_len = cache_tail_len
@@ -241,7 +241,7 @@ class ConversationManager:
 
     @staticmethod
     def _cache_key_tail(plugin_id: str, user_id: str) -> str:
-        return f"chattim:tail:{plugin_id}:{user_id}"
+        return f"asktim:tail:{plugin_id}:{user_id}"
 
     @staticmethod
     def _cache_payload_tail(

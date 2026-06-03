@@ -15,7 +15,7 @@ import {DirectoryPickerComponent} from "tim/folder/directory-picker.component";
  * User can edit LLM model API key permissions.
  */
 @Component({
-    selector: "tim-edit-chattim-api-key-dialog",
+    selector: "tim-edit-asktim-api-key-dialog",
     template: `
         <tim-dialog-frame [minimizable]="false">
             <ng-container header i18n>
@@ -121,7 +121,7 @@ export class EditLLMAPIKeyDialogComponent extends AngularDialogComponent<
 
         const res = await toPromise(
             this.http.post<{groups: IGroup[]; paths: string[]}>(
-                "/chattim/addApiKeyPermissions",
+                "/asktim/addApiKeyPermissions",
                 {
                     provider: key.provider,
                     apikey: key.APIkey,
@@ -152,7 +152,7 @@ export class EditLLMAPIKeyDialogComponent extends AngularDialogComponent<
         const id = group.id;
         const key = this.data.key;
         const res = await toPromise(
-            this.http.post<Response>(`/chattim/removeGroupRight/${id}`, {
+            this.http.post<Response>(`/asktim/removeGroupRight/${id}`, {
                 public_key: key.alias,
             })
         );

@@ -11548,9 +11548,9 @@ Separate multiple addresses with commas or write each address on a new line.</so
           <context context-type="linenumber">50,51</context>
         </context-group>
       </trans-unit>
-      <trans-unit id="7991621302184166089" datatype="html">
-        <source>Chattim API Keys</source>
-        <target state="new">Chattim API Keys</target>
+      <trans-unit id="3252377604839292087" datatype="html">
+        <source>AskTim API Keys</source>
+        <target state="new">AskTim API Keys</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
           <context context-type="linenumber">646</context>
@@ -11568,7 +11568,7 @@ Separate multiple addresses with commas or write each address on a new line.</so
         <source>Ask me about TIM related things</source>
         <target state="new">Ask me about TIM related things</target>
         <context-group purpose="location">
-          <context context-type="sourcefile">modules/chattim/client/chattim.ts</context>
+          <context context-type="sourcefile">modules/asktim/client/asktim.ts</context>
           <context context-type="linenumber">108,109</context>
         </context-group>
       </trans-unit>
@@ -11576,7 +11576,7 @@ Separate multiple addresses with commas or write each address on a new line.</so
         <source>&quot;Welcome to use TIM&apos;s helper chatbot!&quot;</source>
         <target state="new">&quot;Welcome to use TIM&apos;s helper chatbot!&quot;</target>
         <context-group purpose="location">
-          <context context-type="sourcefile">modules/chattim/client/chattim.ts</context>
+          <context context-type="sourcefile">modules/asktim/client/asktim.ts</context>
           <context context-type="linenumber">100,101</context>
         </context-group>
       </trans-unit>
@@ -11616,7 +11616,7 @@ Separate multiple addresses with commas or write each address on a new line.</so
         <source>Delete plugin?</source>
         <target state="new">Delete plugin?</target>
         <context-group purpose="location">
-          <context context-type="sourcefile">modules/chattim/client/controlpanel.ts</context>
+          <context context-type="sourcefile">modules/asktim/client/controlpanel.ts</context>
           <context context-type="linenumber">678,677</context>
         </context-group>
       </trans-unit>
@@ -11624,7 +11624,7 @@ Separate multiple addresses with commas or write each address on a new line.</so
         <source>Are you sure you want to permanently delete this plugin from the document?</source>
         <target state="new">Are you sure you want to permanently delete this plugin from the document?</target>
         <context-group purpose="location">
-          <context context-type="sourcefile">modules/chattim/client/controlpanel.ts</context>
+          <context context-type="sourcefile">modules/asktim/client/controlpanel.ts</context>
           <context context-type="linenumber">679,677</context>
         </context-group>
       </trans-unit>

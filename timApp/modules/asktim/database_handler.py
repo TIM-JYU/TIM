@@ -7,7 +7,7 @@ from timApp.document import docentry
 from timApp.document.docentry import DocEntry, get_documents_in_folder
 from timApp.folder.folder import Folder
 from timApp.item.item import Item
-from timApp.modules.chattim.dbmodels import LLMRule, Policy, Usage
+from .dbmodels import LLMRule, Policy, Usage
 from timApp.timdb.sqa import db
 from timApp.user.user import User
 from timApp.user.usergroup import UserGroup

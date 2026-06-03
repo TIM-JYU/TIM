@@ -37,7 +37,7 @@
   border-radius: 16px;
 }
 
-.chattim-dialog-frame .modal-dialog {
+.asktim-dialog-frame .modal-dialog {
   min-width: 20vh;
   min-height: 32vh;
   max-height: 90vh;
@@ -49,7 +49,7 @@
   overflow: hidden;
 }
 
-.chattim-dialog-frame .modal-body {
+.asktim-dialog-frame .modal-body {
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -61,7 +61,7 @@
   margin-top: auto;
 }
 
-.chattim-body {
+.asktim-body {
   display: flex;
   flex-direction: column;
   height: 100%;
@@ -75,7 +75,7 @@
   padding-top: 4px;
 }
 
-.previewDiv .chattim-dialog-frame.hide-in-preview {
+.previewDiv .asktim-dialog-frame.hide-in-preview {
   visibility: hidden;
 }
 

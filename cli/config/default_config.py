@@ -195,7 +195,6 @@ DEV_SERVICES = [
     ("drag", DevServiceBehaviour.StartStopped),
     ("imagex", DevServiceBehaviour.StartStopped),
     ("mailman", DevServiceBehaviour.Enable),
-    ("chattim", DevServiceBehaviour.StartStopped),
 ]
 
 for service, behaviour in DEV_SERVICES:
