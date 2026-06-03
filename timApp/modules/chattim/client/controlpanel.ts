@@ -377,7 +377,7 @@ type TimeUnit = "seconds" | "minutes" | "hours" | "days";
             <!-- Open dialog to view user token usage and policy modifications -->
             <div class="settings-row">
                 <button class="btn btn-link settings-section-btn"
-                        (click)="userControlOpen = !userControlOpen">
+                        (click)="toggleUserControl()">
                         <span class="glyphicon"
                               [class.glyphicon-chevron-right]="!userControlOpen"
                               [class.glyphicon-chevron-down]="userControlOpen">
@@ -587,6 +587,13 @@ export class ChatControlPanelComponent {
     togglePanel() {
         this.settingsOpen = !this.settingsOpen;
         this.panelToggled.emit(this.settingsOpen);
+    }
+
+    toggleUserControl() {
+        this.userControlOpen = !this.userControlOpen;
+        if (this.userControlOpen) {
+            this.userDataRequest.emit();
+        }
     }
 
     saveSettingsClicked() {
