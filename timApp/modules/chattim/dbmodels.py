@@ -48,13 +48,12 @@ class LLMRule(db.Model):
     total_tokens_spent: Mapped[int] = mapped_column(Integer, default=0)
     indexed_document_ids: Mapped[list[int]] = mapped_column(ARRAY(Integer), default=[])
     system_prompt_path: Mapped[str] = mapped_column(String, default="")
-    # TODO: this should probably be something like:
-    # system_prompt_doc: Mapped[Optional[str]] = mapped_column(
-    #     String, ForeignKey("docentry.name"), nullable=True
-    # )
 
     agent: Mapped[str] = mapped_column(String, default="")
     conv_time_window: Mapped[int] = mapped_column(Integer, default=0)
+    """Time window for messages to be considered in the conversation context."""
+    conv_messages_max: Mapped[int] = mapped_column(Integer, default=32)
+    """Maximum amount of messages in the conversation."""
     policy: Mapped[list["Policy"]] = relationship(
         "Policy", back_populates="llm_rule", cascade="all, delete-orphan"
     )

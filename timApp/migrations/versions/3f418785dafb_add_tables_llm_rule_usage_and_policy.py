@@ -1,18 +1,18 @@
-"""Add tables for LLMRule, Policy and Usage in the ChatTIM plugin.
+"""Add tables llm_rule, usage and policy
 
-Revision ID: 9c9b96ae1505
+Revision ID: 3f418785dafb
 Revises: e03fd2104ce9
-Create Date: 2026-04-22 09:09:37.864438
+Create Date: 2026-06-02 13:43:52.597851
 
 """
 
 # revision identifiers, used by Alembic.
-revision = "9c9b96ae1505"
-down_revision = "e03fd2104ce9"
-
-from alembic import op
-import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
+import sqlalchemy as sa
+from alembic import op
+
+revision = "3f418785dafb"
+down_revision = "e03fd2104ce9"
 
 
 def upgrade():
@@ -22,15 +22,25 @@ def upgrade():
         sa.Column("id", sa.Integer(), nullable=False),
         sa.Column("document_id", sa.Integer(), nullable=False),
         sa.Column("owner", sa.Integer(), nullable=False),
-        sa.Column("apikey_provider", sa.String(), nullable=False),
-        sa.Column("apikey", postgresql.ARRAY(sa.String()), nullable=False),
-        sa.Column("chosen_key", sa.String(), nullable=False),
-        sa.Column("teachers", postgresql.ARRAY(sa.Integer()), nullable=False),
+        sa.Column("public_key", sa.String(), nullable=False),
+        sa.Column("provider", sa.String(), nullable=False),
+        sa.Column("api_key", sa.String(), nullable=False),
+        sa.Column("groups", postgresql.ARRAY(sa.Integer()), nullable=False),
+        sa.Column("paths", postgresql.ARRAY(sa.String()), nullable=False),
+        sa.Column("use_streaming", sa.Boolean(), nullable=False),
+        sa.Column("temperature", sa.Float(), nullable=True),
+        sa.Column("include_citations", sa.Boolean(), nullable=False),
+        sa.Column("similarity_threshold", sa.Float(), nullable=True),
+        sa.Column("top_k_chunks", sa.Integer(), nullable=False),
         sa.Column("current_mode", sa.String(), nullable=False),
         sa.Column("total_tokens_spent", sa.Integer(), nullable=False),
-        sa.Column("indexed_chunk_ids", postgresql.ARRAY(sa.Integer()), nullable=False),
+        sa.Column(
+            "indexed_document_ids", postgresql.ARRAY(sa.Integer()), nullable=False
+        ),
+        sa.Column("system_prompt_path", sa.String(), nullable=False),
         sa.Column("agent", sa.String(), nullable=False),
         sa.Column("conv_time_window", sa.Integer(), nullable=False),
+        sa.Column("conv_messages_max", sa.Integer(), nullable=False),
         sa.ForeignKeyConstraint(
             ["owner"],
             ["useraccount.id"],
@@ -42,32 +52,26 @@ def upgrade():
         sa.Column("id", sa.Integer(), nullable=False),
         sa.Column("for_user", sa.Integer(), nullable=True),
         sa.Column("llm_rule_id", sa.Integer(), nullable=False),
-        sa.Column("token_time_window_type", sa.String(), nullable=False),
-        sa.Column("token_time_window_num", sa.Integer(), nullable=False),
-        sa.Column("time_window_tokens", sa.Integer(), nullable=False),
-        sa.Column("max_tokens", sa.Integer(), nullable=False),
-        sa.Column("policy_type", sa.String(), nullable=False),
+        sa.Column("token_time_window_type", sa.String(), nullable=True),
+        sa.Column("token_time_window_num", sa.Integer(), nullable=True),
+        sa.Column("time_window_tokens", sa.Integer(), nullable=True),
+        sa.Column("max_tokens_per_user", sa.Integer(), nullable=True),
+        sa.Column("token_pool", sa.Integer(), nullable=True),
         sa.ForeignKeyConstraint(
             ["for_user"],
             ["useraccount.id"],
         ),
-        sa.ForeignKeyConstraint(
-            ["llm_rule_id"],
-            ["llm_rule.id"],
-        ),
+        sa.ForeignKeyConstraint(["llm_rule_id"], ["llm_rule.id"], ondelete="CASCADE"),
         sa.PrimaryKeyConstraint("id"),
     )
     op.create_table(
         "usage",
         sa.Column("id", sa.Integer(), nullable=False),
         sa.Column("user", sa.Integer(), nullable=False),
-        sa.Column("conversation_id", sa.Integer(), nullable=False),
         sa.Column("llm_rule_id", sa.Integer(), nullable=False),
         sa.Column("used_tokens", sa.Integer(), nullable=False),
-        sa.ForeignKeyConstraint(
-            ["llm_rule_id"],
-            ["llm_rule.id"],
-        ),
+        sa.Column("token_usage_history", sa.JSON(), nullable=False),
+        sa.ForeignKeyConstraint(["llm_rule_id"], ["llm_rule.id"], ondelete="CASCADE"),
         sa.ForeignKeyConstraint(
             ["user"],
             ["useraccount.id"],

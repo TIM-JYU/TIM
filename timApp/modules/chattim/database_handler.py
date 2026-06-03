@@ -233,6 +233,7 @@ class TimDatabase:
         system_prompt_path: str,
         agent: str,
         conv_time_window: int,
+        conv_messages_max: int,
         policy: list[Policy],
         usage: list[Usage],
     ) -> LLMRule:
@@ -252,6 +253,7 @@ class TimDatabase:
         :param system_prompt_path: TIM path for an optional custom system prompt.
         :param agent: LLm agent.
         :param conv_time_window: Time window for the conversation in seconds.
+        :param conv_messages_max: Maximum amount of messages in the conversation.
         :param policy: List of policies related to the LLMRule instance.
         :param usage: List of usages related to the LLMRule instance.
         :return: created LLMRule instance
@@ -273,6 +275,7 @@ class TimDatabase:
                 system_prompt_path=system_prompt_path,
                 agent=agent,
                 conv_time_window=conv_time_window,
+                conv_messages_max=conv_messages_max,
             )
             db.session.add(rule)
         else:
@@ -288,6 +291,7 @@ class TimDatabase:
             rule.system_prompt_path = system_prompt_path
             rule.agent = agent
             rule.conv_time_window = conv_time_window
+            rule.conv_messages_max = conv_messages_max
         rule.policy.extend(policy)
         rule.usage.extend(usage)
         db.session.commit()

@@ -37,7 +37,6 @@ from timApp.modules.chattim.model import (
 from timApp.modules.chattim.conversation import ConversationManager, ChatMessage
 
 DEFAULT_CACHE_TIMEOUT = 60 * 15  # seconds
-HISTORY_MAX_MESSAGES = 64
 
 
 # TODO: Is this needed if we have no model labels anymore?
@@ -74,6 +73,7 @@ class InstanceAttributes:
     llm_mode: str = "Creative"
     max_tokens: int | None = None
     conv_time_window: int = 0
+    conv_messages_max: int = 32
     tim_paths: list[str] = field(default_factory=list)
     system_prompt_path: str = ""
     use_streaming: bool = False
@@ -219,6 +219,7 @@ class PluginCore:
         # Get conversation history
         chat_history: list[Message]
         conv_tw_s = rule.conv_time_window
+        max_messages = max(rule.conv_messages_max, 0)
         if conv_tw_s > 0:
             ts_now_ms = ChatMessage.ts_ms()
             ts_begin_ms = max(0, ts_now_ms - (conv_tw_s * 1000))
@@ -227,12 +228,12 @@ class PluginCore:
                 document_id_str,
                 ts_begin=ts_begin_ms,
                 ts_end=ts_now_ms,
-                max_count=HISTORY_MAX_MESSAGES,
+                max_count=max_messages,
             )
             chat_history = [Message(role=m.role, content=m.content) for m in history]
         else:
             history = self.history_manager.get_history(
-                document_id_str, caller_id_str, HISTORY_MAX_MESSAGES
+                document_id_str, caller_id_str, max_messages
             )
             chat_history = [Message(role=m.role, content=m.content) for m in history]
 
@@ -499,6 +500,7 @@ class PluginCore:
                 use_streaming=bool(llm_rule.use_streaming),
                 include_citations=bool(llm_rule.include_citations),
                 conv_time_window=llm_rule.conv_time_window or 0,
+                conv_messages_max=llm_rule.conv_messages_max or 0,
             )
             return Result(data)
 
@@ -576,6 +578,7 @@ class PluginCore:
             similarity_threshold=llm_rule.similarity_threshold,
             top_k_chunks=llm_rule.top_k_chunks,
             conv_time_window=llm_rule.conv_time_window,
+            conv_messages_max=llm_rule.conv_messages_max,
             global_policy=global_policy_ui,
             max_tokens=max_token_pool,
         )
@@ -603,6 +606,7 @@ class PluginCore:
         llm_mode: str = instance_settings.llm_mode
         max_tokens: int | None = instance_settings.max_tokens
         conv_time_window: int = instance_settings.conv_time_window
+        conv_messages_max: int = instance_settings.conv_messages_max
         tim_paths: list[str] = instance_settings.tim_paths
         system_prompt_path: str = instance_settings.system_prompt_path.strip()
         global_policy: GenericPolicy = instance_settings.global_policy
@@ -672,6 +676,9 @@ class PluginCore:
         if max_tokens is not None and max_tokens < 0:
             return Result(None, "Give non-negative max tokens value")
 
+        if conv_messages_max < 0:
+            return Result(None, "Conversation message amount must be non-negative")
+
         if conv_time_window < 0:
             return Result(None, "Conversation time window must be non-negative")
 
@@ -726,6 +733,7 @@ class PluginCore:
             system_prompt_path=system_prompt_path,
             agent=model_id,
             conv_time_window=conv_time_window,
+            conv_messages_max=conv_messages_max,
             policy=[],
             usage=[],
         )
@@ -1208,7 +1216,7 @@ class PluginCore:
 
     @staticmethod
     def _calculate_usage_in_window(
-        usage: Usage,
+        usage: Usage | None,
         ts_begin: int,
         ts_end: int,
     ) -> int:
