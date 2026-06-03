@@ -35,7 +35,7 @@ export interface TokenLimitForUser extends Record<string, JsonValue> {
                 >
             </div>
             <div class="error" *ngIf="isInvalidTokenCap">
-                Input should be a positive integer or zero
+                Input should be an integer within [0, {{MAX_NUMBER_INPUT}}]
             </div>
 
             <div class="checkbox">
@@ -58,7 +58,7 @@ export interface TokenLimitForUser extends Record<string, JsonValue> {
                         >
                     </label>
                     <div class="error" *ngIf="isInvalidWindowTokens">
-                        Input should be a positive integer
+                        Input should be an integer within [1, {{MAX_NUMBER_INPUT}}]
                     </div>
                     <div>
                         <label class="col-sm-2 control-label time-window-label">
@@ -77,7 +77,7 @@ export interface TokenLimitForUser extends Record<string, JsonValue> {
                         </label>
                     </div>
                     <div class="error" *ngIf="isInvalidWindowTime">
-                        Input should be a positive integer
+                        Input should be an integer within [1, {{MAX_NUMBER_INPUT}}]
                     </div>
                 </div>
             </div>
@@ -86,6 +86,8 @@ export interface TokenLimitForUser extends Record<string, JsonValue> {
     imports: [FormsModule, NgIf, NgForOf],
 })
 export class UserPolicyComponent {
+    MAX_NUMBER_INPUT = 1000_000;
+
     @Output() isInInvalidState = new EventEmitter<boolean>();
     @Input() userLimits!: TokenLimitForUser;
 
@@ -102,10 +104,20 @@ export class UserPolicyComponent {
         biggerThanZero: boolean = false
     ): boolean {
         const result = value !== null && Number.isInteger(value);
-        if (biggerThanZero) {
-            return result && value > 0;
+
+        if (!result) {
+            return false;
         }
-        return result && value >= 0;
+
+        if (value > this.MAX_NUMBER_INPUT) {
+            return false;
+        }
+
+        if (biggerThanZero) {
+            return value > 0;
+        }
+
+        return value >= 0;
     }
 
     isValidNumberInput(
