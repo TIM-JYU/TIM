@@ -11,6 +11,7 @@ interface MenuGate {
     name: string;
     info: string;
     width: number;
+    group?: string;
 }
 
 @Component({
@@ -31,6 +32,7 @@ interface MenuGate {
                      (dragstart)="handleDragStart($event, gate.name)">
                     <div [ngSwitch]="gate.name">
                         <svg *ngSwitchCase="'control'"
+                             [ngClass]="gate.group"
                              [style.height.px]="circuitOptions.gateSize"
                              [style.width.px]="circuitOptions.gateSize"
                         >
@@ -41,6 +43,7 @@ interface MenuGate {
                         </svg>
                         
                         <svg *ngSwitchCase="'antiControl'"
+                             [ngClass]="gate.group"
                              [style.height.px]="circuitOptions.gateSize"
                              [style.width.px]="circuitOptions.gateSize"
                         >
@@ -52,6 +55,7 @@ interface MenuGate {
                         </svg>
 
                         <svg *ngSwitchCase="'swap'"
+                             [ngClass]="gate.group"
                              [style.height.px]="circuitOptions.gateSize"
                              [style.width.px]="circuitOptions.gateSize"
                              class="swap-gate">
@@ -73,6 +77,7 @@ interface MenuGate {
                         </svg>
 
                         <svg *ngSwitchDefault
+                             [ngClass]="gate.group"
                              [style.width.px]="gate.width"
                              [attr.height]="circuitOptions.gateSize">
                             <rect [attr.x]="0" [attr.y]="0"
@@ -122,6 +127,7 @@ export class QuantumGateMenuComponent implements OnInit, OnDestroy {
                         this.gateService.getTextWidth(g.name),
                         this.circuitOptions.gateSize
                     ),
+                    group: g.group,
                 }));
             });
     }
