@@ -847,7 +847,7 @@ export class ChatTIMComponent
                 this.setControlPanelData(result);
             }
         } else {
-            this.controlpanelError = response.result.error.error;
+            this.controlpanelError = this.handleAngularError(response.result);
         }
 
         if (this.controlpanelError) {
@@ -917,7 +917,8 @@ export class ChatTIMComponent
             return;
         }
 
-        this.handleError(response.result.error.error, "http");
+        const error_str = this.handleAngularError(response.result);
+        this.handleError(error_str, "http");
     }
 
     async onDeletePlugin(): Promise<void> {
@@ -941,7 +942,8 @@ export class ChatTIMComponent
             return;
         }
 
-        this.handleError(response.result.error.error, "http");
+        const error_str = this.handleAngularError(response.result);
+        this.handleError(error_str, "http");
     }
 
     /**
@@ -1164,10 +1166,14 @@ export class ChatTIMComponent
                 this.controlpanelError = "No models found for this API key.";
             }
         } else {
-            this.controlpanelError = response.result.error.error;
+            this.controlpanelError = this.handleAngularError(response.result);
         }
     }
 
+    /**
+    This request comes from usercontrol-component and asks to save the set policy
+    for user in the list of users, their usages and policies.
+     **/
     async handleUserPolicySave(userData: UserData) {
         this.isRunning = true;
         const save_request = {
@@ -1186,10 +1192,15 @@ export class ChatTIMComponent
                 result: data.result,
             };
         } else {
-            this.controlpanelError = response.result.error.error;
+            this.controlpanelError = this.handleAngularError(response.result);
         }
     }
 
+    /**
+    This fetches the list containing tokens used and policies for users
+    for usercontrol.ts where we show the list of users and where the policy
+    per user can be set.
+     **/
     async getUserData() {
         this.isRunning = true;
         const data_request = {
@@ -1205,7 +1216,7 @@ export class ChatTIMComponent
             this.controlpanelError = data.error;
             this.userUsageAndPolicyData = data.result;
         } else {
-            this.controlpanelError = response.result.error.error;
+            this.controlpanelError = this.handleAngularError(response.result);
         }
     }
 
@@ -1219,6 +1230,26 @@ export class ChatTIMComponent
             return;
         }
         await this.onClearConversation();
+    }
+
+    /**
+    If error object contains an error string the string is returned.
+    If no error string is included and the status is zero, no internet connection
+    message is sent back. This exists because AngularError has the error string undefined
+    when status === 0 despite promising not to.
+     **/
+    handleAngularError(error: AngularError): string {
+        const error_str_or = error.error.error;
+
+        if (error_str_or) {
+            return error_str_or;
+        }
+
+        if (error.status === 0) {
+            return "Can't reach server, check your internet connection";
+        }
+
+        return "Unknown error happened";
     }
 }
 
