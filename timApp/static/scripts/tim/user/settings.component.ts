@@ -642,7 +642,7 @@ type StyleSelectionType =
                 <div>
                     <ng-container>
                         <span class="form-label">
-                            <ng-container i18n>Chattim API Keys</ng-container>
+                            <ng-container i18n>AskTim API Keys</ng-container>
                             <a href="https://tim.jyu.fi/view/tim/ohjeita/tekoalyavustaja/adding-llm-api-keys">
                                 <span class="glyphicon glyphicon-question-sign" style="margin-left: 0.2em;"
                                       title="Help with setting up LLM-helper for document" i18n-title></span>
@@ -810,7 +810,7 @@ export class SettingsComponent implements DoCheck, AfterViewInit {
 
     async getLLMKeys() {
         const r = await toPromise(
-            this.http.get<IUserLLMApiKey[]>("/chattim/getExistingKeys")
+            this.http.get<IUserLLMApiKey[]>("/asktim/getExistingKeys")
         );
         if (r.ok) {
             this.userLLMAPIKeys = r.result;
@@ -1390,7 +1390,7 @@ export class SettingsComponent implements DoCheck, AfterViewInit {
         this.deletingLLMKey = undefined;
         this.saving = true;
         const r = await toPromise(
-            this.http.delete("/chattim/deleteKey", {
+            this.http.delete("/asktim/deleteKey", {
                 body: {
                     provider: key.provider,
                     apikey: key.APIkey,

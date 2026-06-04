@@ -18,8 +18,6 @@ from timApp.auth.accesshelper import (
 )
 from timApp.util.flask.requesthelper import RouteException
 from tim_common.marshmallow_dataclass import class_schema
-from timApp.user.user import User
-from timApp.document.document import Document
 from timApp.auth.sessioninfo import get_current_user_id, get_current_user_name
 from timApp.tim_app import csrf
 from timApp.util.flask.responsehelper import json_response, to_json_str, ok_response
@@ -34,7 +32,7 @@ from tim_common.pluginserver_flask import (
     jsonify,
     create_nontask_blueprint,
 )
-from timApp.modules.chattim.plugincore import (
+from .plugincore import (
     PluginCore,
     InstanceAttributes,
     APIKey,
@@ -42,7 +40,6 @@ from timApp.modules.chattim.plugincore import (
     InstanceSettingsData,
 )
 from .database_handler import TimDatabase
-from .model import ModelError
 from timApp.plugin.plugin import Plugin
 from timApp.document.usercontext import UserContext
 from timApp.document.viewcontext import ViewContext, ViewRoute
@@ -54,7 +51,7 @@ RouteReturn: TypeAlias = Response | list | object
 
 
 @dataclass
-class ChatTimMarkupModel(GenericMarkupModel):
+class AskTimMarkupModel(GenericMarkupModel):
     welcomeText: str = "Welcome to use TIM's helper chatbot!"
     apiAlias: str = ""
     defaultWindowSize: Literal["sm", "md", "lg", "xs"] = "md"
@@ -94,14 +91,14 @@ def get_rights(params: GetRightsParams) -> dict:
     }
 
 
-class ChatTimAskResponse(TypedDict, total=False):
+class AskTimAskResponse(TypedDict, total=False):
     answer: str | None
     citations: list[str] | None
     error: str | None
 
 
 @dataclass
-class ChatTimAskParams(GenericParams):
+class AskTimAskParams(GenericParams):
     input: str
 
 
@@ -111,7 +108,7 @@ class GetModelsParams:
 
 
 @dataclass
-class ChatTimSaveSettingsParams(GenericParams):
+class AskTimSaveSettingsParams(GenericParams):
     control_panel_settings: InstanceAttributes
 
 
@@ -131,18 +128,18 @@ class APIKeyParams:
 
 
 @dataclass
-class ChatTIMGetSettingsResponse(TypedDict, total=False):
+class AskTimGetSettingsResponse(TypedDict, total=False):
     result: InstanceAttributes
     error: str | None
 
 
 @dataclass
-class ChatTimHtmlModel(GenericHtmlModel[dict, ChatTimMarkupModel, dict]):
+class AskTimHtmlModel(GenericHtmlModel[dict, AskTimMarkupModel, dict]):
     def get_component_html_name(self) -> str:
-        return "chattim-runner"
+        return "asktim-runner"
 
 
-class ChatTimAnswerWeb(PluginAnswerWeb, total=False):
+class AskTimAnswerWeb(PluginAnswerWeb, total=False):
     availableModels: list[dict[str, str]]
     selectedModel: str
 
@@ -151,8 +148,8 @@ class ChatTimAnswerWeb(PluginAnswerWeb, total=False):
 def reqs() -> PluginReqs:
     templates = [
         """
-``` {plugin="chattim" #taskidhere}
-header: ChatTIM
+``` {plugin="asktim" #taskidhere}
+header: AskTIM
 welcomeText: ""
 apiAlias: ""
 defaultWindowSize: "md" # [sm, md, lg, xs]
@@ -168,11 +165,11 @@ startBottomRight: false
             "text": "Plugins",
             "items": [
                 {
-                    "text": "ChatTIM",
+                    "text": "AskTim",
                     "items": [
                         {
                             "data": templates[0].strip(),
-                            "text": "Chattim",
+                            "text": "LLM assistant",
                             "expl": "Add a chatbot functionality",
                         },
                     ],
@@ -181,7 +178,7 @@ startBottomRight: false
         },
     ]
     result: PluginReqs = PluginReqs(
-        js=["js/build/chattim.js"],
+        js=["js/build/asktim.js"],
         multihtml=True,
     )
 
@@ -189,10 +186,10 @@ startBottomRight: false
     return result
 
 
-chattim = create_nontask_blueprint(
+asktim = create_nontask_blueprint(
     name=__name__,
-    plugin_name="chattim",
-    html_model=ChatTimHtmlModel,
+    plugin_name="asktim",
+    html_model=AskTimHtmlModel,
     reqs_handler=reqs,
     csrf=csrf,
 )
@@ -235,37 +232,37 @@ def register_route(
             raise RouteException(str(e)) from e
 
 
-def ask_route(params: ChatTimAskParams) -> ChatTimAskResponse:
+def ask_route(params: AskTimAskParams) -> AskTimAskResponse:
     user_input = params.input
     document_id = params.document_id
     session_user_id = get_current_user_id()
     check_view_rights(user_id=session_user_id, document_id=document_id)
 
-    document_has_chattim_plugin(document_id, session_user_id)
+    document_has_asktim_plugin(document_id, session_user_id)
 
     resp = plugincore.chat_request(session_user_id, document_id, user_input)
     if resp.ok():
         value: tuple[str, list[str] | None] = resp.value or ("", None)
         message, context = value
-        return ChatTimAskResponse(
+        return AskTimAskResponse(
             answer=message,
             citations=context,
         )
-    return ChatTimAskResponse(error=resp.error)
+    return AskTimAskResponse(error=resp.error)
 
 
-def ask_stream_route(params: ChatTimAskParams) -> Response:
+def ask_stream_route(params: AskTimAskParams) -> Response:
     user_input = params.input
     document_id = params.document_id
     session_user_id = get_current_user_id()
     check_view_rights(user_id=session_user_id, document_id=document_id)
 
-    document_has_chattim_plugin(document_id, session_user_id)
+    document_has_asktim_plugin(document_id, session_user_id)
 
     def generate() -> Iterator[str]:
         resp = plugincore.chat_request_stream(session_user_id, document_id, user_input)
         if not resp.ok() or not resp.value:
-            yield to_ndjson_str(ChatTimAskResponse(error=resp.error))
+            yield to_ndjson_str(AskTimAskResponse(error=resp.error))
             return
 
         citations: list[str] | None = None
@@ -275,16 +272,16 @@ def ask_stream_route(params: ChatTimAskParams) -> Response:
             stream, context = resp.value
             citations = context
             for chunk in stream:
-                yield to_ndjson_str(ChatTimAskResponse(answer=chunk))
+                yield to_ndjson_str(AskTimAskResponse(answer=chunk))
         except GeneratorExit:
             disconnected = True
             return
         except Exception as e:
-            yield to_ndjson_str(ChatTimAskResponse(error=str(e)))
+            yield to_ndjson_str(AskTimAskResponse(error=str(e)))
             return
         finally:
             if not disconnected:
-                yield to_ndjson_str(ChatTimAskResponse(citations=citations))
+                yield to_ndjson_str(AskTimAskResponse(citations=citations))
 
     return Response(
         stream_with_context(generate()),
@@ -293,13 +290,13 @@ def ask_stream_route(params: ChatTimAskParams) -> Response:
     )
 
 
-def get_settings(params: GenericParams) -> ChatTIMGetSettingsResponse:
-    ret: ChatTIMGetSettingsResponse = {}
+def get_settings(params: GenericParams) -> AskTimGetSettingsResponse:
+    ret: AskTimGetSettingsResponse = {}
     document_id = params.document_id
     session_user_id = get_current_user_id()
 
     check_view_rights(user_id=session_user_id, document_id=document_id)
-    document_has_chattim_plugin(document_id, session_user_id)
+    document_has_asktim_plugin(document_id, session_user_id)
 
     get_result = plugincore.get_plugin_settings(session_user_id, document_id)
     if not get_result.ok():
@@ -321,7 +318,7 @@ def get_user_data(params: GenericParams) -> dict:
     session_user_id = get_current_user_id()
     check_view_rights(user_id=session_user_id, document_id=document_id)
 
-    document_has_chattim_plugin(document_id, session_user_id)
+    document_has_asktim_plugin(document_id, session_user_id)
 
     ret: dict = {}
 
@@ -341,7 +338,7 @@ def save_user_policy(params: SaveUserPolicyParams) -> dict:
     check_view_rights(user_id=session_user_id, document_id=document_id)
     operation_result: dict = {"error": "", "result": ""}
 
-    document_has_chattim_plugin(document_id, session_user_id)
+    document_has_asktim_plugin(document_id, session_user_id)
 
     try:
         result_msg = plugincore.save_user_policy(
@@ -354,15 +351,15 @@ def save_user_policy(params: SaveUserPolicyParams) -> dict:
     return operation_result
 
 
-def save_settings(params: ChatTimSaveSettingsParams) -> ChatTIMGetSettingsResponse:
-    res: ChatTIMGetSettingsResponse = {}
+def save_settings(params: AskTimSaveSettingsParams) -> AskTimGetSettingsResponse:
+    res: AskTimGetSettingsResponse = {}
 
     panel_data = params.control_panel_settings
     document_id = params.document_id
     session_user_id = get_current_user_id()
     check_view_rights(user_id=session_user_id, document_id=document_id)
 
-    document_has_chattim_plugin(document_id, session_user_id)
+    document_has_asktim_plugin(document_id, session_user_id)
 
     save_result = plugincore.save_instance(session_user_id, document_id, panel_data)
     if not save_result.ok() or save_result.value is None:
@@ -377,7 +374,7 @@ def get_messages(params: GetMessagesParams) -> dict:
     user_id = get_current_user_id()
     document_id = params.document_id
     check_view_rights(user_id=user_id, document_id=document_id)
-    document_has_chattim_plugin(document_id, user_id)
+    document_has_asktim_plugin(document_id, user_id)
 
     amount = params.amount
     ts_end = params.timestamp_end_ms
@@ -389,7 +386,7 @@ def clear_messages(params: GenericParams) -> Response:
     user_id = get_current_user_id()
     document_id = params.document_id
     check_view_rights(user_id=user_id, document_id=document_id)
-    document_has_chattim_plugin(document_id, user_id)
+    document_has_asktim_plugin(document_id, user_id)
 
     plugincore.clear_history(str(user_id), str(document_id))
     return ok_response()
@@ -438,7 +435,7 @@ def add_api_key_permissions(params: APIKeyParams) -> Response:
     return json_response(res)
 
 
-@chattim.post("/removeGroupRight/<int:group_id>")
+@asktim.post("/removeGroupRight/<int:group_id>")
 def remove_key_group_right(group_id: int) -> Response:
     user_id = get_current_user_id()
     data = json.loads(request.data)
@@ -516,7 +513,7 @@ def delete_plugin(params: DeletePluginParams) -> Response:
     par_id = params.par_id
 
     check_view_rights(user_id=session_user_id, document_id=document_id)
-    document_has_chattim_plugin(document_id, session_user_id)
+    document_has_asktim_plugin(document_id, session_user_id)
 
     result = plugincore.delete_instance(session_user_id, document_id, par_id)
 
@@ -525,7 +522,7 @@ def delete_plugin(params: DeletePluginParams) -> Response:
     return ok_response()
 
 
-def document_has_chattim_plugin(document_id: int, caller_id: int) -> None:
+def document_has_asktim_plugin(document_id: int, caller_id: int) -> None:
     document = TimDatabase.get_tim_document_by_id(document_id)
     if document is None:
         raise LookupError(f"Document with id {document_id} not found")
@@ -541,10 +538,10 @@ def document_has_chattim_plugin(document_id: int, caller_id: int) -> None:
         is_plugin = paragraph.is_plugin()
         if is_plugin:
             plugin = Plugin.from_paragraph(paragraph, view_ctx, user_ctx)
-            if plugin.type == "chattim":
+            if plugin.type == "asktim":
                 return
 
-    raise RouteException(f"No ChatTIM plugin found in the document {document_id}")
+    raise RouteException(f"No AskTim plugin found in the document {document_id}")
 
 
 def check_view_rights(document_id: int, user_id: int) -> None:
@@ -557,29 +554,25 @@ def check_view_rights(document_id: int, user_id: int) -> None:
         raise RouteException(f"You dont have access to this document")
 
 
-register_route(chattim, "post", "ask", ChatTimAskParams, ask_route)
-register_route(chattim, "post", "askStream", ChatTimAskParams, ask_stream_route)
-register_route(chattim, "post", "getSettings", GenericParams, get_settings)
+register_route(asktim, "post", "ask", AskTimAskParams, ask_route)
+register_route(asktim, "post", "askStream", AskTimAskParams, ask_stream_route)
+register_route(asktim, "post", "getSettings", GenericParams, get_settings)
+register_route(asktim, "post", "saveSettings", AskTimSaveSettingsParams, save_settings)
+register_route(asktim, "post", "getMessages", GetMessagesParams, get_messages)
+register_route(asktim, "post", "clearMessages", GenericParams, clear_messages)
+register_route(asktim, "post", "deletePlugin", DeletePluginParams, delete_plugin)
+register_route(asktim, "post", "validateApi", APIKeyParams, save_api_key)
+register_route(asktim, "get", "getProviders", None, get_providers)
+register_route(asktim, "post", "getUserPolicyData", GenericParams, get_user_data)
+register_route(asktim, "post", "saveUserPolicy", SaveUserPolicyParams, save_user_policy)
 register_route(
-    chattim, "post", "saveSettings", ChatTimSaveSettingsParams, save_settings
-)
-register_route(chattim, "post", "getMessages", GetMessagesParams, get_messages)
-register_route(chattim, "post", "clearMessages", GenericParams, clear_messages)
-register_route(chattim, "post", "deletePlugin", DeletePluginParams, delete_plugin)
-register_route(chattim, "post", "validateApi", APIKeyParams, save_api_key)
-register_route(chattim, "get", "getProviders", None, get_providers)
-register_route(chattim, "post", "getUserPolicyData", GenericParams, get_user_data)
-register_route(
-    chattim, "post", "saveUserPolicy", SaveUserPolicyParams, save_user_policy
-)
-register_route(
-    chattim,
+    asktim,
     "post",
     "addApiKeyPermissions",
     APIKeyParams,
     add_api_key_permissions,
 )
-register_route(chattim, "post", "getRights", GetRightsParams, get_rights)
-register_route(chattim, "get", "getExistingKeys", None, get_existing_keys)
-register_route(chattim, "delete", "deleteKey", APIKeyParams, delete_existing_key)
-register_route(chattim, "post", "getModels", GetModelsParams, get_models)
+register_route(asktim, "post", "getRights", GetRightsParams, get_rights)
+register_route(asktim, "get", "getExistingKeys", None, get_existing_keys)
+register_route(asktim, "delete", "deleteKey", APIKeyParams, delete_existing_key)
+register_route(asktim, "post", "getModels", GetModelsParams, get_models)

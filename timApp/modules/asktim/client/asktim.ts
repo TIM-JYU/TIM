@@ -1,5 +1,5 @@
 /**
- * Defines the client-side implementation chattim-plugin.
+ * Defines the client-side implementation asktim-plugin.
  */
 import * as t from "io-ts";
 import {
@@ -108,24 +108,24 @@ export interface ControlPanelData extends ControlPanelSettings {
 }
 
 @Component({
-    selector: "chattim-runner",
+    selector: "asktim-runner",
     encapsulation: ViewEncapsulation.None,
     template: `
         <ng-container *ngIf="!pluginDeleted">
-            <div class="chattim-block-anchor"
+            <div class="asktim-block-anchor"
                  *ngIf="(markup.blockContent ?? '').trim().length > 0"
                  [innerHTML]="markup.blockContent | purify"
                  [hidden]="!hasManageRights"
             >
             </div>
             <tim-dialog-frame
-                class="chattim-dialog-frame"
+                class="asktim-dialog-frame"
                 [size]="windowSize"
                 [class.hide-in-preview]="!markup.previewVisible"
             >
                 <ng-container header> {{ header }}</ng-container>
                 <ng-container body>
-                    <div class="chattim-body scroll-box" #conversationScroll>
+                    <div class="asktim-body scroll-box" #conversationScroll>
                         <div class="upper-area">
                             <div>
                                 <div *ngIf="conversation.length === 0" class="chat-welcome">
@@ -210,7 +210,7 @@ export interface ControlPanelData extends ControlPanelSettings {
                                 </div>
                             </ng-container>
 
-                            <chattim-control-panel *ngIf="isTeacher"
+                            <asktim-control-panel *ngIf="isTeacher"
                                                    [isTeacher]="isTeacher"
                                                    (saveSettingsClick)="onSaveSettings($event)"
                                                    (deletePluginClick)="onDeletePlugin()"
@@ -242,7 +242,7 @@ export interface ControlPanelData extends ControlPanelSettings {
                                                    [policySaveResponse]="policySaveResponse"
                                                    [selectedPublicKey]="selectedPublicKey"
                                                    [availablePublicKeys]="availablePublicKeys">
-                            </chattim-control-panel>
+                            </asktim-control-panel>
                         </div>
 
                     </div>
@@ -250,9 +250,9 @@ export interface ControlPanelData extends ControlPanelSettings {
             </tim-dialog-frame>
         </ng-container>
     `,
-    styleUrls: ["./chattim.scss"],
+    styleUrls: ["./asktim.scss"],
 })
-export class ChatTIMComponent
+export class AskTimComponent
     extends AngularPluginBase<
         t.TypeOf<typeof PluginMarkupFields>,
         t.TypeOf<typeof PluginFields>,
@@ -969,7 +969,7 @@ export class ChatTIMComponent
      * @returns The full URL for the given endpoint.
      */
     route(endpoint: string): string {
-        return "/chattim/" + endpoint;
+        return "/asktim/" + endpoint;
     }
 
     /**
@@ -1254,7 +1254,7 @@ export class ChatTIMComponent
 }
 
 @NgModule({
-    declarations: [ChatTIMComponent],
+    declarations: [AskTimComponent],
     imports: [
         CommonModule,
         HttpClientModule,
@@ -1267,8 +1267,8 @@ export class ChatTIMComponent
         TooltipModule,
     ],
 })
-export class ChatTIMModule implements DoBootstrap {
+export class AskTimModule implements DoBootstrap {
     ngDoBootstrap(appRef: ApplicationRef) {}
 }
 
-registerPlugin("chattim-runner", ChatTIMModule, ChatTIMComponent);
+registerPlugin("asktim-runner", AskTimModule, AskTimComponent);

@@ -114,7 +114,7 @@ export interface UserData extends Record<string, JsonValue> {
                     </div>
                 </div>
             </div>
-        
+
         </div>
 
     `,

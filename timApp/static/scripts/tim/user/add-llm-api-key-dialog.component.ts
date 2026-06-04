@@ -27,7 +27,7 @@ import type {IUserLLMApiKey} from "tim/user/IUser";
  * User can add LLM model API keys to be stored in TIM. (code source: add-api-key-dialog.component.ts)
  */
 @Component({
-    selector: "tim-add-chattim-api-key-dialog",
+    selector: "tim-add-asktim-api-key-dialog",
     template: `
         <tim-dialog-frame [minimizable]="false">
             <ng-container header i18n>
@@ -152,7 +152,7 @@ export class AddLLMAPIKeyDialogComponent extends AngularDialogComponent<
      */
     async validateAPIKey() {
         return await toPromise(
-            this.http.post<IUserLLMApiKey>("/chattim/validateApi", {
+            this.http.post<IUserLLMApiKey>("/asktim/validateApi", {
                 provider: this.chosenProvider,
                 apikey: this.apiKey,
                 alias: this.LLMKeyAlias,
@@ -162,7 +162,7 @@ export class AddLLMAPIKeyDialogComponent extends AngularDialogComponent<
 
     async getLLMProviders() {
         const result = await toPromise(
-            this.http.get<[]>("/chattim/getProviders")
+            this.http.get<[]>("/asktim/getProviders")
         );
         if (result.ok) {
             this.LLMProviders = result.result;

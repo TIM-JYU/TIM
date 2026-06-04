@@ -35,27 +35,27 @@ msgstr ""
 msgid "Sorry, you don't have permission to use this resource."
 msgstr "Spiacenti, non disponi dell'autorizzazione per utilizzare questa risorsa."
 
-#: modules/chattim/model.py:48
+#: modules/asktim/model.py:48
 msgid "The request timed out. Please try again later."
 msgstr ""
 
-#: modules/chattim/model.py:50
+#: modules/asktim/model.py:50
 msgid "Rate limit exceeded. Please wait and try again."
 msgstr ""
 
-#: modules/chattim/model.py:52
+#: modules/asktim/model.py:52
 msgid "Authentication failed."
 msgstr ""
 
-#: modules/chattim/model.py:54
+#: modules/asktim/model.py:54
 msgid "The requested resource was not found."
 msgstr ""
 
-#: modules/chattim/model.py:56
+#: modules/asktim/model.py:56
 msgid "Bad request."
 msgstr ""
 
-#: modules/chattim/model.py:57
+#: modules/asktim/model.py:57
 msgid "An error occurred while generating a response."
 msgstr ""
 

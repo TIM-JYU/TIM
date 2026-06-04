@@ -1,23 +1,23 @@
-import sys
+import os
 import uuid
 from dataclasses import dataclass, field
 
 from unicodedata import normalize, category
 
-from timApp.modules.chattim.dbmodels import LLMRule, Policy, Usage
+from timApp.modules.asktim.dbmodels import LLMRule, Policy, Usage
 from timApp.util.flask.cache import cache
 from timApp.timdb.dbaccess import get_files_path
 from timApp.user.user import User
 from timApp.user.usergroup import get_groups_by_ids, UserGroup
-from timApp.modules.chattim.indexer import (
+from timApp.modules.asktim.indexer import (
     Indexer,
     SUPPORTED_EMBEDDING_PROVIDERS,
 )
-from timApp.modules.chattim.database_handler import (
+from timApp.modules.asktim.database_handler import (
     TimDatabase,
     Document,
 )
-from timApp.modules.chattim.rag import (
+from timApp.modules.asktim.rag import (
     Rag,
     MessageData,
     RagMode,
@@ -26,7 +26,7 @@ from timApp.modules.chattim.rag import (
 )
 from typing import Generic, TypeVar, TypedDict, cast
 
-from timApp.modules.chattim.model import (
+from timApp.modules.asktim.model import (
     ModelResponse,
     ModelUsage,
     GenericApiClient,
@@ -34,7 +34,7 @@ from timApp.modules.chattim.model import (
     ModelError,
     PROVIDERS,
 )
-from timApp.modules.chattim.conversation import ConversationManager, ChatMessage
+from timApp.modules.asktim.conversation import ConversationManager, ChatMessage
 
 DEFAULT_CACHE_TIMEOUT = 60 * 15  # seconds
 
@@ -159,12 +159,14 @@ class PluginCore:
 
     def __init__(self) -> None:
         file_path = get_files_path().as_posix()
+        root_path = os.path.join(file_path, "asktim")
+
         self.history_manager = ConversationManager(
-            file_path,
+            root_path,
             cache_ttl_s=60 * 15,
             cache_tail_len=64,
         )
-        self.indexer = Indexer(file_path)
+        self.indexer = Indexer(root_path)
 
     def _prepare_chat_request(
         self,
@@ -778,14 +780,14 @@ class PluginCore:
 
         par = document.get_paragraph(par_id)
         plugin_type = par.get_attr("plugin")
-        if plugin_type is not None and plugin_type == "chattim":
+        if plugin_type is not None and plugin_type == "asktim":
             deleted = document.delete_paragraph(par_id)
             if not deleted:
                 return Result(error="Failed to delete plugin paragraph")
             self.tim_database.delete_llm_rule(caller_id, document_id)
             return Result(value="Plugin instance deleted")
 
-        return Result(error="No chattim plugin instance in document")
+        return Result(error="No asktim plugin instance in document")
 
     def get_history(self, caller_id: str, document_id: str) -> list[Message]:
         # TODO: fetch with time window

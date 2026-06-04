@@ -72,7 +72,7 @@ from timApp.messaging.timMessage.internalmessage_models import (
     InternalMessageDisplay,
     InternalMessageReadReceipt,
 )
-from timApp.modules.chattim.dbmodels import LLMRule, Policy, Usage
+from timApp.modules.asktim.dbmodels import LLMRule, Policy, Usage
 from timApp.note.usernote import UserNote
 from timApp.notification.notification import Notification
 from timApp.notification.pending_notification import (

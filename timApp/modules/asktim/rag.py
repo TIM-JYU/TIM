@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from typing import Iterable
-from timApp.modules.chattim.model import (
+from .model import (
     GenerateOptions,
     Message,
     ModelResponse,
