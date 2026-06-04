@@ -169,7 +169,6 @@ export class UserControlComponent {
     }
 
     ngOnInit() {
-        this.userDataRequest.emit();
         this.localPolicySaveResponse = {result: "", error: ""};
     }
 
