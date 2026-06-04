@@ -37,6 +37,7 @@ from timApp.modules.asktim.model import (
 from timApp.modules.asktim.conversation import ConversationManager, ChatMessage
 
 DEFAULT_CACHE_TIMEOUT = 60 * 15  # seconds
+MAX_INPUT_NUMBER = 1000_000
 
 
 # TODO: Is this needed if we have no model labels anymore?
@@ -675,14 +676,22 @@ class PluginCore:
             return Result(None, str(e))
 
         # validating max tokens
-        if max_tokens is not None and max_tokens < 0:
-            return Result(None, "Give non-negative max tokens value")
+        if max_tokens is not None and (max_tokens < 0 or max_tokens > MAX_INPUT_NUMBER):
+            return Result(
+                None, f"Max tokens amount must be between 0 and {MAX_INPUT_NUMBER}"
+            )
 
-        if conv_messages_max < 0:
-            return Result(None, "Conversation message amount must be non-negative")
+        if conv_messages_max < 0 or conv_messages_max > MAX_INPUT_NUMBER:
+            return Result(
+                None,
+                f"Conversation message amount must be between 0 and {MAX_INPUT_NUMBER}",
+            )
 
-        if conv_time_window < 0:
-            return Result(None, "Conversation time window must be non-negative")
+        if conv_time_window < 0 or conv_time_window > MAX_INPUT_NUMBER:
+            return Result(
+                None,
+                f"Conversation time window must be between 0 and {MAX_INPUT_NUMBER}",
+            )
 
         if system_prompt_path:
             prompt_doc = self.tim_database.get_tim_document_by_path(system_prompt_path)
@@ -1436,17 +1445,25 @@ class PluginCore:
         time_value = policy.window_value
         window_token_cap = policy.token_cap_for_window
 
-        if cap_enabled and (token_cap is None or token_cap < 0):
-            return f"Given token cap [{token_cap}] cannot be negative"
+        if cap_enabled and (
+            token_cap is None or token_cap < 0 or token_cap > MAX_INPUT_NUMBER
+        ):
+            return f"Given token cap [{token_cap}] should be within [0, {MAX_INPUT_NUMBER}]"
 
-        if window_enabled and (time_value is None or time_value <= 0):
-            return f"Given time value [{time_value}] should be greater than 0"
+        if window_enabled and (
+            time_value is None or time_value <= 0 or time_value > MAX_INPUT_NUMBER
+        ):
+            return f"Given time value [{time_value}] should be within [1, {MAX_INPUT_NUMBER}]"
 
         if window_enabled and (time_type not in valid_time_types):
             return f"Given time type [{time_type}] is not valid"
 
-        if window_enabled and (window_token_cap is None or window_token_cap <= 0):
-            return f"Given time cap [{window_token_cap}] should be greater than 0"
+        if window_enabled and (
+            window_token_cap is None
+            or window_token_cap <= 0
+            or window_token_cap > MAX_INPUT_NUMBER
+        ):
+            return f"Given time cap [{window_token_cap}] should be within [1, {MAX_INPUT_NUMBER}]"
 
         return None
 
