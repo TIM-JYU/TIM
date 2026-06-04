@@ -653,27 +653,29 @@ export class AskTimComponent
         this.error = undefined;
         this.answer = undefined;
 
-        const input: string = this.userInput;
-        this.userInput = "";
-        const document_id: number = this.document_id;
-        const body: AskParams = {input, document_id};
+        try {
+            const input: string = this.userInput;
+            this.userInput = "";
+            const document_id: number = this.document_id;
+            const body: AskParams = {input, document_id};
 
-        const entry: ChatEntry = {
-            user: {content: input, role: "user", timestamp_ms: Date.now()},
-            agent: {content: "", role: "assistant"},
-        };
-        const len: number = this.conversation.push(entry);
-        const index: number = len - 1;
-        this.updateHistoryMarker();
-        this.scheduleAutoScroll(true);
+            const entry: ChatEntry = {
+                user: {content: input, role: "user", timestamp_ms: Date.now()},
+                agent: {content: "", role: "assistant"},
+            };
+            const len: number = this.conversation.push(entry);
+            const index: number = len - 1;
+            this.scheduleAutoScroll(true);
 
-        if (this.useStreaming) {
-            await this.askPostStream(body, index);
-        } else {
-            await this.askPost(body, index);
+            if (this.useStreaming) {
+                await this.askPostStream(body, index);
+            } else {
+                await this.askPost(body, index);
+            }
+        } finally {
+            this.updateHistoryMarker();
+            this.isRunning = false;
         }
-        this.updateHistoryMarker();
-        this.isRunning = false;
     }
 
     /**
@@ -705,7 +707,7 @@ export class AskTimComponent
             message.citations = data.citations;
             this.scheduleAutoScroll(false, pinned);
         } else {
-            this.handleError(response.result.error.error, "http");
+            this.handleError(this.handleAngularError(response.result));
         }
     }
 
@@ -766,7 +768,7 @@ export class AskTimComponent
                 entry.agent.content += res.answer ?? "";
                 processedIdx += idx + 1;
                 didAppend = true;
-                this.handleError(res.error, "server");
+                this.handleError(res.error);
             }
             if (didAppend) {
                 this.scheduleAutoScroll(false, pinned);
@@ -777,7 +779,7 @@ export class AskTimComponent
             const sub = observable.subscribe({
                 next: (event: HttpEvent<string>) => handleNextEvent(event),
                 error: (err) => {
-                    this.handleError(err, "stream");
+                    this.handleError(this.handleAngularError(err));
                     sub.unsubscribe();
                     reject();
                 },
@@ -919,7 +921,7 @@ export class AskTimComponent
         }
 
         const error_str = this.handleAngularError(response.result);
-        this.handleError(error_str, "http");
+        this.handleError(error_str);
     }
 
     async onDeletePlugin(): Promise<void> {
@@ -944,7 +946,7 @@ export class AskTimComponent
         }
 
         const error_str = this.handleAngularError(response.result);
-        this.handleError(error_str, "http");
+        this.handleError(error_str);
     }
 
     /**
@@ -976,18 +978,12 @@ export class AskTimComponent
     /**
      * Handle the error if needed.
      * @param err The error.
-     * @param scope Optional scope of the error.
      */
-    handleError(err: string | undefined, scope?: string) {
+    handleError(err: string | undefined) {
         if (!err) {
             return;
         }
         this.error = err;
-        if (scope) {
-            console.error(`error(${scope}):`, err);
-            return;
-        }
-        console.error(err);
     }
 
     /**
