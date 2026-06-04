@@ -11,7 +11,7 @@
   width: 100%;
 }
 
-.chat-bot {
+.asktim-llm-chat-bubble {
   margin-left: 1em;
   white-space: pre-line;
   word-break: break-word;
@@ -22,9 +22,10 @@
   border-radius: 16px;
   display: inline-block;
   margin-bottom: 10px;
+  border: 1px solid #e8b99a;
 }
 
-.chat-user {
+.asktim-user-chat-bubble {
   white-space: pre-line;
   word-break: break-word;
   color: #0d3b5e;
@@ -35,6 +36,7 @@
   max-width: 90%;
   margin: 0.5em 3em 0.2em 0.1em;
   border-radius: 16px;
+  border: 1px solid rgba(190, 210, 235, 0.8);
 }
 
 .asktim-dialog-frame .modal-dialog {
@@ -56,6 +58,11 @@
   min-height: 0;
 }
 
+// inside tim-dialog-frame's modal-body
+.asktim-dialog-frame-body {
+  background-color: #f4f4f4
+}
+
 
 .form-inline {
   margin-top: auto;
@@ -71,8 +78,14 @@
   position: sticky;
   z-index: 1;
   bottom: 0;
-  background: white;
+  background: inherit;
   padding-top: 4px;
+
+}
+
+asktim-button {
+  flex-shrink: 0;
+  margin-left: 0.5rem;
 }
 
 .previewDiv .asktim-dialog-frame.hide-in-preview {
@@ -100,12 +113,12 @@
   gap: 8px;
 }
 
-.chat-textarea {
+.asktim-prompt-textbox {
   flex: 1 1 auto;
   min-width: 0;
 }
 
-.chat-textarea::placeholder {
+.asktim-prompt-textbox::placeholder {
   color: #999;
   opacity: 1;
 }

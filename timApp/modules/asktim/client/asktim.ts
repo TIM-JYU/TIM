@@ -120,6 +120,7 @@ export interface ControlPanelData extends ControlPanelSettings {
             </div>
             <tim-dialog-frame
                 class="asktim-dialog-frame"
+                bodyClass="asktim-dialog-frame-body"
                 [size]="windowSize"
                 [class.hide-in-preview]="!markup.previewVisible"
             >
@@ -143,10 +144,10 @@ export interface ControlPanelData extends ControlPanelSettings {
                                     </span>
                                     </div>
                                     <div class="chat-bubble-wrapper">
-                                        <div class="chat-user">{{ entry.user.content }}</div>
+                                        <div class="asktim-user-chat-bubble">{{ entry.user.content }}</div>
                                     </div>
                                     <div class="chat-bubble-wrapper">
-                                        <div class="chat-bot">
+                                        <div class="asktim-llm-chat-bubble">
                                             <div [innerHTML]="entry.agent.content | purify"></div>
                                             <div class="answer-footer">
                                         <span *ngIf="entry.agent.citations && entry.agent.citations.length > 0">
@@ -172,7 +173,7 @@ export interface ControlPanelData extends ControlPanelSettings {
                             <label class="justify-center w-100">{{ inputStem }} </label>
                             <div class="sticky-chat-row">
                                 <div class="d-flex flex-row w-100 justify-content-center chat-row">
-                                    <textarea i18n-placeholder class="form-control chat-textarea"
+                                    <textarea i18n-placeholder class="form-control asktim-prompt-textbox"
                                               rows="2"
                                               placeholder="Ask me about TIM related things"
                                               style="resize: none; overflow: hidden; min-width: 0;"
@@ -182,7 +183,7 @@ export interface ControlPanelData extends ControlPanelSettings {
                                               oninput="this.style.height='auto'; this.style.height=this.scrollHeight+'px'">
                                     </textarea>
 
-                                    <button class="timButton flex-shrink-0 ms-2"
+                                    <button class="timButton asktim-button"
                                             *ngIf="buttonText()"
                                             [disabled]="!canSendInput()"
                                             (click)="sendUserInput()"
@@ -211,37 +212,37 @@ export interface ControlPanelData extends ControlPanelSettings {
                             </ng-container>
 
                             <asktim-control-panel *ngIf="isTeacher"
-                                                   [isTeacher]="isTeacher"
-                                                   (saveSettingsClick)="onSaveSettings($event)"
-                                                   (deletePluginClick)="onDeletePlugin()"
-                                                   (panelToggled)="onControlPanelToggle($event)"
-                                                   (fetchModelsClick)="onFetchModels($event)"
-                                                   [selectedModel]="selectedModel"
-                                                   [setModelTemperature]="modelTemperature"
-                                                   [useStreaming]="useStreaming"
-                                                   [includeCitations]="includeCitations"
-                                                   [setSimilarityThreshold]="similarityThreshold"
-                                                   [topKChunks]="topKChunks"
-                                                   [systemPromptPath]="systemPromptPath"
-                                                   [selectedMode]="selectedMode"
-                                                   [maxTokens]="maxTokens"
-                                                   [convTimeWindow]="convTimeWindow"
-                                                   [convMessagesMax]="convMessagesMax"
-                                                   [response]="controlpanelResponse"
-                                                   [error]="controlpanelError"
-                                                   [selectedItemPaths]="selectedItemPaths"
-                                                   [pathRestrictions]="pathRestrictions"
-                                                   [currentFolder]="getCurrentFolder"
-                                                   [availableModels]="availableModels"
-                                                   [availableEmbedderProviders]="availableEmbedderProviders"
-                                                   [availableModes]="availableModes"
-                                                   [tokenLimitAllUsers]="globalPolicy"
-                                                   [userUsageAndPolicyData]="userUsageAndPolicyData"
-                                                   (userDataRequest)="getUserData()"
-                                                   (policySaveRequest)="handleUserPolicySave($event)"
-                                                   [policySaveResponse]="policySaveResponse"
-                                                   [selectedPublicKey]="selectedPublicKey"
-                                                   [availablePublicKeys]="availablePublicKeys">
+                                                  [isTeacher]="isTeacher"
+                                                  (saveSettingsClick)="onSaveSettings($event)"
+                                                  (deletePluginClick)="onDeletePlugin()"
+                                                  (panelToggled)="onControlPanelToggle($event)"
+                                                  (fetchModelsClick)="onFetchModels($event)"
+                                                  [selectedModel]="selectedModel"
+                                                  [setModelTemperature]="modelTemperature"
+                                                  [useStreaming]="useStreaming"
+                                                  [includeCitations]="includeCitations"
+                                                  [setSimilarityThreshold]="similarityThreshold"
+                                                  [topKChunks]="topKChunks"
+                                                  [systemPromptPath]="systemPromptPath"
+                                                  [selectedMode]="selectedMode"
+                                                  [maxTokens]="maxTokens"
+                                                  [convTimeWindow]="convTimeWindow"
+                                                  [convMessagesMax]="convMessagesMax"
+                                                  [response]="controlpanelResponse"
+                                                  [error]="controlpanelError"
+                                                  [selectedItemPaths]="selectedItemPaths"
+                                                  [pathRestrictions]="pathRestrictions"
+                                                  [currentFolder]="getCurrentFolder"
+                                                  [availableModels]="availableModels"
+                                                  [availableEmbedderProviders]="availableEmbedderProviders"
+                                                  [availableModes]="availableModes"
+                                                  [tokenLimitAllUsers]="globalPolicy"
+                                                  [userUsageAndPolicyData]="userUsageAndPolicyData"
+                                                  (userDataRequest)="getUserData()"
+                                                  (policySaveRequest)="handleUserPolicySave($event)"
+                                                  [policySaveResponse]="policySaveResponse"
+                                                  [selectedPublicKey]="selectedPublicKey"
+                                                  [availablePublicKeys]="availablePublicKeys">
                             </asktim-control-panel>
                         </div>
 
