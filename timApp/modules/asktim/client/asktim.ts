@@ -652,27 +652,29 @@ export class AskTimComponent
         this.error = undefined;
         this.answer = undefined;
 
-        const input: string = this.userInput;
-        this.userInput = "";
-        const document_id: number = this.document_id;
-        const body: AskParams = {input, document_id};
+        try {
+            const input: string = this.userInput;
+            this.userInput = "";
+            const document_id: number = this.document_id;
+            const body: AskParams = {input, document_id};
 
-        const entry: ChatEntry = {
-            user: {content: input, role: "user", timestamp_ms: Date.now()},
-            agent: {content: "", role: "assistant"},
-        };
-        const len: number = this.conversation.push(entry);
-        const index: number = len - 1;
-        this.updateHistoryMarker();
-        this.scheduleAutoScroll(true);
+            const entry: ChatEntry = {
+                user: {content: input, role: "user", timestamp_ms: Date.now()},
+                agent: {content: "", role: "assistant"},
+            };
+            const len: number = this.conversation.push(entry);
+            const index: number = len - 1;
+            this.scheduleAutoScroll(true);
 
-        if (this.useStreaming) {
-            await this.askPostStream(body, index);
-        } else {
-            await this.askPost(body, index);
+            if (this.useStreaming) {
+                await this.askPostStream(body, index);
+            } else {
+                await this.askPost(body, index);
+            }
+        } finally {
+            this.updateHistoryMarker();
+            this.isRunning = false;
         }
-        this.updateHistoryMarker();
-        this.isRunning = false;
     }
 
     /**
