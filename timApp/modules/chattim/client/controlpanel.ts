@@ -259,7 +259,7 @@ type TimeUnit = "seconds" | "minutes" | "hours" | "days";
                 </div>
 
                 <div class="error" *ngIf="isInvalidMaxTokens">
-                    Input should be an integer within [0, {{MAX_NUMBER_INPUT}}]
+                    Input should be a positive integer
                 </div>
             </div>
 
@@ -306,7 +306,7 @@ type TimeUnit = "seconds" | "minutes" | "hours" | "days";
                         </label>
                     </div>
                     <div class="error" *ngIf="isInvalidConvTimeWindow">
-                        Input should be an integer within [0, {{MAX_NUMBER_INPUT}}]
+                        Input should be a positive integer
                     </div> 
                 </div> 
             </div>
@@ -377,7 +377,7 @@ type TimeUnit = "seconds" | "minutes" | "hours" | "days";
             <!-- Open dialog to view user token usage and policy modifications -->
             <div class="settings-row">
                 <button class="btn btn-link settings-section-btn"
-                        (click)="toggleUserControl()">
+                        (click)="userControlOpen = !userControlOpen">
                         <span class="glyphicon"
                               [class.glyphicon-chevron-right]="!userControlOpen"
                               [class.glyphicon-chevron-down]="userControlOpen">
@@ -412,8 +412,6 @@ type TimeUnit = "seconds" | "minutes" | "hours" | "days";
     `,
 })
 export class ChatControlPanelComponent {
-    MAX_NUMBER_INPUT = 1000_000;
-
     settingsOpen = false;
     modelOpen = false;
     modeOpen = false;
@@ -589,13 +587,6 @@ export class ChatControlPanelComponent {
         this.panelToggled.emit(this.settingsOpen);
     }
 
-    toggleUserControl() {
-        this.userControlOpen = !this.userControlOpen;
-        if (this.userControlOpen) {
-            this.userDataRequest.emit();
-        }
-    }
-
     saveSettingsClicked() {
         const data: ControlPanelSettings = {
             public_key: this.selectedPublicKey,
@@ -692,8 +683,7 @@ export class ChatControlPanelComponent {
         }
         return (
             !Number.isInteger(this.convTimeWindowAmount) ||
-            this.convTimeWindowAmount < 0 ||
-            this.convTimeWindowAmount > this.MAX_NUMBER_INPUT
+            this.convTimeWindowAmount < 0
         );
     }
 
@@ -779,10 +769,7 @@ export class ChatControlPanelComponent {
         const parsed = Number(trimmed);
 
         this.isInvalidMaxTokens =
-            Number.isNaN(parsed) ||
-            parsed < 0 ||
-            parsed > this.MAX_NUMBER_INPUT ||
-            !Number.isInteger(parsed);
+            Number.isNaN(parsed) || parsed < 0 || !Number.isInteger(parsed);
 
         if (!this.isInvalidMaxTokens) {
             this.maxTokensValue = parsed;
