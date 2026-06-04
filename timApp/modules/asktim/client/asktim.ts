@@ -704,7 +704,7 @@ export class AskTimComponent
             message.citations = data.citations;
             this.scheduleAutoScroll(false, pinned);
         } else {
-            this.handleError(response.result.error.error, "http");
+            this.handleError(this.handleAngularError(response.result));
         }
     }
 
@@ -765,7 +765,7 @@ export class AskTimComponent
                 entry.agent.content += res.answer ?? "";
                 processedIdx += idx + 1;
                 didAppend = true;
-                this.handleError(res.error, "server");
+                this.handleError(res.error);
             }
             if (didAppend) {
                 this.scheduleAutoScroll(false, pinned);
@@ -776,7 +776,7 @@ export class AskTimComponent
             const sub = observable.subscribe({
                 next: (event: HttpEvent<string>) => handleNextEvent(event),
                 error: (err) => {
-                    this.handleError(err, "stream");
+                    this.handleError(this.handleAngularError(err));
                     sub.unsubscribe();
                     reject();
                 },
@@ -918,7 +918,7 @@ export class AskTimComponent
         }
 
         const error_str = this.handleAngularError(response.result);
-        this.handleError(error_str, "http");
+        this.handleError(error_str);
     }
 
     async onDeletePlugin(): Promise<void> {
@@ -943,7 +943,7 @@ export class AskTimComponent
         }
 
         const error_str = this.handleAngularError(response.result);
-        this.handleError(error_str, "http");
+        this.handleError(error_str);
     }
 
     /**
@@ -975,18 +975,12 @@ export class AskTimComponent
     /**
      * Handle the error if needed.
      * @param err The error.
-     * @param scope Optional scope of the error.
      */
-    handleError(err: string | undefined, scope?: string) {
+    handleError(err: string | undefined) {
         if (!err) {
             return;
         }
         this.error = err;
-        if (scope) {
-            console.error(`error(${scope}):`, err);
-            return;
-        }
-        console.error(err);
     }
 
     /**
