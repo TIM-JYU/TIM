@@ -389,7 +389,7 @@ def import_events(
     events: list[CalendarEvent], origin_doc_id: int | None = None
 ) -> Response:
     verify_logged_in()
-    doc = get_doc_or_abort(origin_doc_id) if origin_doc_id else None
+    doc: DocInfo | None = get_doc_or_abort(origin_doc_id) if origin_doc_id else None
     if doc and not doc.is_original_translation:
         doc = doc.src_doc
     save_events(get_current_user_object(), events, True, save_origin=doc)
@@ -627,11 +627,11 @@ def get_event(event_id: int) -> Response:
 @calendar_plugin.get("/events/<int:event_id>/bookers")
 def get_event_bookers(event_id: int, json: bool = False) -> str | Response:
     """Fetches all enrollments from the database for the given event and returns the full name and email of every
-    booker in a html table
+    booker in an HTML table
 
     :param event_id: event id
     :param json: If true, return in JSON format instead of HTML
-    :return: Full name and email of every booker of the given event in a html table"""
+    :return: Full name and email of every booker of the given event in an HTML table"""
 
     verify_logged_in()
     if not user_is_event_manager(event_id):
@@ -859,7 +859,7 @@ def add_events(
     :return: Saved event information in JSON format
     """
     verify_logged_in()
-    doc = get_doc_or_abort(origin_doc_id) if origin_doc_id else None
+    doc: DocInfo | None = get_doc_or_abort(origin_doc_id) if origin_doc_id else None
     if doc and not doc.is_original_translation:
         doc = doc.src_doc
     result = save_events(get_current_user_object(), events, save_origin=doc)
@@ -1136,7 +1136,7 @@ def send_email_to_creator(
     extra_msg: str | None = None,
 ) -> None:
     """
-    Sends an email of cancelled/booked time to creator of the event
+    Sends an email of canceled/booked time to creator of the event
 
     :param: event_id ID the event
     :param: event_type Event type to inform of
