@@ -253,6 +253,8 @@ export class PareditorController extends DialogController<
         acebehaviours: TimStorage<boolean>;
         acewrap: TimStorage<boolean>;
         autocomplete: TimStorage<boolean>;
+        askFilename: TimStorage<boolean>;
+        useDocumentName: TimStorage<boolean>;
         proeditor: TimStorage<boolean>;
         spellcheck: TimStorage<boolean>;
         editortab: TimStorage<string>;
@@ -263,10 +265,14 @@ export class PareditorController extends DialogController<
     };
     private touchDevice: boolean;
     private autocomplete!: boolean; // $onInit
+    private askFilename!: boolean;
+    private useDocumentName!: boolean;
     private citeText!: string; // $onInit
     private docSettings?: IDocSettings;
     private memoMinutesSettings?: IMeetingMemoSettings;
     private uploadedFile?: string;
+    private fileURL?: string;
+    private fileURLLatest?: string;
     private activeTab?: string;
     private lastTab?: string;
     private tabs: IEditorTab[];
@@ -1208,6 +1214,11 @@ ${backTicks}
             acebehaviours: new TimStorage("acebehaviours" + saveTag, t.boolean),
             acewrap: new TimStorage("acewrap" + saveTag, t.boolean),
             autocomplete: new TimStorage("autocomplete" + saveTag, t.boolean),
+            askFilename: new TimStorage("askFilename" + saveTag, t.boolean),
+            useDocumentName: new TimStorage(
+                "useDocumentName" + saveTag,
+                t.boolean
+            ),
             editortab: new TimStorage("editortab" + saveTag, t.string),
             noteAccess: new TimStorage("noteAccess", t.string), // No saveTag here.
             oldMode: new TimStorage("oldMode" + saveTag, t.string),
@@ -1231,6 +1242,8 @@ ${backTicks}
 
         this.spellcheck = this.storage.spellcheck.get() ?? false;
         this.autocomplete = this.storage.autocomplete.get() ?? false;
+        this.askFilename = this.storage.askFilename.get() ?? false;
+        this.useDocumentName = this.storage.useDocumentName.get() ?? false;
         this.proeditor =
             this.storage.proeditor.get() ??
             (saveTag === "par" || saveTag === TIM_TABLE_CELL);
@@ -1742,7 +1755,7 @@ ${backTicks}
     }
 
     /**
-     * Checks whether or not the document is the original document.
+     * Checks whether the document is the original document.
      */
     isOriginalDocument() {
         const tags = this.getExtraData().tags;
@@ -1900,7 +1913,7 @@ ${backTicks}
                 return;
             }
             const cancelSuccess = await this.handleFormulaCancel();
-            // editing wasn't cancelled so do nothing
+            // editing wasn't canceled so do nothing
             if (!cancelSuccess) {
                 return;
             }
@@ -2057,8 +2070,8 @@ ${backTicks}
                         return;
                     }
                 }
-                // If Save and exit was chosen, falls through to normal saving process.
-                // Dismiss (pressing x to close) is considered the same as Save and exit.
+                // If "Save and exit" was chosen, falls through to normal saving process.
+                // Dismiss (pressing x to close) is considered the same as "Save and exit".
             }
         }
         const text = this.editor!.getEditorText();
@@ -2090,14 +2103,33 @@ ${backTicks}
             return;
         }
         const items = clipboardData.items;
-        // find pasted image among pasted items
         let blobs = 0;
+        let htmlImageName: string | null = null;
+
+        // First pass: extract HTML image name and find image blobs
         for (const i of items) {
-            // TODO: one could inspect if some item contains image name and then use that to name the image
+            if (i.type === "text/html") {
+                const html = clipboardData.getData("text/html");
+                const match = html.match(/src="([^"]+)"/);
+                if (match) {
+                    htmlImageName = match[1].split("/").pop() ?? null;
+                }
+            }
+        }
+
+        // Second pass: handle image blobs
+        for (const i of items) {
             if (i.type.startsWith("image")) {
                 const blob = i.getAsFile();
                 if (blob !== null) {
-                    this.onFileSelect(blob);
+                    // Use extracted HTML name if blob doesn't have one
+                    if (htmlImageName) {
+                        Object.defineProperty(blob, "name", {
+                            value: htmlImageName,
+                            writable: false,
+                        });
+                    }
+                    void this.onFileSelect(blob);
                     blobs++;
                 }
             }
@@ -2115,7 +2147,7 @@ ${backTicks}
         }
         const files = de.dataTransfer.files;
         for (const f of files) {
-            this.onFileSelect(f);
+            void this.onFileSelect(f);
         }
     }
 
@@ -2177,7 +2209,6 @@ ${backTicks}
     async onFileSelect(file: File) {
         const editor = this.editor!;
         await this.focusEditor();
-        this.file = file;
         const editorText = editor.getEditorText();
         let autostamp = false;
         let attachmentParams;
@@ -2193,6 +2224,22 @@ ${backTicks}
             this.liiteMacroStringEnd,
             selectionRange
         );
+
+        const suggestedName = (file.name?.trim() ?? "image.png")
+            .replace(/\?.*$/, "")
+            .trim();
+
+        let chosenName: string | null = suggestedName;
+        if (this.askFilename) {
+            chosenName = window.prompt("Give filename", suggestedName);
+        }
+        if (chosenName === null) {
+            // User canceled
+            return;
+        }
+        const trimmedName = chosenName.trim();
+        file = new File([file], trimmedName, {type: file.type});
+        this.file = file;
 
         // If there's an attachment macro in the editor (i.e. macroRange is defined), assume need to stamp.
         // Also requires data from preamble to work correctly (dates and knro).
@@ -2264,6 +2311,7 @@ ${backTicks}
                     let start = "[File](";
                     let end = ")";
                     let savedir = "/files/";
+                    let savename = "";
                     if (
                         response.data.image ||
                         response.data.file.toString().includes(".svg")
@@ -2272,10 +2320,11 @@ ${backTicks}
                     }
                     if (response.data.image) {
                         savedir = "/images/";
-                        this.uploadedFile = savedir + response.data.image;
+                        savename = response.data.image;
                     } else {
-                        this.uploadedFile = savedir + response.data.file;
+                        savename = response.data.file;
                     }
+                    this.uploadedFile = savedir + savename;
                     // For attachments without stamps (only look for this if stamped version wasn't found):
                     let macroRange2;
                     if (!macroRange) {
@@ -2303,7 +2352,34 @@ ${backTicks}
                             }
                         }
                     }
-                    ed.insertTemplate(`${start}${this.uploadedFile}${end}`);
+                    this.fileURL = this.uploadedFile;
+                    const doc = $(document)[0];
+                    if (doc) {
+                        const parsed = new URL(doc.URL);
+                        let cleanPath = parsed.pathname.replace(
+                            /^\/view\//,
+                            ""
+                        );
+                        if (cleanPath === "") {
+                            cleanPath = "/";
+                        }
+                        this.fileURL =
+                            savedir +
+                            cleanPath +
+                            "/" +
+                            // savename.split("/").pop();
+                            savename;
+                        this.fileURLLatest =
+                            savedir +
+                            cleanPath +
+                            "/" +
+                            savename.split("/").pop();
+                    }
+                    let mdUrl = this.uploadedFile;
+                    if (this.useDocumentName) {
+                        mdUrl = this.fileURL;
+                    }
+                    ed.insertTemplate(`${start}${mdUrl}${end}`);
                     // Separate from isPlugin so this is run only when there are attachments with stamps.
                     if (macroRange && kokousDate) {
                         stamped.uploadUrl = this.uploadedFile;
@@ -2647,6 +2723,8 @@ ${backTicks}
         this.storage.spellcheck.set(this.spellcheck);
         this.storage.editortab.set(this.activeTab ?? "navigation");
         this.storage.autocomplete.set(this.autocomplete);
+        this.storage.askFilename.set(this.askFilename);
+        this.storage.useDocumentName.set(this.useDocumentName);
         const ace = this.isAce();
         this.storage.oldMode.set(ace ? "ace" : "text");
         this.storage.wrap.set("" + this.wrapValue());
