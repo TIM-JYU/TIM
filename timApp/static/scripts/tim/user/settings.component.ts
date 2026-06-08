@@ -643,7 +643,7 @@ type StyleSelectionType =
                     <ng-container>
                         <span class="form-label">
                             <ng-container i18n>AskTim API Keys</ng-container>
-                            <a href="https://tim.jyu.fi/view/tim/ohjeita/tekoalyavustaja/adding-llm-api-keys">
+                            <a href="https://tim.jyu.fi/view/tim/ohjeita/tekoalyavustaja/llm-avustaja-ohje/en-GB#api-avainten-lis%C3%A4%C3%A4minen">
                                 <span class="glyphicon glyphicon-question-sign" style="margin-left: 0.2em;"
                                       title="Help with setting up LLM-helper for document" i18n-title></span>
                             </a>
