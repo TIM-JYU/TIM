@@ -23,7 +23,6 @@ class Usage(db.Model):
         default=list,
     )  # [{"timestamp": 123, "tokens": 456}]
 
-
     @staticmethod
     def set_usage(
         user: int,

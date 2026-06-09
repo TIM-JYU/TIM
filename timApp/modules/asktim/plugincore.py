@@ -187,7 +187,7 @@ class PluginCore:
         :param stream: Use streaming for model response.
         :return: Result of the prepared chat request.
         """
-        rule = self.tim_database.get_llm_rule(document_id)
+        rule = LLMRule.get_llm_rule(document_id)
         if not rule:
             return Result(error="Instance has not been created yet")
 
@@ -776,7 +776,7 @@ class PluginCore:
     def delete_instance(
         self, caller_id: int, document_id: int, par_id: str
     ) -> Result[str, str]:
-        rule = self.tim_database.get_llm_rule(document_id)
+        rule = LLMRule.get_llm_rule(document_id)
         if not rule:
             return Result(error=f"No plugin instance in document [{document_id}]")
         if rule.owner != caller_id:
@@ -1121,8 +1121,8 @@ class PluginCore:
         :return: The complete amount of tokens left or None in the case of unlimited. If zero, an explanation is added as string.
         """
 
-        user_policy = self.tim_database.get_user_policy(llm_rule, caller_id)
-        global_policy = self.tim_database.get_global_policy(llm_rule)
+        user_policy = Policy.get_user_policy(llm_rule, caller_id)
+        global_policy = Policy.get_global_policy(llm_rule)
 
         if global_policy is None:
             raise LookupError("Could not find global policy for this instance")
@@ -1433,9 +1433,7 @@ class PluginCore:
         return user_groups, key.paths
 
     @staticmethod
-    def remove_api_key_group(
-        owner_id: int, public_key: str, group_id: int
-    ) -> None:
+    def remove_api_key_group(owner_id: int, public_key: str, group_id: int) -> None:
         LLMRule.remove_api_key_group(owner_id, public_key, group_id)
 
     @staticmethod

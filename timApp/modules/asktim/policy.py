@@ -31,7 +31,6 @@ class Policy(db.Model):
     max_tokens_per_user: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
     token_pool: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
 
-
     @staticmethod
     def set_policy(
         user: int,
@@ -71,8 +70,8 @@ class Policy(db.Model):
         db.session.commit()
         return policy
 
+    @staticmethod
     def set_global_policy(
-        self,
         llm_rule: LLMRule,
         token_time_window_type: str | None,
         token_time_window_num: int | None,
@@ -84,7 +83,7 @@ class Policy(db.Model):
         Sets the global policy for the LLM rule.
         :return:
         """
-        policy = self.set_policy(
+        policy = Policy.set_policy(
             0,
             llm_rule,
             token_time_window_type,
@@ -95,8 +94,8 @@ class Policy(db.Model):
         )
         return policy
 
+    @staticmethod
     def set_user_policy(
-        self,
         user: int,
         llm_rule: LLMRule,
         token_time_window_type: str | None,
@@ -108,7 +107,7 @@ class Policy(db.Model):
         Sets the user policy for the given user in the LLM rule context.
         :return:
         """
-        policy = self.set_policy(
+        policy = Policy.set_policy(
             user,
             llm_rule,
             token_time_window_type,

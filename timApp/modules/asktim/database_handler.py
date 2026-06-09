@@ -176,4 +176,3 @@ class TimDatabase:
         if entry is None:
             raise ValueError(f"No document with ID {doc_id}")
         raise PermissionError(f"API key has no access to document '{entry.path}'")
-

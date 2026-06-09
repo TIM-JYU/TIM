@@ -250,7 +250,6 @@ class LLMRule(db.Model):
         )
         return db.session.execute(stmt).scalars().all()
 
-
     @staticmethod
     def access_api_key(user_id: int, public_key: str) -> LLMRule | None:
         """
