@@ -11635,6 +11635,14 @@ Syötä useiden käyttäjien osoitteet allekkain tai pilkulla erotettuina.</targ
           <context context-type="linenumber">681,682</context>
         </context-group>
       </trans-unit>
+      <trans-unit id="5614136992604855326" datatype="html">
+        <source>Help adding LLM API keys</source>
+        <target state="new">Ohjeet LLM API avaimien lisäämiseen</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/user/add-llm-api-key-dialog.component.ts</context>
+          <context context-type="linenumber">71</context>
+        </context-group>
+      </trans-unit>
     </body>
   </file>
 </xliff>
