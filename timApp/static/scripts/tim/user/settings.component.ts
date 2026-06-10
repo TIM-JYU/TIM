@@ -659,14 +659,6 @@ type StyleSelectionType =
                                                  [value]="APIkey.usedTokens" [max]="APIkey.availableTokens"></progressbar>
                                 </div>
                                 <ng-container *ngIf="deletingLLMKey !== APIkey">
-                                    <button *ngIf="!APIkey.tokensChecked" class="btn" type="button"
-                                            (click)="checkTokens(APIkey)" i18n>
-                                        Check key's quota
-                                    </button>
-                                    <button *ngIf="APIkey.tokensChecked" class="btn" type="button"
-                                            (click)="checkTokens(APIkey)">
-                                        <i class="glyphicon glyphicon-refresh"></i>
-                                    </button>
                                     <button *ngIf="true" class="btn" type="button"
                                             (click)="openEditLLMAPIKeyDialog(APIkey)" i18n>
                                         Edit permissions
@@ -1257,6 +1249,7 @@ export class SettingsComponent implements DoCheck, AfterViewInit {
             })
         );
     }
+
     openLLMAPIKeyDialog() {
         void to2(
             showAddLLMAPIKeyDialog((key) => {
@@ -1433,10 +1426,6 @@ export class SettingsComponent implements DoCheck, AfterViewInit {
         } else {
             await showMessageDialog(r.result.error.error);
         }
-    }
-
-    async checkTokens(key: IUserLLMApiKey) {
-        // TODO Check used tokens for LLM API key
     }
 
     saveUserAccountInfo = async () => {
