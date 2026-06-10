@@ -67,11 +67,6 @@ class GenericParams:
 
 
 @dataclass
-class GetRightsParams(GenericParams):
-    pass
-
-
-@dataclass
 class SaveUserPolicyParams(GenericParams):
     user_data: UserData
 
@@ -79,16 +74,6 @@ class SaveUserPolicyParams(GenericParams):
 @dataclass
 class DeletePluginParams(GenericParams):
     par_id: str
-
-
-def get_rights(params: GetRightsParams) -> dict:
-    doc = get_doc_or_abort(params.document_id)
-    # verify_teacher_access returns the access object if teacher, None if not
-    teacher_access = verify_teacher_access(doc, require=False)
-
-    return {
-        "is_teacher": teacher_access is not None,
-    }
 
 
 class AskTimAskResponse(TypedDict, total=False):
@@ -572,7 +557,6 @@ register_route(
     APIKeyParams,
     add_api_key_permissions,
 )
-register_route(asktim, "post", "getRights", GetRightsParams, get_rights)
 register_route(asktim, "get", "getExistingKeys", None, get_existing_keys)
 register_route(asktim, "delete", "deleteKey", APIKeyParams, delete_existing_key)
 register_route(asktim, "post", "getModels", GetModelsParams, get_models)
