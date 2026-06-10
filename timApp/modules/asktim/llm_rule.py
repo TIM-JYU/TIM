@@ -1,14 +1,20 @@
 from __future__ import annotations
-from typing import Optional
+from typing import Optional, cast, TYPE_CHECKING
+if TYPE_CHECKING:
+    from timApp.modules.asktim.policy import Policy
+    from timApp.modules.asktim.usage import Usage
 from sqlalchemy import Integer, String, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.dialects.postgresql import ARRAY
 from timApp.timdb.sqa import db
-from timApp.modules.asktim.policy import Policy
-from timApp.modules.asktim.usage import Usage
 from timApp.user.user import User
+from timApp.item.item import Item
 from sqlalchemy import select, delete
 from timApp.user.usergroup import UserGroup
+from timApp.modules.asktim.plugincore import PluginCore
+from timApp.document.docentry import DocEntry, get_documents_in_folder
+from timApp.auth.get_user_rights_for_item import get_user_rights_for_item
+from timApp.folder.folder import Folder
 
 
 class LLMRule(db.Model):
@@ -295,7 +301,7 @@ class LLMRule(db.Model):
             raise Exception(f"Invalid user.")
 
         user_groups = LLMRule.get_user_groups(groups)
-        LLMRule.validate_item_paths(user, paths)
+        LLMRule._validate_item_paths(user, paths)
 
         # Append unique user groups
         group_ids: set[int] = set(rule.groups)
@@ -306,6 +312,17 @@ class LLMRule(db.Model):
         rule.paths = paths
         db.session.commit()
         return rule
+
+    @staticmethod
+    def get_user_groups(groups: list[str]) -> list[UserGroup]:
+        """Check if all the user groups exists and return them."""
+        user_groups: list[UserGroup] = []
+        for group in groups:
+            g = UserGroup.get_by_name(group)
+            if not g:
+                raise Exception(f"Invalid user group: {group}")
+            user_groups.append(g)
+        return user_groups
 
     @staticmethod
     def remove_api_key_group(owner_id: int, public_key: str, group_id: int) -> None:
@@ -338,3 +355,94 @@ class LLMRule(db.Model):
         )
         db.session.execute(stmt)
         db.session.commit()
+
+    @staticmethod
+    def _validate_item_paths(
+        user: User,
+        paths: list[str],
+        *,
+        depth: int = 1,
+        add_documents: bool = True,
+    ) -> list[Item]:
+        """
+        Check if all the paths exist and that the user has access to them.
+        If the path is a folder, check access to the documents directly under it.
+
+        :param user: The user of which access to check.
+        :param paths: The list of paths to check.
+        :param depth: The depth to check.
+                      If depth > 0, check the documents under folders.
+        :param add_documents: Whether to add documents to the returned item list.
+        :return: The list of items found.
+        """
+        items: list[Item] = []
+        to_check: list[str] = []
+
+        for path in paths:
+            item = Item.find_by_path(path)
+            if not item:
+                raise Exception(f"Invalid item path: '{path}'")
+
+            is_folder = isinstance(item, Folder)
+
+            rights = get_user_rights_for_item(item, user)
+            if not rights.get("owner") and not rights.get("manage"):
+                raise Exception(f"Insufficient rights: '{path}'")
+
+            if not is_folder:
+                if add_documents:
+                    items.append(item)
+                continue
+
+            items.append(item)
+            folder: Folder = cast(Folder, item)
+
+            # Check rights for the documents under this folder
+            if depth > 0:
+                docs = get_documents_in_folder(path)
+                to_check.extend([d.name for d in docs])
+                # Check rights for the folders under this folder
+                if depth > 1:
+                    folders = folder.get_all_folders()
+                    to_check.extend([f.path for f in folders])
+
+        # Check the rights for pending items
+        if len(to_check) > 0:
+            sub_items = LLMRule._validate_item_paths(
+                user, to_check, add_documents=False, depth=depth - 1
+            )
+            items.extend(sub_items)
+
+        return items
+
+    @staticmethod
+    def api_key_valid_in_doc(key: LLMRule, doc_id: int) -> bool:
+        """Check if the API key can be used in the given document."""
+        if key.document_id > 0:
+            raise ValueError("Not an API key")
+        if len(key.paths) == 0:
+            raise PermissionError("API key is not valid in any document.")
+
+        for path in key.paths:
+            item = Item.find_by_path(path)
+            if not item:
+                continue
+            is_doc = isinstance(item, DocEntry)
+
+            if is_doc:
+                doc = cast(DocEntry, item)
+                if doc.id == doc_id:
+                    return True
+                continue
+
+            # Check if the document is this folder
+            folder = cast(Folder, item)
+            docs = folder.get_all_documents()
+            # TODO: can probably be done more efficiently
+            for doc_info in docs:
+                if doc_info.document.doc_id == doc_id:
+                    return True
+        entry = PluginCore.get_doc_entry_by_id(doc_id)
+        if entry is None:
+            raise ValueError(f"No document with ID {doc_id}")
+        raise PermissionError(f"API key has no access to document '{entry.path}'")

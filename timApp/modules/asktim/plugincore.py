@@ -4,6 +4,11 @@ from dataclasses import dataclass, field
 
 from unicodedata import normalize, category
 
+from timApp.auth.get_user_rights_for_item import UserItemRights, get_user_rights_for_item
+from timApp.document import docentry
+from timApp.document.docentry import DocEntry
+from timApp.document.document import Document
+from timApp.item.item import Item
 from timApp.modules.asktim.llm_rule import LLMRule
 from timApp.modules.asktim.policy import Policy
 from timApp.modules.asktim.usage import Usage
@@ -14,10 +19,6 @@ from timApp.user.usergroup import get_groups_by_ids, UserGroup
 from timApp.modules.asktim.indexer import (
     Indexer,
     SUPPORTED_EMBEDDING_PROVIDERS,
-)
-from timApp.modules.asktim.database_handler import (
-    TimDatabase,
-    Document,
 )
 from timApp.modules.asktim.rag import (
     Rag,
@@ -155,7 +156,6 @@ APIKey = tuple[str, str, str, list[UserGroup], list[str]]
 class PluginCore:
     rag: Rag = Rag()
     history_manager: ConversationManager
-    tim_database: TimDatabase = TimDatabase()
     indexer: Indexer
     # TODO: a plugin instance specific variable? In global policy?
     max_input_len: int = 1024
@@ -562,7 +562,7 @@ class PluginCore:
         # Turn selected TIM documents from IDs to paths
         doc_paths: list[str] = []
         for doc_id in llm_rule.indexed_document_ids:
-            doc = self.tim_database.get_doc_entry_by_id(doc_id)
+            doc = self.get_doc_entry_by_id(doc_id)
             if not doc:
                 continue
             doc_paths.append(doc.path)
@@ -593,7 +593,7 @@ class PluginCore:
     def check_api_key_doc_access(self, key: LLMRule, document_ids: list[int]) -> None:
         """Check that the API key has access to the given documents."""
         for doc_id in document_ids:
-            self.tim_database.api_key_valid_in_doc(key, doc_id)
+            LLMRule.api_key_valid_in_doc(key, doc_id)
 
     def save_instance(
         self, caller_id: int, document_id: int, instance_settings: InstanceAttributes
@@ -672,7 +672,7 @@ class PluginCore:
 
         # Check if the API key is valid in these documents
         try:
-            self.tim_database.api_key_valid_in_doc(api_key_rule, document_id)
+            LLMRule.api_key_valid_in_doc(api_key_rule, document_id)
             self.check_api_key_doc_access(api_key_rule, document_ids)
         except (PermissionError, ValueError) as e:
             return Result(None, str(e))
@@ -696,7 +696,7 @@ class PluginCore:
             )
 
         if system_prompt_path:
-            prompt_doc = self.tim_database.get_tim_document_by_path(system_prompt_path)
+            prompt_doc = self.get_tim_document_by_path(system_prompt_path)
             if not prompt_doc:
                 return Result(None, "Invalid system prompt path")
 
@@ -782,7 +782,7 @@ class PluginCore:
         if rule.owner != caller_id:
             return Result(error="Insufficient rights to delete plugin instance")
 
-        document = self.tim_database.get_tim_document_by_id(document_id)
+        document = self.get_tim_document_by_id(document_id)
         if document is None:
             return Result(error=f"Document [{document_id}] does not exist")
 
@@ -799,6 +799,28 @@ class PluginCore:
             return Result(value="Plugin instance deleted")
 
         return Result(error="No asktim plugin instance in document")
+
+    @staticmethod
+    def get_tim_document_by_id(doc_id: int) -> Document | None:
+        """
+        Returns a document corresponding to the given id.
+        """
+        doc_entry = PluginCore.get_doc_entry_by_id(doc_id)
+        if doc_entry:
+            return doc_entry.document
+        return None
+
+    @staticmethod
+    def get_tim_document_by_path(path: str) -> Document | None:
+        doc = DocEntry.find_by_path(path)
+        return doc.document if doc else None
+
+    @staticmethod
+    def get_doc_entry_by_id(doc_id: int) -> DocEntry | None:
+        entries = docentry.DocEntry.find_all_by_id(doc_id)
+        if not entries:
+            return None
+        return entries[0]
 
     def get_history(self, caller_id: str, document_id: str) -> list[Message]:
         # TODO: fetch with time window
@@ -1025,7 +1047,7 @@ class PluginCore:
     def get_system_prompt(self, system_prompt_path: str) -> str | None:
         if not system_prompt_path:
             return None
-        prompt_doc = self.tim_database.get_tim_document_by_path(system_prompt_path)
+        prompt_doc = self.get_tim_document_by_path(system_prompt_path)
         if not prompt_doc:
             return None
         content = prompt_doc.export_markdown(export_ids=False).strip()
@@ -1034,7 +1056,7 @@ class PluginCore:
     def _owns_document(self, caller_id: int, document_id: int) -> bool:
         """Expects that you have checked already that doc and user exist, throws otherwise"""
 
-        tim_rights = self.tim_database.check_rights(caller_id, document_id)
+        tim_rights = self.check_rights(caller_id, document_id)
 
         if tim_rights is None:
             # TODO: proper error?
@@ -1047,6 +1069,19 @@ class PluginCore:
             return False
 
         return True
+
+    @staticmethod
+    def check_rights(user_id: int, doc_id: int) -> UserItemRights | None:
+        """
+        Checks which rights the given user has for the given document or folder.
+        """
+        user = User.get_by_id(user_id)
+        doc = Item.find_by_id(doc_id)
+        if user and doc:
+            rights = get_user_rights_for_item(doc, user)
+            return rights
+        else:
+            return None
 
     @staticmethod
     def set_user_policy(
@@ -1301,7 +1336,7 @@ class PluginCore:
         """
         documents = []
         for path in paths:
-            found_documents = self.tim_database.get_tim_documents_by_path(path)
+            found_documents = self.get_tim_documents_by_path(path)
             if not found_documents:
                 continue  # Might be just empty
                 # return Result(error=f"Given path [{path}] does not exist")
@@ -1311,9 +1346,32 @@ class PluginCore:
 
         return Result(value=doc_set)
 
+    @staticmethod
+    def get_tim_documents_by_path(path: str, recursive: bool = False) -> list[Document]:
+        """
+        Returns all documents in the given path recursively.
+        If no documents are found, returns empty list.
+        If path is a document the document is returned.
+        If path is a folder all the documents in the folder are returned.
+        If recursive is True, all subfolders are returned recursively.
+        If path is neither a folder nor a document, returns empty list.
+        """
+        documents: list[Document] = []
+        document = PluginCore.get_tim_document_by_path(path)
+        if document:
+            documents.append(document)
+            return documents
+
+        doc_entries = docentry.get_documents(
+            filter_folder=path, search_recursively=recursive
+        )
+        for d in doc_entries if doc_entries else []:
+            documents.append(d.document)  # paragraphs -> .get_paragraphs()
+        return documents
+
     def _document_exists(self, document_id: int) -> bool:
         """Checks if document with given id exists in tim database"""
-        if not self.tim_database.get_tim_document_by_id(document_id):
+        if not self.get_tim_document_by_id(document_id):
             return False
 
         return True
@@ -1338,7 +1396,7 @@ class PluginCore:
 
         for document in documents:
             doc_id = document.id
-            right = self.tim_database.check_rights(user_id, doc_id)
+            right = self.check_rights(user_id, doc_id)
             if not right:
                 raise ValueError(
                     f"Could not get rights for document [{document}] for user [{user_id}]"
@@ -1572,7 +1630,7 @@ class PluginCore:
     def _get_citations(self, blocks: list[tuple[int, int]]) -> list[str]:
         citations: list[str] = []
         for doc_id, block_id in blocks:
-            doc = self.tim_database.get_doc_entry_by_id(doc_id)
+            doc = self.get_doc_entry_by_id(doc_id)
             if not doc:
                 continue
             citations.append(self._get_block_view_addr(doc.path, block_id))

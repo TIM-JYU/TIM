@@ -1,9 +1,11 @@
 from __future__ import annotations
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from timApp.modules.asktim.llm_rule import LLMRule
 from sqlalchemy import Integer, ForeignKey, JSON, select, delete
 from sqlalchemy.ext.mutable import MutableList
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from timApp.timdb.sqa import db
-from timApp.modules.asktim.llm_rule import LLMRule
 
 
 class Usage(db.Model):
