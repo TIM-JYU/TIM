@@ -4,7 +4,10 @@ from dataclasses import dataclass, field
 
 from unicodedata import normalize, category
 
-from timApp.auth.get_user_rights_for_item import UserItemRights, get_user_rights_for_item
+from timApp.auth.get_user_rights_for_item import (
+    UserItemRights,
+    get_user_rights_for_item,
+)
 from timApp.document import docentry
 from timApp.document.docentry import DocEntry
 from timApp.document.document import Document

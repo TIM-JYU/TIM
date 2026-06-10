@@ -1,5 +1,6 @@
 from __future__ import annotations
 from typing import Optional, TYPE_CHECKING
+
 if TYPE_CHECKING:
     from timApp.modules.asktim.llm_rule import LLMRule
 from sqlalchemy import Integer, String, ForeignKey, select, delete
