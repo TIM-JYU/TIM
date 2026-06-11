@@ -349,7 +349,7 @@ export class StackPluginComponent
             2
         )} Api Time: ${r.api_time.toFixed(2)}`;
 
-        ParCompiler.processAllMathDelayed(this.element, 1);
+        await ParCompiler.processAllMathDelayed(this.element, 1);
         const html = this.element.find(".stackOutput");
         const inputs = html.find("input");
         const inputse = html.find("textarea");
