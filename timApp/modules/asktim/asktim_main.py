@@ -245,7 +245,13 @@ def ask_stream_route(params: AskTimAskParams) -> Response:
     document_has_asktim_plugin(document_id, session_user_id)
 
     def generate() -> Iterator[str]:
-        resp = plugincore.chat_request_stream(session_user_id, document_id, user_input)
+        try:
+            resp = plugincore.chat_request_stream(
+                session_user_id, document_id, user_input
+            )
+        except Exception as e:
+            yield to_ndjson_str(AskTimAskResponse(error=str(e)))
+            return
         if not resp.ok() or not resp.value:
             yield to_ndjson_str(AskTimAskResponse(error=resp.error))
             return
