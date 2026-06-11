@@ -12,7 +12,6 @@ from timApp.user.user import User
 from timApp.item.item import Item
 from sqlalchemy import select, delete
 from timApp.user.usergroup import UserGroup
-from timApp.modules.asktim.plugincore import PluginCore
 from timApp.document.docentry import DocEntry, get_documents_in_folder
 from timApp.auth.get_user_rights_for_item import get_user_rights_for_item
 from timApp.folder.folder import Folder
@@ -443,6 +442,9 @@ class LLMRule(db.Model):
             for doc_info in docs:
                 if doc_info.document.doc_id == doc_id:
                     return True
+
+        from timApp.modules.asktim.plugincore import PluginCore
+
         entry = PluginCore.get_doc_entry_by_id(doc_id)
         if entry is None:
             raise ValueError(f"No document with ID {doc_id}")
