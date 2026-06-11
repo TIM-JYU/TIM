@@ -295,7 +295,7 @@ def get_settings(params: GenericParams) -> AskTimGetSettingsResponse:
     session_user_id = get_current_user_id()
 
     check_view_rights(user_id=session_user_id, document_id=document_id)
-    # document_has_asktim_plugin(document_id, session_user_id)
+    document_has_asktim_plugin(document_id, session_user_id)
 
     get_result = plugincore.get_plugin_settings(session_user_id, document_id)
     if not get_result.ok():
@@ -373,7 +373,7 @@ def get_messages(params: GetMessagesParams) -> dict:
     user_id = get_current_user_id()
     document_id = params.document_id
     check_view_rights(user_id=user_id, document_id=document_id)
-    # document_has_asktim_plugin(document_id, user_id)
+    document_has_asktim_plugin(document_id, user_id)
 
     amount = params.amount
     ts_end = params.timestamp_end_ms
