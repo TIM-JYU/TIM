@@ -1,6 +1,8 @@
 from __future__ import annotations
 from typing import Optional, cast, TYPE_CHECKING
 
+from timApp.document import docentry
+
 if TYPE_CHECKING:
     from timApp.modules.asktim.policy import Policy
     from timApp.modules.asktim.usage import Usage
@@ -443,9 +445,8 @@ class LLMRule(db.Model):
                 if doc_info.document.doc_id == doc_id:
                     return True
 
-        from timApp.modules.asktim.plugincore import PluginCore
-
-        entry = PluginCore.get_doc_entry_by_id(doc_id)
-        if entry is None:
+        entries = DocEntry.find_all_by_id(doc_id)
+        if not entries:
             raise ValueError(f"No document with ID {doc_id}")
+        entry = entries[0]
         raise PermissionError(f"API key has no access to document '{entry.path}'")
