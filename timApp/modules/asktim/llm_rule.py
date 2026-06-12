@@ -1,8 +1,5 @@
 from __future__ import annotations
 from typing import Optional, cast, TYPE_CHECKING
-
-from timApp.document import docentry
-
 if TYPE_CHECKING:
     from timApp.modules.asktim.policy import Policy
     from timApp.modules.asktim.usage import Usage
