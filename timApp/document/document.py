@@ -1491,6 +1491,9 @@ class Document:
                 if not line:
                     break
                 if len(line) < 10:
+                    # If a line does not have a parId, it is invalid.
+                    # parId is at least 12 chars.
+                    # Manually editing the file may introduce an empty line.
                     continue
                 if len(line) > 14:
                     # Line contains both par_id and t

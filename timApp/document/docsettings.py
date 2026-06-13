@@ -3,8 +3,17 @@ import functools
 # from copy import deepcopy
 from dataclasses import dataclass, fields
 from datetime import timedelta, datetime, timezone
-from typing import Optional, Iterable, TypeVar, Any, TYPE_CHECKING, Union
+from typing import (
+    Optional,
+    Iterable,
+    TypeVar,
+    Any,
+    TYPE_CHECKING,
+    Union,
+    get_type_hints,
+)
 
+# noinspection PyPackageRequirements
 import yaml
 from marshmallow import ValidationError, EXCLUDE
 from marshmallow.fields import Field
@@ -29,6 +38,7 @@ if TYPE_CHECKING:
     from timApp.user.preferences import BookmarkCollection
 
 RECURSIVE_SETTINGS_KEY = "recursive_settings"
+RECURSIVE_SETTINGS_VALUE = "rec"
 
 
 @dataclass
@@ -139,8 +149,11 @@ class DocSettingTypes:
     __static_macros_hash: str
 
 
+doc_setting_type_hints = get_type_hints(DocSettingTypes)
+
 doc_setting_field_map: dict[str, Field] = {
-    f.name: field_for_schema(f.type) for f in fields(DocSettingTypes)
+    f.name: field_for_schema(doc_setting_type_hints[f.name])
+    for f in fields(DocSettingTypes)
 }
 
 T = TypeVar("T")
@@ -282,7 +295,7 @@ class DocSettings:
     @staticmethod
     def parse_values(par: DocParagraph) -> YamlBlock:
         md = par.get_markdown()
-        if par.get_attr("settings", "") == "rec":
+        if par.get_attr("settings", "") == RECURSIVE_SETTINGS_VALUE:
             return YamlBlock({RECURSIVE_SETTINGS_KEY: {"yaml": md}})
 
         return YamlBlock.from_markdown(md)
@@ -553,6 +566,8 @@ class DocSettings:
     def exam_mode_themes(self) -> list[str]:
         return self.get_setting_or_default("exam_mode_themes", [])
 
+    """
+    # # Originally intended for a single recursive macro.
     def expand_rec_macros(self, s: str) -> str:
         if s.startswith("rec:"):
             s = s[4:]
@@ -561,6 +576,7 @@ class DocSettings:
             env = macroinfo.jinja_env
             s = expand_macros(s, macros, self, env)
         return s
+    """
 
     def point_sum_rule(self, default=None) -> PointSumRule | None:
         psr_dict = self.__dict.get(self.point_sum_rule_key, default)

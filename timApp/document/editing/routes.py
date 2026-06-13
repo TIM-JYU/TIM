@@ -4,7 +4,7 @@ import os
 import re
 import tempfile
 import zipfile
-from dataclasses import field, dataclass as py_dataclass
+from dataclasses import field, dataclass
 
 from flask import Blueprint, render_template
 from flask import current_app
@@ -94,7 +94,7 @@ from timApp.util.utils import (
     clear_g_errors,
 )
 from timApp.util.utils import temp_folder_path
-from tim_common.marshmallow_dataclass import dataclass
+from tim_common.marshmallow_dataclass import dataclass as mm_dataclass
 
 edit_page = Blueprint("edit_page", __name__, url_prefix="")  # TODO: Better URL prefix.
 
@@ -108,8 +108,8 @@ def update_document(doc_id):
 
     """
     # timdb = get_timdb()
-    docentry = get_doc_or_abort(doc_id)
-    verify_edit_access(docentry)
+    docinfo = get_doc_or_abort(doc_id)
+    verify_edit_access(docinfo)
     if "file" in request.files:
         file = request.files["file"]
         content = validate_uploaded_document_content(file)
@@ -121,7 +121,7 @@ def update_document(doc_id):
             raise NotExist("Template not found")
         original_doc = template.src_doc
         assert isinstance(original_doc, DocEntry)
-        return import_template(docentry, template)
+        return import_template(docinfo, template)
     else:
         request_json = request.get_json()
         if "fulltext" not in request_json:
@@ -134,7 +134,7 @@ def update_document(doc_id):
         raise RouteException("Missing parameter: original")
     if content is None:
         return json_response({"message": "Failed to convert the file to UTF-8."}, 400)
-    doc = docentry.document_as_current_user
+    doc = docinfo.document_as_current_user
     doc.preload_option = PreloadOption.all
     ver_before = doc.get_version()
     try:
@@ -162,28 +162,28 @@ def update_document(doc_id):
                     edit_result.changed.append(p)
         """
         if not edit_result.empty:
-            docentry.update_last_modified()
+            docinfo.update_last_modified()
             db.session.commit()
-        synchronize_translations(docentry, edit_result)
+        synchronize_translations(docinfo, edit_result)
     except ValidationWarning as e:
         return json_response({"error": str(e), "is_warning": True}, status_code=400)
     except (TimDbException, ValidationException) as e:
         raise RouteException(str(e))
     pars = doc.get_paragraphs()
-    return manage_response(docentry, pars, ver_before)
+    return manage_response(docinfo, pars, ver_before)
 
 
-def import_template(docentry: DocEntry, template: DocInfo):
-    docentry_doc = docentry.document_as_current_user
-    ver_before = docentry_doc.get_version()
-    docentry_translations = {tl.lang_id: tl for tl in docentry.translations}
+def import_template(docinfo: DocInfo, template: DocInfo):
+    docinfo_doc = docinfo.document_as_current_user
+    ver_before = docinfo_doc.get_version()
+    docentry_translations = {tl.lang_id: tl for tl in docinfo.translations}
 
     if len(docentry_translations) > 1:
         raise RouteException(
             "Cannot load a template into a document that has translations."
         )
 
-    existing_pars = docentry.document_as_current_user.get_paragraphs()
+    existing_pars = docinfo.document_as_current_user.get_paragraphs()
     if existing_pars:
         raise RouteException(
             "Cannot load a template because the document is not empty."
@@ -196,7 +196,8 @@ def import_template(docentry: DocEntry, template: DocInfo):
         template_content = template_doc.document.export_markdown(with_tl=True)
 
         if template_doc.is_original_translation:
-            target_doc = docentry
+            assert isinstance(docinfo, DocEntry)  # TODO: check this is true
+            target_doc = docinfo
             target_doc.lang_id = template_doc.lang_id
         else:
             tl_doc = create_document_and_block(
@@ -204,12 +205,12 @@ def import_template(docentry: DocEntry, template: DocInfo):
             )
             target_doc = Translation(
                 doc_id=tl_doc.doc_id,
-                src_docid=docentry.id,
+                src_docid=docinfo.id,
                 lang_id=template_doc.lang_id,
             )
             db.session.add(target_doc)
-            target_doc.title = docentry.title
-            copy_rights(docentry, target_doc, None, copy_expired=False)
+            target_doc.title = docinfo.title
+            copy_rights(docinfo, target_doc, None, copy_expired=False)
 
         try:
             doc = target_doc.document_as_current_user
@@ -217,7 +218,7 @@ def import_template(docentry: DocEntry, template: DocInfo):
 
             _, _, edit_result = doc.update(template_content, "", True)
             if not edit_result.empty:
-                docentry.update_last_modified()
+                docinfo.update_last_modified()
 
         except ValidationWarning as e:
             return json_response({"error": str(e), "is_warning": True}, status_code=400)
@@ -225,8 +226,8 @@ def import_template(docentry: DocEntry, template: DocInfo):
             raise RouteException(str(e))
 
     db.session.commit()
-    pars = docentry_doc.get_paragraphs()
-    return manage_response(docentry, pars, ver_before)
+    pars = docinfo_doc.get_paragraphs()
+    return manage_response(docinfo, pars, ver_before)
 
 
 def manage_response(docentry: DocInfo, pars: list[DocParagraph], ver_before: Version):
@@ -675,7 +676,7 @@ def par_response(
     partial_doc_pars: bool = False,
     extra_doc_settings: YamlBlock | None = None,
     for_view: ViewRoute | None = None,
-    show_errors: bool = False,  # noqa
+    show_errors: bool = False,
 ):
     """Return a JSON response containing updated paragraphs and updated HTMLs.
 
@@ -700,7 +701,7 @@ def par_response(
     new_doc_version = doc.get_version()
 
     # try:
-    settings = doc.get_settings(show_errors=False)
+    settings = doc.get_settings(show_errors=show_errors)
     # except Exception as e:
     #    pass  # TODO: How to get the error visible?
     #    return json_response(
@@ -1101,7 +1102,7 @@ def delete_paragraph(doc_id):
     )
 
 
-@dataclass
+@mm_dataclass
 class GetUpdatedParsModel:
     view: ViewRoute = field(default=ViewRoute.View, metadata={"by_value": True})
 
@@ -1263,7 +1264,7 @@ def mark_checked_route(doc_id: int, par_id: str) -> Response:
     )
 
 
-@dataclass
+@mm_dataclass
 class DrawIODataModel:
     data: str
     par_id: str
@@ -1288,12 +1289,12 @@ def set_drawio_base(args: DrawIODataModel):
     return ok_response()
 
 
-@dataclass
+@mm_dataclass
 class ImportDocumentModel:
     doc_id: int
 
 
-@py_dataclass
+@dataclass
 class ImportedImageFile:
     filename: str
 

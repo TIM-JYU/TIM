@@ -456,13 +456,13 @@ def preinc(v, delta=1):
     return v[0]
 
 
-def timezone_filter(s: str, timezone: str | None = None) -> Any:
+def timezone_filter(s: object, timezone: object | None = None) -> Any:
     if timezone is None:
         return s
     try:
         dt = datetime.fromisoformat(str(s))
         if dt.tzinfo is None:
-            dt = dt.replace(tzinfo=ZoneInfo(timezone))
+            dt = dt.replace(tzinfo=ZoneInfo(str(timezone)))
         return dt
     except ValueError:
         return s

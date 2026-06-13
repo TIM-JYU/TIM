@@ -2353,13 +2353,8 @@ ${backTicks}
                         }
                     }
                     this.fileURL = this.uploadedFile;
-                    const doc = $(document)[0];
-                    if (doc) {
-                        const parsed = new URL(doc.URL);
-                        let cleanPath = parsed.pathname.replace(
-                            /^\/view\//,
-                            ""
-                        );
+                    let cleanPath = documentglobals().curr_item.path;
+                    if (cleanPath !== null) {
                         if (cleanPath === "") {
                             cleanPath = "/";
                         }

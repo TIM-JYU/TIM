@@ -1,9 +1,7 @@
 from __future__ import annotations
-from flask import g
 
 import json
 import os
-import re
 import shelve
 import shutil
 import tempfile
@@ -20,6 +18,12 @@ import filelock
 from commonmark.node import Node
 from jinja2.sandbox import SandboxedEnvironment
 
+from cli.util.logging import log_warning
+from timApp.document.log_docparagraph import (
+    log_for_person,
+    log_for_person_short,
+    log_filename,
+)
 from timApp.document.viewcontext import ViewRoute
 from timApp.document.documentparser import DocumentParser
 from timApp.document.documentparseroptions import DocumentParserOptions
@@ -50,16 +54,14 @@ from timApp.util.utils import (
     short_repr,
 )
 from tim_common.dumboclient import DumboOptions, MathType, InputFormat
-from tim_common.html_sanitize import sanitize_html, strip_div
+from tim_common.html_sanitize import sanitize_html
 from tim_common.utils import parse_bool
+from user.special_group_names import ANONYMOUS_USERNAME
 
 if TYPE_CHECKING:
     from timApp.document.document import Document
     from timApp.document.docinfo import DocInfo
 
-# Enable user personal logs with url param ?userlogs=TAG
-ENABLE_LOG_FOR_PERSON_LONG = 1
-ENABLE_LOG_FOR_PERSON_SHORT = 1
 
 # Special handling is needed for cache headers with macros.
 # The text must start with 'f' to be interpreted as false
@@ -107,86 +109,8 @@ def write_atomic(path: str, data: str, encoding: str = "utf-8") -> None:
         tmp_path = tmp.name
 
     # atomic replace of the original file with the new file
+    os.chmod(tmp_path, 0o664)
     os.replace(tmp_path, path)
-    os.chmod(path, 0o664)
-
-
-def get_username() -> str:
-    user = g.get("user", None)
-    if user is None:
-        return "???"
-    return user.name
-
-
-def log_filename(file_name: str):
-    from timApp.util.logger import log_info
-
-    # log_info(f"W: {file_name}  {DocParagraph.get_stack_str(15, 1)}")
-    log_info(f"{get_username()} W: {file_name} __write_")
-
-
-def _log_for_person(msg_func, tag: str | None = None):
-    """
-    Logs msg_func if there is url parameter
-       debug_writes=user_tag[&debug_reg=regular_expression][&debug_stack=true]
-       debug_writes_long=user_tag,{log_tag}[&debug_reg=regular_expression][&debug_stack=true]
-    Possible log tags are (find all calls for this function):
-        dic - Creating par from dict
-        unl - List of unloaded pars
-        upd - Updating par cache HTML
-        cha - list of changed pars
-        pre - Pars to prealod
-        che - Check cache for par
-        wri - Writing par
-        cle - Clear HTML cache for par
-        stack - print also call stack
-    To log for example just some par operations, one van use
-        debug_reg = optional regular expression for printing
-    and give the par id as regular expression
-
-    :param msg_func: lambda text to log
-    :param tag: condition to log this message,
-                if log_tag is in debug_writes_long,
-                then log this message, otherwise skip.
-                If tag is missing, print anyway.
-    :return: Nothing
-    """
-    if not flask.has_request_context():
-        return
-    # If url_param "debug_writes", log the filename and stack trace for debugging purposes
-    tags = flask.request.args.get("debug_writes_long" if tag else "debug_writes")
-    if tags is None:
-        return
-
-    parts = [p.strip() for p in tags.split(",") if p.strip()]
-
-    if tag and tag not in parts:
-        return
-
-    user_tag: str = parts[0]
-    text = msg_func()
-
-    debug_reg = flask.request.args.get("debug_reg")
-    if debug_reg:
-        if re.search(debug_reg, text) is None:
-            return
-    stack = flask.request.args.get("debug_stack")
-    username = get_username()
-
-    from timApp.util.logger import log_info
-
-    if stack:
-        log_info(
-            f"{username} DZW ({user_tag}): {text}  {DocParagraph.get_stack_str(15, 1)}"
-        )
-    else:
-        log_info(f"{username} DZW ({user_tag}): {text}")
-
-
-log_for_person = _log_for_person if ENABLE_LOG_FOR_PERSON_LONG else lambda *a, **k: None
-log_for_person_short = (
-    _log_for_person if ENABLE_LOG_FOR_PERSON_SHORT else lambda *a, **k: None
-)
 
 
 class MacroDependency(StrEnum):
@@ -330,7 +254,7 @@ class DocParagraph:
         return par
 
     @property
-    def nocache(self):
+    def nocache(self) -> bool:
         nocache = self.get_attr("nocache")
         return get_boolean(nocache)
 
@@ -425,9 +349,6 @@ class DocParagraph:
             nm = nm.lower()
             return nm != "false"
         return self.doc.get_settings().nomacros(False)
-
-    def is_nocache(self) -> bool:
-        return get_boolean(self.get_attr("nocache"))
 
     def is_new_task(self):
         return self.attrs.get("seed", "") == "answernr"
@@ -1076,13 +997,15 @@ class DocParagraph:
                     )
                 # noinspection PyProtectedMember
                 par._set_html(h, sanitized=True)
-                if get_username() == "Anonymous":
+                from timApp.auth.sessioninfo import get_username
+
+                if get_username() == ANONYMOUS_USERNAME:
                     # anonymous is not allowed to change files
                     continue
                 if persist and not is_from_preamble and need_write:
                     if par.t and par.t != par.hash:
                         # old hash counted wrong
-                        log_info(f"t counted wrong {par}")
+                        log_warning(f"t counted wrong {par}")
                         par.doc.modify_paragraph_obj(par.id, par, True)
                     else:
                         par.__write()
@@ -1487,21 +1410,6 @@ class DocParagraph:
         """Returns the filesystem path for this paragraph."""
         return self._get_path(self.doc, self.id, self.hash)
 
-    @staticmethod
-    def get_stack_str(limit: int = 6, remove_level=0) -> str:
-        import traceback
-
-        stack = traceback.extract_stack()
-
-        # Poista tämä funktio itse stackista
-        stack = stack[: -1 - remove_level]
-
-        # Ota viimeiset `limit` framea ja käännä (uusin ensin)
-        last = stack[-limit:]
-        last.reverse()
-
-        return "|".join(f"{s.name}, {s.filename}:{s.lineno}" for s in last)
-
     def __write(self):
         file_name = self.get_path()
         log_filename(file_name)
@@ -1751,7 +1659,7 @@ class DocParagraph:
             or self.has_plugins()
             or (self.__is_ref and not self.is_translation())
             or self.__is_setting
-            or self.is_nocache()
+            or self.nocache
         )
 
     def is_plugin(self) -> bool:
