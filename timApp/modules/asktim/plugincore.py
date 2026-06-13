@@ -4,7 +4,17 @@ from dataclasses import dataclass, field
 
 from unicodedata import normalize, category
 
-from timApp.modules.asktim.dbmodels import LLMRule, Policy, Usage
+from timApp.auth.get_user_rights_for_item import (
+    UserItemRights,
+    get_user_rights_for_item,
+)
+from timApp.document import docentry
+from timApp.document.docentry import DocEntry
+from timApp.document.document import Document
+from timApp.item.item import Item
+from timApp.modules.asktim.llm_rule import LLMRule
+from timApp.modules.asktim.policy import Policy
+from timApp.modules.asktim.usage import Usage
 from timApp.util.flask.cache import cache
 from timApp.timdb.dbaccess import get_files_path
 from timApp.user.user import User
@@ -12,10 +22,6 @@ from timApp.user.usergroup import get_groups_by_ids, UserGroup
 from timApp.modules.asktim.indexer import (
     Indexer,
     SUPPORTED_EMBEDDING_PROVIDERS,
-)
-from timApp.modules.asktim.database_handler import (
-    TimDatabase,
-    Document,
 )
 from timApp.modules.asktim.rag import (
     Rag,
@@ -153,7 +159,6 @@ APIKey = tuple[str, str, str, list[UserGroup], list[str]]
 class PluginCore:
     rag: Rag = Rag()
     history_manager: ConversationManager
-    tim_database: TimDatabase = TimDatabase()
     indexer: Indexer
     # TODO: a plugin instance specific variable? In global policy?
     max_input_len: int = 1024
@@ -185,7 +190,7 @@ class PluginCore:
         :param stream: Use streaming for model response.
         :return: Result of the prepared chat request.
         """
-        rule = self.tim_database.get_llm_rule(document_id)
+        rule = LLMRule.get_llm_rule(document_id)
         if not rule:
             return Result(error="Instance has not been created yet")
 
@@ -195,7 +200,7 @@ class PluginCore:
         remaining_tokens = 4096  # This is the max value for API max_token_limit for completion. Varies depending on model
         if caller_id != rule.owner:
             try:
-                usage = self.tim_database.get_usage(rule, caller_id)
+                usage = Usage.get_usage(rule, caller_id)
                 left_tokens_result = self._calculate_remaining_tokens(
                     rule, usage, caller_id
                 )
@@ -493,7 +498,7 @@ class PluginCore:
         if not self._document_exists(document_id):
             return Result(None, f"Document [{document_id}] does not exist")
 
-        llm_rule = self.tim_database.get_llm_rule(document_id)
+        llm_rule = LLMRule.get_llm_rule(document_id)
         if llm_rule is None:
             return Result(value=InstanceSettingsData.default())
 
@@ -507,8 +512,8 @@ class PluginCore:
             )
             return Result(data)
 
-        user_keys = self.tim_database.get_user_api_keys(user_id)
-        shared_keys = self.tim_database.get_shared_api_keys(user_id)
+        user_keys = LLMRule.get_user_api_keys(user_id)
+        shared_keys = LLMRule.get_shared_api_keys(user_id)
 
         # Options for selecting key for plugin, no apikey shown
         available_keys = [
@@ -539,7 +544,7 @@ class PluginCore:
         api_key: str = ""
         allowed_paths: list[str] = []
 
-        api_key_row = self.tim_database.get_api_key_by_alias(str(llm_rule.public_key))
+        api_key_row = LLMRule.get_api_key_by_alias(str(llm_rule.public_key))
         if api_key_row is not None:
             provider = self._parse_provider(str(api_key_row.provider))
             api_key = str(api_key_row.api_key)
@@ -550,7 +555,7 @@ class PluginCore:
             self._get_supported_chat_models(provider, api_key) if provider else []
         )
 
-        global_policy = self.tim_database.get_global_policy(llm_rule)
+        global_policy = Policy.get_global_policy(llm_rule)
         global_policy_ui = GenericPolicy()
         max_token_pool = InstanceAttributes().max_tokens
         if global_policy is not None:
@@ -560,7 +565,7 @@ class PluginCore:
         # Turn selected TIM documents from IDs to paths
         doc_paths: list[str] = []
         for doc_id in llm_rule.indexed_document_ids:
-            doc = self.tim_database.get_doc_entry_by_id(doc_id)
+            doc = self.get_doc_entry_by_id(doc_id)
             if not doc:
                 continue
             doc_paths.append(doc.path)
@@ -591,7 +596,7 @@ class PluginCore:
     def check_api_key_doc_access(self, key: LLMRule, document_ids: list[int]) -> None:
         """Check that the API key has access to the given documents."""
         for doc_id in document_ids:
-            self.tim_database.api_key_valid_in_doc(key, doc_id)
+            LLMRule.api_key_valid_in_doc(key, doc_id)
 
     def save_instance(
         self, caller_id: int, document_id: int, instance_settings: InstanceAttributes
@@ -625,11 +630,11 @@ class PluginCore:
         if not self._owns_document(caller_id, document_id):
             return Result(None, "Insufficient rights")
 
-        old_plugin_rule = self.tim_database.get_llm_rule(document_id)
+        old_plugin_rule = LLMRule.get_llm_rule(document_id)
 
         # Need to create before checking any other input
         if old_plugin_rule is None:
-            self.tim_database.create_plugin(owner=caller_id, document_id=document_id)
+            LLMRule.create_plugin(owner=caller_id, document_id=document_id)
             return self.get_plugin_settings(caller_id, document_id)
 
         old_provider = None
@@ -670,7 +675,7 @@ class PluginCore:
 
         # Check if the API key is valid in these documents
         try:
-            self.tim_database.api_key_valid_in_doc(api_key_rule, document_id)
+            LLMRule.api_key_valid_in_doc(api_key_rule, document_id)
             self.check_api_key_doc_access(api_key_rule, document_ids)
         except (PermissionError, ValueError) as e:
             return Result(None, str(e))
@@ -694,7 +699,7 @@ class PluginCore:
             )
 
         if system_prompt_path:
-            prompt_doc = self.tim_database.get_tim_document_by_path(system_prompt_path)
+            prompt_doc = self.get_tim_document_by_path(system_prompt_path)
             if not prompt_doc:
                 return Result(None, "Invalid system prompt path")
 
@@ -729,7 +734,7 @@ class PluginCore:
             return Result(None, str(e))
 
         currently_used_tokens = old_plugin_rule.total_tokens_spent + tokens_used
-        rule = self.tim_database.set_llm_rule(
+        rule = LLMRule.set_llm_rule(
             document_id=document_id,
             owner=caller_id,
             public_key=public_key,
@@ -755,7 +760,7 @@ class PluginCore:
         if not global_policy.time_window_enabled:
             global_policy.token_cap_for_window = -1
 
-        self.tim_database.set_global_policy(
+        Policy.set_global_policy(
             llm_rule=rule,
             token_time_window_type=global_policy.window_unit,
             token_time_window_num=global_policy.window_value,
@@ -774,13 +779,13 @@ class PluginCore:
     def delete_instance(
         self, caller_id: int, document_id: int, par_id: str
     ) -> Result[str, str]:
-        rule = self.tim_database.get_llm_rule(document_id)
+        rule = LLMRule.get_llm_rule(document_id)
         if not rule:
             return Result(error=f"No plugin instance in document [{document_id}]")
         if rule.owner != caller_id:
             return Result(error="Insufficient rights to delete plugin instance")
 
-        document = self.tim_database.get_tim_document_by_id(document_id)
+        document = self.get_tim_document_by_id(document_id)
         if document is None:
             return Result(error=f"Document [{document_id}] does not exist")
 
@@ -793,10 +798,32 @@ class PluginCore:
             deleted = document.delete_paragraph(par_id)
             if not deleted:
                 return Result(error="Failed to delete plugin paragraph")
-            self.tim_database.delete_llm_rule(caller_id, document_id)
+            LLMRule.delete_llm_rule(caller_id, document_id)
             return Result(value="Plugin instance deleted")
 
         return Result(error="No asktim plugin instance in document")
+
+    @staticmethod
+    def get_tim_document_by_id(doc_id: int) -> Document | None:
+        """
+        Returns a document corresponding to the given id.
+        """
+        doc_entry = PluginCore.get_doc_entry_by_id(doc_id)
+        if doc_entry:
+            return doc_entry.document
+        return None
+
+    @staticmethod
+    def get_tim_document_by_path(path: str) -> Document | None:
+        doc = DocEntry.find_by_path(path)
+        return doc.document if doc else None
+
+    @staticmethod
+    def get_doc_entry_by_id(doc_id: int) -> DocEntry | None:
+        entries = docentry.DocEntry.find_all_by_id(doc_id)
+        if not entries:
+            return None
+        return entries[0]
 
     def get_history(self, caller_id: str, document_id: str) -> list[Message]:
         # TODO: fetch with time window
@@ -823,7 +850,7 @@ class PluginCore:
         max_count: int = 128,
     ) -> list[dict]:
         """Retrieve the wanted message window to the UI."""
-        rule = self.tim_database.get_llm_rule(document_id)
+        rule = LLMRule.get_llm_rule(document_id)
         if not rule:
             return []
         try:
@@ -864,7 +891,7 @@ class PluginCore:
         :return: list of UserData objects
         """
 
-        llm_rule = self.tim_database.get_llm_rule(document_id)
+        llm_rule = LLMRule.get_llm_rule(document_id)
         if not llm_rule:
             raise LookupError("Instance has not been created yet")
 
@@ -874,7 +901,7 @@ class PluginCore:
             raise PermissionError("You have no access to this resource")
 
         user_data: list[UserData] = []
-        usages = self.tim_database.get_usages(llm_rule)
+        usages = Usage.get_usages(llm_rule)
         for usage in usages:
             user_id = usage.user
             user = User.get_by_id(user_id)
@@ -884,7 +911,7 @@ class PluginCore:
                 continue
 
             user_policy: GenericPolicy
-            user_policy_sql = self.tim_database.get_user_policy(llm_rule, user_id)
+            user_policy_sql = Policy.get_user_policy(llm_rule, user_id)
 
             if user_policy_sql:
                 user_policy = self._convert_sql_policy_to_generic_policy(
@@ -920,7 +947,7 @@ class PluginCore:
         :return:
         """
 
-        llm_rule = self.tim_database.get_llm_rule(document_id)
+        llm_rule = LLMRule.get_llm_rule(document_id)
         if not llm_rule:
             raise LookupError("Instance has not been created yet")
 
@@ -942,7 +969,7 @@ class PluginCore:
         if not policy.time_window_enabled:
             policy.token_cap_for_window = -1
 
-        self.tim_database.set_user_policy(
+        Policy.set_user_policy(
             user=user_id,
             llm_rule=llm_rule,
             token_time_window_type=policy.window_unit,
@@ -1023,7 +1050,7 @@ class PluginCore:
     def get_system_prompt(self, system_prompt_path: str) -> str | None:
         if not system_prompt_path:
             return None
-        prompt_doc = self.tim_database.get_tim_document_by_path(system_prompt_path)
+        prompt_doc = self.get_tim_document_by_path(system_prompt_path)
         if not prompt_doc:
             return None
         content = prompt_doc.export_markdown(export_ids=False).strip()
@@ -1032,7 +1059,7 @@ class PluginCore:
     def _owns_document(self, caller_id: int, document_id: int) -> bool:
         """Expects that you have checked already that doc and user exist, throws otherwise"""
 
-        tim_rights = self.tim_database.check_rights(caller_id, document_id)
+        tim_rights = self.check_rights(caller_id, document_id)
 
         if tim_rights is None:
             # TODO: proper error?
@@ -1046,8 +1073,22 @@ class PluginCore:
 
         return True
 
+    @staticmethod
+    def check_rights(user_id: int, doc_id: int) -> UserItemRights | None:
+        """
+        Checks which rights the given user has for the given document or folder.
+        """
+        user = User.get_by_id(user_id)
+        doc = Item.find_by_id(doc_id)
+        if user and doc:
+            rights = get_user_rights_for_item(doc, user)
+            return rights
+        else:
+            return None
+
+    @staticmethod
     def set_user_policy(
-        self, caller_id: int, document_id: int, policy_settings: Policy
+        caller_id: int, document_id: int, policy_settings: Policy
     ) -> Result[bool | None, str | None]:
         """
         Sets the user's policy for the given user in the given document. Adds new policy row to the database.
@@ -1056,11 +1097,11 @@ class PluginCore:
         :param policy_settings: Settings for the user policy.
         :return: On error: Result(None, error_reason) On success Result(True, None)
         """
-        rule = self.tim_database.get_llm_rule(document_id)
+        rule = LLMRule.get_llm_rule(document_id)
         if not rule:
             return Result(None, "No LLMRule found for this document")
 
-        self.tim_database.set_user_policy(
+        Policy.set_user_policy(
             caller_id,
             rule,
             policy_settings.window_unit,
@@ -1071,8 +1112,8 @@ class PluginCore:
 
         return Result(True, None)
 
+    @staticmethod
     def update_usage(
-        self,
         user_id: int | None,
         document_id: int,
         used_tokens: int,
@@ -1088,17 +1129,17 @@ class PluginCore:
         :param timestamp: The timestamp of the usage. Is "now" when not given.
         :return: The complete amount of tokens used by the user.
         """
-        rule = self.tim_database.get_llm_rule(document_id)
+        rule = LLMRule.get_llm_rule(document_id)
         if not rule:
             return False
 
-        self.tim_database.update_instance_usage(rule, used_tokens)
+        Usage.update_instance_usage(rule, used_tokens)
 
         if user_id is not None:
             if timestamp is None:
                 timestamp = ChatMessage.ts_ms()
 
-            self.tim_database.update_usage(user_id, rule, used_tokens, timestamp)
+            Usage.update_usage(user_id, rule, used_tokens, timestamp)
 
         return True
 
@@ -1118,8 +1159,8 @@ class PluginCore:
         :return: The complete amount of tokens left or None in the case of unlimited. If zero, an explanation is added as string.
         """
 
-        user_policy = self.tim_database.get_user_policy(llm_rule, caller_id)
-        global_policy = self.tim_database.get_global_policy(llm_rule)
+        user_policy = Policy.get_user_policy(llm_rule, caller_id)
+        global_policy = Policy.get_global_policy(llm_rule)
 
         if global_policy is None:
             raise LookupError("Could not find global policy for this instance")
@@ -1298,7 +1339,7 @@ class PluginCore:
         """
         documents = []
         for path in paths:
-            found_documents = self.tim_database.get_tim_documents_by_path(path)
+            found_documents = self.get_tim_documents_by_path(path)
             if not found_documents:
                 continue  # Might be just empty
                 # return Result(error=f"Given path [{path}] does not exist")
@@ -1308,9 +1349,32 @@ class PluginCore:
 
         return Result(value=doc_set)
 
+    @staticmethod
+    def get_tim_documents_by_path(path: str, recursive: bool = False) -> list[Document]:
+        """
+        Returns all documents in the given path recursively.
+        If no documents are found, returns empty list.
+        If path is a document the document is returned.
+        If path is a folder all the documents in the folder are returned.
+        If recursive is True, all subfolders are returned recursively.
+        If path is neither a folder nor a document, returns empty list.
+        """
+        documents: list[Document] = []
+        document = PluginCore.get_tim_document_by_path(path)
+        if document:
+            documents.append(document)
+            return documents
+
+        doc_entries = docentry.get_documents(
+            filter_folder=path, search_recursively=recursive
+        )
+        for d in doc_entries if doc_entries else []:
+            documents.append(d.document)  # paragraphs -> .get_paragraphs()
+        return documents
+
     def _document_exists(self, document_id: int) -> bool:
         """Checks if document with given id exists in tim database"""
-        if not self.tim_database.get_tim_document_by_id(document_id):
+        if not self.get_tim_document_by_id(document_id):
             return False
 
         return True
@@ -1335,7 +1399,7 @@ class PluginCore:
 
         for document in documents:
             doc_id = document.id
-            right = self.tim_database.check_rights(user_id, doc_id)
+            right = self.check_rights(user_id, doc_id)
             if not right:
                 raise ValueError(
                     f"Could not get rights for document [{document}] for user [{user_id}]"
@@ -1409,8 +1473,9 @@ class PluginCore:
             raise ValueError(f"Invalid input length: {input_len}")
         return sanitized_input
 
+    @staticmethod
     def update_api_key_permissions(
-        self, owner_id: int, public_key: str, groups: list[str], paths: list[str]
+        owner_id: int, public_key: str, groups: list[str], paths: list[str]
     ) -> tuple[list[UserGroup], list[str]]:
         """
         Update the permissions for the API key.
@@ -1422,16 +1487,15 @@ class PluginCore:
         f = lambda e: len(e) > 0
         filtered_groups = list(filter(f, groups))
         filtered_paths = list(filter(f, paths))
-        key = self.tim_database.update_api_key_permissions(
+        key = LLMRule.update_api_key_permissions(
             owner_id, public_key, filtered_groups, filtered_paths
         )
         user_groups = get_groups_by_ids(key.groups)
         return user_groups, key.paths
 
-    def remove_api_key_group(
-        self, owner_id: int, public_key: str, group_id: int
-    ) -> None:
-        self.tim_database.remove_api_key_group(owner_id, public_key, group_id)
+    @staticmethod
+    def remove_api_key_group(owner_id: int, public_key: str, group_id: int) -> None:
+        LLMRule.remove_api_key_group(owner_id, public_key, group_id)
 
     @staticmethod
     def _validate_policy(policy: GenericPolicy) -> None | str:
@@ -1481,7 +1545,7 @@ class PluginCore:
         alias = public_key.strip()
         if not alias:
             raise ValueError("Alias cannot be empty")
-        row = self.tim_database.set_api_key(
+        row = LLMRule.set_api_key(
             userid, provider, alias, api_key, group_names=group_names, paths=paths
         )
         return self._api_row_to_tuple(row)
@@ -1491,16 +1555,17 @@ class PluginCore:
         :param owner_id: Owner ID.
         :return: A list of tuples containing the API keys.
         """
-        rows = self.tim_database.get_user_api_keys(owner_id)
+        rows = LLMRule.get_user_api_keys(owner_id)
         keys: list[APIKey] = []
         for row in rows:
             keys.append(self._api_row_to_tuple(row))
         return keys
 
+    @staticmethod
     def try_access_api_key_row(
-        self, user_id: int, public_key: str
+        user_id: int, public_key: str
     ) -> tuple[LLMRule, Provider, str]:
-        key = self.tim_database.access_api_key(user_id, public_key)
+        key = LLMRule.access_api_key(user_id, public_key)
         if not key:
             raise PermissionError(f"No access to the API key.")
         provider = PluginCore._parse_provider(str(key.provider))
@@ -1522,7 +1587,8 @@ class PluginCore:
         row, provider, api_key = self.try_access_api_key_row(user_id, public_key)
         return provider, api_key
 
-    def get_api_key(self, public_key: str) -> tuple[Provider, str]:
+    @staticmethod
+    def get_api_key(public_key: str) -> tuple[Provider, str]:
         """
         Get the API key matching the public key.
 
@@ -1531,7 +1597,7 @@ class PluginCore:
                            Or the API key provider is invalid.
         :return: A tuple (provider, api_key)
         """
-        key = self.tim_database.get_api_key_by_alias(public_key)
+        key = LLMRule.get_api_key_by_alias(public_key)
         if not key:
             raise Exception(f"API key not found")
         provider = PluginCore._parse_provider(key.provider)
@@ -1539,8 +1605,9 @@ class PluginCore:
             raise Exception(f"No provider found for API key.")
         return provider, key.api_key
 
-    def delete_api_key(self, owner_id: int, public_key: str) -> None:
-        self.tim_database.delete_api_key(owner_id, public_key)
+    @staticmethod
+    def delete_api_key(owner_id: int, public_key: str) -> None:
+        LLMRule.delete_api_key(owner_id, public_key)
 
     @staticmethod
     def _api_row_to_tuple(rule: LLMRule) -> APIKey:
@@ -1566,7 +1633,7 @@ class PluginCore:
     def _get_citations(self, blocks: list[tuple[int, int]]) -> list[str]:
         citations: list[str] = []
         for doc_id, block_id in blocks:
-            doc = self.tim_database.get_doc_entry_by_id(doc_id)
+            doc = self.get_doc_entry_by_id(doc_id)
             if not doc:
                 continue
             citations.append(self._get_block_view_addr(doc.path, block_id))

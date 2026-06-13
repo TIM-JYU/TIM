@@ -39,7 +39,6 @@ from .plugincore import (
     UserData,
     InstanceSettingsData,
 )
-from .database_handler import TimDatabase
 from timApp.plugin.plugin import Plugin
 from timApp.document.usercontext import UserContext
 from timApp.document.viewcontext import ViewContext, ViewRoute
@@ -514,7 +513,7 @@ def delete_plugin(params: DeletePluginParams) -> Response:
 
 
 def document_has_asktim_plugin(document_id: int, caller_id: int) -> None:
-    document = TimDatabase.get_tim_document_by_id(document_id)
+    document = plugincore.get_tim_document_by_id(document_id)
     if document is None:
         raise LookupError(f"Document with id {document_id} not found")
 
