@@ -1,27 +1,28 @@
 # Enable user personal logs with url param ?userlogs=TAG
 import re
 import flask
+from typing import Callable
 
 ENABLE_LOG_FOR_PERSON_LONG = 0
 ENABLE_LOG_FOR_PERSON_SHORT = 0
 
 
-def get_stack_str(limit: int = 6, remove_level=0) -> str:
+def get_stack_str(limit: int = 6, remove_level: int = 0) -> str:
     import traceback
 
-    stack = traceback.extract_stack()
+    stack = list(traceback.extract_stack())
 
-    # Poista tämä funktio itse stackista
-    stack = stack[: -1 - remove_level]
+    # Remove this function from the stack itself
+    trimmed_stack = stack[: -1 - remove_level]
 
-    # Ota viimeiset `limit` framea ja käännä (uusin ensin)
-    last = stack[-limit:]
+    # Take the last `limit` frames and reverse them (most recent first)
+    last = trimmed_stack[-limit:]
     last.reverse()
 
     return "|".join(f"{s.name}, {s.filename}:{s.lineno}" for s in last)
 
 
-def log_filename(file_name: str):
+def log_filename(file_name: str) -> None:
     from timApp.util.logger import log_info
     from timApp.auth.sessioninfo import get_username
 
@@ -29,7 +30,7 @@ def log_filename(file_name: str):
     log_info(f"{get_username()} W: {file_name} __write_")
 
 
-def _log_for_person(msg_func, tag: str | None = None):
+def _log_for_person(msg_func: Callable[[], str], tag: str | None = None) -> None:
     """
     Logs msg_func if there is url parameter
        debug_writes=user_tag[&debug_reg=regular_expression][&debug_stack=true]

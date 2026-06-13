@@ -17,6 +17,10 @@ from sqlalchemy.orm.base import instance_state, Mapped
 
 from timApp.timdb.types import datetime_tz, DbModel
 
+
+class TIMSQLAlchemy(SQLAlchemy):
+    Model: type[DbModel]
+
 session_options = {}
 
 cpus = multiprocessing.cpu_count()
@@ -39,7 +43,7 @@ elif os.environ.get("COMPOSE_PROFILES", None) == "dev":
     SQLALCHEMY_MAX_OVERFLOW = 150
 
 
-db = SQLAlchemy(
+db = TIMSQLAlchemy(
     session_options=session_options,
     model_class=DbModel,
     disable_autonaming=True,
