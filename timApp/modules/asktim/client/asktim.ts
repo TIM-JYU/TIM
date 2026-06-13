@@ -35,7 +35,6 @@ import {
 } from "@angular/common/http";
 import {DomSanitizer} from "@angular/platform-browser";
 import {FormsModule} from "@angular/forms";
-import {Users} from "tim/user/userService";
 import type {DirectoryPickerRestrictions} from "tim/folder/directory-picker.component";
 import {DirectoryPickerComponent} from "tim/folder/directory-picker.component";
 import {itemglobals} from "tim/util/globals";
@@ -348,6 +347,7 @@ export class AskTimComponent
         const panelEl: HTMLElement | null =
             this.hostElement.nativeElement.querySelector(".settings-panel");
 
+        // TODO: Fix miscalculations. Use CSS.
         if (isOpen) {
             if (panelEl) {
                 panelEl.style.position = "absolute";
@@ -387,11 +387,11 @@ export class AskTimComponent
         /* calling this.pluginMeta.getTaskIdUrl() too
          early crashes thus we call in ngAfterViewInit */
         this.initDocId();
+        this.getRights();
         await this.initDialogFrame();
         await this.initScrollContainer();
         // TODO: separate control panel data and client data fetch
         await this.getControlPanelData();
-        await this.fetchRights();
     }
 
     ngOnDestroy(): void {
@@ -422,22 +422,12 @@ export class AskTimComponent
         }
     }
 
-    async fetchRights(): Promise<void> {
+    getRights() {
         if (this.document_id <= 0) {
             return;
         }
         this.hasManageRights = itemglobals().curr_item.rights.manage;
-        const user_id: number = Users.getCurrent().id;
-        const response = await this.httpPost<{is_teacher: boolean}>(
-            this.route("getRights"),
-            {
-                user_id: user_id,
-                document_id: this.document_id,
-            }
-        );
-        if (response.ok) {
-            this.isTeacher = response.result.is_teacher;
-        }
+        this.isTeacher = itemglobals().curr_item.rights.teacher;
     }
 
     async onEnter(e: Event) {
@@ -520,7 +510,7 @@ export class AskTimComponent
 
     /* Fetch and initialize the last messages from the conversation. */
     async initConversation(): Promise<void> {
-        if (this.document_id <= 0) {
+        if (!this.canSendRequest) {
             return;
         }
 
@@ -589,6 +579,7 @@ export class AskTimComponent
         if (
             !el ||
             this.document_id <= 0 ||
+            this.isPreview() ||
             this.loadingOlder ||
             !this.hasMoreHistory
         ) {
@@ -649,6 +640,10 @@ export class AskTimComponent
     }
 
     async doSendUserInput(): Promise<void> {
+        if (!this.canSendRequest) {
+            return;
+        }
+
         this.isRunning = true;
         this.error = undefined;
         this.answer = undefined;
@@ -797,6 +792,10 @@ export class AskTimComponent
      * supported models and modes
      */
     async getControlPanelData() {
+        if (!this.canSendRequest) {
+            return;
+        }
+
         this.isRunning = true;
 
         const getRequest = {
@@ -816,6 +815,9 @@ export class AskTimComponent
      * @param controlPanelSettings holds the values set by user
      */
     async onSaveSettings(controlPanelSettings: ControlPanelSettings) {
+        if (!this.canSendRequest) {
+            return;
+        }
         this.isRunning = true;
 
         const save_request = {
@@ -899,7 +901,7 @@ export class AskTimComponent
     }
 
     async onClearConversation(): Promise<void> {
-        if (this.isRunning || this.document_id <= 0) {
+        if (!this.canSendRequest) {
             return;
         }
         if (this.conversation.length == 0) {
@@ -925,7 +927,7 @@ export class AskTimComponent
     }
 
     async onDeletePlugin(): Promise<void> {
-        if (this.isRunning || this.document_id <= 0) {
+        if (!this.canSendRequest) {
             return;
         }
         this.isRunning = true;
@@ -1141,6 +1143,9 @@ export class AskTimComponent
     }
 
     async onFetchModels(publicKey: string) {
+        if (!this.canSendRequest) {
+            return;
+        }
         this.isRunning = true;
         this.controlpanelError = undefined;
 
@@ -1172,6 +1177,9 @@ export class AskTimComponent
     for user in the list of users, their usages and policies.
      **/
     async handleUserPolicySave(userData: UserData) {
+        if (!this.canSendRequest) {
+            return;
+        }
         this.isRunning = true;
         const save_request = {
             document_id: this.document_id,
@@ -1199,6 +1207,9 @@ export class AskTimComponent
     per user can be set.
      **/
     async getUserData() {
+        if (!this.canSendRequest) {
+            return;
+        }
         this.isRunning = true;
         const data_request = {
             document_id: this.document_id,
@@ -1247,6 +1258,11 @@ export class AskTimComponent
         }
 
         return "Unknown error happened";
+    }
+
+    /* Check if the user can send a request to the server. */
+    get canSendRequest(): boolean {
+        return !this.isRunning && this.document_id > 0 && !this.isPreview();
     }
 }
 

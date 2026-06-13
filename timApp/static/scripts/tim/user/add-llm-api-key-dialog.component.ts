@@ -68,7 +68,7 @@ import type {IUserLLMApiKey} from "tim/user/IUser";
                 <i class="glyphicon glyphicon-ok success" *ngIf="saved"></i>
                 <tim-loading *ngIf="saving" style="margin-right: 1em;"></tim-loading>
                 <a href="https://tim.jyu.fi/view/tim/ohjeita/tekoalyavustaja/llm-avustaja-ohje/en-GB#api-avainten-lis%C3%A4%C3%A4minen">
-                    <span class="glyphicon glyphicon-question-sign" style="margin-right: 1em; font-size: x-large; vertical-align: middle;" title="Help with machine translation setup" i18n-title></span>
+                    <span class="glyphicon glyphicon-question-sign" style="margin-right: 1em; font-size: x-large; vertical-align: middle;" title="Help adding LLM API keys" i18n-title></span>
                 </a>
                 <button class="timButton"
                         (click)="addNewAPIKey()"

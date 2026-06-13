@@ -11541,6 +11541,14 @@ Mata in flera användares adresser på separata rader eller åtskilda med kommat
           <context context-type="linenumber">681,682</context>
         </context-group>
       </trans-unit>
+      <trans-unit id="5614136992604855326" datatype="html">
+        <source>Help adding LLM API keys</source>
+        <target state="new">Help adding LLM API keys</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/user/add-llm-api-key-dialog.component.ts</context>
+          <context context-type="linenumber">71</context>
+        </context-group>
+      </trans-unit>
     </body>
   </file>
 </xliff>
