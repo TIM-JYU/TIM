@@ -3,7 +3,7 @@
 __tablename__ is not mandatory but recommended in order to maintain the naming convention for tables. The default table
 name is class name in lowercase.
 
-Use Flask-Migrate for database migrations. See <http://flask-migrate.readthedocs.io/en/latest/>.
+Use Flask-Migrate for database migrations. See <https://flask-migrate.readthedocs.io/en/latest/>.
 
 """
 import multiprocessing
@@ -16,10 +16,6 @@ from sqlalchemy.orm import mapped_column
 from sqlalchemy.orm.base import instance_state, Mapped
 
 from timApp.timdb.types import datetime_tz, DbModel
-
-
-class TIMSQLAlchemy(SQLAlchemy):
-    Model: type[DbModel]
 
 session_options = {}
 
@@ -43,7 +39,7 @@ elif os.environ.get("COMPOSE_PROFILES", None) == "dev":
     SQLALCHEMY_MAX_OVERFLOW = 150
 
 
-db = TIMSQLAlchemy(
+db = SQLAlchemy(
     session_options=session_options,
     model_class=DbModel,
     disable_autonaming=True,
@@ -57,7 +53,8 @@ db = TIMSQLAlchemy(
 
 # TODO: Switch models to use dataclasses instead
 #   See https://docs.sqlalchemy.org/en/20/orm/dataclasses.html#declarative-dataclass-mapping
-#   This should fix DeeplTranslationService's extra args, see https://docs.sqlalchemy.org/en/20/orm/dataclasses.html#using-non-mapped-dataclass-fields
+#   This should fix DeeplTranslationService's extra args, see
+#     https://docs.sqlalchemy.org/en/20/orm/dataclasses.html#using-non-mapped-dataclass-fields
 
 
 class TimeStampMixin:

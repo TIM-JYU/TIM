@@ -18,7 +18,7 @@ import filelock
 from commonmark.node import Node
 from jinja2.sandbox import SandboxedEnvironment
 
-from cli.util.logging import log_warning
+
 from timApp.document.log_docparagraph import (
     log_for_person,
     log_for_person_short,
@@ -43,7 +43,7 @@ from timApp.markdown.markdownconverter import (
     HeadingHtml,
 )
 from timApp.timdb.exceptions import TimDbException, InvalidReferenceException
-from timApp.util.logger import log_error, log_info
+from timApp.util.logger import log_error, log_info, log_warning
 from timApp.util.rndutils import get_rands_as_dict, SeedType
 from timApp.util.utils import (
     count_chars_from_beginning,
