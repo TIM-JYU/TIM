@@ -4,7 +4,7 @@ import os
 import re
 import tempfile
 import zipfile
-from dataclasses import field, dataclass
+from dataclasses import field
 
 from flask import Blueprint, render_template
 from flask import current_app
@@ -94,7 +94,7 @@ from timApp.util.utils import (
     clear_g_errors,
 )
 from timApp.util.utils import temp_folder_path
-from tim_common.marshmallow_dataclass import dataclass as mm_dataclass
+from tim_common.marshmallow_dataclass import dataclass
 
 edit_page = Blueprint("edit_page", __name__, url_prefix="")  # TODO: Better URL prefix.
 
@@ -1111,7 +1111,7 @@ def delete_paragraph(doc_id):
     )
 
 
-@mm_dataclass
+@dataclass
 class GetUpdatedParsModel:
     view: ViewRoute = field(default=ViewRoute.View, metadata={"by_value": True})
 
@@ -1273,7 +1273,7 @@ def mark_checked_route(doc_id: int, par_id: str) -> Response:
     )
 
 
-@mm_dataclass
+@dataclass
 class DrawIODataModel:
     data: str
     par_id: str
@@ -1298,7 +1298,7 @@ def set_drawio_base(args: DrawIODataModel):
     return ok_response()
 
 
-@mm_dataclass
+@dataclass
 class ImportDocumentModel:
     doc_id: int
 
