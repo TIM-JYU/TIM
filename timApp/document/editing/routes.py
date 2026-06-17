@@ -23,6 +23,7 @@ from timApp.auth.accesshelper import (
     has_edit_access,
     verify_route_access,
     verify_logged_in,
+    verify_copy_access,
 )
 from timApp.auth.get_user_rights_for_item import get_user_rights_for_item
 from timApp.auth.sessioninfo import (
@@ -107,8 +108,8 @@ def update_document(doc_id):
 
     """
     # timdb = get_timdb()
-    docentry = get_doc_or_abort(doc_id)
-    verify_edit_access(docentry)
+    docinfo = get_doc_or_abort(doc_id)
+    verify_edit_access(docinfo)
     if "file" in request.files:
         file = request.files["file"]
         content = validate_uploaded_document_content(file)
@@ -120,7 +121,7 @@ def update_document(doc_id):
             raise NotExist("Template not found")
         original_doc = template.src_doc
         assert isinstance(original_doc, DocEntry)
-        return import_template(docentry, template)
+        return import_template(docinfo, template)
     else:
         request_json = request.get_json()
         if "fulltext" not in request_json:
@@ -133,7 +134,7 @@ def update_document(doc_id):
         raise RouteException("Missing parameter: original")
     if content is None:
         return json_response({"message": "Failed to convert the file to UTF-8."}, 400)
-    doc = docentry.document_as_current_user
+    doc = docinfo.document_as_current_user
     doc.preload_option = PreloadOption.all
     ver_before = doc.get_version()
     try:
@@ -161,28 +162,28 @@ def update_document(doc_id):
                     edit_result.changed.append(p)
         """
         if not edit_result.empty:
-            docentry.update_last_modified()
+            docinfo.update_last_modified()
             db.session.commit()
-        synchronize_translations(docentry, edit_result)
+        synchronize_translations(docinfo, edit_result)
     except ValidationWarning as e:
         return json_response({"error": str(e), "is_warning": True}, status_code=400)
     except (TimDbException, ValidationException) as e:
         raise RouteException(str(e))
     pars = doc.get_paragraphs()
-    return manage_response(docentry, pars, ver_before)
+    return manage_response(docinfo, pars, ver_before)
 
 
-def import_template(docentry: DocEntry, template: DocInfo):
-    docentry_doc = docentry.document_as_current_user
-    ver_before = docentry_doc.get_version()
-    docentry_translations = {tl.lang_id: tl for tl in docentry.translations}
+def import_template(docinfo: DocInfo, template: DocInfo):
+    docinfo_doc = docinfo.document_as_current_user
+    ver_before = docinfo_doc.get_version()
+    docentry_translations = {tl.lang_id: tl for tl in docinfo.translations}
 
     if len(docentry_translations) > 1:
         raise RouteException(
             "Cannot load a template into a document that has translations."
         )
 
-    existing_pars = docentry.document_as_current_user.get_paragraphs()
+    existing_pars = docinfo.document_as_current_user.get_paragraphs()
     if existing_pars:
         raise RouteException(
             "Cannot load a template because the document is not empty."
@@ -195,7 +196,17 @@ def import_template(docentry: DocEntry, template: DocInfo):
         template_content = template_doc.document.export_markdown(with_tl=True)
 
         if template_doc.is_original_translation:
-            target_doc = docentry
+            target_doc = next(
+                (
+                    tl
+                    for _, tl in docentry_translations.values()
+                    if tl.is_original_translation
+                ),
+                None,
+            )
+            assert (
+                target_doc is not None
+            ), f"Document {docinfo.id} does not have a Translation object"
             target_doc.lang_id = template_doc.lang_id
         else:
             tl_doc = create_document_and_block(
@@ -203,12 +214,12 @@ def import_template(docentry: DocEntry, template: DocInfo):
             )
             target_doc = Translation(
                 doc_id=tl_doc.doc_id,
-                src_docid=docentry.id,
+                src_docid=docinfo.id,
                 lang_id=template_doc.lang_id,
             )
             db.session.add(target_doc)
-            target_doc.title = docentry.title
-            copy_rights(docentry, target_doc, None, copy_expired=False)
+            target_doc.title = docinfo.title
+            copy_rights(docinfo, target_doc, None, copy_expired=False)
 
         try:
             doc = target_doc.document_as_current_user
@@ -216,7 +227,7 @@ def import_template(docentry: DocEntry, template: DocInfo):
 
             _, _, edit_result = doc.update(template_content, "", True)
             if not edit_result.empty:
-                docentry.update_last_modified()
+                docinfo.update_last_modified()
 
         except ValidationWarning as e:
             return json_response({"error": str(e), "is_warning": True}, status_code=400)
@@ -224,8 +235,8 @@ def import_template(docentry: DocEntry, template: DocInfo):
             raise RouteException(str(e))
 
     db.session.commit()
-    pars = docentry_doc.get_paragraphs()
-    return manage_response(docentry, pars, ver_before)
+    pars = docinfo_doc.get_paragraphs()
+    return manage_response(docinfo, pars, ver_before)
 
 
 def manage_response(docentry: DocInfo, pars: list[DocParagraph], ver_before: Version):
@@ -338,27 +349,122 @@ def modify_paragraph():
 
 
 def verify_par_edit_access(par: DocParagraph):
-    """Verifies that the current user has edit access to the specified DocParagraph."""
-    edit_attr = par.get_attr("edit", "edit")
-    message = (
-        f"Only users with {edit_attr} access can edit this paragraph ({par.get_id()})."
-    )
+    """
+    Verifies that the current user has edit access
+    to the specified DocParagraph.
+    User can edit if
+      - he is owner of the document
+      - in edit attribute there is a group that the user is in
+      - in edit attribute there is a right that the user has
+      - document is set to parAuthorOnlyEdit and the user
+        is the author of the paragraph
+    Else: Even the user has normal edit right, if the document is set to
+    parAuthorOnlyEdit and the user is not the author of the paragraph,
+    he can't edit.
+    :param par: The DocParagraph for which to verify edit access.
+    :raises AccessDenied: If the user does not have edit access to the paragraph.
+    """
     d = par.doc.get_docinfo()
-    if edit_attr == "edit":
-        verify_edit_access(d, message=message)
-    elif edit_attr == "teacher":
-        verify_teacher_access(d, message=message)
-    elif edit_attr == "see_answers":
-        verify_seeanswers_access(d, message=message)
-    elif edit_attr == "manage":
-        verify_manage_access(d, message=message)
-    elif edit_attr == "owner":
-        verify_ownership(d, message=message)
+    if verify_ownership(d, require=False):  # Owners can always edit
+        return
+
+    edit_attrs = par.get_attr("edit", "edit")
+    attrs = [a.strip() for a in edit_attrs.split(",")] if edit_attrs else []
+    known = {"view", "copy", "edit", "teacher", "see_answers", "manage", "owner"}
+    access_attrs = [a for a in attrs if a in known]
+    group_attrs = [a for a in attrs if a not in known]
+    groups = []
+    group_access = True
+    if group_attrs:
+        group_access = False
+        groups = get_current_user_object().effective_groups
+
+    # If the user has at least one of the group accesses, they have
+    # edit access to the paragraph. Otherwise, we check the other access attributes.
+    for edit_attr in group_attrs:
+        b = any(gr.name == edit_attr for gr in groups)
+        if b:
+            return
+
+    # If parAuthorOnlyEdit is set, only the owner of the paragraph
+    # can edit it. This overrides any other access attributes.
+    doc = par.doc
+    settings = doc.get_settings()
+    par_author_needed = False
+    if settings and settings.par_author_only_edit():
+        authors = doc.get_changelog(-1).get_authorinfo([par])
+        par_authors_info = authors.get(par.get_id(), None)
+        if par_authors_info:
+            par_authors = par_authors_info.username_list
+            if get_current_user_object().name in par_authors:
+                return
+            par_author_needed = True
+
+    if not access_attrs:
+        access_attrs = ["owner"]
+    for edit_attr in access_attrs:
+        message = f"Only users with {edit_attr} access can edit this paragraph ({par.get_id()})."
+        if edit_attr == "view":
+            verify_view_access(d, message=message)
+            return
+        if edit_attr == "copy":
+            verify_copy_access(d, message=message)
+            return
+        if edit_attr == "edit":
+            verify_edit_access(d, message=message)
+            return
+        elif edit_attr == "teacher":
+            verify_teacher_access(d, message=message)
+            return
+        elif edit_attr == "see_answers":
+            verify_seeanswers_access(d, message=message)
+            return
+        elif edit_attr == "manage":
+            verify_manage_access(d, message=message)
+            return
+        elif edit_attr == "owner":
+            verify_ownership(d, message=message)
+            return
+
+    if par_author_needed:
+        raise RouteException(f"Not the original editor for paragraph {par.get_id()}!")
+    if not group_access:
+        raise RouteException(f"No edit access for paragraph {par.get_id()}!")
+
+
+def verify_area_structure_edit_access(
+    docinfo: DocInfo,
+    curr_section: list[DocParagraph],
+    editor_pars: list[DocParagraph],
+) -> None:
+    """
+    Throw exception if the user does not have edit access to the area structure,
+    meaning that they are trying to add, remove or change the id's
+    of paragraphs in the area without having edit access to all
+    paragraphs.
+    If the user has edit access to all paragraphs
+    in the area, we allow any structural changes in the area,
+    because in the future they would be able to do those changes through
+    UI as well.
+    So user may delete or reorder pars if he has edit access to those.
+    But he is not allowed to add new pars without normal edit access.
+    :param docinfo: where to check edit rights if adding new pars
+    :param curr_section: area pars in current document
+    :param editor_pars:  pars from editor
+    :return: None
+    """
+    curr_ids = {p.get_id() for p in curr_section}
+    editor_ids = {p.get_id() for p in editor_pars}
+    if editor_ids - curr_ids:
+        verify_edit_access(
+            docinfo,
+            message="Sorry, you don't have permission to add paragraphs.",
+        )
 
 
 def modify_paragraph_common(doc_id: int, md: str, par_id: str, par_next_id: str | None):
     docinfo = get_doc_or_abort(doc_id)
-    verify_edit_access(docinfo)
+    # verify_edit_access(docinfo)  # Checked later for area and single
 
     doc = docinfo.document_as_current_user
 
@@ -376,10 +482,26 @@ def modify_paragraph_common(doc_id: int, md: str, par_id: str, par_next_id: str 
     # editor_pars = check_and_rename_pluginnamehere(editor_pars, doc)
 
     if editing_area:
+        assert area_start is not None
+        assert area_end is not None
         try:
             curr_section = doc.get_section(area_start, area_end)
+            # User may not have normal edit access, but has
+            # special edit access to every par in area.
+            # In this case it is not possible to edit area through UI,
+            # but one may do it by
+            # direct post or if area is opened before edit access is removed.
+            # So there might be access problems if one tries to add pars
+            # or change pars id's.
+            # It would be easier just to deny edit access to area in
+            # this case, but we might allow edit area in UI in the future.
+
+            # First check user has right for every original par in area
             for p in curr_section:
                 verify_par_edit_access(p)
+            # Then check all editor pars are included in set of current pars
+            # if not, then user should have normal edit right
+            verify_area_structure_edit_access(docinfo, curr_section, editor_pars)
             new_start, new_end, edit_result = doc.update_section(
                 editor_pars, area_start, area_end, do_validation=DoValidation.NONE
             )
@@ -406,6 +528,11 @@ def modify_paragraph_common(doc_id: int, md: str, par_id: str, par_next_id: str 
         )
         edit_result.warnings = list_to_html(changes)
         pars_to_add = editor_pars[1:]
+        if pars_to_add:
+            verify_edit_access(
+                docinfo,
+                message="Sorry, you don't have permission to add new paragraphs.",
+            )
 
         p = editor_pars[0]
         # The ID of the first paragraph needs to match the ID of the paragraph to modify
@@ -426,8 +553,9 @@ def modify_paragraph_common(doc_id: int, md: str, par_id: str, par_next_id: str 
         if p.is_translation():
             mark_translation_as_checked(p)
 
+        verify_par_edit_access(original_par)
+
         if p.is_different_from(original_par):
-            verify_par_edit_access(original_par)
             par = doc.modify_paragraph_obj(par_id=par_id, p=p)
             pars.append(par)
             edit_result.changed.append(par)
@@ -518,6 +646,7 @@ def preview_paragraphs(doc_id):
             edit_request=edit_request,
             edit_result=edit_result,
             extra_doc_settings=extra_doc_settings,
+            show_errors=True,
         )
     else:
         comment_html = md_to_html(text)
@@ -534,6 +663,7 @@ def update_associated_uploads(pars: list[DocParagraph], doc: DocInfo):
             for m in c.finditer(md):
                 u_id = m.group("id").strip()
                 name = m.group("name").strip()
+                assert isinstance(name, str)
                 up = UploadedFile.get_by_id_and_filename(int(u_id), name)
                 if not up:
                     continue
@@ -555,6 +685,7 @@ def par_response(
     partial_doc_pars: bool = False,
     extra_doc_settings: YamlBlock | None = None,
     for_view: ViewRoute | None = None,
+    show_errors: bool = False,
 ):
     """Return a JSON response containing updated paragraphs and updated HTMLs.
 
@@ -571,12 +702,20 @@ def par_response(
                              The option disables some checks that would be otherwise done for full paragraphs.
     :param extra_doc_settings: Extra settings to apply to the paragraph.
     :param for_view: The view route for which to generate the response. Affects what paragraphs to show.
+    :param show_errors: If True, shows error messages instead of ignoring them.
     :return: JSON object containing HTMLs, JS and CSS dependencies of changed paragraphs.
     """
     user_ctx = user_context_with_logged_in(None)
     doc = docu.document
     new_doc_version = doc.get_version()
-    settings = doc.get_settings()
+
+    # try:
+    settings = doc.get_settings(show_errors=show_errors)
+    # except Exception as e:
+    #    pass  # TODO: How to get the error visible?
+    #    return json_response(
+    #        {"message": f"Failed to get document settings: {e}"}, status_code=400
+    #    )
 
     if extra_doc_settings:
         settings = DocSettings(doc, settings.get_dict().merge_with(extra_doc_settings))
@@ -635,7 +774,7 @@ def par_response(
                     LAST_EDITED_GROUP,
                     docu.title,
                     docu.get_relative_url_for_view(
-                        (edit_request.viewname or ViewRoute.View).value
+                        (edit_request.viewname or ViewRoute.View).value  # noqa
                     ),
                     move_to_top=True,
                     limit=current_app.config["LAST_EDITED_BOOKMARK_LIMIT"],
@@ -1174,11 +1313,14 @@ class ImportedImageFile:
 def import_document_from_file(m: ImportDocumentModel) -> Response:
     verify_logged_in()
     d = DocEntry.find_by_id(m.doc_id)
+    if d is None:
+        raise RouteException(f"Document not found {m.doc_id}")
     verify_edit_access(d)
 
     file = request.files.get("file")
     if file is None:
         raise RouteException("Missing file")
+    assert file.filename is not None
 
     filetype = file.filename.split(".")[-1]
     expected_mimetype = ALLOWED_DOC_IMPORT_EXT_MIMETYPES.get(filetype)

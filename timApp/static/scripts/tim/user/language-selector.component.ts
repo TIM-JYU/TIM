@@ -10,7 +10,7 @@ const webBrowser = "UseWebBrowser";
         <label><ng-container i18n>Language</ng-container>:
             <select class="form-control"
                     [(ngModel)]="language"
-                    (ngModelChange)="onChange($event)"
+                    (ngModelChange)="onChange($any($event))"
             >
                 <option [ngValue]="webBrowser" i18n>Use web browser preference</option>
                 <option [ngValue]="'en-US'">English</option>

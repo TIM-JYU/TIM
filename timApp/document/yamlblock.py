@@ -6,6 +6,7 @@ from typing import Generator
 
 import yaml
 from yaml import YAMLError, CSafeLoader, Event, AliasEvent, NodeEvent
+from yaml.scanner import ScannerError
 
 from timApp.util.utils import count_chars_from_beginning
 
@@ -65,6 +66,9 @@ class YamlBlock:
 
     def get(self, key: str, default=None):
         return self.values.get(key, default)
+
+    def pop(self, key: str, default=None):
+        return self.values.pop(key, default)
 
     @staticmethod
     def from_markdown(md: str):
@@ -402,12 +406,29 @@ def parse_yaml(text: str) -> tuple[dict, YamlMergeInfo]:
     """
 
     text, hints = correct_yaml(text)
-    verify_anchor_depth(text)
 
     try:
+        verify_anchor_depth(text)
         values = yaml.load(text, yaml_loader)
     except ValueError as e:
         raise YAMLError("Invalid YAML: " + str(e)) from e
+    except ScannerError as e:
+        cm = e.context_mark
+        pm = e.problem_mark
+
+        context_line = cm.line if cm else None
+        # context_col = cm.column if cm else None
+        problem_line = pm.line if pm else None
+        # problem_col = pm.column if pm else None
+        rows = text.split("\n")
+        row = ""
+        if context_line is not None and context_line < len(rows):
+            row += f"<br>\n{context_line + 1}: {rows[context_line]}"
+
+        if problem_line is not None and problem_line < len(rows):
+            row += f"<br>\n{problem_line + 1}: {rows[problem_line]}"
+        raise YAMLError("Invalid YAML: " + str(e) + str(row)) from e
+
     if isinstance(values, str):
         raise YAMLError("Markup must not be a mere string.")
     # empty YAML is equal to null, so we avoid that by returning {} in that case

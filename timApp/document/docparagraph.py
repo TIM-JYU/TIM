@@ -3,35 +3,46 @@ from __future__ import annotations
 import json
 import os
 import shelve
+import shutil
+import tempfile
 import time
 from collections import defaultdict
 from copy import copy
-from typing import TYPE_CHECKING, Optional
+from enum import StrEnum, IntEnum
+from typing import TYPE_CHECKING, Optional, NamedTuple, Any
 
 import commonmark
 import filelock
+import flask
 from commonmark.node import Node
 from jinja2.sandbox import SandboxedEnvironment
 
-from timApp.document.viewcontext import ViewRoute
 from timApp.document.documentparser import DocumentParser
 from timApp.document.documentparseroptions import DocumentParserOptions
 from timApp.document.documentwriter import DocumentWriter
+from timApp.document.log_docparagraph import (
+    log_for_person,
+    log_for_person_short,
+    log_filename,
+)
 from timApp.document.macroinfo import MacroInfo
 from timApp.document.par_basic_data import ParBasicData
 from timApp.document.preloadoption import PreloadOption
 from timApp.document.prepared_par import PreparedPar
 from timApp.document.randutils import random_id, hashfunc
 from timApp.document.viewcontext import ViewContext, default_view_ctx
+from timApp.document.viewcontext import ViewRoute
 from timApp.markdown.autocounters import TimSandboxedEnvironment
 from timApp.markdown.markdownconverter import (
     par_list_to_html_list,
     expand_macros,
     format_heading,
     AutoCounters,
+    HeadingHtml,
 )
 from timApp.timdb.exceptions import TimDbException, InvalidReferenceException
-from timApp.util.logger import log_error
+from timApp.user.special_group_names import ANONYMOUS_USERNAME
+from timApp.util.logger import log_error, log_warning
 from timApp.util.rndutils import get_rands_as_dict, SeedType
 from timApp.util.utils import (
     count_chars_from_beginning,
@@ -39,14 +50,21 @@ from timApp.util.utils import (
     title_to_id,
     get_boolean,
     add_g_error,
+    short_repr,
 )
 from tim_common.dumboclient import DumboOptions, MathType, InputFormat
-from tim_common.html_sanitize import sanitize_html, strip_div
+from tim_common.html_sanitize import sanitize_html
 from tim_common.utils import parse_bool
 
 if TYPE_CHECKING:
     from timApp.document.document import Document
     from timApp.document.docinfo import DocInfo
+
+
+# Special handling is needed for cache headers with macros.
+# The text must start with 'f' to be interpreted as false
+# in par attribute nocache="f...".
+FORCE_MACROS_HEADER = "force_macros_header"
 
 SKIPPED_ATTRS = {"r", "rd", "rp", "ra", "rt", "rtask", "mt", "settings"}
 
@@ -57,6 +75,55 @@ BLINDED_SETTINGS_TEXT = """```
 
 # TODO: a bit short name for global variable
 se = SandboxedEnvironment(autoescape=True)
+
+
+def write_atomic(path: str, data: str, encoding: str = "utf-8") -> None:
+    """
+    Atomic write with backup:
+    - original -> .bak
+    - temp file -> original (atomic replace)
+    :param path: The file path to write to.
+    :param data: The data to write.
+    :param encoding: The encoding to use when writing the file.
+    """
+    dir_name = os.path.dirname(path) or "."
+    bak_path = path + ".bak"
+
+    # backup original file if it exists
+    if os.path.exists(path):
+        shutil.copy2(path, bak_path)
+
+    # write to a temporary file in the same directory to ensure
+    # atomicity of the replace operation
+    with tempfile.NamedTemporaryFile(
+        mode="w",
+        encoding=encoding,
+        dir=dir_name,
+        delete=False,
+    ) as tmp:
+        tmp.write(data)
+        tmp.flush()
+        os.fsync(tmp.fileno())
+        tmp_path = tmp.name
+
+    # atomic replace of the original file with the new file
+    os.chmod(tmp_path, 0o664)
+    os.replace(tmp_path, path)
+
+
+class MacroDependency(StrEnum):
+    NO = "no"
+    CHECK = "check"
+    STATIC = "static"
+    DYNAMIC = "dynamic"
+
+
+class CacheHashNames(IntEnum):
+    NO_CACHE = -1
+    NORMAL_PAR_HASH = 0
+    HEADING_PAR_HASH = 1
+    WITH_MACROS_HASH = 2
+    HEADING_MACRO_PAR_HASH = 3
 
 
 # TODO: Make this a dataclass as soon as __slots__ is supported for dataclasses (coming in Python 3.10 maybe).
@@ -90,6 +157,9 @@ class DocParagraph:
         "html_cache",  # stored as 'h'
         "id",
         "md",
+        "depends_on_macros",
+        "orig_par",
+        "t",
     }
 
     def __init__(self, doc: Document):
@@ -103,6 +173,7 @@ class DocParagraph:
         self.original: DocParagraph | None = None
         self.html_sanitized = False
         self.html = None
+        self.t = ""
         self.prepared_par: PreparedPar | None = None
 
         # Cache for referenced paragraphs. Keys {True, False} correspond to the values of set_html parameter in
@@ -118,6 +189,8 @@ class DocParagraph:
         self.id = None
         self.ask_new: bool | None = None  # to send for plugins to force new question
         self.html_cache = None
+        self.depends_on_macros: MacroDependency = MacroDependency.NO
+        self.orig_par = None  # is this is dereferd par, what was the original
 
     def __eq__(self, other):
         if isinstance(other, self.__class__):
@@ -134,6 +207,17 @@ class DocParagraph:
         """Returns a dummy paragraph with id 'HELP_PAR' that is used as a placeholder for an empty document."""
         return DocParagraph.create(doc=None, par_id="HELP_PAR")
 
+    def __repr__(self) -> str:
+        return (
+            f"DocParagraph(id={self.id!r}, "
+            f"doc_id={self.get_doc_id()!r}, "
+            f"md={short_repr(self.md)}, "
+            f"html={short_repr(self.html)}, "
+            f"attrs={self.attrs!r}, "
+            f"t={self.t!r}, "
+            f"html_cache={short_repr(self.html_cache)})"
+        )
+
     @classmethod
     def create(
         cls,
@@ -143,15 +227,17 @@ class DocParagraph:
         par_hash: str | None = None,
         html: str | None = None,
         attrs: dict | None = None,
+        html_cache: dict | None = None,
     ) -> DocParagraph:
         """Creates a DocParagraph from the given parameters.
 
         :param doc: The Document object to which this paragraph is connected.
         :param par_id: The paragraph id or None if it should be autogenerated.
-        :param md: The markdown content.
+        :param md: The Markdown content.
         :param par_hash: The hash for the paragraph or None if it should be computed.
-        :param html: The HTML for the paragraph or None if it should be generated based on markdown.
+        :param html: The HTML for the paragraph or None if it should be generated based on Markdown.
         :param attrs: The attributes for the paragraph.
+        :param html_cache: The HTML cache for this paragraph.
         :return: The created DocParagraph.
 
         """
@@ -162,11 +248,13 @@ class DocParagraph:
         par.hash = hashfunc(md, attrs) if par_hash is None else par_hash
         par.attrs = attrs or {}
         par._cache_props()
+        par.html_cache = html_cache
         return par
 
     @property
-    def nocache(self):
-        return self.attrs.get("nocache", False)
+    def nocache(self) -> bool:
+        nocache = self.get_attr("nocache")
+        return get_boolean(nocache)
 
     def create_reference(
         self,
@@ -216,7 +304,7 @@ class DocParagraph:
         return par
 
     @classmethod
-    def from_dict(cls, doc, d: dict) -> DocParagraph:
+    def from_dict(cls, doc, d: dict[str, Any]) -> DocParagraph:
         """Creates a paragraph from a dictionary.
 
         :param doc: The Document object in which the paragraph will reside.
@@ -227,8 +315,14 @@ class DocParagraph:
         par = DocParagraph(doc)
         par.id = d["id"]
         par.md = d["md"]
+        par.t = d.get("t", "")
         par.attrs = d.get("attrs", {})
         par.html_cache = d.get("h")
+        log_for_person(
+            lambda: f"Creating par {par.get_doc_id()}/{par.get_id()} "
+            f"from dict {d!r}",
+            "dic",
+        )
         par._cache_props()
         par._compute_hash()
         return par
@@ -278,10 +372,10 @@ class DocParagraph:
             t = os.readlink(cls._get_path(doc, par_id, "current"))
             return cls.get(doc, par_id, t)
         except FileNotFoundError:
-            doc._raise_not_found(par_id)
+            return doc.raise_not_found(par_id)
 
     @classmethod
-    def get(cls, doc, par_id: str, t: str) -> DocParagraph:
+    def get(cls, doc: Document, par_id: str, t: str) -> DocParagraph:
         """Retrieves a specific paragraph version from the data store.
 
         :param doc: The Document object for which to retrieve the paragraph.
@@ -290,29 +384,80 @@ class DocParagraph:
         :return: The retrieved DocParagraph.
 
         """
-        try:
-            par_path = cls._get_path(doc, par_id, t)
-            # We need to retry reading the file in case it is being written to.
-            # This can sometimes happen if the IO is busy,
-            # and we use a file system that doesn't lock files when writing.
-            # FIXME: This is a temporary workaround. We should probably properly lock the file.
-            attempt = 0
-            while True:
-                with open(par_path) as f:
-                    try:
-                        doc_dict = json.loads(f.read())
-                        break
-                    except json.JSONDecodeError as ex:
-                        attempt += 1
-                        if attempt >= 3:
-                            raise ValueError(
-                                f"Invalid JSON read from {par_path}: '{ex.doc}' (aborting after {attempt} attempts)"
-                            ) from ex
-                        else:
-                            time.sleep(0.01)
-            return cls.from_dict(doc, doc_dict)
-        except FileNotFoundError:
-            doc._raise_not_found(par_id)
+        need_fix = False
+        par_path = cls._get_path(doc, par_id, t)
+        if not t:
+            log_error(f"Missing t from: {par_path}")
+            t = "current"
+            need_fix = True
+
+        while True:  # try with t and current
+            try:
+                par_path = cls._get_path(doc, par_id, t)
+                # We need to retry reading the file in case it is being written to.
+                # This can sometimes happen if the IO is busy,
+                # and we use a file system that doesn't lock files when writing.
+                # FIXME: This is a temporary workaround. We should probably properly lock the file.
+                attempt = 0
+
+                while True:
+                    with open(par_path) as f:
+                        try:
+                            doc_dict = json.load(f)
+                            break
+
+                        except json.JSONDecodeError as ex:
+                            attempt += 1
+
+                            # fallback: cut from the error position to the end and try to parse again
+                            try:
+                                with open(par_path) as f2:
+                                    data = f2.read()
+
+                                fixed = data[: ex.pos]
+                                trimmed = len(data) - ex.pos
+                                removed = data[ex.pos :]
+                                doc_dict = json.loads(fixed)
+                                context = ex.doc[max(0, ex.pos - 20) : ex.pos + 20]
+                                log_error(
+                                    f"Fixed invalid JSON in {par_path} at pos {ex.pos} "
+                                    f"trimmed {trimmed} chars: '{removed}': {ex.msg}. "
+                                    f"Context: {context!r}"
+                                )
+                                if (
+                                    removed == '>"}}'
+                                ):  # this is the most common know case
+                                    write_atomic(par_path, fixed)
+                                    log_error(f"Trimmed 4 chars from {par_path}")
+                                break
+
+                            except json.JSONDecodeError:
+                                if attempt >= 3:
+                                    raise ValueError(
+                                        f"Invalid JSON read from {par_path}: '{ex.doc}' "
+                                        f"(aborting after {attempt} attempts)"
+                                    ) from ex
+                                else:
+                                    time.sleep(0.01)
+                par = cls.from_dict(doc, doc_dict)
+                if need_fix:
+                    # write doc_file
+                    log_error(f"Fix par hash: {par.id}")
+                    doc.modify_paragraph_obj(par.id, par, force=True)
+                return par
+            except FileNotFoundError:
+                log_error(f"Paragraph file not found: {par_path}")
+                if t == "current":
+                    break
+                t = "current"
+                need_fix = True
+
+        # return doc._raise_not_found(par_id)
+        return DocParagraph.create(
+            doc,
+            md=f"[Lost par {par_id}.]" + "{.red} Delete this and write again.",
+            par_id=par_id,
+        )
 
     @classmethod
     def _get_path(cls, doc, par_id: str, t: str) -> str:
@@ -327,7 +472,7 @@ class DocParagraph:
         from timApp.timdb.dbaccess import get_files_path
 
         froot = get_files_path()
-        # For performance, we use string concatenation. The "/" operator of Path is slower
+        # For performance, we use string concatenation. The "/" operator of Path is slower,
         # and it shows in perf profiles.
         return f"{froot}/pars/{doc.doc_id}/{par_id}/{t}"
 
@@ -345,7 +490,7 @@ class DocParagraph:
         froot = get_files_path()
         return (froot / "pars" / str(doc.doc_id) / par_id).as_posix()
 
-    def dict(self, include_html_cache: bool = False) -> dict:
+    def dict(self, include_html_cache: bool = False) -> dict[str, Any]:
         """Returns the persistent data as a dict."""
         d = dict(
             attrs=self.attrs,
@@ -457,13 +602,15 @@ class DocParagraph:
         return self.hash
 
     def get_markdown(self) -> str:
-        """Returns the markdown of this paragraph."""
+        """Returns the Markdown of this paragraph."""
         return self.md
 
     def insert_rnds(self, rnd_seed: SeedType | None) -> bool:
         """Inserts Jinja rnd variable as a list of random numbers based to attribute rnd and rnd_seed
         return True if attribute rnd found and OK, else False
         """
+        if self.attrs is None:
+            return False
         self.__rands, self.__rnd_seed, state = get_rands_as_dict(
             self.attrs, rnd_seed, None
         )
@@ -491,12 +638,12 @@ class DocParagraph:
         macroinfo: MacroInfo,
         ignore_errors: bool = False,
     ) -> str:
-        """Returns the macro-processed markdown for this paragraph.
+        """Returns the macro-processed Markdown for this paragraph.
 
         :param macroinfo: The MacroInfo to use. If None, the MacroInfo is taken from the document that has the
         paragraph.
-        :param ignore_errors: Whether or not to ignore errors when expanding the macros
-        :return: The expanded markdown.
+        :param ignore_errors: Whether to ignore errors when expanding the macros
+        :return: The expanded Markdown.
 
         """
         md = self.md
@@ -518,13 +665,48 @@ class DocParagraph:
             # raise Exception('Error in rnd: ' + str(err)) from err
             pass  # TODO: show exception to user!
 
-        return expand_macros(
+        expanded_md = expand_macros(
             md,
             macros,
             settings,
             ignore_errors=ignore_errors,
             env=env,
         )
+
+        if not self.is_dynamic() and expanded_md != md:
+            # may depend on macros, but is it only
+            # from comments or static macros?
+            if md.find(env.comment_start_string) >= 0:
+                # is diff only from comments?
+                without_comments = expand_macros(
+                    md,
+                    {},
+                    settings,
+                    ignore_errors=ignore_errors,
+                    env=env,
+                )
+                if without_comments == expanded_md:
+                    self.depends_on_macros = MacroDependency.NO
+                    return expanded_md
+            # depends on macros, is static enough?
+            static_md = expand_macros(
+                md,
+                settings.get_static_macros_optionally_preserving_user_macros(macroinfo),
+                settings,
+                ignore_errors=ignore_errors,
+                env=env,
+            )
+            if static_md == expanded_md:
+                self.depends_on_macros = MacroDependency.STATIC
+                if self.orig_par:
+                    self.orig_par.depends_on_macros = MacroDependency.STATIC
+                return expanded_md
+
+        if expanded_md != md:
+            self.depends_on_macros = MacroDependency.DYNAMIC
+            if self.orig_par:
+                self.orig_par.depends_on_macros = MacroDependency.DYNAMIC
+        return expanded_md
 
     def get_title(self) -> str | None:
         """Attempts heuristically to return a title for this paragraph.
@@ -540,7 +722,7 @@ class DocParagraph:
         return md[2:attr_index].strip() if attr_index > 0 else md[2:].strip()
 
     def get_exported_markdown(self, skip_tr=False, export_ids=False) -> str:
-        """Returns the markdown in exported form for this paragraph."""
+        """Returns the Markdown in exported form for this paragraph."""
         if (not skip_tr) and self.is_par_reference() and self.is_translation():
             # This gives a default translation based on the source paragraph
             # todo: same for area reference
@@ -568,13 +750,15 @@ class DocParagraph:
         from timApp.document.docsettings import DocSettings
 
         try:
-            DocSettings.from_paragraph(self)
+            settings = DocSettings.from_paragraph(self)
+            if settings is not None:
+                settings.check_recursive_settings()
         except TimDbException as e:
             return f'<div class="pluginError">Invalid settings: {e}</div>'
         return se.from_string("<pre>{{yml}}</pre>").render(yml=self.md)
 
     def get_html(self, view_ctx: ViewContext, no_persist: bool = True) -> str:
-        """Returns the html for the paragraph."""
+        """Returns the HTML for the paragraph."""
         if self.html is not None:
             return self.html
         if self.is_plugin() or self.has_plugins():
@@ -608,6 +792,14 @@ class DocParagraph:
             assert self.html is not None
         return self.html
 
+    class UnloadedParInfo(NamedTuple):
+        par: DocParagraph
+        cache_hashes: list[str]
+        auto_macros: dict
+        all_headings_so_far: dict | None
+        old_html: str | None
+        old_cache_index: int
+
     @classmethod
     def preload_htmls(
         cls,
@@ -617,15 +809,15 @@ class DocParagraph:
         clear_cache: bool = False,
         context_par: DocParagraph | None = None,
         persist: bool | None = True,
-    ):
+    ) -> list[DocParagraph]:
         """Loads the HTML for each paragraph in the given list.
 
-        :param view_ctx:
+        :param pars: Paragraphs to preload.
+        :param settings: The document settings.
+        :param view_ctx: The view context for which to preload the HTML.
+        :param clear_cache: Whether all caches should be refreshed.
         :param context_par: The context paragraph. Required only for previewing for now.
         :param persist: Whether the result of preloading should be saved to disk.
-        :param clear_cache: Whether all caches should be refreshed.
-        :param settings: The document settings.
-        :param pars: Paragraphs to preload.
         :return: A list of paragraphs whose HTML changed as the result of preloading.
 
         """
@@ -641,6 +833,7 @@ class DocParagraph:
             first_pars = [context_par]
             pars = first_pars + pars
 
+        unloaded_pars = []
         if not persist:
             cache = {}
             heading_cache = {}
@@ -675,11 +868,19 @@ class DocParagraph:
                     heading_cache_file
                 ) as heading_cache:
                     unloaded_pars = cls.get_unloaded_pars(
-                        pars, settings, cache, heading_cache, clear_cache
+                        pars,
+                        settings,
+                        cache,
+                        heading_cache,
+                        clear_cache,
                     )
                     for k, v in heading_cache.items():
                         heading_cache[k] = v
-
+        log_for_person(
+            lambda: f"preload_htmls {doc_id}/{pars[0].get_id()}, ch: {clear_cache}, "
+            f"persist: {persist}, unloaded pars: {unloaded_pars}",
+            "unl",
+        )
         changed_pars = []
         if len(unloaded_pars) > 0:
 
@@ -690,72 +891,184 @@ class DocParagraph:
                 if not p.is_translation():
                     return p
                 try:
-                    return p.get_referenced_pars()[0]
+                    trp = p.get_referenced_pars()[0]
+                    trp.orig_par = p
+                    return trp
                 except (InvalidReferenceException, IndexError) as e:
                     p.was_invalid = True
                     # noinspection PyProtectedMember
                     p._set_html(get_error_html(e))
                     return p
 
+            """
             htmls = par_list_to_html_list(
-                [deref_tr_par(par) for par, _, _, _, _ in unloaded_pars],
+                [deref_tr_par(par) for par, _, _, _, _, _ in unloaded_pars],
                 settings=settings,
                 view_ctx=view_ctx,
                 auto_macros=(
                     {"h": auto_macros["h"], "headings": hs}
-                    for _, _, auto_macros, hs, _ in unloaded_pars
+                    for _, _, _, auto_macros, hs, _ in unloaded_pars
                 ),
             )
-            for (par, auto_macro_hash, _, _, old_html), h in zip(unloaded_pars, htmls):
+            """
+            upars = [
+                deref_tr_par(unloaded_par_info.par)
+                for unloaded_par_info in unloaded_pars
+            ]
+            auto_macros = (
+                {
+                    "h": unloaded_par_info.auto_macros["h"],
+                    "headings": unloaded_par_info.all_headings_so_far,
+                }
+                for unloaded_par_info in unloaded_pars
+            )
+
+            htmls = par_list_to_html_list(
+                upars,
+                settings=settings,
+                view_ctx=view_ctx,
+                auto_macros=auto_macros,
+            )
+
+            for unloaded_par_info, h in zip(unloaded_pars, htmls):
                 # h is not sanitized but old_html is, but HTML stays unchanged after sanitization most of the time
                 # so they are comparable after stripping div. We want to avoid calling sanitize_html unnecessarily.
+                need_write = clear_cache
+                is_heading = False
+                par = unloaded_par_info.par
                 if getattr(par, "was_invalid", False):
                     continue
-                if isinstance(h, bytes):
-                    h = h.decode()
-                h = strip_div(h)
+
+                is_from_preamble = par.from_preamble()
+                nocache = par.get_attr("nocache")
+                if nocache == "false":  # force to cache
+                    par.depends_on_macros = MacroDependency.NO
+                cache_index = CacheHashNames.NORMAL_PAR_HASH
+                if isinstance(h, HeadingHtml):
+                    is_heading = True
+                    cache_index = CacheHashNames.HEADING_PAR_HASH
+                # if isinstance(h, bytes):
+                #    h = h.decode()
+                # h = strip_div(h)  # should be done earlier
+                old_html = unloaded_par_info.old_html
+                old_cache_index = unloaded_par_info.old_cache_index
                 if h != old_html:
                     h = sanitize_html(h)
                     if h != old_html:
-                        if not par.from_preamble():
+                        if not is_from_preamble:
                             changed_pars.append(par)
-                par.html_cache[auto_macro_hash] = h
+                            if par.depends_on_macros is not MacroDependency.DYNAMIC:
+                                need_write = True
+                if par.depends_on_macros is MacroDependency.STATIC:
+                    if is_heading:
+                        cache_index = CacheHashNames.HEADING_MACRO_PAR_HASH
+                    else:
+                        cache_index = CacheHashNames.WITH_MACROS_HASH
+                    need_write = clear_cache or view_ctx.partial
+                if old_cache_index != cache_index and not is_from_preamble:
+                    if par.depends_on_macros is not MacroDependency.DYNAMIC:
+                        need_write = True
+
+                if par.depends_on_macros is MacroDependency.DYNAMIC:
+                    par.html_cache = None
+                    if nocache != "true":
+                        if is_heading:
+                            # heading with dynamic macros needs different handling
+                            # to get autnumbers
+                            par.attrs[
+                                "nocache"
+                            ] = FORCE_MACROS_HEADER  # f matches false
+                            need_write = nocache != FORCE_MACROS_HEADER
+                        else:
+                            par.attrs["nocache"] = "auto"
+                            need_write = True
+                else:
+                    par_html_hash = unloaded_par_info.cache_hashes[cache_index]
+                    par.html_cache[par_html_hash] = h
+                    par.html_cache["i"] = cache_index
+                    log_for_person(
+                        lambda: f"Updating par {par.get_doc_id()}/{par.get_id()} "
+                        f"with par_html_hash {par_html_hash}, "
+                        f"old html: {old_html}, new html: {h}, "
+                        f"new cache: {par.html_cache}, persist: {persist}",
+                        "upd",
+                    )
                 # noinspection PyProtectedMember
                 par._set_html(h, sanitized=True)
-                if persist and not par.from_preamble():
-                    par.__write()
+                from timApp.auth.sessioninfo import get_username
+
+                if get_username() == ANONYMOUS_USERNAME:
+                    # anonymous is not allowed to change files
+                    continue
+                if persist and not is_from_preamble and need_write:
+                    if par.t and par.t != par.hash:
+                        # old hash counted wrong
+                        log_warning(f"t counted wrong {par}")
+                        par.doc.modify_paragraph_obj(par.id, par, True)
+                    else:
+                        par.__write()
+        log_for_person(lambda: f"changed pars: {changed_pars}", "cha")
         return changed_pars
 
     @classmethod
     def get_unloaded_pars(
-        cls, pars, settings, auto_macro_cache, heading_cache, clear_cache=False
-    ):
+        cls,
+        pars,
+        settings,
+        auto_macro_cache,
+        heading_cache,
+        clear_cache=False,
+    ) -> list[UnloadedParInfo]:
         """Finds out which of the given paragraphs need to be preloaded again.
 
         :param pars: The list of paragraphs to be processed.
         :param settings: The settings for the document.
         :param auto_macro_cache: The cache object from which to retrieve and store the auto macro data.
-        :param heading_cache: A cache object to store headings into. The key is paragraph id and value is a list of headings
-         in that paragraph.
+        :param heading_cache: A cache object to store headings into.
+               The key is paragraph id and value is a list of headings
+               in that paragraph.
         :param clear_cache: Whether all caches should be refreshed.
-        :return: A 5-tuple of the form:
-          (paragraph, hash of the auto macro values, auto macros, so far used headings, old HTML).
+        :return: list of UnloadedParInfo objects containing the paragraphs
+                  that need to be preloaded and their related information.
 
         """
-        cumulative_headings = []
+        cumulative_headings = defaultdict(int)
+        my_headings_so_far = None
         unloaded_pars = []
         dyn = 0
+        normal_pars = 0
         macroinfo = settings.get_macroinfo(default_view_ctx)
         macros = macroinfo.get_macros()
         env = macroinfo.jinja_env
-        settings_hash = settings.get_hash()
+        static_macros_hash = settings.get_static_macros_hash()
+        heading_par_hash_base = settings.get_heading_par_cache_key_hash()
+        log_for_person(
+            lambda: f"Preloading {len(pars)} paragraphs "
+            f"({', '.join(f'{p.get_doc_id()}/{p.get_id()}' for p in pars)}) "
+            f"with settings hash {static_macros_hash} and "
+            f"macros {macros}, clear cache: {clear_cache}",
+            "pre",
+        )
         for par in pars:
+            cache_hashes: list[str] = [""] * (len(CacheHashNames) - 1)
+            cache_hashes[
+                CacheHashNames.NORMAL_PAR_HASH
+            ] = settings.get_normal_par_cache_key_hash()
+            cache_index: CacheHashNames = CacheHashNames.NO_CACHE
+            if clear_cache:
+                # clear automatically set nocache value
+                nocache = par.get_attr("nocache")
+                if nocache == FORCE_MACROS_HEADER or nocache == "auto":
+                    if par.attrs:
+                        par.attrs.pop("nocache", None)
+
             if par.is_dynamic():
                 dyn += 1
                 continue
             if not clear_cache and par.html is not None:
                 continue
             cached = par.html_cache
+
             try:
                 auto_number_start = settings.auto_number_start()
                 auto_macros = par.get_auto_macro_values(
@@ -770,41 +1083,92 @@ class DocParagraph:
                 raise TimDbException(
                     "Infinite recursion detected in get_auto_macro_values; the document may be broken."
                 )
-            auto_macro_hash = hashfunc(settings_hash + str(auto_macros))
-
+            heading_par_hash = hashfunc(heading_par_hash_base + str(auto_macros))
             par_headings = heading_cache.get(par.get_id())
-            if cumulative_headings:
-                # Performance optimization: copy only if the set of headings changes
-                if par_headings:
-                    all_headings_so_far = cumulative_headings[-1].copy()
-                else:
-                    all_headings_so_far = cumulative_headings[-1]
+
+            # Performance optimization: copy only if the set of headings changes
+            if par_headings:
+                all_headings_so_far = cumulative_headings.copy()
             else:
-                all_headings_so_far = defaultdict(int)
-            cumulative_headings.append(all_headings_so_far)
+                all_headings_so_far = cumulative_headings
+
+            cumulative_headings = all_headings_so_far
+
             if par_headings is not None:
+                # all_headings_so_far = all_headings_so_far.copy()
+                # my_headings_so_far = defaultdict(int)
                 for h in par_headings:
                     all_headings_so_far[h] += 1
+                    # my_headings_so_far[h] = all_headings_so_far[h]
+                    heading_par_hash = hashfunc(heading_par_hash + h)
+            my_headings_so_far = all_headings_so_far
+            cache_hashes[CacheHashNames.HEADING_PAR_HASH] = heading_par_hash
+            cache_hashes[CacheHashNames.WITH_MACROS_HASH] = static_macros_hash
+            cache_hashes[CacheHashNames.HEADING_MACRO_PAR_HASH] = hashfunc(
+                static_macros_hash + heading_par_hash
+            )
 
+            old_html: str | None = None
             if not clear_cache and cached is not None:
-                if type(cached) is str:  # Compatibility
+                log_for_person(
+                    lambda: f"check cache: {cache_hashes} "
+                    f"cache: {cached} of type {type(cached)} "
+                    f"auto_macros: {str(auto_macros)}",
+                    "che",
+                )
+                if isinstance(cached, str):  # Compatibility
                     old_html = cached
+                    log_for_person_short(
+                        lambda: f"OLD CACHE MISS: par {par.get_doc_id()}/{par.get_id()} "
+                        f"{par}"
+                    )
                 else:
-                    cached_html = cached.get(auto_macro_hash)
-                    if cached_html is not None:
-                        par.html = cached_html
-                        continue
-                    else:
-                        try:
-                            old_html = next(iter(cached.values()))
-                        except StopIteration:
-                            old_html = None
+                    par.html = None
+                    cache_index = cached.get("i", -2)
+                    if cache_index >= 0:
+                        cache_key: str = cache_hashes[cache_index]
+                        cached_html = cached.get(cache_key)
+                        if cached_html is not None:
+                            par.html = cached_html
+                            if cache_index == CacheHashNames.NORMAL_PAR_HASH:
+                                normal_pars += 1
+                            continue  # ideal case
+                    old_html = next((v for k, v in cached.items() if k != "i"), None)
+                    if (
+                        not par.from_preamble()
+                        and flask.has_request_context()
+                        and flask.request.path.startswith("/view")
+                    ):  # The preamble leads to many misses.
+                        log_for_person_short(
+                            lambda: f"CACHE MISS: par {par.get_doc_id()}/{par.get_id()} "
+                            f"{par} "
+                            f"with hashes {cache_hashes}, "
+                            f"auto macros: {auto_macros}"
+                        )
             else:
                 old_html = None
+                if (
+                    par.get_attr("nocache") != FORCE_MACROS_HEADER
+                    and flask.has_request_context()
+                    and flask.request.path.startswith("/view")
+                    and not par.from_preamble()
+                ):
+                    log_for_person_short(
+                        lambda: f"CACHE SKIP: par {par.get_doc_id()}/{par.get_id()} "
+                        f"{par} "
+                        f"clear_cache: {clear_cache} "
+                    )
 
-            tup = (par, auto_macro_hash, auto_macros, all_headings_so_far, old_html)
+            unloaded_par = cls.UnloadedParInfo(
+                par=par,
+                cache_hashes=cache_hashes,
+                auto_macros=auto_macros,
+                all_headings_so_far=my_headings_so_far,
+                old_html=old_html,
+                old_cache_index=cache_index,
+            )
             par.html_cache = {}
-            unloaded_pars.append(tup)
+            unloaded_pars.append(unloaded_par)
         return unloaded_pars
 
     def has_class(self, class_name):
@@ -838,8 +1202,9 @@ class DocParagraph:
         :param macros: Macros to apply for the paragraph.
         :param env: Environment for macros.
         :param auto_macro_cache: The cache object from which to retrieve and store the auto macro data.
-        :param heading_cache: A cache object to store headings into. The key is paragraph id and value is a list of headings
-         in that paragraph.
+        :param heading_cache: A cache object to store headings into.
+               The key is paragraph id and value is a list of headings
+               in that paragraph.
         :param auto_number_start: Object of heading start numbers.
         :param checked_pars: to follow recursion and avoid infinite loops
         :return: Auto macro values as a dict.
@@ -884,7 +1249,7 @@ class DocParagraph:
                 checked_pars,
             )
 
-        # If the paragraph is a translation but it has not been translated
+        # If the paragraph is a translation, but it has not been translated
         # (empty markdown), we use the md from the original.
         deref = None
         if prev_par is not None and prev_par.is_translation():
@@ -970,12 +1335,14 @@ class DocParagraph:
         :return: The attribute value.
 
         """
+        if self.attrs is None:
+            return default_value
         return self.attrs.get(attr_name, default_value)
 
     def set_markdown(self, new_md: str):
-        """Sets markdown for this paragraph.
+        """Sets Markdown for this paragraph.
 
-        :param new_md: The new markdown.
+        :param new_md: The new Markdown.
 
         """
         self.md = new_md
@@ -1030,7 +1397,7 @@ class DocParagraph:
         """
         return self.get_attr("area_end")
 
-    def get_attrs(self) -> dict:
+    def get_attrs(self) -> dict[str, Any]:
         return self.attrs
 
     def get_base_path(self) -> str:
@@ -1041,30 +1408,9 @@ class DocParagraph:
         """Returns the filesystem path for this paragraph."""
         return self._get_path(self.doc, self.id, self.hash)
 
-    @staticmethod
-    def get_stack_str(limit: int = 6, remove_level=0) -> str:
-        import traceback
-
-        stack = traceback.extract_stack()
-
-        # Poista tämä funktio itse stackista
-        stack = stack[: -1 - remove_level]
-
-        # Ota viimeiset `limit` framea ja käännä (uusin ensin)
-        last = stack[-limit:]
-        last.reverse()
-
-        return "|".join(f"{s.name}, {s.filename}:{s.lineno}" for s in last)
-
-    @staticmethod
-    def log_filename(file_name: str):
-        from timApp.util.logger import log_error, log_info
-
-        log_info(f"W: {file_name}  {DocParagraph.get_stack_str(15, 1)}")
-
     def __write(self):
         file_name = self.get_path()
-        DocParagraph.log_filename(file_name)
+        log_filename(file_name)
         does_exist = os.path.isfile(file_name)
 
         if not does_exist:
@@ -1072,13 +1418,18 @@ class DocParagraph:
             if not os.path.exists(base_path):
                 os.makedirs(base_path)
 
-        with open(file_name, "w") as f:
-            f.write(json.dumps(self.dict(include_html_cache=True)))
+        d = self.dict(include_html_cache=True)
+        log_for_person(
+            lambda: f"Writing par {self.get_doc_id()}/{self.get_id()}: {d} "
+            f"with filename {file_name}",
+            "wri",
+        )
+        write_atomic(file_name, json.dumps(d))
 
     def set_latest(self):
         """Updates the 'current' symlink to point to this paragraph version."""
         linkpath = self._get_path(self.doc, self.get_id(), "current")
-        if linkpath == self.get_hash():
+        if linkpath == self.get_hash():  # TODO: When this could be true?
             return
         if os.path.islink(linkpath) or os.path.isfile(linkpath):
             os.unlink(linkpath)
@@ -1098,10 +1449,14 @@ class DocParagraph:
             md=p.md,
             par_hash=p.hash,
             par_id=p.id,
+            html_cache=p.html_cache,
         )
 
     def clear_cache(self) -> None:
         """Clears the HTML cache of this paragraph."""
+        log_for_person(
+            lambda: f"Clearing cache for par {self.get_doc_id()}/{self.get_id()}", "cle"
+        )
         self.html_cache = None
 
     def save(self, add: bool = False) -> None:
@@ -1302,6 +1657,7 @@ class DocParagraph:
             or self.has_plugins()
             or (self.__is_ref and not self.is_translation())
             or self.__is_setting
+            or self.nocache
         )
 
     def is_plugin(self) -> bool:
@@ -1386,9 +1742,9 @@ class DocParagraph:
 
     def is_translation_unchecked(self):
         """
-        Checks whether or not the paragraph's translation has been checked by a human.
+        Checks whether the paragraph's translation has been checked by a human.
 
-        :return: False if the paragraph is not a translation or it has been checked, true if it is not checked
+        :return: False if the paragraph is not a translation, or it has been checked, true if it is not checked
         """
         if not self.ref_chain:
             return False
@@ -1421,8 +1777,8 @@ def create_reference(
 ) -> DocParagraph:
     """Creates a reference paragraph to a paragraph.
 
-    :param par_id: Id of the original paragraph.
-    :param doc_id: Id of the original document.
+    :param par_id: ID of the original paragraph.
+    :param doc_id: ID of the original document.
     :param doc: The Document object in which the reference paragraph will reside.
     :param r: The kind of the reference.
     :param add_rd: If True, sets the rd attribute for the reference paragraph.

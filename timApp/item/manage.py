@@ -296,9 +296,45 @@ class PermissionMassEditModel(PermissionEditModel, PermissionMassEditModelBase):
     pass
 
 
+def parse_hours_minutes(value: str | int | float) -> tuple[int, int]:
+    s = str(value).strip()
+
+    if not s:
+        raise ValueError("Empty duration")
+
+    # Muoto H:MM, esim. 2:40
+    if ":" in s:
+        parts = s.split(":")
+        if len(parts) != 2:
+            raise ValueError(f"Allowed only format h:mm : {value!r}")
+
+        h_str, m_str = parts
+        hours = int(h_str)
+        minutes = int(m_str)
+
+        if hours < 0 or minutes < 0 or minutes >= 60:
+            raise ValueError(f"Invalid duration format: {value!r}")
+
+        return hours, minutes
+
+    # Muoto desimaalitunteina, esim. 2 tai 2.66
+    s = s.replace(",", ".")
+    try:
+        hours_float = float(s)
+    except ValueError:
+        raise ValueError(f"Invalid duration format: {value!r}")
+
+    if hours_float < 0:
+        raise ValueError(f"Invalid duration format: {value!r}")
+
+    total_minutes = round(hours_float * 60)
+    hours, minutes = divmod(total_minutes, 60)
+    return hours, minutes
+
+
 @manage_page.get("/permissions/add/<int:doc_id>/<username>")
 def add_permission_basic(
-    doc_id: int, username: str, type: str, duration: int
+    doc_id: int, username: str, type: str, duration: str
 ) -> Response:
     if type != "view":
         raise RouteException("Only 'view' is allowed to prevent misuse")
@@ -312,13 +348,17 @@ def add_permission_basic(
         )
 
     verify_permission_edit_access(i, AccessType.view)
+    try:
+        h, m = parse_hours_minutes(duration)
+    except ValueError as e:
+        return json_response({"message": str(e)})
 
     p_model = PermissionEditModel(
         type=AccessType.view,
         groups=[username],
         time=TimeOpt(
             type=TimeType.duration,
-            duration=Duration(hours=duration),
+            duration=Duration(hours=h, minutes=m),
         ),
         confirm=False,
     )

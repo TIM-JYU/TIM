@@ -1,4 +1,5 @@
 """Defines the TimRouteTest class."""
+
 import base64
 import io
 import json
@@ -25,7 +26,7 @@ from flask import (
 from flask.sessions import SessionMixin
 from flask.testing import FlaskClient
 from lxml import html
-from lxml.html import HtmlElement
+from lxml.html import HtmlElement  # noqa
 from requests import PreparedRequest
 from sqlalchemy import select
 from sqlalchemy.orm import close_all_sessions, joinedload
@@ -84,7 +85,7 @@ BasicAuthParams = tuple[str, str]
 
 @lru_cache(maxsize=100)
 def fast_getaddrinfo(host, port, family=0, addrtype=0, proto=0, flags=0):
-    """On Windows/Boot2docker, the getaddrinfo function is really slow, so we wrap the function and cache the result."""
+    """On Windows/Boot2docker, the getaddrinfo function is really slow, so we wrap the function and cache the result."""  # noqa
     return orig_getaddrinfo(host, port, family, addrtype, proto, flags)
 
 
@@ -282,7 +283,7 @@ class TimRouteTestBase(TimDbTest):
         self,
         url: str,
         method: str,
-        as_tree: bool = False,
+        as_tree: bool | str = False,
         as_response: bool = False,
         expect_status: int | None = 200,
         expect_content: None | str | dict | list = None,
@@ -303,6 +304,8 @@ class TimRouteTestBase(TimDbTest):
 
         For JSON POST/PUT requests, use the shortcut json_* methods.
 
+        :param as_response:
+        :param expect_mimetype:
         :param url: The request URL.
         :param method: The request method (e.g. GET, POST, PUT, DELETE).
         :param as_tree: Whether to return the response as an HTML tree.
@@ -331,7 +334,7 @@ class TimRouteTestBase(TimDbTest):
                  Otherwise, if the response mimetype is application/json, returns the response as a JSON dict or list.
                  Otherwise, returns the response as a string.
 
-        """
+        """  # noqa
 
         @contextmanager
         def clean_db_after_request():
@@ -347,6 +350,7 @@ class TimRouteTestBase(TimDbTest):
             if headers is None:
                 headers = []
             if xhr:
+                assert headers is not None
                 headers.append(("X-Requested-With", "XMLHttpRequest"))
             if auth:
                 u, p = auth
@@ -378,7 +382,8 @@ class TimRouteTestBase(TimDbTest):
             if force_return_text:
                 return resp_data
             if (
-                expect_status >= 400
+                expect_status is not None
+                and expect_status >= 400
                 and json_key is None
                 and (
                     isinstance(expect_content, str) or isinstance(expect_contains, str)
@@ -451,6 +456,13 @@ class TimRouteTestBase(TimDbTest):
     ):
         """Performs a JSON PUT request.
 
+        :param as_tree:
+        :param expect_status:
+        :param expect_content:
+        :param expect_contains:
+        :param expect_xpath:
+        :param json_key:
+        :param headers:
         :param url: The request URL.
         :param json_data: The JSON data to be submitted.
         :param kwargs: Any custom parameters that are accepted by the 'request' method.
@@ -487,6 +499,14 @@ class TimRouteTestBase(TimDbTest):
     ):
         """Performs a JSON DELETE request.
 
+        :param as_tree:
+        :param expect_status:
+        :param expect_content:
+        :param expect_contains:
+        :param expect_xpath:
+        :param json_key:
+        :param headers:
+        :param auth:
         :param url: The request URL.
         :param json_data: The JSON data to be submitted.
         :param kwargs: Any custom parameters that are accepted by the 'request' method.
@@ -512,7 +532,7 @@ class TimRouteTestBase(TimDbTest):
         self,
         url: str,
         json_data: dict | list | None = None,
-        as_tree: bool = False,
+        as_tree: bool | str = False,
         expect_status: int | None = 200,
         expect_content: None | str | dict | list = None,
         expect_contains: None | str | list[str] | dict = None,
@@ -525,6 +545,15 @@ class TimRouteTestBase(TimDbTest):
     ):
         """Performs a JSON POST request.
 
+        :param as_tree:
+        :param expect_status:
+        :param expect_content:
+        :param expect_contains:
+        :param expect_xpath:
+        :param expect_cookie:
+        :param json_key:
+        :param headers:
+        :param auth:
         :param url: The request URL.
         :param json_data: The JSON data to be submitted.
         :param kwargs: Any custom parameters that are accepted by the 'request' method.
@@ -552,7 +581,7 @@ class TimRouteTestBase(TimDbTest):
         url: str,
         json_data: dict | None = None,
         method: str = "GET",
-        as_tree: bool = False,
+        as_tree: bool | str = False,
         expect_status: int | None = 200,
         expect_content: None | str | dict | list = None,
         expect_contains: None | str | list[str] = None,
@@ -566,6 +595,16 @@ class TimRouteTestBase(TimDbTest):
     ):
         """Performs a JSON request.
 
+        :param expect_cookie:
+        :param expect_xpath:
+        :param expect_contains:
+        :param expect_content:
+        :param expect_status:
+        :param as_tree:
+        :param headers:
+        :param json_key:
+        :param auth:
+        :param content_type:
         :param url: The request URL.
         :param method: The request method.
         :param json_data: The JSON data to be submitted.
@@ -595,6 +634,7 @@ class TimRouteTestBase(TimDbTest):
     ):
         """Edits a paragraph in a document.
 
+        :param extra_data:
         :param doc: The document to be edited.
         :param text: The new text for the paragraph.
         :param par_id: The id of the paragraph to be edited.
@@ -621,6 +661,8 @@ class TimRouteTestBase(TimDbTest):
     ):
         """Edits an area in a document.
 
+        :param area_start:
+        :param area_end:
         :param doc: The document to be edited.
         :param text: The new text for the paragraph.
         :return: The response object.
@@ -717,9 +759,9 @@ class TimRouteTestBase(TimDbTest):
                 f"/{plugin_type}/{task_id}/answer",
                 {
                     "input": user_input,
-                    "ref_from": {"docId": ref_from[0], "par": ref_from[1]}
-                    if ref_from
-                    else None,
+                    "ref_from": (
+                        {"docId": ref_from[0], "par": ref_from[1]} if ref_from else None
+                    ),
                     "abData": {
                         "saveTeacher": save_teacher,
                         "teacher": teacher,
@@ -740,9 +782,9 @@ class TimRouteTestBase(TimDbTest):
             f"/{plugin_type}/{task_id}/answer",
             {
                 "input": user_input,
-                "ref_from": {"docId": ref_from[0], "par": ref_from[1]}
-                if ref_from
-                else None,
+                "ref_from": (
+                    {"docId": ref_from[0], "par": ref_from[1]} if ref_from else None
+                ),
             },
             **kwargs,
         )
@@ -852,6 +894,7 @@ class TimRouteTestBase(TimDbTest):
     ):
         """Logs a user in.
 
+        :param clear_last_doc:
         :param username: The username of the user.
         :param email: The email of the user.
         :param passw: The password of the user.
@@ -863,6 +906,7 @@ class TimRouteTestBase(TimDbTest):
         """
         if not manual:
             if not force and not add:
+                assert username is not None
                 u = User.get_by_name(username)
                 if not u:
                     raise Exception(f"User not found: {username}")
@@ -907,8 +951,8 @@ class TimRouteTestBase(TimDbTest):
         cite: int | None = None,
         template: str | None = None,
         title: str | None = None,
-        expect_status=200,
-        **kwargs,
+        expect_status: int = 200,
+        **kwargs: object,
     ) -> DocEntry | None:
         """Creates a new document.
 
@@ -918,6 +962,9 @@ class TimRouteTestBase(TimDbTest):
         :param from_file: If specified, loads the document content from the specified file.
         :param initial_par: The content of the initial paragraph.
         :param settings: The settings for the document.
+        :param template:
+        :param title: document title. If None, a default title is generated.
+        :param expect_status:
         :return: The DocEntry object.
 
         """
@@ -996,7 +1043,7 @@ class TimRouteTestBase(TimDbTest):
         var = self.get_js_variable(element, variable_name)
         self.assertEqual(expect_content, var)
 
-    def get_js_variable(self, element, variable_name):
+    def get_js_variable(self, element, variable_name):  # noqa
         scripts = element.cssselect('script[class="global-vars"]')
         for s in scripts:
             variables = s.text
@@ -1194,9 +1241,11 @@ class TimRouteTestBase(TimDbTest):
                 "doc_id": doc_id,
                 "points": points,
                 "velp_id": velp_id,
-                "visible_to": visible_to.value
-                if isinstance(visible_to, AnnotationVisibility)
-                else visible_to,
+                "visible_to": (
+                    visible_to.value
+                    if isinstance(visible_to, AnnotationVisibility)
+                    else visible_to
+                ),
                 "color": color,
                 "answer_id": answer_id,
                 "draw_data": draw_data,
@@ -1243,9 +1292,11 @@ class TimRouteTestBase(TimDbTest):
             "/update_annotation",
             {
                 "id": annotation_id,
-                "visible_to": visible_to.value
-                if isinstance(visible_to, AnnotationVisibility)
-                else visible_to,
+                "visible_to": (
+                    visible_to.value
+                    if isinstance(visible_to, AnnotationVisibility)
+                    else visible_to
+                ),
                 "points": points,
                 "color": color,
                 "coord": coord,
@@ -1289,7 +1340,7 @@ class TimRouteTestBase(TimDbTest):
             f"/read/{doc.id}/{par_id}/{read_type.value}", **kwargs, json_data={}
         )
 
-    def print_html(self, e: HtmlElement):
+    def print_html(self, e: HtmlElement):  # noqa
         print(html.tostring(e, pretty_print=True).decode())
 
     def create_plugin_json(
@@ -1328,11 +1379,11 @@ class TimRouteTestBase(TimDbTest):
         }
         return expected_json
 
-    def make_base64(self, d: dict):
+    def make_base64(self, d: dict):  # noqa
         """Converts the given dict to a base64-encoded JSON string."""
         return base64.b64encode(json.dumps(d, sort_keys=True).encode()).decode()
 
-    def get_plugin_json(self, e: HtmlElement):
+    def get_plugin_json(self, e: HtmlElement):  # noqa
         b64str = e.attrib["json"]
         return json.loads(base64.b64decode(b64str))
 
@@ -1388,9 +1439,11 @@ class TimRouteTestBase(TimDbTest):
         a = Answer(
             users_all=[user],
             task_id=f"{d.id}.{task_name}",
-            content=json.dumps({content_key: content})
-            if content_key is not None
-            else json.dumps(content),
+            content=(
+                json.dumps({content_key: content})
+                if content_key is not None
+                else json.dumps(content)
+            ),
             points=points,
             valid=valid,
             last_points_modifier=last_points_modifier,
@@ -1466,7 +1519,7 @@ class TimRouteTestBase(TimDbTest):
             m.add_passthru("http://fields:5000")
             m.add_passthru("http://dumbo:5000")
             m.add_passthru("http://pali:5000")
-            m.add_passthru("http://feedback:5000")
+            m.add_passthru("http://feedback:5000")  # noqa
             m.add_passthru("http://haskellplugins:5002")
             m.add_passthru("http://showfile:5000")
             m.add_passthru("http://mailman-test:8001")
@@ -1595,6 +1648,7 @@ class TimMessageListTest(TimRouteTest):
             message["subject"] = subject
         if body:
             message["body"] = body
+        assert message_list.email_list_domain is not None
         self.trigger_mailman_event(
             NewMessageEvent(
                 event="new_message",
@@ -1608,6 +1662,9 @@ class TimMessageListTest(TimRouteTest):
         )
 
 
-def get_note_id_from_json(json):
-    note_id = int(re.search(r'note-id="(\d+)"', json["texts"]).groups()[0])
+def get_note_id_from_json(json_value):
+    match = re.search(r'note-id="(\d+)"', json_value["texts"])
+    if match is None:
+        return -1
+    note_id = int(match.groups()[0])
     return note_id

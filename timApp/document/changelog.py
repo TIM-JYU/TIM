@@ -1,9 +1,8 @@
 from collections import defaultdict
-from typing import List, Tuple, Optional, TYPE_CHECKING, Union
+from typing import TYPE_CHECKING, Union, cast
 
 from sqlalchemy import select
 
-import timApp
 from timApp.document.changelogentry import ChangelogEntry
 from timApp.document.docparagraph import DocParagraph
 from timApp.timdb.sqa import run_sql
@@ -24,10 +23,12 @@ class AuthorInfo:
         self,
         user_map: dict[int, Union["User", "UserGroup"]],
         entries: dict[int, list[ChangelogEntry]],
+        hide: bool = False,
     ) -> None:
         self.authors: dict[Union["User", "UserGroup"], list[ChangelogEntry]] = {}
         for k, v in entries.items():
             self.authors[user_map[k]] = v
+        self.hide = hide
 
     @property
     def display_name(self):
@@ -35,7 +36,8 @@ class AuthorInfo:
 
     @property
     def username_list(self):
-        return ",".join(u.name for u, es in self.authors.items())
+        names: list[str] = [str(u.name) for u, _es in self.authors.items()]
+        return ",".join(names)
 
     @property
     def time(self):
@@ -66,14 +68,32 @@ class Changelog:
             if e.par_id in par_ids:
                 usergroup_ids.add(e.group_id)
                 par_entry_map[e.par_id][e.group_id].append(e)
-        User = timApp.user.user.User
-        UserGroup = timApp.user.usergroup.UserGroup
+        # user = timApp.user.user.User
+        # user_group = timApp.user.usergroup.UserGroup
+        """
         result = run_sql(
-            select(UserGroup, User)
-            .select_from(UserGroup)
-            .filter(UserGroup.id.in_(usergroup_ids))
-            .outerjoin(User, User.name == UserGroup.name)
+            select(user_group, user)
+            .select_from(user_group)
+            .filter(user_group.id.in_(usergroup_ids))
+            .outerjoin(user, user.name == user_group.name)
         ).all()  # type: List[Tuple[UserGroup, Optional[User]]]
+        """
+        # Lazy import tänne funktioiden sisään ajonaikaa varten
+        from timApp.user.user import User
+        from timApp.user.usergroup import UserGroup
+
+        result = cast(
+            list[tuple[UserGroup, User | None]],
+            run_sql(
+                select(UserGroup, User)
+                .select_from(UserGroup)
+                .filter(UserGroup.id.in_(usergroup_ids))
+                .outerjoin(User, User.name == UserGroup.name)
+            )
+            .tuples()
+            .all(),
+        )
+
         for ug, u in result:
             ug_obj_map[ug.id] = u or ug
         for i in par_ids:

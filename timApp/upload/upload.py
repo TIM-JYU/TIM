@@ -596,7 +596,7 @@ def upload_and_stamp_attachment(
     :param stamp_data: Stamp data object (attachment and list ids) without the path.
     :param stampformat: Formatting of stamp text.
     :param custom_stamp_model_content: LaTeX-string for a custom stamp.
-    :return: Json response containing the stamped file path.
+    :return: JSON response containing the stamped file path.
     """
 
     attachment_folder = default_attachment_folder
@@ -650,12 +650,9 @@ def save_file_and_grant_access(
 @upload.get("/files/<path:file_id>/<file_filename>")
 @require_oauth(Scope.user_tasks.value, optional=True)
 def get_file(file_id: str, file_filename: str) -> Response:
-    if file_id.isdigit():
-        f = UploadedFile.get_by_id_and_filename(int(file_id), file_filename)
-    else:
-        f = UploadedFile.get_by_doc_and_filename(file_id, file_filename)
-    if not f:
-        raise NotExist("File not found")
+    f = get_resource_file(
+        file_id, file_filename, "File not found"
+    )  # Just to check existence and access
 
     user = current_token.user if current_token else None
 
@@ -724,16 +721,47 @@ def get_reviewcanvas_pdf(user_name: str, doc_id: int, task_id: str, answer_id: i
     )
 
 
+def get_resource_file(res_id: str, filename: str, error_text: str) -> UploadedFile:
+    """
+    Get the file resource for the given id and filename.
+    The id can be either the resource id or the document id with resource id
+    or full filepath with or without resource id.
+    If resource id is missing, latest file associated to
+
+      - 1549 = 1549 may be resource id or document id.
+        Try first with resource id, then document id
+      - 1549/1591 = 1549 is sure document id and 1591 is resource id
+        It could also be path 1549 and docname 1591,
+        but since docname is more likely to be non-numeric, we try resource id first
+      - users/vesal/koe/upload/pasteimage/1591 = 1591 may be resource id or
+        docname.  Try first with resource id, then with path
+      - users/vesal/koe/upload/pasteimage
+
+
+    :param res_id: resource id or document name or document id
+    :param filename: filename of resource
+    :return: UploadedFile object
+    """
+    f = None
+    if res_id.isdigit():
+        f = UploadedFile.get_by_id_and_filename(int(res_id), filename)
+        if not f:  # not res_id, maybe docid
+            f = UploadedFile.get_by_doc_and_filename(res_id, filename)
+    else:
+        last = res_id.rsplit("/", 1)[-1]
+        if last.isdigit():  # last may be res_id, try that
+            f = UploadedFile.get_by_id_and_filename(int(last), filename)
+        if not f:  # last was not res_id, try full path
+            f = UploadedFile.get_by_doc_and_filename(res_id, filename)
+    if not f:
+        raise NotExist(error_text)
+    return f
+
+
 @upload.get("/images/<path:image_id>/<image_filename>")
 @require_oauth(Scope.user_tasks.value, optional=True)
 def get_image(image_id: str, image_filename: str) -> Response:
-    if image_id.isdigit():
-        f = UploadedFile.get_by_id_and_filename(int(image_id), image_filename)
-    else:
-        f = UploadedFile.get_by_doc_and_filename(image_id, image_filename)
-    if not f:
-        raise NotExist("Image not found")
-
+    f = get_resource_file(image_id, image_filename, "Image not found")
     user = current_token.user if current_token else None
 
     verify_view_access(f, check_parents=True, user=user)

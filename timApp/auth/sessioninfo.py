@@ -16,6 +16,13 @@ def get_current_user() -> dict:
     return get_current_user_object().to_json()
 
 
+def get_username() -> str:
+    user = g.get("user", None)
+    if user is None:
+        return "???"
+    return user.name
+
+
 def clear_session() -> None:
     session.clear()
     g.pop("user", None)
