@@ -788,7 +788,10 @@ class DocParagraph:
         # This DocParagraph instance is not necessarily the same as what self.doc contains. In that case, we copy the
         # HTML from the doc's equivalent paragraph.
         if self.html is None:
-            self.html = self.doc.par_map[self.get_id()]["c"].html
+            try:
+                self.html = self.doc.par_map[self.get_id()]["c"].html
+            except:
+                return self._set_html("")
             assert self.html is not None
         return self.html
 
