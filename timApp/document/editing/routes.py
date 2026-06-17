@@ -196,8 +196,17 @@ def import_template(docinfo: DocInfo, template: DocInfo):
         template_content = template_doc.document.export_markdown(with_tl=True)
 
         if template_doc.is_original_translation:
-            assert isinstance(docinfo, DocEntry)  # TODO: check this is true
-            target_doc = docinfo
+            target_doc = next(
+                (
+                    tl
+                    for _, tl in docentry_translations.values()
+                    if tl.is_original_translation
+                ),
+                None,
+            )
+            assert (
+                target_doc is not None
+            ), f"Document {docinfo.id} does not have a Translation object"
             target_doc.lang_id = template_doc.lang_id
         else:
             tl_doc = create_document_and_block(
