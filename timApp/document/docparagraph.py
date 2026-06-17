@@ -6,34 +6,32 @@ import shelve
 import shutil
 import tempfile
 import time
-from enum import StrEnum, IntEnum
-
-import flask
 from collections import defaultdict
 from copy import copy
+from enum import StrEnum, IntEnum
 from typing import TYPE_CHECKING, Optional, NamedTuple, Any
 
 import commonmark
 import filelock
+import flask
 from commonmark.node import Node
 from jinja2.sandbox import SandboxedEnvironment
 
-
+from timApp.document.documentparser import DocumentParser
+from timApp.document.documentparseroptions import DocumentParserOptions
+from timApp.document.documentwriter import DocumentWriter
 from timApp.document.log_docparagraph import (
     log_for_person,
     log_for_person_short,
     log_filename,
 )
-from timApp.document.viewcontext import ViewRoute
-from timApp.document.documentparser import DocumentParser
-from timApp.document.documentparseroptions import DocumentParserOptions
-from timApp.document.documentwriter import DocumentWriter
 from timApp.document.macroinfo import MacroInfo
 from timApp.document.par_basic_data import ParBasicData
 from timApp.document.preloadoption import PreloadOption
 from timApp.document.prepared_par import PreparedPar
 from timApp.document.randutils import random_id, hashfunc
 from timApp.document.viewcontext import ViewContext, default_view_ctx
+from timApp.document.viewcontext import ViewRoute
 from timApp.markdown.autocounters import TimSandboxedEnvironment
 from timApp.markdown.markdownconverter import (
     par_list_to_html_list,
@@ -43,7 +41,8 @@ from timApp.markdown.markdownconverter import (
     HeadingHtml,
 )
 from timApp.timdb.exceptions import TimDbException, InvalidReferenceException
-from timApp.util.logger import log_error, log_info, log_warning
+from timApp.user.special_group_names import ANONYMOUS_USERNAME
+from timApp.util.logger import log_error, log_warning
 from timApp.util.rndutils import get_rands_as_dict, SeedType
 from timApp.util.utils import (
     count_chars_from_beginning,
@@ -56,7 +55,6 @@ from timApp.util.utils import (
 from tim_common.dumboclient import DumboOptions, MathType, InputFormat
 from tim_common.html_sanitize import sanitize_html
 from tim_common.utils import parse_bool
-from user.special_group_names import ANONYMOUS_USERNAME
 
 if TYPE_CHECKING:
     from timApp.document.document import Document
