@@ -389,7 +389,7 @@ export class StackPluginComponent
             DOMPurify.sanitize(r.questiontext),
             "text/html"
         );
-        let el = doc.querySelector("div.stackinputfeedback");
+        const el = doc.querySelector("div.stackinputfeedback");
 
         if (!el) {
             return;
