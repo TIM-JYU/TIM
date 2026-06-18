@@ -18,6 +18,7 @@ import {PurifyModule} from "tim/util/purify.module";
 import {ScriptedInnerHTMLModule} from "tim/util/scripted-inner-html.module";
 import {registerPlugin} from "tim/plugin/pluginRegistry";
 import {CommonModule} from "@angular/common";
+import DOMPurify from "dompurify";
 
 const STACK_VARIABLE_PREFIX = "stackapi_";
 
@@ -111,9 +112,6 @@ interface IStackData {
                         (click)="runPeek()">Peek
                 </button>
             </p>
-            <div *ngIf="stackPeek" class="peekdiv" id="peek" style="min-height: 10em;">
-                <div></div>
-            </div>
             <div *ngIf="stackInputFeedback" id="stackinputfeedback"
                  class="stackinputfeedback1"
                  [scriptedInnerHTML]="stackInputFeedback"></div>
@@ -319,9 +317,8 @@ export class StackPluginComponent
             this.error = r.message;
             return;
         }
-
         const qt = this.replace(r.questiontext);
-        const i = qt.indexOf('<div class="stackinputfeedback"');
+        const i = qt.indexOf('<div class="stackinputfeedback"'); // Mahdollinen bugi
         const helper = await import("../stack/ServerSyncValues");
         windowAsAny().ServerSyncValues = helper.ServerSyncValues;
         windowAsAny().findParentElementFromScript =
@@ -358,7 +355,7 @@ export class StackPluginComponent
         if (getTask) {
             // remove input validation texts
             const divinput = this.element.find(".stackinputfeedback");
-            divinput.remove();
+            divinput.addClass("hidden");
         }
     }
 
@@ -386,12 +383,31 @@ export class StackPluginComponent
             this.error = r.message;
             return;
         }
-        const peekDiv = this.element.find(".peekdiv");
-        const peekDivC = peekDiv.children();
-        // editorDiv.empty();
-        const pdiv = $(`<div><div class="math">${r.questiontext}</div></div>`);
-        await ParCompiler.processAllMath(pdiv);
-        peekDivC.replaceWith(pdiv); // TODO: still flashes
+
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(
+            DOMPurify.sanitize(r.questiontext),
+            "text/html"
+        );
+        let el = doc.querySelector("div.stackinputfeedback");
+
+        if (!el) {
+            return;
+        }
+
+        const curEl = this.element.get()[0];
+        const curMathEl = curEl.querySelector(
+            `div#${el.id}.stackinputfeedback`
+        );
+
+        if (!curMathEl) {
+            return;
+        }
+
+        curMathEl.replaceWith(el);
+
+        el.classList.add("math");
+        await ParCompiler.processAllMath(this.element);
     }
 
     autoPeekInput(id: string) {
@@ -438,7 +454,7 @@ export class StackPluginComponent
         if (!this.stackPeek) {
             // remove extra fields from screen
             let divinput = this.element.find(".stackinputfeedback");
-            divinput.remove();
+            divinput.addClass("hidden");
             divinput = this.element.find(".stackprtfeedback");
             divinput.remove();
             divinput = this.element.find(".stackpartmark");
@@ -455,7 +471,6 @@ export class StackPluginComponent
                 stackData: {...data},
             },
         });
-
         this.isRunning = false;
         if (!r.ok) {
             this.error = r.result.error.error;
