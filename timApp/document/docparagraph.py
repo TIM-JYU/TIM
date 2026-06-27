@@ -792,7 +792,9 @@ class DocParagraph:
                 self.html = self.doc.par_map[self.get_id()]["c"].html
             except:
                 return self._set_html("")
-            assert self.html is not None
+            # assert self.html is not None
+            if self.html is None:
+                return self._set_html("")
         return self.html
 
     class UnloadedParInfo(NamedTuple):
