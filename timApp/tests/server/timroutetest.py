@@ -1014,6 +1014,34 @@ class TimRouteTestBase(TimDbTest):
         self.init_doc(doc, from_file, initial_par, settings)
         return de
 
+    def try_create_doc(
+        self,
+        path: str | None = None,
+        from_file: str | None = None,
+        initial_par: str | list[str] | None = None,
+        settings: dict | None = None,
+        copy_from: int | None = None,
+        cite: int | None = None,
+        template: str | None = None,
+        title: str | None = None,
+        expect_status: int = 200,
+        **kwargs: object,
+    ) -> DocEntry:
+        de = self.create_doc(
+            path,
+            from_file,
+            initial_par,
+            settings,
+            copy_from,
+            cite,
+            template,
+            title,
+            expect_status,
+            **kwargs,
+        )
+        assert de is not None, f"Document creation failed with status {expect_status}"
+        return de
+
     def create_folder(
         self, path: str, title: str = "foldertitle", expect_status=200, **kwargs
     ):
