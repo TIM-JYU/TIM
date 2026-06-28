@@ -1422,7 +1422,7 @@ class DocParagraph:
             base_path = self.get_base_path()
             if not os.path.exists(base_path):
                 os.makedirs(base_path)
-
+        self._compute_hash()
         d = self.dict(include_html_cache=True)
         log_for_person(
             lambda: f"Writing par {self.get_doc_id()}/{self.get_id()}: {d} "
