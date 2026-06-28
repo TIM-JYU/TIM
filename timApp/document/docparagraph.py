@@ -1870,6 +1870,8 @@ def create_final_par(
         final_par.ref_doc = last_ref.doc.get_source_document()
 
     final_par.ref_chain = reached_par
+    # if final_par.html_cache is None:
+    #    final_par.html_cache = reached_par.html_cache
 
     # If from postanswer-route, no need for html
     if view_ctx and view_ctx.route != ViewRoute.PostAnswer:
