@@ -170,9 +170,11 @@ This should not be visible.
                 "urlmacros": {"u1": "u1"},
             },
             initial_par=[
+                '#- {id="REgk3TVho1cx"}\nstart',  # there is a bug that the last test fails in h1 without this line
                 '# h1 %%m1%% {id="hbhqWtVl7rMA"}',
                 '#- {id="wC2x3hSCNLvH"}\nm1 = %%m1%%',
-                '#- {nocache="auto" id="8nfXN8EJAlbm"}\n' "u1 = %%u1%%",
+                '#- {id="8nfXN8EJAlbm"}\nu1 = %%u1%%',
+                '## h2 %%u1%% {id="uZWsQiRvbx9n"}',
             ],
         )
 
@@ -181,22 +183,30 @@ This should not be visible.
             ex = []
             if settings:  # The settings produce an empty string
                 ex += [""]
-            ex += ["1. h1 m1", "m1 = m1"]
-            ex1 = ex + ["u1 = u1"]
-            ex2 = ex + ["u1 = yes"]
+            ex += ["start", "1. h1 m1", "m1 = m1"]
+            ex1 = ex + ["u1 = u1", "1.1 h2 u1"]
+            ex2 = ex + ["u1 = yes", "1.1 h2 yes"]
+            self.get(doc_info.url, as_tree=True)
             tree = self.get(doc_info.url, as_tree=True)
             self.assert_content(tree, ex1)
             tree = self.get(doc_info.url + "?u1=yes", as_tree=True)
             self.assert_content(tree, ex2)
 
         check_result(de1, settings=True)
+
+        de1t = self.create_translation(de1)
+        check_result(de1t, settings=True)
+
         de2 = self.try_create_doc(
             initial_par=[
-                f'#- {{rd="{de1.id}" rp="hbhqWtVl7rMA" id="hbhqWtVl7rMA"}}',
-                f'#- {{rd="{de1.id}" rp="wC2x3hSCNLvH" id="wC2x3hSCNLvH"}}',
-                f'#- {{rd="{de1.id}" rp="8nfXN8EJAlbm" id="8nfXN8EJAlbm"}}',
+                f'#- {{rd="{de1.id}" rp="REgk3TVho1cx"}}',
+                f'#- {{rd="{de1.id}" rp="hbhqWtVl7rMA"}}',
+                f'#- {{rd="{de1.id}" rp="wC2x3hSCNLvH"}}',
+                f'#- {{rd="{de1.id}" rp="8nfXN8EJAlbm"}}',
+                f'#- {{rd="{de1.id}" rp="uZWsQiRvbx9n"}}',
             ]
         )
         check_result(de2)
+
         de2t = self.create_translation(de2)
         check_result(de2t)
