@@ -85,6 +85,8 @@ class EditRequest:
             for c in self.forced_classes:
                 for p in self.editor_pars:
                     p.add_class(c)
+            for p in self.editor_pars:
+                p._compute_hash()
         return self.editor_pars
 
     @staticmethod
