@@ -1,0 +1,177 @@
+/**
+ * The dialog component for adding llm model API keys to user settings
+ *
+ * Based on_ add-api-key-dialog.component.ts from TIMTra
+ * original authors:
+ * @author Noora Jokela
+ * @author Sami Viitanen
+ * @licence MIT
+ * @copyright 2022 TIMTra project authors
+ *
+ * Modifications
+ * @author Lauri Malmström
+ * Modified functionality for adding and validating llm api keys
+ */
+
+import {Component, NgModule} from "@angular/core";
+import {HttpClient} from "@angular/common/http";
+import {FormsModule} from "@angular/forms";
+import {CommonModule} from "@angular/common";
+import {AngularDialogComponent} from "tim/ui/angulardialog/angular-dialog-component.directive";
+import {DialogModule} from "tim/ui/angulardialog/dialog.module";
+import {toPromise} from "tim/util/utils";
+import {TimUtilityModule} from "tim/ui/tim-utility.module";
+import type {IUserLLMApiKey} from "tim/user/IUser";
+
+/**
+ * User can add LLM model API keys to be stored in TIM. (code source: add-api-key-dialog.component.ts)
+ */
+@Component({
+    selector: "tim-add-asktim-api-key-dialog",
+    template: `
+        <tim-dialog-frame [minimizable]="false">
+            <ng-container header i18n>
+                Add new LLM model API key
+            </ng-container>
+            <ng-container body>
+                <form>
+                    <fieldset [disabled]="saving || saved">
+                        <div class="form-group">
+                            <label class="control-label" for="model-select" i18n>LLM model provider</label>
+                            <select class="form-control" name="channel-select" [(ngModel)]="chosenProvider">
+                                <option *ngFor="let provider of this.LLMProviders"
+                                        value="{{provider}}"
+                                >{{provider}}</option>
+                            </select> 
+                        </div>
+                        <div class="form-group">
+                            <label class="control-label" for="name-select" i18n>Alias</label>
+                            <input class="form-control" type="text" name="name-select" [(ngModel)]="LLMKeyAlias">
+                        </div>
+                        <div class="form-group">
+                            <label class="control-label" for="api-key-text" i18n>API key</label>
+                            <input class="form-control" type="text" name="api-key-text"
+                                   [(ngModel)]="apiKey">
+                        </div>
+                        <div>
+                            <tim-alert *ngIf="added" severity="success" i18n>
+                                The API key was added successfully!
+                            </tim-alert>
+                            <tim-alert *ngIf="addError" severity="danger" i18n>
+                                Could not add the new API key: {{addError}}
+                            </tim-alert>
+                        </div>
+                    </fieldset>
+                </form>
+            </ng-container>
+            <ng-container footer>
+                <i class="glyphicon glyphicon-ok success" *ngIf="saved"></i>
+                <tim-loading *ngIf="saving" style="margin-right: 1em;"></tim-loading>
+                <a href="https://tim.jyu.fi/view/tim/ohjeita/tekoalyavustaja/llm-avustaja-ohje/en-GB#api-avainten-lis%C3%A4%C3%A4minen">
+                    <span class="glyphicon glyphicon-question-sign" style="margin-right: 1em; font-size: x-large; vertical-align: middle;" title="Help adding LLM API keys" i18n-title></span>
+                </a>
+                <button class="timButton"
+                        (click)="addNewAPIKey()"
+                        [disabled]="!(chosenProvider && apiKey && LLMKeyAlias) || saved" i18n>
+                    Add
+                </button>
+                <button class="timButton" (click)="dismiss()">Close</button>
+            </ng-container>
+        </tim-dialog-frame>
+    `,
+})
+export class AddLLMAPIKeyDialogComponent extends AngularDialogComponent<
+    {onAdd: (key: IUserLLMApiKey) => void; existingKeys?: IUserLLMApiKey[]},
+    void
+> {
+    ngOnInit() {
+        void this.getLLMProviders();
+    }
+
+    dialogName: string = "AddAPIKey";
+
+    chosenProvider: string = "";
+    apiKey?: string;
+    LLMKeyAlias?: string = "";
+    LLMProviders: [] = [];
+    saved = false;
+    saving = false;
+    addError?: string;
+    added = false;
+    message: string = "";
+
+    // Used only to get HttpClient initialized.
+    constructor(private http: HttpClient) {
+        super();
+    }
+
+    /**
+     * Sends a new API key for a user to server.
+     */
+    async addNewAPIKey() {
+        this.saving = true;
+
+        const aliasUsed = this.data.existingKeys?.some(
+            (existingKey) =>
+                existingKey.alias.toLowerCase() ===
+                this.LLMKeyAlias!.toLowerCase()
+        );
+
+        if (aliasUsed) {
+            this.addError = "Alias already in use.";
+            this.saving = false;
+            return;
+        } else {
+            const validateResponse = await this.validateAPIKey();
+
+            if (validateResponse.ok) {
+                const key: IUserLLMApiKey = validateResponse.result;
+                this.saving = false;
+                this.data.onAdd({
+                    provider: key.provider,
+                    APIkey: key.APIkey,
+                    alias: key.alias,
+                    availableTokens: 0,
+                    usedTokens: 0,
+                    tokensChecked: false,
+                    groups: key.groups,
+                    itemPaths: key.itemPaths,
+                });
+                this.added = true;
+                this.dismiss();
+            } else {
+                this.saving = false;
+                this.addError = validateResponse.result.error.error;
+            }
+        }
+    }
+
+    /**
+     * Sends a request to our server to check the validity of the API key to be added.
+     * @return Response from server, if anything else than 200 OK we know the key was not valid.
+     */
+    async validateAPIKey() {
+        return await toPromise(
+            this.http.post<IUserLLMApiKey>("/asktim/validateApi", {
+                provider: this.chosenProvider,
+                apikey: this.apiKey,
+                alias: this.LLMKeyAlias,
+            })
+        );
+    }
+
+    async getLLMProviders() {
+        const result = await toPromise(
+            this.http.get<[]>("/asktim/getProviders")
+        );
+        if (result.ok) {
+            this.LLMProviders = result.result;
+        }
+    }
+}
+
+@NgModule({
+    declarations: [AddLLMAPIKeyDialogComponent],
+    imports: [DialogModule, FormsModule, TimUtilityModule, CommonModule],
+})
+export class AddAPIKeyDialogModule {}

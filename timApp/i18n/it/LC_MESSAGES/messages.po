@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-03-16 12:35+0000\n"
-"PO-Revision-Date: 2026-03-16 14:42+0200\n"
+"POT-Creation-Date: 2026-05-05 15:53+0000\n"
+"PO-Revision-Date: 2026-05-05 20:33+0300\n"
 "Last-Translator: \n"
 "Language-Team: it <LL@li.org>\n"
 "Language: it\n"
@@ -34,6 +34,30 @@ msgstr ""
 #: auth/accesshelper.py:374
 msgid "Sorry, you don't have permission to use this resource."
 msgstr "Spiacenti, non disponi dell'autorizzazione per utilizzare questa risorsa."
+
+#: modules/asktim/model.py:48
+msgid "The request timed out. Please try again later."
+msgstr ""
+
+#: modules/asktim/model.py:50
+msgid "Rate limit exceeded. Please wait and try again."
+msgstr ""
+
+#: modules/asktim/model.py:52
+msgid "Authentication failed."
+msgstr ""
+
+#: modules/asktim/model.py:54
+msgid "The requested resource was not found."
+msgstr ""
+
+#: modules/asktim/model.py:56
+msgid "Bad request."
+msgstr ""
+
+#: modules/asktim/model.py:57
+msgid "An error occurred while generating a response."
+msgstr ""
 
 #: plugin/examGroupManager/examGroupManager.py:722
 #, python-format

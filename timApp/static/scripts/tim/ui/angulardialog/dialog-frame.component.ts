@@ -77,7 +77,7 @@ class ResizableDraggableWrapper {
                     </tim-close-button>
                 </div>
                 <div class="draggable-content modal-content" [class.minimized]="areaMinimized">
-                    <div #body id="modal-body" class="modal-body">
+                    <div #body id="modal-body" class="modal-body" [ngClass]="bodyClass">
                         <ng-content select="[body]"></ng-content>
                     </div>
                     <div class="modal-footer">
@@ -97,6 +97,7 @@ export class DialogFrame {
     @Input() minimizable = true;
     @Input() canResize = true;
     @Input() showCloseIcon = true;
+    @Input() bodyClass = "";
 
     // If true, indicates that there may be some asynchronous loading going on when opening the dialog.
     // This info is only used when initializing the position of the dialog.

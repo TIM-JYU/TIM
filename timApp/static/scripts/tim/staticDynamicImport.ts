@@ -106,6 +106,8 @@ export function staticDynamicImport(s: string) {
             );
         case "steps":
             return import("tim/plugin/steps/steps-plugin.component");
+        case "/asktim/js/build/asktim.js":
+            return import("modules/asktim/client/asktim");
     }
     throw Error(`Module was not statically known: ${s}`);
 }
