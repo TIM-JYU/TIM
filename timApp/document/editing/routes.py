@@ -199,7 +199,7 @@ def import_template(docinfo: DocInfo, template: DocInfo):
             target_doc = next(
                 (
                     tl
-                    for _, tl in docentry_translations.values()
+                    for _, tl in docentry_translations.items()
                     if tl.is_original_translation
                 ),
                 None,
