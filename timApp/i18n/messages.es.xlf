@@ -2,54 +2,6 @@
 <xliff version="1.2" xmlns="urn:oasis:names:tc:xliff:document:1.2">
   <file source-language="en-US" datatype="plaintext" original="ng2.template" target-language="es">
     <body>
-      <trans-unit id="6791923436941679216" datatype="html">
-        <source>Write your code here</source>
-        <target state="translated">Escriba su código aquí</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">modules/cs/js/csPlugin.ts</context>
-          <context context-type="linenumber">1783,1781</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="9154250044984838800" datatype="html">
-        <source>Write your input here</source>
-        <target state="translated">Escriba su entrada aquí</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">modules/cs/js/csPlugin.ts</context>
-          <context context-type="linenumber">1790,1788</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="8331380368195182710" datatype="html">
-        <source>Write file name here</source>
-        <target state="translated">Escriba el nombre del archivo aquí</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">modules/cs/js/csPlugin.ts</context>
-          <context context-type="linenumber">1803,1802</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="3423372852784001404" datatype="html">
-        <source>Write your program arguments here</source>
-        <target state="translated">Escriba los argumentos de su programa aquí</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">modules/cs/js/csPlugin.ts</context>
-          <context context-type="linenumber">1804,1800</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="2685881634494000090" datatype="html">
-        <source>File name:</source>
-        <target state="translated">Nombre del archivo:</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">modules/cs/js/csPlugin.ts</context>
-          <context context-type="linenumber">1811</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="3415721351439288775" datatype="html">
-        <source>Arguments:</source>
-        <target state="translated">Argumentos:</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">modules/cs/js/csPlugin.ts</context>
-          <context context-type="linenumber">1811,1809</context>
-        </context-group>
-      </trans-unit>
       <trans-unit id="7585826646011739428" datatype="html">
         <source>Edit</source>
         <target state="translated">Editar</target>
@@ -142,46 +94,6 @@
           <context context-type="linenumber">359</context>
         </context-group>
       </trans-unit>
-      <trans-unit id="7123864797949635533" datatype="html">
-        <source>Compile</source>
-        <target state="translated">Compilar</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">modules/cs/js/csPlugin.ts</context>
-          <context context-type="linenumber">2073</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="3759965007855499397" datatype="html">
-        <source>Run</source>
-        <target state="translated">Ejecutar</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">modules/cs/js/csPlugin.ts</context>
-          <context context-type="linenumber">2075</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="4986622155679869086" datatype="html">
-        <source>Upload image or file</source>
-        <target state="translated">Subir imagen o archivo</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">modules/cs/js/csPlugin.ts</context>
-          <context context-type="linenumber">2149</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="4016642344805810835" datatype="html">
-        <source>Show complete code</source>
-        <target state="translated">Mostrar código completo</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">modules/cs/js/csPlugin.ts</context>
-          <context context-type="linenumber">2157</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="5196898934555731575" datatype="html">
-        <source>Hide extra code</source>
-        <target state="translated">Ocultar código extra</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">modules/cs/js/csPlugin.ts</context>
-          <context context-type="linenumber">2161</context>
-        </context-group>
-      </trans-unit>
       <trans-unit id="7808756054397155068" datatype="html">
         <source>Reset</source>
         <target state="translated">Reiniciar</target>
@@ -196,22 +108,6 @@
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/quantum-circuit.component.ts</context>
           <context context-type="linenumber">363</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="3080483882937310852" datatype="html">
-        <source>Normal</source>
-        <target state="translated">Normal</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">modules/cs/js/csPlugin.ts</context>
-          <context context-type="linenumber">2308</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="5599513168032987944" datatype="html">
-        <source>Highlight</source>
-        <target state="translated">Resaltar</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">modules/cs/js/csPlugin.ts</context>
-          <context context-type="linenumber">2309</context>
         </context-group>
       </trans-unit>
       <trans-unit id="6119751961559015295" datatype="html">
@@ -272,98 +168,6 @@
         <context-group purpose="location">
           <context context-type="sourcefile">modules/cs/js/csPlugin.ts</context>
           <context context-type="linenumber">3841</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="2347724151568473592" datatype="html">
-        <source>language</source>
-        <target state="translated">language</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">modules/cs/js/csPlugin.ts</context>
-          <context context-type="linenumber">4242</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="3388355350799687511" datatype="html">
-        <source>hide Tauno</source>
-        <target state="translated">hide Tauno</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">modules/cs/js/csPlugin.ts</context>
-          <context context-type="linenumber">4251,4252</context>
-        </context-group>
-        <context-group purpose="location">
-          <context context-type="sourcefile">modules/cs/js/csPlugin.ts</context>
-          <context context-type="linenumber">4263,4264</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="3576138961113522408" datatype="html">
-        <source>show Tauno</source>
-        <target state="translated">show Tauno</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">modules/cs/js/csPlugin.ts</context>
-          <context context-type="linenumber">4260,4261</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="969766256764189402" datatype="html">
-        <source>copy from Tauno</source>
-        <target state="translated">copy from Tauno</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">modules/cs/js/csPlugin.ts</context>
-          <context context-type="linenumber">4262,4263</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="1540071714254168972" datatype="html">
-        <source>Copy the code you made by Tauno by pressing the link "copy from Tauno". Then press Run button. Note that the running code may have different code than in Tauno!</source>
-        <target state="translated">"Copia el código que hizo Tauno pulsando el enlace ""copy from Tauno"". Después pulsa el botón Ejecutar. ¡Ten en cuenta que el código en ejecución puede tener un código diferente al de Tauno!"</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">modules/cs/js/csPlugin.ts</context>
-          <context context-type="linenumber">4264,4265</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="7770718775929472608" datatype="html">
-        <source>hide SimCir</source>
-        <target state="translated">hide SimCir</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">modules/cs/js/csPlugin.ts</context>
-          <context context-type="linenumber">4267,4268</context>
-        </context-group>
-        <context-group purpose="location">
-          <context context-type="sourcefile">modules/cs/js/csPlugin.ts</context>
-          <context context-type="linenumber">4272,4273</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="3558959665898525698" datatype="html">
-        <source>show SimCir</source>
-        <target state="translated">show SimCir</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">modules/cs/js/csPlugin.ts</context>
-          <context context-type="linenumber">4269,4270</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="4305816642652798518" datatype="html">
-        <source>copy from SimCir</source>
-        <target state="translated">copy from SimCir</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">modules/cs/js/csPlugin.ts</context>
-          <context context-type="linenumber">4271,4272</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="9201276850548192972" datatype="html">
-        <source>copy to SimCir</source>
-        <target state="translated">copy to SimCir</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">modules/cs/js/csPlugin.ts</context>
-          <context context-type="linenumber">4272</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="1828289069499836477" datatype="html">
-        <source>Fetch</source>
-        <target state="translated">Fetch</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">modules/cs/js/csPlugin.ts</context>
-          <context context-type="linenumber">4390,4391</context>
-        </context-group>
-        <context-group purpose="location">
-          <context context-type="sourcefile">modules/cs/js/extcheck.ts</context>
-          <context context-type="linenumber">129,130</context>
         </context-group>
       </trans-unit>
       <trans-unit id="5724363929304709833" datatype="html">
@@ -640,22 +444,6 @@
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/quantum-toolbox.component.ts</context>
           <context context-type="linenumber">55</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="935187492052582731" datatype="html">
-        <source>Submit</source>
-        <target state="translated">Submit</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">modules/cs/js/gitreg.ts</context>
-          <context context-type="linenumber">27,28</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="3545535715346988821" datatype="html">
-        <source>Show task</source>
-        <target state="translated">Show task</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">modules/cs/js/jsframe.ts</context>
-          <context context-type="linenumber">310</context>
         </context-group>
       </trans-unit>
       <trans-unit id="5880578431228288838" datatype="html">
@@ -6956,30 +6744,6 @@ Separate multiple addresses with commas or write each address on a new line.</so
           <context context-type="linenumber">1736</context>
         </context-group>
       </trans-unit>
-      <trans-unit id="18610244592166500" datatype="html">
-        <source>Reset table state to</source>
-        <target state="translated">Restablecer estado de la tabla a</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/plugin/timTable/tim-table.component.ts</context>
-          <context context-type="linenumber">1365,1364</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="2323081413317144899" datatype="html">
-        <source>Reset table</source>
-        <target state="translated">Restablecer tabla</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/plugin/timTable/tim-table.component.ts</context>
-          <context context-type="linenumber">1366,1364</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="5520520072410375513" datatype="html">
-        <source>original</source>
-        <target state="translated">original</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/plugin/timTable/tim-table.component.ts</context>
-          <context context-type="linenumber">1370</context>
-        </context-group>
-      </trans-unit>
       <trans-unit id="6087003735770054211" datatype="html">
         <source>Camera settings</source>
         <target state="translated">Configuración de la cámara</target>
@@ -11473,6 +11237,662 @@ Separate multiple addresses with commas or write each address on a new line.</so
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
           <context context-type="linenumber">702,703</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="7416659172020658801" datatype="html">
+        <source>Create a new badge</source>
+        <target state="translated">Crear una nueva insignia</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/gamification/badge/badge-creator.component.ts</context>
+          <context context-type="linenumber">44</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="5423991647761194551" datatype="html">
+        <source>Newest</source>
+        <target state="translated">Más reciente</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/gamification/badge/badge-creator.component.ts</context>
+          <context context-type="linenumber">54,55</context>
+        </context-group>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/gamification/badge/badge-viewer.component.ts</context>
+          <context context-type="linenumber">51,52</context>
+        </context-group>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/gamification/badge/badge-viewer.component.ts</context>
+          <context context-type="linenumber">89,90</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="5844212965736113574" datatype="html">
+        <source>Oldest</source>
+        <target state="translated">Más antigua</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/gamification/badge/badge-creator.component.ts</context>
+          <context context-type="linenumber">55,56</context>
+        </context-group>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/gamification/badge/badge-viewer.component.ts</context>
+          <context context-type="linenumber">52,53</context>
+        </context-group>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/gamification/badge/badge-viewer.component.ts</context>
+          <context context-type="linenumber">90,91</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="11998600819904735" datatype="html">
+        <source>This course does not have any badges yet.</source>
+        <target state="translated">Este curso aún no tiene insignias.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/gamification/badge/badge-creator.component.ts</context>
+          <context context-type="linenumber">63,64</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="6739608248709664215" datatype="html">
+        <source>Assign badge</source>
+        <target state="translated">Asignar insignia</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/gamification/badge/badge-creator.component.ts</context>
+          <context context-type="linenumber">76</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="3393624369102529500" datatype="html">
+        <source>Edit badge</source>
+        <target state="translated">Editar insignia</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/gamification/badge/badge-creator.component.ts</context>
+          <context context-type="linenumber">82</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="6020986914072713662" datatype="html">
+        <source>Delete badge</source>
+        <target state="translated">Eliminar insignia</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/gamification/badge/badge-creator.component.ts</context>
+          <context context-type="linenumber">88</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="5868542061568734441" datatype="html">
+        <source>Fields marked with</source>
+        <target state="translated">Los campos marcados con</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/gamification/badge/badge-creator.component.ts</context>
+          <context context-type="linenumber">113</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="974437052221961135" datatype="html">
+        <source>are required</source>
+        <target state="translated">son obligatorios</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/gamification/badge/badge-creator.component.ts</context>
+          <context context-type="linenumber">113</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="5501075393524406693" datatype="html">
+        <source>Badge title</source>
+        <target state="translated">Título de la insignia</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/gamification/badge/badge-creator.component.ts</context>
+          <context context-type="linenumber">118</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="6901100222794813353" datatype="html">
+        <source>characters</source>
+        <target state="translated">caracteres</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/gamification/badge/badge-creator.component.ts</context>
+          <context context-type="linenumber">122</context>
+        </context-group>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/gamification/badge/badge-creator.component.ts</context>
+          <context context-type="linenumber">136</context>
+        </context-group>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/gamification/badge/badge-giver.component.ts</context>
+          <context context-type="linenumber">190</context>
+        </context-group>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/group-dashboard/name-changer.component.ts</context>
+          <context context-type="linenumber">36</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="6952242034697821025" datatype="html">
+        <source>Title is required.</source>
+        <target state="translated">El título es obligatorio.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/gamification/badge/badge-creator.component.ts</context>
+          <context context-type="linenumber">126,127</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="6037965752494497249" datatype="html">
+        <source>Title is too long (max 30 characters).</source>
+        <target state="translated">El título es demasiado largo (máximo 30 caracteres).</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/gamification/badge/badge-creator.component.ts</context>
+          <context context-type="linenumber">127,128</context>
+        </context-group>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/group-dashboard/name-changer.component.ts</context>
+          <context context-type="linenumber">32,33</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="2512365026527188575" datatype="html">
+        <source>Description is required.</source>
+        <target state="translated">La descripción es obligatoria.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/gamification/badge/badge-creator.component.ts</context>
+          <context context-type="linenumber">140,141</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="8920531641317645527" datatype="html">
+        <source>Description is too long (max 200 characters).</source>
+        <target state="translated">La descripción es demasiado larga (máximo 200 caracteres).</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/gamification/badge/badge-creator.component.ts</context>
+          <context context-type="linenumber">141,142</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="3074987902485823708" datatype="html">
+        <source>Icon</source>
+        <target state="translated">Icono</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/gamification/badge/badge-creator.component.ts</context>
+          <context context-type="linenumber">147</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="7134128927491765785" datatype="html">
+        <source>Icon is required.</source>
+        <target state="translated">El icono es obligatorio.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/gamification/badge/badge-creator.component.ts</context>
+          <context context-type="linenumber">152,153</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="9011959596901584887" datatype="html">
+        <source>Color</source>
+        <target state="translated">Color</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/gamification/badge/badge-creator.component.ts</context>
+          <context context-type="linenumber">157</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="7643964993666081560" datatype="html">
+        <source>Color is required.</source>
+        <target state="translated">El color es obligatorio.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/gamification/badge/badge-creator.component.ts</context>
+          <context context-type="linenumber">162,163</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="4427129289566046309" datatype="html">
+        <source>Shape</source>
+        <target state="translated">Forma</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/gamification/badge/badge-creator.component.ts</context>
+          <context context-type="linenumber">169</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="6484591549347395431" datatype="html">
+        <source>Cancel and return without saving</source>
+        <target state="translated">Cancelar y volver sin guardar</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/gamification/badge/badge-creator.component.ts</context>
+          <context context-type="linenumber">206,207</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="6364492383924408525" datatype="html">
+        <source>Access denied for students.</source>
+        <target state="translated">Acceso denegado para los estudiantes.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/gamification/badge/badge-creator.component.ts</context>
+          <context context-type="linenumber">219,220</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="form.create" datatype="html">
+        <source>Create</source>
+        <target state="translated">Crear</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/gamification/badge/badge-creator.component.ts</context>
+          <context context-type="linenumber">251</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="form.save" datatype="html">
+        <source>Save Changes</source>
+        <target state="translated">Guardar cambios</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/gamification/badge/badge-creator.component.ts</context>
+          <context context-type="linenumber">252</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="form.fillRequired" datatype="html">
+        <source>Fill all the required fields</source>
+        <target state="translated">Complete todos los campos obligatorios</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/gamification/badge/badge-creator.component.ts</context>
+          <context context-type="linenumber">253</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="form.allBadges" datatype="html">
+        <source>All Badges</source>
+        <target state="translated">Todas las insignias</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/gamification/badge/badge-creator.component.ts</context>
+          <context context-type="linenumber">254</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="form.createNewBadge" datatype="html">
+        <source>Create a new badge</source>
+        <target state="translated">Crear una nueva insignia</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/gamification/badge/badge-creator.component.ts</context>
+          <context context-type="linenumber">255</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="form.edit" datatype="html">
+        <source>Edit</source>
+        <target state="translated">Editar</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/gamification/badge/badge-creator.component.ts</context>
+          <context context-type="linenumber">256</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="584754872792429089" datatype="html">
+        <source>Assign</source>
+        <target state="translated">Asignar</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/gamification/badge/badge-giver.component.ts</context>
+          <context context-type="linenumber">28</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="1598304203172707370" datatype="html">
+        <source>to user(s) or group(s)</source>
+        <target state="translated">a usuarios o grupos</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/gamification/badge/badge-giver.component.ts</context>
+          <context context-type="linenumber">28</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="197548451473527565" datatype="html">
+        <source> View users </source>
+        <target state="translated"> Ver usuarios </target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/gamification/badge/badge-giver.component.ts</context>
+          <context context-type="linenumber">47</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="6734116808381874560" datatype="html">
+        <source> View groups </source>
+        <target state="translated"> Ver grupos </target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/gamification/badge/badge-giver.component.ts</context>
+          <context context-type="linenumber">50</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="1494518490116523821" datatype="html">
+        <source>Select all</source>
+        <target state="translated">Seleccionar todo</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/gamification/badge/badge-giver.component.ts</context>
+          <context context-type="linenumber">78</context>
+        </context-group>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/gamification/badge/badge-giver.component.ts</context>
+          <context context-type="linenumber">145</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="6628030584459078156" datatype="html">
+        <source>Users without group</source>
+        <target state="translated">Usuarios sin grupo</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/gamification/badge/badge-giver.component.ts</context>
+          <context context-type="linenumber">101,102</context>
+        </context-group>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/gamification/badge/badge-withdraw.component.ts</context>
+          <context context-type="linenumber">88,89</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="6279406018740594152" datatype="html">
+        <source>No users found</source>
+        <target state="translated">No se encontraron usuarios</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/gamification/badge/badge-giver.component.ts</context>
+          <context context-type="linenumber">171,172</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="4112079984094994691" datatype="html">
+        <source>Select group to view users</source>
+        <target state="translated">Seleccione un grupo para ver los usuarios</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/gamification/badge/badge-giver.component.ts</context>
+          <context context-type="linenumber">174,175</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="8066608938393600549" datatype="html">
+        <source>Message</source>
+        <target state="translated">Mensaje</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/gamification/badge/badge-giver.component.ts</context>
+          <context context-type="linenumber">183,184</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="5610574481341757897" datatype="html">
+        <source> Assign </source>
+        <target state="translated"> Asignar </target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/gamification/badge/badge-giver.component.ts</context>
+          <context context-type="linenumber">202</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="4575719820429514382" datatype="html">
+        <source>User Badges </source>
+        <target state="translated">Insignias del usuario  </target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/gamification/badge/badge-viewer.component.ts</context>
+          <context context-type="linenumber">31,32</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="1857600886131654201" datatype="html">
+        <source>My Badges</source>
+        <target state="translated">Mis insignias</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/gamification/badge/badge-viewer.component.ts</context>
+          <context context-type="linenumber">41</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="2684344419716682750" datatype="html">
+        <source>Badges</source>
+        <target state="translated">Insignias</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/gamification/badge/badge-viewer.component.ts</context>
+          <context context-type="linenumber">42</context>
+        </context-group>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/gamification/badge/badge-viewer.component.ts</context>
+          <context context-type="linenumber">76</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="3311502347627501218" datatype="html">
+        <source>No user badges</source>
+        <target state="translated">El usuario no tiene insignias</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/gamification/badge/badge-viewer.component.ts</context>
+          <context context-type="linenumber">45,46</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="7796428855216903386" datatype="html">
+        <source>No group badges</source>
+        <target state="translated">El grupo no tiene insignias</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/gamification/badge/badge-viewer.component.ts</context>
+          <context context-type="linenumber">79,80</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="form.message" datatype="html">
+        <source>Message:</source>
+        <target state="translated">Mensaje:</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/gamification/badge/badge-viewer.component.ts</context>
+          <context context-type="linenumber">142</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="form.description" datatype="html">
+        <source>Description:</source>
+        <target state="translated">Descripción:</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/gamification/badge/badge-viewer.component.ts</context>
+          <context context-type="linenumber">143</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="form.textIcon" datatype="html">
+        <source>Icon:</source>
+        <target state="translated">Icono:</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/gamification/badge/badge-viewer.component.ts</context>
+          <context context-type="linenumber">144</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="form.textColor" datatype="html">
+        <source>Color:</source>
+        <target state="translated">Color:</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/gamification/badge/badge-viewer.component.ts</context>
+          <context context-type="linenumber">145</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="form.textShape" datatype="html">
+        <source>Shape:</source>
+        <target state="translated">Forma:</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/gamification/badge/badge-viewer.component.ts</context>
+          <context context-type="linenumber">146</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="form.textTime" datatype="html">
+        <source>Time given:</source>
+        <target state="translated">Fecha de asignación:</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/gamification/badge/badge-viewer.component.ts</context>
+          <context context-type="linenumber">147</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="form.textCreatedBy" datatype="html">
+        <source>Created by:</source>
+        <target state="translated">Creado por:</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/gamification/badge/badge-viewer.component.ts</context>
+          <context context-type="linenumber">148</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="form.textGivenBy" datatype="html">
+        <source>Given by:</source>
+        <target state="translated">Asignado por:</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/gamification/badge/badge-viewer.component.ts</context>
+          <context context-type="linenumber">149</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="4828254589226750814" datatype="html">
+        <source>View users or groups</source>
+        <target state="translated">Ver usuarios o grupos</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/gamification/badge/badge-withdraw.component.ts</context>
+          <context context-type="linenumber">30</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="4555457172864212828" datatype="html">
+        <source>Users</source>
+        <target state="translated">Usuarios</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/gamification/badge/badge-withdraw.component.ts</context>
+          <context context-type="linenumber">44</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="5547499389580646473" datatype="html">
+        <source>No badges assigned</source>
+        <target state="translated">No hay insignias asignadas</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/gamification/badge/badge-withdraw.component.ts</context>
+          <context context-type="linenumber">119,120</context>
+        </context-group>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/gamification/badge/badge-withdraw.component.ts</context>
+          <context context-type="linenumber">180,181</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="6812060545430706033" datatype="html">
+        <source>Select user to view badges</source>
+        <target state="translated">Seleccione un usuario para ver las insignias</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/gamification/badge/badge-withdraw.component.ts</context>
+          <context context-type="linenumber">123,124</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="1589856968320125019" datatype="html">
+        <source>Select group to view badges</source>
+        <target state="translated">Seleccione un grupo para ver las insignias</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/gamification/badge/badge-withdraw.component.ts</context>
+          <context context-type="linenumber">184,185</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="5028777105388019087" datatype="html">
+        <source>Details</source>
+        <target state="translated">Detalles</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/gamification/badge/badge-withdraw.component.ts</context>
+          <context context-type="linenumber">198,199</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="2517309683610083249" datatype="html">
+        <source>Title:</source>
+        <target state="translated">Título:</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/gamification/badge/badge-withdraw.component.ts</context>
+          <context context-type="linenumber">200</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="6996799422725544865" datatype="html">
+        <source>Description:</source>
+        <target state="translated">Descripción:</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/gamification/badge/badge-withdraw.component.ts</context>
+          <context context-type="linenumber">201</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="7858060057068625943" datatype="html">
+        <source>Message:</source>
+        <target state="translated">Mensaje:</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/gamification/badge/badge-withdraw.component.ts</context>
+          <context context-type="linenumber">202</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="8257835794605797284" datatype="html">
+        <source>Given by:</source>
+        <target state="translated">Asignado por:</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/gamification/badge/badge-withdraw.component.ts</context>
+          <context context-type="linenumber">203</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="9184020123723303142" datatype="html">
+        <source>Time given:</source>
+        <target state="translated">Fecha de asignación:</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/gamification/badge/badge-withdraw.component.ts</context>
+          <context context-type="linenumber">204</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="7924912164252500969" datatype="html">
+        <source>Withdraw</source>
+        <target state="translated">Retirar</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/gamification/badge/badge-withdraw.component.ts</context>
+          <context context-type="linenumber">213</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="7139999409916594388" datatype="html">
+        <source>Leaderboard</source>
+        <target state="translated">Clasificación</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/gamification/badge/badge.leaderboard.ts</context>
+          <context context-type="linenumber">18</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="2836115012617960804" datatype="html">
+        <source>No groups with badges.</source>
+        <target state="translated">No hay grupos con insignias.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/gamification/badge/badge.leaderboard.ts</context>
+          <context context-type="linenumber">23,24</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="8613741909398167343" datatype="html">
+        <source>dashboard</source>
+        <target state="translated">Panel</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/group-dashboard/group-dashboard.component.ts</context>
+          <context context-type="linenumber">30</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="4848897086169513413" datatype="html">
+        <source>Group details</source>
+        <target state="translated">Detalles del grupo</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/group-dashboard/group-dashboard.component.ts</context>
+          <context context-type="linenumber">43,44</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="4610546458075110030" datatype="html">
+        <source>badges</source>
+        <target state="translated">insignias</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/group-dashboard/group-dashboard.component.ts</context>
+          <context context-type="linenumber">44</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="1761340790137218445" datatype="html">
+        <source>No group badges yet.</source>
+        <target state="translated">El grupo aún no tiene insignias.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/group-dashboard/group-dashboard.component.ts</context>
+          <context context-type="linenumber">46,47</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="1069523139277190436" datatype="html">
+        <source>Statistics</source>
+        <target state="translated">Estadísticas</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/group-dashboard/group-dashboard.component.ts</context>
+          <context context-type="linenumber">60,61</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="3661879077533236001" datatype="html">
+        <source>Total members: </source>
+        <target state="translated">Total de miembros:: </target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/group-dashboard/group-dashboard.component.ts</context>
+          <context context-type="linenumber">62</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="5887444414806996463" datatype="html">
+        <source>Total badges (group + user): </source>
+        <target state="translated">Total de insignias (grupo + usuario): </target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/group-dashboard/group-dashboard.component.ts</context>
+          <context context-type="linenumber">63</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="4691887509600985309" datatype="html">
+        <source>Members</source>
+        <target state="translated">Miembros</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/group-dashboard/group-dashboard.component.ts</context>
+          <context context-type="linenumber">72,73</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="127799817002327101" datatype="html">
+        <source>Current group name: </source>
+        <target state="translated">Nombre actual del grupo: </target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/group-dashboard/name-changer.component.ts</context>
+          <context context-type="linenumber">21</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="1031670110176839073" datatype="html">
+        <source>New name: </source>
+        <target state="translated">Nuevo nombre: </target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/group-dashboard/name-changer.component.ts</context>
+          <context context-type="linenumber">22</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="310091665302387594" datatype="html">
+        <source>Change name</source>
+        <target state="translated">Cambiar nombre</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/group-dashboard/name-changer.component.ts</context>
+          <context context-type="linenumber">25</context>
         </context-group>
       </trans-unit>
     </body>
