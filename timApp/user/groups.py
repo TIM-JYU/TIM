@@ -630,7 +630,7 @@ def get_usergroup_members(group_name: str) -> Response:
     if ug not in current_user.groups:
         # verify_view_access(ug.admin_doc)
         verify_access("view", ug, user_group_name=group_name)
-    log_info(f"GETTING MEMBERS FOR {group_name}: [{ug.users}]")
+    # log_info(f"GETTING MEMBERS FOR {group_name}: [{ug.users}]")
 
     return json_response(sorted(list(ug.users), key=attrgetter("real_name")))
 
@@ -645,7 +645,10 @@ def pretty_name(group_name: str) -> Response:
 @groups.get("/groupinfo/<group_name>")
 def get_groupinfo_with_pretty_name(group_name: str) -> Response:
     group = UserGroup.get_by_name(group_name)
-    verify_access("view", group, user_group_name=group_name)
+
+    current_user = get_current_user_object()
+    if group not in current_user.groups:
+        verify_access("view", group, user_group_name=group_name)
     return json_response(
         {"id": group.id, "name": group.name, "description": group.admin_doc.description}
     )
