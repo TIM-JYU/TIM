@@ -11701,9 +11701,6 @@ Mata in flera användares adresser på separata rader eller åtskilda med kommat
           <context context-type="linenumber">62,63</context>
         </context-group>
       </trans-unit>
-      <trans-unit id="18610244592166500" datatype="html">
-        <source>Reset table state to</source>
-        <target state="translated">Återställ tabellstatus till</target>
       <trans-unit id="127799817002327101" datatype="html">
         <source>Current group name: </source>
         <target state="new">Current group name: </target>
@@ -11712,9 +11709,6 @@ Mata in flera användares adresser på separata rader eller åtskilda med kommat
           <context context-type="linenumber">20</context>
         </context-group>
       </trans-unit>
-      <trans-unit id="2323081413317144899" datatype="html">
-        <source>Reset table</source>
-        <target state="translated">återställ tabell</target>
       <trans-unit id="1031670110176839073" datatype="html">
         <source>New name: </source>
         <target state="new">New name: </target>
@@ -11723,9 +11717,6 @@ Mata in flera användares adresser på separata rader eller åtskilda med kommat
           <context context-type="linenumber">21</context>
         </context-group>
       </trans-unit>
-      <trans-unit id="5520520072410375513" datatype="html">
-        <source>original</source>
-        <target state="translated">originell</target>
       <trans-unit id="310091665302387594" datatype="html">
         <source>Change name</source>
         <target state="new">Change name</target>
