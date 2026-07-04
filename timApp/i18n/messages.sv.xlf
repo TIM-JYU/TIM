@@ -11059,7 +11059,7 @@ Mata in flera användares adresser på separata rader eller åtskilda med kommat
       </trans-unit>
       <trans-unit id="7416659172020658801" datatype="html">
         <source>Create a new badge</source>
-        <target state="new">Create a new badge</target>
+        <target state="translated">Skapa ett nytt märke</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/gamification/badge/badge-creator.component.ts</context>
           <context context-type="linenumber">44</context>
@@ -11067,7 +11067,7 @@ Mata in flera användares adresser på separata rader eller åtskilda med kommat
       </trans-unit>
       <trans-unit id="5423991647761194551" datatype="html">
         <source>Newest</source>
-        <target state="new">Newest</target>
+        <target state="translated">Nyast</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/gamification/badge/badge-creator.component.ts</context>
           <context context-type="linenumber">54,55</context>
@@ -11083,7 +11083,7 @@ Mata in flera användares adresser på separata rader eller åtskilda med kommat
       </trans-unit>
       <trans-unit id="5844212965736113574" datatype="html">
         <source>Oldest</source>
-        <target state="new">Oldest</target>
+        <target state="translated">Äldst</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/gamification/badge/badge-creator.component.ts</context>
           <context context-type="linenumber">55,56</context>
@@ -11099,7 +11099,7 @@ Mata in flera användares adresser på separata rader eller åtskilda med kommat
       </trans-unit>
       <trans-unit id="11998600819904735" datatype="html">
         <source>This course does not have any badges yet.</source>
-        <target state="new">This course does not have any badges yet.</target>
+        <target state="translated">Den här kursen har inga märken ännu.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/gamification/badge/badge-creator.component.ts</context>
           <context context-type="linenumber">63,64</context>
@@ -11107,7 +11107,7 @@ Mata in flera användares adresser på separata rader eller åtskilda med kommat
       </trans-unit>
       <trans-unit id="6739608248709664215" datatype="html">
         <source>Assign badge</source>
-        <target state="new">Assign badge</target>
+        <target state="translated">Tilldela märke</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/gamification/badge/badge-creator.component.ts</context>
           <context context-type="linenumber">76</context>
@@ -11115,7 +11115,7 @@ Mata in flera användares adresser på separata rader eller åtskilda med kommat
       </trans-unit>
       <trans-unit id="3393624369102529500" datatype="html">
         <source>Edit badge</source>
-        <target state="new">Edit badge</target>
+        <target state="translated">Redigera märke</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/gamification/badge/badge-creator.component.ts</context>
           <context context-type="linenumber">82</context>
@@ -11123,7 +11123,7 @@ Mata in flera användares adresser på separata rader eller åtskilda med kommat
       </trans-unit>
       <trans-unit id="6020986914072713662" datatype="html">
         <source>Delete badge</source>
-        <target state="new">Delete badge</target>
+        <target state="translated">Ta bort märke</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/gamification/badge/badge-creator.component.ts</context>
           <context context-type="linenumber">88</context>
@@ -11131,7 +11131,7 @@ Mata in flera användares adresser på separata rader eller åtskilda med kommat
       </trans-unit>
       <trans-unit id="5868542061568734441" datatype="html">
         <source>Fields marked with</source>
-        <target state="new">Fields marked with</target>
+        <target state="translated">Fält markerade med</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/gamification/badge/badge-creator.component.ts</context>
           <context context-type="linenumber">113</context>
@@ -11139,7 +11139,7 @@ Mata in flera användares adresser på separata rader eller åtskilda med kommat
       </trans-unit>
       <trans-unit id="974437052221961135" datatype="html">
         <source>are required</source>
-        <target state="new">are required</target>
+        <target state="translated">är obligatoriska</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/gamification/badge/badge-creator.component.ts</context>
           <context context-type="linenumber">113</context>
@@ -11147,7 +11147,7 @@ Mata in flera användares adresser på separata rader eller åtskilda med kommat
       </trans-unit>
       <trans-unit id="5501075393524406693" datatype="html">
         <source>Badge title</source>
-        <target state="new">Badge title</target>
+        <target state="translated">Märkets namn</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/gamification/badge/badge-creator.component.ts</context>
           <context context-type="linenumber">118</context>
@@ -11155,7 +11155,7 @@ Mata in flera användares adresser på separata rader eller åtskilda med kommat
       </trans-unit>
       <trans-unit id="6901100222794813353" datatype="html">
         <source>characters</source>
-        <target state="new">characters</target>
+        <target state="translated">tecken</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/gamification/badge/badge-creator.component.ts</context>
           <context context-type="linenumber">122</context>
@@ -11175,7 +11175,7 @@ Mata in flera användares adresser på separata rader eller åtskilda med kommat
       </trans-unit>
       <trans-unit id="6952242034697821025" datatype="html">
         <source>Title is required.</source>
-        <target state="new">Title is required.</target>
+        <target state="translated">Namn är obligatoriskt.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/gamification/badge/badge-creator.component.ts</context>
           <context context-type="linenumber">126,127</context>
@@ -11183,7 +11183,7 @@ Mata in flera användares adresser på separata rader eller åtskilda med kommat
       </trans-unit>
       <trans-unit id="6037965752494497249" datatype="html">
         <source>Title is too long (max 30 characters).</source>
-        <target state="new">Title is too long (max 30 characters).</target>
+        <target state="translated">Namnet är för långt (max 30 tecken).</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/gamification/badge/badge-creator.component.ts</context>
           <context context-type="linenumber">127,128</context>
@@ -11195,7 +11195,7 @@ Mata in flera användares adresser på separata rader eller åtskilda med kommat
       </trans-unit>
       <trans-unit id="2512365026527188575" datatype="html">
         <source>Description is required.</source>
-        <target state="new">Description is required.</target>
+        <target state="translated">Beskrivning är obligatorisk.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/gamification/badge/badge-creator.component.ts</context>
           <context context-type="linenumber">140,141</context>
@@ -11203,7 +11203,7 @@ Mata in flera användares adresser på separata rader eller åtskilda med kommat
       </trans-unit>
       <trans-unit id="8920531641317645527" datatype="html">
         <source>Description is too long (max 200 characters).</source>
-        <target state="new">Description is too long (max 200 characters).</target>
+        <target state="translated">Beskrivningen är för lång (max 200 tecken).</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/gamification/badge/badge-creator.component.ts</context>
           <context context-type="linenumber">141,142</context>
@@ -11211,7 +11211,7 @@ Mata in flera användares adresser på separata rader eller åtskilda med kommat
       </trans-unit>
       <trans-unit id="3074987902485823708" datatype="html">
         <source>Icon</source>
-        <target state="new">Icon</target>
+        <target state="translated">Ikon</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/gamification/badge/badge-creator.component.ts</context>
           <context context-type="linenumber">147</context>
@@ -11219,7 +11219,7 @@ Mata in flera användares adresser på separata rader eller åtskilda med kommat
       </trans-unit>
       <trans-unit id="7134128927491765785" datatype="html">
         <source>Icon is required.</source>
-        <target state="new">Icon is required.</target>
+        <target state="translated">Ikon är obligatorisk.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/gamification/badge/badge-creator.component.ts</context>
           <context context-type="linenumber">152,153</context>
@@ -11227,7 +11227,7 @@ Mata in flera användares adresser på separata rader eller åtskilda med kommat
       </trans-unit>
       <trans-unit id="9011959596901584887" datatype="html">
         <source>Color</source>
-        <target state="new">Color</target>
+        <target state="translated">Färg</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/gamification/badge/badge-creator.component.ts</context>
           <context context-type="linenumber">157</context>
@@ -11235,7 +11235,7 @@ Mata in flera användares adresser på separata rader eller åtskilda med kommat
       </trans-unit>
       <trans-unit id="7643964993666081560" datatype="html">
         <source>Color is required.</source>
-        <target state="new">Color is required.</target>
+        <target state="translated">Färg är obligatorisk.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/gamification/badge/badge-creator.component.ts</context>
           <context context-type="linenumber">162,163</context>
@@ -11243,7 +11243,7 @@ Mata in flera användares adresser på separata rader eller åtskilda med kommat
       </trans-unit>
       <trans-unit id="4427129289566046309" datatype="html">
         <source>Shape</source>
-        <target state="new">Shape</target>
+        <target state="translated">Form</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/gamification/badge/badge-creator.component.ts</context>
           <context context-type="linenumber">169</context>
@@ -11251,7 +11251,7 @@ Mata in flera användares adresser på separata rader eller åtskilda med kommat
       </trans-unit>
       <trans-unit id="6484591549347395431" datatype="html">
         <source>Cancel and return without saving</source>
-        <target state="new">Cancel and return without saving</target>
+        <target state="translated">Avbryt och återgå utan att spara</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/gamification/badge/badge-creator.component.ts</context>
           <context context-type="linenumber">206,207</context>
@@ -11259,7 +11259,7 @@ Mata in flera användares adresser på separata rader eller åtskilda med kommat
       </trans-unit>
       <trans-unit id="6364492383924408525" datatype="html">
         <source>Access denied for students.</source>
-        <target state="new">Access denied for students.</target>
+        <target state="translated">Studenter har inte behörighet att använda denna funktion.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/gamification/badge/badge-creator.component.ts</context>
           <context context-type="linenumber">219,220</context>
@@ -11267,7 +11267,7 @@ Mata in flera användares adresser på separata rader eller åtskilda med kommat
       </trans-unit>
       <trans-unit id="form.create" datatype="html">
         <source>Create</source>
-        <target state="new">Create</target>
+        <target state="translated">Skapa</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/gamification/badge/badge-creator.component.ts</context>
           <context context-type="linenumber">251</context>
@@ -11275,7 +11275,7 @@ Mata in flera användares adresser på separata rader eller åtskilda med kommat
       </trans-unit>
       <trans-unit id="form.save" datatype="html">
         <source>Save Changes</source>
-        <target state="new">Save Changes</target>
+        <target state="translated">Spara ändringar</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/gamification/badge/badge-creator.component.ts</context>
           <context context-type="linenumber">252</context>
@@ -11283,7 +11283,7 @@ Mata in flera användares adresser på separata rader eller åtskilda med kommat
       </trans-unit>
       <trans-unit id="form.fillRequired" datatype="html">
         <source>Fill all the required fields</source>
-        <target state="new">Fill all the required fields</target>
+        <target state="translated">Fyll i alla obligatoriska fält</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/gamification/badge/badge-creator.component.ts</context>
           <context context-type="linenumber">253</context>
@@ -11291,7 +11291,7 @@ Mata in flera användares adresser på separata rader eller åtskilda med kommat
       </trans-unit>
       <trans-unit id="form.allBadges" datatype="html">
         <source>All Badges</source>
-        <target state="new">All Badges</target>
+        <target state="translated">Alla märken</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/gamification/badge/badge-creator.component.ts</context>
           <context context-type="linenumber">254</context>
@@ -11299,7 +11299,7 @@ Mata in flera användares adresser på separata rader eller åtskilda med kommat
       </trans-unit>
       <trans-unit id="form.createNewBadge" datatype="html">
         <source>Create a new badge</source>
-        <target state="new">Create a new badge</target>
+        <target state="translated">Skapa ett nytt märke</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/gamification/badge/badge-creator.component.ts</context>
           <context context-type="linenumber">255</context>
@@ -11307,7 +11307,7 @@ Mata in flera användares adresser på separata rader eller åtskilda med kommat
       </trans-unit>
       <trans-unit id="form.edit" datatype="html">
         <source>Edit</source>
-        <target state="new">Edit</target>
+        <target state="translated">Redigera</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/gamification/badge/badge-creator.component.ts</context>
           <context context-type="linenumber">256</context>
@@ -11315,7 +11315,7 @@ Mata in flera användares adresser på separata rader eller åtskilda med kommat
       </trans-unit>
       <trans-unit id="584754872792429089" datatype="html">
         <source>Assign</source>
-        <target state="new">Assign</target>
+        <target state="translated">Tilldela</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/gamification/badge/badge-giver.component.ts</context>
           <context context-type="linenumber">28</context>
@@ -11323,7 +11323,7 @@ Mata in flera användares adresser på separata rader eller åtskilda med kommat
       </trans-unit>
       <trans-unit id="1598304203172707370" datatype="html">
         <source>to user(s) or group(s)</source>
-        <target state="new">to user(s) or group(s)</target>
+        <target state="translated">till användare eller grupper</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/gamification/badge/badge-giver.component.ts</context>
           <context context-type="linenumber">28</context>
@@ -11331,7 +11331,7 @@ Mata in flera användares adresser på separata rader eller åtskilda med kommat
       </trans-unit>
       <trans-unit id="197548451473527565" datatype="html">
         <source> View users </source>
-        <target state="new"> View users </target>
+        <target state="translated"> Visa användare </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/gamification/badge/badge-giver.component.ts</context>
           <context context-type="linenumber">47</context>
@@ -11339,7 +11339,7 @@ Mata in flera användares adresser på separata rader eller åtskilda med kommat
       </trans-unit>
       <trans-unit id="6734116808381874560" datatype="html">
         <source> View groups </source>
-        <target state="new"> View groups </target>
+        <target state="translated"> Visa grupper </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/gamification/badge/badge-giver.component.ts</context>
           <context context-type="linenumber">50</context>
@@ -11347,7 +11347,7 @@ Mata in flera användares adresser på separata rader eller åtskilda med kommat
       </trans-unit>
       <trans-unit id="1494518490116523821" datatype="html">
         <source>Select all</source>
-        <target state="new">Select all</target>
+        <target state="translated">Markera alla</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/gamification/badge/badge-giver.component.ts</context>
           <context context-type="linenumber">78</context>
@@ -11359,7 +11359,7 @@ Mata in flera användares adresser på separata rader eller åtskilda med kommat
       </trans-unit>
       <trans-unit id="6628030584459078156" datatype="html">
         <source>Users without group</source>
-        <target state="new">Users without group</target>
+        <target state="translated">Användare utan grupp</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/gamification/badge/badge-giver.component.ts</context>
           <context context-type="linenumber">101,102</context>
@@ -11371,7 +11371,7 @@ Mata in flera användares adresser på separata rader eller åtskilda med kommat
       </trans-unit>
       <trans-unit id="6279406018740594152" datatype="html">
         <source>No users found</source>
-        <target state="new">No users found</target>
+        <target state="translated">Inga användare hittades</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/gamification/badge/badge-giver.component.ts</context>
           <context context-type="linenumber">171,172</context>
@@ -11379,7 +11379,7 @@ Mata in flera användares adresser på separata rader eller åtskilda med kommat
       </trans-unit>
       <trans-unit id="4112079984094994691" datatype="html">
         <source>Select group to view users</source>
-        <target state="new">Select group to view users</target>
+        <target state="translated">Välj en grupp för att visa användare</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/gamification/badge/badge-giver.component.ts</context>
           <context context-type="linenumber">174,175</context>
@@ -11387,7 +11387,7 @@ Mata in flera användares adresser på separata rader eller åtskilda med kommat
       </trans-unit>
       <trans-unit id="8066608938393600549" datatype="html">
         <source>Message</source>
-        <target state="new">Message</target>
+        <target state="translated">Meddelande</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/gamification/badge/badge-giver.component.ts</context>
           <context context-type="linenumber">183,184</context>
@@ -11395,7 +11395,7 @@ Mata in flera användares adresser på separata rader eller åtskilda med kommat
       </trans-unit>
       <trans-unit id="5610574481341757897" datatype="html">
         <source> Assign </source>
-        <target state="new"> Assign </target>
+        <target state="translated"> Tilldela </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/gamification/badge/badge-giver.component.ts</context>
           <context context-type="linenumber">202</context>
@@ -11403,7 +11403,7 @@ Mata in flera användares adresser på separata rader eller åtskilda med kommat
       </trans-unit>
       <trans-unit id="4575719820429514382" datatype="html">
         <source>User Badges </source>
-        <target state="new">User Badges </target>
+        <target state="translated">Användarmärken </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/gamification/badge/badge-viewer.component.ts</context>
           <context context-type="linenumber">31,32</context>
@@ -11411,7 +11411,7 @@ Mata in flera användares adresser på separata rader eller åtskilda med kommat
       </trans-unit>
       <trans-unit id="2684344419716682750" datatype="html">
         <source>Badges</source>
-        <target state="new">Badges</target>
+        <target state="translated">Märken</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/gamification/badge/badge-viewer.component.ts</context>
           <context context-type="linenumber">40</context>
@@ -11423,7 +11423,7 @@ Mata in flera användares adresser på separata rader eller åtskilda med kommat
       </trans-unit>
       <trans-unit id="3311502347627501218" datatype="html">
         <source>No user badges</source>
-        <target state="new">No user badges</target>
+        <target state="translated">Användaren har inga märken</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/gamification/badge/badge-viewer.component.ts</context>
           <context context-type="linenumber">42,43</context>
@@ -11431,7 +11431,7 @@ Mata in flera användares adresser på separata rader eller åtskilda med kommat
       </trans-unit>
       <trans-unit id="7796428855216903386" datatype="html">
         <source>No group badges</source>
-        <target state="new">No group badges</target>
+        <target state="translated">Gruppen har inga märken</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/gamification/badge/badge-viewer.component.ts</context>
           <context context-type="linenumber">76,77</context>
@@ -11439,7 +11439,7 @@ Mata in flera användares adresser på separata rader eller åtskilda med kommat
       </trans-unit>
       <trans-unit id="form.message" datatype="html">
         <source>Message:</source>
-        <target state="new">Message:</target>
+        <target state="translated">Meddelande:</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/gamification/badge/badge-viewer.component.ts</context>
           <context context-type="linenumber">139</context>
@@ -11447,7 +11447,7 @@ Mata in flera användares adresser på separata rader eller åtskilda med kommat
       </trans-unit>
       <trans-unit id="form.description" datatype="html">
         <source>Description:</source>
-        <target state="new">Description:</target>
+        <target state="translated">Beskrivning:</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/gamification/badge/badge-viewer.component.ts</context>
           <context context-type="linenumber">140</context>
@@ -11455,7 +11455,7 @@ Mata in flera användares adresser på separata rader eller åtskilda med kommat
       </trans-unit>
       <trans-unit id="form.textIcon" datatype="html">
         <source>Icon:</source>
-        <target state="new">Icon:</target>
+        <target state="translated">Ikon:</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/gamification/badge/badge-viewer.component.ts</context>
           <context context-type="linenumber">141</context>
@@ -11463,7 +11463,7 @@ Mata in flera användares adresser på separata rader eller åtskilda med kommat
       </trans-unit>
       <trans-unit id="form.textColor" datatype="html">
         <source>Color:</source>
-        <target state="new">Color:</target>
+        <target state="translated">Färg:</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/gamification/badge/badge-viewer.component.ts</context>
           <context context-type="linenumber">142</context>
@@ -11471,7 +11471,7 @@ Mata in flera användares adresser på separata rader eller åtskilda med kommat
       </trans-unit>
       <trans-unit id="form.textShape" datatype="html">
         <source>Shape:</source>
-        <target state="new">Shape:</target>
+        <target state="translated">Form:</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/gamification/badge/badge-viewer.component.ts</context>
           <context context-type="linenumber">143</context>
@@ -11479,7 +11479,7 @@ Mata in flera användares adresser på separata rader eller åtskilda med kommat
       </trans-unit>
       <trans-unit id="form.textTime" datatype="html">
         <source>Time given:</source>
-        <target state="new">Time given:</target>
+        <target state="translated">Tilldelad:</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/gamification/badge/badge-viewer.component.ts</context>
           <context context-type="linenumber">144</context>
@@ -11487,7 +11487,7 @@ Mata in flera användares adresser på separata rader eller åtskilda med kommat
       </trans-unit>
       <trans-unit id="form.textCreatedBy" datatype="html">
         <source>Created by:</source>
-        <target state="new">Created by:</target>
+        <target state="translated">Skapad av:</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/gamification/badge/badge-viewer.component.ts</context>
           <context context-type="linenumber">145</context>
@@ -11495,7 +11495,7 @@ Mata in flera användares adresser på separata rader eller åtskilda med kommat
       </trans-unit>
       <trans-unit id="form.textGivenBy" datatype="html">
         <source>Given by:</source>
-        <target state="new">Given by:</target>
+        <target state="translated">Tilldelad av:</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/gamification/badge/badge-viewer.component.ts</context>
           <context context-type="linenumber">146</context>
@@ -11503,7 +11503,7 @@ Mata in flera användares adresser på separata rader eller åtskilda med kommat
       </trans-unit>
       <trans-unit id="4828254589226750814" datatype="html">
         <source>View users or groups</source>
-        <target state="new">View users or groups</target>
+        <target state="translated">Visa användare eller grupper</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/gamification/badge/badge-withdraw.component.ts</context>
           <context context-type="linenumber">31</context>
@@ -11511,7 +11511,7 @@ Mata in flera användares adresser på separata rader eller åtskilda med kommat
       </trans-unit>
       <trans-unit id="4555457172864212828" datatype="html">
         <source>Users</source>
-        <target state="new">Users</target>
+        <target state="translated">Användare</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/gamification/badge/badge-withdraw.component.ts</context>
           <context context-type="linenumber">45</context>
@@ -11519,7 +11519,7 @@ Mata in flera användares adresser på separata rader eller åtskilda med kommat
       </trans-unit>
       <trans-unit id="5547499389580646473" datatype="html">
         <source>No badges assigned</source>
-        <target state="new">No badges assigned</target>
+        <target state="translated">Inga märken har tilldelats</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/gamification/badge/badge-withdraw.component.ts</context>
           <context context-type="linenumber">120,121</context>
@@ -11531,7 +11531,7 @@ Mata in flera användares adresser på separata rader eller åtskilda med kommat
       </trans-unit>
       <trans-unit id="6812060545430706033" datatype="html">
         <source>Select user to view badges</source>
-        <target state="new">Select user to view badges</target>
+        <target state="translated">Välj en användare för att visa märken</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/gamification/badge/badge-withdraw.component.ts</context>
           <context context-type="linenumber">124,125</context>
@@ -11539,7 +11539,7 @@ Mata in flera användares adresser på separata rader eller åtskilda med kommat
       </trans-unit>
       <trans-unit id="1589856968320125019" datatype="html">
         <source>Select group to view badges</source>
-        <target state="new">Select group to view badges</target>
+        <target state="translated">Välj en grupp för att visa märken</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/gamification/badge/badge-withdraw.component.ts</context>
           <context context-type="linenumber">185,186</context>
@@ -11547,7 +11547,7 @@ Mata in flera användares adresser på separata rader eller åtskilda med kommat
       </trans-unit>
       <trans-unit id="5028777105388019087" datatype="html">
         <source>Details</source>
-        <target state="new">Details</target>
+        <target state="translated">Detaljer</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/gamification/badge/badge-withdraw.component.ts</context>
           <context context-type="linenumber">199,200</context>
@@ -11555,7 +11555,7 @@ Mata in flera användares adresser på separata rader eller åtskilda med kommat
       </trans-unit>
       <trans-unit id="2517309683610083249" datatype="html">
         <source>Title:</source>
-        <target state="new">Title:</target>
+        <target state="translated">Namn:</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/gamification/badge/badge-withdraw.component.ts</context>
           <context context-type="linenumber">201</context>
@@ -11563,7 +11563,7 @@ Mata in flera användares adresser på separata rader eller åtskilda med kommat
       </trans-unit>
       <trans-unit id="6996799422725544865" datatype="html">
         <source>Description:</source>
-        <target state="new">Description:</target>
+        <target state="translated">Beskrivning:</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/gamification/badge/badge-withdraw.component.ts</context>
           <context context-type="linenumber">202</context>
@@ -11571,7 +11571,7 @@ Mata in flera användares adresser på separata rader eller åtskilda med kommat
       </trans-unit>
       <trans-unit id="7858060057068625943" datatype="html">
         <source>Message:</source>
-        <target state="new">Message:</target>
+        <target state="translated">Meddelande:</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/gamification/badge/badge-withdraw.component.ts</context>
           <context context-type="linenumber">203</context>
@@ -11579,7 +11579,7 @@ Mata in flera användares adresser på separata rader eller åtskilda med kommat
       </trans-unit>
       <trans-unit id="8257835794605797284" datatype="html">
         <source>Given by:</source>
-        <target state="new">Given by:</target>
+        <target state="translated">Tilldelad av:</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/gamification/badge/badge-withdraw.component.ts</context>
           <context context-type="linenumber">204</context>
@@ -11590,7 +11590,7 @@ Mata in flera användares adresser på separata rader eller åtskilda med kommat
         <target state="translated">Ta bort användare från gruppen </target>
       <trans-unit id="9184020123723303142" datatype="html">
         <source>Time given:</source>
-        <target state="new">Time given:</target>
+        <target state="translated">Tilldelad:</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/gamification/badge/badge-withdraw.component.ts</context>
           <context context-type="linenumber">205</context>
@@ -11601,7 +11601,7 @@ Mata in flera användares adresser på separata rader eller åtskilda med kommat
         <target state="translated">Ta bort provgruppen</target>
       <trans-unit id="7924912164252500969" datatype="html">
         <source>Withdraw</source>
-        <target state="new">Withdraw</target>
+        <target state="translated">Återkalla</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/gamification/badge/badge-withdraw.component.ts</context>
           <context context-type="linenumber">214</context>
@@ -11612,7 +11612,7 @@ Mata in flera användares adresser på separata rader eller åtskilda med kommat
         <target state="translated"> Avsluta provet för de utan tilläggstid med knappen bredvid </target>
       <trans-unit id="7139999409916594388" datatype="html">
         <source>Leaderboard</source>
-        <target state="new">Leaderboard</target>
+        <target state="translated">Topplista</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/gamification/badge/badge.leaderboard.ts</context>
           <context context-type="linenumber">17</context>
@@ -11623,7 +11623,7 @@ Mata in flera användares adresser på separata rader eller åtskilda med kommat
         <target state="translated"> Avsluta provet för alla elever med knappen bredvid </target>
       <trans-unit id="2836115012617960804" datatype="html">
         <source>No groups with badges.</source>
-        <target state="new">No groups with badges.</target>
+        <target state="translated">Inga grupper med märken.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/gamification/badge/badge.leaderboard.ts</context>
           <context context-type="linenumber">22,23</context>
@@ -11634,7 +11634,7 @@ Mata in flera användares adresser på separata rader eller åtskilda med kommat
         <target state="translated">Se till att provet för provgruppen är avslutat och att inloggningskoderna har inaktiverats under <x id="START_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;i&gt;"/>3. Hantera prov<x id="CLOSE_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;/i&gt;"/>.</target>
       <trans-unit id="8613741909398167343" datatype="html">
         <source>dashboard</source>
-        <target state="new">dashboard</target>
+        <target state="translated">Översikt</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/group-dashboard/group-dashboard.component.ts</context>
           <context context-type="linenumber">22</context>
@@ -11645,7 +11645,7 @@ Mata in flera användares adresser på separata rader eller åtskilda med kommat
         <target state="translated">Eleverna kan öppna provet själva med knappen <x id="START_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;i&gt;"/>Öppna provet<x id="CLOSE_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;/i&gt;"/>..</target>
       <trans-unit id="4848897086169513413" datatype="html">
         <source>Group details</source>
-        <target state="new">Group details</target>
+        <target state="translated">Gruppinformation</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/group-dashboard/group-dashboard.component.ts</context>
           <context context-type="linenumber">35,36</context>
@@ -11656,7 +11656,7 @@ Mata in flera användares adresser på separata rader eller åtskilda med kommat
         <target state="translated">Nya velper</target>
       <trans-unit id="4610546458075110030" datatype="html">
         <source>badges</source>
-        <target state="new">badges</target>
+        <target state="translated">märken</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/group-dashboard/group-dashboard.component.ts</context>
           <context context-type="linenumber">36</context>
@@ -11664,7 +11664,7 @@ Mata in flera användares adresser på separata rader eller åtskilda med kommat
       </trans-unit>
       <trans-unit id="1761340790137218445" datatype="html">
         <source>No group badges yet.</source>
-        <target state="new">No group badges yet.</target>
+        <target state="translated">Gruppen har inga märken ännu.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/group-dashboard/group-dashboard.component.ts</context>
           <context context-type="linenumber">38,39</context>
@@ -11672,7 +11672,7 @@ Mata in flera användares adresser på separata rader eller åtskilda med kommat
       </trans-unit>
       <trans-unit id="1069523139277190436" datatype="html">
         <source>Statistics</source>
-        <target state="new">Statistics</target>
+        <target state="translated">Statistik</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/group-dashboard/group-dashboard.component.ts</context>
           <context context-type="linenumber">50,51</context>
@@ -11680,7 +11680,7 @@ Mata in flera användares adresser på separata rader eller åtskilda med kommat
       </trans-unit>
       <trans-unit id="3661879077533236001" datatype="html">
         <source>Total members: </source>
-        <target state="new">Total members: </target>
+        <target state="translated">Totalt antal medlemmar: </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/group-dashboard/group-dashboard.component.ts</context>
           <context context-type="linenumber">52</context>
@@ -11688,7 +11688,7 @@ Mata in flera användares adresser på separata rader eller åtskilda med kommat
       </trans-unit>
       <trans-unit id="5887444414806996463" datatype="html">
         <source>Total badges (group + user): </source>
-        <target state="new">Total badges (group + user): </target>
+        <target state="translated">Totalt antal märken (grupp + användare):</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/group-dashboard/group-dashboard.component.ts</context>
           <context context-type="linenumber">53</context>
@@ -11699,7 +11699,7 @@ Mata in flera användares adresser på separata rader eller åtskilda med kommat
         <target state="translated">Du omdirigeras automatiskt när du har tillgång till dokumentet.</target>
       <trans-unit id="4691887509600985309" datatype="html">
         <source>Members</source>
-        <target state="new">Members</target>
+        <target state="translated">Medlemmar</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/group-dashboard/group-dashboard.component.ts</context>
           <context context-type="linenumber">62,63</context>
@@ -11710,7 +11710,7 @@ Mata in flera användares adresser på separata rader eller åtskilda med kommat
         <target state="translated">Klicka här om omdirigeringen inte skedde.</target>
       <trans-unit id="127799817002327101" datatype="html">
         <source>Current group name: </source>
-        <target state="new">Current group name: </target>
+        <target state="translated">Nuvarande gruppnamn: </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/group-dashboard/name-changer.component.ts</context>
           <context context-type="linenumber">20</context>
@@ -12625,7 +12625,7 @@ Mata in flera användares adresser på separata rader eller åtskilda med kommat
         <target state="translated">Du kan visa svaren till eleverna först efter den <x id="INTERPOLATION" equiv-text="{{ toReadableDate(examByDocId.get(group.currentExamDoc!)?.showAnswersStartingTime ?? &quot;&quot;) }}"/>.</target>
       <trans-unit id="1031670110176839073" datatype="html">
         <source>New name: </source>
-        <target state="new">New name: </target>
+        <target state="translated">Nytt namn: </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/group-dashboard/name-changer.component.ts</context>
           <context context-type="linenumber">21</context>
@@ -12638,7 +12638,7 @@ Mata in flera användares adresser på separata rader eller åtskilda med kommat
         <target state="translated">originell</target>
       <trans-unit id="310091665302387594" datatype="html">
         <source>Change name</source>
-        <target state="new">Change name</target>
+        <target state="translated">Ändra namn</target>
       <trans-unit id="824586679107177391" datatype="html">
         <source>Press the <x id="START_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;i&gt;"/>'Begin showing answers to students'<x id="CLOSE_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;/i&gt;"/> button to allow students to review their answers for 1 hour. </source>
         <target state="translated">Tryck på knappen <x id="START_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;i&gt;"/>Börja visa svaren för provgruppens elever<x id="CLOSE_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;/i&gt;"/>. Elevernas inloggningskoder aktiveras och de får tillgång till provet för en timme. </target>
@@ -12707,7 +12707,7 @@ Mata in flera användares adresser på separata rader eller åtskilda med kommat
       </trans-unit>
       <trans-unit id="1857600886131654201" datatype="html">
         <source>My Badges</source>
-        <target state="new">My Badges</target>
+        <target state="translated">Mina märken</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/gamification/badge/badge-viewer.component.ts</context>
           <context context-type="linenumber">41</context>

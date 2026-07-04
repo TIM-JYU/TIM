@@ -11170,7 +11170,7 @@ Syötä useiden käyttäjien osoitteet allekkain tai pilkulla erotettuina.</targ
       </trans-unit>
       <trans-unit id="7416659172020658801" datatype="html">
         <source>Create a new badge</source>
-        <target state="new">Create a new badge</target>
+        <target state="translated">Luo uusi merkki</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/gamification/badge/badge-creator.component.ts</context>
           <context context-type="linenumber">44</context>
@@ -11178,7 +11178,7 @@ Syötä useiden käyttäjien osoitteet allekkain tai pilkulla erotettuina.</targ
       </trans-unit>
       <trans-unit id="5423991647761194551" datatype="html">
         <source>Newest</source>
-        <target state="new">Newest</target>
+        <target state="translated">Uusin</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/gamification/badge/badge-creator.component.ts</context>
           <context context-type="linenumber">54,55</context>
@@ -11194,7 +11194,7 @@ Syötä useiden käyttäjien osoitteet allekkain tai pilkulla erotettuina.</targ
       </trans-unit>
       <trans-unit id="5844212965736113574" datatype="html">
         <source>Oldest</source>
-        <target state="new">Oldest</target>
+        <target state="translated">Vanhin</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/gamification/badge/badge-creator.component.ts</context>
           <context context-type="linenumber">55,56</context>
@@ -11210,7 +11210,7 @@ Syötä useiden käyttäjien osoitteet allekkain tai pilkulla erotettuina.</targ
       </trans-unit>
       <trans-unit id="11998600819904735" datatype="html">
         <source>This course does not have any badges yet.</source>
-        <target state="new">This course does not have any badges yet.</target>
+        <target state="translated">Merkkejä ei ole vielä luotu.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/gamification/badge/badge-creator.component.ts</context>
           <context context-type="linenumber">63,64</context>
@@ -11218,7 +11218,7 @@ Syötä useiden käyttäjien osoitteet allekkain tai pilkulla erotettuina.</targ
       </trans-unit>
       <trans-unit id="6739608248709664215" datatype="html">
         <source>Assign badge</source>
-        <target state="new">Assign badge</target>
+        <target state="translated">Anna merkki</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/gamification/badge/badge-creator.component.ts</context>
           <context context-type="linenumber">76</context>
@@ -11229,7 +11229,7 @@ Syötä useiden käyttäjien osoitteet allekkain tai pilkulla erotettuina.</targ
         <target state="translated"> Varmista, että koeryhmän koe on lopetettu ja että kirjautumiskoodit on otettu pois käytöstä kohdassa <x id="START_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;i&gt;"/>3. Hallinnoi kokeita<x id="CLOSE_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;/i&gt;"/>.</target>
       <trans-unit id="3393624369102529500" datatype="html">
         <source>Edit badge</source>
-        <target state="new">Edit badge</target>
+        <target state="translated">Muokkaa merkkiä</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/gamification/badge/badge-creator.component.ts</context>
           <context context-type="linenumber">82</context>
@@ -11240,7 +11240,7 @@ Syötä useiden käyttäjien osoitteet allekkain tai pilkulla erotettuina.</targ
         <target state="translated">Oppilaat voivat avata kokeen omatoimisesti <x id="START_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;i&gt;"/>Avaa koe<x id="CLOSE_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;/i&gt;"/> -painikkeesta.</target>
       <trans-unit id="6020986914072713662" datatype="html">
         <source>Delete badge</source>
-        <target state="new">Delete badge</target>
+        <target state="translated">Poista merkki</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
           <context context-type="linenumber">720,721</context>
@@ -11250,7 +11250,7 @@ Syötä useiden käyttäjien osoitteet allekkain tai pilkulla erotettuina.</targ
       </trans-unit>
       <trans-unit id="5868542061568734441" datatype="html">
         <source>Fields marked with</source>
-        <target state="new">Fields marked with</target>
+        <target state="translated">Merkityt kentät</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/gamification/badge/badge-creator.component.ts</context>
           <context context-type="linenumber">113</context>
@@ -11258,7 +11258,7 @@ Syötä useiden käyttäjien osoitteet allekkain tai pilkulla erotettuina.</targ
       </trans-unit>
       <trans-unit id="974437052221961135" datatype="html">
         <source>are required</source>
-        <target state="new">are required</target>
+        <target state="translated">vaaditaan</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/gamification/badge/badge-creator.component.ts</context>
           <context context-type="linenumber">113</context>
@@ -11266,7 +11266,7 @@ Syötä useiden käyttäjien osoitteet allekkain tai pilkulla erotettuina.</targ
       </trans-unit>
       <trans-unit id="5501075393524406693" datatype="html">
         <source>Badge title</source>
-        <target state="new">Badge title</target>
+        <target state="translated">Merkin nimi</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/gamification/badge/badge-creator.component.ts</context>
           <context context-type="linenumber">118</context>
@@ -11274,7 +11274,7 @@ Syötä useiden käyttäjien osoitteet allekkain tai pilkulla erotettuina.</targ
       </trans-unit>
       <trans-unit id="6901100222794813353" datatype="html">
         <source>characters</source>
-        <target state="new">characters</target>
+        <target state="translated">kirjainta</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/gamification/badge/badge-creator.component.ts</context>
           <context context-type="linenumber">122</context>
@@ -11294,7 +11294,7 @@ Syötä useiden käyttäjien osoitteet allekkain tai pilkulla erotettuina.</targ
       </trans-unit>
       <trans-unit id="6952242034697821025" datatype="html">
         <source>Title is required.</source>
-        <target state="new">Title is required.</target>
+        <target state="translated">Nimi vaaditaan.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/gamification/badge/badge-creator.component.ts</context>
           <context context-type="linenumber">126,127</context>
@@ -11302,7 +11302,7 @@ Syötä useiden käyttäjien osoitteet allekkain tai pilkulla erotettuina.</targ
       </trans-unit>
       <trans-unit id="6037965752494497249" datatype="html">
         <source>Title is too long (max 30 characters).</source>
-        <target state="new">Title is too long (max 30 characters).</target>
+        <target state="translated">Nimi on liian pitkä (enintään 30 kirjainta).</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/gamification/badge/badge-creator.component.ts</context>
           <context context-type="linenumber">127,128</context>
@@ -12093,7 +12093,7 @@ Syötä useiden käyttäjien osoitteet allekkain tai pilkulla erotettuina.</targ
         <target state="translated">Pyydä oppilaita kirjautumaan koejärjestelmään kirjautumiskoodeillaan: </target>
       <trans-unit id="2512365026527188575" datatype="html">
         <source>Description is required.</source>
-        <target state="new">Description is required.</target>
+        <target state="translated">Kuvaus vaaditaan.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/gamification/badge/badge-creator.component.ts</context>
           <context context-type="linenumber">140,141</context>
@@ -12103,7 +12103,7 @@ Syötä useiden käyttäjien osoitteet allekkain tai pilkulla erotettuina.</targ
       </trans-unit>
       <trans-unit id="8920531641317645527" datatype="html">
         <source>Description is too long (max 200 characters).</source>
-        <target state="new">Description is too long (max 200 characters).</target>
+        <target state="translated">Kuvaus on liian pitkä (enintään 200 kirjainta).</target>
       <trans-unit id="824586679107177391" datatype="html">
         <source>Press the <x id="START_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;i&gt;"/>'Begin showing answers to students'<x id="CLOSE_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;/i&gt;"/> button to allow students to review their answers for 1 hour. </source>
         <target state="translated">Paina <x id="START_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;i&gt;"/>Aloita vastausten näyttäminen koeryhmän oppilaille<x id="CLOSE_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;/i&gt;"/> -painiketta. Oppilaiden kirjautumiskoodit aktivoituvat, ja heille annetaan pääsyoikeus kokeeseen yhdeksi tunniksi. </target>
@@ -12114,7 +12114,7 @@ Syötä useiden käyttäjien osoitteet allekkain tai pilkulla erotettuina.</targ
       </trans-unit>
       <trans-unit id="3074987902485823708" datatype="html">
         <source>Icon</source>
-        <target state="new">Icon</target>
+        <target state="translated">Ikoni</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/gamification/badge/badge-creator.component.ts</context>
           <context context-type="linenumber">147</context>
@@ -12122,7 +12122,7 @@ Syötä useiden käyttäjien osoitteet allekkain tai pilkulla erotettuina.</targ
       </trans-unit>
       <trans-unit id="7134128927491765785" datatype="html">
         <source>Icon is required.</source>
-        <target state="new">Icon is required.</target>
+        <target state="translated">Ikoni vaaditaan.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/gamification/badge/badge-creator.component.ts</context>
           <context context-type="linenumber">152,153</context>
@@ -12130,7 +12130,7 @@ Syötä useiden käyttäjien osoitteet allekkain tai pilkulla erotettuina.</targ
       </trans-unit>
       <trans-unit id="9011959596901584887" datatype="html">
         <source>Color</source>
-        <target state="new">Color</target>
+        <target state="translated">Väri</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/gamification/badge/badge-creator.component.ts</context>
           <context context-type="linenumber">157</context>
@@ -12138,7 +12138,7 @@ Syötä useiden käyttäjien osoitteet allekkain tai pilkulla erotettuina.</targ
       </trans-unit>
       <trans-unit id="7643964993666081560" datatype="html">
         <source>Color is required.</source>
-        <target state="new">Color is required.</target>
+        <target state="translated">Väri vaaditaan.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/gamification/badge/badge-creator.component.ts</context>
           <context context-type="linenumber">162,163</context>
@@ -12146,7 +12146,7 @@ Syötä useiden käyttäjien osoitteet allekkain tai pilkulla erotettuina.</targ
       </trans-unit>
       <trans-unit id="4427129289566046309" datatype="html">
         <source>Shape</source>
-        <target state="new">Shape</target>
+        <target state="translated">Muoto</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/gamification/badge/badge-creator.component.ts</context>
           <context context-type="linenumber">169</context>
@@ -12154,7 +12154,7 @@ Syötä useiden käyttäjien osoitteet allekkain tai pilkulla erotettuina.</targ
       </trans-unit>
       <trans-unit id="6484591549347395431" datatype="html">
         <source>Cancel and return without saving</source>
-        <target state="new">Cancel and return without saving</target>
+        <target state="translated">Keskeytä tallentamatta muutoksia</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/gamification/badge/badge-creator.component.ts</context>
           <context context-type="linenumber">206,207</context>
@@ -12162,7 +12162,7 @@ Syötä useiden käyttäjien osoitteet allekkain tai pilkulla erotettuina.</targ
       </trans-unit>
       <trans-unit id="6364492383924408525" datatype="html">
         <source>Access denied for students.</source>
-        <target state="new">Access denied for students.</target>
+        <target state="translated">Ei oikeuksia käyttää tätä ominaisuutta.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/gamification/badge/badge-creator.component.ts</context>
           <context context-type="linenumber">219,220</context>
@@ -12170,7 +12170,7 @@ Syötä useiden käyttäjien osoitteet allekkain tai pilkulla erotettuina.</targ
       </trans-unit>
       <trans-unit id="form.create" datatype="html">
         <source>Create</source>
-        <target state="new">Create</target>
+        <target state="translated">Luo</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/gamification/badge/badge-creator.component.ts</context>
           <context context-type="linenumber">251</context>
@@ -12178,7 +12178,7 @@ Syötä useiden käyttäjien osoitteet allekkain tai pilkulla erotettuina.</targ
       </trans-unit>
       <trans-unit id="form.save" datatype="html">
         <source>Save Changes</source>
-        <target state="new">Save Changes</target>
+        <target state="translated">Tallenna muutokset</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/gamification/badge/badge-creator.component.ts</context>
           <context context-type="linenumber">252</context>
@@ -12186,7 +12186,7 @@ Syötä useiden käyttäjien osoitteet allekkain tai pilkulla erotettuina.</targ
       </trans-unit>
       <trans-unit id="form.fillRequired" datatype="html">
         <source>Fill all the required fields</source>
-        <target state="new">Fill all the required fields</target>
+        <target state="translated">Täytä kaikki vaaditut kentät</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/gamification/badge/badge-creator.component.ts</context>
           <context context-type="linenumber">253</context>
@@ -12194,7 +12194,7 @@ Syötä useiden käyttäjien osoitteet allekkain tai pilkulla erotettuina.</targ
       </trans-unit>
       <trans-unit id="form.allBadges" datatype="html">
         <source>All Badges</source>
-        <target state="new">All Badges</target>
+        <target state="translated">Kaikki merkit</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/gamification/badge/badge-creator.component.ts</context>
           <context context-type="linenumber">254</context>
@@ -12202,7 +12202,7 @@ Syötä useiden käyttäjien osoitteet allekkain tai pilkulla erotettuina.</targ
       </trans-unit>
       <trans-unit id="form.createNewBadge" datatype="html">
         <source>Create a new badge</source>
-        <target state="new">Create a new badge</target>
+        <target state="translated">Luo uusi merkki</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/gamification/badge/badge-creator.component.ts</context>
           <context context-type="linenumber">255</context>
@@ -12210,7 +12210,7 @@ Syötä useiden käyttäjien osoitteet allekkain tai pilkulla erotettuina.</targ
       </trans-unit>
       <trans-unit id="form.edit" datatype="html">
         <source>Edit</source>
-        <target state="new">Edit</target>
+        <target state="translated">Muokkaa</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/gamification/badge/badge-creator.component.ts</context>
           <context context-type="linenumber">256</context>
@@ -12218,7 +12218,7 @@ Syötä useiden käyttäjien osoitteet allekkain tai pilkulla erotettuina.</targ
       </trans-unit>
       <trans-unit id="584754872792429089" datatype="html">
         <source>Assign</source>
-        <target state="new">Assign</target>
+        <target state="translated">Anna merkki</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/gamification/badge/badge-giver.component.ts</context>
           <context context-type="linenumber">28</context>
@@ -12226,7 +12226,7 @@ Syötä useiden käyttäjien osoitteet allekkain tai pilkulla erotettuina.</targ
       </trans-unit>
       <trans-unit id="1598304203172707370" datatype="html">
         <source>to user(s) or group(s)</source>
-        <target state="new">to user(s) or group(s)</target>
+        <target state="translated">käyttäjille tai ryhmille</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/gamification/badge/badge-giver.component.ts</context>
           <context context-type="linenumber">28</context>
@@ -12234,7 +12234,7 @@ Syötä useiden käyttäjien osoitteet allekkain tai pilkulla erotettuina.</targ
       </trans-unit>
       <trans-unit id="197548451473527565" datatype="html">
         <source> View users </source>
-        <target state="new"> View users </target>
+        <target state="translated"> Selaa käyttäjiä </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/gamification/badge/badge-giver.component.ts</context>
           <context context-type="linenumber">47</context>
@@ -12242,7 +12242,7 @@ Syötä useiden käyttäjien osoitteet allekkain tai pilkulla erotettuina.</targ
       </trans-unit>
       <trans-unit id="6734116808381874560" datatype="html">
         <source> View groups </source>
-        <target state="new"> View groups </target>
+        <target state="translated"> Selaa ryhmiä  </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/gamification/badge/badge-giver.component.ts</context>
           <context context-type="linenumber">50</context>
@@ -12250,7 +12250,7 @@ Syötä useiden käyttäjien osoitteet allekkain tai pilkulla erotettuina.</targ
       </trans-unit>
       <trans-unit id="1494518490116523821" datatype="html">
         <source>Select all</source>
-        <target state="new">Select all</target>
+        <target state="translated">Valitse kaikki</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/gamification/badge/badge-giver.component.ts</context>
           <context context-type="linenumber">78</context>
@@ -12262,7 +12262,7 @@ Syötä useiden käyttäjien osoitteet allekkain tai pilkulla erotettuina.</targ
       </trans-unit>
       <trans-unit id="6628030584459078156" datatype="html">
         <source>Users without group</source>
-        <target state="new">Users without group</target>
+        <target state="translated">Ryhmän ulkopuoliset käyttäjät</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/gamification/badge/badge-giver.component.ts</context>
           <context context-type="linenumber">101,102</context>
@@ -12274,7 +12274,7 @@ Syötä useiden käyttäjien osoitteet allekkain tai pilkulla erotettuina.</targ
       </trans-unit>
       <trans-unit id="6279406018740594152" datatype="html">
         <source>No users found</source>
-        <target state="new">No users found</target>
+        <target state="translated">Käyttäjiä ei löytynyt</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/gamification/badge/badge-giver.component.ts</context>
           <context context-type="linenumber">171,172</context>
@@ -12282,23 +12282,15 @@ Syötä useiden käyttäjien osoitteet allekkain tai pilkulla erotettuina.</targ
       </trans-unit>
       <trans-unit id="4112079984094994691" datatype="html">
         <source>Select group to view users</source>
-        <target state="new">Select group to view users</target>
+        <target state="translated">Valitse ryhmä nähdäksesi käyttäjät</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/gamification/badge/badge-giver.component.ts</context>
           <context context-type="linenumber">174,175</context>
         </context-group>
       </trans-unit>
-      <trans-unit id="2323081413317144899" datatype="html">
-        <source>Reset table</source>
-        <target state="translated">Alusta taulukko</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/gamification/badge/badge-giver.component.ts</context>
-          <context context-type="linenumber">183,184</context>
-        </context-group>
-      </trans-unit>
       <trans-unit id="5610574481341757897" datatype="html">
         <source> Assign </source>
-        <target state="new"> Assign </target>
+        <target state="translated"> Anna merkki </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/gamification/badge/badge-giver.component.ts</context>
           <context context-type="linenumber">202</context>
@@ -12306,7 +12298,7 @@ Syötä useiden käyttäjien osoitteet allekkain tai pilkulla erotettuina.</targ
       </trans-unit>
       <trans-unit id="4575719820429514382" datatype="html">
         <source>User Badges </source>
-        <target state="new">User Badges </target>
+        <target state="translated">Käyttäjän merkit </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/gamification/badge/badge-viewer.component.ts</context>
           <context context-type="linenumber">31,32</context>
@@ -12314,7 +12306,7 @@ Syötä useiden käyttäjien osoitteet allekkain tai pilkulla erotettuina.</targ
       </trans-unit>
       <trans-unit id="2684344419716682750" datatype="html">
         <source>Badges</source>
-        <target state="new">Badges</target>
+        <target state="translated">Merkit</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/gamification/badge/badge-viewer.component.ts</context>
           <context context-type="linenumber">40</context>
@@ -12326,7 +12318,7 @@ Syötä useiden käyttäjien osoitteet allekkain tai pilkulla erotettuina.</targ
       </trans-unit>
       <trans-unit id="3311502347627501218" datatype="html">
         <source>No user badges</source>
-        <target state="new">No user badges</target>
+        <target state="translated">Käyttäjällä ei ole merkkejä</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/gamification/badge/badge-viewer.component.ts</context>
           <context context-type="linenumber">42,43</context>
@@ -12334,7 +12326,7 @@ Syötä useiden käyttäjien osoitteet allekkain tai pilkulla erotettuina.</targ
       </trans-unit>
       <trans-unit id="7796428855216903386" datatype="html">
         <source>No group badges</source>
-        <target state="new">No group badges</target>
+        <target state="translated">Ryhmällä ei ole merkkejä</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/gamification/badge/badge-viewer.component.ts</context>
           <context context-type="linenumber">76,77</context>
@@ -12342,7 +12334,7 @@ Syötä useiden käyttäjien osoitteet allekkain tai pilkulla erotettuina.</targ
       </trans-unit>
       <trans-unit id="form.message" datatype="html">
         <source>Message:</source>
-        <target state="new">Message:</target>
+        <target state="translated">Viesti:</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/gamification/badge/badge-viewer.component.ts</context>
           <context context-type="linenumber">139</context>
@@ -12350,7 +12342,7 @@ Syötä useiden käyttäjien osoitteet allekkain tai pilkulla erotettuina.</targ
       </trans-unit>
       <trans-unit id="form.description" datatype="html">
         <source>Description:</source>
-        <target state="new">Description:</target>
+        <target state="translated">Kuvaus:</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/gamification/badge/badge-viewer.component.ts</context>
           <context context-type="linenumber">140</context>
@@ -12358,7 +12350,7 @@ Syötä useiden käyttäjien osoitteet allekkain tai pilkulla erotettuina.</targ
       </trans-unit>
       <trans-unit id="form.textIcon" datatype="html">
         <source>Icon:</source>
-        <target state="new">Icon:</target>
+        <target state="translated">Ikoni:</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/gamification/badge/badge-viewer.component.ts</context>
           <context context-type="linenumber">141</context>
@@ -12366,7 +12358,7 @@ Syötä useiden käyttäjien osoitteet allekkain tai pilkulla erotettuina.</targ
       </trans-unit>
       <trans-unit id="form.textColor" datatype="html">
         <source>Color:</source>
-        <target state="new">Color:</target>
+        <target state="translated">Väri:</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/gamification/badge/badge-viewer.component.ts</context>
           <context context-type="linenumber">142</context>
@@ -12374,7 +12366,7 @@ Syötä useiden käyttäjien osoitteet allekkain tai pilkulla erotettuina.</targ
       </trans-unit>
       <trans-unit id="form.textShape" datatype="html">
         <source>Shape:</source>
-        <target state="new">Shape:</target>
+        <target state="translated">Muoto:</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/gamification/badge/badge-viewer.component.ts</context>
           <context context-type="linenumber">143</context>
@@ -12382,7 +12374,7 @@ Syötä useiden käyttäjien osoitteet allekkain tai pilkulla erotettuina.</targ
       </trans-unit>
       <trans-unit id="form.textTime" datatype="html">
         <source>Time given:</source>
-        <target state="new">Time given:</target>
+        <target state="translated">Antamisaika:</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/gamification/badge/badge-viewer.component.ts</context>
           <context context-type="linenumber">144</context>
@@ -12390,7 +12382,7 @@ Syötä useiden käyttäjien osoitteet allekkain tai pilkulla erotettuina.</targ
       </trans-unit>
       <trans-unit id="form.textCreatedBy" datatype="html">
         <source>Created by:</source>
-        <target state="new">Created by:</target>
+        <target state="translated">Luonut:</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/gamification/badge/badge-viewer.component.ts</context>
           <context context-type="linenumber">145</context>
@@ -12398,7 +12390,7 @@ Syötä useiden käyttäjien osoitteet allekkain tai pilkulla erotettuina.</targ
       </trans-unit>
       <trans-unit id="form.textGivenBy" datatype="html">
         <source>Given by:</source>
-        <target state="new">Given by:</target>
+        <target state="translated">Merkin antaja:</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/gamification/badge/badge-viewer.component.ts</context>
           <context context-type="linenumber">146</context>
@@ -12406,7 +12398,7 @@ Syötä useiden käyttäjien osoitteet allekkain tai pilkulla erotettuina.</targ
       </trans-unit>
       <trans-unit id="4828254589226750814" datatype="html">
         <source>View users or groups</source>
-        <target state="new">View users or groups</target>
+        <target state="translated">Selaa käyttäjiä tai ryhmiä</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/gamification/badge/badge-withdraw.component.ts</context>
           <context context-type="linenumber">31</context>
@@ -12414,7 +12406,7 @@ Syötä useiden käyttäjien osoitteet allekkain tai pilkulla erotettuina.</targ
       </trans-unit>
       <trans-unit id="4555457172864212828" datatype="html">
         <source>Users</source>
-        <target state="new">Users</target>
+        <target state="translated">Käyttäjät</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/gamification/badge/badge-withdraw.component.ts</context>
           <context context-type="linenumber">45</context>
@@ -12422,7 +12414,7 @@ Syötä useiden käyttäjien osoitteet allekkain tai pilkulla erotettuina.</targ
       </trans-unit>
       <trans-unit id="5547499389580646473" datatype="html">
         <source>No badges assigned</source>
-        <target state="new">No badges assigned</target>
+        <target state="translated">Ei annettuja merkkejä</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/gamification/badge/badge-withdraw.component.ts</context>
           <context context-type="linenumber">120,121</context>
@@ -12434,7 +12426,7 @@ Syötä useiden käyttäjien osoitteet allekkain tai pilkulla erotettuina.</targ
       </trans-unit>
       <trans-unit id="6812060545430706033" datatype="html">
         <source>Select user to view badges</source>
-        <target state="new">Select user to view badges</target>
+        <target state="translated">Valitse käyttäjä nähdäksesi annetut merkit</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/gamification/badge/badge-withdraw.component.ts</context>
           <context context-type="linenumber">124,125</context>
@@ -12442,7 +12434,7 @@ Syötä useiden käyttäjien osoitteet allekkain tai pilkulla erotettuina.</targ
       </trans-unit>
       <trans-unit id="1589856968320125019" datatype="html">
         <source>Select group to view badges</source>
-        <target state="new">Select group to view badges</target>
+        <target state="translated">Valitse ryhmä nähdäksesi annetut merkit</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/gamification/badge/badge-withdraw.component.ts</context>
           <context context-type="linenumber">185,186</context>
@@ -12450,7 +12442,7 @@ Syötä useiden käyttäjien osoitteet allekkain tai pilkulla erotettuina.</targ
       </trans-unit>
       <trans-unit id="5028777105388019087" datatype="html">
         <source>Details</source>
-        <target state="new">Details</target>
+        <target state="translated">Yksityiskohdat</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/gamification/badge/badge-withdraw.component.ts</context>
           <context context-type="linenumber">199,200</context>
@@ -12458,7 +12450,7 @@ Syötä useiden käyttäjien osoitteet allekkain tai pilkulla erotettuina.</targ
       </trans-unit>
       <trans-unit id="2517309683610083249" datatype="html">
         <source>Title:</source>
-        <target state="new">Title:</target>
+        <target state="translated">Nimi:</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/gamification/badge/badge-withdraw.component.ts</context>
           <context context-type="linenumber">201</context>
@@ -12466,7 +12458,7 @@ Syötä useiden käyttäjien osoitteet allekkain tai pilkulla erotettuina.</targ
       </trans-unit>
       <trans-unit id="6996799422725544865" datatype="html">
         <source>Description:</source>
-        <target state="new">Description:</target>
+        <target state="translated">Kuvaus:</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/gamification/badge/badge-withdraw.component.ts</context>
           <context context-type="linenumber">202</context>
@@ -12474,7 +12466,7 @@ Syötä useiden käyttäjien osoitteet allekkain tai pilkulla erotettuina.</targ
       </trans-unit>
       <trans-unit id="7858060057068625943" datatype="html">
         <source>Message:</source>
-        <target state="new">Message:</target>
+        <target state="translated">Viesti:</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/gamification/badge/badge-withdraw.component.ts</context>
           <context context-type="linenumber">203</context>
@@ -12482,7 +12474,7 @@ Syötä useiden käyttäjien osoitteet allekkain tai pilkulla erotettuina.</targ
       </trans-unit>
       <trans-unit id="8257835794605797284" datatype="html">
         <source>Given by:</source>
-        <target state="new">Given by:</target>
+        <target state="translated">Merkin antaja:</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/gamification/badge/badge-withdraw.component.ts</context>
           <context context-type="linenumber">204</context>
@@ -12490,7 +12482,7 @@ Syötä useiden käyttäjien osoitteet allekkain tai pilkulla erotettuina.</targ
       </trans-unit>
       <trans-unit id="9184020123723303142" datatype="html">
         <source>Time given:</source>
-        <target state="new">Time given:</target>
+        <target state="translated">Antamisaika:</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/gamification/badge/badge-withdraw.component.ts</context>
           <context context-type="linenumber">205</context>
@@ -12498,7 +12490,7 @@ Syötä useiden käyttäjien osoitteet allekkain tai pilkulla erotettuina.</targ
       </trans-unit>
       <trans-unit id="7924912164252500969" datatype="html">
         <source>Withdraw</source>
-        <target state="new">Withdraw</target>
+        <target state="translated">Poista merkki</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/gamification/badge/badge-withdraw.component.ts</context>
           <context context-type="linenumber">214</context>
@@ -12506,7 +12498,7 @@ Syötä useiden käyttäjien osoitteet allekkain tai pilkulla erotettuina.</targ
       </trans-unit>
       <trans-unit id="7139999409916594388" datatype="html">
         <source>Leaderboard</source>
-        <target state="new">Leaderboard</target>
+        <target state="translated">Palkintokoroke</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/gamification/badge/badge.leaderboard.ts</context>
           <context context-type="linenumber">17</context>
@@ -12514,7 +12506,7 @@ Syötä useiden käyttäjien osoitteet allekkain tai pilkulla erotettuina.</targ
       </trans-unit>
       <trans-unit id="2836115012617960804" datatype="html">
         <source>No groups with badges.</source>
-        <target state="new">No groups with badges.</target>
+        <target state="translated">Merkeillä palkittuja ryhmiä ei löytynyt.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/gamification/badge/badge.leaderboard.ts</context>
           <context context-type="linenumber">22,23</context>
@@ -12522,7 +12514,7 @@ Syötä useiden käyttäjien osoitteet allekkain tai pilkulla erotettuina.</targ
       </trans-unit>
       <trans-unit id="8613741909398167343" datatype="html">
         <source>dashboard</source>
-        <target state="new">dashboard</target>
+        <target state="translated">yhteenveto</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/group-dashboard/group-dashboard.component.ts</context>
           <context context-type="linenumber">22</context>
@@ -12530,7 +12522,7 @@ Syötä useiden käyttäjien osoitteet allekkain tai pilkulla erotettuina.</targ
       </trans-unit>
       <trans-unit id="4848897086169513413" datatype="html">
         <source>Group details</source>
-        <target state="new">Group details</target>
+        <target state="translated">Ryhmän tiedot</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/group-dashboard/group-dashboard.component.ts</context>
           <context context-type="linenumber">35,36</context>
@@ -12538,7 +12530,7 @@ Syötä useiden käyttäjien osoitteet allekkain tai pilkulla erotettuina.</targ
       </trans-unit>
       <trans-unit id="4610546458075110030" datatype="html">
         <source>badges</source>
-        <target state="new">badges</target>
+        <target state="translated">saadut merkit</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/group-dashboard/group-dashboard.component.ts</context>
           <context context-type="linenumber">36</context>
@@ -12546,7 +12538,7 @@ Syötä useiden käyttäjien osoitteet allekkain tai pilkulla erotettuina.</targ
       </trans-unit>
       <trans-unit id="1761340790137218445" datatype="html">
         <source>No group badges yet.</source>
-        <target state="new">No group badges yet.</target>
+        <target state="translated">Ryhmällä ei vielä ole merkkejä.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/group-dashboard/group-dashboard.component.ts</context>
           <context context-type="linenumber">38,39</context>
@@ -12554,7 +12546,7 @@ Syötä useiden käyttäjien osoitteet allekkain tai pilkulla erotettuina.</targ
       </trans-unit>
       <trans-unit id="1069523139277190436" datatype="html">
         <source>Statistics</source>
-        <target state="new">Statistics</target>
+        <target state="translated">Tilastot</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/group-dashboard/group-dashboard.component.ts</context>
           <context context-type="linenumber">50,51</context>
@@ -12562,7 +12554,7 @@ Syötä useiden käyttäjien osoitteet allekkain tai pilkulla erotettuina.</targ
       </trans-unit>
       <trans-unit id="3661879077533236001" datatype="html">
         <source>Total members: </source>
-        <target state="new">Total members: </target>
+        <target state="translated">Ryhmän jäseniä yhteensä: </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/group-dashboard/group-dashboard.component.ts</context>
           <context context-type="linenumber">52</context>
@@ -12570,7 +12562,7 @@ Syötä useiden käyttäjien osoitteet allekkain tai pilkulla erotettuina.</targ
       </trans-unit>
       <trans-unit id="5887444414806996463" datatype="html">
         <source>Total badges (group + user): </source>
-        <target state="new">Total badges (group + user): </target>
+        <target state="translated">Merkkejä yhteensä (ryhmä + käyttäjä): </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/group-dashboard/group-dashboard.component.ts</context>
           <context context-type="linenumber">53</context>
@@ -12578,7 +12570,7 @@ Syötä useiden käyttäjien osoitteet allekkain tai pilkulla erotettuina.</targ
       </trans-unit>
       <trans-unit id="4691887509600985309" datatype="html">
         <source>Members</source>
-        <target state="new">Members</target>
+        <target state="translated">Jäsenet</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/group-dashboard/group-dashboard.component.ts</context>
           <context context-type="linenumber">62,63</context>
@@ -12586,7 +12578,7 @@ Syötä useiden käyttäjien osoitteet allekkain tai pilkulla erotettuina.</targ
       </trans-unit>
       <trans-unit id="127799817002327101" datatype="html">
         <source>Current group name: </source>
-        <target state="new">Current group name: </target>
+        <target state="translated">Ryhmän nimi: </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/group-dashboard/name-changer.component.ts</context>
           <context context-type="linenumber">20</context>
@@ -12594,7 +12586,7 @@ Syötä useiden käyttäjien osoitteet allekkain tai pilkulla erotettuina.</targ
       </trans-unit>
       <trans-unit id="1031670110176839073" datatype="html">
         <source>New name: </source>
-        <target state="new">New name: </target>
+        <target state="translated">Uusi nimi: </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/group-dashboard/name-changer.component.ts</context>
           <context context-type="linenumber">21</context>
@@ -12602,7 +12594,7 @@ Syötä useiden käyttäjien osoitteet allekkain tai pilkulla erotettuina.</targ
       </trans-unit>
       <trans-unit id="310091665302387594" datatype="html">
         <source>Change name</source>
-        <target state="new">Change name</target>
+        <target state="translated">Vaihda nimeä</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/group-dashboard/name-changer.component.ts</context>
           <context context-type="linenumber">24</context>
@@ -12800,6 +12792,14 @@ Syötä useiden käyttäjien osoitteet allekkain tai pilkulla erotettuina.</targ
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/gamification/badge/badge-viewer.component.ts</context>
           <context context-type="linenumber">41</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="8066608938393600549" datatype="html">
+        <source>Message</source>
+        <target state="new">Message</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/gamification/badge/badge-giver.component.ts</context>
+          <context context-type="linenumber">183,184</context>
         </context-group>
       </trans-unit>
     </body>
