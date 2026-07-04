@@ -298,17 +298,20 @@ def verify_access(
     :param user_group_id: ID of user group.
     :return:
     """
+    _user_group = user_group
     if not user_group:
         if user_group_name:
-            raise NotExist(f'User group "{user_group_name}" not found')
+            _user_group = UserGroup.get_by_name(user_group_name)
         elif user_group_id:
-            raise NotExist(f'User group with id "{user_group_id}" not found')
+            _user_group = UserGroup.get_by_id(user_group_id)
         else:
-            raise NotExist(f"User group not found")
+            raise NotExist(f"User group was not provided.")
+        if not _user_group:
+            raise NotExist(f'User group "{user_group_name or user_group_id}" not found')
 
-    block = user_group.admin_doc
+    block = _user_group.admin_doc if _user_group else None
     if not block:
-        raise NotExist(f'Admin doc for user group "{user_group.name}" not found')
+        raise NotExist(f'Admin doc for user group "{_user_group.name}" not found')
 
     if access_type == "teacher":
         verify_teacher_access(
@@ -339,13 +342,15 @@ def get_groups_badges(group_id: int, context_group: str) -> Response:
     if not context_usergroup:
         raise NotExist(f'User group "{context_group}" not found')
 
-    current_user = get_current_user_object()
-    in_group = check_group_member(current_user, context_usergroup.id)
-    if not in_group:
-        try:
-            verify_access("view", usergroup, user_group_id=group_id)
-        except NotExist:
-            verify_access("teacher", context_usergroup, user_group_name=context_group)
+    # FIXME: for now, badges are be visible to anyone. Rights management needs to be re-worked.
+    #
+    # current_user = get_current_user_object()
+    # in_group = check_group_member(current_user, context_usergroup.id)
+    # if not in_group:
+    #     try:
+    #         verify_access("view", usergroup, user_group_id=group_id)
+    #     except NotExist:
+    #         verify_access("teacher", context_usergroup, user_group_name=context_group)
 
     # log_info(f"Current user's groups: {current_user.groups}")
     #
