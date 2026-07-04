@@ -1045,7 +1045,7 @@ export class ToolsBase {
     }
 
     /**
-     * Performs an HTTP request.
+     * Performs an HTTP request. For internal endpoints, use the Docker service name and mapped port (usually 'tim:5000').
      *
      * @param url URL to request
      * @param opts Options for the request. The available options are:
