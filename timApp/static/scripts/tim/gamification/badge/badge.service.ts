@@ -171,6 +171,7 @@ export class BadgeService {
         {id: 10, name: "Deployed Code"},
         {id: 11, name: "Loop"},
         {id: 12, name: "100 Points"},
+        {id: 13, name: "Communication"},
     ];
 
     // Available shapes for badges
@@ -243,10 +244,10 @@ export class BadgeService {
      */
     getAvailableColors() {
         return this.availableColors.sort((a, b) => {
-            const isVibrantA = a.forCreatorList
+            const isVibrantA: boolean = a.forCreatorList
                 .toLowerCase()
                 .includes("vibrant");
-            const isVibrantB = b.forCreatorList
+            const isVibrantB: boolean = b.forCreatorList
                 .toLowerCase()
                 .includes("vibrant");
 
