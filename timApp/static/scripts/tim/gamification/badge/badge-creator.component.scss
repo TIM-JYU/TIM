@@ -323,6 +323,9 @@ button[type="button"]:hover {
     transform: translateX(-50%);
     display: flex;
     gap: 3px;
+    background: white;
+    border-radius: 5px;
+    padding: 5px;
 }
 
 .badge-buttons button {

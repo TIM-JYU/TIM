@@ -48,6 +48,7 @@ export class BadgeComponent implements OnInit, OnChanges {
         10: "deployed_code",
         11: "loop",
         12: "100_points",
+        13: "communication",
     };
 
     ngOnInit(): void {
