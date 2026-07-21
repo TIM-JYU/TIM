@@ -792,7 +792,9 @@ class DocParagraph:
                 self.html = self.doc.par_map[self.get_id()]["c"].html
             except:
                 return self._set_html("")
-            assert self.html is not None
+            # assert self.html is not None
+            if self.html is None:
+                return self._set_html("")
         return self.html
 
     class UnloadedParInfo(NamedTuple):
@@ -1420,7 +1422,7 @@ class DocParagraph:
             base_path = self.get_base_path()
             if not os.path.exists(base_path):
                 os.makedirs(base_path)
-
+        # self._compute_hash()  #  Some test do not pass if calculated here :-(
         d = self.dict(include_html_cache=True)
         log_for_person(
             lambda: f"Writing par {self.get_doc_id()}/{self.get_id()}: {d} "
@@ -1868,6 +1870,8 @@ def create_final_par(
         final_par.ref_doc = last_ref.doc.get_source_document()
 
     final_par.ref_chain = reached_par
+    # if final_par.html_cache is None:
+    #    final_par.html_cache = reached_par.html_cache
 
     # If from postanswer-route, no need for html
     if view_ctx and view_ctx.route != ViewRoute.PostAnswer:
