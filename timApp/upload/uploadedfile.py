@@ -303,6 +303,7 @@ SCRIPT_SAFE_MIMETYPES = {
     "video/webm",
     "application/msword",
     "text/plain",
+    "text/markdown",
     "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
     "application/vnd.openxmlformats-officedocument.wordprocessingml.template",
     "application/vnd.ms-access",
@@ -344,7 +345,7 @@ ALLOWED_DOC_IMPORT_EXT_MIMETYPES = {
     "docx": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
     "odt": "application/vnd.oasis.opendocument.text",
     "txt": "text/plain",
-    "md": "text/plain",
+    "md": "text/markdown",
     "tex": "text/plain",
 }
 
