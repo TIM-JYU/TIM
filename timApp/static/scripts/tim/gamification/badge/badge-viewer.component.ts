@@ -39,10 +39,8 @@ import {genericglobals} from "tim/util/globals";
         <ng-container *ngIf="hasPermissionToHandleBadges">
             <div class="viewer-container">
                 <h2 class="badge-heading">
-                    <ng-container *ngIf="genericglobals().current_user.name == this.badgeuserContext" i18n>My Badges
-                    </ng-container>
-                    <span *ngIf="genericglobals().current_user.name != this.badgeuserContext"><ng-container
-                        i18n>Badges</ng-container> ({{ realName }})</span>
+                    <ng-container *ngIf="genericglobals().current_user.name == this.badgeuserContext" i18n>My Badges</ng-container>
+                    <span *ngIf="genericglobals().current_user.name != this.badgeuserContext"><ng-container i18n>Badges</ng-container> ({{ realName }})</span>
                     <span class="pull-right">
                         <div class="sort-select">
                             <label for="user-sort-select" class="sort-select-title">
@@ -456,7 +454,6 @@ export class BadgeViewerComponent implements OnInit {
             );
         }
     }
-
 
     ngOnDestroy() {
         this.subscription.unsubscribe();
