@@ -26,75 +26,74 @@ import {genericglobals} from "tim/util/globals";
 @Component({
     selector: "tim-badge-viewer",
     template: `
-        <ng-container *ngIf="!hasPermissionToHandleBadges">
+        <ng-container *ngIf="!hasPermissionToHandleBadges" xmlns="http://www.w3.org/1999/html">
             <div class="viewer-container">
                 <h2 class="badge-heading" i18n>User Badges </h2>
-                <tim-alert *ngFor="let alert of alerts; let i = index" [severity]="alert.type" [closeable]="true" (closing)="badgeService.closeAlert(this.alerts, i)">
+                <tim-alert *ngFor="let alert of alerts; let i = index" [severity]="alert.type" [closeable]="true"
+                           (closing)="badgeService.closeAlert(this.alerts, i)">
                     <div [innerHTML]="alert.msg | purify"></div>
                 </tim-alert>
             </div>
         </ng-container>
-        
+
         <ng-container *ngIf="hasPermissionToHandleBadges">
-        <div class="viewer-container">
-            <h2 class="badge-heading">
-                <ng-container *ngIf="genericglobals().current_user.name == this.badgeuserContext" i18n>My Badges</ng-container>
-                <span *ngIf="genericglobals().current_user.name != this.badgeuserContext"><ng-container i18n>Badges</ng-container> ({{realName}})</span>
-            </h2>
-            <ng-container *ngIf="badges.length === 0">
-                <p class="no-badges-txt" i18n>No user badges</p>
-            </ng-container>
-            <ng-container *ngIf="badges.length > 0">
-                
-                <div class="sort-select">
-                    <select id="user-sort-select" [(ngModel)]="selectedSort" (ngModelChange)="onSortChange($event)">
-                      <option value="newest" i18n>Newest</option>
-                      <option value="oldest" i18n>Oldest</option>
-                      <option value="az">A-Z</option>
-                      <option value="za">Z-A</option>
-                    </select>
-                </div>
-                
-                <div class="user-badges">
-                    <div class="badge-card" *ngFor="let badge of sortedBadges">
-                        <tim-badge
-                                title="{{badge.title}}"
-                                color="{{badge.color}}"
-                                shape="{{badge.shape}}"
-                                [image]="badge.image"
-                                description="{{badge.description}}"
-                                message="{{badge.message}}"
-                                [disableDialogWindow]="false"                                
-                                (click)="openDialog(badge)">
-                        </tim-badge>
-                    </div>
-                </div>
-            </ng-container>
-
-            <ng-container *ngIf="userSubGroups.length > 0">
-                <div class="subgroups" *ngFor="let group of userSubGroups">
-                    <h2 class="badge-heading"><ng-container i18n>Badges</ng-container> ({{ groupPrettyNames.get(group.id) || group.name }})</h2>
-
-                    <ng-container *ngIf="groupBadgesMap.get(group.id)?.length == 0">
-                        <p class="no-badges-txt" i18n>No group badges</p>
+            <div class="viewer-container">
+                <h2 class="badge-heading">
+                    <ng-container *ngIf="genericglobals().current_user.name == this.badgeuserContext" i18n>My Badges
                     </ng-container>
-
-                    <ng-container *ngIf="groupBadgesMap.get(group.id)?.length ?? 0 > 0">
+                    <span *ngIf="genericglobals().current_user.name != this.badgeuserContext"><ng-container
+                        i18n>Badges</ng-container> ({{ realName }})</span>
+                    <span class="pull-right">
                         <div class="sort-select">
-                            <select
-                                [id]="'group-sort-' + group.id"
-                                [ngModel]="groupSortMap.get(group.id) || 'newest'"
-                                (ngModelChange)="onGroupSortChange(group.id, $event)"
-                            >
+                            <label for="user-sort-select" class="sort-select-title">
+                                Sort by: 
+                            </label>
+                            <select id="user-sort-select" [(ngModel)]="selectedSort" (ngModelChange)="onSortChange()">
                                 <option value="newest" i18n>Newest</option>
                                 <option value="oldest" i18n>Oldest</option>
                                 <option value="az">A-Z</option>
                                 <option value="za">Z-A</option>
                             </select>
                         </div>
-                        <div class="users-group-badges">
-                            <div class="badge-card" *ngFor="let badge of groupBadgesMap.get(group.id)">
-                                <tim-badge
+                    </span>
+                </h2>
+                <ng-container *ngIf="badges.length === 0">
+                    <p class="no-badges-txt" i18n>No user badges</p>
+                </ng-container>
+                <ng-container *ngIf="badges.length > 0">
+
+
+                    <div class="user-badges">
+                        <div class="badge-card" *ngFor="let badge of this.badges">
+                            <tim-badge
+                                title="{{badge.title}}"
+                                color="{{badge.color}}"
+                                shape="{{badge.shape}}"
+                                [image]="badge.image"
+                                description="{{badge.description}}"
+                                message="{{badge.message}}"
+                                [disableDialogWindow]="false"
+                                (click)="openDialog(badge)">
+                            </tim-badge>
+                        </div>
+                    </div>
+                </ng-container>
+
+                <ng-container *ngIf="userSubGroups.length > 0">
+                    <div class="subgroups" *ngFor="let group of userSubGroups">
+                        <h2 class="badge-heading">
+                            <ng-container i18n>Badges</ng-container>
+                            ({{ groupPrettyNames.get(group.id) || group.name }})
+                        </h2>
+
+                        <ng-container *ngIf="groupBadgesMap.get(group.id)?.length == 0">
+                            <p class="no-badges-txt" i18n>No group badges</p>
+                        </ng-container>
+
+                        <ng-container *ngIf="groupBadgesMap.get(group.id)?.length ?? 0 > 0">
+                            <div class="users-group-badges">
+                                <div class="badge-card" *ngFor="let badge of groupBadgesMap.get(group.id)">
+                                    <tim-badge
                                         title="{{badge.title}}"
                                         color="{{badge.color}}"
                                         shape="{{badge.shape}}"
@@ -103,13 +102,13 @@ import {genericglobals} from "tim/util/globals";
                                         message="{{badge.message}}"
                                         [disableDialogWindow]="false"
                                         (click)="openDialog(badge)">
-                                </tim-badge>
+                                    </tim-badge>
+                                </div>
                             </div>
-                        </div>
-                    </ng-container>
-                </div>
-            </ng-container>
-        </div>
+                        </ng-container>
+                    </div>
+                </ng-container>
+            </div>
         </ng-container>
     `,
     styleUrls: ["badge-viewer.component.scss"],
@@ -369,17 +368,12 @@ export class BadgeViewerComponent implements OnInit {
      * Finally, onSortChange method is called.
      */
     async getBadges() {
-        this.emptyTable(this.badges);
         const result = await toPromise(
             this.http.get<IBadge[]>(
                 `/badges/group_badges/${this.personalGroup!.id}/${this
                     .badgegroupContext!}`
             )
         );
-        const error = await this.badgeService.checkConnectionError(this.alerts);
-        if (error) {
-            return;
-        }
         if (!result.ok) {
             this.badgeService.showError(
                 this.alerts,
@@ -395,12 +389,7 @@ export class BadgeViewerComponent implements OnInit {
         this.hasPermissionToHandleBadges = true;
 
         this.badges = result.result;
-        this.badges = this.badgeService.sortBadges(this.badges, "newest", true);
-
-        const badge_titles = this.badges.map((b) => b.title);
-        console.log(`User's badges: ${badge_titles.join(", ")}`);
-
-        this.onSortChange(this.selectedSort);
+        this.onSortChange();
     }
 
     /**
@@ -430,11 +419,6 @@ export class BadgeViewerComponent implements OnInit {
             console.error("Failed to retrieve the context group.");
             return;
         }
-
-        console.log(
-            `User subgroups ${this.userSubGroups.map((g) => g.name).join(", ")}`
-        );
-
         for (const group of this.userSubGroups) {
             this.groupBadgesMap.set(
                 group.id,
@@ -452,45 +436,30 @@ export class BadgeViewerComponent implements OnInit {
 
     /**
      * Sorts all badges using the specified sort type and updates the sorted list.
-     *
-     * @param sortType - The type of sorting to apply (e.g., alphabetical, by date).
      */
-    onSortChange(sortType: string) {
-        this.sortedBadges = this.badgeService.sortBadges(
+    onSortChange() {
+        this.badges = this.badgeService.sortBadges(
             this.badges,
-            sortType,
+            this.selectedSort,
             true
         );
+
+        for (const group of this.groupBadgesMap.keys()) {
+            const group_badges = this.groupBadgesMap.get(group) ?? [];
+            this.groupBadgesMap.set(
+                group,
+                this.badgeService.sortBadges(
+                    group_badges,
+                    this.selectedSort,
+                    true
+                )
+            );
+        }
     }
 
-    /**
-     * Sorts badges within a specific group using the given sort type and updates the group's sorted badge list.
-     *
-     * @param groupId - The identifier of the group whose badges should be sorted.
-     * @param sortType - The type of sorting to apply within the group.
-     */
-    onGroupSortChange(groupId: number, sortType: string) {
-        this.groupSortMap.set(groupId, sortType);
-        const originalBadges = this.groupBadgesMap.get(groupId) ?? [];
-        const sorted = this.badgeService.sortBadges(
-            originalBadges,
-            sortType,
-            true
-        );
-        this.groupBadgesMap.set(groupId, sorted);
-    }
 
     ngOnDestroy() {
         this.subscription.unsubscribe();
-    }
-
-    /**
-     * Resets table from argument.
-     */
-    emptyTable<T>(table: T[]) {
-        while (table.length > 0) {
-            table.pop();
-        }
     }
 
     protected readonly genericglobals = genericglobals;
