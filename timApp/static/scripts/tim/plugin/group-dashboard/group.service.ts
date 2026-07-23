@@ -26,7 +26,6 @@ export class GroupService {
             this.http.get<IUser[]>(`/groups/members/${group}`)
         );
         if (response.ok) {
-            console.log(response.result);
             return response.result;
         }
         return [];
