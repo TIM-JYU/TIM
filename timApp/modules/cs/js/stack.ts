@@ -24,6 +24,7 @@ const STACK_VARIABLE_PREFIX = "stackapi_";
 
 const StackMarkup = t.intersection([
     t.partial({
+        showAnswersOnLoad: t.boolean,
         beforeOpen: t.string,
         buttonBottom: t.boolean,
         by: t.string,
@@ -230,6 +231,10 @@ export class StackPluginComponent
             this.runGetTask();
         }
 
+        if (this.markup.showAnswersOnLoad) {
+            this.showResponseWithoutAnswering();
+        }
+
         if (!this.attrsall.preview) {
             this.vctrl.addTimComponent(this);
         }
@@ -238,6 +243,21 @@ export class StackPluginComponent
     ngOnDestroy() {
         if (!this.attrsall.preview) {
             this.vctrl.removeTimComponent(this);
+        }
+    }
+
+    async showResponseWithoutAnswering(): Promise<void> {
+        const taskId = this.getTaskId()?.docTask();
+        if (!taskId) {
+            return;
+        }
+        const ab = await this.vctrl.getAnswerBrowserAsync(taskId);
+        if (!ab) {
+            return;
+        }
+        await ab.loader.abLoad.promise;
+        if (ab.answers.length > 0) {
+            this.runSend(false);
         }
     }
 
