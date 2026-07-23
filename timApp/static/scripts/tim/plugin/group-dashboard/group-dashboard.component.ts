@@ -145,7 +145,6 @@ export class GroupDashboardComponent implements OnInit {
      * - pretty name (description)
      * - group id
      * - permissions for badge viewing
-     * TODO: do badge viewing rights entirely in backend
      * @returns group data
      */
     async getGroupInfo() {
