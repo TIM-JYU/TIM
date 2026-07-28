@@ -1,5 +1,5 @@
 ﻿import * as t from "io-ts";
-import type {ApplicationRef, DoBootstrap} from "@angular/core";
+import {ApplicationRef, DoBootstrap, HostListener} from "@angular/core";
 import {Component, NgModule} from "@angular/core";
 import {ParCompiler} from "tim/editor/parCompiler";
 import {
@@ -24,6 +24,7 @@ const STACK_VARIABLE_PREFIX = "stackapi_";
 
 const StackMarkup = t.intersection([
     t.partial({
+        autosave: t.boolean,
         showAnswersOnLoad: t.boolean,
         beforeOpen: t.string,
         buttonBottom: t.boolean,
@@ -101,7 +102,7 @@ interface IStackData {
                         class="timButton btn-sm"
                         (click)="runGetTask()">Show task
                 </button>
-                <button *ngIf="isOpen"
+                <button *ngIf="isOpen && !markup.autosave"
                         [disabled]="isRunning"
                         title="(Ctrl-S)"
                         class="timButton btn-sm"
@@ -119,6 +120,8 @@ interface IStackData {
             <span class="csRunError"
                   *ngIf="error"
                   [innerHtml]="error | purify"></span>
+            &nbsp;&nbsp;
+            <span *ngIf="savedText" class="savedtext">{{savedText}}</span>
 
             <div *ngIf="stackFeedback">
                 <div *ngIf="markup.generalfeedback">
@@ -158,11 +161,14 @@ export class StackPluginComponent
 
     getContentArray?: () => string[] | undefined;
     isUnSaved(userChange?: boolean | undefined): boolean {
+        console.log(this.userCode);
+        console.log(this.originalUserCode);
         return this.userCode !== this.originalUserCode;
     }
 
     async save() {
         await this.runSave();
+        this.savedText = "Saved";
         return {saved: true, message: undefined};
     }
 
@@ -201,8 +207,11 @@ export class StackPluginComponent
     private lastInputFieldId: string = "";
     private lastInputFieldValue: string = "";
     private lastInputFieldElement?: HTMLInputElement;
+    private focusedInputId: string = "";
+    private focusedInputElement?: HTMLInputElement | null = null;
     button: string = "";
     inputplaceholder!: string;
+    savedText: string = "";
 
     private timer?: number;
 
@@ -211,7 +220,9 @@ export class StackPluginComponent
         this.button = this.buttonText();
         const aa = this.attrsall;
         this.userCode = aa.usercode ?? this.markup.by ?? "";
+        console.log(this.userCode);
         this.originalUserCode = this.userCode;
+        console.log(this.originalUserCode);
         this.timWay = aa.timWay ?? this.markup.timWay ?? false;
         this.inputrows = this.markup.inputrows;
         this.inputplaceholder = this.markup.inputplaceholder ?? "";
@@ -243,6 +254,25 @@ export class StackPluginComponent
     ngOnDestroy() {
         if (!this.attrsall.preview) {
             this.vctrl.removeTimComponent(this);
+        }
+    }
+
+    @HostListener("focusin", ["$event"])
+    onFocusIn(event: FocusEvent) {
+        const target = event.target as HTMLElement;
+
+        if (target instanceof HTMLInputElement) {
+            this.focusedInputId = target.id;
+        }
+    }
+
+    @HostListener("focusout")
+    onFocusOut() {
+        this.focusedInputElement = null;
+        this.focusedInputId = "";
+
+        if (this.markup.autosave && this.isUnSaved()) {
+            this.save();
         }
     }
 
@@ -350,6 +380,7 @@ export class StackPluginComponent
             this.stackOutput = qt.substr(0, i) + "\n";
             this.stackInputFeedback = qt.substr(i);
         }
+        // TODO: Tähän if.markup.autosave jne. Parsitaan qt dom ja poistetaan vastauspalautteet
 
         if (!getTask) {
             this.stackFeedback = this.replace(r.generalfeedback);
@@ -377,6 +408,19 @@ export class StackPluginComponent
             const divinput = this.element.find(".stackinputfeedback");
             divinput.addClass("hidden");
         }
+
+        if (this.markup.autosave && !getTask) {
+            html.find(".stackinputfeedback").addClass("hidden");
+            html.find(".stackprtfeedback").remove();
+            html.find(".stackpartmark").remove();
+        }
+    }
+
+    parseElementsFromSelection(qt: string, select: string) {
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(DOMPurify.sanitize(qt), "text/html");
+
+        return doc.querySelector(select);
     }
 
     inputHandler(e: JQuery.TriggeredEvent) {
@@ -391,6 +435,7 @@ export class StackPluginComponent
         }
         this.lastInputFieldId = id;
         this.lastInputFieldValue = target.value;
+        this.savedText = "";
         this.autoPeekInput(id);
     }
 
@@ -404,12 +449,17 @@ export class StackPluginComponent
             return;
         }
 
-        const parser = new DOMParser();
-        const doc = parser.parseFromString(
-            DOMPurify.sanitize(r.questiontext),
-            "text/html"
+        // const parser = new DOMParser();
+        // const doc = parser.parseFromString(
+        //     DOMPurify.sanitize(r.questiontext),
+        //     "text/html"
+        // );
+        // const el = doc.querySelector("div.stackinputfeedback");
+
+        const el = this.parseElementsFromSelection(
+            r.questiontext,
+            "div.stackinputfeedback"
         );
-        const el = doc.querySelector("div.stackinputfeedback");
 
         if (!el) {
             return;
@@ -546,7 +596,7 @@ export class StackPluginComponent
         const stackResult = r.result.web.stackResult;
         this.originalUserCode = this.userCode;
         await this.handleServerResult(stackResult, getTask);
-        if (this.lastInputFieldId) {
+        if (this.lastInputFieldId && !this.markup.autosave) {
             this.lastInputFieldElement = this.element.find(
                 `#${this.lastInputFieldId}`
             )[0] as HTMLInputElement;
@@ -554,6 +604,18 @@ export class StackPluginComponent
                 this.lastInputFieldElement.focus();
                 this.lastInputFieldElement.selectionStart = 0;
                 this.lastInputFieldElement.selectionEnd = 1000;
+            }
+        }
+        // Refocus to the selected input field after autosave
+        if (this.markup.autosave && this.focusedInputId) {
+            this.focusedInputElement = this.element.find(
+                `#${this.focusedInputId}`
+            )[0] as HTMLInputElement;
+            if (this.focusedInputElement) {
+                this.focusedInputElement.focus();
+                // Move the caret to the end of the input
+                const caretPos = this.focusedInputElement.value.length;
+                this.focusedInputElement.setSelectionRange(caretPos, caretPos);
             }
         }
     }
