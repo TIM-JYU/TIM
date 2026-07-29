@@ -301,7 +301,10 @@ export class QuantumBoard {
                     new Control(targetPos.target, true, control.anti)
                 );
             } else {
-                if (newPos.target !== control.target) {
+                if (
+                    newPos.target !== control.target &&
+                    !this.isMultiqubitOrSwapGate(newPos)
+                ) {
                     this.remove(oldPos.target, oldPos.time);
 
                     this.set(
@@ -326,7 +329,10 @@ export class QuantumBoard {
                 );
             } else {
                 const target = this.findControllable(newPos);
-                if (target !== undefined) {
+                if (
+                    target !== undefined &&
+                    !this.isMultiqubitOrSwapGate(newPos)
+                ) {
                     this.remove(oldPos.target, oldPos.time);
                     this.set(
                         newPos.target,
@@ -336,6 +342,15 @@ export class QuantumBoard {
                 }
             }
         }
+    }
+
+    private isMultiqubitOrSwapGate(gatePos: GatePos) {
+        const cell = this.get(gatePos.target, gatePos.time);
+        return (
+            cell instanceof MultiQubitGate ||
+            cell instanceof MultiQubitGateCell ||
+            cell instanceof Swap
+        );
     }
 
     /**
@@ -451,6 +466,24 @@ export class QuantumBoard {
             this.moveSwap(oldPos, newPos, cell);
         } else if (cell instanceof MultiQubitGate) {
             this.moveMultiQubitGate(oldPos, newPos, cell);
+        } else if (cell instanceof MultiQubitGateCell) {
+            const multiQubitCell = this.get(cell.target, oldPos.time);
+            if (multiQubitCell instanceof MultiQubitGate) {
+                const oldAdjusted = {
+                    target: cell.target,
+                    time: oldPos.time,
+                };
+                const newAdjusted = {
+                    target: newPos.target - (oldPos.target - cell.target),
+                    time: newPos.time,
+                };
+
+                this.moveMultiQubitGate(
+                    oldAdjusted,
+                    newAdjusted,
+                    multiQubitCell
+                );
+            }
         } else {
             console.log("unhandled move case", cell);
         }
