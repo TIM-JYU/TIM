@@ -708,4 +708,37 @@ export class QuantumBoard {
             }
         }
     }
+
+    /**
+     * Get hashmap of gate names and counts in circuit
+     */
+    getGateCounts() {
+        const counts = new Map<string, number>();
+        function addToCounts(name: string) {
+            const val = counts.get(name);
+            if (val === undefined) {
+                counts.set(name, 1);
+            } else {
+                counts.set(name, val + 1);
+            }
+        }
+        for (let i = 0; i < this.board.length; i++) {
+            for (let j = 0; j < this.board[i].length; j++) {
+                const cell = this.board[i][j];
+                if (cell instanceof Gate || cell instanceof MultiQubitGate) {
+                    addToCounts(cell.name);
+                } else if (cell instanceof Swap && cell.target > i) {
+                    addToCounts("swap");
+                } else if (cell instanceof Control) {
+                    if (cell.anti) {
+                        addToCounts("antiControl");
+                    } else {
+                        addToCounts("control");
+                    }
+                }
+            }
+        }
+
+        return counts;
+    }
 }

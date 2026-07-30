@@ -247,6 +247,10 @@ export class GateService {
         return of(this.gates.filter((g) => !g.hidden));
     }
 
+    getMenuGatesArray() {
+        return this.gates.filter((g) => !g.hidden);
+    }
+
     getGates() {
         return this.gates;
     }

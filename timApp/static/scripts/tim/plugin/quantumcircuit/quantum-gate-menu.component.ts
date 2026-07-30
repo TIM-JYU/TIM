@@ -1,10 +1,11 @@
-import type {OnDestroy, OnInit} from "@angular/core";
+import type {OnDestroy, OnInit, SimpleChanges} from "@angular/core";
 import {Component, EventEmitter, Input, Output} from "@angular/core";
 import type {Color} from "tim/plugin/quantumcircuit/quantum-circuit.component";
 import {CircuitOptions} from "tim/plugin/quantumcircuit/quantum-circuit.component";
 import type {ServiceGate} from "tim/plugin/quantumcircuit/gate.service";
 import {GateService} from "tim/plugin/quantumcircuit/gate.service";
 import type {Subscription} from "rxjs";
+import {GateCounts} from "tim/plugin/quantumcircuit/gate-counts";
 
 interface MenuGate {
     color: Color;
@@ -19,10 +20,14 @@ interface MenuGate {
     template: `
         <!--suppress HtmlUnknownAttribute -->
 
-        <div class="gate-container" *ngIf="gates.length > 0" [class.gate-container-static-height]="isToolboxStaticHeight">
-            <p class="gate-container-heading"><ng-container i18n>Drag gate to circuit</ng-container></p>
-
+        <div class="gate-container" *ngIf="gates.length > 0"
+             [class.gate-container-static-height]="isToolboxStaticHeight">
+            <p class="gate-container-heading">
+                <ng-container i18n>Drag gate to circuit</ng-container>
+            </p>
+            
             <div class="gate-list">
+
                 <div class="svg-container" *ngFor="let gate of gates" draggable="true"
                      [title]="gate.info"
                      [style.width.px]="gate.name === 'control' || gate.name == 'antiControl' || gate.name === 'swap' ? circuitOptions.gateSize : gate.width"
@@ -39,9 +44,9 @@ interface MenuGate {
                             <circle [attr.fill]="gate.color.fill"
                                     [attr.cx]="circuitOptions.gateSize/2"
                                     [attr.cy]="circuitOptions.gateSize/2"
-                                    [attr.r]="circuitOptions.gateSize/4"/>
+                                    [attr.r]="circuitOptions.gateSize/4" />
                         </svg>
-                        
+
                         <svg *ngSwitchCase="'antiControl'"
                              [ngClass]="gate.group"
                              [style.height.px]="circuitOptions.gateSize"
@@ -51,7 +56,7 @@ interface MenuGate {
                                     [attr.stroke]="gate.color.fill"
                                     [attr.cx]="circuitOptions.gateSize/2"
                                     [attr.cy]="circuitOptions.gateSize/2"
-                                    [attr.r]="circuitOptions.gateSize/4"/>
+                                    [attr.r]="circuitOptions.gateSize/4" />
                         </svg>
 
                         <svg *ngSwitchCase="'swap'"
@@ -85,12 +90,13 @@ interface MenuGate {
                                   [attr.width]="gate.width"
                                   [attr.fill]="gate.color.fill"
                                   [attr.stroke]="circuitOptions.colors.dark"
-                                  rx="2"/>
+                                  rx="2" />
                             <text x="50%" y="50%"
                                   [attr.stroke]="gate.color.text"
                                   [attr.fill]="gate.color.text"
                                   dominant-baseline="middle"
-                                  text-anchor="middle">{{gate.name}}</text>
+                                  text-anchor="middle">{{ gate.name }}
+                            </text>
                         </svg>
                     </div>
                 </div>
@@ -102,7 +108,7 @@ interface MenuGate {
 })
 export class QuantumGateMenuComponent implements OnInit, OnDestroy {
     gates: MenuGate[] = [];
-    subscription!: Subscription;
+    subscription?: Subscription;
 
     @Input()
     circuitOptions!: CircuitOptions;
@@ -110,16 +116,19 @@ export class QuantumGateMenuComponent implements OnInit, OnDestroy {
     @Input()
     isToolboxStaticHeight: boolean = true;
 
+    @Input()
+    gateCounts?: GateCounts;
+
     @Output()
     select = new EventEmitter<string>();
 
     constructor(private gateService: GateService) {}
 
     ngOnInit(): void {
-        this.subscription = this.gateService
-            .getMenuGates()
-            .subscribe((gates) => {
-                this.gates = gates.map((g) => ({
+        if (this.gateCounts) {
+            this.gates = this.gateCounts
+                .getMenuGates(this.gateService)
+                .map((g) => ({
                     name: g.name,
                     color: this.getColor(g),
                     info: g.info,
@@ -129,7 +138,43 @@ export class QuantumGateMenuComponent implements OnInit, OnDestroy {
                     ),
                     group: g.group,
                 }));
-            });
+        } else {
+            this.subscription = this.gateService
+                .getMenuGates()
+                .subscribe((gates) => {
+                    this.gates = gates.map((g) => ({
+                        name: g.name,
+                        color: this.getColor(g),
+                        info: g.info,
+                        width: Math.max(
+                            this.gateService.getTextWidth(g.name),
+                            this.circuitOptions.gateSize
+                        ),
+                        group: g.group,
+                    }));
+                });
+        }
+    }
+
+    /**
+     * Update gateCounts
+     * @param changes possible change to gateCounts
+     */
+    ngOnChanges(changes: SimpleChanges): void {
+        if (this.gateCounts) {
+            this.gates = this.gateCounts
+                .getMenuGates(this.gateService)
+                .map((g) => ({
+                    name: g.name,
+                    color: this.getColor(g),
+                    info: g.info,
+                    width: Math.max(
+                        this.gateService.getTextWidth(g.name),
+                        this.circuitOptions.gateSize
+                    ),
+                    group: g.group,
+                }));
+        }
     }
 
     /**
@@ -161,7 +206,9 @@ export class QuantumGateMenuComponent implements OnInit, OnDestroy {
     }
 
     ngOnDestroy(): void {
-        this.subscription.unsubscribe();
+        if (this.subscription) {
+            this.subscription.unsubscribe();
+        }
     }
 
     handleClick(event: MouseEvent | TouchEvent, name: string) {
