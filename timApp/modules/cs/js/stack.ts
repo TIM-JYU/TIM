@@ -1,5 +1,11 @@
 ﻿import * as t from "io-ts";
-import {ApplicationRef, DoBootstrap, HostListener} from "@angular/core";
+import {
+    ApplicationRef,
+    DoBootstrap,
+    ElementRef,
+    HostListener,
+    ViewChild,
+} from "@angular/core";
 import {Component, NgModule} from "@angular/core";
 import {ParCompiler} from "tim/editor/parCompiler";
 import {
@@ -19,6 +25,7 @@ import {ScriptedInnerHTMLModule} from "tim/util/scripted-inner-html.module";
 import {registerPlugin} from "tim/plugin/pluginRegistry";
 import {CommonModule} from "@angular/common";
 import DOMPurify from "dompurify";
+import {event} from "jquery";
 
 const STACK_VARIABLE_PREFIX = "stackapi_";
 
@@ -161,8 +168,12 @@ export class StackPluginComponent
 
     getContentArray?: () => string[] | undefined;
     isUnSaved(userChange?: boolean | undefined): boolean {
-        console.log(this.userCode);
-        console.log(this.originalUserCode);
+        console.log("isUnsaved userCode: ", this.userCode);
+        console.log("isUnsaved originalUserCode: ", this.originalUserCode);
+        console.log(
+            "Ovatko eri, eli pitääkö tallentaa? ",
+            this.userCode !== this.originalUserCode
+        );
         return this.userCode !== this.originalUserCode;
     }
 
@@ -212,6 +223,7 @@ export class StackPluginComponent
     button: string = "";
     inputplaceholder!: string;
     savedText: string = "";
+    inputs?: HTMLInputElement[];
 
     private timer?: number;
 
@@ -220,9 +232,7 @@ export class StackPluginComponent
         this.button = this.buttonText();
         const aa = this.attrsall;
         this.userCode = aa.usercode ?? this.markup.by ?? "";
-        console.log(this.userCode);
         this.originalUserCode = this.userCode;
-        console.log(this.originalUserCode);
         this.timWay = aa.timWay ?? this.markup.timWay ?? false;
         this.inputrows = this.markup.inputrows;
         this.inputplaceholder = this.markup.inputplaceholder ?? "";
@@ -266,10 +276,19 @@ export class StackPluginComponent
         }
     }
 
-    @HostListener("focusout")
-    onFocusOut() {
+    @HostListener("focusout", ["$event"])
+    onFocusOut(event: FocusEvent) {
         this.focusedInputElement = null;
         this.focusedInputId = "";
+
+        const target = event.target as HTMLElement;
+
+        if (
+            this.originalUserCode === "" &&
+            target instanceof HTMLInputElement
+        ) {
+            this.userCode = target.value;
+        }
 
         if (this.markup.autosave && this.isUnSaved()) {
             this.save();
@@ -448,13 +467,6 @@ export class StackPluginComponent
             this.error = r.message;
             return;
         }
-
-        // const parser = new DOMParser();
-        // const doc = parser.parseFromString(
-        //     DOMPurify.sanitize(r.questiontext),
-        //     "text/html"
-        // );
-        // const el = doc.querySelector("div.stackinputfeedback");
 
         const el = this.parseElementsFromSelection(
             r.questiontext,
