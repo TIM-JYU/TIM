@@ -723,8 +723,7 @@ export class QuantumBoard {
             }
         }
         for (let i = 0; i < this.board.length; i++) {
-            for (let j = 0; j < this.board[i].length; j++) {
-                const cell = this.board[i][j];
+            for (const cell of this.board[i]) {
                 if (cell instanceof Gate || cell instanceof MultiQubitGate) {
                     addToCounts(cell.name);
                 } else if (cell instanceof Swap && cell.target > i) {
