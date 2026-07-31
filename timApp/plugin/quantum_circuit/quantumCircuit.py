@@ -959,7 +959,7 @@ def answer(args: QuantumCircuitAnswerModel) -> PluginAnswerResp:
             error = asdict(message) if message else "Unknown error"
             points = 0.0
             result = ""
-    if gate_counts is not None:
+    if user_circuit is not None and gate_counts is not None:
         is_valid, message = check_gate_counts_condition(user_circuit, gate_counts)
         if not is_valid:
             valid_conditions = False
