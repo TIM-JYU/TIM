@@ -25,7 +25,6 @@ import {ScriptedInnerHTMLModule} from "tim/util/scripted-inner-html.module";
 import {registerPlugin} from "tim/plugin/pluginRegistry";
 import {CommonModule} from "@angular/common";
 import DOMPurify from "dompurify";
-import {event} from "jquery";
 
 const STACK_VARIABLE_PREFIX = "stackapi_";
 
@@ -269,6 +268,10 @@ export class StackPluginComponent
 
     @HostListener("focusin", ["$event"])
     onFocusIn(event: FocusEvent) {
+        if (!this.markup.autosave) {
+            return;
+        }
+
         const target = event.target as HTMLElement;
 
         if (target instanceof HTMLInputElement) {
@@ -278,19 +281,19 @@ export class StackPluginComponent
 
     @HostListener("focusout", ["$event"])
     onFocusOut(event: FocusEvent) {
+        if (!this.markup.autosave) {
+            return;
+        }
+
         this.focusedInputElement = null;
         this.focusedInputId = "";
 
         const target = event.target as HTMLElement;
-
-        if (
-            this.originalUserCode === "" &&
-            target instanceof HTMLInputElement
-        ) {
+        if (!this.originalUserCode && target instanceof HTMLInputElement) {
             this.userCode = target.value;
         }
 
-        if (this.markup.autosave && this.isUnSaved()) {
+        if (this.isUnSaved()) {
             this.save();
         }
     }
@@ -393,7 +396,18 @@ export class StackPluginComponent
         windowAsAny().findParentElementFromScript =
             helper.findParentElementFromScript;
         if (this.markup.buttonBottom || i < 0) {
-            this.stackOutput = qt;
+            if (this.markup.autosave) {
+                const doc = this.parseElements(qt);
+                doc.querySelectorAll("div.stackprtfeedback").forEach((el) =>
+                    el.remove()
+                );
+                doc.querySelectorAll("p.stackpartmark").forEach((el) =>
+                    el.remove()
+                );
+                this.stackOutput = doc.body.innerHTML;
+            } else {
+                this.stackOutput = qt;
+            }
             this.stackInputFeedback = "";
         } else {
             this.stackOutput = qt.substr(0, i) + "\n";
@@ -427,19 +441,11 @@ export class StackPluginComponent
             const divinput = this.element.find(".stackinputfeedback");
             divinput.addClass("hidden");
         }
-
-        if (this.markup.autosave && !getTask) {
-            html.find(".stackinputfeedback").addClass("hidden");
-            html.find(".stackprtfeedback").remove();
-            html.find(".stackpartmark").remove();
-        }
     }
 
-    parseElementsFromSelection(qt: string, select: string) {
+    parseElements(qt: string) {
         const parser = new DOMParser();
-        const doc = parser.parseFromString(DOMPurify.sanitize(qt), "text/html");
-
-        return doc.querySelector(select);
+        return parser.parseFromString(DOMPurify.sanitize(qt), "text/html");
     }
 
     inputHandler(e: JQuery.TriggeredEvent) {
@@ -468,8 +474,7 @@ export class StackPluginComponent
             return;
         }
 
-        const el = this.parseElementsFromSelection(
-            r.questiontext,
+        const el = this.parseElements(r.questiontext).querySelector(
             "div.stackinputfeedback"
         );
 
