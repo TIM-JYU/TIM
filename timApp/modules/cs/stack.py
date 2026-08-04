@@ -77,13 +77,16 @@ class Stack(Language):
         nosave = input.get("nosave", False)
         stack_data["seed"] = userseed
 
+        prev_answer = input.get("prevAnswer", False)
+        hide_results = markup.get("hideResults", False)
+
         q = stack_data.get("question", "")
         q_data = self.parse_stack_question(
             q, not self.query.jso.get("markup").get("stackjsx")
         )
         stack_data["question"] = q_data
 
-        if nosave or get_task:
+        if not prev_answer and nosave or get_task or hide_results:
             stack_data["score"] = False
             stack_data["feedback"] = False
         stack_data["answer"] = data.get("answer")

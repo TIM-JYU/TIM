@@ -177,8 +177,8 @@ export class StackPluginComponent
     }
 
     async save() {
+        console.log("Tallentaminen tapahtui eli ajetaan runSend()");
         await this.runSave();
-        this.savedText = "Saved";
         return {saved: true, message: undefined};
     }
 
@@ -227,6 +227,7 @@ export class StackPluginComponent
     private timer?: number;
 
     ngOnInit() {
+        console.log("ngOnInit");
         super.ngOnInit();
         this.button = this.buttonText();
         const aa = this.attrsall;
@@ -248,10 +249,12 @@ export class StackPluginComponent
         });
 
         if (this.markup.open) {
+            console.log("Opening...");
             this.runGetTask();
         }
 
         if (this.markup.showAnswersOnLoad) {
+            console.log("showAnswersOnLoad");
             this.showResponseWithoutAnswering();
         }
 
@@ -287,6 +290,7 @@ export class StackPluginComponent
 
         this.focusedInputElement = null;
         this.focusedInputId = "";
+        this.savedText = "";
 
         const target = event.target as HTMLElement;
         if (!this.originalUserCode && target instanceof HTMLInputElement) {
@@ -309,7 +313,8 @@ export class StackPluginComponent
         }
         await ab.loader.abLoad.promise;
         if (ab.answers.length > 0) {
-            this.runSend(false);
+            console.log("ShowResponseWithoutAnswering: ");
+            this.runSend(false, true, true);
         }
     }
 
@@ -380,7 +385,11 @@ export class StackPluginComponent
         return s;
     }
 
-    async handleServerResult(r: StackResult, getTask: boolean) {
+    async handleServerResult(
+        r: StackResult,
+        getTask: boolean,
+        getPrevAnswer: boolean
+    ) {
         if (typeof r === "string") {
             this.error = r.toString();
             return;
@@ -413,9 +422,8 @@ export class StackPluginComponent
             this.stackOutput = qt.substr(0, i) + "\n";
             this.stackInputFeedback = qt.substr(i);
         }
-        // TODO: Tähän if.markup.autosave jne. Parsitaan qt dom ja poistetaan vastauspalautteet
 
-        if (!getTask) {
+        if (!getTask || getPrevAnswer) {
             this.stackFeedback = this.replace(r.generalfeedback);
             this.stackFormatCorrectResponse = this.replace(
                 r.formatcorrectresponse
@@ -436,7 +444,7 @@ export class StackPluginComponent
         const inputse = html.find("textarea");
         $(inputs).on("keyup", (e) => this.inputHandler(e));
         $(inputse).on("keyup", (e) => this.inputHandler(e));
-        if (getTask) {
+        if (getTask && !this.markup.autosave) {
             // remove input validation texts
             const divinput = this.element.find(".stackinputfeedback");
             divinput.addClass("hidden");
@@ -538,7 +546,7 @@ export class StackPluginComponent
             return;
         }
         this.isRunning = true;
-        if (!this.stackPeek) {
+        if (!this.stackPeek && !this.markup.autosave) {
             // remove extra fields from screen
             let divinput = this.element.find(".stackinputfeedback");
             divinput.addClass("hidden");
@@ -571,25 +579,36 @@ export class StackPluginComponent
     }
 
     async runGetTask() {
+        console.log("runGetTask");
         this.isOpen = true;
         await this.runSend(true);
     }
 
-    async runSend(getTask = false) {
+    async runSend(getTask = false, getPrevAnswer = false, nosave = false) {
+        console.log(
+            "runSend: getTask:  ",
+            getTask,
+            " getPrevAnswer",
+            getPrevAnswer,
+            " nosave: ",
+            nosave
+        );
         if (this.pluginMeta.isPreview()) {
             this.error = "Cannot run plugin while previewing.";
             return;
         }
         this.stackPeek = false;
         this.error = "";
+        this.savedText = "";
         this.isRunning = true;
         const stackData = this.collectData();
-
         const r = await this.postAnswer<{
             web: {stackResult: StackResult; error?: string};
         }>({
             input: {
                 getTask: getTask,
+                nosave: nosave,
+                prevAnswer: getPrevAnswer,
                 stackData: stackData,
                 type: "stack",
                 usercode: this.timWay
@@ -610,9 +629,12 @@ export class StackPluginComponent
             this.error = r.result.web.error;
             return;
         }
+        if (r.result.savedNew) {
+            this.savedText = "Saved";
+        }
         const stackResult = r.result.web.stackResult;
         this.originalUserCode = this.userCode;
-        await this.handleServerResult(stackResult, getTask);
+        await this.handleServerResult(stackResult, getTask, getPrevAnswer);
         if (this.lastInputFieldId && !this.markup.autosave) {
             this.lastInputFieldElement = this.element.find(
                 `#${this.lastInputFieldId}`
