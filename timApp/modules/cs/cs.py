@@ -2088,7 +2088,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                 valid = queryinfo.get("valid", False)
                 max_tries = queryinfo.get("max_answers", 1)
                 num_tries = queryinfo.get("earlier_answers", 0)
-                has_tries_left = num_tries <= max_tries
+                has_tries_left = max_tries is not None and num_tries <= max_tries
 
             if (
                 (not has_tries_left)
