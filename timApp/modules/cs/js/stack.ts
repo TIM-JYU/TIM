@@ -405,18 +405,7 @@ export class StackPluginComponent
         windowAsAny().findParentElementFromScript =
             helper.findParentElementFromScript;
         if (this.markup.buttonBottom || i < 0) {
-            if (this.markup.autosave) {
-                const doc = this.parseElements(qt);
-                doc.querySelectorAll("div.stackprtfeedback").forEach((el) =>
-                    el.remove()
-                );
-                doc.querySelectorAll("p.stackpartmark").forEach((el) =>
-                    el.remove()
-                );
-                this.stackOutput = doc.body.innerHTML;
-            } else {
-                this.stackOutput = qt;
-            }
+            this.stackOutput = qt;
             this.stackInputFeedback = "";
         } else {
             this.stackOutput = qt.substr(0, i) + "\n";
