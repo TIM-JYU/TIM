@@ -167,17 +167,10 @@ export class StackPluginComponent
 
     getContentArray?: () => string[] | undefined;
     isUnSaved(userChange?: boolean | undefined): boolean {
-        console.log("isUnsaved userCode: ", this.userCode);
-        console.log("isUnsaved originalUserCode: ", this.originalUserCode);
-        console.log(
-            "Ovatko eri, eli pitääkö tallentaa? ",
-            this.userCode !== this.originalUserCode
-        );
         return this.userCode !== this.originalUserCode;
     }
 
     async save() {
-        console.log("Tallentaminen tapahtui eli ajetaan runSend()");
         await this.runSave();
         return {saved: true, message: undefined};
     }
@@ -227,7 +220,6 @@ export class StackPluginComponent
     private timer?: number;
 
     ngOnInit() {
-        console.log("ngOnInit");
         super.ngOnInit();
         this.button = this.buttonText();
         const aa = this.attrsall;
@@ -249,12 +241,10 @@ export class StackPluginComponent
         });
 
         if (this.markup.open) {
-            console.log("Opening...");
             this.runGetTask();
         }
 
         if (this.markup.showAnswersOnLoad) {
-            console.log("showAnswersOnLoad");
             this.showResponseWithoutAnswering();
         }
 
@@ -313,7 +303,6 @@ export class StackPluginComponent
         }
         await ab.loader.abLoad.promise;
         if (ab.answers.length > 0) {
-            console.log("ShowResponseWithoutAnswering: ");
             this.runSend(false, true, true);
         }
     }
@@ -568,20 +557,11 @@ export class StackPluginComponent
     }
 
     async runGetTask() {
-        console.log("runGetTask");
         this.isOpen = true;
         await this.runSend(true);
     }
 
     async runSend(getTask = false, getPrevAnswer = false, nosave = false) {
-        console.log(
-            "runSend: getTask:  ",
-            getTask,
-            " getPrevAnswer",
-            getPrevAnswer,
-            " nosave: ",
-            nosave
-        );
         if (this.pluginMeta.isPreview()) {
             this.error = "Cannot run plugin while previewing.";
             return;
