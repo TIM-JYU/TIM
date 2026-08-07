@@ -538,6 +538,17 @@ def get_fields_and_users(
                     value = datetime_isoformat(a.answered_on)
                 elif task.field == "ALL":
                     value = p
+                elif task.field and task.field.startswith("qst["):
+                    if type(p) is dict:
+                        p = p.get("c")
+                    if type(p) is list:
+                        from plugin.jsrunner.util import get_qst_index
+
+                        index = get_qst_index(task.field, len(p))
+                        # value = ", ".join(map(str, p[index])) if len(p) > 0 else None
+                        from plugin.jsrunner.util import list_to_string
+
+                        value = list_to_string(p[index]) if len(p) > 0 else None
                 elif task.field == "count":
                     continue
                 else:

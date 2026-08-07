@@ -947,7 +947,7 @@ def tableform_get_fields(
         email = user_info["email"]
         rows[username] = dict(f["fields"])
         for key, content in rows[username].items():
-            if type(content) is dict:
+            if type(content) is dict or type(content) is list:
                 rows[username][key] = json.dumps(content)
         users[username] = TableFormUserInfo(
             id=u.id,

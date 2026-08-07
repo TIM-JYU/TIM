@@ -529,7 +529,8 @@ export class AnswerSheetComponent implements OnChanges {
                         if (!val) {
                             continue;
                         }
-                        const value = parseInt(val, 10);
+                        const value =
+                            typeof val === "number" ? val : parseInt(val, 10);
                         if (this.isCheckbox()) {
                             arr[i][value - 1] = 1;
                         } else {
@@ -552,7 +553,7 @@ export class AnswerSheetComponent implements OnChanges {
                 if (!val) {
                     continue;
                 }
-                const value = parseInt(val, 10);
+                const value = typeof val === "number" ? val : parseInt(val, 10);
                 if (this.isCheckbox()) {
                     arr[value - 1][0] = 1;
                 } else if (this.isRadio()) {

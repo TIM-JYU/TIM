@@ -367,7 +367,7 @@ def get_error_message(e: Exception) -> str:
 Range = tuple[int, int]
 
 TASK_PROG = re.compile(
-    r"([\w.]*)(:\w*)?\( *(\d*) *, *(\d*) *\)(.*)"
+    r"([\w.\[]*)(:\w*)?\( *(\d*) *, *(\d*) *\)(.*)"
 )  # see https://regex101.com/r/ZZuizF/4
 TASK_NAME_PROG = re.compile(
     r"(\d+\.)?(\w+)[.\[]?.*"

@@ -97,7 +97,7 @@ PLUGIN_MAX_POINTS_COUNTER: dict[str, Callable[[dict, bool], str | None]] = {
     "graphviz": count_max_points,
 }
 
-ALLOW_STYLES_PLUGINS = {"textfield", "numericfield", "drag", "dropdown"}
+ALLOW_STYLES_PLUGINS = {"textfield", "numericfield", "drag", "dropdown", "qst"}
 
 WANT_FIELDS = {"csPlugin"}
 

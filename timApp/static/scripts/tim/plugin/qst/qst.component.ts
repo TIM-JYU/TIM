@@ -49,7 +49,7 @@ const PluginMarkupFields = t.intersection([
 const PluginFields = t.intersection([
     getTopLevelFields(PluginMarkupFields),
     t.type({
-        state: nullable(t.array(t.array(t.string))),
+        state: nullable(t.array(t.array(t.union([t.string, t.number])))),
     }),
     t.partial({
         show_result: t.boolean,
@@ -59,7 +59,7 @@ const PluginFields = t.intersection([
 @Component({
     selector: "tim-qst",
     template: `
-        <tim-markup-error *ngIf="markupError" [data]="markupError"></tim-markup-error>
+        <tim-markup-error *ngIf="markupError" [data]="markupError!"></tim-markup-error>
         <div class="csRunDiv qst no-popup-menu" [class.cs-has-header]="getHeader()" *ngIf="isTask()">
             <h4 *ngIf="getHeader()" [innerHtml]="getHeader() | purify"></h4>
             <p *ngIf="stem" class="stem" [innerHtml]="stem | purify"></p>
