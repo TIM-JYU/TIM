@@ -349,6 +349,8 @@ class BrowserTest(LiveServerTestCase, TimRouteTestBase):
             warnings.warn(f"Failed to save screenshot to {scn_path}: {e}")
         TimRouteTestBase.tearDown(self)
         self.drv.quit()
+        if self._process:
+            self._process.kill()
 
     def goto_document(self, d: DocInfo, view="view", query=None):
         params = ""
