@@ -152,7 +152,7 @@ class UploadedFile(ItemBase):
         :param filename: File name, which may contain "_stamped".
         :return: UploadedFile, StampedPDF, or None, if neither was found.
         """
-        d = DocEntry.find_by_path(doc_path)
+        d = DocEntry.find_by_path(doc_path, fallback_to_id=True)
         if not d:
             return None
         f = UploadedFile.find_first_child(d.block, filename)
@@ -303,6 +303,7 @@ SCRIPT_SAFE_MIMETYPES = {
     "video/webm",
     "application/msword",
     "text/plain",
+    "text/markdown",
     "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
     "application/vnd.openxmlformats-officedocument.wordprocessingml.template",
     "application/vnd.ms-access",
@@ -344,7 +345,7 @@ ALLOWED_DOC_IMPORT_EXT_MIMETYPES = {
     "docx": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
     "odt": "application/vnd.oasis.opendocument.text",
     "txt": "text/plain",
-    "md": "text/plain",
+    "md": "text/markdown",
     "tex": "text/plain",
 }
 

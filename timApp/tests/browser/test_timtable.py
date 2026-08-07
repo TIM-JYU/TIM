@@ -1,6 +1,6 @@
 from selenium.common.exceptions import StaleElementReferenceException
 from selenium.webdriver import ActionChains
-
+from selenium.webdriver.support import expected_conditions as ec
 from timApp.tests.browser.browsertest import BrowserTest
 
 
@@ -870,9 +870,15 @@ table:
         ActionChains(self.drv).send_keys("Bye").perform()
         self.find_element("#tabletask .buttonAcceptEdit").click()
         self.find_element("#tabletask .csRunMenu button").click()
+
         self.wait_until_present_and_vis("answerbrowser .prevAnswer")
+        td = self.find_element_avoid_staleness("#tabletask td")
+
         self.find_element("answerbrowser .prevAnswer").click()
+        self.wait.until(ec.staleness_of(td))
         self.wait_until_hidden("#tabletask .csRunMenu span")
+
+        self.wait_until_present("#tabletask td")
         td = self.find_element_avoid_staleness("#tabletask td")
         self.assertEqual("Hello", td.text)
 

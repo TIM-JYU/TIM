@@ -217,7 +217,7 @@ class MessageListModel(db.Model):
 
         Raises ValueError if used with both name and email parameters as None.
 
-        :param username: Userame of the member.
+        :param username: Username of the member.
         :param email: Member's email address
         :return: A message list member, if one is found with given arguments. Otherwise return None.
         """

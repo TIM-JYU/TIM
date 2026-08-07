@@ -1,6 +1,7 @@
 ﻿// TODO: setting popup
 
 import * as t from "io-ts";
+import {firstValueFrom} from "rxjs";
 import type {ApplicationRef, DoBootstrap} from "@angular/core";
 import {Component, ElementRef, NgModule, ViewChild} from "@angular/core";
 import {
@@ -28,6 +29,8 @@ import {Users} from "tim/user/userService";
 import type {IUser} from "tim/user/IUser";
 import type {Iframesettings} from "../../cs/js/jsframe";
 import {VideoLinkComponent} from "./video-link.component";
+import type {VttCue} from "./vtt-parser";
+import {parseVtt} from "./vtt-parser";
 
 function toSeconds(value: string | number | undefined): number | undefined {
     if (value === null || value === undefined) {
@@ -120,6 +123,9 @@ const ShowFileMarkup = t.intersection([
         endJSRunner: t.string,
         audio: t.boolean,
         nolimits: t.boolean,
+        transcriptSearch: t.boolean,
+        transcriptPlaceholder: nullable(t.string),
+        transcriptMaxResults: nullable(t.number),
     }),
     GenericPluginMarkup,
     t.type({
@@ -166,6 +172,8 @@ const ShowFileAll = t.type({
              (keydown.g)="jump(-1, $event)"
              (keydown.h)="jump(1, $event)"
              (keydown.j)="jump(10, $event)"
+             (keydown.control.f)="openTranscriptSearch($event)"
+             (keydown.meta.f)="openTranscriptSearch($event)"
         >
             <tim-markup-error *ngIf="markupError" [data]="markupError!"></tim-markup-error>
             <p *ngIf="header" [innerHtml]="header | purify"></p>
@@ -194,7 +202,7 @@ const ShowFileAll = t.type({
             </div>
 
             <ng-container *ngIf="videoOn">
-               <div *ngIf="iframesettings" class="iframeContainer"> 
+               <div *ngIf="iframesettings as iframesettings" class="iframeContainer"> 
                 <iframe *ngIf="iframesettings && isPdf"
                         class="showVideo"
                         allowfullscreen
@@ -225,7 +233,7 @@ const ShowFileAll = t.type({
                         <a class="hide-text" (click)="hideVideo()">{{hidetext}}</a>
                     </span>
                </div> 
-                <span class="videoRow" *ngIf="videosettings">
+                <span class="videoRow" *ngIf="videosettings as videosettings">
                     <video 
                            #video
                            class="showVideo"
@@ -244,7 +252,7 @@ const ShowFileAll = t.type({
                     </video>
                     <button class="settings-btn" (click)="toggleSettings()" type="button" title="More settings">⋮</button>
                 </span> 
-                <span class="audioRow" *ngIf="audiosettings">
+                <span class="audioRow" *ngIf="audiosettings as audiosettings">
                     <audio
                            #video
                            class="showAudio"
@@ -299,7 +307,10 @@ const ShowFileAll = t.type({
                         <a class="zoom-reset" (click)="zoom(0)" title="Normal zoom (r)">R</a>&ngsp;
                         <a class="zoom-plus" (click)="zoom(1.4)" title="Zoom in (z)"><i class="glyphicon glyphicon-plus"></i></a>
                     </div>
-                   <label *ngIf="!iframesettings" class="normalLabel video-setting-label" title="Advanced media controls">Advanced<input type="checkbox" [(ngModel)]="advVideo" (ngModelChange)="onAdvVideoStateChange($event)" /></label>
+                   <div class="video-toggles"> 
+                       <label *ngIf="videosettings && transcriptLoaded" class="normalLabel video-setting-label" title="Show transcript search"><input type="checkbox" [(ngModel)]="transcriptSearch" (ngModelChange)="onTranscriptSearchStateChange($any($event))" /> Transcript search</label>
+                       <label *ngIf="!iframesettings" class="normalLabel video-setting-label" title="Advanced media controls"><input type="checkbox" [(ngModel)]="advVideo" (ngModelChange)="onAdvVideoStateChange($any($event))" /> Advanced</label>
+                   </div>    
                    <a class="hide-text video-setting-label" (click)="hideVideo()">{{hidetext}}</a>
                 </div>    
             </div>
@@ -321,6 +332,59 @@ const ShowFileAll = t.type({
                 <a (click)="copyStartEnd()" title="Copy start/end to clipboard (c)">Copy</a>
             </div>
             <p class="plgfooter" *ngIf="footer" [innerHtml]="footer | purify"></p>
+            <div *ngIf="transcriptLoaded && videoOn" class="transcript-search">
+                <a *ngIf="transcriptSearch" class="transcript-toggle" (click)="transcriptOpen = !transcriptOpen">
+                    <i class="glyphicon"
+                       [class.glyphicon-chevron-right]="!transcriptOpen"
+                       [class.glyphicon-chevron-down]="transcriptOpen"></i>
+                    Transcript Search
+                </a>
+                <div *ngIf="transcriptOpen" class="transcript-search-panel">
+                    <div class="transcript-search-row">
+                        <div class="transcript-search-input-wrapper">
+                            <input
+                                class="form-control transcript-search-input"
+                                id="transcript-search-input"
+                                #transcriptSearchInput
+                                type="text"
+                                [(ngModel)]="transcriptQuery"
+                                (ngModelChange)="onTranscriptSearch()"
+                                (keydown)="$event.stopPropagation()"
+                                [attr.placeholder]="markup.transcriptPlaceholder ?? 'Search transcript...'"
+                            />
+                        
+                            <button
+                                *ngIf="transcriptQuery"
+                                type="button"
+                                class="clear-transcript-input-btn"
+                                (click)="transcriptQuery = ''; transcriptSearchInput.focus(); onTranscriptSearch()"
+                                aria-label="Clear search"
+                                title="Clear search"
+                            >
+                                ×
+                            </button>
+                        </div>
+                        <select *ngIf="transcriptSubtitleNames.length > 1"
+                                class="form-control transcript-subtitle-select"
+                                [(ngModel)]="selectedTranscriptName"
+                                (ngModelChange)="onTranscriptSubtitleChange()"
+                                (keydown)="$event.stopPropagation()">
+                            <option *ngFor="let name of transcriptSubtitleNames" [value]="name">{{name}}</option>
+                        </select>
+                    </div>
+                    <div class="transcript-search-results" *ngIf="filteredCues.length > 0">
+                        <div class="transcript-result-item"
+                             *ngFor="let cue of filteredCues"
+                             (click)="seekTo(cue.startSeconds)">
+                            <span class="timestamp">{{cue.startTime}}</span>
+                            <span [innerHTML]="cue.highlightedText | purify"></span>
+                        </div>
+                    </div>
+                    <div *ngIf="transcriptQuery && filteredCues.length === 0" class="transcript-no-results">
+                        No results found.
+                    </div>
+                </div>
+            </div>
         </div>
     `,
     styleUrls: ["./video.component.scss"],
@@ -382,6 +446,8 @@ export class VideoComponent extends AngularPluginBase<
 
     // Removing the ElementRef caused the video's advanced controls not to work properly.
     @ViewChild("video") video?: ElementRef<HTMLVideoElement>;
+    @ViewChild("transcriptSearchInput")
+    transcriptSearchInput?: ElementRef<HTMLInputElement>;
 
     private limits!: string | null;
     duration!: string | null;
@@ -395,18 +461,40 @@ export class VideoComponent extends AngularPluginBase<
     videosettings?: {src: string; crossOrigin: string | null};
     audiosettings?: {src: string; crossOrigin: string | null};
     playbackRateString = "";
+    transcriptSearch: boolean = true;
     advVideo: boolean = true;
     requiresTaskId = false;
     advVideoState = new TimStorage("advVideoState", t.boolean);
+    transcriptSearchState = new TimStorage("transcriptSearchState", t.boolean);
     mtype: string = "normal";
     nolimits: boolean = false;
     showSettings: boolean = false;
     hidetext: string = "Hide file";
     srcUrl!: URL;
     src: string = "";
+    transcriptSubtitleMap: Map<string, VttCue[]> | null = null;
+    transcriptSubtitleNames: string[] = [];
+    selectedTranscriptName = "";
+    transcriptQuery = "";
+    filteredCues: VttCue[] = [];
+    transcriptOpen = false;
+    transcriptLoaded = false;
 
     onAdvVideoStateChange(newValue: boolean) {
         this.advVideoState.set(newValue);
+    }
+
+    onTranscriptSearchStateChange(newValue: boolean) {
+        this.transcriptSearchState.set(newValue);
+    }
+
+    openTranscriptSearch(e: Event) {
+        e.preventDefault();
+        this.transcriptOpen = true;
+
+        setTimeout(() => {
+            this.transcriptSearchInput?.nativeElement.focus();
+        });
     }
 
     ngOnInit() {
@@ -444,6 +532,7 @@ export class VideoComponent extends AngularPluginBase<
         this.nolimits = this.markup.nolimits ?? this.nolimits;
 
         this.advVideo = this.advVideoState.get() ?? false;
+        this.transcriptSearch = this.transcriptSearchState.get() ?? true;
         this.start = toSeconds(this.markup.start);
         this.end = toSeconds(this.markup.end);
         this.bookmarks[0] = this.start ?? 0;
@@ -476,6 +565,58 @@ export class VideoComponent extends AngularPluginBase<
         } else if (!this.videoName && !this.doctext) {
             this.videoName = $localize`Open embedded content`;
         }
+
+        if (this.markup.transcriptSearch === false) {
+            return;
+        }
+
+        this.transcriptLoaded = this.markup.subtitles.length > 0;
+    }
+
+    async loadTranscriptSubtitleMap(): Promise<Map<string, VttCue[]> | null> {
+        if (this.transcriptSubtitleMap != null) {
+            return this.transcriptSubtitleMap;
+        }
+
+        if (this.markup.subtitles == null) {
+            return null;
+        }
+
+        this.transcriptSubtitleMap = new Map<string, VttCue[]>();
+
+        for (const subtitle of this.markup.subtitles) {
+            if (!subtitle.file) {
+                continue;
+            }
+
+            const content = await firstValueFrom(
+                this.http.get(subtitle.file, {responseType: "text"})
+            );
+
+            const label = subtitle.name || subtitle.file;
+            this.transcriptSubtitleMap.set(label, parseVtt(content));
+        }
+
+        this.transcriptSubtitleNames = Array.from(
+            this.transcriptSubtitleMap.keys()
+        );
+
+        const selectedTrack = this.video
+            ? [...this.video.nativeElement.textTracks].find(
+                  (tt) => tt.mode === "showing"
+              )
+            : undefined;
+
+        if (selectedTrack) {
+            this.selectedTranscriptName = selectedTrack.label;
+        } else {
+            this.selectedTranscriptName =
+                this.markup.subtitles[0]?.name ||
+                this.markup.subtitles[0]?.file ||
+                "";
+        }
+
+        return this.transcriptSubtitleMap;
     }
 
     hideVideo() {
@@ -791,6 +932,7 @@ export class VideoComponent extends AngularPluginBase<
             );
             if (track) {
                 track.mode = "showing";
+                this.selectedTranscriptName = track.label;
             }
         }
         this.video.nativeElement.currentTime = this.start ?? 0;
@@ -840,6 +982,60 @@ export class VideoComponent extends AngularPluginBase<
             );
         }
         // this.vctrl.runJsRunner();
+    }
+
+    async onTranscriptSearch() {
+        const subtitleMap = await this.loadTranscriptSubtitleMap();
+        if (subtitleMap == null) {
+            return;
+        }
+
+        const query = this.transcriptQuery.trim().toLowerCase();
+        if (!query) {
+            this.filteredCues = [];
+            return;
+        }
+        const cues = subtitleMap.get(this.selectedTranscriptName) ?? [];
+        const maxResults = this.markup.transcriptMaxResults ?? 50;
+        const escaped = query.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+        const re = new RegExp(escaped, "gi");
+        const results: VttCue[] = [];
+        for (const cue of cues) {
+            if (results.length >= maxResults) {
+                break;
+            }
+            if (cue.text.toLowerCase().includes(query)) {
+                results.push({
+                    ...cue,
+                    highlightedText: cue.text.replace(
+                        re,
+                        (match) => `<mark>${match}</mark>`
+                    ),
+                });
+            }
+        }
+        this.filteredCues = results;
+    }
+
+    onTranscriptSubtitleChange() {
+        // this.transcriptQuery = "";
+        this.filteredCues = [];
+        if (this.transcriptQuery) {
+            void this.onTranscriptSearch();
+        }
+    }
+
+    seekTo(seconds: number) {
+        if (!this.videoOn) {
+            this.toggleVideo();
+            setTimeout(() => {
+                if (this.video) {
+                    this.video.nativeElement.currentTime = seconds;
+                }
+            }, 200);
+        } else if (this.video) {
+            this.video.nativeElement.currentTime = seconds;
+        }
     }
 
     getDefaultMarkup() {

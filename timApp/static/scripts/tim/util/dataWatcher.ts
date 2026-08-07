@@ -96,7 +96,7 @@ function getCallerInfo(skipFrames = 0): string {
  * on a target object/element/component.
  * To use add include:
  *   import {installDataWatcher} from "tim/util/dataWatcher";
- * and then call the function to install data wathers as needed.
+ * and then call the function to install data watchers as needed.
  * Put breakpoint to this function or check console logs to see
  * when and where the watched property is mutated or reassigned.
  *

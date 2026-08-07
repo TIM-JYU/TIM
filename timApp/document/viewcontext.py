@@ -15,6 +15,7 @@ class ViewRoute(Enum):
     View = "view"
     Review = "review"
     Unknown = "unknown"
+    PostAnswer = "post_answer"
 
     @property
     def teacher_or_see_answers(self) -> bool:
@@ -25,7 +26,7 @@ class ViewRoute(Enum):
         return self == ViewRoute.Review
 
 
-teacher_or_see_answers = {ViewRoute.Teacher, ViewRoute.Answers}
+teacher_or_see_answers = {ViewRoute.Teacher, ViewRoute.Answers, ViewRoute.PostAnswer}
 
 viewmode_routes = {
     ViewRoute.Lecture,

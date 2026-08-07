@@ -54,6 +54,8 @@ services:
    - dev
  timagent:
   image: ${compose.images_repository}/tim:${tim.image_tag}
+  healthcheck:
+   disable: true # Not used here
   profiles:
    - dev
   command: sleep infinity
@@ -176,6 +178,8 @@ ${ partial("docker", "csplugin_mongodb.tmpl.yml") if csplugin.is_mongodb_enabled
   read_only: true
  pali:
   image: ${compose.images_repository}/tim:${tim.image_tag}
+  healthcheck:
+    disable: true # Not used here
   volumes:
    - ./timApp/modules/pali:/app/pali:ro
    - ./tim_common:/app/tim_common:ro
@@ -190,6 +194,8 @@ ${ partial("docker", "csplugin_mongodb.tmpl.yml") if csplugin.is_mongodb_enabled
    - /tmp
  fields:
   image: ${compose.images_repository}/tim:${tim.image_tag}
+  healthcheck:
+    disable: true # Not used here
   build: ./timApp/modules/fields
   volumes:
    - ./timApp/modules/fields:/app/fields:ro
@@ -204,6 +210,8 @@ ${ partial("docker", "csplugin_mongodb.tmpl.yml") if csplugin.is_mongodb_enabled
    - /tmp
  jsrunner:
   image: ${compose.images_repository}/tim:${tim.image_tag}
+  healthcheck:
+    disable: true # Not used here
   volumes:
    - ./timApp/modules/jsrunner:/timApp/modules/jsrunner:rw
    - ./timApp/static/scripts:/timApp/static/scripts:ro
@@ -219,6 +227,8 @@ ${ partial("docker", "csplugin_mongodb.tmpl.yml") if csplugin.is_mongodb_enabled
     SKIP_JSRUNNER_START: ${SKIP_JSRUNNER_START:-false}
  drag:
   image: ${compose.images_repository}/tim:${tim.image_tag}
+  healthcheck:
+    disable: true # Not used here
   volumes:
    - ./timApp/modules/drag:/app/drag:ro
    - ./tim_common:/app/tim_common:ro
@@ -232,6 +242,8 @@ ${ partial("docker", "csplugin_mongodb.tmpl.yml") if csplugin.is_mongodb_enabled
    - /tmp
  feedback:
   image: ${compose.images_repository}/tim:${tim.image_tag}
+  healthcheck:
+    disable: true # Not used here
   volumes:
    - ./timApp/modules/feedback:/app/feedback:ro
    - ./tim_common:/app/tim_common:ro
@@ -262,6 +274,8 @@ ${ partial("docker", "csplugin_mongodb.tmpl.yml") if csplugin.is_mongodb_enabled
  celery:
   image: ${compose.images_repository}/tim:${tim.image_tag}
   command: celery -A timApp.tim_celery.celery worker --concurrency 4
+  healthcheck:
+    disable: true # Not used here
   profiles:
    - prod
    - dev
@@ -290,6 +304,8 @@ ${ partial("docker", "csplugin_mongodb.tmpl.yml") if csplugin.is_mongodb_enabled
    - /tmp
  celery-beat:
   image: ${compose.images_repository}/tim:${tim.image_tag}
+  healthcheck:
+    disable: true # Not used here
   profiles:
    - prod
    - dev
@@ -395,6 +411,8 @@ ${ partial("docker", "csplugin_mongodb.tmpl.yml") if csplugin.is_mongodb_enabled
    - test
    - dev
   image: ${compose.images_repository}/tim:${tim.image_tag}
+  healthcheck:
+    disable: true # Not used here
   command: ${ f'''${{TEST_COMMAND:-{"python3 -m unittest discover tests/ 'test_*.py' ." if not tim.is_dev else "sleep infinity"}}}''' }
   volumes:
    - .:/service:rw

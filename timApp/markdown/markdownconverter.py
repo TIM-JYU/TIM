@@ -7,6 +7,8 @@ import re
 from dataclasses import dataclass, field
 from datetime import date, datetime, timedelta
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
+
+import isodate.duration
 from dateutil import parser
 from re import Pattern
 from typing import TYPE_CHECKING, Iterable, Any
@@ -30,13 +32,19 @@ from timApp.markdown.autocounters import (
 from timApp.util.utils import get_error_html, title_to_id, slugify
 from timApp.util.utils import widen_fields
 from tim_common.dumboclient import call_dumbo, DumboOptions
-from tim_common.html_sanitize import sanitize_html, presanitize_html_body
+from tim_common.html_sanitize import sanitize_html, presanitize_html_body, strip_div
 
 if TYPE_CHECKING:
     from timApp.document.docparagraph import DocParagraph
     from timApp.document.docsettings import DocSettings
     from timApp.document.document import Document
     from timApp.document.macroinfo import MacroInfo
+
+heading_re = re.compile(r"<h[1-6]\b", re.IGNORECASE)
+
+
+class HeadingHtml(str):
+    pass
 
 
 def has_macros(text: str, env: TimSandboxedEnvironment):
@@ -310,7 +318,7 @@ def now(frmt=0):
     Used in Jinja macros like tomorrow: %%1 | now%%
     Or this week %% "%w" | now %%
 
-    :param frmt: format for current date or delta for current date
+    :param frmt: format for current date or delta from now
     :return: current date + (fmt as int) if fmt is int, otherwise current timestamp formatted
     """
     if isinstance(frmt, int):
@@ -326,7 +334,7 @@ def fmt_date(d, frmt="", weekdays="ma|ti|ke|to|pe|la|su"):
     :param d: date to format
     :param frmt: Python format
     :param weekdays: pipe separated list of weekday names, used for %w
-    :return: string from d an format
+    :return: string from d a format
     """
     if isinstance(d, str):
         d = str_to_date(d)
@@ -377,6 +385,19 @@ def str_to_date(s, input_fmt=None):
         raise ValueError(f"time data '{s}' does not match any known format") from e
 
 
+def str_to_duration(s: str) -> timedelta | isodate.Duration:
+    """
+    Convert string to timedelta object
+
+    :param s: ISO duration string
+    :return: timedelta object
+    """
+    s = s.strip()
+    if not s:
+        return timedelta(0)
+    return isodate.parse_duration(s)
+
+
 def week_to_text(
     week_nr, year=None, frmt=" %d1.%m1|", days="ma|ti|ke|to|pe|", first_day=1
 ):
@@ -389,7 +410,7 @@ def week_to_text(
     :param frmt: extended Python  date format
     :param days: pipe separated list of day names
     :param first_day: from what weekday to start
-    :return: string suitable for calandar header
+    :return: string suitable for calendar header
     """
     if week_nr <= 0:
         week_nr = date.today().isocalendar()[1]
@@ -435,13 +456,13 @@ def preinc(v, delta=1):
     return v[0]
 
 
-def timezone_filter(s: Any, timezone: Any = None) -> Any:
+def timezone_filter(s: object, timezone: object | None = None) -> Any:
     if timezone is None:
         return s
     try:
         dt = datetime.fromisoformat(str(s))
         if dt.tzinfo is None:
-            dt = dt.replace(tzinfo=ZoneInfo(timezone))
+            dt = dt.replace(tzinfo=ZoneInfo(str(timezone)))
         return dt
     except ValueError:
         return s
@@ -496,7 +517,8 @@ def expand_macros(
         conv = env.from_string(text).render(macros)
         if env.counters and env.counters.need_update_labels:
             conv = env.counters.update_labels(conv)
-        env.counters.is_plugin = False
+        if env.counters:
+            env.counters.is_plugin = False
         return conv
     except TemplateSyntaxError as e:
         if not ignore_errors:
@@ -734,6 +756,7 @@ tim_filters = {
     "slugify": slugify_str,
     "fmtdate": fmt_date,
     "str2date": str_to_date,
+    "str2duration": str_to_duration,
     "preinc": preinc,
     "postinc": postinc,
     "belongs": placeholder_filter("belongs"),
@@ -791,7 +814,7 @@ def md_to_html(
     ignore_errors=False,
     doc: Document | None = None,
 ) -> str:
-    """Converts the specified markdown text to HTML.
+    """Converts the specified Markdown text to HTML.
 
     :param ignore_errors: Whether to ignore errors expanding macros
     :param dumbo_options: Options for Dumbo.
@@ -799,7 +822,7 @@ def md_to_html(
     :param sanitize: Whether the HTML should be sanitized. Default is True.
     :param text: The text to be converted.
     :param doc: The document the text belongs to. If provided, document settings will be used for macro expansion.
-    :return: A HTML string.
+    :return: HTML string.
 
     """
 
@@ -834,7 +857,7 @@ def par_list_to_html_list(
     :param view_ctx:
     :return: A list of HTML strings.
     :param settings: The document settings.
-    :param auto_macros: Currently a list(dict) containing the heading information ('h': dict(int,int) of heading counts
+    :param auto_macros: Currently, a list(dict) containing the heading information ('h': dict(int,int) of heading counts
            and 'headings': dict(str,int) of so-far used headings and their counts).
     :param pars: The list of DocParagraphs to be converted.
 
@@ -869,11 +892,16 @@ def par_list_to_html_list(
     # Edit html after dumbo
     raw = edit_html_with_own_syntax(raw)
 
-    if auto_macros:
+    # Note: we can not check auto_number_headings yet, because
+    # we need to handle also normal Html headings to get autonumbers for them
+    if auto_macros:  # and settings.auto_number_headings() > 0:
         processed = []
         for pre_html, m, attrs in zip(raw, auto_macros, (p.get_attrs() for p in pars)):
             if "nonumber" in attrs.get("classes", []):
-                final_html = pre_html
+                if heading_re.search(pre_html):
+                    final_html = HeadingHtml(pre_html)
+                else:
+                    final_html = pre_html
             else:
                 final_html = insert_heading_numbers(
                     pre_html,
@@ -882,6 +910,13 @@ def par_list_to_html_list(
                     settings.heading_format(),
                     initial_heading_counts=settings.auto_number_start(),
                 )
+                final_html = strip_div(final_html)
+                # if final_html != pre_html or heading_re.search(final_html):
+                # Previous may not be good idea, because broken HTML may cause
+                # final_html to differ from pre_html even if there are no headings.
+                # So we just check for headings separately.
+                if heading_re.search(final_html):
+                    final_html = HeadingHtml(final_html)
             processed.append(final_html)
         raw = processed
 
@@ -954,10 +989,11 @@ def check_and_edit_html_if_surrounded_with(
 
 
 def change_classes_to_fragment(html_list: list) -> str:
-    """If found, html_list[1] will have the content that we need to make a fragment of and html_list[0] might have the
+    """If found, html_list[1] will have the content that we need to
+    make a fragment of and html_list[0] might have the
     element tag that will have "fragment" added to it's class.
 
-    There might be multiple fragments in the html list.
+    There might be multiple fragments in the html_list.
 
     """
     # Start from 1, the previous will contain the html tag to change
@@ -978,7 +1014,7 @@ def change_classes_to_fragment(html_list: list) -> str:
 def change_class(
     text_containing_html_tag: str, text_content: str, new_class: str
 ) -> list:
-    """Find the last html tag in the list and change that element's class to new_class or add the new class to element's
+    """Find the last HTML tag in the list and change that element's class to new_class or add the new class to element's
     classes or surround the new content with span element with the new class."""
     try:
         # Find where the html tag supposedly ends
@@ -1025,6 +1061,8 @@ CONFLICTING_HEADER_IDS = {
     "angular",  # Reserved by AngularJS
 }
 
+EMPTY_DICT = {}
+
 
 def insert_heading_numbers(
     html_str: str,
@@ -1033,8 +1071,10 @@ def insert_heading_numbers(
     heading_format: dict | None = None,
     initial_heading_counts: dict[int, int] | None = None,
 ):
-    """Applies the given heading_format to the HTML if it is a heading, based on the given heading_info. Additionally
-    corrects the id attribute of the heading in case it has been used earlier.
+    """
+    Applies the given heading_format to the HTML if it is a heading, based on the given heading_info.
+    Additionally, corrects the id attribute of the heading in case
+    it has been used earlier.
 
     :param heading_info: A dict containing the heading information ('h': dict(int,int) of heading counts
            and 'headings': dict(str,int) of so-far used headings and their counts).
@@ -1048,6 +1088,9 @@ def insert_heading_numbers(
     tree = html.fragment_fromstring(presanitize_html_body(html_str), create_parent=True)
     counts = heading_info["h"]
     used = heading_info["headings"]
+    if used is None:
+        used = EMPTY_DICT
+
     for e in tree.iterchildren():
         is_heading = e.tag in HEADING_TAGS
         if not is_heading:
@@ -1067,7 +1110,8 @@ def insert_heading_numbers(
                 heading_format,
                 initial_counts=initial_heading_counts,
             )
-    final_html = etree.tostring(tree, encoding="utf-8")
+    # final_html = etree.tostring(tree, encoding="utf-8")
+    final_html = etree.tostring(tree, encoding="unicode", method="html")
     return final_html
 
 

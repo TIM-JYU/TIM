@@ -312,7 +312,7 @@
           });
         device.doc = {
           description:
-            'Transmit a signal to another trasmitter that has same label.',
+            'Transmit a signal to another transmitter that has same label.',
           params: [],
           code: '{"type":"' + device.deviceDef.type + '"}'
         };

@@ -24,4 +24,4 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Check spelling of repository files
-        uses: crate-ci/typos@v1.13.6
+        uses: crate-ci/typos@v1.45.1

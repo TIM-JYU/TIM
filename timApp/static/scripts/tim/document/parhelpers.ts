@@ -25,20 +25,90 @@ export function addElementToParagraphMargin(par: ParContext, el: Element) {
     container.appendChild(el);
 }
 
+/**
+ * Checks if the user can edit the paragraph based on the
+ * edit attribute and document settings.
+ * User can edit if
+ *   - he is owner of the document
+ *   - in edit attribute there is a group that the user is in
+ *   - in edit attribute there is a right that the user has
+ *   - document is set to parAuthorOnlyEdit and the user
+ *     is the author of the paragraph
+ * Else: Even the user has normal edit right, if the document is set to
+ * parAuthorOnlyEdit and the user is not the author of the paragraph,
+ * he can't edit.
+ * @param item - The item containing the paragraph
+ * @param par - The paragraph context to check
+ * @returns true if the user can edit the paragraph, false otherwise
+ */
 export function canEditPar(item: IItem, par: ParContext) {
-    const edit = par.par.attrs.edit;
-    let res: boolean;
-    if (!RightNames.is(edit)) {
-        res = item.rights.editable;
-    } else {
-        res = item.rights[edit];
+    if (item.rights.owner) {
+        return true; // Owner is always allowed to edit
+    }
+    let res: boolean = false;
+    const editRaw = par.par.attrs.edit ?? "";
+    const user = Users.getCurrent();
+    res = item.rights.editable;
+    if (editRaw !== "") {
+        const edits = editRaw
+            .split(",")
+            .map((s) => s.trim())
+            .filter((s) => s.length > 0);
+
+        const knownEdits: string[] = [];
+        const groupEdits: string[] = [];
+        for (const e of edits) {
+            if (RightNames.is(e) || e === "view" || e === "edit") {
+                knownEdits.push(e);
+            } else {
+                groupEdits.push(e);
+            }
+        }
+        const groups = user.groups;
+        for (const edit of groupEdits) {
+            // groups are checked first, because if the user is in a group
+            // that has edit rights,
+            // they should be able to edit even if they don't have the right directly
+            if (groups.some((g) => g.name === edit)) {
+                return true;
+            }
+        }
+
+        // if there are no group edits, check the known edits
+        for (const edit of knownEdits) {
+            if (RightNames.is(edit)) {
+                res = item.rights[edit];
+            }
+            if (edit === "view") {
+                // if the user can view, he has view right
+                res = true;
+            }
+            if (edit === "edit" && item.rights.editable) {
+                // if the user can edit, he has edit right
+                res = true;
+            }
+            if (res) {
+                return true;
+            }
+        }
+        res = false;
     }
 
+    // If the document is set to parAuthorOnlyEdit,
+    // only the author of the paragraph can edit it.
+    // The author can edit even there is no edit right,
+    // but if the user is not the author, they can't edit
+    // even if they have the edit right.
     const globals = someglobals();
     if (isDocumentGlobals(globals) && globals.docSettings.parAuthorOnlyEdit) {
         const authorInfo = par.getAuthorInfo();
-        const userName = Users.getCurrent().name;
-        if (!item.rights.owner && !authorInfo?.usernames?.includes(userName)) {
+        if (!authorInfo) {
+            return res;
+        }
+        if (authorInfo?.usernames?.includes(user.name)) {
+            return true;
+        }
+        if (!item.rights.owner) {
             res = false;
         }
     }

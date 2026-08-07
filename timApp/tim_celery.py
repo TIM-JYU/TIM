@@ -2,7 +2,7 @@
 Contains initialization of Celery distributed task queue and task functions.
 Note: Add new tasks here. For scheduling add parameters to defaultconfig as well.
 """
-import contextlib
+
 import json
 import logging
 from concurrent.futures import Future
@@ -19,7 +19,6 @@ from marshmallow import EXCLUDE, ValidationError
 from sqlalchemy import delete
 
 from timApp.answer.routes import post_answer_impl, AnswerRouteResult
-from timApp.auth.sessioninfo import clear_session
 from timApp.document.usercontext import UserContext
 from timApp.document.viewcontext import default_view_ctx
 from timApp.notification.notify import process_pending_notifications
@@ -37,6 +36,19 @@ from tim_common.vendor.requests_futures import FuturesSession
 
 logger: Logger = get_task_logger(__name__)
 
+FORCELOG_PREFIX = "forcelog:"
+
+
+def fix_celery_output(output: str) -> str:
+    forcelog_lines = [
+        line[len(FORCELOG_PREFIX) :]
+        for line in output.splitlines()
+        if line.startswith(FORCELOG_PREFIX)
+    ]
+    if not forcelog_lines:
+        return f"output len = {len(output)}"
+    return "\n".join(forcelog_lines)
+
 
 def make_celery(appl):
     """
@@ -51,6 +63,7 @@ def make_celery(appl):
         broker=appl.config["CELERY_BROKER_URL"],
     )
     cel.conf.update(appl.config)
+    # noinspection PyPep8Naming
     TaskBase = cel.Task
 
     class ContextTask(TaskBase):
@@ -65,7 +78,7 @@ def make_celery(appl):
 
 
 @after_setup_logger.connect
-def on_after_setup_logger(**kwargs):
+def on_after_setup_logger(**_kwargs):
     global logger
     logger.setLevel(logging.INFO)
     logging.getLogger("celery").setLevel(logging.INFO)
@@ -102,7 +115,10 @@ def do_run_user_function(user_id: int, task_id: str, plugin_input: dict[str, Any
         session["user_id"] = user_id
         next_runner = task_id
         encountered_runners = set()
-        u = User.get_by_id(user_id)
+        ut = User.get_by_id(user_id)
+        if not ut:
+            return
+        u: User = ut
         step = 0
         while next_runner:
             step += 1
@@ -122,12 +138,15 @@ def do_run_user_function(user_id: int, task_id: str, plugin_input: dict[str, Any
                 handle_exportdata(result, u, wod)
 
             if output := result.result.get("web", {}).get("output"):
+                output = fix_celery_output(output)
                 logger.info(f"Plugin run: {u.name}, result: {output}")
 
             # The user-provided parameters go only to the first plugin. Others will get no parameters.
             plugin_input = {}
 
             next_runner = result.plugin.values.get("nextRunner")
+            if result.plugin.task_id is None:
+                return
             if isinstance(next_runner, str):
                 next_runner = f"{result.plugin.task_id.doc_id}.{next_runner}"
                 if next_runner in encountered_runners:
@@ -143,6 +162,8 @@ def handle_exportdata(result: AnswerRouteResult, u: User, wod: WithOutData) -> N
     for p in wod.outdata.exportdata:
         if not p.save:
             continue
+        if result.plugin.task_id is None:
+            return
         plug, d = Plugin.from_task_id(
             f"{result.plugin.task_id.doc_id}.{p.plugin}",
             user_ctx=UserContext.from_one_user(u),
@@ -178,7 +199,8 @@ def handle_exportdata(result: AnswerRouteResult, u: User, wod: WithOutData) -> N
                 )
                 continue
 
-        post_answer_impl(plug.task_id.doc_task, converted, {}, {}, u, (), [], None)
+        if plug.task_id is not None:
+            post_answer_impl(plug.task_id.doc_task, converted, {}, {}, u, (), [], None)
 
 
 @celery.task
@@ -190,10 +212,10 @@ def do_send_user_group_info(email: str, user_memberships: list[str]):
     logger.info(f"Sending user group info for {email}: {user_memberships}")
     sync_hosts = app.config["SYNC_USER_GROUPS_HOSTS"]
     sync_secret = app.config["SYNC_USER_GROUPS_SEND_SECRET"]
-    session = FuturesSession()
+    send_user_group_session = FuturesSession()
     futures: list[Future] = []
     for host in sync_hosts:
-        f = session.post(
+        f = send_user_group_session.post(
             f"{host}/backup/user/memberships",
             json={
                 "email": email,
@@ -234,10 +256,10 @@ def send_answer_backup(exported_answer: dict[str, Any]):
 
 def do_send_answer_backup(exported_answer: dict[str, Any]):
     backup_hosts = app.config["BACKUP_ANSWER_HOSTS"]
-    session = FuturesSession()
+    send_answer_session = FuturesSession()
     futures: list[Future] = []
     for h in backup_hosts:
-        f = session.post(
+        f = send_answer_session.post(
             f"{h}/backup/answer",
             json={
                 "answer": exported_answer,
@@ -255,7 +277,7 @@ def cleanup_verifications():
     Verification expiration is defined by two variables:
 
     VERIFICATION_UNREACTED_CLEANUP_INTERVAL - cleanup interval for unverified verifications.
-    VERIFICATION_REACTED_CLEANUP_INTERVAL - cleanup internval for reacted verifications.
+    VERIFICATION_REACTED_CLEANUP_INTERVAL - cleanup interval for reacted verifications.
     """
     max_unreacted_interval = app.config["VERIFICATION_UNREACTED_CLEANUP_INTERVAL"]
     max_reacted_interval = app.config["VERIFICATION_REACTED_CLEANUP_INTERVAL"]

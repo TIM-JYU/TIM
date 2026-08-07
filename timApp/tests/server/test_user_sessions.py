@@ -26,7 +26,7 @@ class UserSessionsTest(TimRouteTest):
             .first()
         )
 
-    def assert_sesion_expired_state(
+    def assert_session_expired_state(
         self, session_ids: list[str], state: list[bool], msg: str
     ) -> None:
         """Assert the state of Test User 1's sessions."""
@@ -255,7 +255,7 @@ class UserSessionsTest(TimRouteTest):
                 },
             )
 
-            self.assert_sesion_expired_state(
+            self.assert_session_expired_state(
                 session_ids,
                 [False, True, True],
                 "Specific session should be valid, others expired",
@@ -277,7 +277,7 @@ class UserSessionsTest(TimRouteTest):
                 },
             )
 
-            self.assert_sesion_expired_state(
+            self.assert_session_expired_state(
                 session_ids,
                 [True, True, False],
                 "Latest session should be valid, others expired",
@@ -308,7 +308,7 @@ class UserSessionsTest(TimRouteTest):
             session_ids.append(self.latest_session().session_id)
             self.forget_session()
 
-            self.assert_sesion_expired_state(
+            self.assert_session_expired_state(
                 session_ids,
                 [False, True, True],
                 "Oldest session should be valid, others expired",
@@ -343,7 +343,7 @@ class UserSessionsTest(TimRouteTest):
                 expect_status=200,
             )
 
-            self.assert_sesion_expired_state(
+            self.assert_session_expired_state(
                 session_ids,
                 [False, True, True],
                 "Expiration state should not have changed after wrong invalidation attempts",
@@ -358,7 +358,7 @@ class UserSessionsTest(TimRouteTest):
                 },
             )
 
-            self.assert_sesion_expired_state(
+            self.assert_session_expired_state(
                 session_ids,
                 [True, True, True],
                 "Oldest session should be invalidated",
@@ -376,7 +376,7 @@ class UserSessionsTest(TimRouteTest):
 
             db.session.commit()
 
-            self.assert_sesion_expired_state(
+            self.assert_session_expired_state(
                 session_ids,
                 [False, False, False],
                 "All sessions should be valid after manual validation",
@@ -390,7 +390,7 @@ class UserSessionsTest(TimRouteTest):
                 },
             )
 
-            self.assert_sesion_expired_state(
+            self.assert_session_expired_state(
                 session_ids,
                 [True, True, True],
                 "All sessions should be expired after invalidation",

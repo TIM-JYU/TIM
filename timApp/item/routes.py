@@ -1,4 +1,5 @@
 """Routes for document view."""
+
 import dataclasses
 import html
 import time
@@ -782,6 +783,7 @@ def render_doc_view(
 
     # Preload htmls here to make dereferencing faster
     DocParagraph.preload_htmls(xs, doc_settings, view_ctx, clear_cache)
+    # TODO: Why should we load src_doc pars?
     src_doc = doc.get_source_document()
     if src_doc is not None:
         DocParagraph.preload_htmls(

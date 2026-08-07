@@ -295,7 +295,20 @@ def try_load_json(json_str: str | None) -> None | str | Any:
         return json_str
 
 
-def get_boolean(s: bool | int | str, default: bool) -> bool:
+def get_boolean(s: bool | int | str | None, default: bool = False) -> bool:
+    """
+    Gets a boolean from a string, int or bool.
+    If the value is None, returns the default value.
+    If the value is a bool, returns it.
+    If the value is an int, returns True if it's not 0.
+    If the value is a string,
+       returns True if it starts with 't', '1', 'y' or 'a' (case-insensitive)
+       returns False if it starts with 'f', '0' or 'n', and default otherwise.
+    :param s: value to check.
+    :param default: value to return if the value is None
+                    or doesn't match any of the expected patterns.
+    :return: bool from s
+    """
     if s is None:
         return default
     if isinstance(s, bool):
@@ -308,7 +321,7 @@ def get_boolean(s: bool | int | str, default: bool) -> bool:
         return default
     if "f0n".find(lresult[0]) >= 0:
         return False
-    if "t1y".find(lresult[0]) >= 0:
+    if "t1ya".find(lresult[0]) >= 0:
         return True
     return default
 
@@ -602,3 +615,36 @@ def get_g_errors(sep: str = "<br>") -> str:
     if not errors:
         return ""
     return sep.join(errors)
+
+
+def short_repr(value: object, n: int = 40) -> str:
+    def shorten_str(s: str) -> str:
+        return s if len(s) <= n else s[:n] + "..."
+
+    if isinstance(value, str):
+        return repr(shorten_str(value))
+
+    if value is None or isinstance(value, (int, float, bool)):
+        return repr(value)
+
+    if isinstance(value, dict):
+        items = ", ".join(
+            f"{short_repr(k, n)}: {short_repr(v, n)}" for k, v in value.items()
+        )
+        return "{" + items + "}"
+
+    if isinstance(value, list):
+        items = ", ".join(short_repr(v, n) for v in value)
+        return "[" + items + "]"
+
+    if isinstance(value, tuple):
+        items = ", ".join(short_repr(v, n) for v in value)
+        if len(value) == 1:
+            items += ","
+        return "(" + items + ")"
+
+    if isinstance(value, set):
+        items = ", ".join(short_repr(v, n) for v in value)
+        return "{" + items + "}"
+
+    return repr(shorten_str(repr(value)))

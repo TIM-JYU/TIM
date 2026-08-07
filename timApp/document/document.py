@@ -9,13 +9,14 @@ from difflib import SequenceMatcher
 from pathlib import Path
 from tempfile import mkstemp
 from time import time
-from typing import Iterable, Generator, Optional
+from typing import Iterable, Generator, Optional, NoReturn
 from typing import TYPE_CHECKING
 
 from filelock import FileLock, BaseFileLock
 from flask import has_request_context, request
 from lxml import etree, html
 
+from timApp.document.docsettings import RECURSIVE_SETTINGS_KEY
 from timApp.document.changelog import Changelog
 from timApp.document.changelogentry import ChangelogEntry
 from timApp.document.docparagraph import DocParagraph
@@ -328,20 +329,34 @@ class Document:
             self.own_settings = resolve_settings_for_pars(self.get_settings_pars())
         return self.own_settings
 
-    def get_settings(self) -> DocSettings:
+    def get_settings(self, show_errors: bool = False) -> DocSettings:
         cached = self.settings_cache
         if cached:
             return cached
         settings_block = self.get_own_settings()
+        own_rec_settings = settings_block.pop(RECURSIVE_SETTINGS_KEY, None)
+        rec_settings = []
         final_settings = YamlBlock()
         preambles = self.get_docinfo().get_preamble_docs()
         for p in preambles:
-            final_settings = final_settings.merge_with(
-                resolve_settings_for_pars(p.document.get_settings_pars())
-            )
+            pre_settings = resolve_settings_for_pars(p.document.get_settings_pars())
+            rec = pre_settings.pop(RECURSIVE_SETTINGS_KEY, None)
+            if rec:
+                rec_settings.append(rec)
+            final_settings = final_settings.merge_with(pre_settings)
         final_settings = final_settings.merge_with(settings_block)
+        if own_rec_settings:
+            rec_settings.append(own_rec_settings)
         settings = DocSettings(self, settings_dict=final_settings)
         self.settings_cache = settings
+        if rec_settings:
+            try:
+                settings.do_recursive_settings(rec_settings)
+            except TimDbException as e:
+                if show_errors:
+                    raise TimDbException(e)
+                pass
+
         return settings
 
     def create(self, ignore_exists: bool = False):
@@ -353,9 +368,11 @@ class Document:
             raise DocExistsError(self.doc_id)
 
     def exists(self) -> bool:
-        if self.__exists is None:
-            self.__exists = self.get_doc_dir().exists()
-        return self.__exists
+        if self.__exists is not None:
+            return self.__exists
+        ex = self.get_doc_dir().exists()
+        self.__exists = ex
+        return ex
 
     def export_markdown(
         self,
@@ -405,14 +422,14 @@ class Document:
         try:
             start_index = all_par_ids.index(par_id_start)
         except ValueError:
-            return self._raise_not_found(par_id_start)
+            return self.raise_not_found(par_id_start)
         if par_id_end == MISSING_AREA_END_PAR_ID:
             # par_id_end = par_id_start  # TODO: would it be better the last par?
             par_id_end = all_par_ids[-1]
         try:
             end_index = all_par_ids.index(par_id_end)
         except ValueError:
-            return self._raise_not_found(par_id_end)
+            return self.raise_not_found(par_id_end)
         if end_index < start_index:
             start_index, end_index = end_index, start_index
         return all_pars[start_index : end_index + 1]
@@ -614,9 +631,9 @@ class Document:
 
     def raise_if_not_exist(self, par_id: str):
         if not self.has_paragraph(par_id):
-            self._raise_not_found(par_id)
+            self.raise_not_found(par_id)
 
-    def _raise_not_found(self, par_id: str):
+    def raise_not_found(self, par_id: str) -> NoReturn:
         raise TimDbException(self.get_par_not_found_msg(par_id))
 
     def get_par_not_found_msg(self, par_id: str):
@@ -638,7 +655,7 @@ class Document:
             try:
                 return self.par_map[par_id]["c"]
             except KeyError:
-                return self._raise_not_found(par_id)
+                return self.raise_not_found(par_id)
         cached = self.single_par_cache.get(par_id)
         if cached:
             return cached
@@ -646,7 +663,7 @@ class Document:
         try:
             idx = self.par_ids.index(par_id)
         except ValueError:
-            return self._raise_not_found(par_id)
+            return self.raise_not_found(par_id)
         fetched = DocParagraph.get(self, self.par_ids[idx], self.par_hashes[idx])
         self.single_par_cache[par_id] = fetched
         return fetched
@@ -665,7 +682,7 @@ class Document:
 
         :param update_meta: Whether to update metadata.
         :param p: Paragraph to be added.
-        :return: The same paragraph object, or None if could not add.
+        :return: The same paragraph object
 
         """
         assert p.doc.doc_id == self.doc_id
@@ -767,8 +784,8 @@ class Document:
         :param par_id: The id of the new paragraph or None if it should be autogenerated.
         :param attrs: The attributes for the paragraph.
         :param text: New paragraph text.
-        :param insert_before_id: Id of the paragraph to insert before, or None if last.
-        :param insert_after_id: Id of the paragraph to insert after, or None if first.
+        :param insert_before_id: ID of the paragraph to insert before, or None if last.
+        :param insert_after_id: ID of the paragraph to insert after, or None if first.
         :return: The inserted paragraph object.
 
         """
@@ -915,21 +932,27 @@ class Document:
         p = DocParagraph.create(md=new_text, doc=self, par_id=par_id, attrs=new_attrs)
         return self.modify_paragraph_obj(par_id, p)
 
-    def modify_paragraph_obj(self, par_id: str, p: DocParagraph) -> DocParagraph:
+    def modify_paragraph_obj(
+        self, par_id: str, p: DocParagraph, force=False
+    ) -> DocParagraph:
         if not self.has_paragraph(par_id):
             raise KeyError(
                 f"No paragraph {par_id} in document {self.doc_id} version {self.get_version()}"
             )
 
-        p_src = DocParagraph.get_latest(self, par_id)
+        p_src: DocParagraph | None = None
+        if not force:
+            p_src = DocParagraph.get_latest(self, par_id)
         p.set_id(par_id)
         new_hash = p.get_hash()
         p.store()
         p.set_latest()
         old_ver = self.get_version()
-        old_hash = p_src.get_hash()
-        if p.is_same_as(p_src):
-            return p
+        old_hash = ""
+        if p_src:
+            old_hash = p_src.get_hash()
+            if p.is_same_as(p_src):
+                return p
         new_ver = self.__increment_version(
             "Modified",
             par_id,
@@ -1101,7 +1124,7 @@ class Document:
                 par = old_pars[idx]
                 par_id = old_ids[idx]
                 # Force to check par in given index because there is duplicate ids
-                # in the document and we want to delete only the correct one
+                # in the document, and we want to delete only the correct one
                 if self.delete_paragraph(par_id, start_index + idx - del_count):
                     del_count += 1
                     result.deleted.append(par)
@@ -1467,6 +1490,11 @@ class Document:
                 line = f.readline()
                 if not line:
                     break
+                if len(line) < 10:
+                    # If a line does not have a parId, it is invalid.
+                    # parId is at least 12 chars.
+                    # Manually editing the file may introduce an empty line.
+                    continue
                 if len(line) > 14:
                     # Line contains both par_id and t
                     par_id, t, *_ = line.rstrip("\n").split("/", 2)
@@ -1491,7 +1519,7 @@ class Document:
         if not class_names:
             pars = [p.clone() for p in self.get_docinfo().get_preamble_pars()]
         else:
-            # Get pars with the any of the filter class names.
+            # Get pars with any of the filter class names.
             pars = [
                 p.clone()
                 for p in self.get_docinfo().get_preamble_pars_with_class(class_names)
@@ -1706,6 +1734,9 @@ class DocParagraphIter:
             if not line:
                 self.close()
                 raise StopIteration
+            if len(line) < 10:
+                log_error(f"Doc: {self.doc.doc_id} - bad line {line}")
+                continue
             if line != "\n":
                 if len(line) > 14:
                     # Line contains both par_id and t
@@ -1769,7 +1800,7 @@ def dereference_pars(
 
                 new_pars.append(err_par)
         else:
-            # If all of the following is true:
+            # If all the following is true:
             #
             # * we are processing a translated document
             # * the document has a preamble that has at least one plugin
