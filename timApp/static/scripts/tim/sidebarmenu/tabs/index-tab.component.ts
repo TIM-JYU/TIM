@@ -17,7 +17,7 @@ import {vctrlInstance} from "tim/document/viewctrlinstance";
     template: `
         <ng-template i18n>Document index</ng-template>
         <h5 i18n>Index <a (click)="goToTop()" i18n-title title="Go to top" class="pull-right">Go to top</a></h5>
-        <ul class="subexp">
+        <ul (window:scrollend)="updateActive()" class="subexp">
             <li *ngFor="let header of displayIndex" [class.no-sub-headings]="!hasSubHeadings(header)">
                 <a class="exptoggle" *ngIf="hasSubHeadings(header)">
                     <i (click)="toggleClosed(header)"
@@ -25,7 +25,7 @@ import {vctrlInstance} from "tim/document/viewctrlinstance";
                        [class.glyphicon-plus]="header.closed"
                        [class.glyphicon-minus]="!header.closed"></i>
                 </a>
-                <a [classList]="getHeaderClassList(header.h1)"
+                <a [ngClass]="getHeaderClassList(header.h1)"
                    [href]="getHeaderHref(header.h1)"
                    target="_self"
                    (click)="headerClicked($event, header.h1.id)">
@@ -33,8 +33,7 @@ import {vctrlInstance} from "tim/document/viewctrlinstance";
                 </a>
                 <ul class="list-unstyled" *ngIf="!header.closed" (click)="$event.stopPropagation()">
                     <li *ngFor="let header2 of header.h2List">
-                        <a 
-                           [classList]="getHeaderClassList(header2)"
+                        <a [ngClass]="getHeaderClassList(header2)"
                            [href]="getHeaderHref(header2)"
                            target="_self"
                            (click)="headerClicked($event, header2.id)">
@@ -51,6 +50,7 @@ export class IndexTabComponent implements OnInit {
     @Input() entry!: TabEntry;
     pageUrl = `${document.location.origin}${document.location.pathname}${document.location.search}`;
     isFullRange = true;
+    activeHeaderId = "";
 
     constructor(private headerIndexer: HeaderIndexerService) {}
 
@@ -74,6 +74,47 @@ export class IndexTabComponent implements OnInit {
     }
 
     /**
+     * Set active header.
+     */
+    updateActive() {
+        let urlHash = document.location.hash;
+        if (urlHash.length === 0) {
+            this.activeHeaderId = "";
+            return;
+        }
+        urlHash = decodeURI(urlHash.substring(1));
+
+        const knownHeaders = new Set();
+        for (const header of this.displayIndex) {
+            knownHeaders.add(header.h1.id);
+            for (const header2 of header.h2List) {
+                knownHeaders.add(header2.id);
+            }
+        }
+
+        if (knownHeaders.has(urlHash)) {
+            this.activeHeaderId = urlHash;
+            return;
+        }
+        // go backwards from current paragraph to find paragraph that is in navbar
+        const pars = document.getElementsByClassName("par");
+        for (let i = 0; i < pars.length; i++) {
+            if (pars[i].id === urlHash) {
+                for (let j = i; j >= 0; j--) {
+                    for (const h of pars[j].querySelectorAll("h1, h2, h3")) {
+                        if (knownHeaders.has(h.id)) {
+                            this.activeHeaderId = h.id;
+                            return;
+                        }
+                    }
+                }
+            }
+        }
+
+        this.activeHeaderId = "";
+    }
+
+    /**
      * Handles clicking index header links. If view range is set, load corresponding part.
      * If partitioning is not in use or the header is in the current part, jump to its
      * location normally.
@@ -81,6 +122,8 @@ export class IndexTabComponent implements OnInit {
      * @param headerId Header id (HTML) from the link.
      */
     async headerClicked(evt: Event, headerId: string) {
+        this.activeHeaderId = headerId;
+
         const isInCurrentPart = document.getElementById(headerId);
         if (!isInCurrentPart && !this.isFullRange && vctrlInstance) {
             const headerRange = await getViewRangeWithHeaderId(
@@ -100,6 +143,9 @@ export class IndexTabComponent implements OnInit {
         let res = [`a${h.level}`];
         if (h.classList) {
             res = res.concat(h.classList);
+        }
+        if (h.id === this.activeHeaderId) {
+            res.push("chosen-heading");
         }
         return res;
     }

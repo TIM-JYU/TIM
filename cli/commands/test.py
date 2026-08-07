@@ -26,6 +26,7 @@ BROWSER_TEST_SCRIPT = Template(
     """
 import os
 import subprocess
+import time
 
 chunk = $chunk
 test_files = sorted([f for f in os.listdir("tests/browser") if f.startswith("test_")])
@@ -42,6 +43,7 @@ if chunk:
 MAX_TRIES = 3
 for test_file in test_files:
     cur_try = 0
+    sleep_time = 5
     while True:
         try:
             res = subprocess.run(
@@ -63,6 +65,9 @@ for test_file in test_files:
                     print(f"{test_file} failed {MAX_TRIES} times")
                     exit(1)
                 print(f"{test_file} failed, retrying")
+
+                time.sleep(sleep_time)
+                sleep_time = min(sleep_time * 2, 15)
                 continue
             break
 
