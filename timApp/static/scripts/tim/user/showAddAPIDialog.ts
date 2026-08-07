@@ -4,6 +4,7 @@
  * @date 21.3.2022
  * @licence MIT
  * @copyright 2022 TIMTra project authors
+ *
  */
 
 import {angularDialog} from "tim/ui/angulardialog/dialog.service";
