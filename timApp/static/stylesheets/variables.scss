@@ -38,6 +38,8 @@ $body-text-align-xs: left !default;
 $asset-path: ".." !default;
 $access-badges-base-color: $basic-color !default;
 $item-badge-color: #5cb85c !default;
+$toc-active-heading-bg-color: ignore !default;
+$toc-active-heading-link-color: ignore !default;
 
 // Used by Angular
 $footer-height: 60px !default;
