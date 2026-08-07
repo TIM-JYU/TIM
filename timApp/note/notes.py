@@ -57,7 +57,7 @@ def get_notes(
     ids.add(doc.doc_id)
     f = UserGroup.id == usergroup_id
     if include_public:
-        f = f | (UserNote.access == "everyone")
+        f = f | (UserNote.access == "everyone") | (UserNote.access == "teachers")
     stmt = (
         select(UserNote, User)
         .filter(UserNote.doc_id.in_(ids))

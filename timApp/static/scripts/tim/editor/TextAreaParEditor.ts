@@ -13,21 +13,6 @@
  */
 
 import {wrapText} from "tim/document/editing/utils";
-import {
-    KEY_1,
-    KEY_2,
-    KEY_3,
-    KEY_4,
-    KEY_5,
-    KEY_B,
-    KEY_E,
-    KEY_ENTER,
-    KEY_I,
-    KEY_O,
-    KEY_S,
-    KEY_TAB,
-    KEY_Y,
-} from "tim/util/keycodes";
 import {$log} from "tim/util/ngimport";
 import type {IEditorCallbacks, SelectionRange} from "tim/editor/BaseParEditor";
 import {
@@ -40,7 +25,7 @@ import type {IEditor} from "../../../../modules/cs/js/editor/editor";
 
 export class TextAreaParEditor extends BaseParEditor implements IEditor {
     public editor: JQuery;
-    private editorElement: HTMLTextAreaElement;
+    private readonly editorElement: HTMLTextAreaElement;
     type: EditorType.Textarea = EditorType.Textarea;
     formulaFunction?: () => void;
 
@@ -48,61 +33,68 @@ export class TextAreaParEditor extends BaseParEditor implements IEditor {
         super(editor, callbacks);
         this.editor = editor;
         this.editorElement = editor.get(0) as HTMLTextAreaElement;
-        this.editor.keydown((e) => {
+        this.editor.on("keydown", (e) => {
+            const key = e.key.toLowerCase();
+            const ikey = e.key;
             if (e.ctrlKey) {
-                if (e.keyCode === KEY_S) {
+                if (key === "s") {
                     this.callbacks.saveClicked();
                     e.preventDefault();
-                } else if (e.altKey && e.keyCode === KEY_B) {
+                } else if (e.altKey && key == "b") {
                     this.texBlockInsertClicked();
                     e.preventDefault();
-                } else if (e.keyCode === KEY_B) {
+                } else if (key === "b") {
                     this.surroundClicked("**", "**");
                     e.preventDefault();
-                } else if (e.keyCode === KEY_I) {
+                } else if (key === "i") {
                     this.italicSurroundClicked();
                     e.preventDefault();
                 } else if (e.altKey) {
-                    if (e.keyCode === KEY_O) {
+                    if (key === "0") {
                         this.codeBlockClicked();
                         e.preventDefault();
                     }
-                } else if (e.keyCode === KEY_O) {
+                } else if (key === "0") {
                     this.surroundClicked("`", "`");
                     e.preventDefault();
-                } else if (e.keyCode === KEY_Y) {
+                } else if (key === "y") {
                     this.commentClicked();
                     e.preventDefault();
-                } else if (e.keyCode === KEY_E) {
+                } else if (key === "e") {
                     if (this.formulaFunction) {
                         this.formulaFunction();
                     }
                     e.preventDefault();
-                } else if (e.keyCode === KEY_1) {
+                } else if (key === "1") {
                     this.headerClicked("#");
                     e.preventDefault();
-                } else if (e.keyCode === KEY_2) {
+                } else if (key === "2") {
                     this.headerClicked("##");
                     e.preventDefault();
-                } else if (e.keyCode === KEY_3) {
+                } else if (key === "3") {
                     this.headerClicked("###");
                     e.preventDefault();
-                } else if (e.keyCode === KEY_4) {
+                } else if (key === "4") {
                     this.headerClicked("####");
                     e.preventDefault();
-                } else if (e.keyCode === KEY_5) {
+                } else if (key === "5") {
                     this.headerClicked("#####");
                     e.preventDefault();
-                } else if (e.keyCode === KEY_ENTER) {
+                } else if (ikey === "Enter") {
                     this.endLineClicked();
                     e.preventDefault();
                 }
-            } else if (e.keyCode === KEY_TAB) {
+            } else if (e.altKey) {
+                if (key === "-") {
+                    this.insert("–");
+                    e.preventDefault();
+                }
+            } else if (ikey === "Tab") {
                 const outdent = e.shiftKey;
                 this.indent(outdent);
                 e.preventDefault();
             } else if (e.shiftKey) {
-                if (e.keyCode === KEY_ENTER) {
+                if (ikey === "Enter") {
                     this.paragraphClicked();
                     e.preventDefault();
                 }
@@ -128,7 +120,7 @@ export class TextAreaParEditor extends BaseParEditor implements IEditor {
         const lineHeight = parseInt(this.editor.css("line-height"), 10);
         const height = this.editor.height();
         const currentLine = text
-            .substr(0, editor.selectionStart)
+            .substring(0, editor.selectionStart)
             .split("\n").length;
         const currentScroll = this.editor.scrollTop();
         if (!currentScroll || !height) {
@@ -229,7 +221,7 @@ export class TextAreaParEditor extends BaseParEditor implements IEditor {
                     return;
                 }
                 input.value =
-                    input.value.substr(0, s) + input.value.substr(s + 1);
+                    input.value.substring(0, s) + input.value.substring(s + 1);
                 input.selectionEnd = s;
             },
             false
@@ -349,7 +341,7 @@ export class TextAreaParEditor extends BaseParEditor implements IEditor {
         let original = 0;
         while (line.startsWith("#")) {
             original++;
-            line = line.substr(1);
+            line = line.substring(1);
         }
         line = line.trim();
         const headAndSpace = head + " ";
@@ -712,7 +704,7 @@ export class TextAreaParEditor extends BaseParEditor implements IEditor {
 
     replaceSelectedText(
         s: string,
-        behavior?: "select" | "collapseToStart" | "collapseToEnd"
+        _behavior?: "select" | "collapseToStart" | "collapseToEnd"
     ) {
         this.editor.replaceSelectedText(s);
         this.editor.trigger("input");
@@ -732,8 +724,7 @@ export class TextAreaParEditor extends BaseParEditor implements IEditor {
     }
 
     checkTranslationSelection() {
-        const selector = this.getSelection().text;
-        return selector;
+        return this.getSelection().text;
     }
 
     /**
@@ -752,7 +743,7 @@ export class TextAreaParEditor extends BaseParEditor implements IEditor {
         this.setEditorText(value);
     }
 
-    doWrap(wrap: number): void {}
+    doWrap(_wrap: number): void {}
 
     insert(str: string): void {
         const ci = str.indexOf(CURSOR); // check if there is a cursor marker
@@ -772,7 +763,7 @@ export class TextAreaParEditor extends BaseParEditor implements IEditor {
         }
     }
 
-    setReadOnly(b: boolean): void {}
+    setReadOnly(_b: boolean): void {}
 
     /**
      * Save function that opens the formula editor.

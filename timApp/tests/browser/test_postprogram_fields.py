@@ -1,7 +1,32 @@
 from selenium.webdriver.common.by import By
 from selenium.webdriver.remote.webelement import WebElement
+from selenium.webdriver.support.ui import WebDriverWait
+
+# noinspection PyPep8Naming
+from selenium.webdriver.support import expected_conditions as EC
 
 from timApp.tests.browser.browsertest import BrowserTest
+
+
+def click_radio(wait: WebDriverWait, locator):
+    el = wait.until(EC.element_to_be_clickable(locator))
+    el.click()
+    wait.until(EC.element_to_be_selected(el))
+    return el
+
+
+def submit_and_wait_saved(
+    wait: WebDriverWait, button_locator, saved_class, saved_text="Saved"
+):
+    btn = wait.until(EC.element_to_be_clickable(button_locator))
+    btn.click()
+    wait.until(
+        EC.text_to_be_present_in_element((By.CSS_SELECTOR, saved_class), saved_text)
+    )
+
+
+def wait_for_result(wait: WebDriverWait, selector: str = "pre") -> WebElement:
+    return wait.until(EC.visibility_of_element_located((By.CSS_SELECTOR, selector)))
 
 
 class PostProgramFieldsTest(BrowserTest):
@@ -36,7 +61,7 @@ postprogram_fields:
   - qst1=qst1
 postprogram: |!!
   println("<pre>");
-  
+
   for (let k in data.fields.names) {
     println(k + " => " + data.fields.names[k]);
   }
@@ -46,7 +71,7 @@ postprogram: |!!
   for (let k in data.fields.names) {
     println(k + " => " + data.fields.values[k]);
   }
-  
+
   println("</pre>");
   return data;
 !!
@@ -56,17 +81,25 @@ postprogram: |!!
 
         self.login_browser_quick_test1()
         self.goto_document(d)
-        self.drv.find_element(By.XPATH, "//td/div/label/input").click()
-        self.drv.find_element(By.XPATH, "//tim-qst/div/div/div/button").click()
-        self.drv.find_element(
-            By.CSS_SELECTOR, ".qst-tr:nth-child(2) .ng-untouched"
-        ).click()
-        self.drv.find_element(
-            By.XPATH, "//div[3]/div/tim-plugin-loader/div/tim-qst/div/div/div/button"
-        ).click()
+        wait = WebDriverWait(self.drv, 10)
 
-        self.wait_until_present("pre")
-        el: WebElement = self.drv.find_element(By.CSS_SELECTOR, "pre")
+        # --- QST1 ---
+        click_radio(wait, (By.XPATH, "//td/div/label/input"))
+        submit_and_wait_saved(
+            wait, (By.XPATH, "//tim-qst/div/div/div/button"), ".qstResult"
+        )
+
+        # --- QST2 ---
+        click_radio(wait, (By.CSS_SELECTOR, ".qst-tr:nth-child(2) input[type='radio']"))
+        submit_and_wait_saved(
+            wait,
+            (By.XPATH, "//div[3]/div/tim-plugin-loader/div/tim-qst/div/div/div/button"),
+            ".qstResult",
+        )
+
+        # --- odota tulos ---
+        el = wait_for_result(wait, "tim-alert .content pre")
+
         self.assertEqual(
             el.text,
             f"""

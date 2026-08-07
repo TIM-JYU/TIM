@@ -82,7 +82,7 @@ def post_process_pars(
     final_pars = presult.pars
     taketime("end pluginify")
     should_mark_all_read = False
-    settings = doc.get_settings() if settings is None else settings
+    settings: DocSettings = doc.get_settings() if settings is None else settings
     macroinfo = settings.get_macroinfo(view_ctx, user_ctx)
     user_macros = get_user_specific_macros(user_ctx)
     macros = macroinfo.get_macros()
@@ -121,7 +121,8 @@ def post_process_pars(
             has_plugin_errors=presult.has_errors,
         )
 
-    if settings.show_authors():
+    if settings.show_authors() or settings.par_author_only_edit():
+        hide = not settings.show_authors()
         hide_authors = view_ctx.hide_names_requested
         authors = doc.get_changelog(-1).get_authorinfo(pars)
         if hide_authors:
@@ -132,6 +133,8 @@ def post_process_pars(
         for p in final_pars:
             ppar = p.prepare(view_ctx)
             ppar.authorinfo = authors.get(ppar.id)
+            if hide:
+                ppar.authorinfo.hide = True
             for u in ppar.authorinfo.authors:
                 if u.has_teacher_access(doc.docinfo):
                     ppar.authorinfo.is_teacher = True
@@ -175,9 +178,6 @@ def post_process_pars(
 
         key = d.data.id, d.data.doc_id
         pars_dict[key].append(d)
-
-    for p in final_pars:
-        d = p.prepare(view_ctx)
         d.status = ReadMarkCollection()
         d.notes = []
     # taketime("pars done")
@@ -189,7 +189,7 @@ def post_process_pars(
         # TODO: UserContext should support multiple users like in group login.
         usergroup_ids = [user_ctx.logged_user.get_personal_group().id]
 
-        # If we're in exam mode and we're visiting the page for the first time, mark everything read
+        # If we're in exam mode, and we're visiting the page for the first time, mark everything read
         if should_auto_read(
             doc, usergroup_ids, user_ctx.logged_user, view_ctx.for_cache
         ):
@@ -222,6 +222,7 @@ def post_process_pars(
     )
     comment_docs = {docinfo.id: docinfo}
     teacher_access_cache = {}
+    personal_group_id = curr_user.get_personal_group().id
     for n, u in notes:
         key = (n.par_id, n.doc_id)
         pars = pars_dict.get(key)
@@ -233,6 +234,12 @@ def post_process_pars(
                 has_teacher = bool(curr_user.has_teacher_access(comment_docs[n.doc_id]))
                 teacher_access_cache[n.doc_id] = has_teacher
             editable = n.usergroup_id == group or has_teacher
+            if (
+                n.access == "teachers"
+                and not has_teacher
+                and n.usergroup_id != personal_group_id
+            ):
+                continue
             private = n.access == "justme"
             for p in pars:
                 if p.notes is None:
@@ -266,8 +273,8 @@ def expand_macro_for_bool_attr(
     """
     Parse boolean value from a macro string for a paragraph attribute that expects a boolean.
     :param maybe_macro: string that is possibly a macro
-    :param macro_delimiter: delimiter used for defining macros
-    :param macros: document macros
+    :param macro_delimiter: delimiter used for defining macro values
+    :param macros: macros available for the document.
     :param settings: document settings
     :param env: environment for expanding macros
     :param ignore_errors:
@@ -360,8 +367,8 @@ def process_areas(
                 )
             if current_areas:
                 # Insert a closing paragraph for the current area.
-                # We do this regardless of whether the area_end name matches because it's reasonable and we
-                # cannot guess what the user is trying to do.
+                # We do this regardless of whether the area_end name matches because it's
+                # reasonable, and we cannot guess what the user is trying to do.
                 if not is_single:
                     html_par.areainfo = AreaEnd(area_end)
                 new_pars.append(html_par)
@@ -438,7 +445,8 @@ def process_areas(
                             )
                 else:
                     # Hide output of the area paragraph if it's there (e.g. collapse title)
-                    html_par.areainfo.is_collapsed = None
+                    if html_par.areainfo:
+                        html_par.areainfo.is_collapsed = None
                     html_par.output = ""
 
         else:

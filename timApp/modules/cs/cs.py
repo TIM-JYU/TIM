@@ -159,7 +159,7 @@ from ttype import TType
 # Kun komento on ajettu, docker-kontti häviää.  Ajon lopuksi tuohotaan
 # ./run/URNDFILE.sh
 # ja kun tämä on hävinnyt, luetaan stdin ja stderr ja tiedot lähetetään
-# selaimelle (Timin kautta)
+# selaimelle (TIMin kautta)
 #
 
 PORT = 5000
@@ -2066,6 +2066,39 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             del result["save"]
 
         result["web"] = web
+
+        # For Stack type, remove contents of 'formatcorrectresponse' if
+        # - the score indicates an empty or incorrect answer
+        # - the user has exceeded the answerLimit to this task
+        # - the answer is not valid (usually when answer came outside of deadline)
+        #
+        # This is to prevent the correct answer from leaking prematurely via web -> stackResult.
+        if "stack" in ttype:
+            ucode = save.get("usercode", "")
+            if ucode:
+                # Stack tasks may have several answer fields, so we need to check each one
+                ucode = json.loads(ucode)
+                ucode = len("".join([str(v) for v in ucode.values()])) > 0
+            score = result["web"]["stackResult"].get("score", False)
+            valid = False
+            has_tries_left = False
+            queryinfo = query.query.get("info", None)
+            queryinfo = queryinfo[0] if queryinfo else None
+            if queryinfo:
+                valid = queryinfo.get("valid", False)
+                max_tries = queryinfo.get("max_answers", 1)
+                num_tries = queryinfo.get("earlier_answers", 0)
+                has_tries_left = max_tries is not None and num_tries <= max_tries
+
+            if (
+                (not has_tries_left)
+                or (not valid)
+                or (not ucode)
+                or (not score)
+                or (not has_tries_left and score <= 0)
+            ):
+                result["web"]["stackResult"]["formatcorrectresponse"] = ""
+
         # print(result)
 
         # Clean up

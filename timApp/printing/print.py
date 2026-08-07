@@ -273,15 +273,21 @@ def get_printed_document(
     doc: DocInfo = g.doc_entry
     doc_settings = doc.document.get_settings()
     def_file_type = "pdf"
+    textplain = None
     urlparams: DocPrintParams = PrintModelSchema.load(request.args, unknown=EXCLUDE)
     if urlparams.textplain is not None:
-        if urlparams.textplain:
-            def_file_type = "plain"
+        textplain = urlparams.textplain
     elif doc_settings.is_textplain():
-        def_file_type = "plain"
-    suffix = Path(doc_path).suffix
-    if suffix:
-        def_file_type = suffix[1:].lower()
+        textplain = doc_settings.is_textplain()
+    if textplain:
+        if textplain is True:
+            suffix = Path(doc_path).suffix
+            if suffix:
+                def_file_type = suffix[1:].lower()
+            else:
+                def_file_type = "plain"
+        elif isinstance(textplain, str):
+            def_file_type = textplain.strip().lower()
 
     file_type = file_type or def_file_type
     # if doc_path != doc.name and doc_path.rfind('.') >= 0:  # name have been changed because . in name

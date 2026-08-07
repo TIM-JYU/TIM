@@ -57,6 +57,7 @@ import {InstanceofModule} from "tim/util/instanceof.module";
 import {polyfill} from "mobile-drag-drop";
 import {scrollBehaviourDragImageTranslateOverride} from "mobile-drag-drop/scroll-behaviour";
 import type {ITimComponent} from "tim/document/viewctrl";
+import {GateCounts} from "tim/plugin/quantumcircuit/gate-counts";
 
 export interface QubitOutput {
     value: string;
@@ -135,12 +136,20 @@ const QubitInfo = t.partial({
     editable: nullable(t.boolean),
 });
 
+const GateCountInfo = t.type({
+    name: t.string,
+    count: t.number,
+});
+
+export type IGateCountInfo = TypeOf<typeof GateCountInfo>;
+
 // All settings that are defined in the plugin markup YAML
 const QuantumCircuitMarkup = t.intersection([
     t.partial({
         initialCircuit: nullable(t.array(GateInfo)),
         customGates: nullable(t.array(CustomGateInfo)),
         gates: nullable(t.array(t.string)),
+        gateCounts: nullable(t.array(GateCountInfo)),
         modelCircuit: nullable(t.array(GateInfo)),
         modelInput: nullable(t.array(t.string)),
         modelConditions: nullable(t.array(t.string)),
@@ -209,6 +218,12 @@ export const ServerError = t.union([
         condition: t.string,
         values: t.string,
         errorType: t.literal("condition-not-satisfied"),
+    }),
+    t.type({
+        name: t.string,
+        expected: t.number,
+        actual: t.number,
+        errorType: t.literal("gate-count-condition-invalid"),
     }),
     t.type({
         condition: t.string,
@@ -313,6 +328,7 @@ export interface CircuitOptions {
                         <tim-quantum-gate-menu
                                 [circuitOptions]="circuitOptions"
                                 [isToolboxStaticHeight]="isToolboxStaticHeight"
+                                [gateCounts]="gateCounts"
                                 (select)="handleMenuGateSelect($event)">
                         </tim-quantum-gate-menu>
                         <tim-quantum-toolbox [activeGateInfo]="activeGateInfo"
@@ -470,6 +486,8 @@ export class QuantumCircuitComponent
     };
 
     board?: QuantumBoard;
+
+    gateCounts?: GateCounts;
 
     selectedGate: GatePos | null = null;
 
@@ -643,9 +661,11 @@ export class QuantumCircuitComponent
      */
     reset() {
         this.initializeBoard(true);
+
         if (this.board) {
             this.simulator.setBoard(this.board);
         }
+
         void this.runSimulation();
         this.setSizes();
     }
@@ -778,6 +798,9 @@ export class QuantumCircuitComponent
             return;
         }
 
+        if (this.gateCounts && !this.gateCounts.checkAddToBoard(gate)) {
+            return;
+        }
         if (gate.name === "control") {
             this.board.addControl(gate, this.selectedGate, false);
         } else if (gate.name === "antiControl") {
@@ -798,6 +821,7 @@ export class QuantumCircuitComponent
 
         this.updateBoard();
 
+        this.initializeGateCounts();
         this.handleActiveGateHide();
 
         this.selectedGate = null;
@@ -817,6 +841,8 @@ export class QuantumCircuitComponent
         this.board.moveCell(gateMove.from, gateMove.to, this.selectedGate);
         this.selectedGate = null;
         this.updateBoard();
+        this.initializeGateCounts();
+
         this.handleActiveGateHide();
         void this.runSimulation();
         this.setSizes();
@@ -835,6 +861,8 @@ export class QuantumCircuitComponent
         }
         this.selectedGate = null;
         this.updateBoard();
+        this.initializeGateCounts();
+
         this.handleActiveGateHide();
         void this.runSimulation();
         this.setSizes();
@@ -1233,7 +1261,7 @@ export class QuantumCircuitComponent
     }
 
     /**
-     * Initializes board, qubits and outputs.
+     * Initializes board, qubits, outputs and gateCounts
      * @param reset whether this call is to reset board to initial state
      */
     initializeBoard(reset: boolean) {
@@ -1294,6 +1322,19 @@ export class QuantumCircuitComponent
                     probabilityText: "0",
                 });
             }
+        }
+
+        this.initializeGateCounts();
+    }
+
+    initializeGateCounts() {
+        if (this.markup.gateCounts && this.board) {
+            this.gateCounts = new GateCounts();
+            this.gateCounts.setGateCounts(
+                this.markup.gateCounts,
+                this.board.getGateCounts()
+            );
+            console.log("initializeGateCounts");
         }
     }
 

@@ -85,10 +85,14 @@ FROM base AS complete
 
 # Install Python, pip and other necessary packages
 
-ENV PY_VERSION=3.11
+ENV PY_VERSION=3.12
 ENV PYTHON=python$PY_VERSION
+# Python 3.12 is provided by Ubuntu 24.04, so we need to enable this to install all the packages
+# FIXME: Maybe we should switch to uv instead to manage python versions
+ENV PIP_BREAK_SYSTEM_PACKAGES=1
 RUN bash -c "add-apt-repository -y ppa:deadsnakes/ppa && ${APT_CLEANUP}"
-RUN bash -c "${APT_INSTALL} ${PYTHON} ${PYTHON}-distutils && ${APT_CLEANUP}"
+# ${PYTHON}-distutils is no longer supported in Python 3.12, we have to use setuptools instead if needed
+RUN bash -c "${APT_INSTALL} ${PYTHON} && ${APT_CLEANUP}"
 
 RUN update-alternatives --install /usr/bin/python3 python3 /usr/bin/${PYTHON} 20
 
@@ -109,11 +113,13 @@ RUN bash -c "${APT_INSTALL} \
  libxslt-dev \
  libyaml-dev \
 ${PYTHON}-dev \
+ python3-pip \
  voikko-fi \
  zlib1g-dev \
  && ${APT_CLEANUP}"
 
-RUN wget -q https://bootstrap.pypa.io/get-pip.py && ${PYTHON} get-pip.py && rm get-pip.py
+# Python 3.12 comes with pip on Ubuntu 24.04
+#RUN wget -q https://bootstrap.pypa.io/get-pip.py && ${PYTHON} get-pip.py && rm get-pip.py
 
 # Install xmlsec binary which is needed for PySAML2
 RUN bash -c "${APT_INSTALL} xmlsec1 && ${APT_CLEANUP}"
@@ -122,6 +128,11 @@ ENV PIP_INSTALL="${PYTHON} -m pip install"
 RUN bash -c "${PIP_INSTALL} --upgrade --ignore-installed poetry==1.5.1 requests blinker && ${APT_CLEANUP}"
 
 COPY pyproject.toml poetry.lock ./
+# Force-reinstall Python packages installed by dpkg (e.g. via python3-distro) so that pip
+# creates proper RECORD files. Without RECORD files, Poetry's pip calls fail with
+# "Cannot uninstall <pkg>, RECORD file not found. Hint: The package was installed by debian."
+# FIXME: There must be a better way to do this via uv, but it requires quite a lot of refactoring
+RUN bash -c "${PIP_INSTALL} --ignore-installed distro wheel && ${APT_CLEANUP}"
 RUN bash -c " \
 poetry config virtualenvs.create false && \
 poetry config virtualenvs.in-project false && \

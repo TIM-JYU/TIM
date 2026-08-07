@@ -4,7 +4,7 @@
 class Combinations {
 
     /*!
-     * Initilaize combinations
+     * Initialize combinations
      * \fn constructor(chars, n, full)
      * \params string or array chars of elements to combine
      * \params int n number of max items

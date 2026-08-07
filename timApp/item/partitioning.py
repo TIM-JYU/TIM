@@ -141,7 +141,7 @@ def partition_texts(
     # If length of original pars and processed pars match, then we can partition the document normally
     if len(raw_texts) == len(texts):
         return partition_texts_with_index(texts, view_range, preamble_count)
-    # Otherwise processing pars caused some paragrahs to disappear, so we compare their ids to the ids
+    # Otherwise processing pars caused some paragraphs to disappear, so we compare their ids to the ids
     # that would normally appear in the requested range
     partitioned = []
     try:

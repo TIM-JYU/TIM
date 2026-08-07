@@ -526,7 +526,7 @@ class FileParams:
         self.by = replace_random(query, get_param(query, "by" + nr, ""))
         if not self.by and nr == "":
             self.by = replace_random(query, get_param(query, "byCode" + nr, ""))
-        self.prorgam = replace_random(query, get_param(query, "program" + nr, ""))
+        self.program = replace_random(query, get_param(query, "program" + nr, ""))
         self.line_sed = get_param(query, "lineSed" + nr, "")
         self.file_sed = get_param(query, "fileSed" + nr, "")
         self.usecache = get_param(query, "usecache" + nr, True)
@@ -563,9 +563,9 @@ class FileParams:
         # if self.url: print("url: " + self.url + " " + self.linefmt + "\n")
 
     def get_file(self, escape_html=False, not_found_error=None):
-        if self.prorgam:
-            # print(self.prorgam)
-            s = self.prorgam
+        if self.program:
+            # print(self.program)
+            s = self.program
             if self.file_sed != "":
                 s = apply_sed_replacements(s, self.file_sed)
             return self.scan_needed_lines(s.split("\n"), escape_html)

@@ -166,7 +166,7 @@ const TableFormHeaders: string[] = [
     "Removed",
 ];
 
-// Uncomment next if need to data watch some attributes for data changes
+// Uncomment the following line if you need to observe attributes for data changes
 // import {installDataWatcher} from "tim/util/dataWatcher";
 // import {LogAllMethods} from "tim/util/dataWatcher";
 
@@ -697,10 +697,10 @@ export enum ClearSort {
                                    [id]="data.table.id"
                                    [columnIdStart]="nrColStart"
                                    [tableMaxHeight]="maxRows"
-                                   [tableMaxWidth]="dataView.tableWidth"
-                                   [fixedColumnCount]="dataView.fixedColumns"
+                                   [tableMaxWidth]="dataView!.tableWidth"
+                                   [fixedColumnCount]="dataView!.fixedColumns"
                                    [headerStyle]="headersStyle"
-                                   [reportSlowLoad]="dataView.reportSlowLoad"
+                                   [reportSlowLoad]="dataView!.reportSlowLoad"
                                    #dataViewComponent>
                         <ng-container *ngTemplateOutlet="inlineEditorTemplate"></ng-container>
                     </tim-data-view>
@@ -949,6 +949,7 @@ export class TimTableComponent
     maxCols = maxContentOrFitContent();
     permTable: number[] = [];
     private permTableToScreen: number[] = []; // inverse perm table to get screencoordinate for row
+    private visiblePermTableToScreen: number[] = []; // inverse perm table to get screencoordinate for visible row
     editedInternal = false;
     @ViewChild("editInput") private editInput?: ElementRef<HTMLTextAreaElement>;
     @ViewChild("inlineEditor") private editorDiv!: ElementRef<HTMLDivElement>;
@@ -1471,7 +1472,7 @@ export class TimTableComponent
             }
             if (tt.run && tt.filters) {
                 await this.applyFilters(tt.filters);
-                // there is no other usefull comd in templates
+                // there is no other useful comd in templates
                 // so do it directly here
                 // toolbar?.applyTemplate(tt);
             }
@@ -1698,6 +1699,7 @@ export class TimTableComponent
 
     updateVisibleRows() {
         this.visibleRowIndices = [];
+        this.visiblePermTableToScreen = Array(this.permTable.length).fill(-1);
         this.rowNumbers = [];
         const isSequential = this.isSequentialNr();
 
@@ -1718,6 +1720,11 @@ export class TimTableComponent
             } else {
                 this.rowNumbers.push(rowIndex + this.nrColStart);
             }
+        }
+
+        for (let i = 0; i < this.visibleRowIndices.length; i++) {
+            const rowIndex = this.visibleRowIndices[i];
+            this.visiblePermTableToScreen[rowIndex] = i;
         }
     }
     private applyFilters = async (filterData?: Filters): Promise<void> => {
@@ -1794,7 +1801,7 @@ export class TimTableComponent
         try {
             fd = JSON.parse(filterDataString);
         } catch (e) {
-            // console.error("Error parsing filter data: ", e);
+            // console.error('Error parsing filter data: ', e);
             return;
         }
         await this.applyFilters(fd);
@@ -2042,7 +2049,7 @@ export class TimTableComponent
 
     /**
      * Changes all visible check boxes on this column to same value as header row cb
-     * if header row cb clicked. Otherwise just update hidden rows if cbFilter is on.
+     * if header row cb clicked. Otherwise, just update hidden rows if cbFilter is on.
      * @param rowi index of checkbox changed
      */
     async handleChangeCheckbox(rowi: number) {
@@ -2940,7 +2947,7 @@ export class TimTableComponent
     }
 
     /**
-     * Initialize celldatamatrix with the values from yaml and yaml only
+     * Initialize celldatamatrix with the values from YAML and YAML only
      */
     private initializeCellDataMatrix(clearSort: ClearSort = ClearSort.Yes) {
         if (!this.data.table) {
@@ -3148,7 +3155,7 @@ export class TimTableComponent
      * ex. C -> 2
      * ex. AA -> 26
      * @param {string} colValue Column value, ex. 'A'
-     * @param max stop iterate if comes bigger than this and return -1
+     * @param max stop iterating if columnIndex comes bigger than this and return -1
      * @returns {number} Column index
      */
     static getColumnFromString(colValue: string, max: number = 100000): number {
@@ -3178,7 +3185,7 @@ export class TimTableComponent
      * ex. "5" -> 5
      * @param {string} col Column value, ex. 'A' or header name or index as string
      * @param {string[] | undefined} headers Headers array
-     * @param maxColumns stop iterate if comes bigger than this and return -1
+     * @param maxColumns maximum number of columns; stops iteration if exceeded and returns -1
      * @returns {number} Column index
      */
     static getColIndex(
@@ -3211,7 +3218,7 @@ export class TimTableComponent
      * ex. ["Name", "Age"] -> [index of column with header "Name", index of column with header "Age"]
      * @param {ColumnsArrayType} colArray Column values, ex. ['A', 'C', 'AA'] or header names or indices as strings
      * @param {string[] | undefined} headers Headers array
-     * @param maxColumns stop iterate if comes bigger than this and return -1
+     * @param maxColumns maximum number of columns; stops iteration if exceeded
      * @returns {number[]} Column indices
      */
     static getColIndicesFromArray(
@@ -4251,7 +4258,7 @@ export class TimTableComponent
         }
         let rowi = this.currentCell.row;
         let coli = this.currentCell.col;
-        const sr = this.permTableToScreen[rowi];
+        const sr = this.visiblePermTableToScreen[rowi];
         const table = $(this.tableElem.nativeElement);
         if (rowi >= this.cellDataMatrix.length) {
             rowi--;
@@ -4514,7 +4521,7 @@ export class TimTableComponent
 
     // noinspection JSMethodCanBeStatic
     /**
-     * Checks if dr.range is valid range.  If it is string, change it to array.
+     * Checks if 'dr.range' is valid range.  If it is string, change it to array.
      * To prevent another check, mark it checked.
      * @param dr default range to check
      */
@@ -4547,7 +4554,7 @@ export class TimTableComponent
 
     // noinspection JSMethodCanBeStatic
     /**
-     * Check if index is between r[0]-r[1] where negative means i steps backward
+     * Check if index is between r[0]-r[1] where negative means index steps backward
      * @param r range to check, may be like [1,-1]
      * @param rown max_value
      * @param coln max_value
@@ -4585,7 +4592,7 @@ export class TimTableComponent
 
     // noinspection JSMethodCanBeStatic
     /**
-     * Check if index is between r[0]-r[1] where negative means i steps backward
+     * Check if index is between r[0]-r[1] where negative means index steps backward
      * @param r range to check, may be like [1,-1]
      * @param n max_value
      * @param index index to check
@@ -5282,7 +5289,7 @@ export class TimTableComponent
     /**
      * Checks whether a cell coordinate is in the given
      * list of cell coordinates.  Or if c is undefined or
-     * the list has 1 or less items, then always true.
+     * the list has 1 or fewer items, then always true.
      * @param c The cell coordinate to check
      * @param cells The list of cell coordinates
      * @returns {boolean} True if the cell is in the list, otherwise false
@@ -6409,7 +6416,7 @@ export class TimTableComponent
 
     /**
      * Converts table coordinates to View order coordinates.
-     * These are not the same than HTML table coordinates
+     * These are not the same as HTML table coordinates
      * if there is filtering or hidden rows.
      * @param tx column index in table coordinates
      * @param ty row index in table coordinates

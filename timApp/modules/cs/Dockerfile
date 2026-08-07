@@ -251,6 +251,9 @@ FROM base AS complete
 # Temporarily return to root to install packages
 USER root
 
+# We need to define $PIP_INSTALL again for the next build stage since it's an ARG
+ARG PIP_INSTALL="${PYTHON} -m pip install --break-system-packages"
+
 # Python packages
 
 # OpenCV
@@ -261,7 +264,20 @@ RUN $PIP_INSTALL gurobipy && bash -c "${APT_CLEANUP}"
 
 # http://www.scipy.org/install.html
 RUN bash -c "${APT_INSTALL} epstool transfig && ${APT_CLEANUP}"
-RUN $PIP_INSTALL numpy scipy matplotlib pandas statsmodels control scikit-learn scikit-image pooch networkx && bash -c "${APT_CLEANUP}"
+# Force installation of pinned versions
+RUN $PIP_INSTALL --ignore-installed \
+    numpy \
+    scipy \
+    matplotlib \
+    pandas \
+    statsmodels \
+    control \
+    scikit-learn==1.7.0 \
+    scikit-image \
+    pooch \
+    networkx && \
+    bash -c "${APT_CLEANUP}"
+
 # As an additional step, we need to initialize the default datasets of scikit-image
 ENV SKIMAGE_DATADIR=/etc/skimage
 RUN $PYTHON -c "import skimage; print(skimage.__version__)"
@@ -287,6 +303,9 @@ RUN $PIP_INSTALL git+https://github.com/industrial-optimization-group/DESDEO.git
 
 # sktime
 RUN bash -c "$PIP_INSTALL sktime[all_extras] && ${APT_CLEANUP}"
+
+# gplearn
+RUN $PIP_INSTALL gplearn==0.4.2 && bash -c "${APT_CLEANUP}"
 
 # R packages
 RUN bash -c "${APT_INSTALL} gcc g++ liblapack-dev liblapack3 libopenblas-dev gfortran && ${APT_CLEANUP}"
@@ -381,7 +400,7 @@ ENV PATH=$PATH:/usr/local/go/bin
 
 # NodeJS and TypeScript
 RUN bash -c "(wget -qO- https://deb.nodesource.com/setup_22.x | bash -) && ${APT_INSTALL} nodejs && ${APT_CLEANUP}"
-RUN npm i npm@latest -g && bash -c "${APT_CLEANUP}"
+RUN npm i npm@10 -g && bash -c "${APT_CLEANUP}"
 RUN npm i ts-node -g && bash -c "${APT_CLEANUP}"
 
 # Install NUnit runner for .NET

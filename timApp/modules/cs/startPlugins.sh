@@ -60,22 +60,22 @@ fi
 
 mkdir -p "$DATA_PATH/java/cs"
 cd "$DATA_PATH/java"
-wget https://gitlab.jyu.fi/tie/ohj2/esimerkit/comtest/-/raw/main/comtest.jar -O comtest.jar.tmp -nv && mv comtest.jar.tmp comtest.jar
-wget https://gitlab.jyu.fi/tie/ohj2/esimerkit/comtest/-/raw/main/comtestcpp.jar -O comtestcpp.jar.tmp -nv && mv comtestcpp.jar.tmp comtestcpp.jar
-wget https://gitlab.jyu.fi/tie/ohj1/graphics/-/raw/main/Graphics.jar -O Graphics.jar.tmp -nv && mv Graphics.jar.tmp Graphics.jar
-wget https://gitlab.jyu.fi/tie/ohj2/esimerkit/ali/-/raw/main/Ali.jar -O Ali.jar.tmp -nv && mv Ali.jar.tmp Ali.jar
-wget https://gitlab.jyu.fi/tie/ohj2/esimerkit/fxexamples/-/raw/master/FXGui/fxgui.jar --no-check-certificate -O fxgui.jar.tmp -nv && mv fxgui.jar.tmp fxgui.jar
-wget https://gitlab.jyu.fi/tie/ohj2/esimerkit/gui/-/raw/main/gui.jar -O gui.jar.tmp -nv && mv gui.jar.tmp gui.jar
+wget https://gitlab.jyu.fi/tie/ohj2/esimerkit/comtest/-/raw/main/comtest.jar -O comtest.jar.tmp -nv -T 10 && mv comtest.jar.tmp comtest.jar
+wget https://gitlab.jyu.fi/tie/ohj2/esimerkit/comtest/-/raw/main/comtestcpp.jar -O comtestcpp.jar.tmp -nv -T 10 && mv comtestcpp.jar.tmp comtestcpp.jar
+wget https://gitlab.jyu.fi/tie/ohj1/graphics/-/raw/main/Graphics.jar -O Graphics.jar.tmp -nv -T 10 && mv Graphics.jar.tmp Graphics.jar
+wget https://gitlab.jyu.fi/tie/ohj2/esimerkit/ali/-/raw/main/Ali.jar -O Ali.jar.tmp -nv -T 10 && mv Ali.jar.tmp Ali.jar
+wget https://gitlab.jyu.fi/tie/ohj2/esimerkit/fxexamples/-/raw/master/FXGui/fxgui.jar --no-check-certificate -O fxgui.jar.tmp -nv -T 10 && mv fxgui.jar.tmp fxgui.jar
+wget https://gitlab.jyu.fi/tie/ohj2/esimerkit/gui/-/raw/main/gui.jar -O gui.jar.tmp -nv -T 10 && mv gui.jar.tmp gui.jar
 
 cd cs
-wget https://kurssit.it.jyu.fi/npo/ComTest/ComTest.jar -O ComTest.jar.tmp -nv && mv ComTest.jar.tmp ComTest.jar
+wget https://kurssit.it.jyu.fi/npo/ComTest/ComTest.jar -O ComTest.jar.tmp -nv -T 10 && mv ComTest.jar.tmp ComTest.jar
 
 cd /cs
 rm -rf "$DATA_PATH/simcir"
 mkdir -p "$DATA_PATH/simcir/check"
 cp -r simcir "$DATA_PATH/simcir"
 cd "$DATA_PATH/simcir/check"
-wget https://gitlab.jyu.fi/arjuvi/logik-py/-/raw/master/simcirtest.py -O simcirtest.py.tmp -nv && mv simcirtest.py.tmp simcirtest.py
+wget https://gitlab.jyu.fi/arjuvi/logik-py/-/raw/master/simcirtest.py -O simcirtest.py.tmp -nv -T 10 && mv simcirtest.py.tmp simcirtest.py
 
 fi
 

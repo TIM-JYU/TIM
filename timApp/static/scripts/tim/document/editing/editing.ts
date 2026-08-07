@@ -973,7 +973,10 @@ auto_number_headings: 0${CURSOR}
         return this.viewctrl.getParMenuEntry(par)?.getMenuEntry();
     }
 
-    getViewSourceEditorMenuEntry(par: ParContext): IMenuFunctionEntry {
+    getViewSourceEditorMenuEntry(
+        par: ParContext,
+        parEditable: boolean = false
+    ): IMenuFunctionEntry {
         return {
             desc: "View source",
             func: async () => {
@@ -990,7 +993,7 @@ auto_number_headings: 0${CURSOR}
                     await showMessageDialog("Failed to get paragraph markdown");
                 }
             },
-            show: canSeeSource(this.viewctrl.item, par),
+            show: parEditable || canSeeSource(this.viewctrl.item, par),
         };
     }
 
@@ -1006,7 +1009,7 @@ auto_number_headings: 0${CURSOR}
         const qstPar = this.isQST(par);
         const customParMenuEntry = this.getParMenuEntry(par, parEditable);
         const fns: MenuFunctionList = [];
-        fns.push(this.getViewSourceEditorMenuEntry(par));
+        fns.push(this.getViewSourceEditorMenuEntry(par, parEditable));
         const showSingleParFns = par.isDeletableOnItsOwn();
         const isTranslation = this.viewctrl.isTranslation();
         const {areasBeforeRef, areasAfterRef, refAreaInclusion} =

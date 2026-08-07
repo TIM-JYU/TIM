@@ -257,6 +257,16 @@ export class AceParEditor extends BaseParEditor implements IEditor {
                 }
             },
         });
+        this.editor.commands.addCommand({
+            name: "En dash",
+            bindKey: {
+                win: "Alt--",
+                mac: "Option--",
+            },
+            exec: () => {
+                this.editor.insert("–");
+            },
+        });
         this.editor.keyBinding.setKeyboardHandler({
             handleKeyboard: () => {
                 this.checkWrap();
@@ -470,7 +480,7 @@ export class AceParEditor extends BaseParEditor implements IEditor {
         range.start.column = 0;
         range.end.column = line.length;
         while (line.startsWith("#")) {
-            line = line.substr(1);
+            line = line.substring(1);
         }
         line = line.trim();
         this.editor.selection.setRange(range, false);

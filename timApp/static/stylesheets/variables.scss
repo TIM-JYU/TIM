@@ -17,6 +17,7 @@ $tab-bg-color: $basic-color !default;
 $csrundiv-color: $basic-color !default;
 $note-private-color: $basic-color !default;
 $note-public-color: #F60 !default;
+$note-teachers-color: #5cb85c !default;
 $csrunmenu-link-color: $basic-color !default;
 $timbutton-bg-color: $button-bg-color !default;
 $viewlogin-link-color: $basic-color !default;
@@ -37,6 +38,8 @@ $body-text-align-xs: left !default;
 $asset-path: ".." !default;
 $access-badges-base-color: $basic-color !default;
 $item-badge-color: #5cb85c !default;
+$toc-active-heading-bg-color: ignore !default;
+$toc-active-heading-link-color: ignore !default;
 
 // Used by Angular
 $footer-height: 60px !default;

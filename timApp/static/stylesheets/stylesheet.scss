@@ -497,6 +497,9 @@ div.error {
     &.private {
         border-color: $note-private-color;
     }
+    &.access-teachers {
+        border-color: $note-teachers-color;
+    }
 }
 
 .notes, .speaker {
@@ -944,6 +947,14 @@ pareditor {
 
     .formula-editor-tab {
         width: 100%;
+    }
+
+    .upload-options {
+        flex-basis: 100%;
+    }
+
+    .select-file {
+
     }
 }
 

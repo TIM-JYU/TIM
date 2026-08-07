@@ -740,7 +740,7 @@
       </trans-unit>
       <trans-unit id="7819314041543176992" datatype="html">
         <source>Close</source>
-        <target state="translated">Stäng av</target>
+        <target state="translated">Stäng</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/document/scheduling/schedule-dialog.component.ts</context>
           <context context-type="linenumber">117</context>
@@ -11343,7 +11343,7 @@ Mata in flera användares adresser på separata rader eller åtskilda med kommat
       </trans-unit>
       <trans-unit id="2121059493646918621" datatype="html">
         <source>This is a practice exam</source>
-        <target state="translated">Det här är ett övningsprov </target>
+        <target state="translated">Genomförandet av övningsprovet har avslutats </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
           <context context-type="linenumber">499,500</context>
@@ -11351,7 +11351,7 @@ Mata in flera användares adresser på separata rader eller åtskilda med kommat
       </trans-unit>
       <trans-unit id="2112778509887488400" datatype="html">
         <source> To start the main exam, select it from the dropdown menu above. </source>
-        <target state="translated">Välj det egentliga provet från rullgardinsmenyn ovan för att påbörja det. </target>
+        <target state="translated">Du kan nu endast påbörja det egentliga provet genom att välja provet i listan ovan. </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
           <context context-type="linenumber">501</context>
@@ -11419,6 +11419,30 @@ Mata in flera användares adresser på separata rader eller åtskilda med kommat
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
           <context context-type="linenumber">618,620</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="5792644276297781479" datatype="html">
+        <source>Gate counts don&apos;t match:</source>
+        <target state="new">Gate counts don&apos;t match:</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/quantum-error.component.ts</context>
+          <context context-type="linenumber">26</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="127351648487130220" datatype="html">
+        <source>with max count:</source>
+        <target state="new">with max count:</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/quantum-error.component.ts</context>
+          <context context-type="linenumber">27</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="293983085507063952" datatype="html">
+        <source>But count was:</source>
+        <target state="new">But count was:</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/quantum-error.component.ts</context>
+          <context context-type="linenumber">28</context>
         </context-group>
       </trans-unit>
       <trans-unit id="2533739546599263955" datatype="html">

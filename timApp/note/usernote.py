@@ -41,7 +41,7 @@ class UserNote(db.Model):
     """Comment modification timestamp."""
 
     access: Mapped[str]
-    """Who can see this comment. So far valid values are 'everyone' and 'justme'."""
+    """Who can see this comment. So far valid values are 'teachers', 'everyone' and 'justme'."""
 
     tags: Mapped[str]
     """Tags for the comment."""
@@ -55,6 +55,10 @@ class UserNote(db.Model):
     @property
     def is_public(self) -> bool:
         return self.access == "everyone"
+
+    @property
+    def is_teachers(self) -> bool:
+        return self.access == "teachers"
 
     def to_json(self):
         tr = self.block.translation

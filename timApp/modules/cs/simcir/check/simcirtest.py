@@ -259,7 +259,7 @@ class Logik:
 
         for i in (zip(terminals, prod) for prod in products):
             locs = {}
-            for (k, v) in i:
+            for k, v in i:
                 locs[k] = v
             locss.append(locs)
 
@@ -308,12 +308,12 @@ class Logik:
         try:
             tulostettava = ""
             hd, label_length = header(locss)
-            for (nimi, lauseke) in sorted(lausekkeet.items()):
+            for nimi, lauseke in sorted(lausekkeet.items()):
                 hd += " ".rjust(label_length) + nimi
                 # hd += str(' '.join(nimi.center(max(len(nimi),label_length))))
             for locs in locss:
                 tulostettava += hianosti(locs, label_length).rstrip()
-                for (nimi, lauseke) in sorted(lausekkeet.items()):
+                for nimi, lauseke in sorted(lausekkeet.items()):
                     # jos LED suoraan kytketty DC:hen
                     if lauseke == "x":  # jos LED ei kytketty
                         arvo = "x"
