@@ -5,7 +5,6 @@ import {
     EventEmitter,
     Input,
     NgModule,
-    NgZone,
     Output,
 } from "@angular/core";
 import {ParCompiler} from "tim/editor/parCompiler";
@@ -230,7 +229,7 @@ type MatrixElement = string | number;
                 </tr>
                 <tr *ngFor="let row of processed.rows; let rowi = index" [ngClass]="getTableRowClass()">
                     <td *ngIf="isMatrix()" [innerHtml]="fixText(row.text) | purify" class="qst-row_text"></td>
-                    <td *ngFor="let col of row.columns; let coli = index;" class="qst-td">
+                    <td *ngFor="let _col of row.columns; let coli = index;" class="qst-td">
                         <ng-template #points>
                             &ngsp;<span [innerHtml]="getLabelText(row) | purify"></span>
                             <p *ngIf="getPoints(rowi, coli) as p" class="qst-points" [innerText]="p"></p>
@@ -303,9 +302,10 @@ export class AnswerSheetComponent implements OnChanges {
     userpoints?: number;
     disabled = false;
     @Output() onAnswerChange: EventEmitter<AnswerTable> = new EventEmitter();
-    private customDomUpdateInProgress = false;
+    // private customDomUpdateInProgress = false;
 
-    constructor(element: ElementRef, private zone: NgZone) {
+    // constructor(element: ElementRef, private zone: NgZone) {
+    constructor(element: ElementRef) {
         this.element = $(element.nativeElement);
     }
 

@@ -2067,7 +2067,9 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
 
         result["web"] = web
 
-        # For Stack type, remove contents of 'formatcorrectresponse' if
+        # TODO: The correct way to do this is to put the code in the run() method of stack.py.
+        # TODO: If it needs to be done here specifically, add a method such as "postprocess"
+        # TODO: to the language base class and implement it for the stack type.        # For Stack type, remove contents of 'formatcorrectresponse' if
         # - the score indicates an empty or incorrect answer
         # - the user has exceeded the answerLimit to this task
         # - the answer is not valid (usually when answer came outside of deadline)

@@ -1,5 +1,5 @@
 import type {OnChanges} from "@angular/core";
-import {ChangeDetectorRef, Component, Input, NgModule} from "@angular/core";
+import {Component, Input, NgModule} from "@angular/core";
 import type {ChartData, ChartDataset, ChartOptions, ChartType} from "chart.js";
 import {fixQuestionJson} from "tim/document/question/answer-sheet.component";
 import type {Overwrite} from "type-zoo";
@@ -37,7 +37,8 @@ function timStripHtml(s: string) {
 }
 
 function timFillArray<T>(len: number, value: T) {
-    return Array.apply(null, new Array(len)).map(() => value);
+    // return Array.apply(null, new Array(len)).map(() => value);
+    return new Array<T>(len).fill(value);
 }
 
 function qstCleanHtml(s: string) {
@@ -159,19 +160,19 @@ interface ChartConfig {
 @Component({
     selector: "tim-answer-chart",
     template: `
-        <div *ngIf="!isText && chartData" style="flex: 1; min-height: 0">
+        <div *ngIf="!isText && chartData as cd" style="flex: 1; min-height: 0">
             <canvas baseChart
-                    [datasets]="chartData?.datasets"
-                    [labels]="chartData?.config?.data?.labels"
+                    [datasets]="cd.datasets"
+                    [labels]="cd.config.data.labels"
                     [options]="chartOptions"
-                    [legend]="chartData?.config?.options?.plugins?.legend?.display ?? false"
+                    [legend]="cd.config.options.plugins?.legend?.display ?? false"
                     [type]="'bar'">
             </canvas>
         </div>
         <div *ngIf="isText">
             <p *ngFor="let t of textAnswers" [innerText]="t"></p>
         </div>
-        <p *ngIf="answers">Total answers: {{ answers?.length }}</p>
+        <p *ngIf="answers as a">Total answers: {{ a.length }}</p>
         <p *ngIf="answers">Total points: {{ getTotalPoints() }}</p>
         <div *ngIf="!isText">
             <button class="timButton btn-xs" (click)="toggleAxis()">Change chart orientation</button>
@@ -316,7 +317,7 @@ export class AnswerChartComponent implements OnChanges {
     ];
     textAnswers: string[] = [];
 
-    constructor(private cdr: ChangeDetectorRef) {}
+    // constructor(private cdr: ChangeDetectorRef) {}
 
     get chartOptions(): ChartOptions<"bar"> {
         return {
