@@ -1,14 +1,14 @@
 """Routes for qst (question) plugin."""
 import json
 import re
-from dataclasses import dataclass, asdict
+from dataclasses import dataclass, asdict, field
 from typing import Union, Any
 
 import yaml
 from flask import Blueprint, render_template_string
 from flask import Response
 from flask import request
-from marshmallow import missing, EXCLUDE, ValidationError
+from marshmallow import missing, EXCLUDE, INCLUDE, ValidationError, pre_load
 
 from timApp.auth.sessioninfo import get_current_user_object
 from timApp.document.docinfo import DocInfo
@@ -143,7 +143,7 @@ class QstMarkupModel(GenericMarkupModel):
     showResult: bool | None | Missing = missing
 
 
-QstBasicState = list[list[str]]
+QstBasicState = list[list[int | str]]
 
 
 @dataclass
@@ -153,12 +153,29 @@ class QstRandomState:
 
 
 @dataclass
-class QstCState:
+class XQstCState:
     class Meta:
-        unknown = EXCLUDE
+        unknown = INCLUDE
 
     c: QstBasicState
     order: list[int] | None = None
+
+
+class QstCState:
+    class Meta:
+        unknown = EXCLUDE  # älä pudota tuntemattomia
+
+    c: QstBasicState
+    order: list[int] | None = None
+    extra: dict[str, Any] = field(default_factory=dict)
+
+    @pre_load
+    def collect_unknown(self, data, **kwargs):
+        known = {"c", "order", "extra"}
+        extra = {k: v for k, v in data.items() if k not in known}
+        data = dict(data)
+        data["extra"] = {**data.get("extra", {}), **extra}
+        return data
 
 
 # Store answer in original row order if no randomizedRows specified in markup:
@@ -196,6 +213,7 @@ def qst_answer_jso(m: QstAnswerModel):
     # if isinstance(prev_state, QstRandomState):
     #    rand_arr = prev_state.order
     rand_arr = getattr(prev_state, "order", None)
+    extra = getattr(prev_state, "extra", None)
     # if prev state is none, check if markup wants random order
     if (
         prev_state is None
@@ -237,12 +255,16 @@ def qst_answer_jso(m: QstAnswerModel):
         tim_info["points"] = points
 
     webstate = answers
+    if markup.saveKey:
+        answers = {markup.saveKey: answers}
     if rand_arr is not None:
         # TODO: Schema?
         answers = {"c": answers, "order": rand_arr}
         m.markup.rows = qst_set_array_order(m.markup.rows, rand_arr)
         if m.markup.expl is not missing:
             m.markup.expl = qst_pick_expls(m.markup.expl, rand_arr)
+    if isinstance(extra, dict) and extra and isinstance(answers, dict):
+        answers = {**answers, **extra}
 
     result = False
     if (

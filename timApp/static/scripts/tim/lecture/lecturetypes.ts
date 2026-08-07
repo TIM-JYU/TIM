@@ -358,4 +358,4 @@ export function isAskedQuestion(qa: QuestionOrAnswer): qa is IAskedQuestion {
     return (qa as IAskedQuestion).asked_id != null;
 }
 
-export type AnswerTable = string[][];
+export type AnswerTable = (string | number)[][];

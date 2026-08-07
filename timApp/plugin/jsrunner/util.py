@@ -1,8 +1,12 @@
 import copy
+import re
+import csv
+from io import StringIO
 import json
 from collections import defaultdict
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
+from re import Match
 from typing import TypedDict, Any, DefaultDict, Literal, Sequence
 
 from sqlalchemy import func, select, Row
@@ -220,6 +224,45 @@ class AllowedOverwriteOptions:
             points=parse_bool(markup.get("canOverwritePoints", False)),
             validity=parse_bool(markup.get("canOverwriteValidity", False)),
         )
+
+
+def get_qst_index(qfield: str, qmax: int) -> int:
+    """
+    Given a qfield and a value, return the index of the qfield in the list
+    If just qst[ return 0
+    :param qfield: string like qst[2] => 1
+    :param qmax: max len for answer
+    :return: index after [
+    """
+    m: Match[str] | None | Match[bytes] = re.fullmatch(r"qst\[(\d+)]?", qfield)
+    if m:
+        index = int(m.group(1)) - 1
+        if index < 0:
+            return 0
+        if index >= qmax:
+            return qmax - 1
+        return index
+    return 0
+
+
+def list_to_string(lst):
+    sio = StringIO()
+    csv.writer(sio).writerow(lst)
+    return sio.getvalue().rstrip("\r\n")
+
+
+def parse_list(s):
+    if not isinstance(s, str):
+        s = str(s)
+    row = next(csv.reader(StringIO(s), skipinitialspace=True))
+    result = []
+    for item in row:
+        item = item.strip()
+        try:
+            result.append(int(item))
+        except ValueError:
+            result.append(item)
+    return result
 
 
 def save_fields(
@@ -479,6 +522,33 @@ def save_fields(
             lastfield = "c"
             for c_field, c_value in contents.items():  # type: str, Any
                 lastfield = c_field
+                if c_field.startswith("qst["):
+                    # used for qst-type rows from TableForm like 1,2,4 to replace
+                    # row in qst answer
+                    qstvalue: list = []
+                    qmax = 20
+                    if an:
+                        if isinstance(content, list):
+                            qstvalue = content.copy()
+                        if isinstance(content, dict):
+                            qstvalue = content["c"].copy()
+                        qmax = len(qstvalue)
+                    index = get_qst_index(c_field, qmax)
+                    if len(qstvalue) <= index:
+                        qstvalue.extend([[] for _ in range(index + 1 - len(qstvalue))])
+                    """
+                    try:
+                        qstvalue[index] = json.loads(f"[{c_value}]")
+                    except json.JSONDecodeError:
+                        raise RouteException(
+                            f"Expected a comma-separated list of integers: {c_value}"
+                        )
+                    """
+                    qstvalue[index] = parse_list(c_value)
+
+                    c_field = "c"
+                    c_value = qstvalue
+
                 match c_field:
                     case "points":
                         if c_value == "":
@@ -497,6 +567,10 @@ def save_fields(
                         if not an or json.dumps(content) != c_value:
                             new_answer = True
                         content = json.loads(c_value)  # TODO: should this be inside if
+                    case "ALL":
+                        if not an or json.dumps(content) != c_value:
+                            new_answer = True
+                            content = json.loads(c_value)
                     case "valid":
                         c_b_value = parse_bool(c_value)
                         validity_changed = True
@@ -527,9 +601,25 @@ def save_fields(
                             if c_field not in content:
                                 content[c_field] = None
                     case _:
-                        if not an or content.get(c_field, "") != c_value:
+                        old_value = None
+                        if an:
+                            if type(content) is dict:
+                                old_value = content[c_field]
+                                if type(old_value) is dict and type(c_value) is str:
+                                    c_value = json.loads(c_value)
+                                if type(old_value) is list and type(c_value) is str:
+                                    c_value = json.loads(c_value)  # mostly qst
+                                content[c_field] = c_value
+                            if type(content) is list:
+                                old_value = content
+                                if type(c_value) is str:
+                                    c_value = json.loads(c_value)
+                                content = c_value
+                            if old_value != c_value:
+                                new_answer = True
+                        else:
+                            content[c_field] = c_value
                             new_answer = True
-                        content[c_field] = c_value
 
             if points_changed:
                 if an and not new_answer and overwrite_opts.points:

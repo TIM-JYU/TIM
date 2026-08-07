@@ -7,7 +7,7 @@ from timApp.document.docparagraph import DocParagraph
 from timApp.document.randutils import is_valid_id
 from timApp.plugin.pluginexception import PluginException
 
-KNOWN_FIELD_NAMES = {"points", "datetime", "ALL"}
+KNOWN_FIELD_NAMES = {"points", "datetime", "ALL", "qstn"}
 
 
 @dataclass
@@ -49,7 +49,7 @@ class TaskId:
         allow_type=True,
     ) -> "TaskId":
         m = re.fullmatch(
-            r"((?P<docid>\d+)\.)?(?P<name>[a-zåäöA-ZÅÄÖ0-9_-]+)(\.(?P<field>[a-zA-Z0-9_-]+))?(:(?P<type>[a-zA-Z]*)(:(?P<rw>readonly|readwrite))?)?",
+            r"((?P<docid>\d+)\.)?(?P<name>[a-zåäöA-ZÅÄÖ0-9_-]+)(\.(?P<field>[\[\]a-zA-Z0-9_-]+))?(:(?P<type>[a-zA-Z]*)(:(?P<rw>readonly|readwrite))?)?",
             s,
         )
         if not m:
