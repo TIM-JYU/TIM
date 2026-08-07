@@ -26,9 +26,21 @@ BROWSER_TEST_SCRIPT = Template(
     """
 import os
 import subprocess
+import time
 
 chunk = $chunk
 test_files = sorted([f for f in os.listdir("tests/browser") if f.startswith("test_")])
+
+def kill_port_5001():
+    try:
+        inode = next((l.split()[9] for l in open('/proc/net/tcp') if ':1389' in l.split()[1]), None)
+        if not inode: return
+        for p in [x for x in os.listdir('/proc') if x.isdigit()]:
+            try:
+                if any(f"socket:[{inode}]" == os.readlink(f'/proc/{p}/fd/{f}') for f in os.listdir(f'/proc/{p}/fd')):
+            os.kill(int(p), 9)
+            except Exception: pass
+    except Exception: pass
 
 if chunk:
     chunk_current, chunk_total = chunk
@@ -42,6 +54,7 @@ if chunk:
 MAX_TRIES = 3
 for test_file in test_files:
     cur_try = 0
+    sleep_time = 5
     while True:
         try:
             res = subprocess.run(
@@ -63,6 +76,9 @@ for test_file in test_files:
                     print(f"{test_file} failed {MAX_TRIES} times")
                     exit(1)
                 print(f"{test_file} failed, retrying")
+
+                time.sleep(sleep_time)
+                sleep_time = min(sleep_time * 2, 15)
                 continue
             break
 
@@ -72,6 +88,8 @@ for test_file in test_files:
             if cur_try >= MAX_TRIES:
                 print("Timed out, giving up")
                 exit(1)
+        finally:
+            kill_port_5001()
 """
 )
 
