@@ -133,11 +133,12 @@ def post_process_pars(
         for p in final_pars:
             ppar = p.prepare(view_ctx)
             ppar.authorinfo = authors.get(ppar.id)
-            if hide:
-                ppar.authorinfo.hide = True
-            for u in ppar.authorinfo.authors:
-                if u.has_teacher_access(doc.docinfo):
-                    ppar.authorinfo.is_teacher = True
+            if ppar.authorinfo:
+                if hide:
+                    ppar.authorinfo.hide = True
+                for u in ppar.authorinfo.authors:
+                    if isinstance(u, User) and u.has_teacher_access(doc.docinfo):
+                        ppar.authorinfo.is_teacher = True
 
     # There can be several references of the same paragraph in the document, which is why we need a dict of lists
     pars_dict: DefaultDict[tuple[str, int], list[PreparedPar]] = defaultdict(list)
