@@ -31,17 +31,6 @@ import time
 chunk = $chunk
 test_files = sorted([f for f in os.listdir("tests/browser") if f.startswith("test_")])
 
-def kill_port_5001():
-    try:
-        inode = next((l.split()[9] for l in open('/proc/net/tcp') if ':1389' in l.split()[1]), None)
-        if not inode: return
-        for p in [x for x in os.listdir('/proc') if x.isdigit()]:
-            try:
-                if any(f"socket:[{inode}]" == os.readlink(f'/proc/{p}/fd/{f}') for f in os.listdir(f'/proc/{p}/fd')):
-                    os.kill(int(p), 9)
-            except Exception: pass
-    except Exception: pass
-
 if chunk:
     chunk_current, chunk_total = chunk
     chunk_size = len(test_files) // chunk_total
@@ -88,8 +77,6 @@ for test_file in test_files:
             if cur_try >= MAX_TRIES:
                 print("Timed out, giving up")
                 exit(1)
-        finally:
-            kill_port_5001()
 """
 )
 

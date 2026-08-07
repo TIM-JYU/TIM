@@ -349,6 +349,9 @@ class BrowserTest(LiveServerTestCase, TimRouteTestBase):
             warnings.warn(f"Failed to save screenshot to {scn_path}: {e}")
         TimRouteTestBase.tearDown(self)
         self.drv.quit()
+        # FIXME: The current LiveServerTestCase implementation tries to terminate the process after every test,
+        #   but it seems to hang up sometimes. Instead, we always kill the test server here as it is meant to be
+        #   ephemeral. The proper fix is likely update to the LiveServerTestCase.
         if self._process:
             self._process.kill()
 
