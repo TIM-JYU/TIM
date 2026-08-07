@@ -38,7 +38,7 @@ def kill_port_5001():
         for p in [x for x in os.listdir('/proc') if x.isdigit()]:
             try:
                 if any(f"socket:[{inode}]" == os.readlink(f'/proc/{p}/fd/{f}') for f in os.listdir(f'/proc/{p}/fd')):
-            os.kill(int(p), 9)
+                    os.kill(int(p), 9)
             except Exception: pass
     except Exception: pass
 
