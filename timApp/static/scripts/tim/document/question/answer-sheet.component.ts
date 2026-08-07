@@ -5,7 +5,6 @@ import {
     EventEmitter,
     Input,
     NgModule,
-    NgZone,
     Output,
 } from "@angular/core";
 import {ParCompiler} from "tim/editor/parCompiler";
@@ -303,9 +302,10 @@ export class AnswerSheetComponent implements OnChanges {
     userpoints?: number;
     disabled = false;
     @Output() onAnswerChange: EventEmitter<AnswerTable> = new EventEmitter();
-    private customDomUpdateInProgress = false;
+    // private customDomUpdateInProgress = false;
 
-    constructor(element: ElementRef, private zone: NgZone) {
+    // constructor(element: ElementRef, private zone: NgZone) {
+    constructor(element: ElementRef) {
         this.element = $(element.nativeElement);
     }
 
