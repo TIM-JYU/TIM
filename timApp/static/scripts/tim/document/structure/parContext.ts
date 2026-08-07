@@ -71,6 +71,10 @@ export class ParContext {
         return this.par.htmlElement.classList.contains(s);
     }
 
+    getClasses() {
+        return this.par.htmlElement.classList;
+    }
+
     isActionable() {
         return !this.isInPreview() && !this.preamble;
     }

@@ -5,7 +5,6 @@ import re
 import tempfile
 import zipfile
 from dataclasses import field
-
 from flask import Blueprint, render_template
 from flask import current_app
 from flask import request
@@ -25,6 +24,7 @@ from timApp.auth.accesshelper import (
     verify_logged_in,
     verify_copy_access,
 )
+
 from timApp.auth.get_user_rights_for_item import get_user_rights_for_item
 from timApp.auth.sessioninfo import (
     get_current_user_object,
@@ -1033,6 +1033,7 @@ def add_paragraph_common(md: str, doc_id: int, par_next_id: str | None):
     # editor_pars = check_and_rename_pluginnamehere(editor_pars, doc)
 
     pars = []
+
     for p in editor_pars:
         if p.is_setting():
             par = doc.insert_setting_paragraph_obj(p, insert_before_id=par_next_id)

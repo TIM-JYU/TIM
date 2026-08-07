@@ -12,7 +12,7 @@ import {
 } from "tim/editor/parCompiler";
 import type {PareditorController} from "tim/editor/pareditor";
 import type {IModalInstance} from "tim/ui/dialog";
-import {documentglobals} from "tim/util/globals";
+import {documentglobals, genericglobals} from "tim/util/globals";
 import {$http, $timeout} from "tim/util/ngimport";
 import {
     empty,
@@ -77,6 +77,7 @@ import type {
 import {EditType, extraDataForServer} from "tim/document/editing/edittypes";
 import type {ICreateItemDialogParams} from "tim/item/showCreateItemDialog";
 import {showCreateItem} from "tim/item/showCreateItemDialog";
+import {Users} from "tim/user/userService";
 
 export interface IParEditorOptions {
     forcedClasses?: string[];
@@ -211,11 +212,69 @@ export class EditingHandler {
             onClick(".addBelow", ($this, e) => {
                 this.viewctrl.closePopupIfOpen();
                 const [par, options] = prepareOptions($this[0], "addBelow");
+
+                if (documentglobals().docSettings.edit_buttons) {
+                    let indent = 0;
+
+                    const chatClasses = par.getClasses();
+                    for (const c of chatClasses) {
+                        if (
+                            c.startsWith("chatReply") &&
+                            c.length > "chatReply".length
+                        ) {
+                            indent = parseInt(
+                                c.substring("chatReply".length),
+                                10
+                            );
+                        }
+                    }
+                    if (indent === 0) {
+                        options.forcedClasses?.push("chatReply1");
+                    } else {
+                        options.forcedClasses?.push("chatReply" + (indent + 1));
+                    }
+                    options.forcedClasses?.push("chatReply");
+                    options.forcedClasses?.push("chat");
+                }
+
                 return this.showAddParagraphBelow(
                     e.originalEvent,
                     par,
                     options
                 );
+            });
+
+            onClick(".editChat", ($this, e) => {
+                this.viewctrl.closePopupIfOpen();
+                const [par, options] = prepareOptions($this[0], "addBelow");
+
+                console.log(this.checkOwnPar(par), this.isTeacher());
+
+                if (!this.checkOwnPar(par) && !this.isTeacher()) {
+                    return;
+                }
+
+                options.forcedClasses?.push("chat");
+                const selection = UnbrokenSelection.explicit(par);
+                return this.toggleParEditor(
+                    {type: EditType.Edit, pars: selection},
+                    options
+                );
+            });
+
+            onClick(".deleteChat", ($this, e) => {
+                this.viewctrl.closePopupIfOpen();
+                const [par, _] = prepareOptions($this[0], "addBelow");
+
+                if (!this.checkOwnPar(par) && !this.isTeacher()) {
+                    return;
+                }
+
+                const selection = UnbrokenSelection.explicit(par);
+
+                const docId = this.viewctrl.docId;
+                const parId = par.par.id;
+                return this.deleteChatMessage(docId, parId, selection, par);
             });
 
             onClick(".pasteBottom", (_$this, e) => {
@@ -255,6 +314,149 @@ export class EditingHandler {
                 this.createItemVisible = false;
             });
         });
+    }
+
+    /**
+     * Check that paragraph is created by current user.
+     * @param par
+     * @private
+     */
+    private checkOwnPar(par: ParContext) {
+        const user = Users.getCurrent();
+        const parCreators = par.getAuthorInfo()?.usernames;
+
+        if (!parCreators) {
+            return false;
+        }
+        for (const creator of parCreators) {
+            if (creator === user.name) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private isTeacher() {
+        const item = genericglobals().curr_item;
+        if (!item) {
+            return false;
+        }
+
+        return item.rights.teacher;
+    }
+
+    private async deleteChatMessage(
+        docId: number,
+        parId: string,
+        selection: UnbrokenSelection,
+        par: ParContext
+    ) {
+        const confirmDi = window.confirm(
+            $localize`Are you sure you want to delete this message?`
+        );
+        let parClassesString = "";
+        for (const c of par.getClasses()) {
+            parClassesString += "." + c + " ";
+        }
+        parClassesString += ".deletedChat";
+        const text = `#- {${parClassesString}}\n${this.getDeleteReplaceText()}`;
+
+        if (!confirmDi) {
+            return;
+        }
+
+        const extraData = {
+            docId: docId,
+            id: parId,
+            tags: {},
+        };
+        const params: EditPosition = {
+            type: EditType.Edit,
+            pars: selection,
+        };
+        const r = await to(
+            $http.post<IParResponse>("/postParagraph/", {
+                text: text,
+                par: parId,
+                docId: docId,
+                tags: {},
+                view: getViewName(),
+            })
+        );
+        if (!r.ok) {
+            throw Error("deleteChat failed");
+            // return {error: r.result.data.error};
+        } else {
+            const saveData = r.result.data;
+            if (
+                saveData.duplicates &&
+                saveData.duplicates.length > 0 &&
+                saveData.new_par_ids != null
+            ) {
+                const res = await to2(
+                    showRenameDialog({
+                        duplicates: saveData.duplicates,
+                        extraData,
+                        new_par_ids: saveData.new_par_ids,
+                        original_par: saveData.original_par,
+                    })
+                );
+                if (res.ok && !isManageResponse(res.result)) {
+                    this.addSavedParToDom(res.result, params);
+                } else {
+                    this.addSavedParToDom(saveData, params);
+                }
+            } else {
+                this.addSavedParToDom(saveData, params);
+            }
+            if (saveData.warnings && saveData.warnings.length > 0) {
+                const chs = "Changes made:<br>\n" + saveData.warnings;
+                await showMessageDialog(chs);
+            }
+        }
+    }
+
+    /**
+     * Markdown of edit_buttons.
+     * @private
+     */
+    private getEditButtonsText() {
+        const buttons = documentglobals().docSettings.edit_buttons;
+        if (buttons === undefined) {
+            return "";
+        }
+        let buttonsText = "";
+        for (const button of buttons) {
+            if (button.action === "add_below") {
+                buttonsText += `[${button.text}]{.timButton .addBelow}\n`;
+            } else if (button.action === "edit_chat") {
+                buttonsText += `[${button.text}]{.timButton .editChat}\n`;
+            } else if (button.action === "delete_chat") {
+                buttonsText += `[${button.text}]{.timButton .deleteChat}\n`;
+            }
+        }
+        // return "    \\\n" + buttonsText;
+        return "\n\\\n" + buttonsText;
+    }
+
+    /**
+     * Get text to replace paragraph content when chat message is deleted.
+     * @private
+     */
+    private getDeleteReplaceText() {
+        const buttons = documentglobals().docSettings.edit_buttons;
+        const defaultText = $localize`Deleted`;
+        if (buttons === undefined) {
+            return defaultText;
+        }
+        for (const button of buttons) {
+            if (button.action === "delete_chat") {
+                return button.deleteText === undefined
+                    ? defaultText
+                    : button.deleteText;
+            }
+        }
+        return defaultText;
     }
 
     setSelection(s: UserSelection | undefined) {
@@ -345,6 +547,27 @@ export class EditingHandler {
             }
         }
         this.viewctrl.editing = true;
+
+        let firstChatLine = "";
+        let isChatMessage = false;
+        if (documentglobals().docSettings.edit_buttons) {
+            if (options.forcedClasses?.includes("chat")) {
+                isChatMessage = true;
+                // remove first line while editing chat message
+                // #- {.chat forceclass="chat"}
+                const firstLineEnd = initialText.indexOf("\n");
+                if (firstLineEnd !== -1) {
+                    firstChatLine = initialText.substring(0, firstLineEnd + 1);
+                    initialText = initialText.substring(firstLineEnd + 1);
+                }
+
+                // remove buttons while editing chat message
+                initialText = initialText.replace(
+                    this.getEditButtonsText(),
+                    ""
+                );
+            }
+        }
         this.editorLoad = openEditor({
             viewCtrl: this.viewctrl,
             extraData,
@@ -404,6 +627,18 @@ This will delete the whole ${
                 return r.result.data;
             },
             saveCb: async (text, data) => {
+                if (
+                    documentglobals().docSettings.edit_buttons &&
+                    isChatMessage
+                ) {
+                    text = firstChatLine + text;
+                    text = text + this.getEditButtonsText();
+                } else if (
+                    documentglobals().docSettings.edit_buttons &&
+                    options.localSaveTag === "addBelow"
+                ) {
+                    text = text + this.getEditButtonsText();
+                }
                 const r = await to(
                     $http.post<IParResponse>(url, {
                         text,

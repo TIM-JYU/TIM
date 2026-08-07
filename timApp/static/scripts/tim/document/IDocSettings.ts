@@ -1,4 +1,5 @@
 import type {IAnswerBrowserSettings} from "tim/plugin/attributes";
+import * as t from "io-ts";
 import type {ITemplateButton} from "../../../../modules/cs/js/csPlugin";
 
 export type MeetingDateEntry = [string, string, string];
@@ -23,6 +24,24 @@ export interface ILoginHideSettings {
 export interface ILoginSettings {
     hide?: ILoginHideSettings;
 }
+
+/**
+ * Edit button definitions for chat functionality
+ * text: text for button
+ * action: button handler name
+ * deleteText: text to replace chat paragraph content for delete button
+ */
+export const EditButton = t.intersection([
+    t.type({
+        text: t.string,
+        action: t.string,
+    }),
+    t.partial({
+        deleteText: t.string,
+    }),
+]);
+
+export interface IEditButton extends t.TypeOf<typeof EditButton> {}
 
 export interface IDocSettings {
     show_velps?: boolean;
@@ -60,6 +79,7 @@ export interface IDocSettings {
     disable_answer?: string;
     nonAnswerAnnotationsDisabled?: string;
     showFullLanguageNames?: boolean;
+    edit_buttons?: IEditButton[];
 }
 
 export interface ISlideDocSettings extends IDocSettings {

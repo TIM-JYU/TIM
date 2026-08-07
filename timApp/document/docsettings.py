@@ -1,6 +1,5 @@
 import functools
 
-# from copy import deepcopy
 from dataclasses import dataclass, fields
 from datetime import timedelta, datetime, timezone
 from typing import (
@@ -145,6 +144,7 @@ class DocSettingTypes:
     showSettingsTypes: list[str]
     macro_lstrip_blocks: bool
     macro_trim_blocks: bool
+    edit_buttons: list[dict[str, str]]
     __static_macros: dict[str, Any]
     __static_macros_hash: str
 
@@ -212,6 +212,7 @@ class DocSettings:
     auto_confirm_key = "auto_confirm"
     expire_next_doc_message_key = "expire_next_doc_message"
     answer_grace_period_key = "answer_grace_period"
+    edit_buttons_key = "edit_buttons"
 
     @classmethod
     def from_paragraph(cls, par: DocParagraph) -> "DocSettings | None":
@@ -936,6 +937,9 @@ class DocSettings:
 
     def macro_trim_blocks(self) -> bool:
         return self.get_setting_or_default("macro_trim_blocks", True)
+
+    def get_edit_buttons(self, default=None) -> list[dict[str, str]] | None:
+        return self.get_setting_or_default("edit_buttons", [])
 
 
 def resolve_settings_for_pars(pars: Iterable[DocParagraph]) -> YamlBlock:

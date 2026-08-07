@@ -25,6 +25,7 @@ class AuthorInfo:
         entries: dict[int, list[ChangelogEntry]],
         hide: bool = False,
     ) -> None:
+        self.is_teacher = False
         self.authors: dict[Union["User", "UserGroup"], list[ChangelogEntry]] = {}
         for k, v in entries.items():
             self.authors[user_map[k]] = v
