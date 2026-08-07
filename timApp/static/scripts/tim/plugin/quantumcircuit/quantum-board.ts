@@ -301,7 +301,10 @@ export class QuantumBoard {
                     new Control(targetPos.target, true, control.anti)
                 );
             } else {
-                if (newPos.target !== control.target) {
+                if (
+                    newPos.target !== control.target &&
+                    !this.isMultiqubitOrSwapGate(newPos)
+                ) {
                     this.remove(oldPos.target, oldPos.time);
 
                     this.set(
@@ -326,7 +329,10 @@ export class QuantumBoard {
                 );
             } else {
                 const target = this.findControllable(newPos);
-                if (target !== undefined) {
+                if (
+                    target !== undefined &&
+                    !this.isMultiqubitOrSwapGate(newPos)
+                ) {
                     this.remove(oldPos.target, oldPos.time);
                     this.set(
                         newPos.target,
@@ -336,6 +342,15 @@ export class QuantumBoard {
                 }
             }
         }
+    }
+
+    private isMultiqubitOrSwapGate(gatePos: GatePos) {
+        const cell = this.get(gatePos.target, gatePos.time);
+        return (
+            cell instanceof MultiQubitGate ||
+            cell instanceof MultiQubitGateCell ||
+            cell instanceof Swap
+        );
     }
 
     /**
@@ -451,6 +466,24 @@ export class QuantumBoard {
             this.moveSwap(oldPos, newPos, cell);
         } else if (cell instanceof MultiQubitGate) {
             this.moveMultiQubitGate(oldPos, newPos, cell);
+        } else if (cell instanceof MultiQubitGateCell) {
+            const multiQubitCell = this.get(cell.target, oldPos.time);
+            if (multiQubitCell instanceof MultiQubitGate) {
+                const oldAdjusted = {
+                    target: cell.target,
+                    time: oldPos.time,
+                };
+                const newAdjusted = {
+                    target: newPos.target - (oldPos.target - cell.target),
+                    time: newPos.time,
+                };
+
+                this.moveMultiQubitGate(
+                    oldAdjusted,
+                    newAdjusted,
+                    multiQubitCell
+                );
+            }
         } else {
             console.log("unhandled move case", cell);
         }
@@ -674,5 +707,37 @@ export class QuantumBoard {
                 this.board[i][time] = undefined;
             }
         }
+    }
+
+    /**
+     * Get hashmap of gate names and counts in circuit
+     */
+    getGateCounts() {
+        const counts = new Map<string, number>();
+        function addToCounts(name: string) {
+            const val = counts.get(name);
+            if (val === undefined) {
+                counts.set(name, 1);
+            } else {
+                counts.set(name, val + 1);
+            }
+        }
+        for (let i = 0; i < this.board.length; i++) {
+            for (const cell of this.board[i]) {
+                if (cell instanceof Gate || cell instanceof MultiQubitGate) {
+                    addToCounts(cell.name);
+                } else if (cell instanceof Swap && cell.target > i) {
+                    addToCounts("swap");
+                } else if (cell instanceof Control) {
+                    if (cell.anti) {
+                        addToCounts("antiControl");
+                    } else {
+                        addToCounts("control");
+                    }
+                }
+            }
+        }
+
+        return counts;
     }
 }

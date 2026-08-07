@@ -36,6 +36,7 @@ import {GateService} from "tim/plugin/quantumcircuit/gate.service";
         <svg:rect *ngIf="cell|instanceof: Gate as g"
                   [style.stroke]="isSelected ? color.selection : color.fill"
                   [style.stroke-width]="isSelected ? 2 : 1"
+                  [ngClass]="group"
                   [class.gate]="g.editable"
                   [class.drag-over-element]="isBeingDraggedOver"
                   [attr.x]="gx"
@@ -56,6 +57,7 @@ import {GateService} from "tim/plugin/quantumcircuit/gate.service";
 
         <!-- control gate -->
         <svg:circle *ngIf="cell|instanceof: Control as c"
+                    [ngClass]="group"
                     [class.gate]="c.editable"
                     [class.drag-over-element]="isBeingDraggedOver"
                     [attr.cx]="cx"
@@ -67,6 +69,7 @@ import {GateService} from "tim/plugin/quantumcircuit/gate.service";
         
         <!-- Swap gate -->
         <svg:text *ngIf="cell|instanceof: Swap as s"
+                  [ngClass]="group"
                   [class.gate]="s.editable"
                   [class.drag-over-element]="isBeingDraggedOver"
                   [attr.x]="cx"
@@ -81,6 +84,7 @@ import {GateService} from "tim/plugin/quantumcircuit/gate.service";
         <svg:rect *ngIf="cell|instanceof: MultiQubitGate as g"
                   [style.stroke]="isSelected ? color.selection : color.fill"
                   [style.stroke-width]="isSelected ? 2 : 1"
+                  [ngClass]="group"
                   [class.gate]="g.editable"
                   [class.drag-over-element]="isBeingDraggedOver"
                   [attr.x]="gx"
@@ -145,6 +149,8 @@ export class QuantumCellComponent implements OnInit, AfterViewInit, OnChanges {
 
     color!: Color;
 
+    group?: string;
+
     backGroundHeight!: number;
 
     rx!: number;
@@ -202,6 +208,7 @@ export class QuantumCellComponent implements OnInit, AfterViewInit, OnChanges {
             const group = this.gateService.getGateGroup(this.cell.name);
             serviceGate = this.gateService.getGate(this.cell.name);
             groupColor = this.circuitOptions.gateColors.get(group ?? "");
+            this.group = group;
         } else if (this.cell instanceof Control) {
             const targetCell = this.board.get(this.cell.target, this.time);
             // use same color for control as its target
@@ -218,9 +225,11 @@ export class QuantumCellComponent implements OnInit, AfterViewInit, OnChanges {
                 );
                 serviceGate = this.gateService.getGate(name);
             }
+            this.group = this.cell.anti ? "antiControl" : "control";
         } else if (this.cell instanceof Swap) {
             const group = this.gateService.getGateGroup("swap");
             groupColor = this.circuitOptions.gateColors.get(group ?? "");
+            this.group = group;
         }
         this.color = {
             fill: serviceGate?.color ?? groupColor?.fill ?? "white",

@@ -21,6 +21,12 @@ interface AnswerIncorrectRow {
                 <p i18n>With values:</p>
                 <p>{{error.values}}</p>
             </div>
+            
+            <div *ngIf="error.errorType === 'gate-count-condition-invalid'">
+                <p i18n>Gate counts don't match:</p>
+                <p><ng-container i18n>Expected</ng-container> {{error.name}} <ng-container i18n>with max count:</ng-container> {{error.expected}}</p>
+                <p><ng-container i18n>But count was:</ng-container> {{error.actual}}</p>
+            </div>
 
             <div *ngIf="error.errorType === 'condition-not-interpretable'">
                 <p i18n>Unable to interpret condition:</p>

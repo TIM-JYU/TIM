@@ -1,4 +1,4 @@
-<?xml version='1.0' encoding='UTF-8'?>
+<?xml version="1.0" encoding="UTF-8"?>
 <xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" version="1.2">
   <file source-language="en-US" datatype="plaintext" original="ng2.template" target-language="fi">
     <body>
@@ -8897,8 +8897,8 @@
         </context-group>
       </trans-unit>
       <trans-unit id="187187500641108332" datatype="html">
-        <source><x id="INTERPOLATION" equiv-text="Folder() ?? 'Enter the location or leave empty'}}"/></source>
-        <target state="translated"><x id="INTERPOLATION" equiv-text="foTitle()}}"/></target>
+        <source><x id="INTERPOLATION" equiv-text="Folder() ?? &apos;Enter the location or leave empty&apos;}}"/></source>
+        <target state="new"><x id="INTERPOLATION" equiv-text="Folder() ?? &apos;Enter the location or leave empty&apos;}}"/></target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/user-group-dialog.component.ts</context>
           <context context-type="linenumber">61,62</context>
@@ -11513,6 +11513,30 @@ Syötä useiden käyttäjien osoitteet allekkain tai pilkulla erotettuina.</targ
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
           <context context-type="linenumber">618,620</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="5792644276297781479" datatype="html">
+        <source>Gate counts don&apos;t match:</source>
+        <target state="translated">Porttien määrät eivät täsmää:</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/quantum-error.component.ts</context>
+          <context context-type="linenumber">26</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="127351648487130220" datatype="html">
+        <source>with max count:</source>
+        <target state="translated">maksimimäärällä:</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/quantum-error.component.ts</context>
+          <context context-type="linenumber">27</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="293983085507063952" datatype="html">
+        <source>But count was:</source>
+        <target state="translated">Mutta määrä oli:</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/quantum-error.component.ts</context>
+          <context context-type="linenumber">28</context>
         </context-group>
       </trans-unit>
     </body>

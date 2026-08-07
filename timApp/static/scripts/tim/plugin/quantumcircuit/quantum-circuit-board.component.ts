@@ -15,6 +15,8 @@ import {CircuitOptions} from "tim/plugin/quantumcircuit/quantum-circuit.componen
 import type {QubitOutput} from "tim/plugin/quantumcircuit/quantum-circuit.component";
 import {
     Control,
+    MultiQubitGate,
+    MultiQubitGateCell,
     QuantumBoard,
     Swap,
 } from "tim/plugin/quantumcircuit/quantum-board";
@@ -50,6 +52,7 @@ export interface GateBeingDragged {
     gate: GatePos;
     offset: [number, number];
     originalBounds: DOMRect;
+    multiqubitOffset?: number;
 }
 
 @Component({
@@ -438,11 +441,12 @@ export class QuantumCircuitBoardComponent implements OnInit {
         if (!event.currentTarget) {
             return;
         }
-        if (this.board.get(target, time) === undefined) {
+        const cell = this.board.get(target, time);
+        if (cell === undefined) {
             this.gateSelect.emit({target: target, time: time});
             return;
         }
-        if (this.board.get(target, time)?.editable === false) {
+        if (!cell?.editable) {
             this.gateSelect.emit({target: target, time: time});
             return;
         }
@@ -452,6 +456,7 @@ export class QuantumCircuitBoardComponent implements OnInit {
         ) {
             return;
         }
+
         const [cursorX, cursorY] = this.getCursorPosition(event);
         const offset = this.getMousePosition(cursorX, cursorY);
         if (!offset) {
@@ -461,11 +466,22 @@ export class QuantumCircuitBoardComponent implements OnInit {
 
         // Get all the transforms currently on this element
 
+        let dragGate = {target: target, time: time};
+        let multiqubitOffset;
+        if (cell instanceof MultiQubitGateCell) {
+            dragGate = {
+                target: cell.target,
+                time: time,
+            };
+            multiqubitOffset = target - cell.target;
+        }
+
         const transforms = group.transform.baseVal;
         this.gateBeingDragged = {
-            gate: {target: target, time: time},
+            gate: dragGate,
             offset: offset,
             originalBounds: group.getBoundingClientRect(),
+            multiqubitOffset: multiqubitOffset,
         };
 
         this.addInitialTransform(group);
@@ -524,8 +540,9 @@ export class QuantumCircuitBoardComponent implements OnInit {
         // Notice that this is quite slow but there aren't that many cells, so it should be fast enough.
         const gates =
             this.svgElement.nativeElement.getElementsByClassName("gate-drop");
+        const collisions = [];
         for (const gate of gates) {
-            if (gate instanceof SVGGElement && gate !== group) {
+            if (gate instanceof SVGGElement) {
                 const r = gate.getBoundingClientRect();
                 // cursor is inside cell
                 if (
@@ -537,17 +554,31 @@ export class QuantumCircuitBoardComponent implements OnInit {
                     const target = gate.getAttribute("data-target");
                     const time = gate.getAttribute("data-time");
                     if (target === null || time === null) {
-                        return undefined;
+                        continue;
                     }
                     const targetNum = parseInt(target, 10);
                     const timeNum = parseInt(time, 10);
 
-                    return {
-                        target: targetNum,
-                        time: timeNum,
-                    };
+                    collisions.push({target: targetNum, time: timeNum});
                 }
             }
+        }
+
+        if (collisions.length > 1) {
+            // select subcell as target if possible, subcell has bigger target number
+            collisions.sort((a, b) => a.target - b.target).reverse();
+            for (const collision of collisions) {
+                if (
+                    collision.time === this.gateBeingDragged.gate.time &&
+                    collision.target === this.gateBeingDragged.gate.target
+                ) {
+                    continue;
+                }
+                return collision;
+            }
+        }
+        if (collisions.length === 1) {
+            return collisions[0];
         }
         return undefined;
     }
@@ -593,7 +624,8 @@ export class QuantumCircuitBoardComponent implements OnInit {
             groupBounds.x <= cursorX &&
             cursorX <= groupBounds.right &&
             groupBounds.y <= cursorY &&
-            cursorY <= groupBounds.bottom
+            cursorY <= groupBounds.bottom &&
+            !this.isMultiqubitSubMove()
         ) {
             this.gateSelect.emit(this.gateBeingDragged.gate);
             this.gateBeingDragged = null;
@@ -605,13 +637,45 @@ export class QuantumCircuitBoardComponent implements OnInit {
         const colliding = this.getColliding(cursorX, cursorY);
 
         if (colliding) {
+            const originalPos = this.gateBeingDragged.gate;
+            if (this.gateBeingDragged.multiqubitOffset !== undefined) {
+                originalPos.target =
+                    originalPos.target + this.gateBeingDragged.multiqubitOffset;
+            }
             this.gateMove.emit({
-                from: this.gateBeingDragged.gate,
+                from: originalPos,
                 to: colliding,
             });
         }
 
         this.gateBeingDragged = null;
         this.dragOverElement = null;
+    }
+
+    /**
+     * Check if moving multiqubit gate to its sub element
+     */
+    isMultiqubitSubMove() {
+        if (this.gateBeingDragged === null) {
+            return false;
+        }
+        if (this.dragOverElement === null) {
+            return false;
+        }
+        const cell = this.board.get(
+            this.gateBeingDragged.gate.target,
+            this.gateBeingDragged.gate.time
+        );
+        if (!(cell instanceof MultiQubitGate)) {
+            return false;
+        }
+
+        const target = this.gateBeingDragged.gate.target;
+        const time = this.gateBeingDragged.gate.time;
+        const target2 = this.dragOverElement.target;
+        const time2 = this.dragOverElement.time;
+        const size = cell.size;
+
+        return time === time2 && target <= target2 && target2 < target + size;
     }
 }

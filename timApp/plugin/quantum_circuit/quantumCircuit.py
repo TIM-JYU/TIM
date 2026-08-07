@@ -70,6 +70,12 @@ class CustomGateInfo:
 
 
 @dataclass
+class GateCountInfo:
+    name: str
+    count: int
+
+
+@dataclass
 class NumericCustomGateInfo:
     name: str
     matrix: str
@@ -105,6 +111,14 @@ class ConditionNotInterpretableError:
 class ConditionInvalidError:
     condition: str
     errorType: str = "condition-invalid"
+
+
+@dataclass
+class GateCountConditionInvalidError:
+    name: str
+    expected: int
+    actual: int
+    errorType: str = "gate-count-condition-invalid"
 
 
 @dataclass
@@ -168,6 +182,7 @@ ErrorType = Union[
     ConditionsNotSatisfiedError,
     ConditionNotInterpretableError,
     ConditionInvalidError,
+    GateCountConditionInvalidError,
     AnswerIncorrectError,
     AnswerIncorrectErrorExact,
     MatrixIncorrectError,
@@ -211,6 +226,7 @@ class QuantumCircuitMarkup(GenericMarkupModel):
     initialCircuit: list[GateInfo] | None = None
     customGates: list[CustomGateInfo] | None = None
     gates: list[str] | None = None
+    gateCounts: list[GateCountInfo] | None = None
     simulate: str | None = None
 
     leftAxisLabel: str | None = None
@@ -323,7 +339,9 @@ def get_extra_gates() -> dict[str, np.ndarray]:
             [0, 1 / np.sqrt(2), -1 / np.sqrt(2), 0],
         ]
     )
-    return {"SX": sx, "B": B, "D": D}
+    s_inv = np.array([[1, 0], [0, -1j]], complex)
+    t_inv = np.array([[1, 0], [0, 1 / np.sqrt(2) - 1j / np.sqrt(2)]], complex)
+    return {"SX": sx, "B": B, "D": D, "S*": s_inv, "T*": t_inv}
 
 
 def get_gate_matrix(
@@ -350,17 +368,19 @@ def get_gate_matrix(
 
 def get_all_gate_names(custom_gates: dict[str, np.ndarray]) -> set[str]:
     """
-    Get all available names of gates including some default gate names and
+    Get all available names of gates including some default gate names, extra gate names and
     names from custom gate definitions.
     :param custom_gates:
     :return:
     """
     custom_names = custom_gates.keys()
     def_names = ["H", "X", "Y", "Z", "S", "T", "swap"]
+    extra_names = get_extra_gates().keys()
 
     all_names: set[str] = set()
     all_names.update(custom_names)
     all_names.update(def_names)
+    all_names.update(extra_names)
 
     return all_names
 
@@ -862,6 +882,50 @@ def check_circuits_equal(
     return True
 
 
+def check_gate_counts_condition(
+    circuit: list[GateInfo], gate_counts: list[GateCountInfo]
+) -> tuple[bool, ErrorType | None]:
+    """
+    Check that circuit doesn't have more gates than specified in gate_counts
+    :param circuit: circuit to check
+    :param gate_counts:
+    :return:
+    """
+    circuit_counts: defaultdict[str, int] = defaultdict(int)
+    for gate_def in circuit:
+        if isinstance(gate_def, NormalGateInfo):
+            circuit_counts[gate_def.name] += 1
+            if gate_def.controls and len(gate_def.controls) > 0:
+                circuit_counts["control"] += len(gate_def.controls)
+            if gate_def.antiControls and len(gate_def.antiControls) > 0:
+                circuit_counts["antiControl"] += len(gate_def.antiControls)
+
+        elif isinstance(gate_def, SwapGateInfo):
+            circuit_counts["swap"] += 1
+            if gate_def.controls and len(gate_def.controls) > 0:
+                circuit_counts["control"] += len(gate_def.controls)
+            if gate_def.antiControls and len(gate_def.antiControls) > 0:
+                circuit_counts["antiControl"] += len(gate_def.antiControls)
+        else:
+            log_warning(f"quantum: undefined gate type {gate_def}")
+
+    gate_counts_dict: dict[str, int] = {}
+
+    for gate_count in gate_counts:
+        gate_counts_dict[gate_count.name] = gate_count.count
+
+    for name, count in circuit_counts.items():
+        if name not in gate_counts_dict:
+            return False, GateCountConditionInvalidError(name, 0, count)
+        expected_max_count = gate_counts_dict[name]
+        if count > expected_max_count:
+            return False, GateCountConditionInvalidError(
+                name, expected_max_count, count
+            )
+
+    return True, None
+
+
 def answer(args: QuantumCircuitAnswerModel) -> PluginAnswerResp:
     model_circuit = args.markup.modelCircuit
     model_input = args.markup.modelInput
@@ -883,11 +947,20 @@ def answer(args: QuantumCircuitAnswerModel) -> PluginAnswerResp:
 
     custom_gates = parse_custom_gates(args.input.customGates)
 
+    gate_counts = args.markup.gateCounts
+
     valid_conditions = True
     if model_conditions is not None:
         is_valid, message = check_conditions(
             model_conditions, user_circuit, n_measurements, custom_gates, user_input
         )
+        if not is_valid:
+            valid_conditions = False
+            error = asdict(message) if message else "Unknown error"
+            points = 0.0
+            result = ""
+    if user_circuit is not None and gate_counts is not None:
+        is_valid, message = check_gate_counts_condition(user_circuit, gate_counts)
         if not is_valid:
             valid_conditions = False
             error = asdict(message) if message else "Unknown error"
