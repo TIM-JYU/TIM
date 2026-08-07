@@ -279,13 +279,18 @@ export class StackPluginComponent
         }
 
         this.focusedInputElement = null;
+
         this.focusedInputId = "";
         this.savedText = "";
-
         const target = event.target as HTMLElement;
+
         if (!this.originalUserCode && target instanceof HTMLInputElement) {
             this.userCode = target.value;
         }
+
+        // Flush the DOM to userCode
+        this.stopTimer();
+        this.collectAnswer("");
 
         if (this.isUnSaved()) {
             this.save();
