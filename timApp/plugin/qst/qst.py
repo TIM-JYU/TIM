@@ -141,6 +141,7 @@ class QstMarkupModel(GenericMarkupModel):
     json: dict[Any, Any] | None | Missing = missing
     title: str | None | Missing = missing
     showResult: bool | None | Missing = missing
+    keys: list[list[str]] | Missing = missing
 
 
 QstBasicState = list[list[int | str]]
@@ -255,16 +256,22 @@ def qst_answer_jso(m: QstAnswerModel):
         tim_info["points"] = points
 
     webstate = answers
-    if markup.saveKey:
+    if markup.saveKey or markup.keys:
+        if not markup.saveKey:
+            markup.saveKey = "c"
         answers = {markup.saveKey: answers}
     if rand_arr is not None:
         # TODO: Schema?
-        answers = {"c": answers, "order": rand_arr}
+        answers = {"c": webstate, "order": rand_arr}
         m.markup.rows = qst_set_array_order(m.markup.rows, rand_arr)
         if m.markup.expl is not missing:
             m.markup.expl = qst_pick_expls(m.markup.expl, rand_arr)
     if isinstance(extra, dict) and extra and isinstance(answers, dict):
         answers = {**answers, **extra}
+    if markup.keys:
+        answers["k"] = ",".join(
+            markup.keys[i][int(a) - 1] for i, ans in enumerate(webstate) for a in ans
+        )
 
     result = False
     if (

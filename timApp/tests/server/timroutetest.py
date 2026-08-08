@@ -1130,6 +1130,30 @@ class TimRouteTestBase(TimDbTest):
             else None
         )
 
+    def try_create_translation(
+        self,
+        doc: DocEntry,
+        doc_title: str = "title",
+        lang: str = "en",
+        expect_contains=None,
+        expect_content=None,
+        expect_status=200,
+        **kwargs,
+    ) -> Translation:
+        dt = self.create_translation(
+            doc,
+            doc_title,
+            lang,
+            expect_contains,
+            expect_content,
+            expect_status,
+            **kwargs,
+        )
+        assert (
+            dt is not None
+        ), f"Translation creation failed with status {expect_status}"
+        return dt
+
     def assert_content(self, element: HtmlElement, expected: list[str]):
         pars = get_content(element)
         self.assertEqual(expected, pars)
