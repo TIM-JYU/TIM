@@ -101,6 +101,11 @@ function hideSideMenu(hide: IVisibilityVars) {
     hide.scoreBoard = true;
 }
 
+function hideEditMenu(hide: IVisibilityVars) {
+    hide.editLine = true;
+    hide.noteBadgeButton = true;
+}
+
 export function getVisibilityVars() {
     const params = getUrlParams();
     const g = someglobals();
@@ -114,6 +119,9 @@ export function getVisibilityVars() {
         }
         if (g.hideTopButtons) {
             hideTopButtonsStuff(hide);
+        }
+        if (g.hideEditMenu) {
+            hideEditMenu(hide);
         }
         if (g.docSettings.login) {
             hide = {...hide, ...g.docSettings.login?.hide};
@@ -158,6 +166,9 @@ export function getVisibilityVars() {
     }
     if (params.get("pars_only")) {
         hideParsOnlyStuff(hide);
+    }
+    if (params.get("hide_edit_menu")) {
+        hideEditMenu(hide);
     }
 
     // Don't show Search UI if user is not logged in.

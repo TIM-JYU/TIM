@@ -1148,6 +1148,7 @@ def render_doc_view(
         hide_top_buttons=should_hide_top_buttons(doc_settings, rights),
         pars_only=m.pars_only or should_hide_paragraphs(doc_settings, rights),
         hide_sidemenu=should_hide_sidemenu(doc_settings, rights),
+        hide_editmenu=should_hide_editmenu(doc_settings, rights),
         show_unpublished_bg=show_unpublished_bg,
         exam_mode=exam_mode,
         rights=rights,
@@ -1278,6 +1279,10 @@ def should_hide_paragraphs(settings: DocSettings, rights: dict):
 
 def should_hide_sidemenu(settings: DocSettings, rights: dict):
     return has_no_higher_right(settings.hide_sidemenu(), rights)
+
+
+def should_hide_editmenu(settings: DocSettings, rights: dict):
+    return has_no_higher_right(settings.hide_editmenu(), rights)
 
 
 def is_exam_mode(settings: DocSettings, rights: UserItemRights):

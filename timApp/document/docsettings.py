@@ -97,6 +97,7 @@ class DocSettingTypes:
     themes: list[str]
     override_user_themes: bool
     hide_sidemenu: str | None
+    hide_editmenu: str | None
     answer_submit_time_tolerance: int
     scoreboard_docs: list[str]
     show_scoreboard: bool
@@ -795,6 +796,9 @@ class DocSettings:
 
     def hide_sidemenu(self) -> str | None:
         return self.get_setting_or_default("hide_sidemenu", None)
+
+    def hide_editmenu(self) -> str | None:
+        return self.get_setting_or_default("hide_editmenu", None)
 
     def answer_submit_time_tolerance(self) -> timedelta:
         r = self.get_setting_or_default("answer_submit_time_tolerance", 1000)

@@ -127,6 +127,7 @@ export interface IDocumentGlobals extends IItemGlobals {
     memoMinutesSettings?: IMeetingMemoSettings;
     editMode: EditMode | null;
     hideLinks: boolean;
+    hideEditMenu: boolean;
     hideTopButtons: boolean;
     index: HeaderIndexItem[];
     lectureMode: boolean;
