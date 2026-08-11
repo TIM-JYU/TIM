@@ -43,6 +43,8 @@ from timApp.util.utils import (
     fin_timezone,
     get_current_time,
     partition,
+    get_qst_index,
+    list_to_string,
 )
 
 ALL_ANSWERED_WILDCARD = "*"
@@ -54,7 +56,7 @@ def chunks(l: list, n: int):
 
 
 tallyfield_re = re.compile(
-    r"tally:(?:(?P<validity>count_only_valid|count_all):)?((?P<doc>\d+)\.)?(?P<field>[a-zA-Z0-9öäåÖÄÅ_-]+)(?:.(?P<subfield>[a-zA-Z0-9öäåÖÄÅ_-]+))?(\[ *(?P<ds>[^\[\],]*) *, *(?P<de>[^\[\],]*) *\])?"
+    r"tally:(?:(?P<validity>count_only_valid|count_all):)?((?P<doc>\d+)\.)?(?P<field>[a-zA-Z0-9öäåÖÄÅ_-]+)(?:.(?P<subfield>[a-zA-Z0-9öäåÖÄÅ_-]+))?(\[ *(?P<ds>[^\[\],]*) *, *(?P<de>[^\[\],]*) *])?"
 )
 
 
@@ -542,12 +544,8 @@ def get_fields_and_users(
                     if type(p) is dict:
                         p = p.get("c")
                     if type(p) is list:
-                        from plugin.jsrunner.util import get_qst_index
-
                         index = get_qst_index(task.field, len(p))
                         # value = ", ".join(map(str, p[index])) if len(p) > 0 else None
-                        from plugin.jsrunner.util import list_to_string
-
                         value = list_to_string(p[index]) if len(p) > 0 else None
                 elif task.field == "count":
                     continue
