@@ -238,7 +238,8 @@ def get_velp_content_for_document(
         .join(VelpContent, sq.c.ver == VelpContent.version_id)
         .filter(VelpContent.language_id == language_id)
         .filter(
-            (Velp.valid_until is None) | (Velp.valid_until >= func.current_timestamp())
+            (Velp.valid_until.is_(None))
+            | (Velp.valid_until >= func.current_timestamp())
         )
         .join(VelpInGroup)
         .join(
@@ -279,7 +280,7 @@ def get_velp_label_content_for_document(
             .join(Velp)
             .filter(
                 (Velp.valid_until >= func.current_timestamp())
-                | (Velp.valid_until is None)
+                | (Velp.valid_until.is_(None))
             )
             .join(VelpInGroup)
             .join(
