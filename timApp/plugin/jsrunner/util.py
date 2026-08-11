@@ -226,36 +226,11 @@ class AllowedOverwriteOptions:
         )
 
 
-def get_qst_index(qfield: str, qmax: int) -> int:
-    """
-    Given a qfield and a value, return the index of the qfield in the list
-    If just qst[ return 0
-    :param qfield: string like qst[2] => 1
-    :param qmax: max len for answer
-    :return: index after [
-    """
-    m: Match[str] | None | Match[bytes] = re.fullmatch(r"qst\[(\d+)]?", qfield)
-    if m:
-        index = int(m.group(1)) - 1
-        if index < 0:
-            return 0
-        if index >= qmax:
-            return qmax - 1
-        return index
-    return 0
-
-
-def list_to_string(lst):
-    sio = StringIO()
-    csv.writer(sio).writerow(lst)
-    return sio.getvalue().rstrip("\r\n")
-
-
-def parse_list(s):
+def parse_list(s: Any) -> list[int | str]:
     if not isinstance(s, str):
         s = str(s)
     row = next(csv.reader(StringIO(s), skipinitialspace=True))
-    result = []
+    result: list[int | str] = []
     for item in row:
         item = item.strip()
         try:
