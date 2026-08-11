@@ -1,12 +1,10 @@
 import copy
-import re
 import csv
 from io import StringIO
 import json
 from collections import defaultdict
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
-from re import Match
 from typing import TypedDict, Any, DefaultDict, Literal, Sequence
 
 from sqlalchemy import func, select, Row
@@ -52,7 +50,6 @@ from timApp.user.user import (
     User,
     UserInfo,
     UserOrigin,
-    teacher_access_set,
     view_access_set,
 )
 from timApp.user.usergroup import UserGroup
@@ -63,7 +60,12 @@ from timApp.util.get_fields import (
     ALL_ANSWERED_WILDCARD,
     MembershipFilter,
 )
-from timApp.util.utils import is_valid_email, approximate_real_name
+from timApp.util.utils import (
+    is_valid_email,
+    approximate_real_name,
+    get_qst_index,
+    parse_list,
+)
 from tim_common.marshmallow_dataclass import class_schema
 from tim_common.utils import parse_bool
 
@@ -224,20 +226,6 @@ class AllowedOverwriteOptions:
             points=parse_bool(markup.get("canOverwritePoints", False)),
             validity=parse_bool(markup.get("canOverwriteValidity", False)),
         )
-
-
-def parse_list(s: Any) -> list[int | str]:
-    if not isinstance(s, str):
-        s = str(s)
-    row = next(csv.reader(StringIO(s), skipinitialspace=True))
-    result: list[int | str] = []
-    for item in row:
-        item = item.strip()
-        try:
-            result.append(int(item))
-        except ValueError:
-            result.append(item)
-    return result
 
 
 def save_fields(
