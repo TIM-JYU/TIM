@@ -416,7 +416,9 @@ export class StackPluginComponent
             );
             this.stackAnswerNotes = this.replace(JSON.stringify(r.answernotes));
         }
-        this.stackScore = r.score.toString();
+        if (r.score) {
+            this.stackScore = r.score.toString();
+        }
         this.stackTime = `Request Time: ${r.request_time.toFixed(
             2
         )} Api Time: ${r.api_time.toFixed(2)}`;

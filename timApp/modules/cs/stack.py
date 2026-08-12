@@ -86,8 +86,11 @@ class Stack(Language):
         )
         stack_data["question"] = q_data
 
-        if not prev_answer and nosave or get_task or hide_results:
+        if not prev_answer and nosave or get_task:
             stack_data["score"] = False
+            stack_data["feedback"] = False
+        if hide_results:
+            stack_data["score"] = True
             stack_data["feedback"] = False
         stack_data["answer"] = data.get("answer")
         stack_data["prefix"] = data.get("prefix")
@@ -108,7 +111,11 @@ class Stack(Language):
             r = r.json()
         except json.JSONDecodeError:
             return 1, "", str(r.content.decode()), ""
-        out = "Score: %s" % r.get("score", 0)
+
+        if "score" in r:
+            out = "Score: %s" % r.get("score", 0)
+            del r["score"]  # Don't leak the score in the response
+
         # r['questiontext'] = tim_sanitize(r['questiontext'])
 
         if nosave:
