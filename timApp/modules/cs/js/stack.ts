@@ -1,11 +1,6 @@
 ﻿import * as t from "io-ts";
-import {
-    ApplicationRef,
-    DoBootstrap,
-    ElementRef,
-    HostListener,
-    ViewChild,
-} from "@angular/core";
+import type {ApplicationRef, DoBootstrap} from "@angular/core";
+import {HostListener} from "@angular/core";
 import {Component, NgModule} from "@angular/core";
 import {ParCompiler} from "tim/editor/parCompiler";
 import {
