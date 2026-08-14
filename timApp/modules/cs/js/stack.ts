@@ -1,5 +1,6 @@
 ﻿import * as t from "io-ts";
 import type {ApplicationRef, DoBootstrap} from "@angular/core";
+import {HostListener} from "@angular/core";
 import {Component, NgModule} from "@angular/core";
 import {ParCompiler} from "tim/editor/parCompiler";
 import {
@@ -18,11 +19,14 @@ import {PurifyModule} from "tim/util/purify.module";
 import {ScriptedInnerHTMLModule} from "tim/util/scripted-inner-html.module";
 import {registerPlugin} from "tim/plugin/pluginRegistry";
 import {CommonModule} from "@angular/common";
+import DOMPurify from "dompurify";
 
 const STACK_VARIABLE_PREFIX = "stackapi_";
 
 const StackMarkup = t.intersection([
     t.partial({
+        autosave: t.boolean,
+        showAnswersOnLoad: t.boolean,
         beforeOpen: t.string,
         buttonBottom: t.boolean,
         by: t.string,
@@ -99,7 +103,7 @@ interface IStackData {
                         class="timButton btn-sm"
                         (click)="runGetTask()">Show task
                 </button>
-                <button *ngIf="isOpen"
+                <button *ngIf="isOpen && !markup.autosave"
                         [disabled]="isRunning"
                         title="(Ctrl-S)"
                         class="timButton btn-sm"
@@ -111,15 +115,14 @@ interface IStackData {
                         (click)="runPeek()">Peek
                 </button>
             </p>
-            <div *ngIf="stackPeek" class="peekdiv" id="peek" style="min-height: 10em;">
-                <div></div>
-            </div>
             <div *ngIf="stackInputFeedback" id="stackinputfeedback"
                  class="stackinputfeedback1"
                  [scriptedInnerHTML]="stackInputFeedback"></div>
             <span class="csRunError"
                   *ngIf="error"
                   [innerHtml]="error | purify"></span>
+            &nbsp;&nbsp;
+            <span *ngIf="savedText" class="savedtext">{{savedText}}</span>
 
             <div *ngIf="stackFeedback">
                 <div *ngIf="markup.generalfeedback">
@@ -202,8 +205,12 @@ export class StackPluginComponent
     private lastInputFieldId: string = "";
     private lastInputFieldValue: string = "";
     private lastInputFieldElement?: HTMLInputElement;
+    private focusedInputId: string = "";
+    private focusedInputElement?: HTMLInputElement | null = null;
     button: string = "";
     inputplaceholder!: string;
+    savedText: string = "";
+    inputs?: HTMLInputElement[];
 
     private timer?: number;
 
@@ -232,6 +239,10 @@ export class StackPluginComponent
             this.runGetTask();
         }
 
+        if (this.markup.showAnswersOnLoad) {
+            this.showResponseWithoutAnswering();
+        }
+
         if (!this.attrsall.preview) {
             this.vctrl.addTimComponent(this);
         }
@@ -240,6 +251,59 @@ export class StackPluginComponent
     ngOnDestroy() {
         if (!this.attrsall.preview) {
             this.vctrl.removeTimComponent(this);
+        }
+    }
+
+    @HostListener("focusin", ["$event"])
+    onFocusIn(event: FocusEvent) {
+        if (!this.markup.autosave) {
+            return;
+        }
+
+        const target = event.target as HTMLElement;
+
+        if (target instanceof HTMLInputElement) {
+            this.focusedInputId = target.id;
+        }
+    }
+
+    @HostListener("focusout", ["$event"])
+    onFocusOut(event: FocusEvent) {
+        if (!this.markup.autosave) {
+            return;
+        }
+
+        this.focusedInputElement = null;
+
+        this.focusedInputId = "";
+        this.savedText = "";
+        const target = event.target as HTMLElement;
+
+        if (!this.originalUserCode && target instanceof HTMLInputElement) {
+            this.userCode = target.value;
+        }
+
+        // Flush the DOM to userCode
+        this.stopTimer();
+        this.collectAnswer("");
+
+        if (this.isUnSaved()) {
+            this.save();
+        }
+    }
+
+    async showResponseWithoutAnswering(): Promise<void> {
+        const taskId = this.getTaskId()?.docTask();
+        if (!taskId) {
+            return;
+        }
+        const ab = await this.vctrl.getAnswerBrowserAsync(taskId);
+        if (!ab) {
+            return;
+        }
+        await ab.loader.abLoad.promise;
+        if (ab.answers.length > 0) {
+            this.runSend(false, true, true);
         }
     }
 
@@ -310,7 +374,11 @@ export class StackPluginComponent
         return s;
     }
 
-    async handleServerResult(r: StackResult, getTask: boolean) {
+    async handleServerResult(
+        r: StackResult,
+        getTask: boolean,
+        getPrevAnswer: boolean
+    ) {
         if (typeof r === "string") {
             this.error = r.toString();
             return;
@@ -319,9 +387,8 @@ export class StackPluginComponent
             this.error = r.message;
             return;
         }
-
         const qt = this.replace(r.questiontext);
-        const i = qt.indexOf('<div class="stackinputfeedback"');
+        const i = qt.indexOf('<div class="stackinputfeedback"'); // Mahdollinen bugi
         const helper = await import("../stack/ServerSyncValues");
         windowAsAny().ServerSyncValues = helper.ServerSyncValues;
         windowAsAny().findParentElementFromScript =
@@ -334,7 +401,7 @@ export class StackPluginComponent
             this.stackInputFeedback = qt.substr(i);
         }
 
-        if (!getTask) {
+        if (!getTask || getPrevAnswer) {
             this.stackFeedback = this.replace(r.generalfeedback);
             this.stackFormatCorrectResponse = this.replace(
                 r.formatcorrectresponse
@@ -344,7 +411,9 @@ export class StackPluginComponent
             );
             this.stackAnswerNotes = this.replace(JSON.stringify(r.answernotes));
         }
-        this.stackScore = r.score.toString();
+        if (r.score) {
+            this.stackScore = r.score.toString();
+        }
         this.stackTime = `Request Time: ${r.request_time.toFixed(
             2
         )} Api Time: ${r.api_time.toFixed(2)}`;
@@ -355,11 +424,16 @@ export class StackPluginComponent
         const inputse = html.find("textarea");
         $(inputs).on("keyup", (e) => this.inputHandler(e));
         $(inputse).on("keyup", (e) => this.inputHandler(e));
-        if (getTask) {
+        if (getTask && !this.markup.autosave) {
             // remove input validation texts
             const divinput = this.element.find(".stackinputfeedback");
-            divinput.remove();
+            divinput.addClass("hidden");
         }
+    }
+
+    parseElements(qt: string) {
+        const parser = new DOMParser();
+        return parser.parseFromString(DOMPurify.sanitize(qt), "text/html");
     }
 
     inputHandler(e: JQuery.TriggeredEvent) {
@@ -374,6 +448,7 @@ export class StackPluginComponent
         }
         this.lastInputFieldId = id;
         this.lastInputFieldValue = target.value;
+        this.savedText = "";
         this.autoPeekInput(id);
     }
 
@@ -386,12 +461,28 @@ export class StackPluginComponent
             this.error = r.message;
             return;
         }
-        const peekDiv = this.element.find(".peekdiv");
-        const peekDivC = peekDiv.children();
-        // editorDiv.empty();
-        const pdiv = $(`<div><div class="math">${r.questiontext}</div></div>`);
-        await ParCompiler.processAllMath(pdiv);
-        peekDivC.replaceWith(pdiv); // TODO: still flashes
+
+        const el = this.parseElements(r.questiontext).querySelector(
+            "div.stackinputfeedback"
+        );
+
+        if (!el) {
+            return;
+        }
+
+        const curEl = this.element.get()[0];
+        const curMathEl = curEl.querySelector(
+            `div#${el.id}.stackinputfeedback`
+        );
+
+        if (!curMathEl) {
+            return;
+        }
+
+        curMathEl.replaceWith(el);
+
+        el.classList.add("math");
+        await ParCompiler.processAllMath(this.element);
     }
 
     autoPeekInput(id: string) {
@@ -435,10 +526,10 @@ export class StackPluginComponent
             return;
         }
         this.isRunning = true;
-        if (!this.stackPeek) {
+        if (!this.stackPeek && !this.markup.autosave) {
             // remove extra fields from screen
             let divinput = this.element.find(".stackinputfeedback");
-            divinput.remove();
+            divinput.addClass("hidden");
             divinput = this.element.find(".stackprtfeedback");
             divinput.remove();
             divinput = this.element.find(".stackpartmark");
@@ -455,7 +546,6 @@ export class StackPluginComponent
                 stackData: {...data},
             },
         });
-
         this.isRunning = false;
         if (!r.ok) {
             this.error = r.result.error.error;
@@ -473,21 +563,23 @@ export class StackPluginComponent
         await this.runSend(true);
     }
 
-    async runSend(getTask = false) {
+    async runSend(getTask = false, getPrevAnswer = false, nosave = false) {
         if (this.pluginMeta.isPreview()) {
             this.error = "Cannot run plugin while previewing.";
             return;
         }
         this.stackPeek = false;
         this.error = "";
+        this.savedText = "";
         this.isRunning = true;
         const stackData = this.collectData();
-
         const r = await this.postAnswer<{
             web: {stackResult: StackResult; error?: string};
         }>({
             input: {
                 getTask: getTask,
+                nosave: nosave,
+                prevAnswer: getPrevAnswer,
                 stackData: stackData,
                 type: "stack",
                 usercode: this.timWay
@@ -508,10 +600,13 @@ export class StackPluginComponent
             this.error = r.result.web.error;
             return;
         }
+        if (r.result.savedNew) {
+            this.savedText = "Saved";
+        }
         const stackResult = r.result.web.stackResult;
         this.originalUserCode = this.userCode;
-        await this.handleServerResult(stackResult, getTask);
-        if (this.lastInputFieldId) {
+        await this.handleServerResult(stackResult, getTask, getPrevAnswer);
+        if (this.lastInputFieldId && !this.markup.autosave) {
             this.lastInputFieldElement = this.element.find(
                 `#${this.lastInputFieldId}`
             )[0] as HTMLInputElement;
@@ -519,6 +614,18 @@ export class StackPluginComponent
                 this.lastInputFieldElement.focus();
                 this.lastInputFieldElement.selectionStart = 0;
                 this.lastInputFieldElement.selectionEnd = 1000;
+            }
+        }
+        // Refocus to the selected input field after autosave
+        if (this.markup.autosave && this.focusedInputId) {
+            this.focusedInputElement = this.element.find(
+                `#${this.focusedInputId}`
+            )[0] as HTMLInputElement;
+            if (this.focusedInputElement) {
+                this.focusedInputElement.focus();
+                // Move the caret to the end of the input
+                const caretPos = this.focusedInputElement.value.length;
+                this.focusedInputElement.setSelectionRange(caretPos, caretPos);
             }
         }
     }

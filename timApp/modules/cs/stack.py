@@ -4,6 +4,7 @@ from typing import Any, Optional, Union
 
 import requests
 import yaml
+from bs4 import BeautifulSoup
 
 from languages import Language
 from tim_common.cs_sanitizer import tim_sanitize
@@ -77,15 +78,22 @@ class Stack(Language):
         nosave = input.get("nosave", False)
         stack_data["seed"] = userseed
 
+        prev_answer = input.get("prevAnswer", False)
+        hide_results = markup.get("hideResults", False)
+
         q = stack_data.get("question", "")
         q_data = self.parse_stack_question(
             q, not self.query.jso.get("markup").get("stackjsx")
         )
         stack_data["question"] = q_data
 
-        if nosave or get_task:
+        if not prev_answer and nosave or get_task:
             stack_data["score"] = False
             stack_data["feedback"] = False
+        if hide_results:
+            stack_data["score"] = True
+            stack_data["feedback"] = False
+
         stack_data["answer"] = data.get("answer")
         stack_data["prefix"] = data.get("prefix")
         stack_data["verifyvar"] = data.get("verifyvar", "")
@@ -105,8 +113,48 @@ class Stack(Language):
             r = r.json()
         except json.JSONDecodeError:
             return 1, "", str(r.content.decode()), ""
-        out = "Score: %s" % r.get("score", 0)
+
+        # Remove contents of 'formatcorrectresponse' if
+        # - the score indicates an empty or incorrect answer
+        # - the user has exceeded the answerLimit to this task
+        # - the answer is not valid (usually when answer was sent outside the deadline)
+        #
+        # This is to prevent the correct answer from leaking prematurely via web -> stackResult.
+        ucode = input.get("usercode", "")
+        if ucode:
+            # Stack tasks may have several answer fields, so we need to check each one
+            ucode = json.loads(ucode)
+            ucode = len("".join([str(v) for v in ucode.values()])) > 0
+        score = r["score"]
+        valid = info.get("valid", False)
+        max_tries = info.get("max_answers", 1)
+        num_tries = info.get("earlier_answers", 0)
+        # If max_tries is None the task does not have an answer limit
+        has_tries_left = True if max_tries is None else num_tries <= max_tries
+
+        if (
+            (not has_tries_left)
+            or (not valid)
+            or (not ucode)
+            or (not score)
+            or (not has_tries_left and score <= 0)
+        ):
+            r["formatcorrectresponse"] = ""
+
+        if "score" in r:
+            out = "Score: %s" % r.get("score", 0)
+            del r["score"]  # Don't leak the score in the response
+
         # r['questiontext'] = tim_sanitize(r['questiontext'])
+
+        if hide_results:
+            # The information about points needs to be removed from the questiontext HTML
+            question_text = r.get("questiontext", "")
+            soup = BeautifulSoup(question_text, "html.parser")
+            for element in soup.select(".stackpartmark"):
+                element.decompose()
+
+            r["questiontext"] = str(soup)
 
         if nosave:
             out = ""
