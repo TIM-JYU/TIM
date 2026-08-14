@@ -114,6 +114,33 @@ class Stack(Language):
         except json.JSONDecodeError:
             return 1, "", str(r.content.decode()), ""
 
+        # Remove contents of 'formatcorrectresponse' if
+        # - the score indicates an empty or incorrect answer
+        # - the user has exceeded the answerLimit to this task
+        # - the answer is not valid (usually when answer was sent outside the deadline)
+        #
+        # This is to prevent the correct answer from leaking prematurely via web -> stackResult.
+        ucode = input.get("usercode", "")
+        if ucode:
+            # Stack tasks may have several answer fields, so we need to check each one
+            ucode = json.loads(ucode)
+            ucode = len("".join([str(v) for v in ucode.values()])) > 0
+        score = r["score"]
+        valid = info.get("valid", False)
+        max_tries = info.get("max_answers", 1)
+        num_tries = info.get("earlier_answers", 0)
+        # If max_tries is None the task does not have an answer limit
+        has_tries_left = True if max_tries is None else num_tries <= max_tries
+
+        if (
+            (not has_tries_left)
+            or (not valid)
+            or (not ucode)
+            or (not score)
+            or (not has_tries_left and score <= 0)
+        ):
+            r["formatcorrectresponse"] = ""
+
         if "score" in r:
             out = "Score: %s" % r.get("score", 0)
             del r["score"]  # Don't leak the score in the response
