@@ -1,14 +1,14 @@
 """Routes for qst (question) plugin."""
 import json
 import re
-from dataclasses import dataclass, asdict
+from dataclasses import dataclass, asdict, field
 from typing import Union, Any
 
 import yaml
 from flask import Blueprint, render_template_string
 from flask import Response
 from flask import request
-from marshmallow import missing, EXCLUDE, ValidationError
+from marshmallow import missing, EXCLUDE, INCLUDE, ValidationError, pre_load
 
 from timApp.auth.sessioninfo import get_current_user_object
 from timApp.document.docinfo import DocInfo
@@ -107,7 +107,7 @@ def qst_mmcq_answer():
 
 @dataclass
 class QstInputModel:
-    answers: list[list[str]]
+    answers: list[list[str]] | dict[str, Any]
     nosave: bool | Missing = missing
 
 
@@ -141,9 +141,10 @@ class QstMarkupModel(GenericMarkupModel):
     json: dict[Any, Any] | None | Missing = missing
     title: str | None | Missing = missing
     showResult: bool | None | Missing = missing
+    keys: list[list[str]] | Missing = missing
 
 
-QstBasicState = list[list[str]]
+QstBasicState = list[list[int | str]]
 
 
 @dataclass
@@ -152,11 +153,37 @@ class QstRandomState:
     order: list[int]
 
 
+@dataclass
+class XQstCState:
+    class Meta:
+        unknown = INCLUDE
+
+    c: QstBasicState
+    order: list[int] | None = None
+
+
+class QstCState:
+    class Meta:
+        unknown = EXCLUDE  # älä pudota tuntemattomia
+
+    c: QstBasicState
+    order: list[int] | None = None
+    extra: dict[str, Any] = field(default_factory=dict)
+
+    @pre_load
+    def collect_unknown(self, data, **kwargs):
+        known = {"c", "order", "extra"}
+        extra = {k: v for k, v in data.items() if k not in known}
+        data = dict(data)
+        data["extra"] = {**data.get("extra", {}), **extra}
+        return data
+
+
 # Store answer in original row order if no randomizedRows specified in markup:
 # [["1"], [], ["1"], ["2"]]
 # Otherwise specify order in which rows were presented
 # {"c": [["1"], ["2"], ["3"], []], "order": [3, 7, 4, 5]}
-QstStateModel = Union[QstBasicState, QstRandomState]
+QstStateModel = Union[QstBasicState, QstRandomState, QstCState]
 
 
 @dataclass
@@ -184,8 +211,10 @@ def qst_answer_jso(m: QstAnswerModel):
     rand_arr = None
     prev_state = m.state
     # if prev state exists, try to get order from there
-    if isinstance(prev_state, QstRandomState):
-        rand_arr = prev_state.order
+    # if isinstance(prev_state, QstRandomState):
+    #    rand_arr = prev_state.order
+    rand_arr = getattr(prev_state, "order", None)
+    extra = getattr(prev_state, "extra", None)
     # if prev state is none, check if markup wants random order
     if (
         prev_state is None
@@ -227,12 +256,22 @@ def qst_answer_jso(m: QstAnswerModel):
         tim_info["points"] = points
 
     webstate = answers
+    if markup.saveKey or markup.keys:
+        if not markup.saveKey:
+            markup.saveKey = "c"
+        answers = {markup.saveKey: answers}
     if rand_arr is not None:
         # TODO: Schema?
-        answers = {"c": answers, "order": rand_arr}
+        answers = {"c": webstate, "order": rand_arr}
         m.markup.rows = qst_set_array_order(m.markup.rows, rand_arr)
         if m.markup.expl is not missing:
             m.markup.expl = qst_pick_expls(m.markup.expl, rand_arr)
+    if isinstance(extra, dict) and extra and isinstance(answers, dict):
+        answers = {**answers, **extra}
+    if markup.keys:
+        answers["k"] = ",".join(
+            markup.keys[i][int(a) - 1] for i, ans in enumerate(webstate) for a in ans
+        )
 
     result = False
     if (

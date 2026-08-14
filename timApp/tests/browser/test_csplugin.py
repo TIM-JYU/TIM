@@ -12,7 +12,7 @@ class CsPluginTest(BrowserTest):
     def test_csplugin_translation(self):
         self.login_browser_quick_test1()
         self.login_test1()
-        d = self.create_doc(
+        d = self.try_create_doc(
             initial_par="""
 #- {plugin=csPlugin #py}
 type: python
@@ -22,7 +22,7 @@ pointsRule:
   expectCode: .*Hei maailma.*
         """
         )
-        dt = self.create_translation(d)
+        dt = self.try_create_translation(d)
         dt.document.set_settings(
             {
                 "global_plugin_attrs": {"all": {"lang": "en"}},
@@ -93,7 +93,8 @@ pointsRule:
         par = self.find_element("#py > tim-plugin-loader > div")
 
         # Wait until the height workaround completes (see answer-browser.component.ts)
-        # self.wait.until(expected_conditions.presence_of_element_located((By.XPATH, "//*[@id='py'][@style='opacity: 1;']")))
+        # self.wait.until(expected_conditions.presence_of_element_located(
+        #   (By.XPATH, "//*[@id='py'][@style='opacity: 1;']")))
 
         # TODO: Why is this slightly different from python_before_answer ?
         self.assert_same_screenshot(
@@ -174,7 +175,7 @@ disableUnchanged: true
 
     def test_csplugin_require_type(self):
         self.login_test1()
-        d = self.create_doc(
+        d = self.try_create_doc(
             initial_par="""
 #- {plugin=csPlugin}
 stem: ""
@@ -186,9 +187,9 @@ stem: ""
 
     def test_csplugin_answernr1(self):
         def input_and_send(s):
-            input = self.find_element(".csEditArea")
-            input.clear()
-            input.send_keys(s)
+            a_input = self.find_element(".csEditArea")
+            a_input.clear()
+            a_input.send_keys(s)
             button = self.find_element(".csRunDiv .timButton")
             button.click()
             self.wait_until_hidden("tim-loading")
@@ -200,7 +201,7 @@ stem: ""
         # 1: 1 + -5
         # 2: -2 + -1
         # 3: 10 + -3
-        d = self.create_doc(
+        d = self.try_create_doc(
             initial_par="""
 ``` {id="suSn2NPH8MC3" #summa2 plugin="csPlugin" rnd="[[-10,10],[-10,-1]]" seed="answernr"}
 type: text
@@ -265,8 +266,8 @@ postprogram: |!!
         # got to task 1/2 there should be the first correct answer -9
         self.find_element(".nextAnswer").click()
         sleep(0.3)
-        input = self.find_element(".csEditArea")
-        self.assertEqual("-9", input.get_attribute("value"))
+        cs_input = self.find_element(".csEditArea")
+        self.assertEqual("-9", cs_input.get_attribute("value"))
 
         # answer again to task 1/2
         self.assertEqual("1/2", count.text)
@@ -297,8 +298,8 @@ postprogram: |!!
         self.goto_document(d)
         time.sleep(0.5)
         self.wait_until_present(".csEditArea")
-        input = self.find_element(".csEditArea")
-        input.click()
+        cs_input = self.find_element(".csEditArea")
+        cs_input.click()
         self.wait_until_present_and_vis(".answer-index-count")
         # self.assertEqual("Uusi", button_new.text) # how to test that there is no new button
         self.assertEqual("Laske: 10 + -3", self.find_element(".stem").text)
@@ -307,7 +308,7 @@ postprogram: |!!
     def test_missing_taskid_warning(self):
         self.login_browser_quick_test1()
         self.login_test1()
-        d = self.create_doc(
+        d = self.try_create_doc(
             initial_par="""
 #- {plugin=csPlugin}
 type: text
@@ -349,10 +350,11 @@ class StackRandomTest(BrowserTest):
         # 1: 11370:1+5
         # 2:
         # 3:
-        d = self.create_doc(
+        d = self.try_create_doc(
             initial_par="""
 ``` {id="suSn2NPH8MC3" #summa3 plugin="csPlugin" rnd="1,20000" seed="answernr"}
 type: stack
+autopeek: false
 copyConsoleLink: ""
 buttonNewTask: Uusi
 undo:
@@ -416,13 +418,42 @@ stackversion: 0
         def stem_text():
             return removeTex(self.find_element(".stackOutput p").text)
 
-        def feedback_text():
-            return self.find_element(".stackprtfeedback-ans1").text
+        def feedback_text(expected: str | None = None):
+            # Markup differs between STACK/TIM versions. Poll known containers
+            # and require expected text so test can't pass accidentally.
+            plugin_selector = ".csRunDiv"
+            plugin = self.find_element(plugin_selector)
+            feedback_selectors = [
+                ".stackprtfeedback-ans1",
+                ".stackprtfeedback",
+                ".stackOutput",
+                "#stackinputfeedback",
+                ".stackinputfeedback1",
+            ]
+            last_texts: list[str] = []
+            timeout = time.time() + 10
+            while time.time() < timeout:
+                found_any = False
+                last_texts = []
+                for selector in feedback_selectors:
+                    for e in plugin.find_elements(By.CSS_SELECTOR, selector):
+                        found_any = True
+                        txt = e.text.strip()
+                        if txt:
+                            last_texts.append(f"{selector}: {txt}")
+                        if txt and (expected is None or expected in txt):
+                            return txt
+                if expected is None and found_any:
+                    break
+                sleep(0.1)
+            if expected is not None:
+                self.fail(f"Feedback text '{expected}' not found. Seen: {last_texts}")
+            self.fail("Feedback element not found in known feedback containers.")
 
         def input_and_send(s):
-            input = self.find_element("#stackapi_ans1")
-            input.clear()
-            input.send_keys(s)
+            s_input = self.find_element("#stackapi_ans1")
+            s_input.clear()
+            s_input.send_keys(s)
             button = self.find_element(".csRunDiv .timButton")
             button.click()
             sleep(0.8)
@@ -438,13 +469,13 @@ stackversion: 0
         button_new = self.find_element_by_text("Uusi")
         count = self.find_element(".answer-index-count")
         self.assertEqual("1/1", count.text)
-        self.assertEqual("OK!", feedback_text())
+        self.assertEqual("OK!", feedback_text("OK!"))
 
         # make a new answer, that is not saved (see later)
         input_and_send("16")
         self.assertEqual("1/1", count.text)
         self.assertEqual("4553:15+2", stem_text())
-        self.assertEqual("Wrong! 4553", feedback_text())
+        self.assertEqual("Wrong! 4553", feedback_text("Wrong! 4553"))
 
         # Answer to new task 2
         button_new.click()
@@ -454,10 +485,10 @@ stackversion: 0
         input_and_send("6")
         self.assertEqual("2/2", count.text)
         self.assertEqual("11370:1+5", stem_text())
-        self.assertEqual("OK!", feedback_text())
+        self.assertEqual("OK!", feedback_text("OK!"))
 
         # Make new answer to same task => no changes
         input_and_send("5")
         self.assertEqual("2/2", count.text)
         self.assertEqual("11370:1+5", stem_text())
-        self.assertEqual("Wrong! 11370", feedback_text())
+        self.assertEqual("Wrong! 11370", feedback_text("Wrong! 11370"))

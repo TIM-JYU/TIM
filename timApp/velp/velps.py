@@ -43,14 +43,13 @@ def _create_velp(
     :return: ID of velp that was just created.
 
     """
-    if not visible_to:
-        visible_to = 4
+    velp_visible_to = 4 if visible_to is None else visible_to
     v = Velp(
         creator_id=creator_id,
         default_points=default_points,
         color=color,
         valid_until=valid_until,
-        visible_to=visible_to,
+        visible_to=velp_visible_to,
         style=style,
     )
     db.session.add(v)
@@ -126,6 +125,7 @@ def create_new_velp(
     :param language_id: Language ID of velp.
     :param visible_to: Default visibility to annotation.
     :param color: Velp color
+    :param style: Velp style
     :return: A tuple of (velp id, velp version id).
 
     """
@@ -152,7 +152,7 @@ def update_velp(
     """
     if not visible_to:
         visible_to = 4
-    v: Velp = db.session.get(Velp, velp_id)
+    v: Velp | None = db.session.get(Velp, velp_id)
     if v:
         v.default_points = default_points
         v.color = color
@@ -238,7 +238,8 @@ def get_velp_content_for_document(
         .join(VelpContent, sq.c.ver == VelpContent.version_id)
         .filter(VelpContent.language_id == language_id)
         .filter(
-            (Velp.valid_until == None) | (Velp.valid_until >= func.current_timestamp())
+            (Velp.valid_until.is_(None))
+            | (Velp.valid_until >= func.current_timestamp())
         )
         .join(VelpInGroup)
         .join(
@@ -279,7 +280,7 @@ def get_velp_label_content_for_document(
             .join(Velp)
             .filter(
                 (Velp.valid_until >= func.current_timestamp())
-                | (Velp.valid_until == None)
+                | (Velp.valid_until.is_(None))
             )
             .join(VelpInGroup)
             .join(

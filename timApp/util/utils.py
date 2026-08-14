@@ -1,6 +1,7 @@
 """Utility functions."""
 
 import base64
+import csv
 import hashlib
 import json
 import os
@@ -12,6 +13,7 @@ from concurrent.futures import Future
 from dataclasses import fields, asdict
 from datetime import datetime, timezone
 from enum import Enum
+from io import StringIO
 from itertools import tee
 from pathlib import Path, PurePosixPath
 from types import TracebackType, FrameType
@@ -21,7 +23,7 @@ import dateutil.parser
 import pytz
 import requests
 from flask import g
-from lxml.html import HtmlElement
+from lxml import html
 
 from tim_common.html_sanitize import sanitize_html
 
@@ -56,9 +58,10 @@ def is_int(s: str) -> bool:
 
 
 def datestr_to_relative(d: str | datetime) -> str:
-    if isinstance(d, str):
-        d = datetime.strptime(d, "%Y-%m-%d %H:%M:%S")
-    return date_to_relative(d) if d else ""
+    dt: datetime = (
+        datetime.strptime(d, "%Y-%m-%d %H:%M:%S") if isinstance(d, str) else d
+    )
+    return date_to_relative(dt)
 
 
 def date_to_relative(d: datetime) -> str:
@@ -334,7 +337,7 @@ def static_tim_doc(path: str) -> str:
     return f"static/tim_docs/{path}"
 
 
-def decode_csplugin(text: HtmlElement) -> dict[str, Any]:
+def decode_csplugin(text: html.HtmlElement) -> dict[str, Any]:
     return json.loads(base64.b64decode(text.get("json")))["markup"]
 
 
@@ -367,7 +370,7 @@ def get_error_message(e: Exception) -> str:
 Range = tuple[int, int]
 
 TASK_PROG = re.compile(
-    r"([\w.]*)(:\w*)?\( *(\d*) *, *(\d*) *\)(.*)"
+    r"([\w.\[]*)(:\w*)?\( *(\d*) *, *(\d*) *\)(.*)"
 )  # see https://regex101.com/r/ZZuizF/4
 TASK_NAME_PROG = re.compile(
     r"(\d+\.)?(\w+)[.\[]?.*"
@@ -396,7 +399,7 @@ def widen_fields(flds: list[str] | str) -> list[str]:
             continue
         parts = field.split("=")
         t = parts[0].strip()
-        a = None
+        a: str | None = None
         if len(parts) > 1:
             a = parts[1].strip()
         match = re.search(TASK_PROG, t)
@@ -415,7 +418,7 @@ def widen_fields(flds: list[str] | str) -> list[str]:
             if not tb:
                 tn = ""
             tn += ft
-            if a is not None:  # a is allowed to be empty
+            if a is not None:  # 'a' variable is allowed to be empty
                 tn += "=" + a + str(i)
             rfields.append(tn)
 
@@ -648,3 +651,39 @@ def short_repr(value: object, n: int = 40) -> str:
         return "{" + items + "}"
 
     return repr(shorten_str(repr(value)))
+
+
+def list_to_string(lst: list[Any]) -> str:
+    sio = StringIO()
+    csv.writer(sio).writerow(lst)
+    return sio.getvalue().rstrip("\r\n")
+
+
+def get_qst_index(qfield: str, qmax: int) -> int:
+    """
+    Given a qfield and a value, return the index of the qfield in the list.
+    If just 'qst[' return 0.
+    """
+    m: re.Match[str] | None | re.Match[bytes] = re.fullmatch(r"qst\[(\d+)]?", qfield)
+    if m:
+        index = int(m.group(1)) - 1
+        if index < 0:
+            return 0
+        if index >= qmax:
+            return qmax - 1
+        return index
+    return 0
+
+
+def parse_list(s: Any) -> list[int | str]:
+    if not isinstance(s, str):
+        s = str(s)
+    row = next(csv.reader(StringIO(s), skipinitialspace=True))
+    result: list[int | str] = []
+    for item in row:
+        item = item.strip()
+        try:
+            result.append(int(item))
+        except ValueError:
+            result.append(item)
+    return result

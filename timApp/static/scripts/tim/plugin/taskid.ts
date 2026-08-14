@@ -30,7 +30,7 @@ export enum TaskIdAccess {
     ReadWrite,
 }
 
-const KNOWN_FIELD_NAMES = new Set(["points", "datetime", "ALL"]);
+const KNOWN_FIELD_NAMES = new Set(["points", "datetime", "ALL", "qstn"]);
 
 function isValidId(blockHint: string) {
     return blockHint.length === 12; // TODO more accurate check

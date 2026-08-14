@@ -1,5 +1,5 @@
 import type {OnChanges} from "@angular/core";
-import {ChangeDetectorRef, Component, Input, NgModule} from "@angular/core";
+import {Component, Input, NgModule} from "@angular/core";
 import type {ChartData, ChartDataset, ChartOptions, ChartType} from "chart.js";
 import {fixQuestionJson} from "tim/document/question/answer-sheet.component";
 import type {Overwrite} from "type-zoo";
@@ -37,7 +37,8 @@ function timStripHtml(s: string) {
 }
 
 function timFillArray<T>(len: number, value: T) {
-    return Array.apply(null, new Array(len)).map(() => value);
+    // return Array.apply(null, new Array(len)).map(() => value);
+    return new Array<T>(len).fill(value);
 }
 
 function qstCleanHtml(s: string) {
@@ -125,7 +126,9 @@ function qstShortText(s: string): string {
 
 type AnswerList = (IQuestionAnswer | IQuestionAnswerPlain)[];
 
-function* enumAnswers(answers: AnswerList): Iterable<[number, string[]]> {
+function* enumAnswers(
+    answers: AnswerList
+): Iterable<[number, (number | string)[]]> {
     for (const answ of answers) {
         const onePersonAnswers = answ.answer;
         for (let a = 0; a < onePersonAnswers.length; a++) {
@@ -157,19 +160,19 @@ interface ChartConfig {
 @Component({
     selector: "tim-answer-chart",
     template: `
-        <div *ngIf="!isText && chartData" style="flex: 1; min-height: 0">
+        <div *ngIf="!isText && chartData as cd" style="flex: 1; min-height: 0">
             <canvas baseChart
-                    [datasets]="chartData.datasets"
-                    [labels]="chartData.config.data.labels"
+                    [datasets]="cd.datasets"
+                    [labels]="cd.config.data.labels"
                     [options]="chartOptions"
-                    [legend]="chartData.config.options.plugins?.legend?.display || false"
+                    [legend]="cd.config.options.plugins?.legend?.display ?? false"
                     [type]="'bar'">
             </canvas>
         </div>
         <div *ngIf="isText">
             <p *ngFor="let t of textAnswers" [innerText]="t"></p>
         </div>
-        <p *ngIf="answers">Total answers: {{ answers.length }}</p>
+        <p *ngIf="answers as ans">Total answers: {{ ans.length }}</p>
         <p *ngIf="answers">Total points: {{ getTotalPoints() }}</p>
         <div *ngIf="!isText">
             <button class="timButton btn-xs" (click)="toggleAxis()">Change chart orientation</button>
@@ -314,7 +317,7 @@ export class AnswerChartComponent implements OnChanges {
     ];
     textAnswers: string[] = [];
 
-    constructor(private cdr: ChangeDetectorRef) {}
+    // constructor(private cdr: ChangeDetectorRef) {}
 
     get chartOptions(): ChartOptions<"bar"> {
         return {
@@ -472,7 +475,7 @@ export class AnswerChartComponent implements OnChanges {
             this.textAnswers = [];
             for (const [_, singleAnswers] of enumAnswers(answers)) {
                 for (const singleAnswer of singleAnswers) {
-                    this.textAnswers.push(singleAnswer);
+                    this.textAnswers.push(String(singleAnswer));
                 }
             }
         } else {
@@ -494,7 +497,10 @@ export class AnswerChartComponent implements OnChanges {
                     }
                 }
                 for (const singleAnswer of singleAnswers) {
-                    const index = parseInt(singleAnswer, 10) - 1;
+                    const index =
+                        (typeof singleAnswer === "number"
+                            ? singleAnswer
+                            : parseInt(singleAnswer, 10)) - 1;
                     if (datasets.length === 1) {
                         if (index >= 0 && index < firstSet.length) {
                             firstSet[index]++;
