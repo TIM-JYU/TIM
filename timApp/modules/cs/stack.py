@@ -4,6 +4,7 @@ from typing import Any, Optional, Union
 
 import requests
 import yaml
+from bs4 import BeautifulSoup
 
 from languages import Language
 from tim_common.cs_sanitizer import tim_sanitize
@@ -92,6 +93,7 @@ class Stack(Language):
         if hide_results:
             stack_data["score"] = True
             stack_data["feedback"] = False
+
         stack_data["answer"] = data.get("answer")
         stack_data["prefix"] = data.get("prefix")
         stack_data["verifyvar"] = data.get("verifyvar", "")
@@ -117,6 +119,15 @@ class Stack(Language):
             del r["score"]  # Don't leak the score in the response
 
         # r['questiontext'] = tim_sanitize(r['questiontext'])
+
+        if hide_results:
+            # The information about points needs to be removed from the questiontext HTML
+            question_text = r.get("questiontext", "")
+            soup = BeautifulSoup(question_text, "html.parser")
+            for element in soup.select(".stackpartmark"):
+                element.decompose()
+
+            r["questiontext"] = str(soup)
 
         if nosave:
             out = ""
