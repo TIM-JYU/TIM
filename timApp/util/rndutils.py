@@ -148,6 +148,10 @@ def get_windowed_sequence(
     circular = bool(values.get("c", False))
 
     ret = generate(myrandom, n, window, distinct, count, circular)
+
+    if ret is None:
+        raise ValueError("Could not generate windowed sequence with given constraints")
+
     if r[0] != 0 or step != 1:
         first = r[0]
         for i in range(len(ret)):
@@ -304,46 +308,41 @@ def get_rnds(
     no_same = False  # do not give same number
     ret_len = params.get("l", 0)
     order_nr = 0
-    jso: str = attrs.get(name, "")
+    jso = attrs.get(name, "")
     if not jso:
-        jso: str = attrs.get("!" + name, "")
+        jso = attrs.get("!" + name, "")
         if not jso:
             return None, rnd_seed, state
         no_same = True
 
     seed_to_use = rnd_seed
-    seed_to_use_nr = 0
     attrs_seed = attrs.get("seed", None)
     if attrs_seed is not None:
         if attrs_seed == "" or attrs_seed == "time":
             # seed_to_use = int(time.perf_counter() * 1000)
             seed_to_use = secrets.randbits(64)
-            seed_to_use_nr = seed_to_use
         elif attrs_seed == "answernr":
             if isinstance(rnd_seed, SeedClass):
                 if not no_same:
-                    seed_to_use_nr = rnd_seed.seed + rnd_seed.extraseed
-                order_nr = rnd_seed.extraseed
+                    seed_to_use = rnd_seed.seed + rnd_seed.extraseed
+                else:
+                    order_nr = rnd_seed.extraseed
         else:
             seed_to_use = attrs_seed
 
     if isinstance(seed_to_use, SeedClass):
-        seed_to_use_nr = seed_to_use.seed
+        seed_to_use = seed_to_use.seed
 
     if isinstance(seed_to_use, str):
-        seed_to_use_nr = myhash(seed_to_use)
-
-    if isinstance(seed_to_use, int):
-        seed_to_use_nr = seed_to_use
+        seed_to_use = myhash(seed_to_use)
 
     # noinspection PyBroadException
     if seed_to_use is None:
         # seed_to_use = int(time.perf_counter() * 1000)
         seed_to_use = secrets.randbits(64)
-        seed_to_use_nr = seed_to_use
 
     myrandom = Random()
-    myrandom.seed(a=seed_to_use_nr)
+    myrandom.seed(a=seed_to_use)
     if state:
         myrandom.setstate(state)
 
@@ -364,24 +363,26 @@ def get_rnds(
         if r_len > 0:
             del seq[r_len:]
 
+    ret_list: list[int] | list[float] | None
+
     if jso.startswith("s"):  # s10:[1,7,2], s10, s10:50, s10:[0,50]
-        ret = get_sample_list(myrandom, jso[1:])
-        rotate_left_to(ret, order_nr, ret_len)
-        return ret, seed_to_use, myrandom.getstate()
+        ret_list = get_sample_list(myrandom, jso[1:])
+        rotate_left_to(ret_list, order_nr, ret_len)
+        return ret_list, seed_to_use, myrandom.getstate()
 
     if jso.startswith("w"):  # w10:[1,7,2], w10, w10:50, w10:[0,50]
-        ret = get_windowed_sequence(myrandom, jso[1:], params)
-        rotate_left_to(ret, order_nr, ret_len)
-        return ret, seed_to_use, myrandom.getstate()
+        ret_list = get_windowed_sequence(myrandom, jso[1:], params)
+        rotate_left_to(ret_list, order_nr, ret_len)
+        return ret_list, seed_to_use, myrandom.getstate()
 
     if jso.startswith("u"):  # u[[0,1],[100,110],[-30,-20],[0.001,0.002]], u6
-        ret = repeat_rnd(get_uniform_list, myrandom, jso[1:])
-        rotate_left_to(ret, order_nr, ret_len)
-        return ret, seed_to_use, myrandom.getstate()
+        ret_list = repeat_rnd(get_uniform_list, myrandom, jso[1:])
+        rotate_left_to(ret_list, order_nr, ret_len)
+        return ret_list, seed_to_use, myrandom.getstate()
 
-    ret = repeat_rnd(get_int_list, myrandom, jso)
-    rotate_left_to(ret, order_nr, ret_len)
-    return ret, seed_to_use, myrandom.getstate()
+    ret_list = repeat_rnd(get_int_list, myrandom, jso)
+    rotate_left_to(ret_list, order_nr, ret_len)
+    return ret_list, seed_to_use, myrandom.getstate()
 
 
 def get_rands_as_dict(
