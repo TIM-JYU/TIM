@@ -61,7 +61,7 @@ def fix_parameters(
     """
     Adjust parameters to satisfy:
         1 <= window <= distinct <= n
-    :param  n: numebr of ints
+    :param  n: number of ints
     :param window: Size of the sliding window.
     :param distinct: Size of distinct groups
     """
