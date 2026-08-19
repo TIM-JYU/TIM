@@ -1,8 +1,34 @@
 from random import Random
 import time
 
+"""
+Generate sequences with constraints on sliding windows and distinct groups.
 
-def check_circular(result, window):
+Authors:
+    vesal
+    ChatGPT (GPT-5.6 Luna)
+
+This module is somewhat complex, and possibly more complex than strictly
+necessary. The complexity comes mainly from generating sequences efficiently
+while satisfying several interacting constraints.
+
+The main externally callable function is ``generate()``. It is the public
+interface for generating a sequence.
+
+The rest of the code is primarily internal implementation. In particular,
+there is an internal main program that exercises ``generate()`` with various
+parameter combinations and checks that the generated sequences satisfy the
+required constraints.
+
+If this code is modified, the internal tests should be run. It is important
+not only to check that the tests pass, but also to inspect the generated
+results to make sure they are still sensible. A change can produce technically
+valid sequences while nevertheless changing the intended behaviour of the
+generator.
+"""
+
+
+def check_circular(result: list[int], window: int) -> bool:
     """
     Check the sliding-window constraint treating the sequence
     as a circular sequence.
@@ -27,10 +53,17 @@ def check_circular(result, window):
     return True
 
 
-def fix_parameters(n, window, distinct):
+def fix_parameters(
+    n: int,
+    window: int,
+    distinct: int,
+) -> tuple[int, int, int]:
     """
     Adjust parameters to satisfy:
         1 <= window <= distinct <= n
+    :param  n: numebr of ints
+    :param window: Size of the sliding window.
+    :param distinct: Size of distinct groups
     """
     if n < 2:
         n = 2
@@ -48,20 +81,23 @@ def fix_parameters(n, window, distinct):
     return n, window, distinct
 
 
-def check(result, n, window, distinct, circular=False):
+def check(
+    result: list[int] | None,
+    n: int,
+    window: int,
+    distinct: int,
+    circular: bool = False,
+) -> str | None:
     """
     Check whether a generated sequence satisfies its constraints.
 
-    Args:
-        result: Sequence to check.
-        n: Number of possible values, 0..n-1.
-        window: Maximum linear window size.
-        distinct: Size of each complete group whose values
+    :param result: Sequence to check.
+    :param n: Number of possible values, 0..n-1.
+    :param window: Maximum linear window size.
+    :param distinct: Size of each complete group whose values
             must be different.
-        circular: If True, also check the circular constraint.
-
-    Returns:
-        None if the sequence is valid.
+    :param circular: If True, also check the circular constraint.
+    :returns: None if the sequence is valid.
         Otherwise, return a message describing relaxed constraints
         or an error.
     """
@@ -165,7 +201,14 @@ def check(result, n, window, distinct, circular=False):
     return None
 
 
-def generate(myrandom: Random, n, window, distinct, count, circular=False):
+def generate(
+    myrandom: Random,
+    n: int,
+    window: int,
+    distinct: int,
+    count: int,
+    circular: bool = False,
+) -> list[int] | None:
     """
     Generate a sequence in which no window-sized subsequence
     contains repeated values, subject to additional group and
@@ -261,9 +304,12 @@ def generate(myrandom: Random, n, window, distinct, count, circular=False):
         full_count - distinct,
     )
 
-    result = []
+    result: list[int] = []
 
-    def get_available(prefix, current_window):
+    def get_available(
+        prefix: list[int],
+        current_window: int,
+    ) -> set[int]:
         """
         Return values that can be appended to prefix.
 
@@ -301,7 +347,11 @@ def generate(myrandom: Random, n, window, distinct, count, circular=False):
 
         return avail
 
-    def circular_ok(prefix, value, cir):
+    def circular_ok(
+        prefix: list[int],
+        value: int,
+        cir: int,
+    ) -> bool:
         """
         Check circular windows that become complete when value is
         appended to prefix.
@@ -337,7 +387,11 @@ def generate(myrandom: Random, n, window, distinct, count, circular=False):
 
         return True
 
-    def complete(prefix, win, cir):
+    def complete(
+        prefix: list[int],
+        win: int,
+        cir: int,
+    ) -> list[int] | None:
         """
         Complete the sequence using linear window win and
         circular window cir.
@@ -452,7 +506,7 @@ def generate(myrandom: Random, n, window, distinct, count, circular=False):
     return None
 
 
-def main():
+def main() -> None:
     # BYCODEBEGIN
     n = 5
     window = 3
@@ -462,7 +516,7 @@ def main():
     myrandom = Random(1615)
     # BYCODEEND
 
-    results = []
+    results: list[list[int] | None] = []
 
     start = time.perf_counter()
 
