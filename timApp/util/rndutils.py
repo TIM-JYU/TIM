@@ -168,7 +168,7 @@ def get_uniform_list(myrandom: Random, jso: str) -> list[float]:
 
 def sep_n_and_range(jso: str) -> tuple[int, str]:
     """
-    Separates the count and the range part of a modulo (m) instruction.
+    Separates the count and the range part of an (m) instruction.
 
     Unlike sep_n_and_jso, a value without a separator is the range and the count
     defaults to one, because an m-list gives one value per attempt by default.
@@ -194,7 +194,7 @@ def sep_n_and_range(jso: str) -> tuple[int, str]:
     return min(n, MAX_RND_LIST_LEN), jso[idx + 1 :]
 
 
-def get_modulo_pool(jso: str) -> list[int]:
+def get_m_pool(jso: str) -> list[int]:
     """
     Returns the pool of unique values that an m-list cycles through.
 
@@ -238,16 +238,13 @@ def shuffle_pool(base_seed: SeedType, cycle: int, pool: list[int]) -> list[int]:
     return ints
 
 
-def get_modulo_cycle(base_seed: SeedType, cycle: int, pool: list[int]) -> list[int]:
+def get_m_cycle(base_seed: SeedType, cycle: int, pool: list[int]) -> list[int]:
     """
     Returns the order in which one cycle uses the values of the pool.
 
     Each cycle is shuffled anew, but a cycle never starts with the value the
     cycle before it ended with, so no value is given twice in a row over the
-    wrap. The fix moves the first value only, and never into the last slot, so
-    the last value of a cycle is always its plain shuffle. That is what lets the
-    cycle before this one be checked without working through every cycle since
-    the first one.
+    wrap.
 
     :param base_seed: seed that stays the same from one attempt to the next
     :param cycle: how many full rounds of the pool were used before this one
@@ -257,10 +254,7 @@ def get_modulo_cycle(base_seed: SeedType, cycle: int, pool: list[int]) -> list[i
     size = len(pool)
     if cycle <= 0 or size < 2:
         return shuffle_pool(base_seed, cycle, pool)
-    if size == 2:
-        # Two values leave no room to choose: the cycle has to start with the
-        # one the cycle before it did not end with, which is the first cycle
-        # over again.
+    if size == 2:  # Two values leave no room to choose
         return shuffle_pool(base_seed, 0, pool)
     ints = shuffle_pool(base_seed, cycle, pool)
     if ints[0] == shuffle_pool(base_seed, cycle - 1, pool)[-1]:
@@ -269,7 +263,7 @@ def get_modulo_cycle(base_seed: SeedType, cycle: int, pool: list[int]) -> list[i
     return ints
 
 
-def get_modulo_list(base_seed: SeedType, index: int, jso: str) -> list[int]:
+def get_m_list(base_seed: SeedType, index: int, jso: str) -> list[int]:
     """
     Returns one attempt's worth of values from a shuffled pool.
 
@@ -283,7 +277,7 @@ def get_modulo_list(base_seed: SeedType, index: int, jso: str) -> list[int]:
     :return: list of values for this attempt
     """
     n, jso = sep_n_and_range(jso)
-    pool = get_modulo_pool(jso)
+    pool = get_m_pool(jso)
     size = len(pool)
     cycles: dict[int, list[int]] = {}
     ret = []
@@ -291,7 +285,7 @@ def get_modulo_list(base_seed: SeedType, index: int, jso: str) -> list[int]:
         cycle, slot = divmod(pos, size)
         order = cycles.get(cycle)
         if order is None:
-            order = get_modulo_cycle(base_seed, cycle, pool)
+            order = get_m_cycle(base_seed, cycle, pool)
             cycles[cycle] = order
         ret.append(order[slot])
     return ret
@@ -356,9 +350,7 @@ def get_rnds(
     if not jso:
         return None, rnd_seed, state
 
-    # How many attempts came before this one. A paragraph is a new task when it
-    # has seed="answernr", and only then does pluginControl put the answer
-    # number in extraseed, growing by one for every version askNew hands out.
+    # How many attempts came before this one.
     # Only m-lists use it; without it they stay on the first value.
     index = rnd_seed.extraseed if isinstance(rnd_seed, SeedClass) else 0
 
@@ -390,9 +382,9 @@ def get_rnds(
     # seed_to_use, which would put the pool in a new order every time and undo
     # the point of walking it; for an m-list the attempt number is what picks
     # the value out of the pool instead.
-    modulo_seed = seed_to_use
+    mlist_seed = seed_to_use
     if attrs_seed == "answernr" and isinstance(rnd_seed, SeedClass):
-        modulo_seed = rnd_seed.seed
+        mlist_seed = rnd_seed.seed
 
     myrandom = Random()
     myrandom.seed(a=seed_to_use)
@@ -410,7 +402,7 @@ def get_rnds(
 
     if jso.startswith("m"):  # m[1,7], m[1,7,2], m3:[1,20], m10
         return (
-            get_modulo_list(modulo_seed, index, jso[1:]),
+            get_m_list(mlist_seed, index, jso[1:]),
             seed_to_use,
             myrandom.getstate(),
         )
