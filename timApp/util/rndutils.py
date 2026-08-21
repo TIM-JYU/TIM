@@ -166,6 +166,137 @@ def get_uniform_list(myrandom: Random, jso: str) -> list[float]:
     return ret
 
 
+def sep_n_and_range(jso: str) -> tuple[int, str]:
+    """
+    Separates the count and the range part of a modulo (m) instruction.
+
+    Unlike sep_n_and_jso, a value without a separator is the range and the count
+    defaults to one, because an m-list gives one value per attempt by default.
+    For example:
+        "3:[1,20]" -> 3, "[1,20]"
+        "[1,7]"    -> 1, "[1,7]"
+        "10"       -> 1, "10"
+
+    :param jso: string to check
+    :return: count of values per attempt and the string that stands for a range
+    """
+    idx = jso.find(":")
+    if idx < 0:
+        idx = jso.find("*")
+    if idx < 0:
+        return 1, jso
+    n_str = jso[:idx]
+    try:
+        n = int(n_str)
+    except ValueError:
+        n = 1
+    n = max(n, 1)
+    return min(n, MAX_RND_LIST_LEN), jso[idx + 1 :]
+
+
+def get_modulo_pool(jso: str) -> list[int]:
+    """
+    Returns the pool of unique values that an m-list cycles through.
+
+    :param jso: string to find the values, for example "[1,7]", "[1,7,2]" or "10"
+    :return: list of unique ints
+    """
+    if not jso:
+        raise ValueError("No range for m")
+    if not jso.startswith("["):  # m10
+        jso = "[" + jso + "]"
+    r = json.loads(jso)
+    if len(r) < 2:  # m[50]
+        r.insert(0, 0)
+    step = 1
+    if len(r) > 2:  # m[1,7,2]
+        step = r[2]
+    if step == 0:
+        raise ValueError("Zero step for m")
+    if abs(r[1] - r[0]) > 500:
+        raise ValueError(f"Too big range for m: {r[0]}-{r[1]}")
+    # Like s, both ends of the range belong to it.
+    pool = list(range(r[0], r[1] + (1 if step > 0 else -1), step))
+    if not pool:
+        raise ValueError(f"Empty range for m: {r[0]}-{r[1]}")
+    return pool
+
+
+def shuffle_pool(base_seed: SeedType, cycle: int, pool: list[int]) -> list[int]:
+    """
+    Returns the pool shuffled for one cycle, not looking at any other cycle.
+
+    :param base_seed: seed that stays the same from one attempt to the next
+    :param cycle: how many full rounds of the pool were used before this one
+    :param pool: values to shuffle
+    :return: shuffled copy of pool
+    """
+    ints = list(pool)
+    myrandom = Random()
+    myrandom.seed(a=f"{base_seed}:{cycle}")
+    myrandom.shuffle(ints)
+    return ints
+
+
+def get_modulo_cycle(base_seed: SeedType, cycle: int, pool: list[int]) -> list[int]:
+    """
+    Returns the order in which one cycle uses the values of the pool.
+
+    Each cycle is shuffled anew, but a cycle never starts with the value the
+    cycle before it ended with, so no value is given twice in a row over the
+    wrap. The fix moves the first value only, and never into the last slot, so
+    the last value of a cycle is always its plain shuffle. That is what lets the
+    cycle before this one be checked without working through every cycle since
+    the first one.
+
+    :param base_seed: seed that stays the same from one attempt to the next
+    :param cycle: how many full rounds of the pool were used before this one
+    :param pool: values to put in order
+    :return: values of pool in the order this cycle uses them
+    """
+    size = len(pool)
+    if cycle <= 0 or size < 2:
+        return shuffle_pool(base_seed, cycle, pool)
+    if size == 2:
+        # Two values leave no room to choose: the cycle has to start with the
+        # one the cycle before it did not end with, which is the first cycle
+        # over again.
+        return shuffle_pool(base_seed, 0, pool)
+    ints = shuffle_pool(base_seed, cycle, pool)
+    if ints[0] == shuffle_pool(base_seed, cycle - 1, pool)[-1]:
+        i = 1 + cycle % (size - 2)  # neither the first nor the last slot
+        ints[0], ints[i] = ints[i], ints[0]
+    return ints
+
+
+def get_modulo_list(base_seed: SeedType, index: int, jso: str) -> list[int]:
+    """
+    Returns one attempt's worth of values from a shuffled pool.
+
+    The pool is walked in order, so a value comes up again only after every
+    other value has been used. When the pool runs out, the walk wraps around to
+    a new shuffle of the same values.
+
+    :param base_seed: seed that stays the same from one attempt to the next
+    :param index: number of attempts before this one, from SeedClass.extraseed
+    :param jso: string to find the values
+    :return: list of values for this attempt
+    """
+    n, jso = sep_n_and_range(jso)
+    pool = get_modulo_pool(jso)
+    size = len(pool)
+    cycles: dict[int, list[int]] = {}
+    ret = []
+    for pos in range(index * n, index * n + n):
+        cycle, slot = divmod(pos, size)
+        order = cycles.get(cycle)
+        if order is None:
+            order = get_modulo_cycle(base_seed, cycle, pool)
+            cycles[cycle] = order
+        ret.append(order[slot])
+    return ret
+
+
 T = TypeVar("T")
 
 
@@ -225,6 +356,12 @@ def get_rnds(
     if not jso:
         return None, rnd_seed, state
 
+    # How many attempts came before this one. A paragraph is a new task when it
+    # has seed="answernr", and only then does pluginControl put the answer
+    # number in extraseed, growing by one for every version askNew hands out.
+    # Only m-lists use it; without it they stay on the first value.
+    index = rnd_seed.extraseed if isinstance(rnd_seed, SeedClass) else 0
+
     seed_to_use = rnd_seed
     attrs_seed = attrs.get("seed", None)
     if attrs_seed is not None:
@@ -248,6 +385,15 @@ def get_rnds(
         # seed_to_use = int(time.perf_counter() * 1000)
         seed_to_use = secrets.randbits(64)
 
+    # An m-list has to see the same pool on every attempt, so it seeds from the
+    # part that does not change. seed="answernr" mixes the attempt number into
+    # seed_to_use, which would put the pool in a new order every time and undo
+    # the point of walking it; for an m-list the attempt number is what picks
+    # the value out of the pool instead.
+    modulo_seed = seed_to_use
+    if attrs_seed == "answernr" and isinstance(rnd_seed, SeedClass):
+        modulo_seed = rnd_seed.seed
+
     myrandom = Random()
     myrandom.seed(a=seed_to_use)
     if state:
@@ -258,6 +404,13 @@ def get_rnds(
     if jso.startswith("u"):  # u[[0,1],[100,110],[-30,-20],[0.001,0.002]], u6
         return (
             repeat_rnd(get_uniform_list, myrandom, jso[1:]),
+            seed_to_use,
+            myrandom.getstate(),
+        )
+
+    if jso.startswith("m"):  # m[1,7], m[1,7,2], m3:[1,20], m10
+        return (
+            get_modulo_list(modulo_seed, index, jso[1:]),
             seed_to_use,
             myrandom.getstate(),
         )
