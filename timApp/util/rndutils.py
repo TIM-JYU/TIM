@@ -351,7 +351,7 @@ def get_rnds(
         return None, rnd_seed, state
 
     # How many attempts came before this one.
-    # Only m-lists use it; without it they stay on the first value.
+    # Only i-lists use it; without it they stay on the first value.
     index = rnd_seed.extraseed if isinstance(rnd_seed, SeedClass) else 0
 
     seed_to_use = rnd_seed
@@ -380,9 +380,13 @@ def get_rnds(
     # An i-list has to see the same pool on every attempt. seed="answernr" mixes
     # the attempt number into seed_to_use, which would put the pool in a new order
     # every time and undo the point of walking it.
-    distinct_list_seed = seed_to_use
+    stable_seed = seed_to_use
     if attrs_seed == "answernr" and isinstance(rnd_seed, SeedClass):
-        distinct_list_seed = rnd_seed.seed
+        stable_seed = rnd_seed.seed
+    # The name is mixed in so that two i-lists in the same block walk different
+    # orders. s and u are kept apart by the shared generator state instead, which
+    # an i-list does not use.
+    distinct_list_seed = f"{stable_seed}:{name}"
 
     myrandom = Random()
     myrandom.seed(a=seed_to_use)
@@ -425,8 +429,12 @@ def get_rands_as_dict(
         return None, rnd_seed, state
     names = attrs.get("rndnames", "rnd").split(",")
     ret: dict = {}
+    # get_rnds gives back a plain seed number, so passing that on would leave every
+    # name but the first without the attempt counter, and their i-lists would sit on
+    # the first value. Give each name the same SeedClass instead.
+    counter_seed = rnd_seed if isinstance(rnd_seed, SeedClass) else None
     for name in names:
-        rnds, rnd_seed, state = get_rnds(attrs, name, rnd_seed, state)
+        rnds, rnd_seed, state = get_rnds(attrs, name, counter_seed or rnd_seed, state)
         if rnds is None:
             continue
         ret[name] = rnds

@@ -2,7 +2,7 @@
 import ast
 
 from timApp.tests.server.timroutetest import TimRouteTest, get_content
-from timApp.util.rndutils import SeedClass, get_rnds
+from timApp.util.rndutils import SeedClass, get_rands_as_dict, get_rnds
 
 
 class RandomTest(TimRouteTest):
@@ -47,7 +47,7 @@ class RandomTest(TimRouteTest):
 """
         )
         nums = self.get_number_list(d)
-        # A plain paragraph has no attempt counter, so an m-list stays on the
+        # A plain paragraph has no attempt counter, so an i-list stays on the
         # first value of the first cycle.
         self.assertEqual(1, len(nums))
         self.assertIn(nums[0], range(1, 8))
@@ -126,6 +126,34 @@ class RandomTest(TimRouteTest):
         for spec in ["i", "i[1,7,0]", "i[1,900]"]:
             with self.assertRaises(ValueError, msg=spec):
                 get_rnds({"rnd": spec}, "rnd", SeedClass(1, 0))
+
+    @staticmethod
+    def walk_names(specs, attempts, seed=12345):
+        """Values each named i-list gives on successive attempts.
+
+        Same as walk(), but through get_rands_as_dict, which is the way a block
+        with several rndnames is served.
+        """
+        attrs = {"rndnames": ",".join(specs), "seed": "answernr", **specs}
+        out: dict = {name: [] for name in specs}
+        for i in range(attempts):
+            rnds, _, _ = get_rands_as_dict(attrs, SeedClass(seed, i))
+            for name in specs:
+                out[name].append(rnds[name][0])
+        return out
+
+    def test_distinct_with_several_rndnames(self):
+        # Every named i-list gets the attempt counter, not only the first one.
+        walks = self.walk_names({"a": "i[1,5]", "b": "i[1,5]", "c": "i[1,5]"}, 10)
+        for name, nums in walks.items():
+            self.assertEqual([1, 2, 3, 4, 5], sorted(nums[:5]), msg=name)
+            self.assertEqual([1, 2, 3, 4, 5], sorted(nums[5:]), msg=name)
+            for i in range(1, len(nums)):
+                self.assertNotEqual(nums[i - 1], nums[i], msg=f"{name} {i=}")
+        # And lists over the same range walk it in their own order.
+        self.assertNotEqual(walks["a"], walks["b"])
+        self.assertNotEqual(walks["b"], walks["c"])
+        self.assertNotEqual(walks["a"], walks["c"])
 
     def test_distinct_with_new_task_seed(self):
         # A paragraph is only a new task, and so only gets its attempts
