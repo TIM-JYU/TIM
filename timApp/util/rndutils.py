@@ -168,10 +168,10 @@ def get_uniform_list(myrandom: Random, jso: str) -> list[float]:
 
 def sep_n_and_range(jso: str) -> tuple[int, str]:
     """
-    Separates the count and the range part of an (m) instruction.
+    Separates the count and the range part of an (i) instruction.
 
     Unlike sep_n_and_jso, a value without a separator is the range and the count
-    defaults to one, because an m-list gives one value per attempt by default.
+    defaults to one, because an i-list gives one value per attempt by default.
     For example:
         "3:[1,20]" -> 3, "[1,20]"
         "[1,7]"    -> 1, "[1,7]"
@@ -194,31 +194,31 @@ def sep_n_and_range(jso: str) -> tuple[int, str]:
     return min(n, MAX_RND_LIST_LEN), jso[idx + 1 :]
 
 
-def get_m_pool(jso: str) -> list[int]:
+def get_distinct_pool(jso: str) -> list[int]:
     """
-    Returns the pool of unique values that an m-list cycles through.
+    Returns the pool of unique values that a list cycles through.
 
     :param jso: string to find the values, for example "[1,7]", "[1,7,2]" or "10"
     :return: list of unique ints
     """
     if not jso:
-        raise ValueError("No range for m")
-    if not jso.startswith("["):  # m10
+        raise ValueError("No range for i")
+    if not jso.startswith("["):  # i10
         jso = "[" + jso + "]"
     r = json.loads(jso)
-    if len(r) < 2:  # m[50]
+    if len(r) < 2:  # i[50]
         r.insert(0, 0)
     step = 1
-    if len(r) > 2:  # m[1,7,2]
+    if len(r) > 2:  # i[1,7,2]
         step = r[2]
     if step == 0:
-        raise ValueError("Zero step for m")
+        raise ValueError("Zero step for i")
     if abs(r[1] - r[0]) > 500:
-        raise ValueError(f"Too big range for m: {r[0]}-{r[1]}")
+        raise ValueError(f"Too big range for i: {r[0]}-{r[1]}")
     # Like s, both ends of the range belong to it.
     pool = list(range(r[0], r[1] + (1 if step > 0 else -1), step))
     if not pool:
-        raise ValueError(f"Empty range for m: {r[0]}-{r[1]}")
+        raise ValueError(f"Empty range for i: {r[0]}-{r[1]}")
     return pool
 
 
@@ -238,7 +238,7 @@ def shuffle_pool(base_seed: SeedType, cycle: int, pool: list[int]) -> list[int]:
     return ints
 
 
-def get_m_cycle(base_seed: SeedType, cycle: int, pool: list[int]) -> list[int]:
+def get_distinct_cycle(base_seed: SeedType, cycle: int, pool: list[int]) -> list[int]:
     """
     Returns the order in which one cycle uses the values of the pool.
 
@@ -263,7 +263,7 @@ def get_m_cycle(base_seed: SeedType, cycle: int, pool: list[int]) -> list[int]:
     return ints
 
 
-def get_m_list(base_seed: SeedType, index: int, jso: str) -> list[int]:
+def get_distinct_list(base_seed: SeedType, index: int, jso: str) -> list[int]:
     """
     Returns one attempt's worth of values from a shuffled pool.
 
@@ -277,7 +277,7 @@ def get_m_list(base_seed: SeedType, index: int, jso: str) -> list[int]:
     :return: list of values for this attempt
     """
     n, jso = sep_n_and_range(jso)
-    pool = get_m_pool(jso)
+    pool = get_distinct_pool(jso)
     size = len(pool)
     cycles: dict[int, list[int]] = {}
     ret = []
@@ -285,7 +285,7 @@ def get_m_list(base_seed: SeedType, index: int, jso: str) -> list[int]:
         cycle, slot = divmod(pos, size)
         order = cycles.get(cycle)
         if order is None:
-            order = get_m_cycle(base_seed, cycle, pool)
+            order = get_distinct_cycle(base_seed, cycle, pool)
             cycles[cycle] = order
         ret.append(order[slot])
     return ret
@@ -377,14 +377,12 @@ def get_rnds(
         # seed_to_use = int(time.perf_counter() * 1000)
         seed_to_use = secrets.randbits(64)
 
-    # An m-list has to see the same pool on every attempt, so it seeds from the
-    # part that does not change. seed="answernr" mixes the attempt number into
-    # seed_to_use, which would put the pool in a new order every time and undo
-    # the point of walking it; for an m-list the attempt number is what picks
-    # the value out of the pool instead.
-    mlist_seed = seed_to_use
+    # An i-list has to see the same pool on every attempt. seed="answernr" mixes
+    # the attempt number into seed_to_use, which would put the pool in a new order
+    # every time and undo the point of walking it.
+    distinct_list_seed = seed_to_use
     if attrs_seed == "answernr" and isinstance(rnd_seed, SeedClass):
-        mlist_seed = rnd_seed.seed
+        distinct_list_seed = rnd_seed.seed
 
     myrandom = Random()
     myrandom.seed(a=seed_to_use)
@@ -400,9 +398,9 @@ def get_rnds(
             myrandom.getstate(),
         )
 
-    if jso.startswith("m"):  # m[1,7], m[1,7,2], m3:[1,20], m10
+    if jso.startswith("i"):  # i[1,7], i[1,7,2], i3:[1,20], i10
         return (
-            get_m_list(mlist_seed, index, jso[1:]),
+            get_distinct_list(distinct_list_seed, index, jso[1:]),
             seed_to_use,
             myrandom.getstate(),
         )
