@@ -84,13 +84,13 @@ class PluginReqs(TypedDict, total=False):
 @dataclass
 class InfoModel:
     """Model for the information that is given by TIM in an answer request."""
-
     earlier_answers: int
     look_answer: bool
     max_answers: int | None
     user_id: str
     valid: bool  # could be False e.g. if answering deadline has passed
     show_points: bool | None = None
+    askNew: bool | None = None
 
     @property
     def primary_user(self) -> str:
