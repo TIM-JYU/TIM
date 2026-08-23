@@ -92,7 +92,7 @@ class InfoModel:
     user_id: str
     valid: bool  # could be False e.g. if answering deadline has passed
     show_points: bool | None = None
-    askNew: bool | None = None
+    askNew: bool | Missing = missing
 
     @property
     def primary_user(self) -> str:
