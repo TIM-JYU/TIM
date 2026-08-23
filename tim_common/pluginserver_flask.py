@@ -14,6 +14,7 @@ is converted to the corresponding Model object that can be used in code.
 If validation fails, the plugin returns an error with status code 422.
 
 """
+
 import base64
 import json
 from abc import ABC
@@ -84,6 +85,7 @@ class PluginReqs(TypedDict, total=False):
 @dataclass
 class InfoModel:
     """Model for the information that is given by TIM in an answer request."""
+
     earlier_answers: int
     look_answer: bool
     max_answers: int | None
@@ -287,7 +289,7 @@ The following fields have invalid values:
 
 
 def render_plugin_with_login_request(
-    m: GenericHtmlModel[PluginInput, PluginMarkup, PluginState]
+    m: GenericHtmlModel[PluginInput, PluginMarkup, PluginState],
 ) -> str:
     """Renders a static version of the plugin as HTML along with a request to log in."""
     return render_template_string(
@@ -322,7 +324,7 @@ def is_lazy(q: GenericHtmlModel) -> bool:
 
 
 def render_plugin_lazy(
-    m: GenericHtmlModel[PluginInput, PluginMarkup, PluginState]
+    m: GenericHtmlModel[PluginInput, PluginMarkup, PluginState],
 ) -> str:
     """Renders lazy HTML for a plugin.
 
@@ -345,7 +347,7 @@ def render_plugin_lazy(
 
 
 def render_plugin_html(
-    m: GenericHtmlModel[PluginInput, PluginMarkup, PluginState]
+    m: GenericHtmlModel[PluginInput, PluginMarkup, PluginState],
 ) -> str:
     """Renders HTML for a plugin.
 
@@ -360,7 +362,7 @@ def render_plugin_html(
 
 
 def render_plugin_md(
-    m: GenericHtmlModel[PluginInput, PluginMarkup, PluginState]
+    m: GenericHtmlModel[PluginInput, PluginMarkup, PluginState],
 ) -> str:
     """Renders HTML for a plugin.
 
