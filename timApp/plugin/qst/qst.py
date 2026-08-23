@@ -346,10 +346,6 @@ def qst_multihtml():
         except ValidationError as e:
             multi.append(render_validationerror(e))
         else:
-            info = jso.get("info", {})
-            if info and info.get("askNew", False):
-                jso["state"] = None
-                jso["markup"]["showResult"] = False
             multi.append(qst_get_html(jso, is_review(jso)))
     return json_response(multi)
 
