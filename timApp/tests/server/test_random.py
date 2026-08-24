@@ -104,11 +104,14 @@ class RandomTest(TimRouteTest):
 
     def test_distinct_step_and_bare_forms(self):
         self.assertEqual([1, 3, 5, 7], sorted(v[0] for v in self.walk("i[1,7,2]", 4)))
-        # Both ends of the range belong to it, as with s.
-        bare = [v[0] for v in self.walk("i10", 11)]
-        self.assertEqual(list(range(0, 11)), sorted(bare))
-        self.assertEqual(bare, [v[0] for v in self.walk("i1:10", 11)])
-        self.assertEqual(bare, [v[0] for v in self.walk("i[10]", 11)])
+        # A bare number is the size of the range, as with s: i10 walks 0-9.
+        bare = [v[0] for v in self.walk("i10", 10)]
+        self.assertEqual(list(range(0, 10)), sorted(bare))
+        self.assertEqual(bare, [v[0] for v in self.walk("i[0,9]", 10)])
+        # Written out, both ends of the range belong to it, again as with s.
+        for spec in ["i1:10", "i[10]", "i[0,10]"]:
+            nums = [v[0] for v in self.walk(spec, 11)]
+            self.assertEqual(list(range(0, 11)), sorted(nums), msg=spec)
 
     def test_distinct_without_attempt_counter(self):
         # A seed that is not a SeedClass carries no counter, so the walk stays

@@ -172,10 +172,11 @@ def sep_n_and_range(jso: str) -> tuple[int, str]:
 
     Unlike sep_n_and_jso, a value without a separator is the range and the count
     defaults to one, because an i-list gives one value per attempt by default.
+    A bare number is then the size of that range, as in s: i10 walks 0-9.
     For example:
         "3:[1,20]" -> 3, "[1,20]"
         "[1,7]"    -> 1, "[1,7]"
-        "10"       -> 1, "10"
+        "10"       -> 1, "[0,9]"
 
     :param jso: string to check
     :return: count of values per attempt and the string that stands for a range
@@ -184,7 +185,10 @@ def sep_n_and_range(jso: str) -> tuple[int, str]:
     if idx < 0:
         idx = jso.find("*")
     if idx < 0:
-        return 1, jso
+        try:
+            return 1, f"[0,{int(jso) - 1}]"
+        except ValueError:
+            return 1, jso
     n_str = jso[:idx]
     try:
         n = int(n_str)
