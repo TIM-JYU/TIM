@@ -50,6 +50,10 @@ maxRows: %%maxRows%%
 removeUsersButtonText: "Poista valitut ryhmästä"
 userListButtonText: "Käyttäjälista"
 emailUsersButtonText: "Lähetä sähköpostia"
+forceToolbar: false
+hide:
+  edit: true
+  toolbar: true
 ```
 
 #- {.hidden-print}
