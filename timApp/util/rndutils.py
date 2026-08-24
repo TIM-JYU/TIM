@@ -166,6 +166,135 @@ def get_uniform_list(myrandom: Random, jso: str) -> list[float]:
     return ret
 
 
+def sep_n_and_range(jso: str) -> tuple[int, str]:
+    """
+    Separates the count and the range part of an (i) instruction.
+
+    Unlike sep_n_and_jso, a value without a separator is the range and the count
+    defaults to one, because an i-list gives one value per attempt by default.
+    A bare number is then the size of that range, as in s: i10 walks 0-9.
+    For example:
+        "3:[1,20]" -> 3, "[1,20]"
+        "[1,7]"    -> 1, "[1,7]"
+        "10"       -> 1, "[0,9]"
+
+    :param jso: string to check
+    :return: count of values per attempt and the string that stands for a range
+    """
+    idx = jso.find(":")
+    if idx < 0:
+        idx = jso.find("*")
+    if idx < 0:
+        try:
+            return 1, f"[0,{int(jso) - 1}]"
+        except ValueError:
+            return 1, jso
+    n_str = jso[:idx]
+    try:
+        n = int(n_str)
+    except ValueError:
+        n = 1
+    n = max(n, 1)
+    return min(n, MAX_RND_LIST_LEN), jso[idx + 1 :]
+
+
+def get_distinct_pool(jso: str) -> list[int]:
+    """
+    Returns the pool of unique values that a list cycles through.
+
+    :param jso: string to find the values, for example "[1,7]", "[1,7,2]" or "10"
+    :return: list of unique ints
+    """
+    if not jso:
+        raise ValueError("No range for i")
+    if not jso.startswith("["):  # i10
+        jso = "[" + jso + "]"
+    r = json.loads(jso)
+    if len(r) < 2:  # i[50]
+        r.insert(0, 0)
+    step = 1
+    if len(r) > 2:  # i[1,7,2]
+        step = r[2]
+    if step == 0:
+        raise ValueError("Zero step for i")
+    if abs(r[1] - r[0]) > 500:
+        raise ValueError(f"Too big range for i: {r[0]}-{r[1]}")
+    # Like s, both ends of the range belong to it.
+    pool = list(range(r[0], r[1] + (1 if step > 0 else -1), step))
+    if not pool:
+        raise ValueError(f"Empty range for i: {r[0]}-{r[1]}")
+    return pool
+
+
+def shuffle_pool(base_seed: SeedType, cycle: int, pool: list[int]) -> list[int]:
+    """
+    Returns the pool shuffled for one cycle, not looking at any other cycle.
+
+    :param base_seed: seed that stays the same from one attempt to the next
+    :param cycle: how many full rounds of the pool were used before this one
+    :param pool: values to shuffle
+    :return: shuffled copy of pool
+    """
+    ints = list(pool)
+    myrandom = Random()
+    myrandom.seed(a=f"{base_seed}:{cycle}")
+    myrandom.shuffle(ints)
+    return ints
+
+
+def get_distinct_cycle(base_seed: SeedType, cycle: int, pool: list[int]) -> list[int]:
+    """
+    Returns the order in which one cycle uses the values of the pool.
+
+    Each cycle is shuffled anew, but a cycle never starts with the value the
+    cycle before it ended with, so no value is given twice in a row over the
+    wrap.
+
+    :param base_seed: seed that stays the same from one attempt to the next
+    :param cycle: how many full rounds of the pool were used before this one
+    :param pool: values to put in order
+    :return: values of pool in the order this cycle uses them
+    """
+    size = len(pool)
+    if cycle <= 0 or size < 2:
+        return shuffle_pool(base_seed, cycle, pool)
+    if size == 2:  # Two values leave no room to choose
+        return shuffle_pool(base_seed, 0, pool)
+    ints = shuffle_pool(base_seed, cycle, pool)
+    if ints[0] == shuffle_pool(base_seed, cycle - 1, pool)[-1]:
+        i = 1 + cycle % (size - 2)  # neither the first nor the last slot
+        ints[0], ints[i] = ints[i], ints[0]
+    return ints
+
+
+def get_distinct_list(base_seed: SeedType, index: int, jso: str) -> list[int]:
+    """
+    Returns one attempt's worth of values from a shuffled pool.
+
+    The pool is walked in order, so a value comes up again only after every
+    other value has been used. When the pool runs out, the walk wraps around to
+    a new shuffle of the same values.
+
+    :param base_seed: seed that stays the same from one attempt to the next
+    :param index: number of attempts before this one, from SeedClass.extraseed
+    :param jso: string to find the values
+    :return: list of values for this attempt
+    """
+    n, jso = sep_n_and_range(jso)
+    pool = get_distinct_pool(jso)
+    size = len(pool)
+    cycles: dict[int, list[int]] = {}
+    ret = []
+    for pos in range(index * n, index * n + n):
+        cycle, slot = divmod(pos, size)
+        order = cycles.get(cycle)
+        if order is None:
+            order = get_distinct_cycle(base_seed, cycle, pool)
+            cycles[cycle] = order
+        ret.append(order[slot])
+    return ret
+
+
 T = TypeVar("T")
 
 
@@ -225,6 +354,10 @@ def get_rnds(
     if not jso:
         return None, rnd_seed, state
 
+    # How many attempts came before this one.
+    # Only i-lists use it; without it they stay on the first value.
+    index = rnd_seed.extraseed if isinstance(rnd_seed, SeedClass) else 0
+
     seed_to_use = rnd_seed
     attrs_seed = attrs.get("seed", None)
     if attrs_seed is not None:
@@ -248,6 +381,17 @@ def get_rnds(
         # seed_to_use = int(time.perf_counter() * 1000)
         seed_to_use = secrets.randbits(64)
 
+    # An i-list has to see the same pool on every attempt. seed="answernr" mixes
+    # the attempt number into seed_to_use, which would put the pool in a new order
+    # every time and undo the point of walking it.
+    stable_seed = seed_to_use
+    if attrs_seed == "answernr" and isinstance(rnd_seed, SeedClass):
+        stable_seed = rnd_seed.seed
+    # The name is mixed in so that two i-lists in the same block walk different
+    # orders. s and u are kept apart by the shared generator state instead, which
+    # an i-list does not use.
+    distinct_list_seed = f"{stable_seed}:{name}"
+
     myrandom = Random()
     myrandom.seed(a=seed_to_use)
     if state:
@@ -258,6 +402,13 @@ def get_rnds(
     if jso.startswith("u"):  # u[[0,1],[100,110],[-30,-20],[0.001,0.002]], u6
         return (
             repeat_rnd(get_uniform_list, myrandom, jso[1:]),
+            seed_to_use,
+            myrandom.getstate(),
+        )
+
+    if jso.startswith("i"):  # i[1,7], i[1,7,2], i3:[1,20], i10
+        return (
+            get_distinct_list(distinct_list_seed, index, jso[1:]),
             seed_to_use,
             myrandom.getstate(),
         )
@@ -282,8 +433,12 @@ def get_rands_as_dict(
         return None, rnd_seed, state
     names = attrs.get("rndnames", "rnd").split(",")
     ret: dict = {}
+    # get_rnds gives back a plain seed number, so passing that on would leave every
+    # name but the first without the attempt counter, and their i-lists would sit on
+    # the first value. Give each name the same SeedClass instead.
+    counter_seed = rnd_seed if isinstance(rnd_seed, SeedClass) else None
     for name in names:
-        rnds, rnd_seed, state = get_rnds(attrs, name, rnd_seed, state)
+        rnds, rnd_seed, state = get_rnds(attrs, name, counter_seed or rnd_seed, state)
         if rnds is None:
             continue
         ret[name] = rnds
