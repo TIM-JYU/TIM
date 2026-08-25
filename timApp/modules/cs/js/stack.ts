@@ -541,6 +541,7 @@ export class StackPluginComponent
         const r = await this.postAnswer<{web: {stackResult: StackResult}}>({
             input: {
                 nosave: true,
+                stackPeek: true,
                 type: "stack",
                 usercode: "",
                 stackData: {...data},

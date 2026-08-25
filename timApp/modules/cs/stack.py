@@ -81,6 +81,8 @@ class Stack(Language):
         prev_answer = input.get("prevAnswer", False)
         hide_results = markup.get("hideResults", False)
 
+        stack_peek = input.get("stackPeek", False)
+
         q = stack_data.get("question", "")
         q_data = self.parse_stack_question(
             q, not self.query.jso.get("markup").get("stackjsx")
@@ -121,25 +123,26 @@ class Stack(Language):
         #
         # This is to prevent the correct answer from leaking prematurely via web -> stackResult.
         ucode = input.get("usercode", "")
-        if ucode:
-            # Stack tasks may have several answer fields, so we need to check each one
-            ucode = json.loads(ucode)
-            ucode = len("".join([str(v) for v in ucode.values()])) > 0
-        score = r["score"]
-        valid = info.get("valid", False)
-        max_tries = info.get("max_answers", 1)
-        num_tries = info.get("earlier_answers", 0)
-        # If max_tries is None the task does not have an answer limit
-        has_tries_left = True if max_tries is None else num_tries <= max_tries
+        if not stack_peek:
+            if ucode:
+                # Stack tasks may have several answer fields, so we need to check each one
+                ucode = json.loads(ucode)
+                ucode = len("".join([str(v) for v in ucode.values()])) > 0
+            score = r["score"]
+            valid = info.get("valid", False)
+            max_tries = info.get("max_answers", 1)
+            num_tries = info.get("earlier_answers", 0)
+            # If max_tries is None the task does not have an answer limit
+            has_tries_left = True if max_tries is None else num_tries <= max_tries
 
-        if (
-            (not has_tries_left)
-            or (not valid)
-            or (not ucode)
-            or (not score)
-            or (not has_tries_left and score <= 0)
-        ):
-            r["formatcorrectresponse"] = ""
+            if (
+                (not has_tries_left)
+                or (not valid)
+                or (not ucode)
+                or (not score)
+                or (not has_tries_left and score <= 0)
+            ):
+                r["formatcorrectresponse"] = ""
 
         if "score" in r:
             out = "Score: %s" % r.get("score", 0)
@@ -147,7 +150,7 @@ class Stack(Language):
 
         # r['questiontext'] = tim_sanitize(r['questiontext'])
 
-        if hide_results:
+        if hide_results and not stack_peek:
             # The information about points needs to be removed from the questiontext HTML
             question_text = r.get("questiontext", "")
             soup = BeautifulSoup(question_text, "html.parser")
