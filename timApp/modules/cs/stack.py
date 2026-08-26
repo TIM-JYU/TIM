@@ -130,17 +130,18 @@ class Stack(Language):
                 ucode = len("".join([str(v) for v in ucode.values()])) > 0
             score = r["score"]
             valid = info.get("valid", False)
-            max_tries = info.get("max_answers", 1)
+            max_tries = info.get("max_answers")
             num_tries = info.get("earlier_answers", 0)
-            # If max_tries is None the task does not have an answer limit
-            has_tries_left = True if max_tries is None else num_tries <= max_tries
+            answer_limit_exceeded = (
+                True if max_tries is None else num_tries >= max_tries
+            )
 
             if (
-                (not has_tries_left)
+                (not answer_limit_exceeded)
                 or (not valid)
                 or (not ucode)
                 or (not score)
-                or (not has_tries_left and score <= 0)
+                or (not answer_limit_exceeded and score <= 0)
             ):
                 r["formatcorrectresponse"] = ""
 
