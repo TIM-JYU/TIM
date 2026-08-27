@@ -42,6 +42,7 @@ if TYPE_CHECKING:
     from timApp.item.block import Block
     from timApp.document.docentry import DocEntry
     from timApp.user.user import User
+    from timApp.user.subgroups import SubGroup
     from timApp.auth.auth_models import BlockAccess
     from timApp.readmark.readparagraph import ReadParagraph
     from timApp.note.usernote import UserNote
@@ -150,6 +151,13 @@ class UserGroup(db.Model, TimeStampMixin, SCIMEntity):
 
     internalmessage_display: Mapped[List["InternalMessageDisplay"]] = relationship(
         back_populates="usergroup"
+    )
+
+    # For subgroups; see subgroups.py for details
+    subgroups = relationship(
+        "SubGroup",
+        foreign_keys=[SubGroup.parent_id],
+        cascade="all, delete-orphan",
     )
 
     def __repr__(self):
@@ -347,6 +355,11 @@ class UserGroup(db.Model, TimeStampMixin, SCIMEntity):
             .scalars()
             .one()
         )
+
+    @staticmethod
+    def get_subgroups(name: str) -> list[UserGroup] | None:
+        ug = UserGroup.get_by_name(name)
+        return ug.subgroups if ug else None
 
 
 @lru_cache
