@@ -47,6 +47,7 @@ from timApp.document.translation.routes import tr_bp
 from timApp.gamification.generateMap import generateMap
 from timApp.gamification.badge.routes import badges_blueprint
 from timApp.item.distribute_rights import dist_bp
+from timApp.item.item import Item
 from timApp.item.manage import manage_page
 from timApp.item.routes import view_page
 from timApp.item.routes_tags import tags_blueprint
@@ -269,7 +270,7 @@ def get_tos_date() -> datetime | None:
     tos_path = current_app.config["TERMS_OF_SERVICE_DOC"]
     if tos_path:
         tos_doc = Item.find_by_path(tos_path)
-        return tos_doc.last_modified
+        return tos_doc.last_modified if tos_doc else None
     else:
         return None
 

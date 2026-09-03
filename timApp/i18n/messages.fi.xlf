@@ -1162,42 +1162,6 @@
           <context context-type="linenumber">265</context>
         </context-group>
       </trans-unit>
-      <trans-unit id="5248717555542428023" datatype="html">
-        <source>Username</source>
-        <target state="translated">Käyttäjätunnus</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/messaging/manage/message-list-admin.component.ts</context>
-          <context context-type="linenumber">226</context>
-        </context-group>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/messaging/manage/message-list-admin.component.ts</context>
-          <context context-type="linenumber">266</context>
-        </context-group>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
-          <context context-type="linenumber">225</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="4768749765465246664" datatype="html">
-        <source>Email</source>
-        <target state="translated">Sähköpostiosoite</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/messaging/manage/message-list-admin.component.ts</context>
-          <context context-type="linenumber">56</context>
-        </context-group>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/messaging/manage/message-list-admin.component.ts</context>
-          <context context-type="linenumber">227</context>
-        </context-group>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/messaging/manage/message-list-admin.component.ts</context>
-          <context context-type="linenumber">267</context>
-        </context-group>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/user/add-contact-dialog.component.ts</context>
-          <context context-type="linenumber">28</context>
-        </context-group>
-      </trans-unit>
       <trans-unit id="401896744286330382" datatype="html">
         <source>Send right</source>
         <target state="translated">Lähetysoikeus</target>
@@ -1870,26 +1834,6 @@
           <context context-type="linenumber">23,29</context>
         </context-group>
       </trans-unit>
-      <trans-unit id="1792806198663410166" datatype="html">
-        <source>Bookmarks</source>
-        <target state="translated">Kirjanmerkit</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/sidebarmenu/tabs/bookmarks-tab.component.ts</context>
-          <context context-type="linenumber">6</context>
-        </context-group>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/sidebarmenu/tabs/bookmarks-tab.component.ts</context>
-          <context context-type="linenumber">7</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="7372224717222969507" datatype="html">
-        <source>Document index</source>
-        <target state="translated">Dokumentin sisällys</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/sidebarmenu/tabs/index-tab.component.ts</context>
-          <context context-type="linenumber">16</context>
-        </context-group>
-      </trans-unit>
       <trans-unit id="7911416166208830577" datatype="html">
         <source>Help</source>
         <target state="translated">Ohje</target>
@@ -1994,18 +1938,6 @@
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/sidebarmenu/tabs/settings-tab.component.ts</context>
           <context context-type="linenumber">164</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="4836175280518160350" datatype="html">
-        <source>Document settings</source>
-        <target state="translated">Dokumentin asetukset</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/sidebarmenu/tabs/settings-tab.component.ts</context>
-          <context context-type="linenumber">49</context>
-        </context-group>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/sidebarmenu/tabs/settings-tab.component.ts</context>
-          <context context-type="linenumber">76</context>
         </context-group>
       </trans-unit>
       <trans-unit id="3345795974962707996" datatype="html">
@@ -2488,14 +2420,6 @@
           <context context-type="linenumber">17</context>
         </context-group>
       </trans-unit>
-      <trans-unit id="1478700475585808513" datatype="html">
-        <source>Lecture</source>
-        <target state="translated">Luento</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/sidebarmenu/tabs/lecture-info-tab.component.ts</context>
-          <context context-type="linenumber">14</context>
-        </context-group>
-      </trans-unit>
       <trans-unit id="5967071017461085725" datatype="html">
         <source>Points on this page</source>
         <target state="translated">Tämän sivun pisteet</target>
@@ -2630,28 +2554,12 @@
           <context context-type="linenumber">61</context>
         </context-group>
       </trans-unit>
-      <trans-unit id="8142657803643326364" datatype="html">
-        <source>Get question</source>
-        <target state="translated">Hae kysymys</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/sidebarmenu/tabs/load-questions-tab.component.ts</context>
-          <context context-type="linenumber">8</context>
-        </context-group>
-      </trans-unit>
       <trans-unit id="1835862130590080443" datatype="html">
         <source>Loading question manually...</source>
         <target state="translated">Ladataan kysymys...</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/sidebarmenu/tabs/load-questions-tab.component.ts</context>
           <context context-type="linenumber">9</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="9086145107498026183" datatype="html">
-        <source>Lecture participants</source>
-        <target state="translated">Luennon osallistujat</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/sidebarmenu/tabs/logged-users-tab.component.ts</context>
-          <context context-type="linenumber">7</context>
         </context-group>
       </trans-unit>
       <trans-unit id="2764567568324210100" datatype="html">
@@ -2692,14 +2600,6 @@
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/sidebarmenu/tabs/logged-users-tab.component.ts</context>
           <context context-type="linenumber">29</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="7025159553172419928" datatype="html">
-        <source>Scoreboard</source>
-        <target state="translated">Pistetaulu</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/sidebarmenu/tabs/score-info-tab.component.ts</context>
-          <context context-type="linenumber">7</context>
         </context-group>
       </trans-unit>
       <trans-unit id="2595203250116897745" datatype="html">
@@ -2984,14 +2884,6 @@
           <context context-type="linenumber">381</context>
         </context-group>
       </trans-unit>
-      <trans-unit id="2336550011721758066" datatype="html">
-        <source>Log in</source>
-        <target state="translated">Kirjaudu sisään</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/user/login-dialog.component.ts</context>
-          <context context-type="linenumber">383</context>
-        </context-group>
-      </trans-unit>
       <trans-unit id="2826581353496868063" datatype="html">
         <source>Language</source>
         <target state="translated">Kieli</target>
@@ -3236,14 +3128,6 @@
           <context context-type="linenumber">17</context>
         </context-group>
       </trans-unit>
-      <trans-unit id="1346640911183618259" datatype="html">
-        <source>Add a user to this session</source>
-        <target state="translated">Lisää käyttäjä istuntoon</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/user/user-menu.component.ts</context>
-          <context context-type="linenumber">29</context>
-        </context-group>
-      </trans-unit>
       <trans-unit id="5676197465127641757" datatype="html">
         <source>You're logged in</source>
         <target state="translated">Olet kirjautunut sisään</target>
@@ -3290,18 +3174,6 @@
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/oauth-authorize.component.ts</context>
           <context context-type="linenumber">48</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="2159130950882492111" datatype="html">
-        <source>Cancel</source>
-        <target state="translated">Peruuta</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/user/oauth-authorize.component.ts</context>
-          <context context-type="linenumber">50</context>
-        </context-group>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
-          <context context-type="linenumber">313</context>
         </context-group>
       </trans-unit>
       <trans-unit id="3456557310846343541" datatype="html">
@@ -4854,7 +4726,7 @@
       </trans-unit>
       <trans-unit id="2831208374909602436" datatype="html">
         <source>Uploaded <x id="PH" equiv-text="file.name"/> as <x id="PH_1" equiv-text="mapping.path"/> at <x id="PH_2" equiv-text="timeString()"/>. <x id="PH_3" equiv-text="this.multiple                                                     ? this.stem ?? &quot;&quot;                                                     : &quot;&quot;"/></source>
-        <target state="translated">Ladattiin tiedosto <x id="PH" equiv-text="file.name"/> tiedostonimellä <x id="PH_1" equiv-text="mapping.path"/> ({timeString())}. <x id="PH_3" equiv-text="this.multiple                                                     ? this.stem ?? &quot;&quot;                                                     : &quot;&quot;"/></target>
+        <target state="translated">Ladattiin tiedosto <x id="PH" equiv-text="file.name"/> tiedostonimellä <x id="PH_1" equiv-text="mapping.path"/> (<x id="PH_2" equiv-text="timeString()"/>). <x id="PH_3" equiv-text="this.multiple                                                     ? this.stem ?? &quot;&quot;                                                     : &quot;&quot;"/></target>
         <context-group purpose="location">
           <context context-type="sourcefile">modules/cs/js/util/file-select.ts</context>
           <context context-type="linenumber">244,252</context>
@@ -8898,7 +8770,7 @@
       </trans-unit>
       <trans-unit id="187187500641108332" datatype="html">
         <source><x id="INTERPOLATION" equiv-text="Folder() ?? 'Enter the location or leave empty'}}"/></source>
-        <target state="translated">{Folder() ?? 'Kirjoita polku tai jätä tyhjäksi'}}}</target>
+        <target state="translated"><x id="INTERPOLATION" equiv-text="Folder() ?? 'Enter the location or leave empty'}}"/></target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/user-group-dialog.component.ts</context>
           <context context-type="linenumber">61,62</context>
@@ -9078,186 +8950,6 @@
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/quantum-toolbox.component.ts</context>
           <context context-type="linenumber">43</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="1392223819399449504" datatype="html">
-        <source>Number of students</source>
-        <target state="translated">Oppilasmäärä</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/ui/group-management.component.ts</context>
-          <context context-type="linenumber">120,121</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="2041629809382689328" datatype="html">
-        <source>Group name</source>
-        <target state="translated">Ryhmän nimi</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/ui/group-management.component.ts</context>
-          <context context-type="linenumber">140,141</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="5394139990516849326" datatype="html">
-        <source>Group document</source>
-        <target state="translated">Ryhmädokumentti</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/ui/group-management.component.ts</context>
-          <context context-type="linenumber">141,142</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="2507348948753734044" datatype="html">
-        <source>Timeslot</source>
-        <target state="translated">Aikaväli</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/ui/group-management.component.ts</context>
-          <context context-type="linenumber">144,145</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="187187500641108332" datatype="html">
-        <source><x id="INTERPOLATION" equiv-text="foTitle()}}"/></source>
-        <target state="translated"><x id="INTERPOLATION" equiv-text="foTitle()}}"/></target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/user-creation-dialog.component.ts</context>
-          <context context-type="linenumber">79,80</context>
-        </context-group>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/user/user-group-dialog.component.ts</context>
-          <context context-type="linenumber">61,62</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="1919972235845496858" datatype="html">
-        <source>Login code</source>
-        <target state="translated">Kirjautumiskoodi</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/ui/group-management.component.ts</context>
-          <context context-type="linenumber">224,225</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="6955490026273536125" datatype="html">
-        <source> Add new student </source>
-        <target state="translated"> Lisää uusi oppilas </target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/ui/group-management.component.ts</context>
-          <context context-type="linenumber">249</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="952211910163814535" datatype="html">
-        <source> Import students from Wilma </source>
-        <target state="translated"> Tuo oppilaat Wilmasta </target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/ui/group-management.component.ts</context>
-          <context context-type="linenumber">252</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="1397367236021319842" datatype="html">
-        <source> Create user </source>
-        <target state="translated"> Luo käyttäjä </target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/user/user-creation-dialog.component.ts</context>
-          <context context-type="linenumber">38</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="3438398600349705966" datatype="html">
-        <source>Enter a username for the user</source>
-        <target state="translated">Anna käyttäjänimi</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/user/user-creation-dialog.component.ts</context>
-          <context context-type="linenumber">50,51</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="321211703452449732" datatype="html">
-        <source>First name(s)</source>
-        <target state="translated">Etunimet</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/user/user-creation-dialog.component.ts</context>
-          <context context-type="linenumber">56,57</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="7259493919346164577" datatype="html">
-        <source>User's given name, list first and middle names in order</source>
-        <target state="translated">Oppilaan etunimi ja tarvittaessa keskimmäinen nimi</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/user/user-creation-dialog.component.ts</context>
-          <context context-type="linenumber">64,65</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="2045112409653231798" datatype="html">
-        <source>Surname</source>
-        <target state="translated">Sukunimi</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/user/user-creation-dialog.component.ts</context>
-          <context context-type="linenumber">69,70</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="1873235879343846913" datatype="html">
-        <source>User's surname</source>
-        <target state="translated">Oppilaan sukunimi</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/user/user-creation-dialog.component.ts</context>
-          <context context-type="linenumber">78,79</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="3797679965749234166" datatype="html">
-        <source>Additional information related to the user, eg. class or group name</source>
-        <target state="translated">Lisätietoa oppilaasta, esim. luokka tai opetusryhmä</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/user/user-creation-dialog.component.ts</context>
-          <context context-type="linenumber">89,90</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="5118443923593151399" datatype="html">
-        <source>User's email</source>
-        <target state="translated">Käyttäjän sähköpostiosoite</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/user/user-creation-dialog.component.ts</context>
-          <context context-type="linenumber">100,101</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="3191375468946657151" datatype="html">
-        <source> First name is required. </source>
-        <target state="translated"> Etunimi on vaadittu tieto. </target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/user/user-creation-dialog.component.ts</context>
-          <context context-type="linenumber">108</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="8576076545194079732" datatype="html">
-        <source> First name should not contain the slash character. </source>
-        <target state="translated"> Etunimi ei voi sisältää vinoviivaa. </target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/user/user-creation-dialog.component.ts</context>
-          <context context-type="linenumber">111</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="1382265866050618696" datatype="html">
-        <source> Surname is required. </source>
-        <target state="translated"> Sukunimi on vaadittu tieto. </target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/user/user-creation-dialog.component.ts</context>
-          <context context-type="linenumber">117</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="2813752041544956779" datatype="html">
-        <source> Surname should not contain the slash character. </source>
-        <target state="translated"> Sukunimi ei voi sisältää vinoviivaa. </target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/user/user-creation-dialog.component.ts</context>
-          <context context-type="linenumber">120</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="6213502996886086330" datatype="html">
-        <source> Import users </source>
-        <target state="translated"> Tuo käyttäjiä </target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/user/user-import-dialog.component.ts</context>
-          <context context-type="linenumber">25</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="6018067703223481846" datatype="html">
-        <source>Enter student information in the format &lt;class&gt; &lt;last name&gt; &lt;first name&gt;, one student per line.</source>
-        <target state="translated">Syötä oppilaan tiedot muodossa &lt;luokka&gt; &lt;sukunimi&gt; &lt;etunimi&gt;, yksi oppilas per rivi.</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/user/user-import-dialog.component.ts</context>
-          <context context-type="linenumber">47</context>
         </context-group>
       </trans-unit>
       <trans-unit id="6616765859036665543" datatype="html">
@@ -9582,7 +9274,7 @@ Tätä toimintoa ei voi peruuttaa!
       </trans-unit>
       <trans-unit id="5856526190707156104" datatype="html">
         <source> Press the toggle button to activate login codes for the exam group </source>
-        <target state="translated">Ota koeryhmän kirjautumiskoodit käyttöön viereisestä painikkeesta </target>
+        <target state="translated"> Ota koeryhmän kirjautumiskoodit käyttöön viereisestä painikkeesta </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
           <context context-type="linenumber">478</context>
@@ -9606,14 +9298,6 @@ Tätä toimintoa ei voi peruuttaa!
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
           <context context-type="linenumber">649,650</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="3438605880625234523" datatype="html">
-        <source>Ask students to log in to the exam page:</source>
-        <target state="translated">Pyydä oppilaita kirjautumaan koejärjestelmään: </target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
-          <context context-type="linenumber">507</context>
         </context-group>
       </trans-unit>
       <trans-unit id="6839138864615473489" datatype="html">
@@ -9658,7 +9342,7 @@ Tätä toimintoa ei voi peruuttaa!
       </trans-unit>
       <trans-unit id="6625041605734206208" datatype="html">
         <source> Press the toggle button to start the exam </source>
-        <target state="translated">Aloita koe viereisestä painikkeesta </target>
+        <target state="translated"> Aloita koe viereisestä painikkeesta </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
           <context context-type="linenumber">561</context>
@@ -10033,26 +9717,6 @@ Ole hyvä ja luo ensin kirjautumiskoodit.</target>
           <context context-type="linenumber">444</context>
         </context-group>
       </trans-unit>
-      <trans-unit id="8023863054421277417" datatype="html">
-        <source> The exam has started! Students can now access the exam. Audio and video materials can be accessed via the "View exam document" link. </source>
-        <target state="translated"> Koe alkoi! Oppilaat voivat nyt avata kokeen. Löydät kuuntelut &lt;i&gt;Tarkastele koedokumenttia ja video- ja audiomateriaaleja&lt;/i&gt; -painikkeesta. </target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
-          <context context-type="linenumber">558</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="6266613639885813372" datatype="html">
-        <source>Could not load task data. Check your internet connection and try again.</source>
-        <target state="translated">Yhteysongelma palvelimeen, yritä tallentaa vastauksesi uudestaan. Kun tallennus on onnistunut, sulje tämä ilmoitus.</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/answer/answer-browser.component.ts</context>
-          <context context-type="linenumber">1555</context>
-        </context-group>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/answer/answer-browser.component.ts</context>
-          <context context-type="linenumber">1788</context>
-        </context-group>
-      </trans-unit>
       <trans-unit id="142265385893814401" datatype="html">
         <source>There is an issue with the server. Try to save your work and reload the page.</source>
         <target state="translated">Yhteysongelma palvelimeen, yritä tallentaa vastauksesi uudestaan. Kun tallennus on onnistunut, sulje tämä ilmoitus.</target>
@@ -10267,7 +9931,7 @@ Ole hyvä ja luo ensin kirjautumiskoodit.</target>
       </trans-unit>
       <trans-unit id="8054904775519687363" datatype="html">
         <source><x id="START_TAG_STRONG" ctype="x-strong" equiv-text="User"/>User-made styles<x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong&gt;"/> are made and maintained by TIM's users. For more information, see <x id="START_LINK" ctype="x-a" equiv-text="&lt;a href=&quot;/view/tim/ohjeita/styles&quot;&gt;"/>style authoring guide<x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a&gt;"/>. </source>
-        <target state="translated"><x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong&gt;"/>Käyttäjätyylit<x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong&gt;"/> ovat TIM-käyttäjien luomat. Katso <x id="START_LINK" ctype="x-a" equiv-text="&lt;a href=&quot;/view/tim/ohjeita/styles&quot;&gt;"/>tyylien laadintaopas<x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a&gt;"/> lisätietoja varten.</target>
+        <target state="translated"><x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong&gt;"/>Käyttäjätyylit<x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong&gt;"/> ovat TIM-käyttäjien luomat. Katso <x id="START_LINK" ctype="x-a" equiv-text="&lt;a href=&quot;/view/tim/ohjeita/styles&quot;&gt;"/>tyylien laadintaopas<x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a&gt;"/> lisätietoja varten. </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
           <context context-type="linenumber">270,272</context>
@@ -10275,7 +9939,7 @@ Ole hyvä ja luo ensin kirjautumiskoodit.</target>
       </trans-unit>
       <trans-unit id="4546255532664748373" datatype="html">
         <source>Add Print Settings </source>
-        <target state="translated">Lisää tulostusasetukset</target>
+        <target state="translated">Lisää tulostusasetukset </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
           <context context-type="linenumber">336,337</context>
@@ -10297,38 +9961,6 @@ Ole hyvä ja luo ensin kirjautumiskoodit.</target>
           <context context-type="linenumber">431</context>
         </context-group>
       </trans-unit>
-      <trans-unit id="2859819736874880280" datatype="html">
-        <source>Logging in, please wait...</source>
-        <target state="translated">Kirjaudutaan sisään, odota...</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/user/user-code-login.component.ts</context>
-          <context context-type="linenumber">35</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="2298247937024475895" datatype="html">
-        <source>Login code not yet active. Make sure you use the correct code or ask the code to be activated.</source>
-        <target state="translated">Kirjautumiskoodi ei ole vielä aktiivinen. Tarkista, että sinulla on oikea koodi tai pyydä, että koodisi aktivoidaan.</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/user/user-code-login.component.ts</context>
-          <context context-type="linenumber">10,8</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="563854068285277269" datatype="html">
-        <source>Login code expired. Make sure you use the correct code or ask for a new code.</source>
-        <target state="translated">Kirjautumiskoodi on umpeutunut. Tarkista, että käytit oikeaa koodia tai pyydä uusi koodi.</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/user/user-code-login.component.ts</context>
-          <context context-type="linenumber">11</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="5533111384851624507" datatype="html">
-        <source>Invalid login code. Check that you entered it correctly.</source>
-        <target state="translated">Väärä kirjautumiskoodi. Tarkista, että syötit sen oikein.</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/user/user-code-login.component.ts</context>
-          <context context-type="linenumber">9,8</context>
-        </context-group>
-      </trans-unit>
       <trans-unit id="6266613639885813372" datatype="html">
         <source>Could not load task data. Check your internet connection and try again.</source>
         <target state="translated">Tehtävän tietoja ei voitu ladata. Yritä tallentaa vastauksesi. Kun tallennus on onnistunut, sulje tämä ilmoitus.</target>
@@ -10339,18 +9971,6 @@ Ole hyvä ja luo ensin kirjautumiskoodit.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/answer/answer-browser.component.ts</context>
           <context context-type="linenumber">1788</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="142265385893814401" datatype="html">
-        <source>There is an issue with the server. Try to save your work and reload the page.</source>
-        <target state="translated">Yhteysongelma palvelimeen, yritä tallentaa vastauksesi uudestaan. Kun tallennus on onnistunut, sulje tämä ilmoitus.</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/answer/answer-browser.component.ts</context>
-          <context context-type="linenumber">1559</context>
-        </context-group>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/answer/answer-browser.component.ts</context>
-          <context context-type="linenumber">1792</context>
         </context-group>
       </trans-unit>
       <trans-unit id="657151549921052159" datatype="html">
@@ -10391,19 +10011,6 @@ Ole hyvä ja luo ensin kirjautumiskoodit.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
           <context context-type="linenumber">785,787</context>
-        <source>Ask students to log in to the exam page using their login codes: <x id="START_LINK" ctype="x-a" equiv-text="&lt;a [href]=&quot;getExamUrl(examByDocId.get(group.examDocId!))&quot;>"/><x id="START_TAG_CODE" ctype="x-code" equiv-text="{{ getExa"/><x id="INTERPOLATION" equiv-text="yDocId.get(group.examDocId!)) }}"/><x id="CLOSE_TAG_CODE" ctype="x-code" equiv-text="&lt;/a>&lt;/li>"/><x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/li>"/></source>
-        <target state="translated">Pyydä oppilaita kirjautumaan koejärjestelmään: <x id="START_LINK" ctype="x-a" equiv-text="&lt;a [href]=&quot;getExamUrl(examByDocId.get(group.examDocId!))&quot;>"/><x id="START_TAG_CODE" ctype="x-code" equiv-text="{{ getExa"/><x id="INTERPOLATION" equiv-text="yDocId.get(group.examDocId!)) }}"/><x id="CLOSE_TAG_CODE" ctype="x-code" equiv-text="&lt;/a>&lt;/li>"/><x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/li>"/></target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
-          <context context-type="linenumber">712,713</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="1229716178210207066" datatype="html">
-        <source>Students can now review their answers. Students cannot submit new answers but can see their answers and model answers (if they are included).</source>
-        <target state="translated">Oppilaat voivat omatoimisesti tarkastella vastauksiaan. Oppilaat eivät voi lähettää uusia vastauksia, mutta he voivat katsoa mallivastauksia opettajan tapaan.</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
-          <context context-type="linenumber">712,713</context>
         </context-group>
       </trans-unit>
       <trans-unit id="9173480621811532307" datatype="html">
@@ -10568,22 +10175,6 @@ Syötä useiden käyttäjien osoitteet allekkain tai pilkulla erotettuina.</targ
           <context context-type="linenumber">720,721</context>
         </context-group>
       </trans-unit>
-      <trans-unit id="4189671442877791653" datatype="html">
-        <source>To end the view right, press the <x id="START_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;i>"/>'End showing answers to students button'<x id="CLOSE_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;/i>"/>. The right is automatically disabled in 1 hour.</source>
-        <target state="translated">Kun haluat lopettaa katseluoikeuden, paina <x id="START_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;i>"/>Lopeta vastausten näyttäminen koeryhmän oppilailta<x id="CLOSE_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;/i>"/> -painiketta. Koejärjestelmä lopettaa tarkasteluoikeuden automaattisesti yhden tunnin päästä oikeuden antamisesta.</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
-          <context context-type="linenumber">722,723</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="6667488878974100003" datatype="html">
-        <source>Press the <x id="START_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;i>"/>'Begin showing answers to students'<x id="CLOSE_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;/i>"/> button to allow students to review their answers for 1 hour.</source>
-        <target state="translated">Paina <x id="START_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;i>"/>Aloita vastausten näyttäminen koeryhmän oppilaille<x id="CLOSE_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;/i>"/> -painiketta. Oppilaiden kirjautumiskoodit aktivoituvat, ja heille annetaan pääsyoikeus kokeeseen yhdeksi tunniksi.</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
-          <context context-type="linenumber">718,719</context>
-        </context-group>
-      </trans-unit>
       <trans-unit id="5769201915047199693" datatype="html">
         <source>New velps</source>
         <target state="translated">Uudet velpit</target>
@@ -10614,14 +10205,6 @@ Syötä useiden käyttäjien osoitteet allekkain tai pilkulla erotettuina.</targ
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/ui/goto-link.component.ts</context>
           <context context-type="linenumber">63</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="4454548802259509672" datatype="html">
-        <source> Select an exam in section '3. Manage exams' to enable showing answers. </source>
-        <target state="translated"> Valitse koe kohdassa &lt;i&gt;3. Hallinnoi kokeita&lt;/i&gt; voidaksesi näyttää vastauksia. </target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
-          <context context-type="linenumber">702</context>
         </context-group>
       </trans-unit>
       <trans-unit id="7571375880734710634" datatype="html">
@@ -11224,9 +10807,6 @@ Syötä useiden käyttäjien osoitteet allekkain tai pilkulla erotettuina.</targ
           <context context-type="linenumber">76</context>
         </context-group>
       </trans-unit>
-      <trans-unit id="8036091162175708988" datatype="html">
-        <source>Make sure the exam is ended and login codes are disabled in section <x id="START_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;i&gt;"/>'3. Manage exams'<x id="CLOSE_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;/i&gt;"/></source>
-        <target state="translated"> Varmista, että koeryhmän koe on lopetettu ja että kirjautumiskoodit on otettu pois käytöstä kohdassa <x id="START_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;i&gt;"/>3. Hallinnoi kokeita<x id="CLOSE_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;/i&gt;"/>.</target>
       <trans-unit id="3393624369102529500" datatype="html">
         <source>Edit badge</source>
         <target state="translated">Muokkaa merkkiä</target>
@@ -11235,9 +10815,6 @@ Syötä useiden käyttäjien osoitteet allekkain tai pilkulla erotettuina.</targ
           <context context-type="linenumber">82</context>
         </context-group>
       </trans-unit>
-      <trans-unit id="3550757413033906635" datatype="html">
-        <source>Students can open the exam using the <x id="START_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;i&gt;"/>'Open exam'<x id="CLOSE_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;/i&gt;"/> button.</source>
-        <target state="translated">Oppilaat voivat avata kokeen omatoimisesti <x id="START_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;i&gt;"/>Avaa koe<x id="CLOSE_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;/i&gt;"/> -painikkeesta.</target>
       <trans-unit id="6020986914072713662" datatype="html">
         <source>Delete badge</source>
         <target state="translated">Poista merkki</target>
@@ -11310,550 +10887,6 @@ Syötä useiden käyttäjien osoitteet allekkain tai pilkulla erotettuina.</targ
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/group-dashboard/name-changer.component.ts</context>
           <context context-type="linenumber">31,32</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="7571375880734710634" datatype="html">
-        <source> Terms of Service </source>
-        <target state="translated"> Käyttöehdot </target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/footer.component.ts</context>
-          <context context-type="linenumber">48,50</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="4343307932975048814" datatype="html">
-        <source>Item is visible publicly (ie. to everyone), including anonymous users.</source>
-        <target state="translated">Kohde näkyy julkisesti kaikille (myös anonyymeille käyttäjille).</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/folder/directory-list.component.ts</context>
-          <context context-type="linenumber">23,21</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="53962414988403367" datatype="html">
-        <source>Item is visible to logged-in users.</source>
-        <target state="translated">Kohde näkyy sisäänkirjautuneille käyttäjille.</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/folder/directory-list.component.ts</context>
-          <context context-type="linenumber">24,21</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="6175417143135898708" datatype="html">
-        <source>Item is visible to groups belonging to a Haka organization.</source>
-        <target state="translated">Kohde näkyy Haka-organisaatioon kuuluville ryhmille.</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/folder/directory-list.component.ts</context>
-          <context context-type="linenumber">25,21</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="5605266308588695513" datatype="html">
-        <source>Item is visible only to specific users, check the Manage-page for details.</source>
-        <target state="translated">Kohde näkyy vain valituille käyttäjille, katso lisätiedot Hallitse-sivulta.</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/folder/directory-list.component.ts</context>
-          <context context-type="linenumber">26,21</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="514896344625162208" datatype="html">
-        <source>Item is visible only to its owners.</source>
-        <target state="translated">Kohde näkyy vain omistajilleen.</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/folder/directory-list.component.ts</context>
-          <context context-type="linenumber">27</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="3305807586292277903" datatype="html">
-        <source>Directory listing: Display access badges for folder items. </source>
-        <target state="translated">Hakemistolistaus: Näytä näkyvyysmerkinnät kansioille ja dokumenteille. </target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
-          <context context-type="linenumber">499,500</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="3616259126353021959" datatype="html">
-        <source>Directory listing: Display document tags for folder items. </source>
-        <target state="translated">Hakemistolistaus: Näytä dokumenttitagit. </target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
-          <context context-type="linenumber">507,508</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="5369335165199679048" datatype="html">
-        <source> Your Email <x id="START_TAG_SPAN" ctype="x-span" equiv-text="&lt;span&gt;"/>(optional)<x id="CLOSE_TAG_SPAN" ctype="x-span" equiv-text="&lt;/span&gt;"/></source>
-        <target state="translated"> Sähköpostiosoitteesi <x id="START_TAG_SPAN" ctype="x-span" equiv-text="&lt;span&gt;"/>(vapaaehtoinen)<x id="CLOSE_TAG_SPAN" ctype="x-span" equiv-text="&lt;/span&gt;"/></target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/ui/report-content-dialog.component.ts</context>
-          <context context-type="linenumber">76,78</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="452949630448939191" datatype="html">
-        <source>Describe the issue</source>
-        <target state="translated">Ilmoituksen sisältö</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/ui/report-content-dialog.component.ts</context>
-          <context context-type="linenumber">57</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="6151928365554450816" datatype="html">
-        <source>Report Page</source>
-        <target state="translated">Ilmoita sisällöstä</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/ui/report-content-dialog.component.ts</context>
-          <context context-type="linenumber">76</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="2446227100022235850" datatype="html">
-        <source>Please enter a valid email address.</source>
-        <target state="translated">Syötä oikean muotoinen sähköpostiosoite.</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/ui/report-content-dialog.component.ts</context>
-          <context context-type="linenumber">96,97</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="6287738615734758922" datatype="html">
-        <source>The email address cannot exceed 256 characters.</source>
-        <target state="translated">Sähköpostiosoite voi olla enintään 256 merkkiä pitkä.</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/ui/report-content-dialog.component.ts</context>
-          <context context-type="linenumber">97,98</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="5962072938234411707" datatype="html">
-        <source><x id="START_TAG_SPAN" ctype="x-span" equiv-text="&quot;glyphicon glyphicon-exclamation-sign&quot;&gt;"/><x id="CLOSE_TAG_SPAN" ctype="x-span" equiv-text="This field"/> This field is required.</source>
-        <target state="translated"><x id="START_TAG_SPAN" ctype="x-span" equiv-text="&quot;glyphicon glyphicon-exclamation-sign&quot;&gt;"/><x id="CLOSE_TAG_SPAN" ctype="x-span" equiv-text="This field"/> Tämä kenttä vaaditaan.</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/ui/report-content-dialog.component.ts</context>
-          <context context-type="linenumber">115,116</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="7523042633016688692" datatype="html">
-        <source>The description cannot exceed 2000 characters.</source>
-        <target state="translated">Kuvaus voi olla enintään 2000 merkkiä pitkä.</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/ui/report-content-dialog.component.ts</context>
-          <context context-type="linenumber">116</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="4120435970812709184" datatype="html">
-        <source><x id="START_TAG_STRONG" ctype="x-strong" equiv-text="Than"/>Thank you for your report.<x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong&gt;"/></source>
-        <target state="translated"><x id="START_TAG_STRONG" ctype="x-strong" equiv-text="Than"/>Kiitos ilmoituksestasi.<x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong&gt;"/></target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/ui/report-content-dialog.component.ts</context>
-          <context context-type="linenumber">130,131</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="3765149214612773760" datatype="html">
-        <source>Your message has been sent to the TIM administrators. We appreciate your help in keeping our content accurate and safe.</source>
-        <target state="translated">Viestisi on lähetetty TIM:n ylläpitäjille. Arvostamme apuasi sisällön pitämisessä oikeana ja turvallisena.</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/ui/report-content-dialog.component.ts</context>
-          <context context-type="linenumber">131,132</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="397098723873502323" datatype="html">
-        <source>Done</source>
-        <target state="translated">Valmis</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/ui/report-content-dialog.component.ts</context>
-          <context context-type="linenumber">133,134</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="110871703751109989" datatype="html">
-        <source> Report inappropriate content </source>
-        <target state="translated"> Ilmoita asiaton sisältö </target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/ui/report-content-dialog.component.ts</context>
-          <context context-type="linenumber">32</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="8959949608841060449" datatype="html">
-        <source> Page address <x id="START_TAG_SPAN" ctype="x-span" equiv-text="&lt;span&gt;"/>(optional)<x id="CLOSE_TAG_SPAN" ctype="x-span" equiv-text="&lt;/span&gt;"/></source>
-        <target state="translated"> Sivun osoite <x id="START_TAG_SPAN" ctype="x-span" equiv-text="&lt;span&gt;"/>(vapaaehtoinen)<x id="CLOSE_TAG_SPAN" ctype="x-span" equiv-text="&lt;/span&gt;"/></target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/ui/report-content-dialog.component.ts</context>
-          <context context-type="linenumber">48,50</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="5607172656789974207" datatype="html">
-        <source>Fill current address</source>
-        <target state="translated">Täytä nykyisellä osoitteella</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/ui/report-content-dialog.component.ts</context>
-          <context context-type="linenumber">61,62</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="5726155981923810218" datatype="html">
-        <source>Fill user email</source>
-        <target state="translated">Lisää käyttäjän sähköposti</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/ui/report-content-dialog.component.ts</context>
-          <context context-type="linenumber">91,92</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="3333065049174534332" datatype="html">
-        <source><x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;spa"/><x id="START_TAG_SPAN" ctype="x-span" equiv-text="n glyphicon-exclamation-sign&quot;&gt;"/><x id="CLOSE_TAG_SPAN" ctype="x-span" equiv-text="There was a"/> There was an error.<x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong&gt;"/></source>
-        <target state="translated"><x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;spa"/><x id="START_TAG_SPAN" ctype="x-span" equiv-text="n glyphicon-exclamation-sign&quot;&gt;"/><x id="CLOSE_TAG_SPAN" ctype="x-span" equiv-text="There was a"/> Tapahtui virhe.<x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong&gt;"/></target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/ui/report-content-dialog.component.ts</context>
-          <context context-type="linenumber">126,127</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="4180813104141834795" datatype="html">
-        <source>Your report was not sent.</source>
-        <target state="translated">Ilmoitusta ei lähetetty.</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/ui/report-content-dialog.component.ts</context>
-          <context context-type="linenumber">128,129</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="6699791699859977301" datatype="html">
-        <source>Could not connect to server. Check your internet connection and try again.</source>
-        <target state="translated">Palvelimeen ei saatu yhteyttä. Tarkista verkkoyhteytesi ja yritä uudelleen.</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/ui/report-content-dialog.component.ts</context>
-          <context context-type="linenumber">211</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="2170321853448003764" datatype="html">
-        <source>There is an issue with the server. Make a copy of your message and refresh the page, or contact TIM support directly at tim@jyu.fi.</source>
-        <target state="translated">Palvelimen kanssa on ongelmia. Tee kopio viestistäsi ja päivitä sivu, tai ota suoraan yhteyttä TIM-tukeen osoitteessa tim@jyu.fi.</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/ui/report-content-dialog.component.ts</context>
-          <context context-type="linenumber">213</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="4890967305882645389" datatype="html">
-        <source>Please check the page address. You can only report addresses from TIM.</source>
-        <target state="translated">Ole hyvä ja tarkista sivun osoite. Voit ilmoittaa vain TIM:ssä olevista sivuista.</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/ui/report-content-dialog.component.ts</context>
-          <context context-type="linenumber">65,66</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="5227627642850381764" datatype="html">
-        <source>Report inappropriate content</source>
-        <target state="translated">Ilmoita asiaton sisältö</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/footer.component.ts</context>
-          <context context-type="linenumber">62,63</context>
-        </context-group>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/ui/report-content-dialog.component.ts</context>
-          <context context-type="linenumber">40,41</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="7537003864277929073" datatype="html">
-        <source><x id="START_PARAGRAPH" ctype="x-p" equiv-text="Use this"/>Use this form to report any harmful or inappropriate content you encounter on TIM. If you would like a response from the TIM administrators, please provide your email address.<x id="CLOSE_PARAGRAPH" ctype="x-p" equiv-text="&lt;/p&gt;"/></source>
-        <target state="translated"><x id="START_PARAGRAPH" ctype="x-p" equiv-text="Use this"/>Tällä lomakkeella voit ilmoittaa TIM-palvelussa havaitsemastasi haitallisesta tai sopimattomasta sisällöstä. Jos haluat TIM-ylläpidon vastaavan sinulle, ole hyvä ja anna sähköpostiosoitteesi.<x id="CLOSE_PARAGRAPH" ctype="x-p" equiv-text="&lt;/p&gt;"/></target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/ui/report-content-dialog.component.ts</context>
-          <context context-type="linenumber">43,44</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="793497416353063752" datatype="html">
-        <source>This is the page address where you encountered the issue. If you are reporting a problem on a different page, please paste the correct address here.</source>
-        <target state="translated">Tämä on sivun osoite, jossa havaitsit ongelman. Jos ilmoitat ongelmasta jollakin muulla sivulla, liitä oikea osoite tähän.</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/ui/report-content-dialog.component.ts</context>
-          <context context-type="linenumber">70,71</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="6334384804553156455" datatype="html">
-        <source>Please provide your email address if you wish for the TIM administrators to follow up with you regarding this report.</source>
-        <target state="translated">Anna sähköpostiosoitteesi, jos haluat, että TIM:n ylläpitäjät ottavat sinuun yhteyttä tämän raportin osalta.</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/ui/report-content-dialog.component.ts</context>
-          <context context-type="linenumber">101,102</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="4678590939146937144" datatype="html">
-        <source>Explain why you think the content is inappropriate. Be as specific as possible.</source>
-        <target state="translated">Selitä, miksi sisältö on mielestäsi sopimatonta. Kerro mahdollisimman tarkasti.</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/ui/report-content-dialog.component.ts</context>
-          <context context-type="linenumber">120,121</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="1876317285885218816" datatype="html">
-        <source>If you do not receive the message within 5 minutes, verify that your email address is entered correctly above. Additionally, check your Spam or Junk folder in case the message was filtered.</source>
-        <target state="translated">Jos et saa viestiä 5 minuutin kuluessa, varmista, että sähköpostiosoitteesi on syötetty oikein. Tarkista myös roskapostikansiosi, sillä viesti on voinut joutua suodatetuksi.</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/user/login-dialog.component.ts</context>
-          <context context-type="linenumber">209,210</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="5252011853704992482" datatype="html">
-        <source>I have read and agree to the </source>
-        <target state="translated">Olen lukenut ja hyväksyn </target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/user/login-dialog.component.ts</context>
-          <context context-type="linenumber">224</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="2099768926011797391" datatype="html">
-        <source>Terms of Service.</source>
-        <target state="translated">Käyttöehdot.</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/user/login-dialog.component.ts</context>
-          <context context-type="linenumber">224</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="9054131468802299331" datatype="html">
-        <source>You can copy all documents and folders in this folder to another folder.</source>
-        <target state="translated">Voit kopioida kaikki tässä kansiossa olevat asiakirjat ja kansiot toiseen kansioon.</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/folder/copy-folder.component.ts</context>
-          <context context-type="linenumber">29,30</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="8724125301600901569" datatype="html">
-        <source>Copy options</source>
-        <target state="translated">Kopiointiasetukset</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/folder/copy-folder.component.ts</context>
-          <context context-type="linenumber">30,31</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="5122641209934306863" datatype="html">
-        <source> Copy active access rights</source>
-        <target state="translated"> Kopioi aktiiviset käyttöoikeudet</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/folder/copy-folder.component.ts</context>
-          <context context-type="linenumber">33</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="3134631678726108556" datatype="html">
-        <source> Copy expired access rights</source>
-        <target state="translated"> Kopioi vanhentuneet käyttöoikeudet</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/folder/copy-folder.component.ts</context>
-          <context context-type="linenumber">36</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="7005994245870834103" datatype="html">
-        <source> Stop copying on errors</source>
-        <target state="translated"> Lopeta kopiointi virheiden yhteydessä</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/folder/copy-folder.component.ts</context>
-          <context context-type="linenumber">39</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="7918852881700996328" datatype="html">
-        <source>You can optionally enter a regular expression to exclude specific documents or folders from being copied.</source>
-        <target state="translated">Voit halutessasi syöttää säännöllisen lausekkeen, jolla voit sulkea tietyt asiakirjat tai kansiot kopioinnin ulkopuolelle.</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/folder/copy-folder.component.ts</context>
-          <context context-type="linenumber">48,49</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="6819973710480044605" datatype="html">
-        <source>For more information on copying see the </source>
-        <target state="translated">Lisätietoja kopioinnista on </target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/folder/copy-folder.component.ts</context>
-          <context context-type="linenumber">49</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="6225170388354110007" datatype="html">
-        <source>help page</source>
-        <target state="translated">ohjesivulla</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/folder/copy-folder.component.ts</context>
-          <context context-type="linenumber">49</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="7648491229604756233" datatype="html">
-        <source>Exclude documents/folders that match:</source>
-        <target state="translated">Jätä pois asiakirjat/kansiot, jotka sisältävät vastaavuuden:</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/folder/copy-folder.component.ts</context>
-          <context context-type="linenumber">51,52</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="7259476176756479954" datatype="html">
-        <source>Copy preview... </source>
-        <target state="translated">Kopioinnin esikatselu... </target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/folder/copy-folder.component.ts</context>
-          <context context-type="linenumber">59,60</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="5166214964122035544" datatype="html">
-        <source>These are the items that will be copied. Select the items you want to exclude from being copied.</source>
-        <target state="translated">Nämä kohteet kopioidaan. Valitse kohteet, jotka haluat jättää kopioinnin ulkopuolelle.</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/folder/copy-folder.component.ts</context>
-          <context context-type="linenumber">65,66</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="4467315881384291593" datatype="html">
-        <source> The destination folder already exists. Make sure this is intended before copying. </source>
-        <target state="translated"> Kohdekansio on jo olemassa. Ennen kopioimista varmista, että tämä on aiottua. </target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/folder/copy-folder.component.ts</context>
-          <context context-type="linenumber">92</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="2996339800309212628" datatype="html">
-        <source>The following errors occurred while copying:</source>
-        <target state="translated">Kopioinnin aikana tapahtui seuraavat virheet:</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/folder/copy-folder.component.ts</context>
-          <context context-type="linenumber">105,106</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="5646035883377382015" datatype="html">
-        <source>Destination:</source>
-        <target state="translated">Kohdekansio:</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/folder/copy-folder.component.ts</context>
-          <context context-type="linenumber">43,44</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="3400430107547156831" datatype="html">
-        <source> Copying, this might take a while...</source>
-        <target state="translated"> Kopioidaan. Tämä voi kestää hetken aikaa...</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/folder/copy-folder.component.ts</context>
-          <context context-type="linenumber">99</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="3224778871824337213" datatype="html">
-        <source>Folder </source>
-        <target state="translated">Kansio </target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/folder/copy-folder.component.ts</context>
-          <context context-type="linenumber">101</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="8982532068172415683" datatype="html">
-        <source>Exclude folder or document items</source>
-        <target state="translated">Kansioiden tai asiakirjojen kohteiden rajaaminen ulkopuolelle</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/folder/copy-folder.component.ts</context>
-          <context context-type="linenumber">63,64</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="5351591262168826856" datatype="html">
-        <source>Copy </source>
-        <target state="translated">Kopioi </target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/folder/copy-folder.component.ts</context>
-          <context context-type="linenumber">98</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="5234854445110707803" datatype="html">
-        <source>From</source>
-        <target state="translated">Mistä</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/folder/copy-folder.component.ts</context>
-          <context context-type="linenumber">73,75</context>
-        </context-group>
-        <note priority="1" from="description">tableHeader</note>
-        <note priority="1" from="meaning">Column name for source folders</note>
-      </trans-unit>
-      <trans-unit id="9059588518991956593" datatype="html">
-        <source>To</source>
-        <target state="translated">Mihin</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/folder/copy-folder.component.ts</context>
-          <context context-type="linenumber">76,77</context>
-        </context-group>
-        <note priority="1" from="description">tableHeader</note>
-        <note priority="1" from="meaning">Column name for target folders</note>
-      </trans-unit>
-      <trans-unit id="491697219808104137" datatype="html">
-        <source>You can copy all documents and folders from folder </source>
-        <target state="translated">Voit kopioida kaikki asiakirjat ja kansiot kansiosta </target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/folder/copy-folder.component.ts</context>
-          <context context-type="linenumber">38,39</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="6021380561456852386" datatype="html">
-        <source>to another folder.</source>
-        <target state="translated">toiseen kansioon.</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/folder/copy-folder.component.ts</context>
-          <context context-type="linenumber">40,41</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="1201994481266057161" datatype="html">
-        <source>Nothing would be copied.</source>
-        <target state="translated">Mitään ei kopioitaisi.</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/folder/copy-folder.component.ts</context>
-          <context context-type="linenumber">108,109</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="4460586915252709323" datatype="html">
-        <source> copied to </source>
-        <target state="translated"> Kopioitiin kansioon </target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/folder/copy-folder.component.ts</context>
-          <context context-type="linenumber">128</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="2037530438482013410" datatype="html">
-        <source> Terms of Service Update </source>
-        <target state="translated"> Käyttöehtojen päivitys </target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/ui/tos-dialog.component.ts</context>
-          <context context-type="linenumber">20</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="7673566870612739975" datatype="html">
-        <source>We have updated our Terms of Service</source>
-        <target state="translated">Olemme päivittäneet käyttöehtoja</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/ui/tos-dialog.component.ts</context>
-          <context context-type="linenumber">24,25</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="6510841402924705360" datatype="html">
-        <source>Could not save the agreement. Try to refresh the page, if the problem persists you can contact TIM support at tim@jyu.fi</source>
-        <target state="translated">Hyväksyntää ei voitu tallentaa. Yritä päivittää sivu, jos ongelma jatkuu, voit ottaa yhteyttä TIM tukeen osoitteessa tim@jyu.fi</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/ui/tos-dialog.component.ts</context>
-          <context context-type="linenumber">77</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="6077020405693328783" datatype="html">
-        <source> Confirm</source>
-        <target state="translated"> Vahvista</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/ui/tos-dialog.component.ts</context>
-          <context context-type="linenumber">46</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="5609403425822167661" datatype="html">
-        <source> Log out</source>
-        <target state="translated"> Kirjaudu ulos</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/ui/tos-dialog.component.ts</context>
-          <context context-type="linenumber">47</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="5490996627311304999" datatype="html">
-        <source>To continue using TIM, please review and accept the updated terms.</source>
-        <target state="translated">Jos haluat jatkaa TIMin käyttöä, tarkista ja hyväksy päivitetyt ehdot.</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/ui/tos-dialog.component.ts</context>
-          <context context-type="linenumber">25,26</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="8343193648246401401" datatype="html">
-        <source>By checking the box and clicking "Confirm", you acknowledge that you have read and agree to the Terms of Service.</source>
-        <target state="translated">Merkitsemällä laatikon ja napsauttamalla ”Vahvista” ilmoitat lukeneesi ja hyväksyväsi käyttöehdot.</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/ui/tos-dialog.component.ts</context>
-          <context context-type="linenumber">26,27</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="4524017100327483982" datatype="html">
-        <source>Select a group</source>
-        <target state="translated">Valitse ryhmä</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/plugin/groupJoin/group-join.component.ts</context>
-          <context context-type="linenumber">62,63</context>
         </context-group>
       </trans-unit>
       <trans-unit id="18610244592166500" datatype="html">
@@ -12091,6 +11124,7 @@ Syötä useiden käyttäjien osoitteet allekkain tai pilkulla erotettuina.</targ
       <trans-unit id="8242217576609732399" datatype="html">
         <source>Ask students to log in to the exam page: </source>
         <target state="translated">Pyydä oppilaita kirjautumaan koejärjestelmään kirjautumiskoodeillaan: </target>
+      </trans-unit>
       <trans-unit id="2512365026527188575" datatype="html">
         <source>Description is required.</source>
         <target state="translated">Kuvaus vaaditaan.</target>
@@ -12104,6 +11138,7 @@ Syötä useiden käyttäjien osoitteet allekkain tai pilkulla erotettuina.</targ
       <trans-unit id="8920531641317645527" datatype="html">
         <source>Description is too long (max 200 characters).</source>
         <target state="translated">Kuvaus on liian pitkä (enintään 200 kirjainta).</target>
+      </trans-unit>
       <trans-unit id="824586679107177391" datatype="html">
         <source>Press the <x id="START_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;i&gt;"/>'Begin showing answers to students'<x id="CLOSE_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;/i&gt;"/> button to allow students to review their answers for 1 hour. </source>
         <target state="translated">Paina <x id="START_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;i&gt;"/>Aloita vastausten näyttäminen koeryhmän oppilaille<x id="CLOSE_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;/i&gt;"/> -painiketta. Oppilaiden kirjautumiskoodit aktivoituvat, ja heille annetaan pääsyoikeus kokeeseen yhdeksi tunniksi. </target>
@@ -12628,7 +11663,7 @@ Syötä useiden käyttäjien osoitteet allekkain tai pilkulla erotettuina.</targ
       </trans-unit>
       <trans-unit id="6964643867443964161" datatype="html">
         <source> You have a reservation for this exam. Starting the exam will become available on <x id="INTERPOLATION" equiv-text="{{ toReadableDate(examByDocId.get(group.currentExamDoc)?.startingTime ?? &quot;&quot;) }}"/>. </source>
-        <target state="translated">Sinulla on varaus tähän kokeeseen. Kokeen aloittaminen avautuu <x id="INTERPOLATION" equiv-text="{{ toReadableDate(examByDocId.get(group.currentExamDoc)?.startingTime ?? &quot;&quot;) }}"/>.</target>
+        <target state="translated"> Sinulla on varaus tähän kokeeseen. Kokeen aloittaminen avautuu <x id="INTERPOLATION" equiv-text="{{ toReadableDate(examByDocId.get(group.currentExamDoc)?.startingTime ?? &quot;&quot;) }}"/>. </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
           <context context-type="linenumber">486,489</context>
@@ -12644,7 +11679,7 @@ Syötä useiden käyttäjien osoitteet allekkain tai pilkulla erotettuina.</targ
       </trans-unit>
       <trans-unit id="2112778509887488400" datatype="html">
         <source> To start the main exam, select it from the dropdown menu above. </source>
-        <target state="translated">Voit enää aloittaa vain varsinaisen kokeen valitsemalla kokeen yllä olevasta listasta. </target>
+        <target state="translated"> Voit enää aloittaa vain varsinaisen kokeen valitsemalla kokeen yllä olevasta listasta. </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
           <context context-type="linenumber">498</context>
@@ -12652,7 +11687,7 @@ Syötä useiden käyttäjien osoitteet allekkain tai pilkulla erotettuina.</targ
       </trans-unit>
       <trans-unit id="5817483956876441203" datatype="html">
         <source> You can hold the exam after <x id="INTERPOLATION" equiv-text="{{ toReadableDate(examByDocId.get(group.currentExamDoc!)?.startingTime ?? &quot;&quot;) }}"/>. </source>
-        <target state="translated">Tämän kokeen aloitus avautuu aikaisintaan <x id="INTERPOLATION" equiv-text="{{ toReadableDate(examByDocId.get(group.currentExamDoc!)?.startingTime ?? &quot;&quot;) }}"/>.</target>
+        <target state="translated"> Tämän kokeen aloitus avautuu aikaisintaan <x id="INTERPOLATION" equiv-text="{{ toReadableDate(examByDocId.get(group.currentExamDoc!)?.startingTime ?? &quot;&quot;) }}"/>. </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
           <context context-type="linenumber">745,746</context>
@@ -12660,7 +11695,7 @@ Syötä useiden käyttäjien osoitteet allekkain tai pilkulla erotettuina.</targ
       </trans-unit>
       <trans-unit id="6436234122184632938" datatype="html">
         <source> You can show the answers only after <x id="INTERPOLATION" equiv-text="{{ toReadableDate(examByDocId.get(group.currentExamDoc!)?.showAnswersStartingTime ?? &quot;&quot;) }}"/>. </source>
-        <target state="translated">Voit näyttää vastaukset oppilaille vasta <x id="INTERPOLATION" equiv-text="{{ toReadableDate(examByDocId.get(group.currentExamDoc!)?.showAnswersStartingTime ?? &quot;&quot;) }}"/> jälkeen.</target>
+        <target state="translated"> Voit näyttää vastaukset oppilaille vasta <x id="INTERPOLATION" equiv-text="{{ toReadableDate(examByDocId.get(group.currentExamDoc!)?.showAnswersStartingTime ?? &quot;&quot;) }}"/> jälkeen. </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
           <context context-type="linenumber">748,749</context>
@@ -12684,7 +11719,7 @@ Syötä useiden käyttäjien osoitteet allekkain tai pilkulla erotettuina.</targ
       </trans-unit>
       <trans-unit id="7179153993560145570" datatype="html">
         <source>and not for the practice exam.</source>
-        <target state="translated">Harjoituskokeen vastausten näyttämistä ei vielä tueta. </target>
+        <target state="translated">Harjoituskokeen vastausten näyttämistä ei vielä tueta.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
           <context context-type="linenumber">698</context>
@@ -12716,7 +11751,7 @@ Syötä useiden käyttäjien osoitteet allekkain tai pilkulla erotettuina.</targ
       </trans-unit>
       <trans-unit id="6393914330108344860" datatype="html">
         <source> Select an exam in section <x id="START_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;i&gt;"/>3. Manage exams<x id="CLOSE_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;/i&gt;"/> to enable showing answers. </source>
-        <target state="translated"> Valitse koe kohdassa <x id="START_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;i&gt;"/>3. Hallinnoi kokeita<x id="CLOSE_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;/i&gt;"/> voidaksesi näyttää vastauksia.</target>
+        <target state="translated"> Valitse koe kohdassa <x id="START_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;i&gt;"/>3. Hallinnoi kokeita<x id="CLOSE_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;/i&gt;"/> voidaksesi näyttää vastauksia. </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
           <context context-type="linenumber">702,703</context>
@@ -12740,7 +11775,7 @@ Syötä useiden käyttäjien osoitteet allekkain tai pilkulla erotettuina.</targ
       </trans-unit>
       <trans-unit id="856792486484034703" datatype="html">
         <source>You can only show answers for the main exam </source>
-        <target state="translated">Voit näyttää vain varsinaisen kokeen vastauksia</target>
+        <target state="translated">Voit näyttää vain varsinaisen kokeen vastauksia </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
           <context context-type="linenumber">737,738</context>
