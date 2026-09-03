@@ -12,6 +12,7 @@ from timApp.auth.accesshelper import (
     check_admin_access,
     AccessDenied,
     verify_logged_in,
+    verify_teacher_access,
 )
 from timApp.auth.accesstype import AccessType
 from timApp.auth.auth_models import BlockAccess
@@ -21,6 +22,7 @@ from timApp.auth.sessioninfo import (
 )
 from timApp.document.create_item import apply_template, create_document
 from timApp.document.docinfo import DocInfo
+from timApp.gamification.badge.routes import verify_access
 from timApp.item.validation import ItemValidationRule
 from timApp.notification.send_email import multi_send_email
 from timApp.timdb.sqa import db, run_sql
@@ -33,14 +35,16 @@ from timApp.user.user import (
     User,
     view_access_set,
     edit_access_set,
+    teacher_access_set,
     UserInfo,
     UserOrigin,
 )
 from timApp.user.usergroup import UserGroup
 from timApp.util.flask.requesthelper import load_data_from_req, RouteException, NotExist
-from timApp.util.flask.responsehelper import json_response
+from timApp.util.flask.responsehelper import json_response, ok_response
 from timApp.util.flask.typedblueprint import TypedBlueprint
 from timApp.util.locale import get_locale
+from timApp.util.logger import log_info
 from timApp.util.utils import (
     remove_path_special_chars,
     get_current_time,
@@ -516,3 +520,182 @@ def get_usernames(usernames: list[str]):
     usernames = list({n for name in usernames if (n := name.strip())})
     usernames.sort()
     return usernames
+
+
+@groups.get("/subgroups/<group>")
+def get_subgroups(group: str) -> Response:
+    """
+    Fetches user groups that have a name that starts with the given prefix but is not the exact prefix.
+    :param group_name_prefix: Prefix of the user groups
+    :return: List of user groups sorted by name
+    """
+
+    context_usergroup = UserGroup.get_by_name(group)
+    # if not context_usergroup:
+    #     raise NotExist(f"{context_usergroup} not found.")
+    # verify_teacher_access(context_usergroup.admin_doc)
+    verify_access("teacher", context_usergroup, user_group_name=group)
+
+    # TODO: better way to get sub-groups
+    group_name_prefix = context_usergroup.name.split("-")[0]
+
+    subgroups = (
+        run_sql(
+            select(UserGroup)
+            .filter(
+                UserGroup.name.like(group_name_prefix + "%"),
+                UserGroup.name != group_name_prefix,
+            )
+            .order_by(UserGroup.name)
+        )
+        .scalars()
+        .all()
+    )
+    subgroups_json = []
+    for subgroup in subgroups:
+        subgroups_json.append(subgroup.to_json())
+
+    return json_response(subgroups_json)
+
+
+@groups.get("/prefix_groups/<int:user_id>/<group_name_prefix>")
+def get_users_subgroups(user_id: int, group_name_prefix: str) -> Response:
+    """
+    Fetches user groups that user with given user_id belongs. Fetched user groups also
+    have a name that starts with the given prefix but is not the exact prefix.
+    :param user_id: ID of the user
+    :param group_name_prefix: Prefix of the user groups
+    :return: List of user groups sorted by name
+    """
+    user = User.get_by_id(user_id)
+    if not user:
+        # we got the user's personal group's id, get the user from the personal group
+        ug = UserGroup.get_by_id(user_id)
+        if not ug:
+            raise NotExist(f'User with id "{user_id}" not found')
+        user = ug.personal_user if hasattr(ug, "personal_user") else None
+        if not user:
+            raise NotExist(f'User with id "{user_id}" not found')
+
+    # # TODO: this will likely need to change since now we will be checking access to the super-groups instead of the sub-group in some cases
+
+    # Specific hack to try to resolve oscar-specific problem with getting user's subgroups
+    supergroup = [c for c in group_name_prefix]
+    supergroup = "".join(supergroup)
+    group_name_prefix = group_name_prefix.split("-")[0]
+
+    current_user = get_current_user_object()
+    if current_user.id != user.id:
+        context_usergroup = UserGroup.get_by_name(supergroup)
+        # verify_teacher_access(context_usergroup.admin_doc)
+        verify_access("teacher", context_usergroup, user_group_name=group_name_prefix)
+
+    users_subgroups_json = []
+    for ug in user.groups:
+        if ug.name.startswith(group_name_prefix) and len(ug.name) > len(
+            group_name_prefix
+        ):
+            group = dict(id=ug.id, name=ug.name, description=ug.human_name)
+            users_subgroups_json.append(group)
+    return json_response(users_subgroups_json)
+
+
+@groups.get("/personal_group/<name>")
+def get_personal_group(name: str) -> Response:
+    """
+    Fetches user's personal user group.
+    :param name: User's username
+    :return: User account and personal user group in json format
+    """
+    user = User.get_by_name(name)
+    if not user:
+        raise NotExist(f'User "{name}" not found')
+    else:
+        p_group = user.get_personal_group()
+        p_group.load_personal_user()
+        return json_response(p_group)
+
+
+@groups.get("/members/<group_name>")
+def get_usergroup_members(group_name: str) -> Response:
+    """
+    Fetches user group's members.
+    :param group_name: User group's name
+    :return: Alphabetically sorted list of users
+    """
+    ug = UserGroup.get_by_name(group_name)
+    # raise_group_not_found_if_none(group_name, ug)
+    current_user = get_current_user_object()
+
+    if ug not in current_user.groups:
+        # verify_view_access(ug.admin_doc)
+        verify_access("view", ug, user_group_name=group_name)
+    # log_info(f"GETTING MEMBERS FOR {group_name}: [{ug.users}]")
+
+    return json_response(sorted(list(ug.users), key=attrgetter("real_name")))
+
+
+@groups.get("/pretty_name/<group_name>")
+def pretty_name(group_name: str) -> Response:
+    group = UserGroup.get_by_name(group_name)
+    verify_access("teacher", group, user_group_name=group_name)
+    return json_response(group.human_name)
+
+
+@groups.get("/groupinfo/<group_name>")
+def get_groupinfo_with_pretty_name(group_name: str) -> Response:
+    group = UserGroup.get_by_name(group_name)
+
+    current_user = get_current_user_object()
+    if group not in current_user.groups:
+        verify_access("view", group, user_group_name=group_name)
+    return json_response(
+        {"id": group.id, "name": group.name, "description": group.admin_doc.description}
+    )
+
+
+@groups.post("/pretty_name/<group_name>/<new_name>")
+def change_pretty_name(group_name: str, new_name: str) -> Response:
+    """
+    Changes group's admin_doc's description (pretty name)
+    :param group_name: Full group name
+    :param new_name: New group's admin_doc's description (pretty name)
+    :return: Group data in json format
+    """
+    group = UserGroup.get_by_name(group_name)
+    # raise_group_not_found_if_none(group_name, group)
+    if not group:
+        raise NotExist(f'User group "{group_name}" not found')
+    doc_entries = group.admin_doc.docentries
+    settings = doc_entries[0].document.get_settings()
+
+    current_user = get_current_user_object()
+    in_group = group in current_user.groups
+    log_info(f"{current_user.name} {in_group} {group.name}")
+    if (
+        not in_group
+    ):  # or (in_group and not settings.allow_name_edit_by_group_members()):
+        verify_teacher_access(
+            group.admin_doc,
+            message=f'Sorry, you don\'t have permission to use this resource. If you are a teacher of "{group_name}", please contact TIM admin.',
+        )
+
+    if len(new_name.strip()) > 0:
+        group_doc = group.admin_doc
+        log_info(f"GROUP DESCRIPTION: {group_doc.description}")
+        group_doc.description = new_name
+        db.session.commit()
+        log_info(f"GROUP DESCRIPTION AFTER COMMIT: {group_doc.description}")
+    else:
+        raise RouteException("Group name cannot be empty")
+
+    return json_response(
+        {"id": group.id, "name": group.name, "description": group.admin_doc.description}
+    )
+
+
+@groups.get("/hasTeacherRightTo/<int:group_id>")
+def get_has_teacher_right_to_group(group_id: int) -> Response:
+    group = UserGroup.get_by_id(group_id)
+    verify_group_access(group, teacher_access_set)
+    return ok_response()
