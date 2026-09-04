@@ -65,16 +65,39 @@ def sep_n_and_jso(jso: str) -> tuple[int, str]:
     return n, fix_jso(jso)
 
 
-def get_range_from(jso: str) -> tuple[int, list[int], int]:
+def get_range_and_step(jso: str) -> tuple[list[int], int]:
+    """
+    Returns the range and step parsed from jso.
+
+    :param jso: one of:
+       "5" =>      [0, 4], 1
+       "3"      => [0, 3], 1
+       "[3]"    => [0, 3], 1
+       "[2,5]"   => [2, 5], 1
+       "[2,5,3]" => [2, 5], 3
+    :return: range bounds and step
+    """
+    if not jso.startswith("["):
+        jso = "[" + jso + "]"
+    r = json.loads(jso)
+    if len(r) < 2:
+        r.insert(0, 0)
+    step = 1
+    if len(r) > 2:
+        step = r[2]
+    return r, step
+
+
+def get_count_range_and_step(jso: str) -> tuple[int, list[int], int]:
     """
      Returns the count, range bounds, and step parsed from jso.
 
     :param jso: one of:
-       "5" =>      5, [0,4], 1
+       "5" =>      5, [0, 4], 1
        "10*3"      => 10, [0, 3], 1
        "10*[3]"    => 10, [0, 3], 1
-       "8*[2,5]"   => 8, [2,5], 1
-       "9*[2,5,3]" => 9, [2,5], 3
+       "8*[2,5]"   => 8, [2, 5], 1
+       "9*[2,5,3]" => 9, [2, 5], 3
     :return: count, range bounds, and step
     """
     idx = jso.find(":")
@@ -94,16 +117,7 @@ def get_range_from(jso: str) -> tuple[int, list[int], int]:
     if len(jso) == 0:  # s10 => 10, [0, 9], 1
         return count, [0, count - 1], 1
 
-    if not jso.startswith("["):  # s10*50
-        jso = "[" + jso + "]"
-
-    r = json.loads(jso)
-
-    if len(r) < 2:  # s10*[50]
-        r.insert(0, 0)
-    step = 1
-    if len(r) > 2:
-        step = r[2]
+    r, step = get_range_and_step(jso)
     return count, r, step
 
 
@@ -135,7 +149,7 @@ def get_windowed_sequence(
     """
     from timApp.util.windowed_sequence import generate
 
-    count, r, step = get_range_from(jso)
+    count, r, step = get_count_range_and_step(jso)
 
     n = len(range(r[0], r[1] + 1, step))
 
@@ -168,7 +182,7 @@ def get_sample_list(myrandom: Random, jso: str) -> list[int]:
     :return: list of unique ints
     """
 
-    count, r, step = get_range_from(jso)
+    count, r, step = get_count_range_and_step(jso)
     ret = []
 
     if count == 1:  # handle s1*5: same as normal range
@@ -280,14 +294,7 @@ def get_distinct_pool(jso: str) -> list[int]:
     """
     if not jso:
         raise ValueError("No range for i")
-    if not jso.startswith("["):  # i10
-        jso = "[" + jso + "]"
-    r = json.loads(jso)
-    if len(r) < 2:  # i[50]
-        r.insert(0, 0)
-    step = 1
-    if len(r) > 2:  # i[1,7,2]
-        step = r[2]
+    r, step = get_range_and_step(jso)
     if step == 0:
         raise ValueError("Zero step for i")
     if abs(r[1] - r[0]) > 500:
@@ -445,7 +452,7 @@ def get_rnds(
         no_same = True
 
     # How many attempts came before this one.
-    # Only i-lists use it; without it they stay on the first value.
+    # Only i-lists use it; without it, they stay on the first value.
     index = rnd_seed.extraseed if isinstance(rnd_seed, SeedClass) else 0
 
     seed_to_use = rnd_seed
@@ -525,11 +532,8 @@ def get_rnds(
         return ret_list, seed_to_use, myrandom.getstate()
 
     if jso.startswith("i"):  # i[1,7], i[1,7,2], i3:[1,20], i10
-        return (
-            get_distinct_list(distinct_list_seed, index, jso[1:]),
-            seed_to_use,
-            myrandom.getstate(),
-        )
+        ret_list = get_distinct_list(distinct_list_seed, index, jso[1:])
+        return ret_list, seed_to_use, myrandom.getstate()
 
     ret = repeat_rnd(get_int_list, myrandom, jso)
     rotate_left_to(ret, order_nr, ret_len)
