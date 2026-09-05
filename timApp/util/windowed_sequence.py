@@ -299,10 +299,15 @@ def generate(
 
     # The final complete group, or the final incomplete part,
     # is the part that may need relaxed window constraints.
-    final_start = max(
-        0,
-        full_count - distinct,
-    )
+    """
+    final_start = max(0, full_count - distinct)
+    """
+    if count % distinct == 0:
+        # The final group is complete.
+        final_start = max(0, full_count - distinct)
+    else:
+        # The final group is incomplete.
+        final_start = full_count
 
     result: list[int] = []
 
@@ -325,6 +330,19 @@ def generate(
 
         avail = set(all_values)
 
+        # Windows starting before the final group use the
+        # original window size.
+        if position < final_start + window - 1:
+            start = max(0, position - (window - 1))
+            avail -= set(prefix[start:position])
+
+        # Windows starting in the final group use the possibly
+        # relaxed current window size.
+        if position >= final_start:
+            start = max(final_start, position - (current_window - 1))
+            avail -= set(prefix[start:position])
+
+        """
         # The new value may complete an original window that starts
         # before the final group.
         if position >= window - 1:
@@ -339,6 +357,7 @@ def generate(
 
             if window_start >= final_start:
                 avail -= set(prefix[-(current_window - 1) :])
+        """
 
         # The distinct constraint applies to complete groups.
         if position < full_count:
@@ -423,6 +442,7 @@ def generate(
 
         values = list(avail)
         myrandom.shuffle(values)
+        print(avail, values)
 
         for value in values:
             cand = complete(
@@ -435,6 +455,33 @@ def generate(
                 return cand
 
         return None
+
+    # ------------------------------------------------------------
+    # Without circular optimization, simply complete the sequence
+    # with the original window.
+    # ------------------------------------------------------------
+
+    if not circular:
+        """
+        return complete(
+            [],
+            window,
+            window,
+        )
+        """
+        result = []
+
+        while len(result) < count:
+            available = get_available(
+                result,
+                window,
+            )
+
+            result.append(
+                myrandom.choice(tuple(available)),
+            )
+
+        return result
 
     # ------------------------------------------------------------
     # Generate the part before the final group.
@@ -454,18 +501,6 @@ def generate(
         result.append(myrandom.choice(tuple(available)))
 
     fixed = result[:]
-
-    # ------------------------------------------------------------
-    # Without circular optimization, simply complete the sequence
-    # with the original window.
-    # ------------------------------------------------------------
-
-    if not circular:
-        return complete(
-            fixed,
-            window,
-            window,
-        )
 
     # ------------------------------------------------------------
     # Try progressively relaxed (w, c) pairs.
@@ -508,19 +543,19 @@ def generate(
 
 def main() -> None:
     # BYCODEBEGIN
-    n = 5
+    n = 4
     window = 3
     distinct = 4
-    count = 10
-    circular = True
-    myrandom = Random(1615)
+    count = 7
+    circular = False  # True
+    myrandom = Random(1644)
     # BYCODEEND
 
     results: list[list[int] | None] = []
 
     start = time.perf_counter()
 
-    for _ in range(20):
+    for _ in range(100):
         result = generate(
             myrandom,
             n,
