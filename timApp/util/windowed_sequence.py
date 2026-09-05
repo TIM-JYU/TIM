@@ -1,3 +1,4 @@
+from dataclasses import dataclass
 from random import Random
 import time
 
@@ -28,6 +29,26 @@ generator.
 """
 
 
+@dataclass
+class GenerateState:
+    """
+    State specific to one call of generate().
+
+    The state is passed to the internal generation functions instead of
+    recreating those functions as closures on every call to generate().
+    """
+
+    myrandom: Random
+    n: int
+    window: int
+    distinct: int
+    count: int
+    circular: bool
+    all_values: set[int]
+    full_count: int
+    final_start: int
+
+
 def check_circular(result: list[int], window: int) -> bool:
     """
     Check the sliding-window constraint treating the sequence
@@ -42,7 +63,7 @@ def check_circular(result: list[int], window: int) -> bool:
     length = len(result)
 
     if length < window:
-        return True
+        return False
 
     for i in range(length):
         values = [result[(i + j) % length] for j in range(window)]
@@ -105,6 +126,7 @@ def check(
         return "result is None"
 
     n, window, distinct = fix_parameters(n, window, distinct)
+    window = min(window, len(result))
 
     # Check the allowed value range.
     for value in result:
@@ -154,7 +176,7 @@ def check(
                 break
 
         if not valid:
-            return f"same number in window before final group: " f"{values}"
+            return f"same number in window before final group: {values}"
 
         # Check windows touching the final group using w.
         for i in range(
@@ -197,6 +219,171 @@ def check(
 
     if messages:
         return "; ".join(messages)
+
+    return None
+
+
+def get_available(
+    state: GenerateState,
+    prefix: list[int],
+    current_window: int,
+) -> set[int]:
+    """
+    Return values that can be appended to prefix.
+
+    Windows which start before the final group must satisfy the
+    original window. Windows starting inside the final group use
+    current_window.
+
+    :param state: Generation state for the current generate() call.
+    :param prefix: Part of the sequence constructed so far.
+    :param current_window: Window currently being considered.
+    :returns: Values that can be appended to prefix.
+    """
+    position = len(prefix)
+
+    avail = set(state.all_values)
+
+    # Windows starting before the final group use the
+    # original window size.
+    if position < state.final_start + state.window - 1:
+        start = max(0, position - (state.window - 1))
+        avail -= set(prefix[start:position])
+
+    # Windows starting in the final group use the possibly
+    # relaxed current window size.
+    if position >= state.final_start:
+        start = max(
+            state.final_start,
+            position - (current_window - 1),
+        )
+        avail -= set(prefix[start:position])
+
+    # The distinct constraint applies to complete groups.
+    if position < state.full_count:
+        group_start = (position // state.distinct) * state.distinct
+        avail -= set(prefix[group_start:position])
+
+    return avail
+
+
+def generate_linearly(
+    state: GenerateState,
+    length: int,
+) -> list[int]:
+    """
+    Generate a sequence of the requested length without applying
+    the circular constraint.
+
+    :param state: Generation state for the current generate() call.
+    :param length: Number of values to generate.
+    :returns: A sequence satisfying the linear constraints, or None.
+    """
+    result: list[int] = []
+
+    while len(result) < length:
+        available = get_available(state, result, state.window)
+        result.append(state.myrandom.choice(tuple(available)))
+        # print(available, result)
+
+    return result
+
+
+def circular_ok(
+    state: GenerateState,
+    prefix: list[int],
+    value: int,
+    cir: int,
+) -> bool:
+    """
+    Check circular windows that become complete when value is
+    appended to prefix.
+
+    For example, with count=6 and cir=4, after adding the last
+    value the sequence is:
+
+        [a b c d e f]
+
+    The circular windows crossing the end are:
+
+        [d e f a]
+        [e f a b]
+        [f a b c]
+
+    These are checked immediately when the last value is added.
+    Before that they are incomplete and cannot yet be rejected.
+
+    :param state: Generation state for the current generate() call.
+    :param prefix: Part of the sequence constructed so far.
+    :param value: Value being considered for the next position.
+    :param cir: Circular window currently being considered.
+    :returns: True if the value satisfies the circular constraint,
+        otherwise False.
+    """
+    pos = len(prefix)
+
+    # Only the last value can complete windows crossing
+    # from the end of the sequence back to the beginning.
+    if pos != state.count - 1:
+        return True
+
+    sequence = prefix + [value]
+
+    for start in range(state.count - cir + 1, state.count):
+        circ_values = [
+            sequence[(start + offset) % state.count] for offset in range(cir)
+        ]
+
+        if len(set(circ_values)) != cir:
+            return False
+
+    return True
+
+
+def complete(
+    state: GenerateState,
+    prefix: list[int],
+    win: int,
+    cir: int,
+) -> list[int] | None:
+    """
+    Complete the sequence using linear window win and
+    circular window cir.
+
+    Backtracking is used so that a bad random choice does
+    not cause an otherwise possible (w, c) combination
+    to be rejected.
+
+    :param state: Generation state for the current generate() call.
+    :param prefix: Part of the sequence constructed so far.
+    :param win: Size of the linear window.
+    :param cir: Size of the circular window.
+    :returns: A completed sequence, or None if no solution can be found.
+    """
+    if len(prefix) == state.count:
+        if not state.circular:
+            return prefix
+
+        if check_circular(prefix, cir):
+            return prefix
+
+        return None
+
+    avail = get_available(state, prefix, win)
+
+    if state.circular:
+        avail = {value for value in avail if circular_ok(state, prefix, value, cir)}
+
+    if not avail:
+        return None
+
+    values = list(avail)
+    state.myrandom.shuffle(values)
+
+    for value in values:
+        cand = complete(state, prefix + [value], win, cir)
+        if cand is not None:
+            return cand
 
     return None
 
@@ -299,7 +486,6 @@ def generate(
 
     # The final complete group, or the final incomplete part,
     # is the part that may need relaxed window constraints.
-    """
     final_start = max(0, full_count - distinct)
     """
     if count % distinct == 0:
@@ -308,153 +494,19 @@ def generate(
     else:
         # The final group is incomplete.
         final_start = full_count
+    """
 
-    result: list[int] = []
-
-    def get_available(
-        prefix: list[int],
-        current_window: int,
-    ) -> set[int]:
-        """
-        Return values that can be appended to prefix.
-
-        Windows which start before the final group must satisfy
-        the original window. Windows starting inside the final
-        group use current_window.
-
-        :param prefix: Part of the sequence constructed so far.
-        :param current_window: Window currently being considered.
-        :returns: Values that can be appended to prefix.
-        """
-        position = len(prefix)
-
-        avail = set(all_values)
-
-        # Windows starting before the final group use the
-        # original window size.
-        if position < final_start + window - 1:
-            start = max(0, position - (window - 1))
-            avail -= set(prefix[start:position])
-
-        # Windows starting in the final group use the possibly
-        # relaxed current window size.
-        if position >= final_start:
-            start = max(final_start, position - (current_window - 1))
-            avail -= set(prefix[start:position])
-
-        """
-        # The new value may complete an original window that starts
-        # before the final group.
-        if position >= window - 1:
-            window_start = position - window + 1
-
-            if window_start < final_start:
-                avail -= set(prefix[-(window - 1) :])
-
-        # The new value may also complete the relaxed window.
-        if position >= current_window - 1:
-            window_start = position - current_window + 1
-
-            if window_start >= final_start:
-                avail -= set(prefix[-(current_window - 1) :])
-        """
-
-        # The distinct constraint applies to complete groups.
-        if position < full_count:
-            group_start = (position // distinct) * distinct
-            avail -= set(prefix[group_start:position])
-
-        return avail
-
-    def circular_ok(
-        prefix: list[int],
-        value: int,
-        cir: int,
-    ) -> bool:
-        """
-        Check circular windows that become complete when value is
-        appended to prefix.
-
-        For example, with count=6 and cir=4, after adding the last
-        value the sequence is:
-
-            [a b c d e f]
-
-        The circular windows crossing the end are:
-
-            [d e f a]
-            [e f a b]
-            [f a b c]
-
-        These are checked immediately when the last value is added.
-        Before that they are incomplete and cannot yet be rejected.
-        """
-        pos = len(prefix)
-
-        # Only the last value can complete windows crossing
-        # from the end of the sequence back to the beginning.
-        if pos != count - 1:
-            return True
-
-        sequence = prefix + [value]
-
-        for start in range(count - cir + 1, count):
-            circ_values = [sequence[(start + offset) % count] for offset in range(cir)]
-
-            if len(set(circ_values)) != cir:
-                return False
-
-        return True
-
-    def complete(
-        prefix: list[int],
-        win: int,
-        cir: int,
-    ) -> list[int] | None:
-        """
-        Complete the sequence using linear window win and
-        circular window cir.
-
-        Backtracking is used so that a bad random choice does
-        not cause an otherwise possible (w, c) combination
-        to be rejected.
-
-        :param prefix: Part of the sequence constructed so far.
-        :param win: Size of the linear window.
-        :param cir: Size of the circular window.
-        """
-        if len(prefix) == count:
-            if not circular:
-                return prefix
-
-            if check_circular(prefix, cir):
-                return prefix
-
-            return None
-
-        avail = get_available(prefix, win)
-
-        if circular:
-            avail = {value for value in avail if circular_ok(prefix, value, cir)}
-
-        if not avail:
-            return None
-
-        values = list(avail)
-        myrandom.shuffle(values)
-        print(avail, values)
-
-        for value in values:
-            cand = complete(
-                prefix + [value],
-                win,
-                cir,
-            )
-
-            if cand is not None:
-                return cand
-
-        return None
+    state = GenerateState(
+        myrandom=myrandom,
+        n=n,
+        window=window,
+        distinct=distinct,
+        count=count,
+        circular=circular,
+        all_values=all_values,
+        full_count=full_count,
+        final_start=final_start,
+    )
 
     # ------------------------------------------------------------
     # Without circular optimization, simply complete the sequence
@@ -462,50 +514,21 @@ def generate(
     # ------------------------------------------------------------
 
     if not circular:
-        """
-        return complete(
-            [],
-            window,
-            window,
-        )
-        """
-        result = []
-
-        while len(result) < count:
-            available = get_available(
-                result,
-                window,
-            )
-
-            result.append(
-                myrandom.choice(tuple(available)),
-            )
-
-        return result
+        return generate_linearly(state, count)
 
     # ------------------------------------------------------------
     # Generate the part before the final group.
     #
     # This part must always use the original window.
+    # - window = give some space for optimization in the final group
     # ------------------------------------------------------------
 
-    while len(result) < final_start:
-        available = get_available(
-            result,
-            window,
-        )
-
-        if not available:
-            return None
-
-        result.append(myrandom.choice(tuple(available)))
-
-    fixed = result[:]
+    fixed = generate_linearly(state, final_start)
 
     # ------------------------------------------------------------
     # Try progressively relaxed (w, c) pairs.
     #
-    # Example for window = 5:
+    # Example for window, circular = 5:
     #
     #   5,5
     #   5,4
@@ -522,13 +545,10 @@ def generate(
 
     w = window
     c = window
+    g_state = myrandom.getstate()
 
     while w > 0:
-        candidate = complete(
-            fixed[:],
-            w,
-            c,
-        )
+        candidate = complete(state, fixed[:], w, c)
 
         if candidate is not None:
             return candidate
@@ -538,24 +558,27 @@ def generate(
         else:
             w -= 1
 
+        # Ensure that the same random choices are made for each (w, c) pair.
+        myrandom.setstate(g_state)
+
     return None
 
 
 def main() -> None:
     # BYCODEBEGIN
-    n = 4
-    window = 3
+    n = 5
+    window = 5
     distinct = 4
     count = 7
-    circular = False  # True
+    circular = bool(1)
     myrandom = Random(1644)
     # BYCODEEND
-
     results: list[list[int] | None] = []
 
     start = time.perf_counter()
 
-    for _ in range(100):
+    for _ in range(20):
+        # myrandom = Random(1644)
         result = generate(
             myrandom,
             n,
@@ -564,7 +587,7 @@ def main() -> None:
             count,
             circular,
         )
-
+        # count -= 1
         results.append(result)
 
     generate_time = time.perf_counter() - start
