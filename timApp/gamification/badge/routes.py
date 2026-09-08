@@ -15,6 +15,7 @@ from timApp.gamification.badge.badges import BadgeTemplate, Badge
 from timApp.item.block import Block
 from timApp.timdb.sqa import db, run_sql
 from timApp.timdb.types import datetime_tz
+from timApp.user.subgroups import SubGroup
 from timApp.user.user import User
 from timApp.user.usergroup import UserGroup
 from timApp.user.usergroupmember import UserGroupMember
@@ -559,34 +560,42 @@ def withdraw_badge(badge_given_id: int, context_group: str) -> Response:
     return json_response(badge_given_new, 200)
 
 
-@badges_blueprint.get("/podium/<group_name_prefix>")
-def podium(group_name_prefix: str) -> Response:
+@badges_blueprint.get("/podium/<context_group>")
+def podium(context_group: str) -> Response:
     """
-    Fetches 5 user groups with given group name prefix that has had the most badges.
-    :param group_name_prefix: Context group
+    Fetches the 5 subgroups of the given group that have been given the most badges.
+
+    Which groups count as subgroups comes from the usergroup_subgroups table; it used
+    to be inferred from a shared name prefix, which also matched unrelated groups that
+    happened to start with the same characters.
+
+    :param context_group: Name of the context group
     :return: 5 subgroups with most badges in json format
     """
-    context_usergroup = UserGroup.get_by_name(group_name_prefix)
+    context_usergroup = UserGroup.get_by_name(context_group)
     if not context_usergroup:
-        raise NotExist(f'User group "{group_name_prefix}" not found')
+        raise NotExist(f'User group "{context_group}" not found')
 
     current_user = get_current_user_object()
 
     if not context_usergroup in current_user.groups:
-        verify_access("teacher", context_usergroup, user_group_name=group_name_prefix)
+        verify_access("teacher", context_usergroup, user_group_name=context_group)
 
+    # Inner joins: only subgroups that hold at least one active badge can place, which
+    # is what the previous outerjoin + WHERE on the joined tables already amounted to.
     results = run_sql(
         select(UserGroup.name, func.count(Badge.id).label("badge_count"))
-        .filter(
-            UserGroup.name.like(group_name_prefix + "%"),
-            UserGroup.name != group_name_prefix,
+        .join(SubGroup, SubGroup.child_id == UserGroup.id)
+        .join(Badge, Badge.group_id == UserGroup.id)
+        .join(BadgeTemplate, BadgeTemplate.id == Badge.badge_id)
+        .where(
+            (SubGroup.parent_id == context_usergroup.id)
+            & Badge.active.is_(True)
+            & BadgeTemplate.active.is_(True)
         )
-        .outerjoin(Badge, Badge.group_id == UserGroup.id)
-        .where(Badge.active.is_(True))
-        .outerjoin(BadgeTemplate, BadgeTemplate.id == Badge.badge_id)
-        .where(BadgeTemplate.active.is_(True))
         .group_by(UserGroup.id, UserGroup.name)
-        .order_by(desc("badge_count"))
+        # Name breaks ties so that equal badge counts come back in a stable order.
+        .order_by(desc("badge_count"), UserGroup.name)
         .limit(5)
     ).all()
 

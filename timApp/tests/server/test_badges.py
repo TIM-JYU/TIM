@@ -2,6 +2,7 @@ from timApp.auth.accesstype import AccessType
 from timApp.tests.server.timroutetest import TimRouteTest
 from timApp.timdb.sqa import db
 from timApp.user.groups import do_create_group_impl
+from timApp.user.subgroups import add_subgroup
 
 
 class BadgeTestAllBadges(TimRouteTest):
@@ -873,13 +874,28 @@ class BadgeTestPodium(TimRouteTest):
         subgroup4_name = "es_28-pigs"
         subgroup5_name = "es_28-lions"
         subgroup6_name = "es_28-wolves"
+        # Shares the context group's name prefix but is never linked to it, so it must
+        # not place on the podium no matter how many badges it holds.
+        unlinked_name = "es_28-ghosts"
         (subgroup1, subdoc1) = do_create_group_impl(f"{subgroup1_name}", subgroup1_name)
         (subgroup2, subdoc2) = do_create_group_impl(f"{subgroup2_name}", subgroup2_name)
         (subgroup3, subdoc3) = do_create_group_impl(f"{subgroup3_name}", subgroup3_name)
         (subgroup4, subdoc4) = do_create_group_impl(f"{subgroup4_name}", subgroup4_name)
         (subgroup5, subdoc5) = do_create_group_impl(f"{subgroup5_name}", subgroup5_name)
         (subgroup6, subdoc6) = do_create_group_impl(f"{subgroup6_name}", subgroup6_name)
+        (unlinked, unlinked_doc) = do_create_group_impl(
+            f"{unlinked_name}", unlinked_name
+        )
         db.session.commit()
+        for subgroup in (
+            subgroup1,
+            subgroup2,
+            subgroup3,
+            subgroup4,
+            subgroup5,
+            subgroup6,
+        ):
+            add_subgroup(group1, subgroup)
         self.test_user_1.grant_access(subgroup1.admin_doc, AccessType.teacher)
         self.test_user_1.grant_access(subgroup2.admin_doc, AccessType.teacher)
         self.test_user_1.grant_access(subgroup3.admin_doc, AccessType.teacher)
@@ -906,6 +922,11 @@ class BadgeTestPodium(TimRouteTest):
         self.give_badge(12)
         self.give_badge(10)
         self.give_badge(10)
+
+        # give the unlinked prefix-sharing group more badges than anyone else; it must
+        # still be absent from every podium below
+        for i in range(10):
+            self.give_badge(unlinked.id)
 
         # get podium after 6 subgroups created and badges given to some of them
         self.get(
