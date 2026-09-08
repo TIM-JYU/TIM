@@ -32,6 +32,7 @@ from timApp.user.special_group_names import (
     SPECIAL_USERNAMES,
 )
 from timApp.user.subgroups import (
+    SubGroup,
     SubGroupError,
     add_subgroup,
     remove_subgroup,
@@ -45,6 +46,7 @@ from timApp.user.user import (
     UserOrigin,
 )
 from timApp.user.usergroup import UserGroup
+from timApp.user.usergroupmember import UserGroupMember, membership_current
 from timApp.util.flask.requesthelper import load_data_from_req, RouteException, NotExist
 from timApp.util.flask.responsehelper import json_response, ok_response
 from timApp.util.flask.typedblueprint import TypedBlueprint
@@ -530,47 +532,44 @@ def get_usernames(usernames: list[str]):
 @groups.get("/subgroups/<group>")
 def get_subgroups(group: str) -> Response:
     """
-    Fetches user groups that have a name that starts with the given prefix but is not the exact prefix.
-    :param group_name_prefix: Prefix of the user groups
-    :return: List of user groups sorted by name
+    Fetches the subgroups of the given user group.
+
+    Subgroup membership is recorded in the usergroup_subgroups table; it used to be
+    inferred from a shared name prefix, which also matched unrelated groups that
+    happened to start with the same characters.
+
+    :param group: Name of the parent user group
+    :return: List of subgroups sorted by name
     """
-
     context_usergroup = UserGroup.get_by_name(group)
-    # if not context_usergroup:
-    #     raise NotExist(f"{context_usergroup} not found.")
-    # verify_teacher_access(context_usergroup.admin_doc)
+    # verify_access raises NotExist when the group does not exist.
     verify_access("teacher", context_usergroup, user_group_name=group)
-
-    # TODO: better way to get sub-groups
-    group_name_prefix = context_usergroup.name.split("-")[0]
 
     subgroups = (
         run_sql(
             select(UserGroup)
-            .filter(
-                UserGroup.name.like(group_name_prefix + "%"),
-                UserGroup.name != group_name_prefix,
-            )
+            .join(SubGroup, SubGroup.child_id == UserGroup.id)
+            .where(SubGroup.parent_id == context_usergroup.id)
             .order_by(UserGroup.name)
         )
         .scalars()
         .all()
     )
-    subgroups_json = []
-    for subgroup in subgroups:
-        subgroups_json.append(subgroup.to_json())
 
-    return json_response(subgroups_json)
+    return json_response([subgroup.to_json() for subgroup in subgroups])
 
 
-@groups.get("/prefix_groups/<int:user_id>/<group_name_prefix>")
-def get_users_subgroups(user_id: int, group_name_prefix: str) -> Response:
+@groups.get("/prefix_groups/<int:user_id>/<group_name>")
+def get_users_subgroups(user_id: int, group_name: str) -> Response:
     """
-    Fetches user groups that user with given user_id belongs. Fetched user groups also
-    have a name that starts with the given prefix but is not the exact prefix.
+    Fetches the subgroups of the given group that the given user is a member of.
+
+    Which groups count as subgroups comes from the usergroup_subgroups table; it used
+    to be inferred from a shared name prefix.
+
     :param user_id: ID of the user
-    :param group_name_prefix: Prefix of the user groups
-    :return: List of user groups sorted by name
+    :param group_name: Name of the parent user group
+    :return: List of the user's subgroups sorted by name
     """
     user = User.get_by_id(user_id)
     if not user:
@@ -582,27 +581,33 @@ def get_users_subgroups(user_id: int, group_name_prefix: str) -> Response:
         if not user:
             raise NotExist(f'User with id "{user_id}" not found')
 
-    # # TODO: this will likely need to change since now we will be checking access to the super-groups instead of the sub-group in some cases
-
-    # Specific hack to try to resolve oscar-specific problem with getting user's subgroups
-    supergroup = [c for c in group_name_prefix]
-    supergroup = "".join(supergroup)
-    group_name_prefix = group_name_prefix.split("-")[0]
-
+    context_usergroup = UserGroup.get_by_name(group_name)
     current_user = get_current_user_object()
     if current_user.id != user.id:
-        context_usergroup = UserGroup.get_by_name(supergroup)
-        # verify_teacher_access(context_usergroup.admin_doc)
-        verify_access("teacher", context_usergroup, user_group_name=group_name_prefix)
+        # verify_access raises NotExist when the group does not exist.
+        verify_access("teacher", context_usergroup, user_group_name=group_name)
+    elif not context_usergroup:
+        raise NotExist(f'User group "{group_name}" not found')
 
-    users_subgroups_json = []
-    for ug in user.groups:
-        if ug.name.startswith(group_name_prefix) and len(ug.name) > len(
-            group_name_prefix
-        ):
-            group = dict(id=ug.id, name=ug.name, description=ug.human_name)
-            users_subgroups_json.append(group)
-    return json_response(users_subgroups_json)
+    subgroups = (
+        run_sql(
+            select(UserGroup)
+            .join(SubGroup, SubGroup.child_id == UserGroup.id)
+            .join(UserGroupMember, UserGroupMember.usergroup_id == UserGroup.id)
+            .where(
+                (SubGroup.parent_id == context_usergroup.id)
+                & (UserGroupMember.user_id == user.id)
+                & membership_current
+            )
+            .order_by(UserGroup.name)
+        )
+        .scalars()
+        .all()
+    )
+
+    return json_response(
+        [dict(id=ug.id, name=ug.name, description=ug.human_name) for ug in subgroups]
+    )
 
 
 @groups.get("/personal_group/<name>")
@@ -719,23 +724,6 @@ def verify_subgroup_edit_access(
     verify_group_edit_access(parent)
     verify_group_edit_access(child)
     return parent, child
-
-
-@groups.get("/subgroups/list/<group_name>")
-def get_subgroup_list(group_name: str) -> Response:
-    """The subgroups of the given group.
-
-    Unlike :func:`get_subgroups`, this uses the usergroup_subgroups table rather than
-    matching on a name prefix.
-
-    :param group_name: Name of the parent group
-    :return: The subgroups, sorted by name
-    """
-    ug = get_group_or_abort(group_name)
-    verify_group_view_access(ug)
-    return json_response(
-        [g.to_json() for g in sorted(ug.subgroup_list, key=attrgetter("name"))]
-    )
 
 
 @groups.get("/subgroups/of/<group_name>")

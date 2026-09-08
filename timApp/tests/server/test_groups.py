@@ -10,6 +10,7 @@ from timApp.tests.server.timroutetest import TimRouteTest
 from timApp.tim_app import app
 from timApp.timdb.sqa import db
 from timApp.user.groups import do_create_group_impl
+from timApp.user.subgroups import add_subgroup
 from timApp.user.user import User, UserInfo
 from timApp.user.usergroup import UserGroup
 
@@ -659,11 +660,19 @@ class SubgroupsTest(TimRouteTest):
         subgroup1_name = "es_25-cats"
         subgroup2_name = "es_25-dogs"
         group2_name = "es_26"
+        # Shares group1's name prefix but is never linked to it, so it must not be
+        # reported as a subgroup.
+        unlinked_name = "es_25-unlinked"
         (group1, doc1) = do_create_group_impl(f"{group1_name}", group1_name)
         (subgroup1, subdoc1) = do_create_group_impl(f"{subgroup1_name}", subgroup1_name)
         (subgroup2, subdoc2) = do_create_group_impl(f"{subgroup2_name}", subgroup2_name)
         (group2, doc2) = do_create_group_impl(f"{group2_name}", group2_name)
+        (unlinked, unlinked_doc) = do_create_group_impl(
+            f"{unlinked_name}", unlinked_name
+        )
         db.session.commit()
+        add_subgroup(group1, subgroup1)
+        add_subgroup(group1, subgroup2)
         self.test_user_1.grant_access(group1.admin_doc, AccessType.teacher)
         self.test_user_1.grant_access(subgroup1.admin_doc, AccessType.teacher)
         self.test_user_1.grant_access(subgroup2.admin_doc, AccessType.teacher)
@@ -674,7 +683,8 @@ class SubgroupsTest(TimRouteTest):
         result_sg_empty = self.get(f"/groups/subgroups/{group2_name}")
         self.assertEqual([], result_sg_empty)
 
-        # fetch subgroups when there are 2 of them
+        # fetch subgroups when there are 2 of them; the group sharing the name prefix
+        # is not among them
         result_sg_nonempty = self.get(f"/groups/subgroups/{group1_name}")
         self.assertEqual(
             [
@@ -714,6 +724,8 @@ class UsersSubgroupsTest(TimRouteTest):
         (subgroup1, subdoc1) = do_create_group_impl(f"{subgroup1_name}", subgroup1_name)
         (subgroup2, subdoc2) = do_create_group_impl(f"{subgroup2_name}", subgroup2_name)
         db.session.commit()
+        add_subgroup(group1, subgroup1)
+        add_subgroup(group1, subgroup2)
         self.test_user_1.grant_access(group1.admin_doc, AccessType.teacher)
         self.test_user_1.grant_access(subgroup1.admin_doc, AccessType.teacher)
         self.test_user_1.grant_access(subgroup2.admin_doc, AccessType.teacher)
