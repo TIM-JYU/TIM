@@ -31,6 +31,11 @@ from timApp.user.special_group_names import (
     PRIVILEGED_GROUPS,
     SPECIAL_USERNAMES,
 )
+from timApp.user.subgroups import (
+    SubGroupError,
+    add_subgroup,
+    remove_subgroup,
+)
 from timApp.user.user import (
     User,
     view_access_set,
@@ -699,3 +704,103 @@ def get_has_teacher_right_to_group(group_id: int) -> Response:
     group = UserGroup.get_by_id(group_id)
     verify_group_access(group, teacher_access_set)
     return ok_response()
+
+
+def verify_subgroup_edit_access(
+    parent_name: str, child_name: str
+) -> tuple[UserGroup, UserGroup]:
+    """Resolve both groups of a subgroup operation and require edit access to each.
+
+    Changing the link changes who belongs to the parent group, so edit access to the
+    subgroup alone is not enough.
+    """
+    parent = get_group_or_abort(parent_name)
+    child = get_group_or_abort(child_name)
+    verify_group_edit_access(parent)
+    verify_group_edit_access(child)
+    return parent, child
+
+
+@groups.get("/subgroups/list/<group_name>")
+def get_subgroup_list(group_name: str) -> Response:
+    """The subgroups of the given group.
+
+    Unlike :func:`get_subgroups`, this uses the usergroup_subgroups table rather than
+    matching on a name prefix.
+
+    :param group_name: Name of the parent group
+    :return: The subgroups, sorted by name
+    """
+    ug = get_group_or_abort(group_name)
+    verify_group_view_access(ug)
+    return json_response(
+        [g.to_json() for g in sorted(ug.subgroup_list, key=attrgetter("name"))]
+    )
+
+
+@groups.get("/subgroups/of/<group_name>")
+def get_parent_group_of(group_name: str) -> Response:
+    """The group that the given group is a subgroup of.
+
+    :param group_name: Name of the subgroup
+    :return: The parent group, or null if the group is not a subgroup
+    """
+    ug = get_group_or_abort(group_name)
+    verify_group_view_access(ug)
+    parent = ug.parent_group
+    return json_response(parent.to_json() if parent is not None else None)
+
+
+@groups.post("/subgroups/add/<parent_name>/<child_name>")
+def add_subgroup_to_group(parent_name: str, child_name: str) -> Response:
+    """Make one group a subgroup of another.
+
+    Members of the subgroup are added to the parent group as well, since a subgroup's
+    members are implicitly members of its parent.
+
+    :param parent_name: Name of the group that gains a subgroup
+    :param child_name: Name of the group that becomes a subgroup
+    :return: The parent's subgroups after the change
+    """
+    parent, child = verify_subgroup_edit_access(parent_name, child_name)
+    try:
+        add_subgroup(parent, child, added_by=get_current_user_object())
+    except SubGroupError as e:
+        raise RouteException(str(e))
+    db.session.commit()
+    return json_response(
+        {
+            "parent": parent.to_json(),
+            "subgroups": [
+                g.to_json() for g in sorted(parent.subgroup_list, key=attrgetter("name"))
+            ],
+        }
+    )
+
+
+@groups.post("/subgroups/remove/<parent_name>/<child_name>")
+def remove_subgroup_from_group(parent_name: str, child_name: str) -> Response:
+    """Detach a subgroup from its parent, leaving both as ordinary groups.
+
+    Members that were added to the parent through the subgroup keep their parent
+    membership, because a materialised membership cannot be told apart from one that
+    was granted directly.
+
+    :param parent_name: Name of the parent group
+    :param child_name: Name of the subgroup to detach
+    :return: The parent's subgroups after the change
+    """
+    parent, child = verify_subgroup_edit_access(parent_name, child_name)
+    try:
+        remove_subgroup(parent, child)
+    except SubGroupError as e:
+        raise RouteException(str(e))
+    db.session.commit()
+    return json_response(
+        {
+            "parent": parent.to_json(),
+            "subgroups": [
+                g.to_json() for g in sorted(parent.subgroup_list, key=attrgetter("name"))
+            ],
+        }
+    )
