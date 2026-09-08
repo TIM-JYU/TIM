@@ -465,7 +465,7 @@ export class BadgeCreatorComponent implements OnInit {
     newBadge: IBadgeTemplate | undefined;
     async onSubmit() {
         if (this.badgeForm.valid) {
-            this.newBadge = this.badgeForm.value as IBadgeTemplate;
+            this.newBadge = this.badgeForm.value as unknown as IBadgeTemplate;
             const response = toPromise(
                 this.http.post<{ok: boolean}>("/badges/create_badge", {
                     context_group: this.selectedContextGroup,
