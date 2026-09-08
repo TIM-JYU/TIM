@@ -539,7 +539,7 @@ class BadgeTestGroupsBadges(TimRouteTest):
         # and is not included in the context group
         self.get(
             f"/badges/group_badges/10/{group1_name}",
-            expect_content=f"Sorry, you don't have permission to use this resource.",
+            expect_content=f'Sorry, you don\'t have permission to use this resource. If you are a teacher of "{group1_name}", please contact TIM admin.',
             expect_status=403,
         )
 
@@ -553,17 +553,56 @@ class BadgeTestGroupsBadgesView(TimRouteTest):
         (group1, doc1) = do_create_group_impl(f"{group1_name}", group1_name)
         (subgroup1, subdoc1) = do_create_group_impl(f"{subgroup1_name}", subgroup1_name)
         db.session.commit()
-        self.test_user_3.grant_access(subgroup1.admin_doc, AccessType.view)
+        add_subgroup(group1, subgroup1)
+        self.test_user_1.grant_access(group1.admin_doc, AccessType.teacher)
+        self.test_user_1.grant_access(subgroup1.admin_doc, AccessType.teacher)
         self.commit_db()
+
+        # testuser3 joins the subgroup only, which makes them a member of the context
+        # group as well
+        self.post(
+            f"/groups/addmember/{subgroup1_name}",
+            data={"names": ["testuser3"]},
+        )
+
+        self.post(
+            "/badges/create_badge",
+            data={
+                "context_group": group1_name,
+                "title": "Coordinator",
+                "color": "blue",
+                "shape": "hexagon",
+                "image": 1,
+                "description": "Great coordination",
+            },
+        )
+        self.post(
+            "/badges/give_badge",
+            data={
+                "context_group": group1_name,
+                "group_id": subgroup1.id,
+                "badge_id": 1,
+                "message": "Great work guys!",
+            },
+        )
 
         self.login_test3()
 
-        # fetch groups badges when user has view access to the subgroup
-        # and is not included in the subgroup
+        # a member of a subgroup can read that group's badges, because belonging to a
+        # subgroup makes them a member of the context group
+        result_gb = self.get(f"/badges/group_badges/{subgroup1.id}/{group1_name}")
+        self.assertEqual(1, len(result_gb))
+        self.assertEqual("Coordinator", result_gb[0]["title"])
+        self.assertEqual("Great work guys!", result_gb[0]["message"])
+
+        self.login_test2()
+
+        # a user who belongs to neither the context group nor any of its subgroups is
+        # refused, even though the badge itself is the same one
         self.get(
-            f"/badges/group_badges/10/{group1_name}",
-            expect_content=[],
-            expect_status=200,
+            f"/badges/group_badges/{subgroup1.id}/{group1_name}",
+            expect_content=f'Sorry, you don\'t have permission to use this resource. If you are a teacher of "{group1_name}", please contact TIM admin.',
+            expect_status=403,
         )
 
 

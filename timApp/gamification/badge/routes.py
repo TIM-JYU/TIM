@@ -343,30 +343,15 @@ def get_groups_badges(group_id: int, context_group: str) -> Response:
     if not context_usergroup:
         raise NotExist(f'User group "{context_group}" not found')
 
-    # FIXME: for now, badges are be visible to anyone. Rights management needs to be re-worked.
-    #
-    # current_user = get_current_user_object()
-    # in_group = check_group_member(current_user, context_usergroup.id)
-    # if not in_group:
-    #     try:
-    #         verify_access("view", usergroup, user_group_id=group_id)
-    #     except NotExist:
-    #         verify_access("teacher", context_usergroup, user_group_name=context_group)
-
-    # log_info(f"Current user's groups: {current_user.groups}")
-    #
-    # if usergroup not in current_user.groups:
-    #     block = usergroup.admin_doc
-    #     if not block:
-    #         raise NotExist(f"No admin doc for group id {group_id}")
-    #     if not verify_view_access(block, require=False):
-    #         block = context_usergroup.admin_doc
-    #         if not block:
-    #             raise NotExist(f"No admin doc for context group {context_group}")
-    #         verify_teacher_access(
-    #             block,
-    #             message=f'Sorry, you don\'t have permission to use this resource. If you are a teacher of "{context_group}", please contact TIM admin.',
-    #         )
+    # Badges belong to a course, and belonging to that course is what grants the right
+    # to see them: any member of the context group may read the badges of any group
+    # within it. Members of a subgroup are members of the context group as well (see
+    # timApp.user.subgroups), so a student on a coding camp sees their camp's badges
+    # through their own student group. Teachers of the context group may look without
+    # being members of it.
+    current_user = get_current_user_object()
+    if not check_group_member(current_user, context_usergroup.id):
+        verify_access("teacher", context_usergroup, user_group_name=context_group)
 
     groups_badges_given = (
         run_sql(
