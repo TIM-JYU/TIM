@@ -1,6 +1,5 @@
 """badge-related routes."""
 from typing import cast
-from collections import defaultdict
 from dataclasses import dataclass
 from operator import attrgetter
 from pathlib import Path
@@ -162,7 +161,7 @@ def create_badge(
 @badges_blueprint.post("/modify_badge")
 def modify_badge(
     badge_id: int,
-    context_group: int,
+    context_group: str,
     title: str,
     color: str,
     shape: str,
@@ -172,7 +171,7 @@ def modify_badge(
     """
     Modifies a badge.
     :param badge_id: ID of the badge
-    :param context_group: Context group where the badge will be included
+    :param context_group: Name of the context group where the badge will be included
     :param title: Title of the badge
     :param color: Color of the badge
     :param shape: Shape of the badge
@@ -180,13 +179,14 @@ def modify_badge(
     :param description: Description of the badge
     :return: Modified badge in json format
     """
-    context_usergroup = UserGroup.get_by_id(context_group)
-    # if not context_usergroup:
-    #     raise NotExist(f"Context group {context_group} does not exist")
-    verify_access("teacher", context_usergroup, user_group_id=context_group)
+    # verify_access raises NotExist when the group does not exist, so context_usergroup
+    # is set by the time it returns.
+    context_usergroup = UserGroup.get_by_name(context_group)
+    verify_access("teacher", context_usergroup, user_group_name=context_group)
 
     new_badge = {
-        "context_group": context_group,
+        # The column stores the group id; only the route parameter is a name.
+        "context_group": context_usergroup.id,
         "title": title,
         "color": color,
         "shape": shape,
@@ -317,7 +317,7 @@ def verify_access(
     if access_type == "teacher":
         verify_teacher_access(
             block,
-            message=f'Sorry, you don\'t have permission to use this resource. If you are a teacher of "{user_group.name}", please contact TIM admin.',
+            message=f'Sorry, you don\'t have permission to use this resource. If you are a teacher of "{_user_group.name}", please contact TIM admin.',
         )
     elif access_type == "view":
         verify_view_access(
@@ -329,10 +329,17 @@ def verify_access(
 @badges_blueprint.get("/group_badges/<int:group_id>/<context_group>")
 def get_groups_badges(group_id: int, context_group: str) -> Response:
     """
-    Fetches badges that are given to a user group. Sorted by given-timestamp.
+    Fetches the badges given to a user group, oldest first.
+
+    Awards and templates are returned as two separate lists rather than merged, so that
+    an award carries only what belongs to it and refers to its template through
+    ``badge_id``. Only awards whose template is active and belongs to the context group
+    are included, and every returned award's template is present in ``templates``.
+
     :param group_id: ID of the user group
     :param context_group: Name of the context group
-    :return: Badges in json response format
+    :return: ``{"badges": [...], "templates": [...]}``, where each badge additionally
+             carries ``given_by_name`` and each template ``created_by_name``
     """
     if group_id == "undefined":
         raise NotExist("User group not found")
@@ -353,7 +360,7 @@ def get_groups_badges(group_id: int, context_group: str) -> Response:
     if not check_group_member(current_user, context_usergroup.id):
         verify_access("teacher", context_usergroup, user_group_name=context_group)
 
-    groups_badges_given = (
+    awards = (
         run_sql(
             select(Badge)
             .filter(Badge.active, Badge.group_id == group_id)
@@ -363,56 +370,47 @@ def get_groups_badges(group_id: int, context_group: str) -> Response:
         .all()
     )
 
-    badge_map = defaultdict(list)
-    for bg in groups_badges_given:
-        badge_map[bg.badge_id].append(bg)
-    badge_ids = list(badge_map.keys())
-
-    badges = (
+    templates = (
         run_sql(
             select(BadgeTemplate)
             .filter_by(active=True)
             .filter(
                 BadgeTemplate.context_group == context_usergroup.id,
-                BadgeTemplate.id.in_(badge_ids),
+                BadgeTemplate.id.in_({award.badge_id for award in awards}),
             )
         )
         .scalars()
         .all()
     )
+    template_ids = {template.id for template in templates}
 
-    valid_badge_ids = {b.id for b in badges}
-    badge_id_to_badge = {b.id: b for b in badges}
+    # Resolve each display name once rather than once per row.
+    user_names: dict[int, str | None] = {}
+
+    def name_of(user_id: int | None) -> str | None:
+        if not user_id:
+            return None
+        if user_id not in user_names:
+            user = User.get_by_id(user_id)
+            user_names[user_id] = user.real_name if user else None
+        return user_names[user_id]
 
     badges_json = []
-    for badge_id in badge_ids:
-        if badge_id not in valid_badge_ids:
+    for award in awards:
+        # Drop awards whose template is inactive or belongs to another context group.
+        if award.badge_id not in template_ids:
             continue
-        badge = badge_id_to_badge[badge_id]
-        for i, badge_given in enumerate(badge_map[badge_id]):
-            badge_json = badge.to_json()
-            badge_json.update(
-                {
-                    "badgegiven_id": badge_given.id,
-                    "message": badge_given.message,
-                    "given_by": badge_given.given_by,
-                    "given": badge_given.given,
-                    "withdrawn": badge_given.withdrawn,
-                }
-            )
+        award_json = award.to_json()
+        award_json["given_by_name"] = name_of(award.given_by)
+        badges_json.append(award_json)
 
-            user_fields = [
-                "created_by",
-                "given_by",
-            ]
-            for field in user_fields:
-                uid = badge_json.get(field)
-                user = User.get_by_id(uid) if uid else None
-                badge_json[f"{field}_name"] = user.real_name if user else None
+    templates_json = []
+    for template in templates:
+        template_json = template.to_json()
+        template_json["created_by_name"] = name_of(template.created_by)
+        templates_json.append(template_json)
 
-            badges_json.append(badge_json)
-
-    return json_response(badges_json)
+    return json_response({"badges": badges_json, "templates": templates_json})
 
 
 @badges_blueprint.get("/badge_holders/<badge_id>")

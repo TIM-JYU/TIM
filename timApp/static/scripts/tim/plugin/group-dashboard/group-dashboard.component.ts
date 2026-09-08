@@ -5,7 +5,7 @@ import {BadgeService} from "tim/gamification/badge/badge.service";
 import {manageglobals} from "tim/util/globals";
 import {NameChangerModule} from "tim/plugin/group-dashboard/name-changer.component";
 import type {IErrorAlert} from "tim/gamification/badge/badge.interface";
-import type {IBadge} from "tim/gamification/badge/badge.interface";
+import type {IBadgeAward} from "tim/gamification/badge/badge.interface";
 import {BadgeModule} from "tim/gamification/badge/badge.component";
 import {GroupService} from "tim/plugin/group-dashboard/group.service";
 import {toPromise} from "tim/util/utils";
@@ -17,7 +17,7 @@ import type {BadgeGroupInfo} from "tim/plugin/group-dashboard/group.service";
 
 // FIXME: temp interfaces, get rid of these
 export interface IBadgeUser extends IUser {
-    badges: IBadge[];
+    badges: IBadgeAward[];
 }
 
 @Component({
@@ -46,11 +46,11 @@ export interface IBadgeUser extends IUser {
                             <ng-container *ngIf="groupBadges.length > 0">
                                 <span *ngFor="let badge of groupBadges" class="badge">
                                     <tim-badge class
-                                        [title]="badge.title"
-                                        [color]="badge.color"
-                                        [shape]="badge.shape"
-                                        [image]="badge.image"
-                                        [description]="badge.description"
+                                        [title]="badge.template.title"
+                                        [color]="badge.template.color"
+                                        [shape]="badge.template.shape"
+                                        [image]="badge.template.image"
+                                        [description]="badge.template.description"
                                         [message]="badge.message">
                                     </tim-badge>
                                 </span>
@@ -72,11 +72,11 @@ export interface IBadgeUser extends IUser {
                                     <div class="member-badge-area">
                                         <span *ngFor="let badge of member.badges" class="badge">
                                             <tim-badge class="member-badge"
-                                                title="{{badge.title}}"
-                                                color="{{badge.color}}"
-                                                shape="{{badge.shape}}"
-                                                [image]="badge.image"
-                                                description="{{badge.description}}"
+                                                title="{{badge.template.title}}"
+                                                color="{{badge.template.color}}"
+                                                shape="{{badge.template.shape}}"
+                                                [image]="badge.template.image"
+                                                description="{{badge.template.description}}"
                                                 message="{{badge.message}}">
                                             </tim-badge>
                                         </span>
@@ -106,7 +106,7 @@ export class GroupDashboardComponent implements OnInit {
     title: string | undefined;
     currentUserName: string | undefined;
     canViewAllBadges: boolean = false;
-    groupBadges: IBadge[] = [];
+    groupBadges: IBadgeAward[] = [];
     nameJustUpdated = false;
     totalBadges: number = 0;
     alerts: Array<IErrorAlert> = [];
@@ -194,8 +194,8 @@ export class GroupDashboardComponent implements OnInit {
      * Get badges for a specific user
      * @param username
      */
-    async getBadgesForUser(username: string): Promise<IBadge[]> {
-        let badges: IBadge[] = [];
+    async getBadgesForUser(username: string): Promise<IBadgeAward[]> {
+        let badges: IBadgeAward[] = [];
         const personal_group_query = await this.groupService.getPersonalGroup(
             username
         );
@@ -214,8 +214,8 @@ export class GroupDashboardComponent implements OnInit {
      * Fetches badges that are assigned directly to the group itself.
      * Updates the group's badge list and adds to the total badge count.
      */
-    async fetchGroupBadges(): Promise<IBadge[]> {
-        let groupBadges: IBadge[] = [];
+    async fetchGroupBadges(): Promise<IBadgeAward[]> {
+        let groupBadges: IBadgeAward[] = [];
         if (this.groupId != undefined) {
             const result = await this.badgeService.getBadges(
                 this.groupId,

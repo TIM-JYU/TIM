@@ -9,8 +9,8 @@ import {Subscription} from "rxjs";
 import {ElementRef, HostListener} from "@angular/core";
 import {Users} from "tim/user/userService";
 import type {
-    IBadge,
     IBadgeGroup,
+    IBadgeTemplate,
     IErrorAlert,
 } from "tim/gamification/badge/badge.interface";
 import {BadgeModule} from "tim/gamification/badge/badge.component";
@@ -221,7 +221,7 @@ export class BadgeGiverComponent implements OnInit {
     groupUsersMap = new Map<number, IUser[]>();
     groupPrettyNames: Map<number, string> = new Map();
 
-    @Input() selectedBadge?: IBadge | null = null;
+    @Input() selectedBadge?: IBadgeTemplate | null = null;
     @Input() badgegroupContext?: string;
 
     userAssign?: boolean = undefined;

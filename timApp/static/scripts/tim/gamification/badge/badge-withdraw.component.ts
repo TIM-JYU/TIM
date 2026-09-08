@@ -8,8 +8,8 @@ import {FormsModule} from "@angular/forms";
 import {HttpClient, HttpClientModule} from "@angular/common/http";
 import {BadgeModule} from "tim/gamification/badge/badge.component";
 import type {
-    IBadge,
     IBadgeGroup,
+    IBadgeAward,
     IErrorAlert,
 } from "tim/gamification/badge/badge.interface";
 import {BadgeService} from "tim/gamification/badge/badge.service";
@@ -104,10 +104,10 @@ import {PurifyModule} from "tim/util/purify.module";
                                         <div class="card" *ngFor="let badge of userBadges">
                                             <tim-badge
                                                     [ngClass]="{'selected-badge': selectedBadge === badge}"
-                                                    title="{{badge.title}}"
-                                                    color="{{badge.color}}"
-                                                    shape="{{badge.shape}}"
-                                                    [image]="badge.image"
+                                                    title="{{badge.template.title}}"
+                                                    color="{{badge.template.color}}"
+                                                    shape="{{badge.template.shape}}"
+                                                    [image]="badge.template.image"
                                                     (click)="selectBadge(badge, false, false)">
                                             </tim-badge>
                                         </div>
@@ -164,10 +164,10 @@ import {PurifyModule} from "tim/util/purify.module";
                                         <div class="card" *ngFor="let badge of groupBadges">
                                             <tim-badge
                                                     [ngClass]="{'selected-badge': selectedBadge === badge}"
-                                                    title="{{badge.title}}"
-                                                    color="{{badge.color}}"
-                                                    shape="{{badge.shape}}"
-                                                    [image]="badge.image"
+                                                    title="{{badge.template.title}}"
+                                                    color="{{badge.template.color}}"
+                                                    shape="{{badge.template.shape}}"
+                                                    [image]="badge.template.image"
                                                     (click)="selectBadge(badge, true, false)">
                                             </tim-badge>
                                         </div>
@@ -197,8 +197,8 @@ import {PurifyModule} from "tim/util/purify.module";
                     <ng-container *ngIf="selectedBadge">
                         <h5 i18n>Details</h5>
                         <p class="word-wrap">
-                            <ng-container i18n>Title:</ng-container> {{ selectedBadge!.title || "No title" }} <br>
-                            <ng-container i18n>Description:</ng-container> {{ selectedBadge!.description || "No description" }} <br>
+                            <ng-container i18n>Title:</ng-container> {{ selectedBadge!.template.title || "No title" }} <br>
+                            <ng-container i18n>Description:</ng-container> {{ selectedBadge!.template.description || "No description" }} <br>
                             <ng-container i18n>Message:</ng-container> {{ selectedBadge!.message || "No message" }} <br>
                             <ng-container i18n>Given by:</ng-container> {{ selectedBadge!.given_by_name || "No name" }} <br>
                             <ng-container i18n>Time given:</ng-container> {{ selectedBadge!.given || "No date" }} <br>
@@ -207,7 +207,7 @@ import {PurifyModule} from "tim/util/purify.module";
 
                     <ng-container *ngIf="userAssign != undefined">
                         <div class="button-container">
-                            <button id="assignButton" (click)="removeBadge(selectedBadge?.badgegiven_id)"
+                            <button id="assignButton" (click)="removeBadge(selectedBadge?.id)"
                                     [disabled]="isWithdrawButtonDisabled()"
                                     [title]="isWithdrawButtonDisabled() ? 'Select badge to withdraw' : ''">
                                 <ng-container i18n>Withdraw</ng-container>
@@ -232,17 +232,17 @@ export class BadgeWithdrawComponent implements OnInit {
     users: IUser[] = [];
     selectedUser?: IUser | null = null;
     usersWithoutGroup: IUser[] = [];
-    userBadges: IBadge[] = [];
+    userBadges: IBadgeAward[] = [];
 
-    badges: IBadge[] = [];
-    selectedBadge?: IBadge | null = null;
+    badges: IBadgeAward[] = [];
+    selectedBadge?: IBadgeAward | null = null;
 
     @Input() badgegroupContext?: string;
     @ViewChild("startSection") startSection!: HTMLDivElement;
 
     groups: IBadgeGroup[] = [];
     selectedGroup?: IBadgeGroup | null = null;
-    groupBadges: IBadge[] = [];
+    groupBadges: IBadgeAward[] = [];
     groupUsersMap = new Map<number, IUser[]>();
 
     searchTerm = "";
@@ -680,7 +680,7 @@ export class BadgeWithdrawComponent implements OnInit {
     }
 
     selectBadge(
-        badge?: IBadge | null | undefined,
+        badge?: IBadgeAward | null | undefined,
         fromGroup: boolean = false,
         fromAssignList: boolean = false
     ) {

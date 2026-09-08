@@ -2,7 +2,12 @@ import {Injectable} from "@angular/core";
 import {HttpClient} from "@angular/common/http";
 import {Subject} from "rxjs";
 import {toPromise} from "tim/util/utils";
-import type {IBadge, IErrorAlert} from "tim/gamification/badge/badge.interface";
+import type {
+    IBadgeAward,
+    IBadgeTemplate,
+    IErrorAlert,
+    IGroupBadges,
+} from "tim/gamification/badge/badge.interface";
 import {sortLang} from "tim/user/IUser";
 import type {AngularDialogComponent} from "tim/ui/angulardialog/angular-dialog-component.directive";
 
@@ -33,20 +38,41 @@ export class BadgeService {
     constructor(private http: HttpClient) {}
 
     /**
+     * Joins each award returned by `/badges/group_badges` with its template.
+     *
+     * Awards whose template is missing from the payload are dropped; the route only
+     * omits a template when the award should not be shown in this context anyway.
+     * @param payload The two lists as the route returns them.
+     * @return IBadgeAward[]
+     */
+    joinAwards(payload: IGroupBadges): IBadgeAward[] {
+        const templates = new Map(payload.templates.map((t) => [t.id, t]));
+        const awards: IBadgeAward[] = [];
+        for (const badge of payload.badges) {
+            const template = templates.get(badge.badge_id);
+            if (template) {
+                awards.push({...badge, template});
+            }
+        }
+        return awards;
+    }
+
+    /**
      * Fetches badges for user or group.
      * ID can be user's personal group ID with one member or group ID with multiple.
      * @param id defines user/group.
      * @param contextGroup Course context for badges.
-     * @return IBadge[]
+     * @return IBadgeAward[] newest first
      */
     async getBadges(id: number, contextGroup: string) {
         const resp = await toPromise(
-            this.http.get<IBadge[]>(
+            this.http.get<IGroupBadges>(
                 `/badges/group_badges/${id}/${contextGroup}`
             )
         );
         if (resp.ok) {
-            return resp.result.reverse();
+            // The route returns oldest first.
+            return this.joinAwards(resp.result).reverse();
         }
         return [];
     }
@@ -276,50 +302,71 @@ export class BadgeService {
     }
 
     /**
-     * Sorts a list of badges based on the selected sort type.
-     * Alphabetical sorting is locale-aware and uses the configured `sortLang` locale.
+     * Sorts badge templates by title or by when they were created.
      *
-     * @param badges The array of badge objects to be sorted
-     * @param sortType The selected sorting option:
-     *  - "az": Sort badges A–Z by title (locale-aware using `sortLang`)
-     *  - "za": Sort badges Z–A by title (locale-aware using `sortLang`)
-     *  - "newest": Sort badges by creation date, newest first
-     *  - "oldest": Sort badges by creation date, oldest first
-     *  - any other value: Returns the badges unsorted (copied)
-     * @param sortGivenTime If true, date-based sorting uses `given` date; otherwise uses `created`. Defaults to false.
-     * @returns A new sorted array of badges
+     * @param templates The templates to sort
+     * @param sortType "az", "za", "newest", "oldest"; anything else returns a copy
+     * @returns A new sorted array
      */
-    sortBadges(
-        badges: IBadge[],
+    sortBadgeTemplates(
+        templates: IBadgeTemplate[],
+        sortType: string
+    ): IBadgeTemplate[] {
+        return this.sortByTitleOrTime(
+            templates,
+            sortType,
+            (template) => template.title,
+            (template) => template.created
+        );
+    }
+
+    /**
+     * Sorts awarded badges by their template's title or by when they were given.
+     *
+     * @param awards The awards to sort
+     * @param sortType "az", "za", "newest", "oldest"; anything else returns a copy
+     * @returns A new sorted array
+     */
+    sortBadgeAwards(awards: IBadgeAward[], sortType: string): IBadgeAward[] {
+        return this.sortByTitleOrTime(
+            awards,
+            sortType,
+            (award) => award.template.title,
+            (award) => award.given
+        );
+    }
+
+    /**
+     * Shared ordering for both sorts; the callers say how to read a title and a
+     * timestamp out of their own element type. Alphabetical sorting is locale-aware
+     * and uses the configured `sortLang` locale.
+     */
+    private sortByTitleOrTime<T>(
+        items: T[],
         sortType: string,
-        sortGivenTime: boolean = false
-    ): IBadge[] {
-        const sorted = [...badges];
-        const key = sortGivenTime ? "given" : "created";
+        title: (item: T) => string,
+        time: (item: T) => string
+    ): T[] {
+        const sorted = [...items];
+        const ms = (item: T) => new Date(time(item)).getTime();
 
         switch (sortType) {
             case "az":
                 return sorted.sort((a, b) =>
-                    a.title.localeCompare(b.title, sortLang, {
+                    title(a).localeCompare(title(b), sortLang, {
                         sensitivity: "base",
                     })
                 );
             case "za":
                 return sorted.sort((a, b) =>
-                    b.title.localeCompare(a.title, sortLang, {
+                    title(b).localeCompare(title(a), sortLang, {
                         sensitivity: "base",
                     })
                 );
             case "newest":
-                return sorted.sort(
-                    (a, b) =>
-                        new Date(b[key]).getTime() - new Date(a[key]).getTime()
-                );
+                return sorted.sort((a, b) => ms(b) - ms(a));
             case "oldest":
-                return sorted.sort(
-                    (a, b) =>
-                        new Date(a[key]).getTime() - new Date(b[key]).getTime()
-                );
+                return sorted.sort((a, b) => ms(a) - ms(b));
             default:
                 return sorted;
         }

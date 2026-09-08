@@ -206,7 +206,7 @@ class BadgeTestModify(TimRouteTest):
             "/badges/modify_badge",
             data={
                 "badge_id": 1,
-                "context_group": 9,
+                "context_group": group1_name,
                 "title": "MVP",
                 "color": "gold",
                 "shape": "hexagon",
@@ -256,7 +256,7 @@ class BadgeTestModify(TimRouteTest):
             f"/badges/modify_badge",
             data={
                 "badge_id": 1,
-                "context_group": 9,
+                "context_group": group1_name,
                 "title": "MVP",
                 "color": "gold",
                 "shape": "hexagon",
@@ -372,7 +372,7 @@ class BadgeTestDeleteGiven(TimRouteTest):
         )
         self.get(
             f"/badges/group_badges/{self.test_user_2.get_personal_group().id}/{group1_name}",
-            expect_content=[],
+            expect_content={"badges": [], "templates": []},
             expect_status=200,
         )
 
@@ -433,7 +433,7 @@ class BadgeTestGroupsBadges(TimRouteTest):
 
         # fetch groups badges when no badges given
         result_grba_empty = self.get(f"/badges/group_badges/10/{group1_name}")
-        self.assertEqual([], result_grba_empty)
+        self.assertEqual({"badges": [], "templates": []}, result_grba_empty)
 
         # give 2 badges from different context groups to testuser2
         result_giba_1 = self.post(
@@ -460,58 +460,76 @@ class BadgeTestGroupsBadges(TimRouteTest):
         # fetch personal groups badges of testuser2 from context group es_25
         self.get(
             f"/badges/group_badges/{self.test_user_2.get_personal_group().id}/{group1_name}",
-            expect_content=[
-                {
-                    "id": 1,
-                    "message": "Yippee!",
-                    "badgegiven_id": 1,
-                    "active": True,
-                    "given_by": self.test_user_1.id,
-                    "given_by_name": self.test_user_1.real_name,
-                    "given": result_giba_1["given"],
-                    "withdrawn": None,
-                    "color": "blue",
-                    "context_group": 9,
-                    "created": result_cb_1["created"],
-                    "created_by": self.test_user_1.id,
-                    "created_by_name": self.test_user_1.real_name,
-                    "deleted": None,
-                    "description": "Great coordination",
-                    "image": 1,
-                    "modified": None,
-                    "shape": "hexagon",
-                    "title": "Coordinator",
-                }
-            ],
+            expect_content={
+                "badges": [
+                    {
+                        "id": 1,
+                        "badge_id": 1,
+                        "group_id": self.test_user_2.get_personal_group().id,
+                        "message": "Yippee!",
+                        "active": True,
+                        "given_by": self.test_user_1.id,
+                        "given_by_name": self.test_user_1.real_name,
+                        "given": result_giba_1["given"],
+                        "withdrawn": None,
+                    }
+                ],
+                "templates": [
+                    {
+                        "id": 1,
+                        "title": "Coordinator",
+                        "description": "Great coordination",
+                        "color": "blue",
+                        "shape": "hexagon",
+                        "image": 1,
+                        "context_group": 9,
+                        "active": True,
+                        "created": result_cb_1["created"],
+                        "created_by": self.test_user_1.id,
+                        "created_by_name": self.test_user_1.real_name,
+                        "modified": None,
+                        "deleted": None,
+                    }
+                ],
+            },
             expect_status=200,
         )
 
         # fetch personal groups badges of testuser2 from context group es_26
         self.get(
             f"/badges/group_badges/{self.test_user_2.get_personal_group().id}/{group2_name}",
-            expect_content=[
-                {
-                    "id": 2,
-                    "message": "Yahoo!",
-                    "badgegiven_id": 2,
-                    "active": True,
-                    "given_by": self.test_user_1.id,
-                    "given_by_name": self.test_user_1.real_name,
-                    "given": result_giba_2["given"],
-                    "withdrawn": None,
-                    "color": "yellow",
-                    "context_group": 11,
-                    "created": result_cb_2["created"],
-                    "created_by": self.test_user_1.id,
-                    "created_by_name": self.test_user_1.real_name,
-                    "deleted": None,
-                    "description": "You rule!",
-                    "image": 2,
-                    "modified": None,
-                    "shape": "hexagon",
-                    "title": "King",
-                }
-            ],
+            expect_content={
+                "badges": [
+                    {
+                        "id": 2,
+                        "badge_id": 2,
+                        "group_id": self.test_user_2.get_personal_group().id,
+                        "message": "Yahoo!",
+                        "active": True,
+                        "given_by": self.test_user_1.id,
+                        "given_by_name": self.test_user_1.real_name,
+                        "given": result_giba_2["given"],
+                        "withdrawn": None,
+                    }
+                ],
+                "templates": [
+                    {
+                        "id": 2,
+                        "title": "King",
+                        "description": "You rule!",
+                        "color": "yellow",
+                        "shape": "hexagon",
+                        "image": 2,
+                        "context_group": 11,
+                        "active": True,
+                        "created": result_cb_2["created"],
+                        "created_by": self.test_user_1.id,
+                        "created_by_name": self.test_user_1.real_name,
+                        "modified": None,
+                        "deleted": None,
+                    }
+                ],
+            },
             expect_status=200,
         )
 
@@ -519,7 +537,7 @@ class BadgeTestGroupsBadges(TimRouteTest):
         # and is not included in the subgroup
         self.get(
             f"/badges/group_badges/10/{group1_name}",
-            expect_content=[],
+            expect_content={"badges": [], "templates": []},
             expect_status=200,
         )
 
@@ -529,7 +547,7 @@ class BadgeTestGroupsBadges(TimRouteTest):
         # and is included in the subgroup
         self.get(
             f"/badges/group_badges/10/{group1_name}",
-            expect_content=[],
+            expect_content={"badges": [], "templates": []},
             expect_status=200,
         )
 
@@ -591,9 +609,14 @@ class BadgeTestGroupsBadgesView(TimRouteTest):
         # a member of a subgroup can read that group's badges, because belonging to a
         # subgroup makes them a member of the context group
         result_gb = self.get(f"/badges/group_badges/{subgroup1.id}/{group1_name}")
-        self.assertEqual(1, len(result_gb))
-        self.assertEqual("Coordinator", result_gb[0]["title"])
-        self.assertEqual("Great work guys!", result_gb[0]["message"])
+        self.assertEqual(1, len(result_gb["badges"]))
+        self.assertEqual(1, len(result_gb["templates"]))
+        self.assertEqual("Great work guys!", result_gb["badges"][0]["message"])
+        # the award refers to its template rather than repeating it
+        self.assertEqual(
+            result_gb["templates"][0]["id"], result_gb["badges"][0]["badge_id"]
+        )
+        self.assertEqual("Coordinator", result_gb["templates"][0]["title"])
 
         self.login_test2()
 
@@ -760,29 +783,38 @@ class BadgeTestGiveBadge(TimRouteTest):
         # fetch groups badges after given a badge to it
         result_grba = self.get(f"/badges/group_badges/10/{group1_name}")
         self.assertEqual(
-            [
-                {
-                    "id": 1,
-                    "active": True,
-                    "given_by": self.test_user_1.id,
-                    "given_by_name": "Test user 1",
-                    "given": result_giba["given"],
-                    "withdrawn": None,
-                    "message": "Great work!",
-                    "badgegiven_id": 1,
-                    "color": "blue",
-                    "context_group": 9,
-                    "created": result_cb["created"],
-                    "created_by": 2,
-                    "created_by_name": "Test user 1",
-                    "deleted": None,
-                    "description": "Great coordination",
-                    "image": 1,
-                    "modified": None,
-                    "shape": "hexagon",
-                    "title": "Coordinator",
-                }
-            ],
+            {
+                "badges": [
+                    {
+                        "id": 1,
+                        "badge_id": 1,
+                        "group_id": 10,
+                        "message": "Great work!",
+                        "active": True,
+                        "given_by": self.test_user_1.id,
+                        "given_by_name": self.test_user_1.real_name,
+                        "given": result_giba["given"],
+                        "withdrawn": None,
+                    }
+                ],
+                "templates": [
+                    {
+                        "id": 1,
+                        "title": "Coordinator",
+                        "description": "Great coordination",
+                        "color": "blue",
+                        "shape": "hexagon",
+                        "image": 1,
+                        "context_group": 9,
+                        "active": True,
+                        "created": result_cb["created"],
+                        "created_by": self.test_user_1.id,
+                        "created_by_name": self.test_user_1.real_name,
+                        "modified": None,
+                        "deleted": None,
+                    }
+                ],
+            },
             result_grba,
         )
 
@@ -876,7 +908,7 @@ class BadgeTestWithdrawBadge(TimRouteTest):
             f"/badges/group_badges/{self.test_user_2.get_personal_group().id}/{group1_name}"
         )
         self.assertEqual(
-            [],
+            {"badges": [], "templates": []},
             result_grba,
         )
 
@@ -1090,7 +1122,7 @@ class BadgeTestErroneousData(TimRouteTest):
             f"/badges/modify_badge",
             data={
                 "badge_id": 100,
-                "context_group": 9,
+                "context_group": group1_name,
                 "title": "Coordinator",
                 "color": "blue",
                 "shape": "hexagon",
@@ -1104,7 +1136,7 @@ class BadgeTestErroneousData(TimRouteTest):
             f"/badges/modify_badge",
             data={
                 "badge_id": 1,
-                "context_group": 100,
+                "context_group": "nonexistent_group",
                 "title": "Coordinator",
                 "color": "blue",
                 "shape": "hexagon",
@@ -1112,7 +1144,7 @@ class BadgeTestErroneousData(TimRouteTest):
                 "description": "Great coordination",
             },
             expect_status=404,
-            expect_content='User group with id "100" not found',
+            expect_content='User group "nonexistent_group" not found',
         )
 
         # delete a badge with different erroneous data

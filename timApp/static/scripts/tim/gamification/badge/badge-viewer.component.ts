@@ -7,9 +7,10 @@ import {HttpClient, HttpClientModule} from "@angular/common/http";
 import {BadgeModule} from "tim/gamification/badge/badge.component";
 import {BadgeService} from "tim/gamification/badge/badge.service";
 import type {
-    IBadge,
+    IBadgeAward,
     IBadgeGroup,
     IErrorAlert,
+    IGroupBadges,
 } from "tim/gamification/badge/badge.interface";
 import {Subscription} from "rxjs";
 import {Users} from "tim/user/userService";
@@ -64,11 +65,11 @@ import {genericglobals} from "tim/util/globals";
                     <div class="user-badges">
                         <div class="badge-card" *ngFor="let badge of this.badges">
                             <tim-badge
-                                title="{{badge.title}}"
-                                color="{{badge.color}}"
-                                shape="{{badge.shape}}"
-                                [image]="badge.image"
-                                description="{{badge.description}}"
+                                title="{{badge.template.title}}"
+                                color="{{badge.template.color}}"
+                                shape="{{badge.template.shape}}"
+                                [image]="badge.template.image"
+                                description="{{badge.template.description}}"
                                 message="{{badge.message}}"
                                 [disableDialogWindow]="false"
                                 (click)="openDialog(badge)">
@@ -92,11 +93,11 @@ import {genericglobals} from "tim/util/globals";
                             <div class="users-group-badges">
                                 <div class="badge-card" *ngFor="let badge of groupBadgesMap.get(group.id)">
                                     <tim-badge
-                                        title="{{badge.title}}"
-                                        color="{{badge.color}}"
-                                        shape="{{badge.shape}}"
-                                        [image]="badge.image"
-                                        description="{{badge.description}}"
+                                        title="{{badge.template.title}}"
+                                        color="{{badge.template.color}}"
+                                        shape="{{badge.template.shape}}"
+                                        [image]="badge.template.image"
+                                        description="{{badge.template.description}}"
                                         message="{{badge.message}}"
                                         [disableDialogWindow]="false"
                                         (click)="openDialog(badge)">
@@ -116,12 +117,12 @@ export class BadgeViewerComponent implements OnInit {
     personalGroup?: IGroup;
     realName: string | null = null;
     selectedUser?: IUser | null = null;
-    badges: IBadge[] = [];
+    badges: IBadgeAward[] = [];
     userSubGroups: IBadgeGroup[] = [];
     @Input() badgegroupContext?: string;
     @Input() badgeuserContext?: string;
     private subscription: Subscription = new Subscription();
-    groupBadgesMap = new Map<number, IBadge[]>();
+    groupBadgesMap = new Map<number, IBadgeAward[]>();
     groupPrettyNames: Map<number, string> = new Map();
     disableDialogWindow?: boolean;
 
@@ -130,7 +131,7 @@ export class BadgeViewerComponent implements OnInit {
     availableColors: {id: string; forCreatorList: string}[] = [];
 
     selectedSort: string = "newest";
-    sortedBadges: IBadge[] = [];
+    sortedBadges: IBadgeAward[] = [];
     groupSortMap: Map<number, string> = new Map();
 
     hasPermissionToHandleBadges: boolean = false;
@@ -255,11 +256,11 @@ export class BadgeViewerComponent implements OnInit {
      * This method first closes any open dialogs, then opens a new one to display
      * details from the provided badge object.
      *
-     * @param badge - An object of type `IBadge` containing the details of the badge to display.
+     * @param badge - The award whose details should be shown.
      * @returns Promise<void> - An asynchronous method that resolves once the dialog is closed.
      */
 
-    async openDialog(badge: IBadge): Promise<void> {
+    async openDialog(badge: IBadgeAward): Promise<void> {
         if (this.disableDialogWindow) {
             this.badgeService.closeActiveDialog();
             return;
@@ -279,9 +280,9 @@ export class BadgeViewerComponent implements OnInit {
 
         // Creates a dialog-window about the data of a badge
         this.badgeService.closeActiveDialog();
-        const iconName = this.getImageNameById(badge.image);
-        const colorName = this.getColorNameById(badge.color);
-        const shapeName = this.getShapeNameById(badge.shape);
+        const iconName = this.getImageNameById(badge.template.image);
+        const colorName = this.getColorNameById(badge.template.color);
+        const shapeName = this.getShapeNameById(badge.template.shape);
 
         // TODO: create custom dialog for this
         this.badgeService.activeDialogRef = await angularDialog.open(
@@ -289,14 +290,14 @@ export class BadgeViewerComponent implements OnInit {
             {
                 message: `
                     <div class="badge-dialog-window">
-                        <b>${badge.title}</b><br><br>
-                        <b>${this.textDescription}</b> ${badge.description}<br>
+                        <b>${badge.template.title}</b><br><br>
+                        <b>${this.textDescription}</b> ${badge.template.description}<br>
                         <b>${this.textMessage}</b> ${badge.message}<br><br>
                         <b>${this.textIcon}</b> ${iconName}<br>
                         <b>${this.textColor}</b> ${colorName}<br>
                         <b>${this.textShape}</b> ${shapeName}<br><br>
                         <b>${this.textTime}</b> ${formattedBadgeTime}<br>
-                        <b>${this.textCreatedBy}</b> ${badge.created_by_name}<br>
+                        <b>${this.textCreatedBy}</b> ${badge.template.created_by_name}<br>
                         <b>${this.textGivenBy}</b> ${badge.given_by_name}<br>                     
                     </div>
             `,
@@ -367,7 +368,7 @@ export class BadgeViewerComponent implements OnInit {
      */
     async getBadges() {
         const result = await toPromise(
-            this.http.get<IBadge[]>(
+            this.http.get<IGroupBadges>(
                 `/badges/group_badges/${this.personalGroup!.id}/${this
                     .badgegroupContext!}`
             )
@@ -386,7 +387,7 @@ export class BadgeViewerComponent implements OnInit {
         }
         this.hasPermissionToHandleBadges = true;
 
-        this.badges = result.result;
+        this.badges = this.badgeService.joinAwards(result.result);
         this.onSortChange();
     }
 
@@ -420,13 +421,12 @@ export class BadgeViewerComponent implements OnInit {
         for (const group of this.userSubGroups) {
             this.groupBadgesMap.set(
                 group.id,
-                this.badgeService.sortBadges(
+                this.badgeService.sortBadgeAwards(
                     await this.badgeService.getBadges(
                         group.id,
                         this.badgegroupContext
                     ),
-                    "newest",
-                    true
+                    "newest"
                 )
             );
         }
@@ -436,20 +436,18 @@ export class BadgeViewerComponent implements OnInit {
      * Sorts all badges using the specified sort type and updates the sorted list.
      */
     onSortChange() {
-        this.badges = this.badgeService.sortBadges(
+        this.badges = this.badgeService.sortBadgeAwards(
             this.badges,
-            this.selectedSort,
-            true
+            this.selectedSort
         );
 
         for (const group of this.groupBadgesMap.keys()) {
             const group_badges = this.groupBadgesMap.get(group) ?? [];
             this.groupBadgesMap.set(
                 group,
-                this.badgeService.sortBadges(
+                this.badgeService.sortBadgeAwards(
                     group_badges,
-                    this.selectedSort,
-                    true
+                    this.selectedSort
                 )
             );
         }

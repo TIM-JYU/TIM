@@ -10,7 +10,10 @@ import {HttpClientModule} from "@angular/common/http";
 import {BadgeViewerModule} from "tim/gamification/badge/badge-viewer.component";
 import {BadgeGiverModule} from "tim/gamification/badge/badge-giver.component";
 import {BadgeService} from "tim/gamification/badge/badge.service";
-import type {IBadge, IErrorAlert} from "tim/gamification/badge/badge.interface";
+import type {
+    IBadgeTemplate,
+    IErrorAlert,
+} from "tim/gamification/badge/badge.interface";
 import {showConfirm} from "tim/ui/showConfirmDialog";
 import {toPromise} from "tim/util/utils";
 import {BadgeModule} from "tim/gamification/badge/badge.component";
@@ -230,7 +233,7 @@ export class BadgeCreatorComponent implements OnInit {
     ) {}
 
     isFormChanged = false;
-    all_badges: IBadge[] = [];
+    all_badges: IBadgeTemplate[] = [];
     selectedContextGroup?: string;
     badgeFormShowing = false;
     hasPermissionToHandleBadges = false;
@@ -239,14 +242,14 @@ export class BadgeCreatorComponent implements OnInit {
     availableShapes: {id: string; value: string}[] = [];
     availableColors: {id: string; forCreatorList: string}[] = [];
 
-    clickedBadge: IBadge | null = null;
-    editingBadge: IBadge | null = null;
+    clickedBadge: IBadgeTemplate | null = null;
+    editingBadge: IBadgeTemplate | null = null;
 
     showGiver = false;
     @Input() badgegroupContext?: string;
     alerts: Array<IErrorAlert> = [];
     selectedSort: string = "newest";
-    sortedBadges: IBadge[] = [];
+    sortedBadges: IBadgeTemplate[] = [];
 
     textCreate = $localize`:@@form.create:Create`;
     textSave = $localize`:@@form.save:Save Changes`;
@@ -259,7 +262,7 @@ export class BadgeCreatorComponent implements OnInit {
      * Method called when a badge is clicked
      * @param badge clicked badge by user
      */
-    selectBadge(badge: IBadge) {
+    selectBadge(badge: IBadgeTemplate) {
         if (this.clickedBadge === badge) {
             this.clickedBadge = null;
             this.emptyForm();
@@ -336,10 +339,10 @@ export class BadgeCreatorComponent implements OnInit {
     /**
      * Toggles the visibility of the badge editing form and prepares it for the selected badge.
      *
-     * @param {IBadge} badge - The badge object that needs to be edited, containing all relevant details.
+     * @param {IBadgeTemplate} badge - The badge object that needs to be edited, containing all relevant details.
      *
      */
-    editBadge(badge: IBadge) {
+    editBadge(badge: IBadgeTemplate) {
         this.badgeFormShowing = !this.badgeFormShowing;
         this.badgeFormShowing = this.hideOtherViewsExcept(
             this.badgeFormShowing
@@ -357,7 +360,7 @@ export class BadgeCreatorComponent implements OnInit {
      * Opens badge assigning view and hides other views.
      * @param badge Selected badge
      */
-    showBadgeGiver(badge: IBadge) {
+    showBadgeGiver(badge: IBadgeTemplate) {
         this.showGiver = this.hideOtherViewsExcept(this.showGiver);
         this.showGiver = !this.showGiver;
 
@@ -381,10 +384,10 @@ export class BadgeCreatorComponent implements OnInit {
      * This function sets the provided `badge` object for editing, marks the form as changed,
      * and populates the form fields with the current values of the selected badge.
      *
-     * @param {IBadge} badge - The badge object to be edited, containing all the necessary properties.
+     * @param {IBadgeTemplate} badge - The badge object to be edited, containing all the necessary properties.
      *
      */
-    showEditingForm(badge: IBadge) {
+    showEditingForm(badge: IBadgeTemplate) {
         this.editingBadge = badge;
         this.clickedBadge = badge;
         this.isFormChanged = true;
@@ -395,7 +398,7 @@ export class BadgeCreatorComponent implements OnInit {
             image: badge.image,
             color: badge.color,
             shape: badge.shape,
-            context_group: badge.context_group,
+            context_group: this.selectedContextGroup,
         });
     }
 
@@ -459,10 +462,10 @@ export class BadgeCreatorComponent implements OnInit {
      * Saves newly created badge with the information the user has set,
      * when the create badge button is pressed.
      */
-    newBadge: IBadge | undefined;
+    newBadge: IBadgeTemplate | undefined;
     async onSubmit() {
         if (this.badgeForm.valid) {
-            this.newBadge = this.badgeForm.value as IBadge;
+            this.newBadge = this.badgeForm.value as IBadgeTemplate;
             const response = toPromise(
                 this.http.post<{ok: boolean}>("/badges/create_badge", {
                     context_group: this.selectedContextGroup,
@@ -524,7 +527,7 @@ export class BadgeCreatorComponent implements OnInit {
     private async getBadges() {
         // FIXME: show error if there is no context group
         const response = await toPromise(
-            this.http.get<IBadge[]>(
+            this.http.get<IBadgeTemplate[]>(
                 `/badges/all_badges/${this.selectedContextGroup!}`,
                 {}
             )
@@ -562,7 +565,9 @@ export class BadgeCreatorComponent implements OnInit {
             const response = toPromise(
                 this.http.post<{ok: boolean}>("/badges/modify_badge", {
                     badge_id: this.editingBadge.id,
-                    context_group: this.editingBadge.context_group,
+                    // The route takes the context group's name, as the other badge
+                    // routes do; editingBadge.context_group holds its id.
+                    context_group: this.selectedContextGroup,
                     title: this.editingBadge.title,
                     color: this.editingBadge.color,
                     shape: this.editingBadge.shape,
@@ -695,7 +700,7 @@ export class BadgeCreatorComponent implements OnInit {
      * @param sortType The selected sort option ("az", "za", "newest", "oldest")
      */
     onSortChange(sortType: string) {
-        this.sortedBadges = this.badgeService.sortBadges(
+        this.sortedBadges = this.badgeService.sortBadgeTemplates(
             this.all_badges,
             sortType
         );
