@@ -688,8 +688,16 @@ class SubgroupsTest(TimRouteTest):
         result_sg_nonempty = self.get(f"/groups/subgroups/{group1_name}")
         self.assertEqual(
             [
-                {"id": 10, "name": subgroup1_name},
-                {"id": 11, "name": subgroup2_name},
+                {
+                    "id": 10,
+                    "name": subgroup1_name,
+                    "admin_doc_path": f"groups/{subgroup1_name}",
+                },
+                {
+                    "id": 11,
+                    "name": subgroup2_name,
+                    "admin_doc_path": f"groups/{subgroup2_name}",
+                },
             ],
             result_sg_nonempty,
         )

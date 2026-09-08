@@ -24,6 +24,10 @@ tim-table .timTableTable {
 
 Ryhmän nimi: **%%group%%**
 
+{% if parent_group %}
+Subgroup of: %%parent_group%%
+{% endif %}
+
 ## Jäsenet
 
 #-
@@ -65,6 +69,11 @@ hide:
 
 #- {allowangular="true"}
 <tim-add-member group="%%group%%"></tim-add-member>
+
+## Aliryhmät {.hidden-print}
+
+#- {allowangular="true"}
+<tim-subgroups-manager group="%%group%%"></tim-subgroups-manager>
 
 ## Ryhmän poistaminen {.hidden-print}
 

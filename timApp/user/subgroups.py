@@ -83,6 +83,36 @@ class SubGroup(db.Model):
         return f"<SubGroup(parent_id={self.parent_id}, child_id={self.child_id})>"
 
 
+PARENT_GROUP_MACRO = "parent_group"
+"""Macro that the group preamble reads to show which group a subgroup belongs to."""
+
+
+def _set_parent_group_macro(child: UserGroup, parent_name: str | None) -> None:
+    """Record the parent group in the subgroup's admin document, or clear it.
+
+    The group preamble renders its "Subgroup of" line from the ``parent_group`` macro,
+    so the macro has to be kept in step with the link. Groups that have no admin
+    document, such as ones created straight from the model, are skipped.
+
+    :param child: The subgroup whose admin document is updated.
+    :param parent_name: Name of the parent group, or None to clear the macro.
+    """
+    if child.admin_doc is None or not child.admin_doc.docentries:
+        return
+    doc = child.admin_doc.docentries[0].document
+    # Own settings only: the merged settings would pull the preamble's macros into
+    # the group document.
+    macros = doc.get_own_settings().get("macros", {})
+    if parent_name is None:
+        if macros.pop(PARENT_GROUP_MACRO, None) is None:
+            return
+    elif macros.get(PARENT_GROUP_MACRO) == parent_name:
+        return
+    else:
+        macros[PARENT_GROUP_MACRO] = parent_name
+    doc.add_setting("macros", macros)
+
+
 def _check_eligible(ug: UserGroup, role: str) -> None:
     """Reject groups that cannot take part in a subgroup relationship at all.
 
@@ -120,6 +150,7 @@ def add_subgroup(
     existing = child.subgroup_of
     if existing is not None:
         if existing.parent_id == parent.id:
+            _set_parent_group_macro(child, parent.name)
             return existing
         raise SubGroupError(
             f"Group '{child.name}' is already a subgroup of '{existing.parent.name}'. "
@@ -140,6 +171,7 @@ def add_subgroup(
 
     link = SubGroup(parent=parent, child=child)
     db.session.add(link)
+    _set_parent_group_macro(child, parent.name)
 
     # Materialise the implicit memberships. add_to_group is a no-op for users who are
     # already members of the parent, so direct and inherited membership can overlap.
@@ -160,3 +192,4 @@ def remove_subgroup(parent: UserGroup, child: UserGroup) -> None:
             f"Group '{child.name}' is not a subgroup of '{parent.name}'."
         )
     db.session.delete(link)
+    _set_parent_group_macro(child, None)

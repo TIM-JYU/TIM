@@ -6,6 +6,7 @@ from typing import Any
 
 from flask import Response, current_app
 from sqlalchemy import select
+from sqlalchemy.orm import selectinload
 
 from timApp.auth.accesshelper import (
     verify_admin,
@@ -23,6 +24,7 @@ from timApp.auth.sessioninfo import (
 from timApp.document.create_item import apply_template, create_document
 from timApp.document.docinfo import DocInfo
 from timApp.gamification.badge.routes import verify_access
+from timApp.item.block import Block
 from timApp.item.validation import ItemValidationRule
 from timApp.notification.send_email import multi_send_email
 from timApp.timdb.sqa import db, run_sql
@@ -550,13 +552,16 @@ def get_subgroups(group: str) -> Response:
             select(UserGroup)
             .join(SubGroup, SubGroup.child_id == UserGroup.id)
             .where(SubGroup.parent_id == context_usergroup.id)
+            # Loaded so that to_json includes admin_doc_path; it is omitted for groups
+            # whose admin doc has not been loaded.
+            .options(selectinload(UserGroup.admin_doc).selectinload(Block.docentries))
             .order_by(UserGroup.name)
         )
         .scalars()
         .all()
     )
 
-    #log_info(f"subgroups of {group}: {[sg.name for sg in subgroups]}")
+    # log_info(f"subgroups of {group}: {[sg.name for sg in subgroups]}")
 
     return json_response([subgroup.to_json() for subgroup in subgroups])
 
