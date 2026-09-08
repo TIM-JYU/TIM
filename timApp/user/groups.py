@@ -556,6 +556,8 @@ def get_subgroups(group: str) -> Response:
         .all()
     )
 
+    #log_info(f"subgroups of {group}: {[sg.name for sg in subgroups]}")
+
     return json_response([subgroup.to_json() for subgroup in subgroups])
 
 
@@ -760,7 +762,8 @@ def add_subgroup_to_group(parent_name: str, child_name: str) -> Response:
         {
             "parent": parent.to_json(),
             "subgroups": [
-                g.to_json() for g in sorted(parent.subgroup_list, key=attrgetter("name"))
+                g.to_json()
+                for g in sorted(parent.subgroup_list, key=attrgetter("name"))
             ],
         }
     )
@@ -788,7 +791,8 @@ def remove_subgroup_from_group(parent_name: str, child_name: str) -> Response:
         {
             "parent": parent.to_json(),
             "subgroups": [
-                g.to_json() for g in sorted(parent.subgroup_list, key=attrgetter("name"))
+                g.to_json()
+                for g in sorted(parent.subgroup_list, key=attrgetter("name"))
             ],
         }
     )
