@@ -105,7 +105,7 @@ export class NameChangerComponent implements OnInit {
         this.groupName = fetchedGroup.name;
         this.group_id = fetchedGroup.id;
 
-        this.prettyName = fetchedGroup.description || "";
+        this.prettyName = fetchedGroup.description ?? "";
         this.displayedName = this.showFullName ? this.groupName : this.subGroup;
 
         const teacherRight = await this.groupService.queryTeacherRightsToGroup(

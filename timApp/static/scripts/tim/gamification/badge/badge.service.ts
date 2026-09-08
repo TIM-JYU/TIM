@@ -378,8 +378,11 @@ export class BadgeService {
      * If no errors, returns false.
      */
     async checkConnectionError(alerts: IErrorAlert[]) {
+        // No trailing slash: the route is registered as "/badges/check_connection",
+        // and Flask answers 404 for the same path with one, which made every caller
+        // report a connection error and give up.
         const result = await toPromise(
-            this.http.get(`/badges/check_connection/`)
+            this.http.get("/badges/check_connection")
         );
         if (!result.ok) {
             this.showError(

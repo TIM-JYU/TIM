@@ -702,6 +702,24 @@ class SubgroupsTest(TimRouteTest):
             result_sg_nonempty,
         )
 
+        # a subgroup's own info names the group it belongs to, so that callers do not
+        # have to guess it from the name
+        self.assertEqual(
+            {
+                "id": 10,
+                "name": subgroup1_name,
+                "description": subgroup1_name,
+                "parent_group": group1_name,
+            },
+            self.get(f"/groups/groupinfo/{subgroup1_name}"),
+        )
+
+        # a group that is not a subgroup has no parent
+        self.assertEqual(
+            None,
+            self.get(f"/groups/groupinfo/{group1_name}")["parent_group"],
+        )
+
         self.login_test2()
 
         # fetch subgroups when user doesn't have teacher access to the context group
@@ -975,6 +993,7 @@ class GroupNameChangerTest(TimRouteTest):
                 "id": 10,
                 "name": subgroup1_name,
                 "description": "Hevoset",
+                "parent_group": None,
             },
         )
         self.get(

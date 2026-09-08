@@ -283,6 +283,9 @@ export class BadgeViewerComponent implements OnInit {
         const iconName = this.getImageNameById(badge.template.image);
         const colorName = this.getColorNameById(badge.template.color);
         const shapeName = this.getShapeNameById(badge.template.shape);
+        // Both are null when the award records no user, or that user is gone.
+        const createdBy = badge.template.created_by_name ?? "";
+        const givenBy = badge.given_by_name ?? "";
 
         // TODO: create custom dialog for this
         this.badgeService.activeDialogRef = await angularDialog.open(
@@ -297,8 +300,8 @@ export class BadgeViewerComponent implements OnInit {
                         <b>${this.textColor}</b> ${colorName}<br>
                         <b>${this.textShape}</b> ${shapeName}<br><br>
                         <b>${this.textTime}</b> ${formattedBadgeTime}<br>
-                        <b>${this.textCreatedBy}</b> ${badge.template.created_by_name}<br>
-                        <b>${this.textGivenBy}</b> ${badge.given_by_name}<br>                     
+                        <b>${this.textCreatedBy}</b> ${createdBy}<br>
+                        <b>${this.textGivenBy}</b> ${givenBy}<br>                     
                     </div>
             `,
                 modal: true,

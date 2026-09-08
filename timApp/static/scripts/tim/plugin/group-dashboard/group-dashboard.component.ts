@@ -2,7 +2,7 @@ import type {OnInit} from "@angular/core";
 import {Component, Input, NgModule} from "@angular/core";
 import {CommonModule} from "@angular/common";
 import {BadgeService} from "tim/gamification/badge/badge.service";
-import {manageglobals} from "tim/util/globals";
+import {genericglobals} from "tim/util/globals";
 import {NameChangerModule} from "tim/plugin/group-dashboard/name-changer.component";
 import type {IErrorAlert} from "tim/gamification/badge/badge.interface";
 import type {IBadgeAward} from "tim/gamification/badge/badge.interface";
@@ -112,44 +112,42 @@ export class GroupDashboardComponent implements OnInit {
     alerts: Array<IErrorAlert> = [];
 
     /**
-     * Triggers loading of group related data if group is provided in the user interface
+     * Triggers loading of group related data if group is provided in the user interface.
+     *
+     * The group information is loaded first, because everything after it needs the
+     * context group that it resolves.
      */
-    ngOnInit() {
-        if (this.group) {
-            // FIXME: Since the group dashboard is aimed at the group members, there should be no reason
-            //  to extract the super-group from the sub-group name. Currently however, fetching the group badges depends
-            //  on this behaviour.
-            this.contextGroup = this.groupService.getContextGroup(this.group);
-            this.currentUserName = manageglobals().current_user.name;
-
-            this.getGroupInfo().then((_) => {
-                this.getMembers().then((_m) => {
-                    this.members = _m;
-                    this.members.forEach((m) => {
-                        this.getBadgesForUser(m.name).then((bs) => {
-                            m.badges = bs;
-                            this.totalBadges += bs.length;
-                        });
-                    });
-                });
-                this.fetchGroupBadges().then((bs) => {
-                    this.groupBadges = bs;
-                    this.totalBadges += bs.length;
-                });
-            });
+    async ngOnInit() {
+        if (!this.group) {
+            return;
         }
+        this.currentUserName = genericglobals().current_user.name;
+
+        if (!(await this.getGroupInfo())) {
+            return;
+        }
+        this.members = await this.getMembers();
+        const memberBadges = await Promise.all(
+            this.members.map((m) => this.getBadgesForUser(m.name))
+        );
+        this.members.forEach((m, i) => (m.badges = memberBadges[i]));
+        this.groupBadges = await this.fetchGroupBadges();
+        this.totalBadges =
+            this.groupBadges.length +
+            memberBadges.reduce((total, badges) => total + badges.length, 0);
     }
 
     /**
-     * Fetches data for current group, including:
-     * - pretty name (description)
-     * - group id
-     * - permissions for badge viewing
-     * @returns group data
+     * Fetches data for the current group: its pretty name, its id, and the group that
+     * its badges are scoped to.
+     *
+     * @returns whether the group could be read; an error alert is shown if it could not
      */
-    async getGroupInfo() {
+    async getGroupInfo(): Promise<boolean> {
         const response = await toPromise(
-            this.http.get<BadgeGroupInfo>(`/groups/groupinfo/${this.group}`)
+            this.http.get<BadgeGroupInfo>(
+                `/groups/groupinfo/${encodeURIComponent(this.group)}`
+            )
         );
         if (!response.ok) {
             this.badgeService.showError(
@@ -161,11 +159,19 @@ export class GroupDashboardComponent implements OnInit {
                 },
                 "danger"
             );
-            return;
+            return false;
         }
         const groupInfo = response.result;
-        this.displayName = groupInfo.description;
+        // A group without an admin document has no pretty name; fall back to the
+        // internal name, since the whole dashboard is hidden without one.
+        this.displayName = groupInfo.description ?? groupInfo.name;
         this.groupId = groupInfo.id;
+        // Badges belong to a course, so a subgroup's badges live in its parent group.
+        // This used to be guessed by cutting the name at the first "-", which was wrong
+        // for a top-level group whose name contains a dash and for any subgroup not
+        // named after its parent.
+        this.contextGroup = groupInfo.parent_group ?? groupInfo.name;
+        return true;
     }
 
     /**

@@ -7,7 +7,10 @@ import {Injectable} from "@angular/core";
 export type BadgeGroupInfo = {
     id: number;
     name: string;
-    description: string;
+    /** Pretty name from the admin document, null for a group that has none. */
+    description: string | null;
+    /** Name of the group this one is a subgroup of, null for a top-level group. */
+    parent_group: string | null;
 };
 
 @Injectable({
@@ -23,7 +26,9 @@ export class GroupService {
      */
     async getUsersFromGroup(group: string): Promise<IUser[]> {
         const response = await toPromise(
-            this.http.get<IUser[]>(`/groups/members/${group}`)
+            this.http.get<IUser[]>(
+                `/groups/members/${encodeURIComponent(group)}`
+            )
         );
         if (response.ok) {
             return response.result;
@@ -32,24 +37,26 @@ export class GroupService {
     }
 
     /**
-     * Retrieves all sub-groups whose name starts with the given prefix.
-     * @param group group name prefix
+     * Retrieves the subgroups of the given group.
+     * @param group parent group name
      */
     async getSubGroups(group: string) {
         return await toPromise(
-            this.http.get<IBadgeGroup[]>(`/groups/subgroups/${group}`)
+            this.http.get<IBadgeGroup[]>(
+                `/groups/subgroups/${encodeURIComponent(group)}`
+            )
         );
     }
 
     /**
-     * Retrieves all groups with the specified group name prefix, that the user belongs to.
-     * @param group group name prefix
+     * Retrieves the subgroups of the given group that the user belongs to.
+     * @param group parent group name
      * @param userId user's id
      */
     async getUserSubGroups(group: string, userId: number) {
         const resp = await toPromise(
             this.http.get<IBadgeGroup[]>(
-                `/groups/prefix_groups/${userId}/${group}`
+                `/groups/prefix_groups/${userId}/${encodeURIComponent(group)}`
             )
         );
         if (resp.ok) {
@@ -65,18 +72,23 @@ export class GroupService {
      */
     async getPersonalGroup(userName: string) {
         return await toPromise(
-            this.http.get<IGroup>(`/groups/personal_group/${userName}`)
+            this.http.get<IGroup>(
+                `/groups/personal_group/${encodeURIComponent(userName)}`
+            )
         );
     }
 
     /**
-     * Retrieves group data including id, internal name, and description (pretty name).
-     * @param groupName The full internal name of the group (e.g., "parent-subgroup").
-     * @returns An object containing the group's id, name, and description, or null if the fetch fails.
+     * Retrieves group data: id, internal name, description (pretty name) and the name
+     * of the group it is a subgroup of.
+     * @param groupName The internal name of the group.
+     * @returns The group summary, or undefined if the fetch fails.
      */
     async getCurrentGroup(groupName: string) {
         const response = await toPromise(
-            this.http.get<BadgeGroupInfo>(`/groups/groupinfo/${groupName}`)
+            this.http.get<BadgeGroupInfo>(
+                `/groups/groupinfo/${encodeURIComponent(groupName)}`
+            )
         );
         if (response.ok) {
             return response.result;
@@ -92,8 +104,10 @@ export class GroupService {
      */
     async updateGroupName(group_name: string, new_name: string) {
         const response = toPromise(
-            this.http.post<{ok: boolean}>(
-                `/groups/pretty_name/${group_name}/${new_name}`,
+            this.http.post<BadgeGroupInfo>(
+                `/groups/pretty_name/${encodeURIComponent(
+                    group_name
+                )}/${encodeURIComponent(new_name)}`,
                 {}
             )
         );
@@ -101,15 +115,22 @@ export class GroupService {
     }
 
     /**
-     * Extracts the context group (i.e., the parent group) from a full group name.
-     * @param fullName The full internal group name, typically in the format "parent-subgroup".
-     * @returns The first part of the group name before the dash, representing the context group.
+     * The group that badges are scoped to for the given group: its parent if it is a
+     * subgroup, otherwise the group itself.
+     *
+     * Subgroups used to be recognised by a shared name prefix, so this was the part of
+     * the name before the first "-". That gave the wrong answer for any top-level group
+     * whose name contains a dash, and for any subgroup not named after its parent.
+     *
+     * @param groupName The internal name of the group.
+     * @returns The context group's name, or undefined if the group cannot be read.
      */
-    getContextGroup(fullName: string) {
-        // TODO: this needs to be reworked, since there is no set convention for naming
-        //  subgroups.
-        const parts = fullName.split("-");
-        return parts[0];
+    async getContextGroup(groupName: string): Promise<string | undefined> {
+        const info = await this.getCurrentGroup(groupName);
+        if (!info) {
+            return undefined;
+        }
+        return info.parent_group ?? info.name;
     }
 
     /**
@@ -117,13 +138,13 @@ export class GroupService {
      * @param group_id The group's id number
      */
     async queryTeacherRightsToGroup(group_id: number): Promise<boolean> {
-        // TODO: error handling / error messages for user
+        // The route answers with a plain ok response; a lack of rights is a 403, so
+        // whether the request succeeded is the whole answer.
         const teacherRightQuery = await toPromise(
-            this.http.get<boolean>(`/groups/hasTeacherRightTo/${group_id}`)
+            this.http.get<{status: string}>(
+                `/groups/hasTeacherRightTo/${group_id}`
+            )
         );
-        if (teacherRightQuery.ok) {
-            return true;
-        }
-        return false;
+        return teacherRightQuery.ok;
     }
 }

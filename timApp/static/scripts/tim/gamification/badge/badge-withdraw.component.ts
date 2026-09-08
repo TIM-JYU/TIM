@@ -526,7 +526,7 @@ export class BadgeWithdrawComponent implements OnInit {
                 group.name
             );
             if (prettyName) {
-                group.description = prettyName.description || group.name;
+                group.description = prettyName.description ?? group.name;
                 updatesGroups.push(group);
             }
         }

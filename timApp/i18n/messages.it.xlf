@@ -12257,6 +12257,118 @@ Proceed?</target>
           <context context-type="linenumber">281,282</context>
         </context-group>
       </trans-unit>
+      <trans-unit id="5843146741010825721" datatype="html">
+        <source>Subgroups</source>
+        <target state="translated">Subgroups</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/user/subgroups-manager.component.ts</context>
+          <context context-type="linenumber">48</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="1809911523755991949" datatype="html">
+        <source> No group given. Set the group attribute to the name of the parent group. </source>
+        <target state="translated"> No group given. Set the group attribute to the name of the parent group. </target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/user/subgroups-manager.component.ts</context>
+          <context context-type="linenumber">53</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="3821834717032476445" datatype="html">
+        <source>Subgroups of <x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong&gt;"/><x id="INTERPOLATION" equiv-text="&lt;/strong&gt;."/><x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text=".&lt;/p&gt;"/>.</source>
+        <target state="translated">Subgroups of <x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong&gt;"/><x id="INTERPOLATION" equiv-text="&lt;/strong&gt;."/><x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text=".&lt;/p&gt;"/>.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/user/subgroups-manager.component.ts</context>
+          <context context-type="linenumber">58,60</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="276841432083534314" datatype="html">
+        <source>This group has no subgroups.</source>
+        <target state="translated">This group has no subgroups.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/user/subgroups-manager.component.ts</context>
+          <context context-type="linenumber">92,94</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="5381230309143012956" datatype="html">
+        <source> Remove selected </source>
+        <target state="translated"> Remove selected </target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/user/subgroups-manager.component.ts</context>
+          <context context-type="linenumber">99</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="7788144676976007748" datatype="html">
+        <source> Removing detaches the subgroup from this group. The group itself is not deleted, and members that joined this group through the subgroup remain its members. </source>
+        <target state="translated"> Removing detaches the subgroup from this group. The group itself is not deleted, and members that joined this group through the subgroup remain its members. </target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/user/subgroups-manager.component.ts</context>
+          <context context-type="linenumber">102,103</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="1921262188546615038" datatype="html">
+        <source>Add subgroups</source>
+        <target state="translated">Add subgroups</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/user/subgroups-manager.component.ts</context>
+          <context context-type="linenumber">108,109</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="4885264227168242478" datatype="html">
+        <source>Enter the names of the groups to add as subgroups, one per line.</source>
+        <target state="translated">Enter the names of the groups to add as subgroups, one per line.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/user/subgroups-manager.component.ts</context>
+          <context context-type="linenumber">116</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="2172902003676402663" datatype="html">
+        <source> Refresh </source>
+        <target state="translated"> Refresh </target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/user/subgroups-manager.component.ts</context>
+          <context context-type="linenumber">130</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="7762403958505859855" datatype="html">
+        <source>Added as subgroups:</source>
+        <target state="translated">Added as subgroups:</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/user/subgroups-manager.component.ts</context>
+          <context context-type="linenumber">136</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="164140394408732146" datatype="html">
+        <source>Removed from subgroups:</source>
+        <target state="translated">Removed from subgroups:</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/user/subgroups-manager.component.ts</context>
+          <context context-type="linenumber">143</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="5984625725328971623" datatype="html">
+        <source>Failed:</source>
+        <target state="translated">Failed:</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/user/subgroups-manager.component.ts</context>
+          <context context-type="linenumber">150</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="1836768055207926526" datatype="html">
+        <source>Remove subgroups</source>
+        <target state="translated">Remove subgroups</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/user/subgroups-manager.component.ts</context>
+          <context context-type="linenumber">265,264</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="5482602639617240100" datatype="html">
+        <source>Remove <x id="PH" equiv-text="names.length"/> subgroup(s) from <x id="PH_1" equiv-text="group"/>? The groups themselves are not deleted.</source>
+        <target state="translated">Remove <x id="PH" equiv-text="names.length"/> subgroup(s) from <x id="PH_1" equiv-text="group"/>? The groups themselves are not deleted.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/user/subgroups-manager.component.ts</context>
+          <context context-type="linenumber">266,264</context>
+        </context-group>
+      </trans-unit>
     </body>
   </file>
 </xliff>

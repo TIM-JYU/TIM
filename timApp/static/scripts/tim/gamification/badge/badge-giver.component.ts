@@ -20,7 +20,6 @@ import {GroupService} from "tim/plugin/group-dashboard/group.service";
 import type {IGroup, IUser} from "tim/user/IUser";
 import {PurifyModule} from "tim/util/purify.module";
 import type {AngularError, Result} from "tim/util/utils";
-import {toPromise} from "tim/util/utils";
 
 @Component({
     selector: "tim-badge-giver",

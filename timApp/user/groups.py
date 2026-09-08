@@ -659,16 +659,41 @@ def pretty_name(group_name: str) -> Response:
     return json_response(group.human_name)
 
 
+def group_info_json(group: UserGroup) -> dict:
+    """The group summary that the badge and dashboard components read.
+
+    ``parent_group`` is the name of the group this one is a subgroup of, or None. It is
+    part of the summary so that callers can tell a subgroup from a top-level group
+    instead of guessing from the name, which used to be done by splitting on "-".
+
+    ``description`` is None for a group with no admin document - such groups exist, so
+    reading the description off it unconditionally would be a 500 - and also for a blank
+    one, so that callers can treat "no pretty name" as a single case.
+    """
+    parent = group.parent_group
+    description = group.admin_doc.description if group.admin_doc else None
+    return {
+        "id": group.id,
+        "name": group.name,
+        "description": description or None,
+        "parent_group": parent.name if parent is not None else None,
+    }
+
+
 @groups.get("/groupinfo/<group_name>")
 def get_groupinfo_with_pretty_name(group_name: str) -> Response:
+    """Name, id, description and parent group of a user group.
+
+    :param group_name: Name of the group
+    :return: The group summary, see :func:`group_info_json`
+    """
     group = UserGroup.get_by_name(group_name)
 
     current_user = get_current_user_object()
     if group not in current_user.groups:
+        # Raises NotExist when the group does not exist.
         verify_access("view", group, user_group_name=group_name)
-    return json_response(
-        {"id": group.id, "name": group.name, "description": group.admin_doc.description}
-    )
+    return json_response(group_info_json(group))
 
 
 @groups.post("/pretty_name/<group_name>/<new_name>")
@@ -706,9 +731,7 @@ def change_pretty_name(group_name: str, new_name: str) -> Response:
     else:
         raise RouteException("Group name cannot be empty")
 
-    return json_response(
-        {"id": group.id, "name": group.name, "description": group.admin_doc.description}
-    )
+    return json_response(group_info_json(group))
 
 
 @groups.get("/hasTeacherRightTo/<int:group_id>")
