@@ -70,10 +70,14 @@ hide:
 #- {allowangular="true"}
 <tim-add-member group="%%group%%"></tim-add-member>
 
-## Aliryhmät {.hidden-print}
+#- {area="subgroups" nocache="true" .hidden-print visible="%%not parent_group%%"}
 
-#- {allowangular="true"}
+## Aliryhmät
+
+#- {allowangular="true" }
 <tim-subgroups-manager group="%%group%%"></tim-subgroups-manager>
+
+#- {area_end="subgroups" }
 
 ## Ryhmän poistaminen {.hidden-print}
 
