@@ -42,7 +42,7 @@ import type {AngularError, Result} from "tim/util/utils";
         </div>
 
         <div class="user-group-button-container">
-            <button (click)="handleSwap(true); fetchUsersFromGroups()" [disabled]="userAssign === true" i18n>
+            <button (click)="showUsers()" [disabled]="userAssign === true" i18n>
                 View users
             </button>
             <button (click)="handleSwap(false)" [disabled]="userAssign === false" i18n>
@@ -97,7 +97,7 @@ import type {AngularError, Result} from "tim/util/utils";
                 </div>
                 <ng-container *ngIf="usersWithoutGroup.length > 0">
                     <div class="group">
-                        <span i18n>Users without group</span>
+                        <span i18n>Members in the main group ({{ contextGroupName }})</span>
                         <div *ngFor="let user of usersWithoutGroup" class="users-item">
                             <input class="user-checkbox"
                                    type="checkbox"
@@ -219,6 +219,8 @@ export class BadgeGiverComponent implements OnInit {
     selectedGroups: IBadgeGroup[] = [];
     groupUsersMap = new Map<number, IUser[]>();
     groupPrettyNames: Map<number, string> = new Map();
+    /** Pretty name of the context group, falling back to its internal name. */
+    contextGroupName = "";
 
     @Input() selectedBadge?: IBadgeTemplate | null = null;
     @Input() badgegroupContext?: string;
@@ -227,6 +229,8 @@ export class BadgeGiverComponent implements OnInit {
 
     alerts: Array<IErrorAlert> = [];
     private subscription: Subscription = new Subscription();
+    /** Resolves once the initial fetchGroups call has finished; see showUsers. */
+    private groupsLoaded: Promise<void> = Promise.resolve();
     @Output() cancelEvent = new EventEmitter<void>();
 
     userSearchTerm: string = "";
@@ -246,8 +250,24 @@ export class BadgeGiverComponent implements OnInit {
     ngOnInit() {
         if (Users.isLoggedIn()) {
             this.fetchUsers(this.badgegroupContext);
-            this.fetchGroups();
+            this.groupsLoaded = this.fetchGroups();
         }
+    }
+
+    /**
+     * Switches to the user view and lists the members.
+     *
+     * The three steps have to happen in order: fetchUsersFromGroups reads this.groups
+     * and this.users, and handleSwap empties this.users before refilling it. Running
+     * them concurrently used to leave usersWithoutGroup empty whenever the context
+     * group had no subgroups, because the members request was still in flight - with
+     * subgroups the awaits in the fetchUsersFromGroups loop happened to give it time
+     * to land, which is why the list only appeared for groups that had subgroups.
+     */
+    async showUsers() {
+        await this.groupsLoaded;
+        await this.handleSwap(true);
+        await this.fetchUsersFromGroups();
     }
 
     /**
@@ -499,13 +519,14 @@ export class BadgeGiverComponent implements OnInit {
      * Fetches all users in the end.
      * @param bool boolean value, that defines user/group view.
      */
-    handleSwap(bool: boolean) {
+    async handleSwap(bool: boolean) {
         this.userAssign = bool;
         this.selectedGroup = null;
         this.emptyTable(this.selectedUsers);
         this.emptyTable(this.selectedGroups);
         this.emptyTable(this.users);
-        this.fetchUsers(this.badgegroupContext);
+        this.emptyTable(this.usersWithoutGroup);
+        await this.fetchUsers(this.badgegroupContext);
     }
 
     /**
@@ -539,6 +560,12 @@ export class BadgeGiverComponent implements OnInit {
 
     async fetchGroups() {
         if (this.badgegroupContext) {
+            const contextInfo = await this.groupService.getCurrentGroup(
+                this.badgegroupContext
+            );
+            this.contextGroupName =
+                contextInfo?.description ?? this.badgegroupContext;
+
             const response = await this.groupService.getSubGroups(
                 this.badgegroupContext
             );

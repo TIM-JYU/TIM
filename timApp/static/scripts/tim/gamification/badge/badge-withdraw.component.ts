@@ -85,7 +85,7 @@ import {PurifyModule} from "tim/util/purify.module";
                                     </div>
                                 </div>
                                 <ng-container *ngIf="usersWithoutGroup.length > 0">
-                                    <span i18n>Users without group</span>
+                                    <span i18n>Members in the main group ({{ contextGroupName }})</span>
                                     <div *ngFor="let user of usersWithoutGroup" class="option-item">
                                             <span class="user-name" (click)="selectedUser = user; fetchUserBadges(user.id)"
                                                   [ngClass]="{'selected-option': selectedUser?.id === user.id}">
@@ -241,6 +241,8 @@ export class BadgeWithdrawComponent implements OnInit {
     @ViewChild("startSection") startSection!: HTMLDivElement;
 
     groups: IBadgeGroup[] = [];
+    /** Pretty name of the context group, falling back to its internal name. */
+    contextGroupName = "";
     selectedGroup?: IBadgeGroup | null = null;
     groupBadges: IBadgeAward[] = [];
     groupUsersMap = new Map<number, IUser[]>();
@@ -487,6 +489,12 @@ export class BadgeWithdrawComponent implements OnInit {
      */
     private async fetchGroups() {
         if (this.badgegroupContext) {
+            const contextInfo = await this.groupService.getCurrentGroup(
+                this.badgegroupContext
+            );
+            this.contextGroupName =
+                contextInfo?.description ?? this.badgegroupContext;
+
             const result = await toPromise(
                 this.http.get<[]>(`/groups/subgroups/${this.badgegroupContext}`)
             );

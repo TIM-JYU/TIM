@@ -11082,16 +11082,16 @@ Mata in flera användares adresser på separata rader eller åtskilda med kommat
           <context context-type="linenumber">145</context>
         </context-group>
       </trans-unit>
-      <trans-unit id="6628030584459078156" datatype="html">
-        <source>Users without group</source>
-        <target state="translated">Användare utan grupp</target>
+      <trans-unit id="355915293230904999" datatype="html">
+        <source>Members in the main group (<x id="INTERPOLATION" equiv-text="{{ contextGroupName }}"/>)</source>
+        <target state="translated">Medlemmar i huvudgruppen (<x id="INTERPOLATION" equiv-text="{{ contextGroupName }}"/>)</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/gamification/badge/badge-giver.component.ts</context>
-          <context context-type="linenumber">101,102</context>
+          <context context-type="linenumber">100</context>
         </context-group>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/gamification/badge/badge-withdraw.component.ts</context>
-          <context context-type="linenumber">89,90</context>
+          <context context-type="linenumber">88</context>
         </context-group>
       </trans-unit>
       <trans-unit id="6279406018740594152" datatype="html">
