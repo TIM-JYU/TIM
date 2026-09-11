@@ -51,7 +51,7 @@ RouteReturn: TypeAlias = Response | list | object
 
 @dataclass
 class AskTimMarkupModel(GenericMarkupModel):
-    welcomeText: str = "Welcome to use TIM's helper chatbot!"
+    welcomeText: str = "Welcome to the TIM AI assistant!"
     apiAlias: str = ""
     defaultWindowSize: Literal["sm", "md", "lg", "xs"] = "md"
     blockContent: str = ""
