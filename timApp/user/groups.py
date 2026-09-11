@@ -654,8 +654,15 @@ def get_usergroup_members(group_name: str) -> Response:
 
 @groups.get("/pretty_name/<group_name>")
 def pretty_name(group_name: str) -> Response:
+    """
+    Returns the group's display name (pretty name) to any logged-in user.
+    :param group_name: Full group name
+    :return: The admin doc's description, or the group name if there is no admin doc
+    """
+    verify_logged_in()
     group = UserGroup.get_by_name(group_name)
-    verify_access("teacher", group, user_group_name=group_name)
+    if not group:
+        raise NotExist(f'User group "{group_name}" not found')
     return json_response(group.human_name)
 
 

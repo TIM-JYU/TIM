@@ -962,30 +962,16 @@ class GroupNameChangerTest(TimRouteTest):
             expect_status=403,
             expect_content=f'Sorry, you don\'t have permission to use this resource. If you are a teacher of "{subgroup1_name}", please contact TIM admin.',
         )
+        # but any logged-in user can read the group's display name
         self.get(
             f"/groups/pretty_name/{subgroup1_name}",
-            expect_status=403,
-            expect_content=f'Sorry, you don\'t have permission to use this resource. If you are a teacher of "{subgroup1_name}", please contact TIM admin.',
+            expect_status=200,
+            expect_content=subgroup1_name,
         )
 
         self.login_test2()
 
-        # edit group's pretty name when logged in user is included in the group
-        # but editing is prohibited in document settings
-        self.post(
-            f"/groups/pretty_name/{subgroup1_name}/Hevoset",
-            expect_status=403,
-            expect_content=f'Sorry, you don\'t have permission to use this resource. If you are a teacher of "{subgroup1_name}", please contact TIM admin.',
-        )
-        self.get(
-            f"/groups/pretty_name/{subgroup1_name}",
-            expect_status=403,
-            expect_content=f'Sorry, you don\'t have permission to use this resource. If you are a teacher of "{subgroup1_name}", please contact TIM admin.',
-        )
-
-        self.login_test1()
-
-        # edit group's pretty name when logged in user is teacher of the group
+        # a member of the group may rename its display name without being its teacher
         self.post(
             f"/groups/pretty_name/{subgroup1_name}/Hevoset",
             expect_status=200,
@@ -996,10 +982,37 @@ class GroupNameChangerTest(TimRouteTest):
                 "parent_group": None,
             },
         )
+        # the member reads back the name they set
         self.get(
             f"/groups/pretty_name/{subgroup1_name}",
             expect_status=200,
             expect_content="Hevoset",
+        )
+
+        self.login_test1()
+
+        # the member's rename is what the group's teacher sees
+        self.get(
+            f"/groups/pretty_name/{subgroup1_name}",
+            expect_status=200,
+            expect_content="Hevoset",
+        )
+
+        # edit group's pretty name when logged in user is teacher of the group
+        self.post(
+            f"/groups/pretty_name/{subgroup1_name}/Ponit",
+            expect_status=200,
+            expect_content={
+                "id": 10,
+                "name": subgroup1_name,
+                "description": "Ponit",
+                "parent_group": None,
+            },
+        )
+        self.get(
+            f"/groups/pretty_name/{subgroup1_name}",
+            expect_status=200,
+            expect_content="Ponit",
         )
 
         # fetch group's pretty name with erroneous data
@@ -1014,4 +1027,13 @@ class GroupNameChangerTest(TimRouteTest):
             f"/groups/pretty_name/nonexistent_group/Horses",
             expect_status=404,
             expect_content='User group "nonexistent_group" not found',
+        )
+
+        self.logout()
+
+        # reading the display name requires being logged in
+        self.get(
+            f"/groups/pretty_name/{subgroup1_name}",
+            expect_status=403,
+            expect_content="You have to be logged in to perform this action.",
         )

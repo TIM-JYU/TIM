@@ -3,6 +3,7 @@ from timApp.tests.server.timroutetest import TimRouteTest
 from timApp.timdb.sqa import db
 from timApp.user.groups import do_create_group_impl
 from timApp.user.subgroups import add_subgroup
+from timApp.user.usergroup import UserGroup
 
 
 class BadgeTestAllBadges(TimRouteTest):
@@ -575,6 +576,8 @@ class BadgeTestGroupsBadgesView(TimRouteTest):
         self.test_user_1.grant_access(group1.admin_doc, AccessType.teacher)
         self.test_user_1.grant_access(subgroup1.admin_doc, AccessType.teacher)
         self.commit_db()
+        # Every request removes the session, detaching the objects created above.
+        subgroup1_id = subgroup1.id
 
         # testuser3 joins the subgroup only, which makes them a member of the context
         # group as well
@@ -598,7 +601,7 @@ class BadgeTestGroupsBadgesView(TimRouteTest):
             "/badges/give_badge",
             data={
                 "context_group": group1_name,
-                "group_id": subgroup1.id,
+                "group_id": subgroup1_id,
                 "badge_id": 1,
                 "message": "Great work guys!",
             },
@@ -608,7 +611,7 @@ class BadgeTestGroupsBadgesView(TimRouteTest):
 
         # a member of a subgroup can read that group's badges, because belonging to a
         # subgroup makes them a member of the context group
-        result_gb = self.get(f"/badges/group_badges/{subgroup1.id}/{group1_name}")
+        result_gb = self.get(f"/badges/group_badges/{subgroup1_id}/{group1_name}")
         self.assertEqual(1, len(result_gb["badges"]))
         self.assertEqual(1, len(result_gb["templates"]))
         self.assertEqual("Great work guys!", result_gb["badges"][0]["message"])
@@ -623,7 +626,7 @@ class BadgeTestGroupsBadgesView(TimRouteTest):
         # a user who belongs to neither the context group nor any of its subgroups is
         # refused, even though the badge itself is the same one
         self.get(
-            f"/badges/group_badges/{subgroup1.id}/{group1_name}",
+            f"/badges/group_badges/{subgroup1_id}/{group1_name}",
             expect_content=f'Sorry, you don\'t have permission to use this resource. If you are a teacher of "{group1_name}", please contact TIM admin.',
             expect_status=403,
         )
@@ -958,6 +961,8 @@ class BadgeTestPodium(TimRouteTest):
             f"{unlinked_name}", unlinked_name
         )
         db.session.commit()
+        # The podium request above removed the session, detaching group1.
+        group1 = UserGroup.get_by_name(group1_name)
         for subgroup in (
             subgroup1,
             subgroup2,
@@ -974,6 +979,7 @@ class BadgeTestPodium(TimRouteTest):
         self.test_user_1.grant_access(subgroup5.admin_doc, AccessType.teacher)
         self.test_user_1.grant_access(subgroup6.admin_doc, AccessType.teacher)
         self.commit_db()
+        unlinked_id = unlinked.id
 
         # create a badge
         self.post(
@@ -997,7 +1003,7 @@ class BadgeTestPodium(TimRouteTest):
         # give the unlinked prefix-sharing group more badges than anyone else; it must
         # still be absent from every podium below
         for i in range(10):
-            self.give_badge(unlinked.id)
+            self.give_badge(unlinked_id)
 
         # get podium after 6 subgroups created and badges given to some of them
         self.get(
