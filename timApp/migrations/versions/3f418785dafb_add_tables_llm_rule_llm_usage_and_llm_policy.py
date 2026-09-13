@@ -1,7 +1,7 @@
 """Add tables llm_rule, llm_usage and llm_policy
 
 Revision ID: 3f418785dafb
-Revises: e03fd2104ce9
+Revises: 9a878986c7d7
 Create Date: 2026-06-02 13:43:52.597851
 
 """
@@ -12,7 +12,7 @@ import sqlalchemy as sa
 from alembic import op
 
 revision = "3f418785dafb"
-down_revision = "e03fd2104ce9"
+down_revision = "9a878986c7d7"
 
 
 def upgrade():
