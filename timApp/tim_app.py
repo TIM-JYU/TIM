@@ -73,6 +73,9 @@ from timApp.messaging.timMessage.internalmessage_models import (
     InternalMessageDisplay,
     InternalMessageReadReceipt,
 )
+from timApp.modules.asktim.llm_policy import LLMPolicy
+from timApp.modules.asktim.llm_rule import LLMRule
+from timApp.modules.asktim.llm_usage import LLMUsage
 from timApp.note.usernote import UserNote
 from timApp.notification.notification import Notification
 from timApp.notification.pending_notification import (
@@ -185,6 +188,9 @@ all_models = (
     Lecture,
     LectureAnswer,
     LectureUsers,
+    LLMPolicy,
+    LLMRule,
+    LLMUsage,
     Message,
     MessageListDistribution,
     MessageListMember,
