@@ -394,8 +394,11 @@ class GenericApiChatModel(ChatModel):
         stream: Stream[ChatCompletionChunk] = completion
 
         # Iterate the message chunks in the stream
-        for chunk in stream:
-            yield _parse_stream_chunk(chunk)
+        try:
+            for chunk in stream:
+                yield _parse_stream_chunk(chunk)
+        except Exception as e:
+            raise _openai_to_model_error(e) from e
 
     def get_info(self) -> tuple[Provider, str]:
         """Return info about the model."""
@@ -453,8 +456,11 @@ class AsyncGenericApiChatModel(AsyncChatModel):
             assert isinstance(completion, AsyncStream)
             stream: AsyncStream[ChatCompletionChunk] = completion
 
-            async for chunk in stream:
-                yield _parse_stream_chunk(chunk)
+            try:
+                async for chunk in stream:
+                    yield _parse_stream_chunk(chunk)
+            except Exception as e:
+                raise _openai_to_model_error(e) from e
 
         return gen()
 

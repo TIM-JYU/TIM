@@ -50,8 +50,8 @@ import type {IUserLLMApiKey} from "tim/user/IUser";
                         </div>
                         <div class="form-group">
                             <label class="control-label" for="api-key-text" i18n>API key</label>
-                            <input class="form-control" type="text" name="api-key-text"
-                                   [(ngModel)]="apiKey">
+                            <input class="form-control" type="password" name="api-key-text"
+                                   autocomplete="off" [(ngModel)]="apiKey">
                         </div>
                         <div>
                             <tim-alert *ngIf="added" severity="success" i18n>

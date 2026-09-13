@@ -124,7 +124,6 @@ export class EditLLMAPIKeyDialogComponent extends AngularDialogComponent<
                 "/asktim/addApiKeyPermissions",
                 {
                     provider: key.provider,
-                    apikey: key.APIkey,
                     alias: key.alias,
                     groups: groups,
                     paths: paths,

@@ -288,6 +288,31 @@ class LLMRule(db.Model):
         return None
 
     @staticmethod
+    def usable_api_key(user_id: int, public_key: str, doc_id: int) -> LLMRule | None:
+        """
+        Get the API key if the given user may still use it in the given document.
+
+        Combines the access check of :meth:`access_api_key` with the path rules of
+        :meth:`api_key_valid_in_doc`. Used at chat time, so that revoking a user
+        group or a path also stops plugin instances that were saved while the
+        access still existed.
+
+        :param user_id: The id of the user the key was linked by.
+        :param public_key: The associated public key for the desired API key.
+        :param doc_id: The id of the document the key would be used in.
+        :return: The API key, or None if it does not exist or may not be used here.
+        """
+        api_key = LLMRule.access_api_key(user_id, public_key)
+        if not api_key:
+            return None
+        try:
+            if not LLMRule.api_key_valid_in_doc(api_key, doc_id):
+                return None
+        except (PermissionError, ValueError):
+            return None
+        return api_key
+
+    @staticmethod
     def update_api_key_permissions(
         owner_id: int, alias: str, groups: list[str], paths: list[str]
     ) -> LLMRule:
@@ -330,8 +355,7 @@ class LLMRule(db.Model):
         rule = LLMRule.get_owner_api_key(owner_id, public_key)
         if not rule:
             raise Exception("No API-key with the alias found")
-        groups = rule.groups
-        rule.groups = filter(lambda gid: gid != group_id, groups)  # type: ignore
+        rule.groups = [gid for gid in rule.groups if gid != group_id]
         db.session.commit()
 
     @staticmethod

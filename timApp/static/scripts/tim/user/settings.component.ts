@@ -1386,7 +1386,6 @@ export class SettingsComponent implements DoCheck, AfterViewInit {
             this.http.delete("/asktim/deleteKey", {
                 body: {
                     provider: key.provider,
-                    apikey: key.APIkey,
                     alias: key.alias,
                 },
             })

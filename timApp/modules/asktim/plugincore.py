@@ -16,6 +16,7 @@ from timApp.modules.asktim.llm_rule import LLMRule
 from timApp.modules.asktim.llm_policy import LLMPolicy
 from timApp.modules.asktim.llm_usage import LLMUsage
 from timApp.util.flask.cache import cache
+from timApp.util.logger import log_error, log_warning
 from timApp.timdb.dbaccess import get_files_path
 from timApp.user.user import User
 from timApp.user.usergroup import get_groups_by_ids, UserGroup
@@ -270,7 +271,27 @@ class PluginCore:
         if stream != use_streaming:
             return Result(error="Bad request. Mismatching generation mode.")
 
-        api_key = self.get_api_key(str(rule.public_key))
+        # The instance stores only the alias of the key, so the access has to be
+        # re-checked here: revoking a user group or a path must also stop the
+        # instances that were saved while the access still existed.
+        key_row = LLMRule.usable_api_key(rule.owner, str(rule.public_key), document_id)
+        if not key_row:
+            log_warning(
+                f"asktim: API key '{rule.public_key}' is no longer usable by its "
+                f"instance owner {rule.owner} in document {document_id}"
+            )
+            return Result(
+                error="The API key of this assistant is no longer available. "
+                "Please contact the owner of the document."
+            )
+        key_provider = self._parse_provider(str(key_row.provider))
+        if not key_provider:
+            log_error(
+                f"asktim: unknown provider '{key_row.provider}' for API key "
+                f"'{rule.public_key}' in document {document_id}"
+            )
+            return Result(error="The API key of this assistant is misconfigured.")
+        api_key: tuple[Provider, str] = (key_provider, str(key_row.api_key))
         model_id = rule.agent
 
         if not model_id:
@@ -317,12 +338,19 @@ class PluginCore:
                 temperature=temperature,
             )
         except ModelError as e:
+            log_error(
+                f"asktim: model error in document {document_id}: "
+                f"{e.kind.value}: {str(e.cause)}"
+            )
             error = e.text()
             if verbose_errors:
-                error += f" {str(e.cause)}"
+                # Detail for the owner: the error kind only, never the raw
+                # provider/SDK text, which may carry request details.
+                error += f" ({e.kind.value})"
             return Result(error=error)
         except Exception as e:
-            return Result(error=str(e))
+            log_error(f"asktim: unexpected error in document {document_id}: {str(e)}")
+            return Result(error="An error occurred while generating a response.")
 
         prepared = PreparedChatRequest(
             caller_id=caller_id_str,
@@ -462,10 +490,21 @@ class PluginCore:
                     apply_chunk(chunk)
                     yield chunk.delta or ""
             except ModelError as e:
+                log_error(
+                    "asktim: model error while streaming in document "
+                    f"{p.document_id}: {e.kind.value}: {str(e.cause)}"
+                )
                 error = e.text()
                 if p.verbose:
-                    error += f" {str(e.cause)}"
+                    error += f" ({e.kind.value})"
                 raise Exception(error) from e
+            except Exception as e:
+                log_error(
+                    "asktim: unexpected error while streaming in document "
+                    f"{p.document_id}: {str(e)}"
+                )
+                msg = "An error occurred while generating a response."
+                raise Exception(msg) from e
             finally:
                 # Drain the remaining chunks if the client disconnected mid-stream
                 try:
@@ -544,7 +583,17 @@ class PluginCore:
         api_key: str = ""
         allowed_paths: list[str] = []
 
-        api_key_row = LLMRule.get_api_key_by_alias(str(llm_rule.public_key))
+        # Same re-check as the chat path: the instance stores only the alias, so a key
+        # whose sharing or paths have been revoked must not be used here either.
+        api_key_row = LLMRule.usable_api_key(
+            llm_rule.owner, str(llm_rule.public_key), document_id
+        )
+        if api_key_row is None and llm_rule.public_key:
+            log_warning(
+                f"asktim: API key '{llm_rule.public_key}' is no longer usable by its "
+                f"instance owner {llm_rule.owner} in document {document_id}; "
+                "listing no models"
+            )
         if api_key_row is not None:
             provider = self._parse_provider(str(api_key_row.provider))
             api_key = str(api_key_row.api_key)

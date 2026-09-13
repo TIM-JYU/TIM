@@ -12,6 +12,7 @@ from webargs.flaskparser import use_args
 import json
 
 from timApp.auth.accesshelper import (
+    AccessDenied,
     verify_logged_in,
     verify_teacher_access,
     get_doc_or_abort,
@@ -47,6 +48,10 @@ from timApp.user.user import User
 plugincore = PluginCore()
 
 RouteReturn: TypeAlias = Response | list | object
+
+MIN_MASKED_KEY_LEN = 14
+"""Shortest API key for which the "first 6 + last 4" mask still hides something.
+Shorter keys are masked completely."""
 
 
 @dataclass
@@ -106,6 +111,21 @@ class GetMessagesParams(GenericParams):
 class APIKeyParams:
     provider: str
     apikey: str
+    alias: str
+    groups: list[str] | None = None
+    paths: list[str] | None = None
+
+
+@dataclass
+class APIKeyAliasParams:
+    """Parameters for routes that act on an already saved API key.
+
+    The alias identifies the key, so the key itself is deliberately absent: the
+    client only ever holds the masked value, and sending that back risks storing
+    the mask as if it were the key.
+    """
+
+    provider: str
     alias: str
     groups: list[str] | None = None
     paths: list[str] | None = None
@@ -200,6 +220,9 @@ def register_route(
                 return to_response(route_handler())
             except RouteException as e:
                 raise e
+            except AccessDenied:
+                # Keep the 403 of an access check instead of turning it into a 400.
+                raise
             except Exception as e:
                 raise RouteException(str(e)) from e
 
@@ -212,6 +235,9 @@ def register_route(
             return to_response(route_handler(m))
         except RouteException as e:
             raise e
+        except AccessDenied:
+            # Keep the 403 of an access check instead of turning it into a 400.
+            raise
         except Exception as e:
             raise RouteException(str(e)) from e
 
@@ -406,7 +432,7 @@ def save_api_key(params: APIKeyParams) -> Response:
         raise RouteException(description="API Key is invalid.")
 
 
-def add_api_key_permissions(params: APIKeyParams) -> Response:
+def add_api_key_permissions(params: APIKeyAliasParams) -> Response:
     verify_logged_in()
     user_id = get_current_user_id()
     alias = params.alias
@@ -427,6 +453,7 @@ def add_api_key_permissions(params: APIKeyParams) -> Response:
 
 @asktim.post("/removeGroupRight/<int:group_id>")
 def remove_key_group_right(group_id: int) -> Response:
+    verify_logged_in()
     user_id = get_current_user_id()
     data = json.loads(request.data)
     try:
@@ -453,7 +480,7 @@ def get_existing_keys() -> list[dict]:
     return hidden_keys
 
 
-def delete_existing_key(key: APIKeyParams) -> Response:
+def delete_existing_key(key: APIKeyAliasParams) -> Response:
     verify_logged_in()
     alias = key.alias
     userid = get_current_user_id()
@@ -477,7 +504,10 @@ def to_ndjson_str(json_data: object) -> str:
 
 def _api_key_to_dict(key: APIKey) -> dict:
     alias, provider, api_key, groups, paths = key
-    hidden_key = api_key[:6] + "..." + api_key[-4:]
+    if len(api_key) >= MIN_MASKED_KEY_LEN:
+        hidden_key = api_key[:6] + "..." + api_key[-4:]
+    else:
+        hidden_key = "..."
     return {
         "provider": provider,
         "APIkey": hidden_key,
@@ -488,6 +518,7 @@ def _api_key_to_dict(key: APIKey) -> dict:
 
 
 def get_models(params: GetModelsParams) -> dict:
+    verify_logged_in()
     user_id = get_current_user_id()
     try:
         provider, api_key = plugincore.try_access_api_key(user_id, params.public_key)
@@ -571,9 +602,9 @@ register_route(
     asktim,
     "post",
     "addApiKeyPermissions",
-    APIKeyParams,
+    APIKeyAliasParams,
     add_api_key_permissions,
 )
 register_route(asktim, "get", "getExistingKeys", None, get_existing_keys)
-register_route(asktim, "delete", "deleteKey", APIKeyParams, delete_existing_key)
+register_route(asktim, "delete", "deleteKey", APIKeyAliasParams, delete_existing_key)
 register_route(asktim, "post", "getModels", GetModelsParams, get_models)
