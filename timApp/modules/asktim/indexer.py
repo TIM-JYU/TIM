@@ -6,7 +6,15 @@ from openai import OpenAI  # type: ignore
 import numpy as np
 import os
 
-from timApp.document.document import Document
+from timApp.document.document import Document, dereference_pars
+from timApp.document.macroinfo import MacroInfo
+from timApp.document.post_process import process_areas
+from timApp.document.preloadoption import PreloadOption
+from timApp.document.usercontext import UserContext
+from timApp.document.viewcontext import default_view_ctx
+from timApp.user.special_group_names import ANONYMOUS_USERNAME
+from timApp.user.user import User
+from timApp.util.logger import log_error
 from datetime import datetime
 from .model import Provider, _DEFAULT_BASE_URL_BY_PROVIDER
 from ...document.docparagraph import DocParagraph
@@ -199,14 +207,18 @@ class Indexer:
         return chunks
 
     def chunk_block(
-        self, block: DocParagraph, max_chunk_size: int = 2500, overlap: int = 200
+        self,
+        block: DocParagraph,
+        text: str,
+        max_chunk_size: int = 2500,
+        overlap: int = 200,
     ) -> tuple[list[TextBlock], int]:
         """ " splits a chunk into smaller chunks
         :param block: tim block
+        :param text: text of the block to index, with macros already expanded
         :param max_chunk_size: maximum size of the chunk
         :param overlap: overlap between chunks"""
         chunks: list[TextBlock] = []
-        text = block.get_markdown()
         if not text:
             return chunks, 0
         block_id = block.id or ""
@@ -256,24 +268,75 @@ class Indexer:
 
         return chunks, len(text)
 
+    @staticmethod
+    def _visible_par_ids(doc: Document) -> tuple[set[str], MacroInfo]:
+        """Resolve the paragraphs that the least privileged reader can see.
+
+        ``process_areas`` leaves out paragraphs hidden by their own ``visible``
+        attribute, by an enclosing area's visibility, and by an area's time
+        window. Resolving the document with an anonymous user context therefore
+        yields the content that any reader of the document may see.
+
+        :param doc: The document being indexed.
+        :return: The ids of the visible paragraphs, and the macro info used to
+                 resolve them, for expanding the markdown of those paragraphs.
+        """
+        doc.preload_option = PreloadOption.all
+        anon_user = User.get_by_name(ANONYMOUS_USERNAME)
+        if anon_user is None:
+            raise ValueError("Anonymous user not found")
+
+        view_ctx = default_view_ctx
+        user_ctx = UserContext.from_one_user(anon_user)
+        settings = doc.get_settings()
+        macro_info = settings.get_macroinfo(view_ctx, user_ctx)
+        pars = dereference_pars(
+            doc.get_paragraphs(), context_doc=doc, view_ctx=view_ctx
+        )
+        visible = process_areas(
+            settings,
+            pars,
+            macro_info.get_macros(),
+            macro_info.get_macro_delimiter(),
+            macro_info.jinja_env,
+            view_ctx,
+            use_md=True,
+            cache=False,
+        )
+        return {p.target_data.id for p in visible}, macro_info
+
     def get_blocks(self, doc: Document) -> tuple[list[TextBlock], int]:
-        """returns the text chunks from provided tim document and splits long chunks into smaller chunks"""
+        """Return the indexable text chunks of the given TIM document.
+
+        Only what a plain ``view`` user sees is indexed. The document is
+        resolved with an anonymous user context and anything hidden from that
+        reader is left out, as are settings paragraphs, paragraphs coming from
+        a preamble document, and plugins. The markdown is macro expanded, so
+        macro source is not indexed either.
+
+        If resolving the document fails, nothing is indexed for it: it is
+        better to index too little than to embed content nobody may read.
+        """
         total_content_len: int = 0
         blocks: list[TextBlock] = []
         try:
-            paragraphs: list[DocParagraph] = doc.get_paragraphs()
+            visible_ids, macro_info = self._visible_par_ids(doc)
 
-            for par in paragraphs:
-                if par.get_attr("plugin") is not None:
-                    # Skip plugins
+            for par in doc.get_paragraphs():
+                if par.is_plugin() or par.is_setting():
                     continue
+                if par.from_preamble() is not None:
+                    continue
+                if par.id not in visible_ids:
+                    continue
+                text = par.get_expanded_markdown(macro_info, ignore_errors=True)
                 sub_blocks, content_len = self.chunk_block(
-                    par, self._chunk_size_characters
+                    par, text, self._chunk_size_characters
                 )
                 blocks.extend(sub_blocks)
                 total_content_len += content_len
-        except Exception:
-            pass
+        except Exception as e:
+            log_error(f"asktim: failed to index document {doc.doc_id}: {e}")
 
         return blocks, total_content_len
 
