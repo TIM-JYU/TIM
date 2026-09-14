@@ -311,9 +311,12 @@ class PluginCore:
             response = self.indexer.get_context(
                 prompt=validated_input,
                 api_key=api_key,
-                # Only this instance's own documents, never whatever the shared
-                # indexer happens to have embedded for other instances.
-                doc_ids=list(rule.indexed_document_ids),
+                # Only this instance's own documents, and of those only the ones
+                # the asking user may view: the instance owner chooses what gets
+                # indexed, so the scope has to be narrowed per caller.
+                doc_ids=self.viewable_document_ids(
+                    caller_id, list(rule.indexed_document_ids)
+                ),
                 k=top_k_chunks,
                 threshold=similarity_threshold,
             )
@@ -1139,6 +1142,30 @@ class PluginCore:
             return None
 
     @staticmethod
+    def viewable_document_ids(caller_id: int, doc_ids: list[int]) -> list[int]:
+        """
+        Keep only the documents the given user may view.
+
+        The documents indexed for an instance are chosen by its owner, so they are
+        not necessarily readable by everyone who can chat with the assistant. The
+        retrieval scope is narrowed per caller, so the assistant cannot quote
+        material the caller has no access to.
+
+        :param caller_id: The user asking the question.
+        :param doc_ids: The documents indexed for the plugin instance.
+        :return: The subset of doc_ids that the user may view.
+        """
+        user = User.get_by_id(caller_id)
+        if not user:
+            return []
+        viewable: list[int] = []
+        for doc_id in doc_ids:
+            doc = PluginCore.get_doc_entry_by_id(doc_id)
+            if doc is not None and user.has_view_access(doc):
+                viewable.append(doc_id)
+        return viewable
+
+    @staticmethod
     def set_user_policy(
         caller_id: int, document_id: int, policy_settings: LLMPolicy
     ) -> Result[bool | None, str | None]:
@@ -1457,7 +1484,10 @@ class PluginCore:
                     f"Could not get rights for document [{document}] for user [{user_id}]"
                 )
 
-            has_rights = any(right.get(r) is not None for r in rights)
+            # UserItemRights values are booleans: a user without the right gets
+            # False, not a missing key, so this must test truthiness. Comparing
+            # against None passed for every user and made the check a no-op.
+            has_rights = any(right.get(r) for r in rights)
             if document.docinfo is None:
                 raise ValueError(
                     f"Could not get rights for document [{document}] for user [{user_id}]"
