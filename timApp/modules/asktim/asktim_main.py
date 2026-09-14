@@ -216,6 +216,9 @@ def register_route(
 
         @app.route(f"/{route}", methods=[method], endpoint=route)
         def handler() -> Response:
+            # AskTIM is not available to anonymous users at all, the same way a
+            # task plugin refuses an answer from one (answer/routes.py:902).
+            verify_logged_in()
             try:
                 return to_response(route_handler())
             except RouteException as e:
@@ -231,6 +234,9 @@ def register_route(
     @app.route(f"/{route}", methods=[method], endpoint=route)
     @use_args(class_schema(route_model)(), locations=("json",))
     def handler_args(m: object) -> Response:
+        # AskTIM is not available to anonymous users at all, the same way a task
+        # plugin refuses an answer from one (answer/routes.py:902).
+        verify_logged_in()
         try:
             return to_response(route_handler(m))
         except RouteException as e:

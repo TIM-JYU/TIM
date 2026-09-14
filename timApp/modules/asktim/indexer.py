@@ -12,7 +12,7 @@ from timApp.document.post_process import process_areas
 from timApp.document.preloadoption import PreloadOption
 from timApp.document.usercontext import UserContext
 from timApp.document.viewcontext import default_view_ctx
-from timApp.user.special_group_names import ANONYMOUS_USERNAME
+from timApp.user.special_group_names import LOGGED_IN_USERNAME
 from timApp.user.user import User
 from timApp.util.logger import log_error
 from datetime import datetime
@@ -25,6 +25,14 @@ CHUNK_TOKEN_TARGET = 512
 CHARACTERS_PER_TOKEN = 3
 
 SUPPORTED_EMBEDDING_PROVIDERS: list[Provider] = ["openai", "google", "openrouter"]
+
+INDEX_POLICY_VERSION = 1
+"""Version of the rules that decide what is indexed from a document.
+
+Bump this whenever those rules change. An embeddings file written under an older
+version is then treated as stale and the document is embedded again, even when the
+document itself has not been edited since it was indexed.
+"""
 
 
 @dataclass
@@ -274,20 +282,25 @@ class Indexer:
 
         ``process_areas`` leaves out paragraphs hidden by their own ``visible``
         attribute, by an enclosing area's visibility, and by an area's time
-        window. Resolving the document with an anonymous user context therefore
-        yields the content that any reader of the document may see.
+        window. Resolving the document as a logged-in user without privileges of
+        their own therefore yields the content that any user of the assistant is
+        allowed to see.
 
         :param doc: The document being indexed.
         :return: The ids of the visible paragraphs, and the macro info used to
                  resolve them, for expanding the markdown of those paragraphs.
         """
         doc.preload_option = PreloadOption.all
-        anon_user = User.get_by_name(ANONYMOUS_USERNAME)
-        if anon_user is None:
-            raise ValueError("Anonymous user not found")
+        # AskTIM refuses anonymous callers, so the least privileged reader that
+        # can actually use it is a logged-in user with no groups of their own.
+        # Resolving as anonymous instead would leave out content that every
+        # AskTIM user is allowed to see.
+        reference_user = User.get_by_name(LOGGED_IN_USERNAME)
+        if reference_user is None:
+            raise ValueError(f"User '{LOGGED_IN_USERNAME}' not found")
 
         view_ctx = default_view_ctx
-        user_ctx = UserContext.from_one_user(anon_user)
+        user_ctx = UserContext.from_one_user(reference_user)
         settings = doc.get_settings()
         macro_info = settings.get_macroinfo(view_ctx, user_ctx)
         pars = dereference_pars(
@@ -309,10 +322,10 @@ class Indexer:
         """Return the indexable text chunks of the given TIM document.
 
         Only what a plain ``view`` user sees is indexed. The document is
-        resolved with an anonymous user context and anything hidden from that
-        reader is left out, as are settings paragraphs, paragraphs coming from
-        a preamble document, and plugins. The markdown is macro expanded, so
-        macro source is not indexed either.
+        resolved as a logged-in user with no privileges of their own, and
+        anything hidden from that reader is left out, as are settings
+        paragraphs, paragraphs coming from a preamble document, and plugins.
+        The markdown is macro expanded, so macro source is not indexed either.
 
         If resolving the document fails, nothing is indexed for it: it is
         better to index too little than to embed content nobody may read.
@@ -396,13 +409,16 @@ class Indexer:
                         and "indexed_document_version" in embedding_file
                         and "embeddings" in embedding_file
                         and embedding_file["embeddings"]
+                        and embedding_file.get("index_policy_version")
+                        == INDEX_POLICY_VERSION
                     ):
                         embeddings_created = embedding_file["indexed_document_version"]
 
                         if document_last_edited <= datetime.fromisoformat(
                             embeddings_created
                         ):
-                            # Already embedded and still up to date.
+                            # Already embedded, still current, and indexed under
+                            # the filtering rules that are in force now.
                             continue
             except FileNotFoundError as e:
                 pass
@@ -430,6 +446,7 @@ class Indexer:
             document_id = document.doc_id
             data = {
                 "indexed_document_version": document_last_edited.isoformat(),
+                "index_policy_version": INDEX_POLICY_VERSION,
                 "embeddings": [
                     {
                         "embedding": embedding,

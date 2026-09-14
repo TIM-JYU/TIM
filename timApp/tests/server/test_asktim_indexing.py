@@ -1,11 +1,15 @@
 """Only what a plain view user can see may be indexed for AskTIM's RAG mode.
 
-The indexer resolves each document with an anonymous user context, so anything
-hidden from the least privileged reader is left out, along with settings
-paragraphs, preamble paragraphs and plugins.
+The indexer resolves each document as a logged-in user with no privileges of
+their own -- AskTIM refuses anonymous callers, so that is the least privileged
+reader it can actually have. Anything hidden from that reader is left out, along
+with settings paragraphs, preamble paragraphs and plugins.
 """
 
+import json
 import tempfile
+from pathlib import Path
+from unittest import mock
 
 from timApp.document.docinfo import DocInfo
 from timApp.document.specialnames import (
@@ -13,8 +17,31 @@ from timApp.document.specialnames import (
     PREAMBLE_FOLDER_NAME,
     DEFAULT_PREAMBLE_DOC,
 )
-from timApp.modules.asktim.indexer import Indexer
+from timApp.modules.asktim.indexer import (
+    INDEX_POLICY_VERSION,
+    EmbeddingResponse,
+    Indexer,
+)
 from timApp.tests.server.timroutetest import TimRouteTest
+
+
+class FakeEmbeddingModel:
+    """Counts calls so re-indexing can be observed without a provider."""
+
+    def __init__(self) -> None:
+        self.calls = 0
+
+    def generate(self, text_chunks: list[str]) -> EmbeddingResponse:
+        self.calls += 1
+        return EmbeddingResponse(
+            embeddings=[[1.0, 0.0] for _ in text_chunks], used_tokens=1
+        )
+
+    def change_key(self, new_key: str) -> None:
+        pass
+
+    def get_model_type(self) -> str:
+        return "test-embedding-model"
 
 
 class AskTimIndexingTest(TimRouteTest):
@@ -123,3 +150,59 @@ PLUGINMARKUP
         text = self.indexed_text(d)
         self.assertIn("public paragraph", text)
         self.assertNotIn("PLUGINMARKUP", text)
+
+    def test_content_visible_to_logged_in_users_is_indexed(self):
+        """The reference reader is a logged-in user, not an anonymous visitor.
+
+        AskTIM refuses anonymous callers, so content gated on being logged in is
+        visible to every user of the assistant and belongs in the index.
+        """
+        self.login_test1()
+        d = self.create_doc(
+            initial_par="""
+#-
+public paragraph
+
+#- {nocache=true visible="%%'Logged-in users'|belongs%%"}
+LOGGEDINONLYCONTENT
+"""
+        )
+        text = self.indexed_text(d)
+        self.assertIn("public paragraph", text)
+        self.assertIn("LOGGEDINONLYCONTENT", text)
+
+    def test_stale_index_policy_forces_reindexing(self):
+        """A document indexed under older filtering rules must be redone."""
+        self.login_test1()
+        d = self.create_doc(initial_par="indexable content")
+
+        with tempfile.TemporaryDirectory() as tmp:
+            indexer = Indexer(tmp)
+            fake = FakeEmbeddingModel()
+            with mock.patch(
+                "timApp.modules.asktim.indexer.create_embedder", return_value=fake
+            ):
+                indexer.create_embeddings(("openai", "sk-x"), [d.document])
+                path = Path(indexer._get_file_name(d.id, fake.get_model_type()))
+                data = json.loads(path.read_text(encoding="utf-8"))
+                self.assertEqual(
+                    INDEX_POLICY_VERSION, data["index_policy_version"]
+                )
+                self.assertGreater(fake.calls, 0)
+
+                # An unchanged document indexed under the current rules is
+                # not embedded again.
+                fake.calls = 0
+                indexer.create_embeddings(("openai", "sk-x"), [d.document])
+                self.assertEqual(0, fake.calls)
+
+                # The same document indexed under older rules is.
+                del data["index_policy_version"]
+                path.write_text(json.dumps(data), encoding="utf-8")
+                fake.calls = 0
+                indexer.create_embeddings(("openai", "sk-x"), [d.document])
+                self.assertGreater(fake.calls, 0)
+                refreshed = json.loads(path.read_text(encoding="utf-8"))
+                self.assertEqual(
+                    INDEX_POLICY_VERSION, refreshed["index_policy_version"]
+                )
