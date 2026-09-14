@@ -311,6 +311,9 @@ class PluginCore:
             response = self.indexer.get_context(
                 prompt=validated_input,
                 api_key=api_key,
+                # Only this instance's own documents, never whatever the shared
+                # indexer happens to have embedded for other instances.
+                doc_ids=list(rule.indexed_document_ids),
                 k=top_k_chunks,
                 threshold=similarity_threshold,
             )

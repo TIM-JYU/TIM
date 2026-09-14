@@ -171,7 +171,6 @@ class Indexer:
         :param file_path: root directory for storing index files
         """
         self.root_path = os.path.join(file_path, "embeddings")
-        self.indexed_page_ids: list[int] = []
         os.makedirs(self.root_path, exist_ok=True)
 
     def delete_page(self, doc_id: int, model_type: str) -> bool:
@@ -340,8 +339,7 @@ class Indexer:
                         if document_last_edited <= datetime.fromisoformat(
                             embeddings_created
                         ):
-                            self.indexed_page_ids.append(document.doc_id)
-
+                            # Already embedded and still up to date.
                             continue
             except FileNotFoundError as e:
                 pass
@@ -384,7 +382,6 @@ class Indexer:
             try:
                 with open(file_name, "w") as f:
                     json.dump(data, f, indent=2)
-                    self.indexed_page_ids.append(document.doc_id)
             except Exception as e:
                 failed_embeddings += 1
 
@@ -427,6 +424,7 @@ class Indexer:
         self,
         prompt: str,
         api_key: tuple[Provider, str],
+        doc_ids: list[int],
         k: int = 3,
         threshold: float | None = None,
     ) -> ContextResponse:
@@ -434,10 +432,17 @@ class Indexer:
 
         :param prompt: prompt that is used to search for context
         :param api_key: The used API key.
+        :param doc_ids: The documents this plugin instance has indexed. Only their
+                        embeddings are searched, so one instance cannot retrieve
+                        context from another instance's documents.
         :param k: number of tim chunks to return
         :param threshold: Threshold for the similarity values of the chunks. Between -1 and 1.
         :return: ContextResponse object containing the context and the number of tokens used
         """
+
+        if not doc_ids:
+            # Nothing indexed for this instance; do not spend a request on the prompt.
+            return ContextResponse(context="", tokens_used=0, used_context=[])
 
         embedding_model = create_embedder(api_key[0], api_key[1])
         if embedding_model is None:
@@ -452,9 +457,8 @@ class Indexer:
         except Exception:
             return ContextResponse(context="", tokens_used=tokens_used, used_context=[])
 
-        page_embeddings = self.get_embeddings(
-            self.indexed_page_ids, embedding_model.get_model_type()
-        )
+        model_type = embedding_model.get_model_type()
+        page_embeddings = self.get_embeddings(doc_ids, model_type)
 
         embeddings: list[list[float]] = []
         texts: list[str] = []
