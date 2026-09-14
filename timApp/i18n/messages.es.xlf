@@ -12430,6 +12430,14 @@ Proceed?</target>
           <context context-type="linenumber">100,101</context>
         </context-group>
       </trans-unit>
+      <trans-unit id="6672163487754065481" datatype="html">
+        <source> Log in to use the assistant. </source>
+        <target state="translated"> Iniciar sesión para usar el asistente. </target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">modules/asktim/client/asktim.ts</context>
+          <context context-type="linenumber">131,133</context>
+        </context-group>
+      </trans-unit>
       <trans-unit id="2443492338531163252" datatype="html">
         <source> Edit LLM API-key permissions </source>
         <target state="new"> Edit LLM API-key permissions </target>

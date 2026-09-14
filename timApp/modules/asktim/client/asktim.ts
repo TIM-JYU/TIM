@@ -38,6 +38,7 @@ import {FormsModule} from "@angular/forms";
 import type {DirectoryPickerRestrictions} from "tim/folder/directory-picker.component";
 import {DirectoryPickerComponent} from "tim/folder/directory-picker.component";
 import {itemglobals} from "tim/util/globals";
+import {Users} from "tim/user/userService";
 import {TooltipModule} from "ngx-bootstrap/tooltip";
 import type {AngularError, Result} from "tim/util/utils";
 import {DialogFrame} from "tim/ui/angulardialog/dialog-frame.component";
@@ -127,6 +128,10 @@ export interface ControlPanelData extends ControlPanelSettings {
                 <ng-container body>
                     <div class="asktim-body scroll-box" #conversationScroll>
                         <div class="upper-area">
+                            <div *ngIf="!isLoggedIn" class="chat-welcome" i18n>
+                                Log in to use the assistant.
+                            </div>
+                            <ng-container *ngIf="isLoggedIn">
                             <div>
                                 <div *ngIf="conversation.length === 0" class="chat-welcome">
                                     <ng-container *ngIf="markup.welcomeText; else localizedWelcome">
@@ -190,9 +195,10 @@ export interface ControlPanelData extends ControlPanelSettings {
                                     </button>
                                 </div>
                             </div>
+                            </ng-container>
                         </div>
 
-                        <div class="control-panel-container">
+                        <div class="control-panel-container" *ngIf="isLoggedIn">
 
                             <ng-container *ngIf="!isTeacher">
                                 <button class="btn btn-link settings-btn"
@@ -1260,9 +1266,20 @@ export class AskTimComponent
         return "Unknown error happened";
     }
 
+    /* AskTIM is not available to anonymous users; the server refuses them too,
+       so the requests are not even attempted. */
+    get isLoggedIn(): boolean {
+        return Users.isLoggedIn();
+    }
+
     /* Check if the user can send a request to the server. */
     get canSendRequest(): boolean {
-        return !this.isRunning && this.document_id > 0 && !this.isPreview();
+        return (
+            this.isLoggedIn &&
+            !this.isRunning &&
+            this.document_id > 0 &&
+            !this.isPreview()
+        );
     }
 }
 
