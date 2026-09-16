@@ -205,11 +205,9 @@ export class DirectoryListComponent {
             this.itemList = foldersArr.concat(docsArr);
             this.sortByNameDesc = !this.sortByNameDesc;
 
-            // modified column's sorting order should be reset to latest to newest if sorting by name. Otherwise, might seem counter-intuitive when pressing modified and it sorts in from oldest
             if (!this.sortByModifiedDesc) {
                 this.sortByModifiedDesc = true;
             }
-            console.log(this.sortByNameDesc);
         } else {
             foldersArr.sort((a, b) =>
                 new Date(a.modifiedTimeFull).getTime() <
@@ -224,18 +222,15 @@ export class DirectoryListComponent {
                     : -1
             );
             if (!this.sortByModifiedDesc) {
-                // sort in ascending order by reversing the arrays
                 foldersArr.reverse();
                 docsArr.reverse();
             }
 
-            // name column's sorting order should be reset to descending if sorting by modified. Otherwise, might seem counter-intuitive when pressing name and it sorts in ascending
             if (!this.sortByNameDesc) {
                 this.sortByNameDesc = true;
             }
             this.itemList = foldersArr.concat(docsArr);
             this.sortByModifiedDesc = !this.sortByModifiedDesc;
-            console.log(this.itemList);
         }
     }
 
