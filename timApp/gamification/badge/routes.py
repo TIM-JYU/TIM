@@ -592,3 +592,74 @@ def podium(context_group: str) -> Response:
         )
 
     return json_response(podium_json)
+
+
+@badges_blueprint.get("/user_podium/<context_group>")
+def user_podium(context_group: str) -> Response:
+    """
+    Fetches the 10 members of the given group that have been given the most badges.
+
+    The group counterpart of this route is :func:`podium`; this one ranks the individual
+    members instead of the subgroups. A badge given to a person is recorded against
+    their personal user group, so the count comes from joining each member to the user
+    group that shares their name.
+
+    Subgroup membership is materialised (see :mod:`timApp.user.subgroups`), so members
+    of a subgroup are members of the context group as well and place here without the
+    subgroup table being consulted. Memberships that have already ended do not count.
+
+    Unlike :func:`podium`, this counts only badges whose template belongs to the context
+    group. A personal user group follows its owner from course to course and collects
+    the badges of every one of them, so without that restriction a member's score here
+    would include badges earned somewhere else entirely.
+
+    :param context_group: Name of the context group
+    :return: 10 members with most badges in json format
+    """
+    context_usergroup = UserGroup.get_by_name(context_group)
+    if not context_usergroup:
+        raise NotExist(f'User group "{context_group}" not found')
+
+    current_user = get_current_user_object()
+
+    if not context_usergroup in current_user.groups:
+        verify_access("teacher", context_usergroup, user_group_name=context_group)
+
+    # Inner joins throughout: only members that hold at least one active badge of this
+    # context group can place, so there is nothing to outer join in.
+    results = run_sql(
+        select(User.name, User.real_name, func.count(Badge.id).label("badge_count"))
+        .join(UserGroupMember, UserGroupMember.user_id == User.id)
+        # A personal user group is the group named after its owner; that name equality
+        # is the whole definition (see UserGroup.is_personal_group).
+        .join(UserGroup, UserGroup.name == User.name)
+        .join(Badge, Badge.group_id == UserGroup.id)
+        .join(BadgeTemplate, BadgeTemplate.id == Badge.badge_id)
+        .where(
+            (UserGroupMember.usergroup_id == context_usergroup.id)
+            & or_(
+                UserGroupMember.membership_end == None,
+                UserGroupMember.membership_end > datetime_tz.now(),
+            )
+            & Badge.active.is_(True)
+            & BadgeTemplate.active.is_(True)
+            & (BadgeTemplate.context_group == context_usergroup.id)
+        )
+        .group_by(User.id, User.name, User.real_name)
+        # Name breaks ties so that equal badge counts come back in a stable order.
+        .order_by(desc("badge_count"), User.real_name, User.name)
+        .limit(10)
+    ).all()
+
+    podium_json = []
+    for user_name, real_name, badge_count in results:
+        podium_json.append(
+            {
+                "user_name": user_name,
+                # Users without a real name are shown under their username.
+                "real_name": real_name or user_name,
+                "badge_count": badge_count,
+            }
+        )
+
+    return json_response(podium_json)

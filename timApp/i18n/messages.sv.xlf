@@ -11573,6 +11573,18 @@ Mata in flera användares adresser på separata rader eller åtskilda med kommat
           <context context-type="sourcefile">static/scripts/tim/gamification/badge/badge.leaderboard.ts</context>
           <context context-type="linenumber">17</context>
         </context-group>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/gamification/badge/badge.user.leaderboard.ts</context>
+          <context context-type="linenumber">49</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="9194642237668885508" datatype="html">
+        <source>No users with badges.</source>
+        <target state="translated">Inga användare med märken.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/gamification/badge/badge.user.leaderboard.ts</context>
+          <context context-type="linenumber">54</context>
+        </context-group>
       </trans-unit>
       <trans-unit id="2836115012617960804" datatype="html">
         <source>No groups with badges.</source>

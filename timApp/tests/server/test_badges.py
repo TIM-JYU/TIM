@@ -3,6 +3,7 @@ from timApp.tests.server.timroutetest import TimRouteTest
 from timApp.timdb.sqa import db
 from timApp.user.groups import do_create_group_impl
 from timApp.user.subgroups import add_subgroup
+from timApp.user.user import User, UserInfo
 from timApp.user.usergroup import UserGroup
 
 
@@ -1060,6 +1061,185 @@ class BadgeTestPodium(TimRouteTest):
         )
         self.get(
             f"/badges/podium/{group1_name}",
+            expect_content=[],
+            expect_status=200,
+        )
+
+
+class BadgeTestUserPodium(TimRouteTest):
+    CONTEXT_GROUP = "es_29"
+    OTHER_GROUP = "es_30"
+
+    def give_badge(self, group_id, badge_id=1, context_group=CONTEXT_GROUP):
+        self.post(
+            f"/badges/give_badge",
+            data={
+                "context_group": context_group,
+                "group_id": group_id,
+                "badge_id": badge_id,
+                "message": "Congratulations!",
+            },
+            expect_status=200,
+        )
+
+    def personal_group_id(self, username):
+        """Id of the user group a badge given to this user is recorded against."""
+        user = User.get_by_name(username)
+        self.assertIsNotNone(user, f"{username} was not created")
+        return user.get_personal_group().id
+
+    def create_badge(self, context_group, title):
+        self.post(
+            f"/badges/create_badge",
+            data={
+                "context_group": context_group,
+                "title": title,
+                "color": "blue",
+                "shape": "hexagon",
+                "image": 1,
+                "description": "Great coordination",
+            },
+            expect_status=200,
+        )
+
+    def test_badge_user_podium(self):
+        # initialization
+        self.login_test1()
+        group_name = self.CONTEXT_GROUP
+        other_name = self.OTHER_GROUP
+        (group, doc) = do_create_group_impl(group_name, group_name)
+        (other, other_doc) = do_create_group_impl(other_name, other_name)
+        # A subgroup exists to show that the user podium ignores group badges; the
+        # group podium is what ranks those.
+        subgroup_name = f"{group_name}-cats"
+        (subgroup, subdoc) = do_create_group_impl(subgroup_name, subgroup_name)
+        db.session.commit()
+        self.test_user_1.grant_access(group.admin_doc, AccessType.teacher)
+        self.test_user_1.grant_access(other.admin_doc, AccessType.teacher)
+        self.test_user_1.grant_access(subgroup.admin_doc, AccessType.teacher)
+        self.commit_db()
+        group_obj = UserGroup.get_by_name(group_name)
+        add_subgroup(group_obj, UserGroup.get_by_name(subgroup_name))
+        self.commit_db()
+
+        # get podium when the context group has no members with badges
+        self.get(
+            f"/badges/user_podium/{group_name}", expect_content=[], expect_status=200
+        )
+
+        # 12 members, so that the podium has more candidates than its ten places
+        usernames = [f"podiumuser{i:02d}" for i in range(1, 13)]
+        for i, username in enumerate(usernames, start=1):
+            User.create_with_group(
+                UserInfo(
+                    username=username,
+                    email=f"{username}@example.com",
+                    full_name=f"Podium User {i:02d}",
+                )
+            )
+        db.session.commit()
+        self.post(
+            f"/groups/addmember/{group_name}",
+            data={"names": usernames},
+            expect_status=200,
+        )
+
+        self.create_badge(group_name, "Coordinator")
+        # A second template, in a context group of its own. Personal user groups follow
+        # their owner from course to course, so this is what a member's badges from
+        # somewhere else look like.
+        self.create_badge(other_name, "Outsider")
+
+        personal_group_ids = [self.personal_group_id(name) for name in usernames]
+        subgroup_id = UserGroup.get_by_name(subgroup_name).id
+
+        # the first member gets 12 badges, the second 11, and so on down to 1
+        for i, personal_group_id in enumerate(personal_group_ids):
+            for _ in range(12 - i):
+                self.give_badge(personal_group_id)
+
+        # the last member also collects badges of the other context group; they must
+        # not count here, or that one member would climb from last place to sixth
+        for _ in range(5):
+            self.give_badge(
+                personal_group_ids[-1], badge_id=2, context_group=other_name
+            )
+
+        # the subgroup collects badges of this very context group; those belong on the
+        # group podium, not on this one
+        for _ in range(20):
+            self.give_badge(subgroup_id)
+
+        def place(index, badge_count):
+            return {
+                "user_name": usernames[index],
+                "real_name": f"Podium User {index + 1:02d}",
+                "badge_count": badge_count,
+            }
+
+        # ten places, most badges first; the 11th and 12th members are left out
+        self.get(
+            f"/badges/user_podium/{group_name}",
+            expect_content=[place(i, 12 - i) for i in range(10)],
+            expect_status=200,
+        )
+
+        # a member who has left the group stops placing, and the member below the cut
+        # moves up into the vacated tenth place
+        # /groups/removemember reads its body as JSON, unlike /groups/addmember
+        self.json_post(
+            f"/groups/removemember/{group_name}",
+            {"names": [usernames[0]]},
+            expect_status=200,
+        )
+        self.get(
+            f"/badges/user_podium/{group_name}",
+            expect_content=[place(i, 12 - i) for i in range(1, 11)],
+            expect_status=200,
+        )
+
+        # a plain member of the context group may read the podium
+        self.post(
+            f"/groups/addmember/{group_name}",
+            data={"names": ["testuser3"]},
+            expect_status=200,
+        )
+        self.login_test3()
+        self.get(
+            f"/badges/user_podium/{group_name}",
+            expect_content=[place(i, 12 - i) for i in range(1, 11)],
+            expect_status=200,
+        )
+
+        self.login_test2()
+
+        # get podium when user is not a part of the context group and doesn't have teacher access to context group
+        self.get(
+            f"/badges/user_podium/{group_name}",
+            expect_content=f'Sorry, you don\'t have permission to use this resource. If you are a teacher of "{group_name}", please contact TIM admin.',
+            expect_status=403,
+        )
+
+        self.login_test1()
+
+        # get podium for a context group that does not exist
+        self.get(
+            f"/badges/user_podium/es_31",
+            expect_content='User group "es_31" not found',
+            expect_status=404,
+        )
+
+        # deleting the only badge template of the context group empties the podium
+        self.post(
+            f"/badges/deactivate_badge",
+            data={
+                "badge_id": 1,
+                "context_group": group_name,
+            },
+            expect_status=200,
+        )
+        self.get(
+            f"/badges/user_podium/{group_name}",
             expect_content=[],
             expect_status=200,
         )
