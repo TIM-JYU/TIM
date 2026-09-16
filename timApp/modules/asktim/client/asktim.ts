@@ -138,7 +138,7 @@ export interface ControlPanelData extends ControlPanelSettings {
                                         {{ markup.welcomeText }}
                                     </ng-container>
                                     <ng-template #localizedWelcome>
-                                        <span i18n>"Welcome to use TIM's helper chatbot!"</span>
+                                        <span i18n>Welcome to the TIM AI assistant!</span>
                                     </ng-template>
                                 </div>
                                 <div *ngFor="let entry of conversation; let i = index">
@@ -179,7 +179,7 @@ export interface ControlPanelData extends ControlPanelSettings {
                                 <div class="d-flex flex-row w-100 justify-content-center chat-row">
                                     <textarea i18n-placeholder class="form-control asktim-prompt-textbox"
                                               rows="2"
-                                              placeholder="Ask me about TIM related things"
+                                              placeholder="What would you like to know about?"
                                               style="resize: none; overflow: hidden; min-width: 0;"
                                               [(ngModel)]="userInput"
                                               (keydown.enter)="onEnter($event)"
