@@ -36,7 +36,6 @@ const AccessLevelBadgeInfo: Record<AccessLevelBadge, string> = {
             <ng-template #sortDesc><span class="glyphicon glyphicon-triangle-bottom" aria-hidden="true"></span></ng-template>
             <tr>
                 <th></th>
-                <!--<th (click)="sortByNameDesc=!sortByNameDesc;sortByModifiedDesc=false;sortListing('name')"> could be like this too?-->
                 <th (click)="sortListing('name')">
                     Name
                     <span *ngIf="currentSortOrder === 'name'">
