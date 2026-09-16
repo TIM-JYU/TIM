@@ -32,10 +32,23 @@ const AccessLevelBadgeInfo: Record<AccessLevelBadge, string> = {
     template: `
         <table class="table" *ngIf="itemList.length > 0 || item.path">
             <thead>
+            <ng-template #sortAsc><span class="glyphicon glyphicon-triangle-top" aria-hidden="true"></span></ng-template>
+            <ng-template #sortDesc><span class="glyphicon glyphicon-triangle-bottom" aria-hidden="true"></span></ng-template>
             <tr>
                 <th></th>
-                <th>Name</th>
-                <th>Last modified</th>
+                <!--<th (click)="sortByNameDesc=!sortByNameDesc;sortByModifiedDesc=false;sortListing('name')"> could be like this too?-->
+                <th (click)="sortListing('name')">
+                    Name
+                    <span *ngIf="currentSortOrder === 'name'">
+                        <span *ngIf="sortByNameDesc; then sortAsc else sortDesc"></span>
+                    </span>
+                </th>
+                <th (click)="sortListing('time')">
+                    Last modified
+                    <span *ngIf="currentSortOrder === 'time'">
+                        <span *ngIf="sortByModifiedDesc; then sortAsc else sortDesc"></span>
+                    </span>
+                </th>
                 <th *ngIf="displayAccessBadges" (click)="showAccessBadges = !showAccessBadges">{{showAccessBadges ? "Access" : "A" }}</th>
                 <th>Owners</th>
                 <th>Rights</th>
@@ -131,6 +144,9 @@ export class DirectoryListComponent {
     displayAccessBadges: boolean;
     displayDocumentTags: boolean;
     activeTab: number = -1;
+    currentSortOrder: string;
+    sortByNameDesc: boolean;
+    sortByModifiedDesc: boolean;
 
     constructor(private http: HttpClient) {
         const fg = folderglobals();
@@ -139,6 +155,9 @@ export class DirectoryListComponent {
         this.canCreate = Users.isRealUser();
         this.itemBadges = {};
         this.itemTags = {};
+        this.currentSortOrder = "default";
+        this.sortByNameDesc = true;
+        this.sortByModifiedDesc = true;
 
         // TODO: Allow to sort all columns instead
         if (
@@ -163,6 +182,60 @@ export class DirectoryListComponent {
             this.getFolderItemTags(this.item).then((value) => {
                 this.itemTags = value;
             });
+        }
+    }
+
+    sortListing(column: string) {
+        let foldersArr = this.itemList.filter((item) => item.isFolder);
+        let docsArr = this.itemList.filter((item) => !item.isFolder);
+        this.currentSortOrder = column;
+
+        if (column === "name") {
+            foldersArr = foldersArr.sort((a, b) =>
+                a.title.localeCompare(b.title, "fi")
+            );
+            docsArr = docsArr.sort((a, b) =>
+                a.title.localeCompare(b.title, "fi")
+            );
+
+            if (!this.sortByNameDesc) {
+                foldersArr.reverse();
+                docsArr.reverse();
+            }
+            this.itemList = foldersArr.concat(docsArr);
+            this.sortByNameDesc = !this.sortByNameDesc;
+
+            // modified column's sorting order should be reset to latest to newest if sorting by name. Otherwise, might seem counter-intuitive when pressing modified and it sorts in from oldest
+            if (!this.sortByModifiedDesc) {
+                this.sortByModifiedDesc = true;
+            }
+            console.log(this.sortByNameDesc);
+        } else {
+            foldersArr.sort((a, b) =>
+                new Date(a.modifiedTimeFull).getTime() <
+                new Date(b.modifiedTimeFull).getTime()
+                    ? 1
+                    : -1
+            );
+            docsArr.sort((a, b) =>
+                new Date(a.modifiedTimeFull).getTime() <
+                new Date(b.modifiedTimeFull).getTime()
+                    ? 1
+                    : -1
+            );
+            if (!this.sortByModifiedDesc) {
+                // sort in ascending order by reversing the arrays
+                foldersArr.reverse();
+                docsArr.reverse();
+            }
+
+            // name column's sorting order should be reset to descending if sorting by modified. Otherwise, might seem counter-intuitive when pressing name and it sorts in ascending
+            if (!this.sortByNameDesc) {
+                this.sortByNameDesc = true;
+            }
+            this.itemList = foldersArr.concat(docsArr);
+            this.sortByModifiedDesc = !this.sortByModifiedDesc;
+            console.log(this.itemList);
         }
     }
 

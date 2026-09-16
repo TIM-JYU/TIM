@@ -226,6 +226,7 @@ class Item(ItemBase):
             "modified": date_to_relative(self.last_modified)
             if self.last_modified
             else None,
+            "modifiedTimeFull": self.last_modified if self.last_modified else None,
             "owners": self.owners,
             "rights": get_user_rights_for_item(self, curr_user),
             "unpublished": self.block.is_unpublished() if self.block else False,

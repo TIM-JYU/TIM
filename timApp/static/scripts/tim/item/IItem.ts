@@ -24,6 +24,7 @@ export interface IItem {
     id: number;
     location: string;
     modified: string; // TODO change type to Moment
+    modifiedTimeFull: string;
     name: string;
     owners: IGroup[];
     path: string;
