@@ -1,0 +1,27 @@
+.subgroup-table {
+    width: auto;
+    min-width: 20em;
+    max-width: 100%;
+}
+
+.subgroup-table .select-column {
+    width: 2em;
+    text-align: center;
+}
+
+.button-controls {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5em;
+    margin-bottom: 1em;
+}
+
+.button-controls .help-block {
+    flex-basis: 100%;
+    margin: 0;
+}
+
+.add-subgroups textarea {
+    font-family: var(--font-family-monospace);
+}

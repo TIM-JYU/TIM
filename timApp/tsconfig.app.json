@@ -2,7 +2,7 @@
   "extends": "./tsconfig.json",
   "compilerOptions": {
     "outDir": "./static/scripts/build/tsc/app",
-    "noEmit": false
+    "noEmit": false,
   },
   "files": [
     "static/scripts/tim/main.ts",

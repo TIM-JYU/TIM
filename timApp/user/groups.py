@@ -6,12 +6,14 @@ from typing import Any
 
 from flask import Response, current_app
 from sqlalchemy import select
+from sqlalchemy.orm import selectinload
 
 from timApp.auth.accesshelper import (
     verify_admin,
     check_admin_access,
     AccessDenied,
     verify_logged_in,
+    verify_teacher_access,
 )
 from timApp.auth.accesstype import AccessType
 from timApp.auth.auth_models import BlockAccess
@@ -21,6 +23,8 @@ from timApp.auth.sessioninfo import (
 )
 from timApp.document.create_item import apply_template, create_document
 from timApp.document.docinfo import DocInfo
+from timApp.gamification.badge.routes import verify_access
+from timApp.item.block import Block
 from timApp.item.validation import ItemValidationRule
 from timApp.notification.send_email import multi_send_email
 from timApp.timdb.sqa import db, run_sql
@@ -29,18 +33,27 @@ from timApp.user.special_group_names import (
     PRIVILEGED_GROUPS,
     SPECIAL_USERNAMES,
 )
+from timApp.user.subgroups import (
+    SubGroup,
+    SubGroupError,
+    add_subgroup,
+    remove_subgroup,
+)
 from timApp.user.user import (
     User,
     view_access_set,
     edit_access_set,
+    teacher_access_set,
     UserInfo,
     UserOrigin,
 )
 from timApp.user.usergroup import UserGroup
+from timApp.user.usergroupmember import UserGroupMember, membership_current
 from timApp.util.flask.requesthelper import load_data_from_req, RouteException, NotExist
-from timApp.util.flask.responsehelper import json_response
+from timApp.util.flask.responsehelper import json_response, ok_response
 from timApp.util.flask.typedblueprint import TypedBlueprint
 from timApp.util.locale import get_locale
+from timApp.util.logger import log_info
 from timApp.util.utils import (
     remove_path_special_chars,
     get_current_time,
@@ -516,3 +529,305 @@ def get_usernames(usernames: list[str]):
     usernames = list({n for name in usernames if (n := name.strip())})
     usernames.sort()
     return usernames
+
+
+@groups.get("/subgroups/<group>")
+def get_subgroups(group: str) -> Response:
+    """
+    Fetches the subgroups of the given user group.
+
+    Subgroup membership is recorded in the usergroup_subgroups table; it used to be
+    inferred from a shared name prefix, which also matched unrelated groups that
+    happened to start with the same characters.
+
+    :param group: Name of the parent user group
+    :return: List of subgroups sorted by name
+    """
+    context_usergroup = UserGroup.get_by_name(group)
+    # verify_access raises NotExist when the group does not exist.
+    verify_access("teacher", context_usergroup, user_group_name=group)
+
+    subgroups = (
+        run_sql(
+            select(UserGroup)
+            .join(SubGroup, SubGroup.child_id == UserGroup.id)
+            .where(SubGroup.parent_id == context_usergroup.id)
+            # Loaded so that to_json includes admin_doc_path; it is omitted for groups
+            # whose admin doc has not been loaded.
+            .options(selectinload(UserGroup.admin_doc).selectinload(Block.docentries))
+            .order_by(UserGroup.name)
+        )
+        .scalars()
+        .all()
+    )
+
+    # log_info(f"subgroups of {group}: {[sg.name for sg in subgroups]}")
+
+    return json_response([subgroup.to_json() for subgroup in subgroups])
+
+
+@groups.get("/prefix_groups/<int:user_id>/<group_name>")
+def get_users_subgroups(user_id: int, group_name: str) -> Response:
+    """
+    Fetches the subgroups of the given group that the given user is a member of.
+
+    Which groups count as subgroups comes from the usergroup_subgroups table; it used
+    to be inferred from a shared name prefix.
+
+    :param user_id: ID of the user
+    :param group_name: Name of the parent user group
+    :return: List of the user's subgroups sorted by name
+    """
+    user = User.get_by_id(user_id)
+    if not user:
+        # we got the user's personal group's id, get the user from the personal group
+        ug = UserGroup.get_by_id(user_id)
+        if not ug:
+            raise NotExist(f'User with id "{user_id}" not found')
+        user = ug.personal_user if hasattr(ug, "personal_user") else None
+        if not user:
+            raise NotExist(f'User with id "{user_id}" not found')
+
+    context_usergroup = UserGroup.get_by_name(group_name)
+    current_user = get_current_user_object()
+    if current_user.id != user.id:
+        # verify_access raises NotExist when the group does not exist.
+        verify_access("teacher", context_usergroup, user_group_name=group_name)
+    elif not context_usergroup:
+        raise NotExist(f'User group "{group_name}" not found')
+
+    subgroups = (
+        run_sql(
+            select(UserGroup)
+            .join(SubGroup, SubGroup.child_id == UserGroup.id)
+            .join(UserGroupMember, UserGroupMember.usergroup_id == UserGroup.id)
+            .where(
+                (SubGroup.parent_id == context_usergroup.id)
+                & (UserGroupMember.user_id == user.id)
+                & membership_current
+            )
+            .order_by(UserGroup.name)
+        )
+        .scalars()
+        .all()
+    )
+
+    return json_response(
+        [dict(id=ug.id, name=ug.name, description=ug.human_name) for ug in subgroups]
+    )
+
+
+@groups.get("/personal_group/<name>")
+def get_personal_group(name: str) -> Response:
+    """
+    Fetches user's personal user group.
+    :param name: User's username
+    :return: User account and personal user group in json format
+    """
+    user = User.get_by_name(name)
+    if not user:
+        raise NotExist(f'User "{name}" not found')
+    else:
+        p_group = user.get_personal_group()
+        p_group.load_personal_user()
+        return json_response(p_group)
+
+
+@groups.get("/members/<group_name>")
+def get_usergroup_members(group_name: str) -> Response:
+    """
+    Fetches user group's members.
+    :param group_name: User group's name
+    :return: Alphabetically sorted list of users
+    """
+    ug = UserGroup.get_by_name(group_name)
+    # raise_group_not_found_if_none(group_name, ug)
+    current_user = get_current_user_object()
+
+    if ug not in current_user.groups:
+        # verify_view_access(ug.admin_doc)
+        verify_access("view", ug, user_group_name=group_name)
+    # log_info(f"GETTING MEMBERS FOR {group_name}: [{ug.users}]")
+
+    return json_response(sorted(list(ug.users), key=attrgetter("real_name")))
+
+
+@groups.get("/pretty_name/<group_name>")
+def pretty_name(group_name: str) -> Response:
+    """
+    Returns the group's display name (pretty name) to any logged-in user.
+    :param group_name: Full group name
+    :return: The admin doc's description, or the group name if there is no admin doc
+    """
+    verify_logged_in()
+    group = UserGroup.get_by_name(group_name)
+    if not group:
+        raise NotExist(f'User group "{group_name}" not found')
+    return json_response(group.human_name)
+
+
+def group_info_json(group: UserGroup) -> dict:
+    """The group summary that the badge and dashboard components read.
+
+    ``parent_group`` is the name of the group this one is a subgroup of, or None. It is
+    part of the summary so that callers can tell a subgroup from a top-level group
+    instead of guessing from the name, which used to be done by splitting on "-".
+
+    ``description`` is None for a group with no admin document - such groups exist, so
+    reading the description off it unconditionally would be a 500 - and also for a blank
+    one, so that callers can treat "no pretty name" as a single case.
+    """
+    parent = group.parent_group
+    description = group.admin_doc.description if group.admin_doc else None
+    return {
+        "id": group.id,
+        "name": group.name,
+        "description": description or None,
+        "parent_group": parent.name if parent is not None else None,
+    }
+
+
+@groups.get("/groupinfo/<group_name>")
+def get_groupinfo_with_pretty_name(group_name: str) -> Response:
+    """Name, id, description and parent group of a user group.
+
+    :param group_name: Name of the group
+    :return: The group summary, see :func:`group_info_json`
+    """
+    group = UserGroup.get_by_name(group_name)
+
+    current_user = get_current_user_object()
+    if group not in current_user.groups:
+        # Raises NotExist when the group does not exist.
+        verify_access("view", group, user_group_name=group_name)
+    return json_response(group_info_json(group))
+
+
+@groups.post("/pretty_name/<group_name>/<new_name>")
+def change_pretty_name(group_name: str, new_name: str) -> Response:
+    """
+    Changes group's admin_doc's description (pretty name)
+    :param group_name: Full group name
+    :param new_name: New group's admin_doc's description (pretty name)
+    :return: Group data in json format
+    """
+    group = UserGroup.get_by_name(group_name)
+    # raise_group_not_found_if_none(group_name, group)
+    if not group:
+        raise NotExist(f'User group "{group_name}" not found')
+    doc_entries = group.admin_doc.docentries
+    settings = doc_entries[0].document.get_settings()
+
+    current_user = get_current_user_object()
+    in_group = group in current_user.groups
+    log_info(f"{current_user.name} {in_group} {group.name}")
+    if (
+        not in_group
+    ):  # or (in_group and not settings.allow_name_edit_by_group_members()):
+        verify_teacher_access(
+            group.admin_doc,
+            message=f'Sorry, you don\'t have permission to use this resource. If you are a teacher of "{group_name}", please contact TIM admin.',
+        )
+
+    if len(new_name.strip()) > 0:
+        group_doc = group.admin_doc
+        log_info(f"GROUP DESCRIPTION: {group_doc.description}")
+        group_doc.description = new_name
+        db.session.commit()
+        log_info(f"GROUP DESCRIPTION AFTER COMMIT: {group_doc.description}")
+    else:
+        raise RouteException("Group name cannot be empty")
+
+    return json_response(group_info_json(group))
+
+
+@groups.get("/hasTeacherRightTo/<int:group_id>")
+def get_has_teacher_right_to_group(group_id: int) -> Response:
+    group = UserGroup.get_by_id(group_id)
+    verify_group_access(group, teacher_access_set)
+    return ok_response()
+
+
+def verify_subgroup_edit_access(
+    parent_name: str, child_name: str
+) -> tuple[UserGroup, UserGroup]:
+    """Resolve both groups of a subgroup operation and require edit access to each.
+
+    Changing the link changes who belongs to the parent group, so edit access to the
+    subgroup alone is not enough.
+    """
+    parent = get_group_or_abort(parent_name)
+    child = get_group_or_abort(child_name)
+    verify_group_edit_access(parent)
+    verify_group_edit_access(child)
+    return parent, child
+
+
+@groups.get("/subgroups/of/<group_name>")
+def get_parent_group_of(group_name: str) -> Response:
+    """The group that the given group is a subgroup of.
+
+    :param group_name: Name of the subgroup
+    :return: The parent group, or null if the group is not a subgroup
+    """
+    ug = get_group_or_abort(group_name)
+    verify_group_view_access(ug)
+    parent = ug.parent_group
+    return json_response(parent.to_json() if parent is not None else None)
+
+
+@groups.post("/subgroups/add/<parent_name>/<child_name>")
+def add_subgroup_to_group(parent_name: str, child_name: str) -> Response:
+    """Make one group a subgroup of another.
+
+    Members of the subgroup are added to the parent group as well, since a subgroup's
+    members are implicitly members of its parent.
+
+    :param parent_name: Name of the group that gains a subgroup
+    :param child_name: Name of the group that becomes a subgroup
+    :return: The parent's subgroups after the change
+    """
+    parent, child = verify_subgroup_edit_access(parent_name, child_name)
+    try:
+        add_subgroup(parent, child, added_by=get_current_user_object())
+    except SubGroupError as e:
+        raise RouteException(str(e))
+    db.session.commit()
+    return json_response(
+        {
+            "parent": parent.to_json(),
+            "subgroups": [
+                g.to_json()
+                for g in sorted(parent.subgroup_list, key=attrgetter("name"))
+            ],
+        }
+    )
+
+
+@groups.post("/subgroups/remove/<parent_name>/<child_name>")
+def remove_subgroup_from_group(parent_name: str, child_name: str) -> Response:
+    """Detach a subgroup from its parent, leaving both as ordinary groups.
+
+    Members that were added to the parent through the subgroup keep their parent
+    membership, because a materialised membership cannot be told apart from one that
+    was granted directly.
+
+    :param parent_name: Name of the parent group
+    :param child_name: Name of the subgroup to detach
+    :return: The parent's subgroups after the change
+    """
+    parent, child = verify_subgroup_edit_access(parent_name, child_name)
+    try:
+        remove_subgroup(parent, child)
+    except SubGroupError as e:
+        raise RouteException(str(e))
+    db.session.commit()
+    return json_response(
+        {
+            "parent": parent.to_json(),
+            "subgroups": [
+                g.to_json()
+                for g in sorted(parent.subgroup_list, key=attrgetter("name"))
+            ],
+        }
+    )

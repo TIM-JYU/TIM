@@ -9,6 +9,8 @@ from timApp.notification.send_email import sent_mails_in_testing
 from timApp.tests.server.timroutetest import TimRouteTest
 from timApp.tim_app import app
 from timApp.timdb.sqa import db
+from timApp.user.groups import do_create_group_impl
+from timApp.user.subgroups import add_subgroup
 from timApp.user.user import User, UserInfo
 from timApp.user.usergroup import UserGroup
 
@@ -647,4 +649,391 @@ class GroupNotificationsTest(TimRouteTest):
         )
         self.assertEqual(
             2, len(sent_mails_in_testing), "Should send welcome mail again."
+        )
+
+
+class SubgroupsTest(TimRouteTest):
+    def test_subgroups(self):
+        # initialization
+        self.login_test1()
+        group1_name = "es_25"
+        subgroup1_name = "es_25-cats"
+        subgroup2_name = "es_25-dogs"
+        group2_name = "es_26"
+        # Shares group1's name prefix but is never linked to it, so it must not be
+        # reported as a subgroup.
+        unlinked_name = "es_25-unlinked"
+        (group1, doc1) = do_create_group_impl(f"{group1_name}", group1_name)
+        (subgroup1, subdoc1) = do_create_group_impl(f"{subgroup1_name}", subgroup1_name)
+        (subgroup2, subdoc2) = do_create_group_impl(f"{subgroup2_name}", subgroup2_name)
+        (group2, doc2) = do_create_group_impl(f"{group2_name}", group2_name)
+        (unlinked, unlinked_doc) = do_create_group_impl(
+            f"{unlinked_name}", unlinked_name
+        )
+        db.session.commit()
+        add_subgroup(group1, subgroup1)
+        add_subgroup(group1, subgroup2)
+        self.test_user_1.grant_access(group1.admin_doc, AccessType.teacher)
+        self.test_user_1.grant_access(subgroup1.admin_doc, AccessType.teacher)
+        self.test_user_1.grant_access(subgroup2.admin_doc, AccessType.teacher)
+        self.test_user_1.grant_access(group2.admin_doc, AccessType.teacher)
+        self.commit_db()
+
+        # fetch subgroups when there are not any
+        result_sg_empty = self.get(f"/groups/subgroups/{group2_name}")
+        self.assertEqual([], result_sg_empty)
+
+        # fetch subgroups when there are 2 of them; the group sharing the name prefix
+        # is not among them
+        result_sg_nonempty = self.get(f"/groups/subgroups/{group1_name}")
+        self.assertEqual(
+            [
+                {
+                    "id": 10,
+                    "name": subgroup1_name,
+                    "admin_doc_path": f"groups/{subgroup1_name}",
+                },
+                {
+                    "id": 11,
+                    "name": subgroup2_name,
+                    "admin_doc_path": f"groups/{subgroup2_name}",
+                },
+            ],
+            result_sg_nonempty,
+        )
+
+        # a subgroup's own info names the group it belongs to, so that callers do not
+        # have to guess it from the name
+        self.assertEqual(
+            {
+                "id": 10,
+                "name": subgroup1_name,
+                "description": subgroup1_name,
+                "parent_group": group1_name,
+            },
+            self.get(f"/groups/groupinfo/{subgroup1_name}"),
+        )
+
+        # a group that is not a subgroup has no parent
+        self.assertEqual(
+            None,
+            self.get(f"/groups/groupinfo/{group1_name}")["parent_group"],
+        )
+
+        self.login_test2()
+
+        # fetch subgroups when user doesn't have teacher access to the context group
+        self.get(
+            f"/groups/subgroups/{group1_name}",
+            expect_content=f'Sorry, you don\'t have permission to use this resource. If you are a teacher of "{group1_name}", please contact TIM admin.',
+            expect_status=403,
+        )
+
+        self.login_test1()
+
+        # fetch subgroups with erroneous data
+        self.get(
+            f"/groups/subgroups/nonexistent_group",
+            expect_status=404,
+            expect_content='User group "nonexistent_group" not found',
+        )
+
+
+class UsersSubgroupsTest(TimRouteTest):
+    def test_users_subgroups(self):
+        # initialization
+        self.login_test1()
+        group1_name = "es_25"
+        subgroup1_name = "es_25-cats"
+        subgroup2_name = "es_25-dogs"
+        (group1, doc1) = do_create_group_impl(f"{group1_name}", group1_name)
+        (subgroup1, subdoc1) = do_create_group_impl(f"{subgroup1_name}", subgroup1_name)
+        (subgroup2, subdoc2) = do_create_group_impl(f"{subgroup2_name}", subgroup2_name)
+        db.session.commit()
+        add_subgroup(group1, subgroup1)
+        add_subgroup(group1, subgroup2)
+        self.test_user_1.grant_access(group1.admin_doc, AccessType.teacher)
+        self.test_user_1.grant_access(subgroup1.admin_doc, AccessType.teacher)
+        self.test_user_1.grant_access(subgroup2.admin_doc, AccessType.teacher)
+        self.commit_db()
+        self.post(
+            f"/groups/addmember/{group1_name}",
+            data={"names": ["testuser2", "testuser3"]},
+        )
+        self.post(
+            f"/groups/addmember/{subgroup1_name}",
+            data={"names": ["testuser2"]},
+        )
+
+        # fetch users subgroups when there are not any
+        result_usg_empty = self.get(
+            f"/groups/prefix_groups/{self.test_user_3.id}/{group1_name}"
+        )
+        self.assertEqual([], result_usg_empty)
+
+        # fetch users subgroups when user has teacher access to the context group
+        # and is not the user with given user id
+        self.get(
+            f"/groups/prefix_groups/{self.test_user_2.id}/{group1_name}",
+            expect_content=[
+                {
+                    "description": subgroup1_name,
+                    "id": 10,
+                    "name": subgroup1_name,
+                }
+            ],
+            expect_status=200,
+        )
+
+        self.login_test2()
+
+        # fetch users subgroups when user doesn't have teacher access to the context group
+        # and is the user with given user id
+        self.get(
+            f"/groups/prefix_groups/{self.test_user_2.id}/{group1_name}",
+            expect_content=[
+                {"description": subgroup1_name, "id": 10, "name": subgroup1_name}
+            ],
+            expect_status=200,
+        )
+
+        self.login_test3()
+
+        # fetch users subgroups when user doesn't have teacher access to the context group
+        # and is not the user with given user id
+        self.get(
+            f"/groups/prefix_groups/{self.test_user_2.id}/{group1_name}",
+            expect_content=f'Sorry, you don\'t have permission to use this resource. If you are a teacher of "{group1_name}", please contact TIM admin.',
+            expect_status=403,
+        )
+
+        self.login_test1()
+
+        # fetch users subgroups with different erroneous data
+        self.get(
+            f"/groups/prefix_groups/100/{group1_name}",
+            expect_status=404,
+            expect_content='User with id "100" not found',
+        )
+        self.get(
+            f"/groups/prefix_groups/{self.test_user_2.id}/nonexistent_group",
+            expect_status=404,
+            expect_content='User group "nonexistent_group" not found',
+        )
+
+
+class UserAndPersonalGroupTest(TimRouteTest):
+    def test_user_and_personal_group(self):
+        # initialization
+        self.login_test2()
+
+        # fetch user and his/her personal usergroup
+        result_uapg = self.get(f"/groups/personal_group/{self.test_user_2.name}")
+        self.assertEqual(
+            {
+                "id": self.test_user_2.get_personal_group().id,
+                "name": self.test_user_2.get_personal_group().name,
+                "personal_user": {
+                    "id": self.test_user_2.id,
+                    "name": self.test_user_2.name,
+                    "real_name": self.test_user_2.real_name,
+                    "email": self.test_user_2.email,
+                },
+            },
+            result_uapg,
+        )
+
+        self.login_test1()
+
+        # fetch user and his/her personal usergroup with erroneous data
+        self.get(
+            f"/groups/personal_group/nonexistent_user",
+            expect_status=404,
+            expect_content='User "nonexistent_user" not found',
+        )
+
+
+class UsergroupsMembersTest(TimRouteTest):
+    def test_usergroups_members(self):
+        # initialization
+        self.login_test1()
+        subgroup1_name = "es_25-cats"
+        subgroup2_name = "es_25-dogs"
+        (subgroup1, subdoc1) = do_create_group_impl(f"{subgroup1_name}", subgroup1_name)
+        (subgroup2, subdoc2) = do_create_group_impl(f"{subgroup2_name}", subgroup2_name)
+        db.session.commit()
+        self.test_user_1.grant_access(subgroup1.admin_doc, AccessType.teacher)
+        self.test_user_1.grant_access(subgroup2.admin_doc, AccessType.teacher)
+        self.commit_db()
+        self.post(
+            f"/groups/addmember/{subgroup1_name}",
+            data={"names": ["testuser2"]},
+        )
+
+        # fetch usergroup's members when there are not any
+        result_ugm_empty = self.get(f"/groups/members/{subgroup2_name}")
+        self.assertEqual(
+            [],
+            result_ugm_empty,
+        )
+
+        # fetch usergroup's members when there are 2
+        result_ugm_nonempty = self.get(f"/groups/members/{subgroup1_name}")
+        self.assertEqual(
+            [
+                {
+                    "id": self.test_user_2.id,
+                    "name": self.test_user_2.name,
+                    "real_name": self.test_user_2.real_name,
+                    "email": self.test_user_2.email,
+                }
+            ],
+            result_ugm_nonempty,
+        )
+
+        self.login_test2()
+
+        # fetch usergroup's members when user doesn't have view access to the usergroup and belongs to usergroup
+        self.get(
+            f"/groups/members/{subgroup1_name}",
+            expect_content=[
+                {
+                    "id": self.test_user_2.id,
+                    "name": self.test_user_2.name,
+                    "real_name": self.test_user_2.real_name,
+                    "email": self.test_user_2.email,
+                }
+            ],
+            expect_status=200,
+        )
+
+        self.login_test3()
+
+        # fetch usergroup's members when user doesn't have view access to the usergroup and doesn't belong to usergroup
+        self.get(
+            f"/groups/members/{subgroup1_name}",
+            expect_content=f"Sorry, you don't have permission to use this resource.",
+            expect_status=403,
+        )
+
+        self.login_test1()
+
+        # fetch usergroup's members with erroneous data
+        self.get(
+            f"/groups/members/nonexistent_group",
+            expect_status=404,
+            expect_content='User group "nonexistent_group" not found',
+        )
+
+
+class GroupNameChangerTest(TimRouteTest):
+    def test_group_name_changer(self):
+        # initialization
+        self.login_test1()
+        group1_name = "es_25"
+        subgroup1_name = "es_25-horses"
+        (group1, doc1) = do_create_group_impl(f"{group1_name}", group1_name)
+        (subgroup1, subdoc1) = do_create_group_impl(f"{subgroup1_name}", subgroup1_name)
+        db.session.commit()
+        self.test_user_1.grant_access(group1.admin_doc, AccessType.teacher)
+        self.test_user_1.grant_access(subgroup1.admin_doc, AccessType.teacher)
+        self.commit_db()
+        self.post(
+            f"/groups/addmember/{group1_name}",
+            data={"names": ["testuser2"]},
+        )
+        self.post(
+            f"/groups/addmember/{subgroup1_name}",
+            data={"names": ["testuser2"]},
+        )
+
+        # fetch group's original pretty name
+        self.get(
+            f"/groups/pretty_name/{subgroup1_name}",
+            expect_status=200,
+            expect_content=subgroup1_name,
+        )
+
+        self.login_test3()
+
+        # try to edit group's pretty name when logged in user isn't included in the group and isn't teacher of the group
+        self.post(
+            f"/groups/pretty_name/{subgroup1_name}/Hevoset",
+            expect_status=403,
+            expect_content=f'Sorry, you don\'t have permission to use this resource. If you are a teacher of "{subgroup1_name}", please contact TIM admin.',
+        )
+        # but any logged-in user can read the group's display name
+        self.get(
+            f"/groups/pretty_name/{subgroup1_name}",
+            expect_status=200,
+            expect_content=subgroup1_name,
+        )
+
+        self.login_test2()
+
+        # a member of the group may rename its display name without being its teacher
+        self.post(
+            f"/groups/pretty_name/{subgroup1_name}/Hevoset",
+            expect_status=200,
+            expect_content={
+                "id": 10,
+                "name": subgroup1_name,
+                "description": "Hevoset",
+                "parent_group": None,
+            },
+        )
+        # the member reads back the name they set
+        self.get(
+            f"/groups/pretty_name/{subgroup1_name}",
+            expect_status=200,
+            expect_content="Hevoset",
+        )
+
+        self.login_test1()
+
+        # the member's rename is what the group's teacher sees
+        self.get(
+            f"/groups/pretty_name/{subgroup1_name}",
+            expect_status=200,
+            expect_content="Hevoset",
+        )
+
+        # edit group's pretty name when logged in user is teacher of the group
+        self.post(
+            f"/groups/pretty_name/{subgroup1_name}/Ponit",
+            expect_status=200,
+            expect_content={
+                "id": 10,
+                "name": subgroup1_name,
+                "description": "Ponit",
+                "parent_group": None,
+            },
+        )
+        self.get(
+            f"/groups/pretty_name/{subgroup1_name}",
+            expect_status=200,
+            expect_content="Ponit",
+        )
+
+        # fetch group's pretty name with erroneous data
+        self.get(
+            f"/groups/pretty_name/nonexistent_group",
+            expect_status=404,
+            expect_content='User group "nonexistent_group" not found',
+        )
+
+        # edit group's pretty name with erroneous data
+        self.post(
+            f"/groups/pretty_name/nonexistent_group/Horses",
+            expect_status=404,
+            expect_content='User group "nonexistent_group" not found',
+        )
+
+        self.logout()
+
+        # reading the display name requires being logged in
+        self.get(
+            f"/groups/pretty_name/{subgroup1_name}",
+            expect_status=403,
+            expect_content="You have to be logged in to perform this action.",
         )

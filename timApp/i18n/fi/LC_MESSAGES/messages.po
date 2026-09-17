@@ -8,7 +8,7 @@ msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
 "POT-Creation-Date: 2026-05-27 17:56+0000\n"
-"PO-Revision-Date: 2026-03-16 14:41+0200\n"
+"PO-Revision-Date: 2026-05-05 20:32+0300\n"
 "Last-Translator: \n"
 "Language: fi\n"
 "Language-Team: fi <LL@li.org>\n"
@@ -37,6 +37,30 @@ msgstr "Pahoittelut, sinulla ei ole tarvittavia oikeuksia tähän kohteeseen."
 #: item/routes.py:1165
 msgid "Teacher"
 msgstr "Opettaja"
+
+#: modules/asktim/model.py:48
+msgid "The request timed out. Please try again later."
+msgstr "Pyyntö aikakatkaistiin. Yritä myöhemmin uudelleen."
+
+#: modules/asktim/model.py:50
+msgid "Rate limit exceeded. Please wait and try again."
+msgstr "Käyttömäärän rajoitus ylittyi. Odota ja yritä uudelleen."
+
+#: modules/asktim/model.py:52
+msgid "Authentication failed."
+msgstr "Todennus epäonnistui."
+
+#: modules/asktim/model.py:54
+msgid "The requested resource was not found."
+msgstr "Pyydettyä resurssia ei löytynyt."
+
+#: modules/asktim/model.py:56
+msgid "Bad request."
+msgstr "Virheellinen pyyntö."
+
+#: modules/asktim/model.py:57
+msgid "An error occurred while generating a response."
+msgstr "Vastauksen luomisessa tapahtui virhe."
 
 #: plugin/examGroupManager/examGroupManager.py:722
 #, python-format
