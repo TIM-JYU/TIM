@@ -16,6 +16,7 @@ MAX_RND_LIST_LEN = 100
 class SeedClass:
     seed: int
     extraseed: int = 0
+    ask_new: bool | None = None
 
 
 SeedType = Union[str, int, SeedClass]
@@ -88,36 +89,51 @@ def get_range_and_step(jso: str) -> tuple[list[int], int]:
     return r, step
 
 
-def get_count_range_and_step(jso: str) -> tuple[int, list[int], int]:
+def get_count_range_and_step(
+    jso: str, def_count: int = -1
+) -> tuple[int, list[int], int]:
     """
      Returns the count, range bounds, and step parsed from jso.
 
     :param jso: one of:
-       "5" =>      5, [0, 4], 1
+       "5" =>      5, [0, 4], 1   or 1, [0, 4], 1 if def_count = 1
        "10*3"      => 10, [0, 3], 1
        "10*[3]"    => 10, [0, 3], 1
        "8*[2,5]"   => 8, [2, 5], 1
        "9*[2,5,3]" => 9, [2, 5], 3
+       "[2,5]"     => 4, [2, 5], 1  or  1, [2, 5], 1 if def_count = 1
+       "[2,5,3]"   => 2, [2, 5], 3  or  1, [2, 5], 3 if def_count = 1
+    :param def_count: default count if no value is given, -1 = get from range
     :return: count, range bounds, and step
     """
     idx = jso.find(":")
     if idx < 0:
         idx = jso.find("*")
     if idx < 0:
-        count_str = jso
-        jso = ""
+        if jso.startswith("["):
+            count_str = "-1"
+        else:
+            count_str = jso
+            jso = ""
     else:
         count_str = jso[:idx]
         jso = jso[idx + 1 :]
+
     try:
-        count = int(count_str)
+        end = int(count_str)
+        count = end
     except ValueError:
+        end = 1
         count = 1
+    if idx < 0 <= def_count:
+        count = def_count
 
     if len(jso) == 0:  # s10 => 10, [0, 9], 1
-        return count, [0, count - 1], 1
+        return count, [0, end - 1], 1
 
     r, step = get_range_and_step(jso)
+    if end < 0:
+        count = len(range(r[0], r[1] + 1, step))
     return count, r, step
 
 
@@ -136,6 +152,23 @@ def get_params(p: str) -> dict[str, int]:
     return params
 
 
+def adjust_to_range(values: list[int], first: int, step: int) -> list[int]:
+    """
+    Adjust values to correspond to a range with the given start and step.
+
+    The values are modified in place.
+
+    :param values: Values to adjust.
+    :param first: First value of the range.
+    :param step: Step between consecutive values.
+    :return: The modified values.
+    """
+    if first != 0 or step != 1:
+        for i in range(len(values)):
+            values[i] = values[i] * step + first
+    return values
+
+
 def get_windowed_sequence(
     myrandom: Random, jso: str, params: dict[str, int]
 ) -> list[int]:
@@ -149,7 +182,7 @@ def get_windowed_sequence(
     """
     from timApp.util.windowed_sequence import generate
 
-    count, r, step = get_count_range_and_step(jso)
+    count, r, step = get_count_range_and_step(jso, 1)
 
     n = len(range(r[0], r[1] + 1, step))
 
@@ -166,11 +199,67 @@ def get_windowed_sequence(
     if ret is None:
         raise ValueError("Could not generate windowed sequence with given constraints")
 
-    if r[0] != 0 or step != 1:
-        first = r[0]
-        for i in range(len(ret)):
-            ret[i] = ret[i] * step + first
+    ret = adjust_to_range(ret, r[0], step)
     return ret
+
+
+def get_next_windowed_sequence(
+    myrandom: Random,
+    jso: str,
+    params: dict[str, int],
+    nr: int,
+    rnd_save: dict | None = None,
+) -> tuple[list[int], list[int] | None]:
+    """
+    Returns a list of unique ints from the given interval.
+
+    :param myrandom: random number generator
+    :param jso: string containing the interval parameters
+    :param params: dict containing sequence parameters
+    :param nr: answer number
+    :param rnd_save: dict containing the saved state of the generator
+    :return: list of unique ints satisfying the window constraints
+             and dict to save to database
+    """
+    from timApp.util.windowed_sequence import generate_next, get_old
+
+    count, r, step = get_count_range_and_step(jso, 1)
+
+    n = len(range(r[0], r[1] + 1, step))
+
+    values = {"c": 1, "d": n, "w": 3}
+    if params:
+        values.update(params)
+
+    window = values.get("w", 3)
+    distinct = values.get("d", n)
+    old_r = []
+    old_nr = -2
+    if rnd_save:
+        old_r = rnd_save.get("r", [])
+        old_nr = rnd_save.get("nr", 0)
+        seed = rnd_save.get("seed", None)
+        if seed is not None:
+            myrandom.seed(a=seed)
+    if nr == old_nr:
+        ret = get_old(old_r, nr, count)
+        return ret, None
+
+    ret, new_r = generate_next(
+        myrandom,
+        n,
+        window,
+        distinct,
+        count,
+        nr,
+        old_r,
+    )
+
+    if ret is None:
+        raise ValueError("Could not generate windowed sequence with given constraints")
+
+    adjust_to_range(ret, r[0], step)
+    return ret, new_r
 
 
 def get_sample_list(myrandom: Random, jso: str) -> list[int]:
@@ -407,12 +496,21 @@ def repeat_rnd(
         rnds = list_func(myrandom, jso)
         ret.extend(rnds)
         i -= lr
-    ret.extend(rnds[0:i])
+    if i > 0:
+        rnds = list_func(myrandom, jso)
+        ret.extend(rnds[0:i])
     return ret
 
 
 # Mypy needs capital "Tuple" here.
 State = tuple[int, ...]
+
+type GetRndsResult = tuple[
+    list[float] | list[int] | None,
+    SeedType | int | None,
+    State | None,
+    dict | None,
+]
 
 
 def get_rnds(
@@ -420,7 +518,8 @@ def get_rnds(
     name: str = "rnd",
     rnd_seed: SeedType | int | None = None,
     state: State | None = None,
-) -> tuple[list[float] | list[int] | None, SeedType | int | None, State | None]:
+    rnd_save: dict | None = None,
+) -> GetRndsResult:
     """
     Returns a list of random numbers based on the attribute name (default: rnd)
     and rnd_seed.
@@ -434,10 +533,36 @@ def get_rnds(
                  for the random numbers
     :param rnd_seed: random number initialization seed; if None, use the current time
     :param state: state of the last used generator
+    :param rnd_save: saved dict for the last used generator
     :return: list of random numbers, used seed, and generator state
     """
     if attrs is None:
-        return None, rnd_seed, state
+        return None, rnd_seed, state, None
+
+    # How many attempts came before this one.
+    # Only i-lists use it; without it, they stay on the first value.
+    index = 0
+    ask_new = False
+    if isinstance(rnd_seed, SeedClass):
+        index = rnd_seed.extraseed
+        ask_new = rnd_seed.ask_new
+    else:
+        ask_new = True
+
+    # Is this already saved?
+    if rnd_save:
+        old_nr = rnd_save.get("nr", -2)
+        if index == old_nr:
+            old_list = rnd_save.get("v", None)
+            if old_list is not None:
+                return old_list, rnd_seed, state, None
+
+    if ask_new:  # maybe there is new rnd to replace the old one
+        jso = attrs.get(name + "_new", "")
+        if not jso:
+            jso = attrs.get("!" + name + "_new", "")
+        if jso:
+            name = name + "_new"
 
     params = get_params(attrs.get(name + "_params", ""))
 
@@ -448,12 +573,8 @@ def get_rnds(
     if not jso:
         jso = attrs.get("!" + name, "")
         if not jso:
-            return None, rnd_seed, state
+            return None, rnd_seed, state, None
         no_same = True
-
-    # How many attempts came before this one.
-    # Only i-lists use it; without it, they stay on the first value.
-    index = rnd_seed.extraseed if isinstance(rnd_seed, SeedClass) else 0
 
     seed_to_use = rnd_seed
     attrs_seed = attrs.get("seed", None)
@@ -514,35 +635,75 @@ def get_rnds(
         if r_len > 0:
             del seq[r_len:]
 
+    def save(
+        values: list[int] | list[float] | None,
+        seed: int | str,
+        gen_state: State,
+        rnd_save_state: dict | None = None,
+        save_as_default: bool = False,
+    ) -> tuple[
+        list[float] | list[int] | None,
+        str | int | SeedClass | None,
+        tuple[int, ...] | None,
+        dict | None,
+    ]:
+        """
+        Prepares save state for the result depending on from params
+        :param values: list to return and possibly to save
+        :param seed: seed used to make the list
+        :param gen_state: random generator state
+        :param rnd_save_state: dict to save as the new rnd_save or None
+        :param save_as_default: if True, save as default rnd_save
+        """
+        need_to_save = params.get("s", save_as_default)
+        if not need_to_save or values is None:
+            return values, seed, gen_state, None
+        state_to_save = rnd_save_state if rnd_save_state is not None else {}
+        state_to_save["v"] = values
+        state_to_save["nr"] = index
+        return values, seed, gen_state, state_to_save
+
     ret_list: list[int] | list[float] | None
 
     if jso.startswith("s"):  # s10:[1,7,2], s10, s10:50, s10:[0,50]
         ret_list = get_sample_list(myrandom, jso[1:])
         rotate_left_to(ret_list, order_nr, ret_len)
-        return ret_list, seed_to_use, myrandom.getstate()
+        return save(ret_list, seed_to_use, myrandom.getstate(), None)
 
     if jso.startswith("w"):  # w10:[1,7,2], w10, w10:50, w10:[0,50]
-        ret_list = get_windowed_sequence(myrandom, jso[1:], params)
-        rotate_left_to(ret_list, order_nr, ret_len)
-        return ret_list, seed_to_use, myrandom.getstate()
+        if no_same:
+            ret_list = get_windowed_sequence(myrandom, jso[1:], params)
+            rotate_left_to(ret_list, order_nr, ret_len)
+            return save(ret_list, seed_to_use, myrandom.getstate())
+
+        ret_list, new_r = get_next_windowed_sequence(
+            myrandom, jso[1:], params, index, rnd_save
+        )
+        new_rnd_save = None
+        if new_r:
+            new_rnd_save = {"r": new_r}
+        return save(ret_list, seed_to_use, myrandom.getstate(), new_rnd_save, True)
 
     if jso.startswith("u"):  # u[[0,1],[100,110],[-30,-20],[0.001,0.002]], u6
         ret_list = repeat_rnd(get_uniform_list, myrandom, jso[1:])
         rotate_left_to(ret_list, order_nr, ret_len)
-        return ret_list, seed_to_use, myrandom.getstate()
+        return save(ret_list, seed_to_use, myrandom.getstate(), None)
 
     if jso.startswith("i"):  # i[1,7], i[1,7,2], i3:[1,20], i10
         ret_list = get_distinct_list(distinct_list_seed, index, jso[1:])
-        return ret_list, seed_to_use, myrandom.getstate()
+        return save(ret_list, seed_to_use, myrandom.getstate(), None)
 
     ret = repeat_rnd(get_int_list, myrandom, jso)
     rotate_left_to(ret, order_nr, ret_len)
-    return ret, seed_to_use, myrandom.getstate()
+    return save(ret, seed_to_use, myrandom.getstate(), None)
 
 
 def get_rands_as_dict(
-    attrs: dict, rnd_seed: SeedType | None, state: State | None = None
-) -> tuple[dict | None, SeedType | None, State | None]:
+    attrs: dict,
+    rnd_seed: SeedType | None,
+    state: State | None = None,
+    rnd_saves: dict | None = None,
+) -> tuple[dict | None, SeedType | None, State | None, dict | None]:
     """
     Returns a dict of random number variables
     (each variable is a list of random numbers).
@@ -551,25 +712,35 @@ def get_rands_as_dict(
                   If no names are given, "rnd" is assumed.
     :param rnd_seed: seed to initialize the random number generator
     :param state: state of the previously used generator
+    :param rnd_saves: dict of saved random number generator statuses,
+                      one for each name
     :return: dict of random variables
     """
     if attrs is None:
-        return None, rnd_seed, state
+        return None, rnd_seed, state, None
     names = attrs.get("rndnames", "rnd").split(",")
     ret: dict = {}
+    new_rnd_saves = {}
     # get_rnds gives back a plain seed number, so passing that on would leave every
     # name but the first without the attempt counter, and their i-lists would sit on
     # the first value. Give each name the same SeedClass instead.
     counter_seed = rnd_seed if isinstance(rnd_seed, SeedClass) else None
     for name in names:
-        rnds, rnd_seed, state = get_rnds(attrs, name, counter_seed or rnd_seed, state)
+        rnd_save = rnd_saves.get(name, None) if rnd_saves else None
+        rnds, rnd_seed, state, rnd_save = get_rnds(
+            attrs, name, counter_seed or rnd_seed, state, rnd_save
+        )
         if rnds is None:
             continue
         ret[name] = rnds
+        if rnd_save:
+            new_rnd_saves[name] = rnd_save
     if not ret:
-        return None, rnd_seed, state
+        return None, rnd_seed, state, None
     ret["seed"] = rnd_seed
-    return ret, rnd_seed, state
+    if not new_rnd_saves:
+        new_rnd_saves = None
+    return ret, rnd_seed, state, new_rnd_saves
 
 
 def get_rands_as_str(
@@ -587,7 +758,7 @@ def get_rands_as_str(
     """
     if attrs is None:
         return "", rnd_seed, state
-    rands, rnd_seed, state = get_rands_as_dict(attrs, rnd_seed, state)
+    (rands, rnd_seed, state, rnd_save) = get_rands_as_dict(attrs, rnd_seed, state)
     if rands is None:
         return "", rnd_seed, state
     ret = ""

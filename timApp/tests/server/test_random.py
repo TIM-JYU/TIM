@@ -140,7 +140,7 @@ class RandomTest(TimRouteTest):
         attrs = {"rndnames": ",".join(specs), "seed": "answernr", **specs}
         out: dict = {name: [] for name in specs}
         for i in range(attempts):
-            rnds, _, _ = get_rands_as_dict(attrs, SeedClass(seed, i))
+            rnds, _, _, _ = get_rands_as_dict(attrs, SeedClass(seed, i))
             for name in specs:
                 out[name].append(rnds[name][0])
         return out

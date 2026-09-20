@@ -256,7 +256,7 @@ def qst_answer_jso(m: QstAnswerModel):
         tim_info["points"] = points
 
     webstate = answers
-    if markup.saveKey or markup.keys:
+    if markup.saveKey or markup.keys or isinstance(extra, dict):
         if not markup.saveKey:
             markup.saveKey = "c"
         answers = {markup.saveKey: answers}

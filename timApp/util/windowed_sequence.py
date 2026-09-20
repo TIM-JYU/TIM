@@ -108,6 +108,7 @@ def check(
     window: int,
     distinct: int,
     circular: bool = False,
+    start: int = 0,
 ) -> str | None:
     """
     Check whether a generated sequence satisfies its constraints.
@@ -118,6 +119,7 @@ def check(
     :param distinct: Size of each complete group whose values
             must be different.
     :param circular: If True, also check the circular constraint.
+    :param start: Global starting index of the sequence.
     :returns: None if the sequence is valid.
         Otherwise, return a message describing relaxed constraints
         or an error.
@@ -137,12 +139,17 @@ def check(
     # Check complete distinct groups.
     # ------------------------------------------------------------
 
-    full_count = (len(result) // distinct) * distinct
+    first_group = ((start + distinct - 1) // distinct) * distinct
 
-    for i in range(0, full_count, distinct):
+    last = start + len(result)
+    full_count = ((last - 1) // distinct) * distinct
+
+    for global_start in range(first_group, full_count + 1, distinct):
+        i = global_start - start
         group = result[i : i + distinct]
 
-        if len(set(group)) != distinct:
+        # if len(set(group)) != distinct:
+        if len(group) == distinct and len(set(group)) != distinct:
             return "group does not contain enough different values: " f"{group}"
 
     # ------------------------------------------------------------
@@ -152,13 +159,15 @@ def check(
     # original window. Only the final group may use a smaller w.
     # ------------------------------------------------------------
 
-    if len(result) % distinct == 0:
+    # if len(result) % distinct == 0:
+    if last % distinct == 0:
         # The final group is complete, but it is still the group
         # that generate() was allowed to optimize.
-        final_start = max(0, len(result) - distinct)
+        # final_start = max(0, len(result) - distinct)
+        final_start = len(result) - distinct
     else:
         # The final group is incomplete.
-        final_start = full_count
+        final_start = full_count - start
 
     effective_window = 1
 
@@ -168,10 +177,11 @@ def check(
 
         # Windows completely before the final group must use the
         # original window.
-        for i in range(max(0, final_start - window + 1)):
-            values = result[i : i + window]
+        # for i in range(max(0, final_start - window + 1)):
+        for i in range(max(0, final_start - w + 1)):
+            values = result[i : i + w]
 
-            if len(set(values)) != window:
+            if len(set(values)) != w:
                 valid = False
                 break
 
@@ -227,6 +237,7 @@ def get_available(
     state: GenerateState,
     prefix: list[int],
     current_window: int,
+    start: int = 0,
 ) -> set[int]:
     """
     Return values that can be appended to prefix.
@@ -238,53 +249,64 @@ def get_available(
     :param state: Generation state for the current generate() call.
     :param prefix: Part of the sequence constructed so far.
     :param current_window: Window currently being considered.
+    :param start: Global zero-based starting index of prefix.
     :returns: Values that can be appended to prefix.
     """
-    position = len(prefix)
+    position = start + len(prefix)
 
     avail = set(state.all_values)
 
     # Windows starting before the final group use the
     # original window size.
     if position < state.final_start + state.window - 1:
-        start = max(0, position - (state.window - 1))
-        avail -= set(prefix[start:position])
+        first = max(start, position - (state.window - 1))
+        avail -= set(prefix[first - start :])
 
     # Windows starting in the final group use the possibly
-    # relaxed current window size.
+    # relaxed
+    # current window size.
     if position >= state.final_start:
-        start = max(
+        first = max(
+            start,
             state.final_start,
             position - (current_window - 1),
         )
-        avail -= set(prefix[start:position])
+        avail -= set(prefix[first - start :])
 
     # The distinct constraint applies to complete groups.
     if position < state.full_count:
         group_start = (position // state.distinct) * state.distinct
-        avail -= set(prefix[group_start:position])
+        first = max(start, group_start)
+        avail -= set(prefix[first - start :])
 
     return avail
 
 
 def generate_linearly(
-    state: GenerateState,
-    length: int,
+    state: GenerateState, length: int, existing: list[int] | None = None, start: int = 0
 ) -> list[int]:
     """
-    Generate a sequence of the requested length without applying
-    the circular constraint.
+    Generate or complete a sequence of the requested length
+    without applying the circular constraint.
+
+    If existing is given, generation continues from the existing
+    sequence.
 
     :param state: Generation state for the current generate() call.
     :param length: Number of values to generate.
-    :returns: A sequence satisfying the linear constraints, or None.
+    :param existing: Existing sequence to continue, or None to start
+        a new sequence.
+     :param start: Global zero-based starting index of the sequence.
+    :returns: A sequence satisfying the linear constraints.
     """
-    result: list[int] = []
+    if existing is None:
+        result = []
+    else:
+        result = existing[:]
 
     while len(result) < length:
-        available = get_available(state, result, state.window)
+        available = get_available(state, result, state.window, start)
         result.append(state.myrandom.choice(tuple(available)))
-        # print(available, result)
 
     return result
 
@@ -564,44 +586,179 @@ def generate(
     return None
 
 
+def get_old(
+    r: list[int],
+    nr: int,
+    count: int,
+) -> list[int]:
+    """
+    Get a sequence of values from an already generated sequence.
+
+    The first element of r is the global position of the first
+    actual value in r. The remaining elements are the generated
+    values.
+
+    The global positions are one-based, so the first position is 1.
+
+    :param r: Stored sequence. r[0] is the global position of
+        r[1].
+    :param nr: Global zero-based starting position of the requested
+        sequence.
+    :param count: Number of values to return.
+    :return: The requested values from r.
+    """
+    i = nr - r[0] + 1
+    return r[i : i + count]
+
+
+def generate_next(
+    myrandom: Random,
+    n: int,
+    window: int,
+    distinct: int,
+    count: int,
+    nr: int,
+    saved_r: list[int],
+) -> tuple[list[int] | None, list[int] | None]:
+    """
+    Generate the requested sequence and extend r when necessary.
+
+    The virtual sequence is one-based, so the first value has
+    position 1. The first element of r stores the global position
+    of the first actual value in r.
+
+    If r is empty, generation starts from position 1.
+    If r already contains the requested values, no new values
+    are generated.
+
+    :param myrandom: Random number generator.
+    :param n: Number of possible values, 0..n-1.
+    :param window: Maximum linear window size.
+    :param distinct: Size of each complete group whose values
+        must be different.
+    :param count: Number of values in the requested sequence.
+    :param nr: Global zero-based starting position of the requested
+        sequence.
+    :param saved_r: Previously generated sequence, or an empty list.
+    :return: The requested sequence and the possibly extended r.
+    """
+    n, window, distinct = fix_parameters(n, window, distinct)
+
+    if count <= 0:
+        return [], None
+
+    last = nr + count - 1
+
+    if not saved_r:
+        start = 0
+        existing = []
+    else:
+        start = saved_r[0]
+        existing = saved_r[1:]
+
+    current_last = start + len(existing) - 1
+
+    if last > current_last:
+        length = last - start + 1
+
+        global_start = start
+        global_last = global_start + length
+
+        full_count = ((global_last + distinct - 1) // distinct) * distinct
+        final_start = max(0, full_count - distinct)
+
+        state = GenerateState(
+            myrandom=myrandom,
+            n=n,
+            window=window,
+            distinct=distinct,
+            count=length,
+            circular=False,
+            all_values=set(range(n)),
+            full_count=full_count,
+            final_start=final_start,
+        )
+
+        existing = generate_linearly(
+            state,
+            length,
+            existing,
+            global_start,
+        )
+
+    # Save only needed amout of history
+    needed = max(count, window, distinct)
+
+    if len(existing) > needed:
+        start += len(existing) - needed
+        existing = existing[-needed:]
+
+    new_r = [start] + existing
+
+    return get_old(new_r, nr, count), new_r
+
+
 def main() -> None:
     # BYCODEBEGIN
     n = 5
-    window = 5
+    window = 3
     distinct = 4
-    count = 7
+    count = 10
     circular = bool(1)
+    gen_next = bool(1)
     myrandom = Random(1644)
     # BYCODEEND
     results: list[list[int] | None] = []
+    rs: list[list[int]] = []
 
     start = time.perf_counter()
+    if gen_next:
+        circular = False
+        r: list[int] = []
+        nr = 0
+        for _ in range(120):
+            # myrandom = Random(1644)
+            result, r = generate_next(
+                myrandom,
+                n,
+                window,
+                distinct,
+                count,
+                nr,
+                r,
+            )
+            nr += 1
+            results.append(result)
+            rs.append(r)
 
-    for _ in range(20):
-        # myrandom = Random(1644)
-        result = generate(
-            myrandom,
-            n,
-            window,
-            distinct,
-            count,
-            circular,
-        )
-        # count -= 1
-        results.append(result)
+    else:
+        for _ in range(20):
+            # myrandom = Random(1644)
+            result = generate(
+                myrandom,
+                n,
+                window,
+                distinct,
+                count,
+                circular,
+            )
+            # count -= 1
+            results.append(result)
 
     generate_time = time.perf_counter() - start
 
     start = time.perf_counter()
 
+    start_index = 0
     for result in results:
-        error = check(
-            result,
-            n,
-            window,
-            distinct,
-            circular,
-        )
+        error = check(result, n, window, distinct, circular, start_index)
+        if gen_next:
+            r = rs[start_index]
+            old = get_old(r, start_index, count)
+            if old != result:
+                error = f" != old: {old}"
+            start_index += 1
+            print(r)
 
         print(result, error or "")
 
