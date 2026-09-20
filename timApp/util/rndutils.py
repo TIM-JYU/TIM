@@ -7,7 +7,7 @@ import json
 import secrets
 from dataclasses import dataclass
 from random import Random
-from typing import Union, Callable, TypeVar
+from typing import Union, Callable, TypeVar, TypeAlias
 
 MAX_RND_LIST_LEN = 100
 
@@ -505,7 +505,7 @@ def repeat_rnd(
 # Mypy needs capital "Tuple" here.
 State = tuple[int, ...]
 
-type GetRndsResult = tuple[
+GetRndsResult: TypeAlias = tuple[
     list[float] | list[int] | None,
     SeedType | int | None,
     State | None,
@@ -542,7 +542,7 @@ def get_rnds(
     # How many attempts came before this one.
     # Only i-lists use it; without it, they stay on the first value.
     index = 0
-    ask_new = False
+
     if isinstance(rnd_seed, SeedClass):
         index = rnd_seed.extraseed
         ask_new = rnd_seed.ask_new

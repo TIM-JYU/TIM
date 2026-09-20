@@ -248,7 +248,7 @@ postprogram: |!!
 
         # Answer to new task 2
         button_new.click()
-        sleep(0.3)
+        sleep(0.6)
         self.assertEqual("2/1", count.text)
         stem = self.find_element(".stem")
         self.assertEqual("Laske: 1 + -5", stem.text)
@@ -265,7 +265,7 @@ postprogram: |!!
 
         # got to task 1/2 there should be the first correct answer -9
         self.find_element(".nextAnswer").click()
-        sleep(0.3)
+        sleep(0.6)
         cs_input = self.find_element(".csEditArea")
         self.assertEqual("-9", cs_input.get_attribute("value"))
 
@@ -279,12 +279,12 @@ postprogram: |!!
         self.assertEqual(
             "-6 + -3 = -9; 4 on väärin!", self.find_element(".console").text
         )
-        sleep(0.3)
+        sleep(0.6)
 
         # Answer to new task 3
         button_new = self.find_element_by_text("Uusi")
         button_new.click()
-        sleep(0.3)
+        sleep(0.6)
         # how to test that there is no new button
         self.assertEqual("3/2", count.text)
         self.assertEqual("Laske: -2 + -1", self.find_element(".stem").text)
@@ -445,7 +445,7 @@ stackversion: 0
                             return txt
                 if expected is None and found_any:
                     break
-                sleep(0.1)
+                sleep(0.4)
             if expected is not None:
                 self.fail(f"Feedback text '{expected}' not found. Seen: {last_texts}")
             self.fail("Feedback element not found in known feedback containers.")

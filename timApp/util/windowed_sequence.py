@@ -686,7 +686,7 @@ def generate_next(
             global_start,
         )
 
-    # Save only needed amout of history
+    # Save only needed amount of history
     needed = max(count, window, distinct)
 
     if len(existing) > needed:
