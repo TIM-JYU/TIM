@@ -233,17 +233,23 @@ def get_next_windowed_sequence(
 
     window = values.get("w", 3)
     distinct = values.get("d", n)
-    old_r = []
+    old_r: list[int] = []
     old_nr = -2
     if rnd_save is not None:
-        old_r = rnd_save.get("r", [])
+        saved_r = rnd_save.get("r", [])
+        if isinstance(saved_r, list):
+            old_r = saved_r
         old_nr = rnd_save.get("nr", 0)
         seed = rnd_save.get("seed", None)
         if seed is not None:
             myrandom.seed(a=seed)
+
+    ret: list[int] | None
+    new_r: list[int] | None
+
     if nr == old_nr:
-        ret = get_old(old_r, nr, count)
-        return ret, None
+        old_ret = get_old(old_r, nr, count)
+        return old_ret, None
 
     ret, new_r = generate_next(
         myrandom,
