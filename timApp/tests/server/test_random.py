@@ -116,7 +116,7 @@ class RandomTest(TimRouteTest):
     def test_distinct_without_attempt_counter(self):
         # A seed that is not a SeedClass carries no counter, so the walk stays
         # on the first value, and stays there for good.
-        nums, _, _ = get_rnds({"rnd": "i[1,7]"}, "rnd", 12345)
+        nums, _, _, _ = get_rnds({"rnd": "i[1,7]"}, "rnd", 12345)
         self.assertEqual(self.walk("i[1,7]", 1)[0], nums)
         self.assertEqual(nums, get_rnds({"rnd": "i[1,7]"}, "rnd", 12345)[0])
 
@@ -140,7 +140,7 @@ class RandomTest(TimRouteTest):
         attrs = {"rndnames": ",".join(specs), "seed": "answernr", **specs}
         out: dict = {name: [] for name in specs}
         for i in range(attempts):
-            rnds, _, _ = get_rands_as_dict(attrs, SeedClass(seed, i))
+            rnds, _, _, _ = get_rands_as_dict(attrs, SeedClass(seed, i))
             for name in specs:
                 out[name].append(rnds[name][0])
         return out

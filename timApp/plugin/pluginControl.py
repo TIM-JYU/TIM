@@ -99,7 +99,7 @@ class PluginPlacement:
      * a block-level (traditional) plugin, or
      * one or more inlineplugins.
 
-    In case of a block-level plugin, the range spans the entire block's expanded markdown.
+    In case of a block-level plugin, the range spans the entire block's expanded Markdown.
     """
 
     plugins: dict[Range, Plugin] = attr.ib(kw_only=True)  # ordered
@@ -196,6 +196,7 @@ class PluginPlacement:
         rnd_seed = None
         answer_and_cnt = None
         ask_next = False
+        rnd_saves = None
 
         if rnd_seed is None:
             rnd_seed = get_simple_hash_from_par_and_user(
@@ -206,7 +207,24 @@ class PluginPlacement:
             # TODO: if possible to look from markup newtask: true, this is not needed
             if block.is_new_task():
                 if block.answer_nr is not None and not block.ask_new:
-                    rnd_seed = SeedClass(rnd_seed, block.answer_nr)
+                    cnt = block.answer_nr
+                    rnd_seed = SeedClass(rnd_seed, cnt, block.ask_new)
+                    task_id = block.get_attr("taskId")
+                    if task_id:
+                        doc_id = str(
+                            block.ref_doc.doc_id if block.ref_doc else block.doc.doc_id
+                        )
+                        answer_and_cnt = answer_map.get(doc_id + "." + task_id, None)
+                        if answer_and_cnt:
+                            cnt = answer_and_cnt[1]
+                            rnd_saves = answer_and_cnt[0].content_as_json.get(
+                                "rnd_saves", None
+                            )
+                        else:
+                            if custom_answer:
+                                content = custom_answer.content_as_json
+                                if isinstance(content, dict):
+                                    rnd_saves = content.get("rnd_saves")
                 else:  # try with length of answers
                     task_id = block.get_attr("taskId")
                     doc_id = str(
@@ -216,15 +234,19 @@ class PluginPlacement:
                         answer_and_cnt = answer_map.get(doc_id + "." + task_id, None)
                         if answer_and_cnt:
                             cnt = answer_and_cnt[1]
+                            content = answer_and_cnt[0].content_as_json
+                            if isinstance(content, dict):
+                                rnd_saves = content.get("rnd_saves", None)
                             if cnt > 0:
-                                rnd_seed = SeedClass(rnd_seed, cnt)
+                                rnd_seed = SeedClass(rnd_seed, cnt, block.ask_new)
                                 ask_next = True
+
             new_seed = True
 
         rnd_error = None
         try:
             if (
-                block.insert_rnds(rnd_seed) and new_seed
+                block.insert_rnds(rnd_seed, rnd_saves) and new_seed
             ):  # do not change order!  inserts must be done
                 # TODO: RND_SEED save rnd_seed to user data
                 pass
@@ -444,13 +466,13 @@ def pluginify(
     :param doc: Document / DocumentVersion object.
     :param pars: A list of DocParagraphs to be processed.
     :param user_ctx: The user context.
-    :param custom_answer: Optional answer that will used as the state for the plugin instead of answer database.
+    :param custom_answer: Optional answer that will be used as the state for the plugin instead of answer database.
     :param task_id: Optional taskId for plugin which will load it's current state (returned as custom_answer_plugin)
         If custom_answer or task_id is specified, the expression len(blocks) MUST be 1.
     :param sanitize: Whether the blocks should be sanitized before processing.
     :param do_lazy: Whether to use lazy versions of the plugins.
     :param output_format: Desired output format (html/md) for plugins
-    :param user_print: Whether the plugins should output the original values or user's input (when exporting markdown).
+    :param user_print: Whether the plugins should output the original values or user's input (when exporting Markdown).
     :param target_format: for MD-print what exact format to use
     :param protect_raw_inline_plugins: If true, protect inline plugins from being processed by macros
                                        by wrapping them into a raw block.
@@ -812,7 +834,7 @@ def get_all_reqs():
 def plugin_deps(p: dict) -> tuple[list[str], list[str]]:
     """
 
-    :param p: is json of plugin requirements of the form:
+    :param p: is JSON of plugin requirements of the form:
               {"js": ["js.js"], "css":["css.css"]}
     """
     js_files = []
