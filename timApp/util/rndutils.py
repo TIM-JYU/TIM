@@ -235,7 +235,7 @@ def get_next_windowed_sequence(
     distinct = values.get("d", n)
     old_r = []
     old_nr = -2
-    if rnd_save:
+    if rnd_save is not None:
         old_r = rnd_save.get("r", [])
         old_nr = rnd_save.get("nr", 0)
         seed = rnd_save.get("seed", None)
@@ -550,7 +550,7 @@ def get_rnds(
         ask_new = True
 
     # Is this already saved?
-    if rnd_save:
+    if rnd_save is not None:
         old_nr = rnd_save.get("nr", -2)
         if index == old_nr:
             old_list = rnd_save.get("v", None)
@@ -680,7 +680,7 @@ def get_rnds(
             myrandom, jso[1:], params, index, rnd_save
         )
         new_rnd_save = None
-        if new_r:
+        if new_r is not None:
             new_rnd_save = {"r": new_r}
         return save(ret_list, seed_to_use, myrandom.getstate(), new_rnd_save, True)
 
@@ -720,7 +720,7 @@ def get_rands_as_dict(
         return None, rnd_seed, state, None
     names = attrs.get("rndnames", "rnd").split(",")
     ret: dict = {}
-    new_rnd_saves = {}
+    new_rnd_saves: dict[str, dict] = {}
     # get_rnds gives back a plain seed number, so passing that on would leave every
     # name but the first without the attempt counter, and their i-lists would sit on
     # the first value. Give each name the same SeedClass instead.
@@ -733,14 +733,12 @@ def get_rands_as_dict(
         if rnds is None:
             continue
         ret[name] = rnds
-        if rnd_save:
+        if rnd_save is not None:
             new_rnd_saves[name] = rnd_save
     if not ret:
         return None, rnd_seed, state, None
     ret["seed"] = rnd_seed
-    if not new_rnd_saves:
-        new_rnd_saves = None
-    return ret, rnd_seed, state, new_rnd_saves
+    return ret, rnd_seed, state, new_rnd_saves or None
 
 
 def get_rands_as_str(

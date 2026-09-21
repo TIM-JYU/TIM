@@ -718,7 +718,7 @@ def main() -> None:
         nr = 0
         for _ in range(120):
             # myrandom = Random(1644)
-            result, r = generate_next(
+            result, new_r = generate_next(
                 myrandom,
                 n,
                 window,
@@ -728,8 +728,13 @@ def main() -> None:
                 r,
             )
             nr += 1
+            if result is None:
+                print(f"generate_next returned None for nr={nr}")
+                break
+            if new_r is not None:
+                r = new_r
+                rs.append(r)
             results.append(result)
-            rs.append(r)
 
     else:
         for _ in range(20):
