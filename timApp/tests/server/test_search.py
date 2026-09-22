@@ -2,6 +2,7 @@ from timApp.auth.accesstype import AccessType
 from timApp.item.tag import TagType
 from timApp.tests.server.timroutetest import TimRouteTest
 from timApp.timdb.sqa import db
+from timApp.util.utils import get_current_time
 
 
 class SearchTest(TimRouteTest):
@@ -26,6 +27,9 @@ class SearchTest(TimRouteTest):
                             "isFolder": False,
                             "location": d.location,
                             "modified": "just now",
+                            "modifiedTimeFull": get_current_time()
+                            .replace(microsecond=0)
+                            .isoformat(),
                             "name": d.short_name,
                             "owners": [
                                 {"id": self.get_test_user_1_group_id(), "name": u_name}
@@ -203,6 +207,9 @@ class SearchTest(TimRouteTest):
                             "isFolder": False,
                             "location": d.location,
                             "modified": "just now",
+                            "modifiedTimeFull": get_current_time()
+                            .replace(microsecond=0)
+                            .isoformat(),
                             "name": d.short_name,
                             "owners": [
                                 {"id": self.get_test_user_1_group_id(), "name": u1_name}
@@ -297,6 +304,9 @@ class SearchTest(TimRouteTest):
                             "isFolder": False,
                             "location": d.location,
                             "modified": "just now",
+                            "modifiedTimeFull": get_current_time()
+                            .replace(microsecond=0)
+                            .isoformat(),
                             "name": d.short_name,
                             "owners": [
                                 {
@@ -419,6 +429,9 @@ class SearchTest(TimRouteTest):
                             "isFolder": False,
                             "location": d.location,
                             "modified": "just now",
+                            "modifiedTimeFull": get_current_time()
+                            .replace(microsecond=0)
+                            .isoformat(),
                             "name": d.short_name,
                             "owners": [
                                 {
@@ -494,6 +507,9 @@ class SearchTest(TimRouteTest):
                             "isFolder": False,
                             "location": d.location,
                             "modified": "just now",
+                            "modifiedTimeFull": get_current_time()
+                            .replace(microsecond=0)
+                            .isoformat(),
                             "name": d.short_name,
                             "owners": [
                                 {"id": self.get_test_user_1_group_id(), "name": u.name}
@@ -556,6 +572,9 @@ class SearchTest(TimRouteTest):
                             "isFolder": False,
                             "location": d.location,
                             "modified": "just now",
+                            "modifiedTimeFull": get_current_time()
+                            .replace(microsecond=0)
+                            .isoformat(),
                             "name": d.short_name,
                             "owners": [
                                 {"id": self.get_test_user_1_group_id(), "name": u.name}
@@ -629,6 +648,9 @@ class SearchTest(TimRouteTest):
                             "isFolder": False,
                             "location": d.location,
                             "modified": "just now",
+                            "modifiedTimeFull": get_current_time()
+                            .replace(microsecond=0)
+                            .isoformat(),
                             "name": d.short_name,
                             "owners": [
                                 {"id": self.get_test_user_1_group_id(), "name": u.name}

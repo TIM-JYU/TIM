@@ -2,6 +2,7 @@ from timApp.document.docentry import DocEntry
 from timApp.item.tag import TagType, Tag
 from timApp.tests.server.timroutetest import TimRouteTest
 from timApp.timdb.sqa import db
+from timApp.util.utils import get_current_time
 
 
 class CoursesTest(TimRouteTest):
@@ -60,6 +61,9 @@ class CoursesTest(TimRouteTest):
                     "isFolder": False,
                     "location": d.location,
                     "modified": "just now",
+                    "modifiedTimeFull": get_current_time()
+                    .replace(microsecond=0)
+                    .isoformat(),
                     "name": "test",
                     "owners": [{"id": self.get_test_user_2_group_id(), "name": u.name}],
                     "path": d.path,

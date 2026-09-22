@@ -14,10 +14,14 @@ from timApp.user.user import User, UserInfo
 from timApp.user.usercontact import ContactOrigin
 from timApp.user.usergroup import UserGroup, get_admin_group_id
 from timApp.util.flask.requesthelper import RouteException, NotExist
+from timApp.util.utils import get_current_time
 
 
 class SearchTest(TimRouteTest):
     def test_user_search(self):
+        expected_modified_time_full = (
+            get_current_time().replace(microsecond=0).isoformat()
+        )
         self.login_test1()
         self.get("/users/search/test", expect_status=403)
         self.make_admin(self.current_user)
@@ -92,6 +96,7 @@ class SearchTest(TimRouteTest):
                         "isFolder": True,
                         "location": "users",
                         "modified": "just now",
+                        "modifiedTimeFull": expected_modified_time_full,
                         "name": "test-user-1",
                         "owners": [
                             {
@@ -154,6 +159,7 @@ class SearchTest(TimRouteTest):
                         "isFolder": True,
                         "location": "users",
                         "modified": "just now",
+                        "modifiedTimeFull": expected_modified_time_full,
                         "name": "test-user-2",
                         "owners": [
                             {
@@ -211,6 +217,7 @@ class SearchTest(TimRouteTest):
                         "isFolder": True,
                         "location": "users",
                         "modified": "just now",
+                        "modifiedTimeFull": expected_modified_time_full,
                         "name": "test-user-3",
                         "owners": [
                             {
