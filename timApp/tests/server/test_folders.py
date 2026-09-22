@@ -54,6 +54,9 @@ class FolderTest(TimRouteTest):
         self.create_folder(fname)
 
     def test_folders(self):
+        expected_modified_time_full = (
+            get_current_time().replace(microsecond=0).isoformat()
+        )
         self.login_test1()
         user_folder = self.current_user.get_personal_folder().path
         fname = self.get_personal_item_path("testing")
@@ -90,6 +93,7 @@ class FolderTest(TimRouteTest):
                     "id": f["id"],
                     "isFolder": True,
                     "modified": "just now",
+                    "modifiedTimeFull": expected_modified_time_full,
                     "path": new_name,
                     "location": user_folder,
                     "owners": [{"id": t1g, "name": "testuser1"}],
@@ -113,6 +117,7 @@ class FolderTest(TimRouteTest):
                     "id": f3["id"],
                     "isFolder": True,
                     "modified": "just now",
+                    "modifiedTimeFull": expected_modified_time_full,
                     "path": fname2,
                     "location": user_folder,
                     "owners": [{"id": t1g, "name": "testuser1"}],
@@ -148,6 +153,7 @@ class FolderTest(TimRouteTest):
                     "id": f3["id"],
                     "isFolder": True,
                     "modified": "just now",
+                    "modifiedTimeFull": expected_modified_time_full,
                     "path": fname2,
                     "location": user_folder,
                     "owners": [{"id": t1g, "name": "testuser1"}],
@@ -664,6 +670,9 @@ class FolderContentTest(TimRouteTest):
                     "isFolder": False,
                     "location": folderpath,
                     "modified": "just now",
+                    "modifiedTimeFull": get_current_time()
+                    .replace(microsecond=0)
+                    .isoformat(),
                     "name": docname,
                     "owners": [
                         {

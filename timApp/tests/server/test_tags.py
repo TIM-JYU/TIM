@@ -3,6 +3,7 @@ from timApp.tests.server.timroutetest import TimRouteTest
 from timApp.timdb.sqa import db
 from timApp.user.special_group_names import TEACHERS_GROUPNAME
 from timApp.user.usergroup import UserGroup
+from timApp.util.utils import get_current_time
 
 
 class TagTest(TimRouteTest):
@@ -302,6 +303,9 @@ class TagTest(TimRouteTest):
                 "id": d.id,
                 "isFolder": False,
                 "location": d.location,
+                "modifiedTimeFull": get_current_time()
+                .replace(microsecond=0)
+                .isoformat(),
                 "modified": "just now",
                 "name": "doc5",
                 "owners": [{"id": self.get_test_user_1_group_id(), "name": u.name}],

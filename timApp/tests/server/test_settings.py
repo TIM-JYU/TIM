@@ -6,7 +6,7 @@ from timApp.tests.server.timroutetest import TimRouteTest
 from timApp.timdb.sqa import db
 from timApp.user.settings.style_utils import OFFICIAL_STYLES_PATH
 from timApp.user.usergroup import UserGroup
-from timApp.util.utils import static_tim_doc
+from timApp.util.utils import static_tim_doc, get_current_time
 
 
 class SettingsTest(TimRouteTest):
@@ -29,6 +29,9 @@ class SettingsTest(TimRouteTest):
                         "isFolder": False,
                         "location": "users/test-user-1",
                         "modified": "just now",
+                        "modifiedTimeFull": get_current_time()
+                        .replace(microsecond=0)
+                        .isoformat(),
                         "name": "doc1",
                         "owners": [{"id": t1id, "name": "testuser1"}],
                         "path": "users/test-user-1/doc1",
@@ -54,6 +57,9 @@ class SettingsTest(TimRouteTest):
                         "isFolder": True,
                         "location": "users",
                         "modified": "just now",
+                        "modifiedTimeFull": get_current_time()
+                        .replace(microsecond=0)
+                        .isoformat(),
                         "name": "test-user-1",
                         "owners": [{"id": t1id, "name": "testuser1"}],
                         "path": "users/test-user-1",
