@@ -98,6 +98,10 @@ def get_saml_config(metadata_loader: Callable[[], bytes]) -> Saml2Config:
         }
         config_dict["attribute_map_dir"] = str(saml_path.parent / "attributemaps")
         config_dict["allow_unknown_attributes"] = True
+        # Persisted SSO logins cause problems when trying to log in as another user on the same machine/browser session,
+        # so force SSO to re-authenticate on each request
+        if app.config["SAML_FORCE_REAUTHENTICATION"]:
+            config_dict["service"]["sp"]["force_authn"] = True
         saml2_config.load(config_dict)
 
         return saml2_config

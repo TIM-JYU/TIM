@@ -169,6 +169,10 @@ SISU_CERT_PATH = "/service/certs/sisu.pem"
 
 SAML_PATH = "/service/timApp/auth/saml/dev"
 SAML_VERIFY_METADATA = False
+# Force SSO to always re-authenticate so logging in with Haka as a different user
+# is possible without deleting the browser cache/cookies. This is required for multi-account sessions,
+# such as in group work assignments.
+SAML_FORCE_REAUTHENTICATION = True
 HAKA_METADATA_URL = "https://haka.funet.fi/metadata/haka_test_metadata_signed.xml"
 
 # In production, copy these to prodconfig.py and remove the "_PROD" suffix.
