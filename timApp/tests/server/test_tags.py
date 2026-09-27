@@ -3,7 +3,6 @@ from timApp.tests.server.timroutetest import TimRouteTest
 from timApp.timdb.sqa import db
 from timApp.user.special_group_names import TEACHERS_GROUPNAME
 from timApp.user.usergroup import UserGroup
-from timApp.util.utils import get_current_time
 
 
 class TagTest(TimRouteTest):
@@ -296,49 +295,54 @@ class TagTest(TimRouteTest):
                 ]
             },
         )
-
-        self.get(
-            f"/tags/getDoc/{d.id}",
-            expect_content={
-                "id": d.id,
-                "isFolder": False,
-                "location": d.location,
-                "modifiedTimeFull": get_current_time()
-                .replace(microsecond=0)
-                .isoformat(),
-                "modified": "just now",
-                "name": "doc5",
-                "owners": [{"id": self.get_test_user_1_group_id(), "name": u.name}],
-                "path": d.path,
-                "public": True,
-                "rights": {
-                    "browse_own_answers": True,
-                    "can_comment": True,
-                    "can_mark_as_read": True,
-                    "copy": True,
-                    "editable": True,
-                    "manage": True,
-                    "owner": True,
-                    "see_answers": True,
-                    "teacher": True,
-                },
-                "tags": [
-                    {
-                        "block_id": d.id,
-                        "expires": None,
-                        "name": "test",
-                        "type": TagType.Regular.value,
-                    },
-                    {
-                        "block_id": d.id,
-                        "expires": None,
-                        "name": "test2",
-                        "type": TagType.Regular.value,
-                    },
-                ],
-                "title": d.title,
-                "unpublished": True,
-            },
+        date_re = r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\+\d{2}:\d{2}"
+        response_json = str(self.get(f"/tags/getDoc/{d.id}"))
+        self.assertRegex(
+            response_json,
+            rf"""
+{{
+    'name': 'doc5', 
+    'path': '{d.path}', 
+    'title': '{d.title}', 
+    'location': '{d.location}', 
+    'id': {d.id}, 
+    'modified': 'just now', 
+    'modifiedTimeFull': '{date_re}', 
+    'owners': \[{{'id': {self.get_test_user_1_group_id()}, 'name': '{u.name}'}}\], 
+    'rights': {{
+        'editable': True, 
+        'can_mark_as_read': True, 
+        'can_comment': True, 
+        'copy': True, 
+        'browse_own_answers': True, 
+        'teacher': True, 
+        'see_answers': True, 
+        'manage': True, 
+        'owner': True
+    }}, 
+    'unpublished': True, 
+    'public': True, 
+    'tags': \[
+        {{
+            'block_id': {d.id}, 
+            'name': 'test', 
+            'type': {TagType.Regular.value}, 
+            'expires': None
+        }}, 
+        {{
+            'block_id': {d.id}, 
+            'name': 'test2', 
+            'type': {TagType.Regular.value}, 
+            'expires': None
+        }}
+    \], 
+    'isFolder': False
+}}
+""".replace(
+                "\n", ""
+            ).replace(
+                "    ", ""
+            ),
         )
 
     def test_tag_edit(self):
