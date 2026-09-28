@@ -175,9 +175,9 @@ def get_upload_review_html(path: str, mimetype: str | None) -> str:
     Return review HTML for an uploaded file: the file name and the escaped file content
      (for text and Markdown files), so that it can be annotated with velps.
      The original formatting for file names enclosed the file name in a redundant `<pre>` element;
-     to retain placement of pre-existing annotations/velps we will not change this. This, however,
-     also retains a bug in how annotations are rendered if attached to the filename, as the size of
-     the inner `<pre>` element is determined by the text content, making annotations only partially visible.
+     to retain placement of pre-existing annotations/velps we will not change this.
+     Note that long lines are wrapped despite the `<pre>` element; see timApp/static/stylesheets/stylesheet.css,
+     .upload-review-content for details.
     """
     s = f"<p>File:</p><pre>{html.escape(os.path.basename(path))}</pre>"
     is_text = (mimetype or "").lower().startswith("text/")
