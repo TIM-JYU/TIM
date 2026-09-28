@@ -1322,6 +1322,13 @@ p.docsettings {
     height: 10em
 }
 
+// Content of an uploaded text file in the csPlugin velp review view.
+// We need to wrap long lines (`pre-wrap`), since `overflow-x: auto` breaks rendering
+// of velp annotations that are added to the answer text.
+.upload-review-content {
+    white-space: pre-wrap;
+}
+
 .less-opacity {
     opacity: 0.66;
 }
