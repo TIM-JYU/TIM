@@ -1,7 +1,7 @@
 import {Component} from "@angular/core";
 import type {DocumentOrFolder, IFolder, IItem, ITag} from "tim/item/IItem";
 import {TagType} from "tim/item/IItem";
-import {Users} from "tim/user/userService";
+import {isAdmin, Users} from "tim/user/userService";
 import {folderglobals, genericglobals} from "tim/util/globals";
 import {toPromise} from "tim/util/utils";
 import {HttpClient} from "@angular/common/http";
@@ -32,14 +32,16 @@ const AccessLevelBadgeInfo: Record<AccessLevelBadge, string> = {
     template: `
         <table class="table" *ngIf="itemList.length > 0 || item.path">
             <thead>
-            <ng-template #sortAsc><span class="glyphicon glyphicon-triangle-top" aria-hidden="true"></span></ng-template>
-            <ng-template #sortDesc><span class="glyphicon glyphicon-triangle-bottom" aria-hidden="true"></span></ng-template>
+            <ng-template #sortAsc><span class="glyphicon glyphicon-triangle-top" aria-hidden="true"></span>
+            </ng-template>
+            <ng-template #sortDesc><span class="glyphicon glyphicon-triangle-bottom" aria-hidden="true"></span>
+            </ng-template>
             <tr>
                 <th></th>
                 <th (click)="sortListing('name')">
                     Name
                     <span *ngIf="currentSortOrder === 'name'">
-                        <span *ngIf="sortByNameDesc; then sortAsc else sortDesc"></span>
+                        <span *ngIf="sortByNameAsc; then sortDesc else sortAsc"></span>
                     </span>
                 </th>
                 <th (click)="sortListing('time')">
@@ -48,11 +50,18 @@ const AccessLevelBadgeInfo: Record<AccessLevelBadge, string> = {
                         <span *ngIf="sortByModifiedDesc; then sortAsc else sortDesc"></span>
                     </span>
                 </th>
-                <th *ngIf="displayAccessBadges" (click)="showAccessBadges = !showAccessBadges">{{showAccessBadges ? "Access" : "A" }}</th>
+                <th *ngIf="displayAccessBadges"
+                    (click)="showAccessBadges = !showAccessBadges">{{ showAccessBadges ? "Access" : "A" }}
+                </th>
                 <th>Owners</th>
                 <th>Rights</th>
-                <th *ngIf="displayDocumentTags" (click)="showTags = !showTags">{{ showTags ? "Tags" : "T"}}</th>
-                <th class="gray" (click)="showId = !showId">Id</th>
+                <th *ngIf="displayDocumentTags" (click)="showTags = !showTags">{{ showTags ? "Tags" : "T" }}</th>
+                <th *ngIf="showId" class="gray" (click)="sortListing('id')">
+                    Id
+                    <span *ngIf="currentSortOrder === 'id'">
+                        <span *ngIf="sortByIdAsc; then sortDesc else sortAsc"></span>
+                    </span>
+                </th>
             </tr>
             </thead>
             <tbody>
@@ -81,8 +90,8 @@ const AccessLevelBadgeInfo: Record<AccessLevelBadge, string> = {
                 </td>
                 <td>{{ item.modified }}</td>
                 <td *ngIf="displayAccessBadges" class="col-access-badges">
-                    <ng-container  *ngIf="showAccessBadges">
-                        <span class="accessbadge ab-{{ getItemBadgeName(item.id).toLowerCase() }}" 
+                    <ng-container *ngIf="showAccessBadges">
+                        <span class="accessbadge ab-{{ getItemBadgeName(item.id).toLowerCase() }}"
                               title="{{ AccessLevelBadgeInfo[getItemBadge(item.id)] }}">{{ getItemBadgeName(item.id) }}</span>
                     </ng-container>
                 </td>
@@ -92,20 +101,20 @@ const AccessLevelBadgeInfo: Record<AccessLevelBadge, string> = {
                        href="/view/{{ item.path }}"><i
                             class="glyphicon glyphicon-pencil"></i></a>
                     &ngsp;<a title="Manage" *ngIf="item.rights.manage" href="/manage/{{ item.path }}"><i
-                            class="glyphicon glyphicon-cog"></i></a>
+                        class="glyphicon glyphicon-cog"></i></a>
                     &ngsp;<a title="Teacher" *ngIf="item.rights.teacher && !item.isFolder"
-                       href="/teacher/{{ item.path }}"><i class="glyphicon glyphicon-education"></i></a>
+                             href="/teacher/{{ item.path }}"><i class="glyphicon glyphicon-education"></i></a>
                 </td>
                 <td *ngIf="displayDocumentTags" class="col-item-tags">
                     <ng-container *ngIf="showTags">
                         <span class="itemtags" *ngFor="let tag of getItemTags(item)">
-                            <span class="itemtag tagtype-{{ getTagTypeString(tag) }}" 
-                              title="{{ tag.name }} {{ tag.expires ? '(expires on ' + tag.expires!.toDate() + ')' : '' }}">{{ tag.name }}</span>
+                            <span class="itemtag tagtype-{{ getTagTypeString(tag) }}"
+                                  title="{{ tag.name }} {{ tag.expires ? '(expires on ' + tag.expires!.toDate() + ')' : '' }}">{{ tag.name }}</span>
                         </span>
                     </ng-container>
                 </td>
                 <td *ngIf="showId">
-                    {{item.id}}
+                    {{ item.id }}
                 </td>
             </tr>
             </tbody>
@@ -113,17 +122,18 @@ const AccessLevelBadgeInfo: Record<AccessLevelBadge, string> = {
         <p *ngIf="itemList.length == 0">There are no items to show.</p>
         <tabset *ngIf="canCreate">
             <tab [active]="false" (selectTab)="tabSelection(0)">
-                        <ng-template tabHeading>
-                            <span>Create a new document</span>
-                            <span class="glyphicon glyphicon-file icon-inline" aria-hidden="true"></span>
-                        </ng-template>
-                <create-item itemType="document" itemLocation="{{ item.path }}" [enable]="activeTab === 0"></create-item>
+                <ng-template tabHeading>
+                    <span>Create a new document</span>
+                    <span class="glyphicon glyphicon-file icon-inline" aria-hidden="true"></span>
+                </ng-template>
+                <create-item itemType="document" itemLocation="{{ item.path }}"
+                             [enable]="activeTab === 0"></create-item>
             </tab>
             <tab [active]="false" (selectTab)="tabSelection(1)">
-                        <ng-template tabHeading>
-                            <span>Create a new folder</span>
-                            <span class="glyphicon glyphicon-folder-open icon-inline" aria-hidden="true"></span>
-                        </ng-template>
+                <ng-template tabHeading>
+                    <span>Create a new folder</span>
+                    <span class="glyphicon glyphicon-folder-open icon-inline" aria-hidden="true"></span>
+                </ng-template>
                 <create-item itemType="folder" itemLocation="{{ item.path }}" [enable]="activeTab === 1"></create-item>
             </tab>
         </tabset>
@@ -144,8 +154,9 @@ export class DirectoryListComponent {
     displayDocumentTags: boolean;
     activeTab: number = -1;
     currentSortOrder: string;
-    sortByNameDesc: boolean;
+    sortByNameAsc: boolean;
     sortByModifiedDesc: boolean;
+    sortByIdAsc: boolean;
 
     constructor(private http: HttpClient) {
         const fg = folderglobals();
@@ -155,10 +166,10 @@ export class DirectoryListComponent {
         this.itemBadges = {};
         this.itemTags = {};
         this.currentSortOrder = "default";
-        this.sortByNameDesc = true;
+        this.sortByNameAsc = true;
         this.sortByModifiedDesc = true;
+        this.sortByIdAsc = true;
 
-        // TODO: Allow to sort all columns instead
         if (
             this.item.path.startsWith(MESSAGE_LIST_ARCHIVE_FOLDER_PREFIX) ||
             this.item.path.startsWith(TIM_MESSAGES_FOLDER_PREFIX)
@@ -182,6 +193,10 @@ export class DirectoryListComponent {
                 this.itemTags = value;
             });
         }
+
+        if (isAdmin() || Users.belongsToGroup("teachers")) {
+            this.showId = true;
+        }
     }
 
     sortListing(column: string) {
@@ -197,17 +212,15 @@ export class DirectoryListComponent {
                 a.title.localeCompare(b.title, "fi")
             );
 
-            if (!this.sortByNameDesc) {
+            if (!this.sortByNameAsc) {
                 foldersArr.reverse();
                 docsArr.reverse();
             }
-            this.itemList = foldersArr.concat(docsArr);
-            this.sortByNameDesc = !this.sortByNameDesc;
 
-            if (!this.sortByModifiedDesc) {
-                this.sortByModifiedDesc = true;
-            }
-        } else {
+            this.sortByModifiedDesc = true;
+            this.sortByIdAsc = true;
+            this.sortByNameAsc = !this.sortByNameAsc;
+        } else if (column === "time") {
             foldersArr.sort((a, b) =>
                 new Date(a.modifiedTimeFull).getTime() <
                 new Date(b.modifiedTimeFull).getTime()
@@ -220,17 +233,29 @@ export class DirectoryListComponent {
                     ? 1
                     : -1
             );
+
             if (!this.sortByModifiedDesc) {
                 foldersArr.reverse();
                 docsArr.reverse();
             }
 
-            if (!this.sortByNameDesc) {
-                this.sortByNameDesc = true;
-            }
-            this.itemList = foldersArr.concat(docsArr);
+            this.sortByNameAsc = true;
+            this.sortByIdAsc = true;
             this.sortByModifiedDesc = !this.sortByModifiedDesc;
+        } else {
+            foldersArr.sort((a, b) => a.id - b.id);
+            docsArr.sort((a, b) => a.id - b.id);
+
+            if (!this.sortByIdAsc) {
+                foldersArr.reverse();
+                docsArr.reverse();
+            }
+
+            this.sortByNameAsc = true;
+            this.sortByModifiedDesc = true;
+            this.sortByIdAsc = !this.sortByIdAsc;
         }
+        this.itemList = foldersArr.concat(docsArr);
     }
 
     listOwnerNames(i: IItem) {
