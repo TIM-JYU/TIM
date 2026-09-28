@@ -3,6 +3,7 @@ import codecs
 import datetime
 import glob
 import hashlib
+import html
 import http.server
 import io
 import json
@@ -163,6 +164,50 @@ from ttype import TType
 #
 
 PORT = 5000
+
+UPLOADS_ROOT = Path("/uploads")
+REVIEW_UPLOAD_MAX_BYTES = 1024 * 1024
+REVIEW_UPLOAD_TEXT_EXTENSIONS = (".md", ".markdown")
+
+
+def get_upload_review_html(path: str, mimetype: str | None) -> str:
+    """
+    Return review HTML for an uploaded file: the file name and the escaped file content
+     (for text and Markdown files), so that it can be annotated with velps.
+     The original formatting for file names enclosed the file name in a redundant `<pre>` element;
+     to retain placement of pre-existing annotations/velps we will not change this. This, however,
+     also retains a bug in how annotations are rendered if attached to the filename, as the size of
+     the inner `<pre>` element is determined by the text content, making annotations only partially visible.
+    """
+    s = f"<p>File:</p><pre>{html.escape(os.path.basename(path))}</pre>"
+    is_text = (mimetype or "").lower().startswith("text/")
+    is_markdown = path.lower().endswith(REVIEW_UPLOAD_TEXT_EXTENSIONS)
+    if not is_text and not is_markdown:
+        return s
+    try:
+        p = Path(path).resolve()
+        if not p.is_relative_to(UPLOADS_ROOT) or not p.is_file():
+            return s
+        with p.open("rb") as f:
+            data = f.read(REVIEW_UPLOAD_MAX_BYTES + 1)
+    except OSError:
+        return s
+    truncated = len(data) > REVIEW_UPLOAD_MAX_BYTES
+    data = data[:REVIEW_UPLOAD_MAX_BYTES]
+    try:
+        text = data.decode("utf-8")
+    except UnicodeDecodeError as e:
+        if truncated and e.start >= len(data) - 3:
+            # The truncation split a multibyte character
+            text = data[: e.start].decode("utf-8", errors="replace")
+        elif is_text:
+            text = data.decode("latin-1")
+        else:
+            return s
+    s += f'<p class="upload-review-content">{html.escape(text)}</p>'
+    if truncated:
+        s += f"<p>(File truncated to {REVIEW_UPLOAD_MAX_BYTES} bytes)</p>"
+    return s
 
 
 def get_process_children(pid):
@@ -594,7 +639,7 @@ def get_html(self: "TIMServer", ttype: TType, query: QueryClass):
     if is_rv:
         userinput = get_json_eparam(query.jso, "state", "userinput", "")
         userargs = get_json_eparam(query.jso, "state", "userargs", "")
-        uploaded_file = get_json_eparam(query.jso, "state", "uploadedFile", None)
+        uploaded_file = get_json_param(query.jso, "state", "uploadedFile", None)
         uploaded_files = get_json_param(query.jso, "state", "uploadedFiles", None)
         submitted_files = get_json_param(query.jso, "state", "submittedFiles", None)
         s = ""
@@ -604,9 +649,10 @@ def get_html(self: "TIMServer", ttype: TType, query: QueryClass):
             s = s + "<p>Args:</p><pre>" + userargs + "</pre>"
         if uploaded_files is not None:
             for f in uploaded_files:
-                s = s + f'<p>File:</p><pre>{os.path.basename(f["path"])}</pre>'
+                s = s + get_upload_review_html(f["path"], f.get("type"))
         elif uploaded_file is not None:
-            s = s + "<p>File:</p><pre>" + os.path.basename(uploaded_file) + "</pre>"
+            uploaded_type = get_json_param(query.jso, "state", "uploadedType", None)
+            s = s + get_upload_review_html(uploaded_file, uploaded_type)
         if submitted_files is not None:
             for f in submitted_files:
                 s = s + f'<pre>{f["path"]}</pre>'
