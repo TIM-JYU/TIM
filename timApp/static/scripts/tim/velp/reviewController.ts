@@ -439,10 +439,10 @@ export class ReviewController {
             } else {
                 // end if (a.draw_data)
 
-                const element =
-                    par.par.htmlElement.querySelector(
-                        ".review pre"
-                    )?.firstChild;
+                const element = this.getAnswerAnnotationTextNode(
+                    par,
+                    placeInfo.start
+                );
 
                 if (
                     !isFullCoord(placeInfo.start) ||
@@ -499,6 +499,57 @@ export class ReviewController {
             canvas.setPersistentDrawData(drawings);
         }
         $rootScope.$applyAsync(); // TODO: run only if we are in Angular zone
+    }
+
+    /**
+     * Gets the text node of the answer review area that the offsets of an answer annotation refer to.
+     *
+     * The element path of the annotation is resolved relative to the review area, so that annotations
+     * can be placed in any text element of the review HTML (for example, the content of a file uploaded
+     * to csPlugin, which comes after the file name). If the path cannot be resolved, falls back to
+     * the first text node of the first `<pre>` element, which holds the answer in most plugins.
+     *
+     * @param par - Paragraph containing the answer
+     * @param coord - Start coordinate of the annotation
+     * @returns {Node} The text node, or undefined if the review area was not found
+     */
+    getAnswerAnnotationTextNode(
+        par: ParContext,
+        coord: IAnnotationCoordinate
+    ): Node | undefined {
+        const fallback =
+            par.par.htmlElement.querySelector(".review pre")?.firstChild ??
+            undefined;
+        const review = par.par.htmlElement.querySelector(".review");
+        if (!review || !coord.el_path) {
+            return fallback;
+        }
+        let reviewPath: number[];
+        try {
+            reviewPath = this.getElementPositionInTree(review, []);
+        } catch {
+            return fallback;
+        }
+        const path = coord.el_path.slice(reviewPath.length);
+        if (path.length === 0) {
+            return fallback;
+        }
+        let element: Element = review;
+        for (const p of path) {
+            // Annotation elements are ignored when the element path is saved
+            const child = this.getElementChildren(element).filter(
+                (c) => !this.checkIfAnnotation(c)
+            )[p];
+            if (child == null) {
+                return fallback;
+            }
+            element = child;
+        }
+        const textNode = element.firstChild;
+        if (textNode == null || !isText(textNode)) {
+            return fallback;
+        }
+        return textNode;
     }
 
     /**
