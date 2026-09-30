@@ -102,6 +102,27 @@ class RandomTest(TimRouteTest):
         # Three attempts of three values use up the pool of nine exactly once.
         self.assertEqual(list(range(1, 10)), sorted(v for a in attempts for v in a))
 
+    def test_distinct_attempt_over_the_wrap_has_no_duplicates(self):
+        # When the pool runs out in the middle of an attempt, the rest of the
+        # attempt comes from a new shuffle, which must not repeat the values the
+        # attempt already got from the old one.
+        for size in range(2, 12):
+            for n in range(2, size + 1):
+                for seed in range(10):
+                    attempts = self.walk(f"i{n}:[1,{size}]", 2 * size + 2, seed)
+                    msg = f"{size=} {n=} {seed=}"
+                    for a in attempts:
+                        self.assertEqual(n, len(set(a)), msg=f"{msg} {a}")
+                    nums = [v for a in attempts for v in a]
+                    for start in range(0, len(nums) - size + 1, size):
+                        self.assertEqual(
+                            list(range(1, size + 1)),
+                            sorted(nums[start : start + size]),
+                            msg=msg,
+                        )
+                    for i in range(1, len(nums)):
+                        self.assertNotEqual(nums[i - 1], nums[i], msg=f"{msg} {i=}")
+
     def test_distinct_step_and_bare_forms(self):
         self.assertEqual([1, 3, 5, 7], sorted(v[0] for v in self.walk("i[1,7,2]", 4)))
         # A bare number is the size of the range, as with s: i10 walks 0-9.

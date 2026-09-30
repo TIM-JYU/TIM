@@ -242,29 +242,36 @@ def shuffle_pool(base_seed: SeedType, cycle: int, pool: list[int]) -> list[int]:
     return ints
 
 
-def get_distinct_cycle(base_seed: SeedType, cycle: int, pool: list[int]) -> list[int]:
+def get_distinct_cycle(
+    base_seed: SeedType,
+    cycle: int,
+    pool: list[int],
+    avoid: list[int],
+    head: int,
+) -> list[int]:
     """
     Returns the order in which one cycle uses the values of the pool.
 
-    Each cycle is shuffled anew, but a cycle never starts with the value the
-    cycle before it ended with, so no value is given twice in a row over the
-    wrap.
+    Each cycle is shuffled anew, but its first head values are picked from
+    outside 'avoid', the values the cycle before it ended with. That way an
+    attempt that is continued from the new cycle gets no value twice, and no
+    value is given twice in a row over the wrap. Otherwise the shuffled order is
+    kept.
 
     :param base_seed: seed that stays the same from one attempt to the next
     :param cycle: how many full rounds of the pool were used before this one
     :param pool: values to put in order
+    :param avoid: values the first head values of this cycle must differ from
+    :param head: how many values at the start of this cycle to keep apart
     :return: values of pool in the order this cycle uses them
     """
-    size = len(pool)
-    if cycle <= 0 or size < 2:
-        return shuffle_pool(base_seed, cycle, pool)
-    if size == 2:  # Two values leave no room to choose
-        return shuffle_pool(base_seed, 0, pool)
     ints = shuffle_pool(base_seed, cycle, pool)
-    if ints[0] == shuffle_pool(base_seed, cycle - 1, pool)[-1]:
-        i = 1 + cycle % (size - 2)  # neither the first nor the last slot
-        ints[0], ints[i] = ints[i], ints[0]
-    return ints
+    if len(pool) - len(avoid) < head:  # Not enough other values, e.g. one value
+        return ints
+    avoided = set(avoid)
+    first = [v for v in ints if v not in avoided][:head]
+    picked = set(first)
+    return first + [v for v in ints if v not in picked]
 
 
 def get_distinct_list(base_seed: SeedType, index: int, jso: str) -> list[int]:
@@ -273,7 +280,9 @@ def get_distinct_list(base_seed: SeedType, index: int, jso: str) -> list[int]:
 
     The pool is walked in order, so a value comes up again only after every
     other value has been used. When the pool runs out, the walk wraps around to
-    a new shuffle of the same values.
+    a new shuffle of the same values. An attempt that is continued from the new
+    shuffle gets no value twice, as long as it asks for no more values than the
+    pool has.
 
     :param base_seed: seed that stays the same from one attempt to the next
     :param index: number of attempts before this one, from SeedClass.extraseed
@@ -283,15 +292,26 @@ def get_distinct_list(base_seed: SeedType, index: int, jso: str) -> list[int]:
     n, jso = sep_n_and_range(jso)
     pool = get_distinct_pool(jso)
     size = len(pool)
-    cycles: dict[int, list[int]] = {}
-    ret = []
-    for pos in range(index * n, index * n + n):
-        cycle, slot = divmod(pos, size)
-        order = cycles.get(cycle)
-        if order is None:
-            order = get_distinct_cycle(base_seed, cycle, pool)
+    first_pos = index * n
+    last_cycle = (first_pos + n - 1) // size
+    # A cycle depends on how the cycle before it ended, so they are built in order.
+    order = shuffle_pool(base_seed, 0, pool)
+    cycles: dict[int, list[int]] = {0: order}
+    for cycle in range(1, last_cycle + 1):
+        # Values of the previous cycle that the attempt over the wrap already got
+        tail = (cycle * size) % n if n <= size else 0
+        if tail == 0:  # The wrap is between attempts, only the last value matters
+            tail = 1
+            head = 1
+        else:
+            head = n - tail
+        order = get_distinct_cycle(base_seed, cycle, pool, order[-tail:], head)
+        if cycle >= first_pos // size:
             cycles[cycle] = order
-        ret.append(order[slot])
+    ret = []
+    for pos in range(first_pos, first_pos + n):
+        cycle, slot = divmod(pos, size)
+        ret.append(cycles[cycle][slot])
     return ret
 
 
