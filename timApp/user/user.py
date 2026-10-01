@@ -961,6 +961,19 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
         if add_membership and sync_mailing_lists:
             sync_message_list_on_add(self, ug)
 
+        # A subgroup's members are implicitly members of its parent group, so make the
+        # parent membership real instead of resolving it on every read. Subgroups
+        # cannot be nested (see timApp.user.subgroups), so this recurses at most once.
+        if add_membership:
+            parent = ug.parent_group
+            if parent is not None:
+                self.add_to_group(
+                    parent,
+                    added_by,
+                    sync_mailing_lists=sync_mailing_lists,
+                    send_group_notification=send_group_notification,
+                )
+
         return add_membership
 
     def get_contact(

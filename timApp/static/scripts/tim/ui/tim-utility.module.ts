@@ -3,7 +3,7 @@ import {PluginHeaderComponent} from "tim/ui/plugin-header.component";
 import {FocusMeDirective} from "tim/ui/focus-me.directive";
 import {DialogComponent} from "tim/ui/dialog.component";
 import {AddMemberComponent} from "tim/ui/add-member.component";
-import {FormsModule} from "@angular/forms";
+import {FormsModule, ReactiveFormsModule} from "@angular/forms";
 import {TimAlertComponent} from "tim/ui/tim-alert.component";
 import {ErrorDescriptionComponent} from "tim/ui/error-description.component";
 import {
@@ -91,6 +91,6 @@ import {PurifyModule} from "tim/util/purify.module";
         SwitchButtonComponent,
         CreateItemComponent,
     ],
-    imports: [CommonModule, FormsModule, PurifyModule],
+    imports: [CommonModule, FormsModule, PurifyModule, ReactiveFormsModule],
 })
 export class TimUtilityModule {}

@@ -42,6 +42,7 @@ import {SelfExpireComponent} from "tim/item/self-expire.component";
 import {SearchButtonComponent} from "tim/search/search-button.component";
 import {SessionVerify} from "tim/util/session-verify.interceptor";
 import {RoleInfoComponent} from "tim/header/role-info.component";
+import {SubgroupsManagerModule} from "tim/user/subgroups-manager.component";
 
 @NgModule({
     declarations: [
@@ -81,6 +82,7 @@ import {RoleInfoComponent} from "tim/header/role-info.component";
         NoopAnimationsModule,
         SideBarMenuModule,
         TimManageModule,
+        SubgroupsManagerModule,
         BsDropdownModule.forRoot(),
         TypeaheadModule.forRoot(),
         TooltipModule.forRoot(),

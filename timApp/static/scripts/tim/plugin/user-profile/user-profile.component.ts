@@ -93,9 +93,9 @@ interface IUploadedFile extends t.TypeOf<typeof UploadedFile> {}
                             <span class="textfield">
                                 <label>Links</label>
                             <input #i name="link" class="form-control" type="text"
-                                   *ngFor="let item of profileData.profile_links; index as i; trackBy: linkTrackBy"
+                                   *ngFor="let item of profileData.profile_links; index as idx; trackBy: linkTrackBy"
                                    (ngModelChange)="setWarning(i.toString())"
-                                   [(ngModel)]="profileData.profile_links[i]"
+                                   [(ngModel)]="profileData.profile_links[idx]"
                                    [class.warnFrame]="checkWarning(i.toString())"/>
                                 <label>Group</label>
                             <input #group name="group" class="form-control" type="text"
