@@ -1,5 +1,4 @@
 import json
-import re
 
 from timApp.document.documents import import_document_from_file
 from timApp.tests.db.timdbtest import TEST_USER_2_ID, TEST_USER_1_ID
@@ -15,102 +14,107 @@ class SettingsTest(TimRouteTest):
         self.login_test1()
         d = self.create_doc()
         t1id = self.get_test_user_1_group_id()
-        date_re = r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\+\d{2}:\d{2}"
-        response_json = str(self.get("/settings/info"))
-        self.assertRegex(
+        response_json = self.get("/settings/info")
+        expected_date_doc = response_json["owned_documents"][0]["modifiedTimeFull"]
+        expected_date_folder = response_json["owned_folders"][0]["modifiedTimeFull"]
+        self.assertEqual(
             response_json,
-            rf"""
-{{
-    'annotations': \[\], 
-    'answers': \[\], 
-    'answer_uploads': \[\], 
-    'groups': \[{{'id': {t1id}, 'name': 'testuser1'}}\], 
-    'lectureanswers': \[\], 
-    'notes': \[\], 
-    'owned_documents': \[
-        {{
-            'name': 'doc1', 
-            'path': 'users\/test\-user\-1\/doc1', 
-            'title': 'document 2', 
-            'location': 'users\/test\-user\-1', 
-            'id': {d.id}, 
-            'modified': 'just now', 
-            'modifiedTimeFull': '{date_re}', 
-            'owners': \[{{'id': {t1id}, 'name': 'testuser1'}}\], 
-            'rights': {{
-                'editable': True, 
-                'can_mark_as_read': True, 
-                'can_comment': True, 
-                'copy': True, 
-                'browse_own_answers': True, 
-                'teacher': True, 
-                'see_answers': True, 
-                'manage': True, 
-                'owner': True
-            }}, 
-            'unpublished': True, 
-            'public': True, 
-            'isFolder': False
-        }}
-    \], 
-    'owned_folders': \[
-        {{
-        'name': 'test\-user\-1', 
-        'path': 'users\/test\-user\-1', 
-        'title': 'Test user 1', 
-        'location': 'users', 
-        'id': 2, 
-        'modified': 'just now', 
-        'modifiedTimeFull': '{date_re}', 
-        'owners': \[{{'id': 6, 'name': 'testuser1'}}\], 
-        'rights': {{
-            'editable': True, 
-            'can_mark_as_read': True, 
-            'can_comment': True, 
-            'copy': True, 
-            'browse_own_answers': True, 
-            'teacher': True, 
-            'see_answers': True, 
-            'manage': True, 
-            'owner': True
-        }}, 
-        'unpublished': True, 
-        'public': True, 
-        'isFolder': True
-        }}
-    \], 
-    'owned_lectures': \[\], 
-    'readparagraphs': \[\], 
-    'uploaded_images': \[\], 
-    'uploaded_files': \[\], 
-    'user': {{
-        'id': {TEST_USER_1_ID}, 
-        'name': 'testuser1', 
-        'real_name': 'Test user 1', 
-        'email': 'test1@example\.com', 
-        'contacts': \[
-            {{
-                'contact': 'test1@example\.com', 
-                'channel': 'email', 
-                'verified': True, 
-                'origin': 1, 
-                'primary': True
-            }}
-        \], 
-        'given_name': None, 
-        'last_name': None, 
-        'prefs': '{{"custom_css": "", "use_document_word_list": false, "disable_menu_hover": false, "remember_last_sidebar_menu_tab": false, "remember_last_sidebar_menu_state": false, "word_list": "", "email_exclude": "", "language": null, "style_doc_ids": \[\], "quick_select_style_doc_ids": \[\], "last_answer_fetch": {{}}, "auto_mark_all_read": false, "bookmarks": \[{{"Last edited": \[{{"document 2": "\/view\/users\/test\-user\-1\/doc1"}}\]}}\], "max_uncollapsed_toc_items": null, "parmenu_position": 1, "always_show_header_menu": false, "display_dir_list_badges": false, "display_dir_list_tags": false}}', 
-        'origin': None, 
-        'consent': None, 
-        'created': '{re.escape(self.test_user_1.created.isoformat())}', 
-        'modified': '{re.escape(self.test_user_1.modified.isoformat())}'}}, 
-        'velps': \[\]
-}}
-""".replace(
-                "\n", ""
-            ).replace(
-                "    ", ""
-            ),
+            {
+                "annotations": [],
+                "answer_uploads": [],
+                "answers": [],
+                "groups": [{"id": t1id, "name": "testuser1"}],
+                "lectureanswers": [],
+                "notes": [],
+                "owned_documents": [
+                    {
+                        "id": d.id,
+                        "isFolder": False,
+                        "location": "users/test-user-1",
+                        "modified": "just now",
+                        "modifiedTimeFull": expected_date_doc,
+                        "name": "doc1",
+                        "owners": [{"id": t1id, "name": "testuser1"}],
+                        "path": "users/test-user-1/doc1",
+                        "public": True,
+                        "rights": {
+                            "browse_own_answers": True,
+                            "can_comment": True,
+                            "can_mark_as_read": True,
+                            "copy": True,
+                            "editable": True,
+                            "manage": True,
+                            "owner": True,
+                            "see_answers": True,
+                            "teacher": True,
+                        },
+                        "title": "document 2",
+                        "unpublished": True,
+                    }
+                ],
+                "owned_folders": [
+                    {
+                        "id": 2,
+                        "isFolder": True,
+                        "location": "users",
+                        "modified": "just now",
+                        "modifiedTimeFull": expected_date_folder,
+                        "name": "test-user-1",
+                        "owners": [{"id": t1id, "name": "testuser1"}],
+                        "path": "users/test-user-1",
+                        "public": True,
+                        "rights": {
+                            "browse_own_answers": True,
+                            "can_comment": True,
+                            "can_mark_as_read": True,
+                            "copy": True,
+                            "editable": True,
+                            "manage": True,
+                            "owner": True,
+                            "see_answers": True,
+                            "teacher": True,
+                        },
+                        "title": "Test user 1",
+                        "unpublished": True,
+                    }
+                ],
+                "owned_lectures": [],
+                "readparagraphs": [],
+                "uploaded_files": [],
+                "uploaded_images": [],
+                "user": {
+                    "consent": None,
+                    "contacts": [
+                        {
+                            "channel": "email",
+                            "contact": "test1@example.com",
+                            "origin": 1,
+                            "primary": True,
+                            "verified": True,
+                        }
+                    ],
+                    "created": self.test_user_1.created.isoformat(),
+                    "email": "test1@example.com",
+                    "given_name": None,
+                    "id": TEST_USER_1_ID,
+                    "last_name": None,
+                    "modified": self.test_user_1.modified.isoformat(),
+                    "name": "testuser1",
+                    "origin": None,
+                    "prefs": '{"custom_css": "", "use_document_word_list": false, '
+                    '"disable_menu_hover": false, '
+                    '"remember_last_sidebar_menu_tab": false, '
+                    '"remember_last_sidebar_menu_state": false, "word_list": '
+                    '"", "email_exclude": "", "language": null, '
+                    '"style_doc_ids": [], "quick_select_style_doc_ids": [], '
+                    '"last_answer_fetch": {}, "auto_mark_all_read": false, '
+                    '"bookmarks": [{"Last edited": [{"document 2": '
+                    '"/view/users/test-user-1/doc1"}]}], '
+                    '"max_uncollapsed_toc_items": null, "parmenu_position": 1, "always_show_header_menu": false, "display_dir_list_badges": false, "display_dir_list_tags": false}',
+                    "real_name": "Test user 1",
+                },
+                "velps": [],
+            },
         )
         self.get("/settings/info/testuser2", expect_status=403)
         u = self.test_user_1

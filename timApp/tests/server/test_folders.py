@@ -81,66 +81,61 @@ class FolderTest(TimRouteTest):
         db.session.commit()
         t1g = self.get_test_user_1_group_id()
 
-        date_re = r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\+\d{2}:\d{2}"
-        response_json = str(self.get("/getItems", query_string={"folder": user_folder}))
-        self.assertRegex(
+        response_json = self.get("/getItems", query_string={"folder": user_folder})
+        expected_date = response_json[0]["modifiedTimeFull"]
+        expected_date2 = response_json[1]["modifiedTimeFull"]
+        self.assertEqual(
             response_json,
-            rf"""
-\[
-    {{
-        'name': 'testing1', 
-        'path': '{new_name}', 
-        'title': 'foldertitle', 
-        'location': '{user_folder}', 
-        'id': {f["id"]}, 
-        'modified': 'just now', 
-        'modifiedTimeFull': '{date_re}', 
-        'owners': \[{{'id': {t1g}, 'name': 'testuser1'}}\], 
-        'rights': {{
-            'editable': True, 
-            'can_mark_as_read': True, 
-            'can_comment': True, 
-            'copy': True, 
-            'browse_own_answers': True, 
-            'teacher': True, 
-            'see_answers': True, 
-            'manage': True, 
-            'owner': True
-        }}, 
-        'unpublished': True, 
-        'public': True, 
-        'isFolder': True
-    }}, 
-    {{
-        'name': 'testing2', 
-        'path': '{fname2}', 
-        'title': 'foldertitle', 
-        'location': '{user_folder}', 
-        'id': {f3["id"]}, 
-        'modified': 'just now', 
-        'modifiedTimeFull': '{date_re}', 
-        'owners': \[{{'id': {t1g}, 'name': 'testuser1'}}\], 
-        'rights': {{
-            'editable': True, 
-            'can_mark_as_read': True, 
-            'can_comment': True, 
-            'copy': True, 
-            'browse_own_answers': True, 
-            'teacher': True, 
-            'see_answers': True, 
-            'manage': True, 
-            'owner': True
-        }}, 
-        'unpublished': False, 
-        'public': True, 
-        'isFolder': True
-    }}
-\]
-""".replace(
-                "\n", ""
-            ).replace(
-                "    ", ""
-            ),
+            [
+                {
+                    "name": "testing1",
+                    "title": "foldertitle",
+                    "id": f["id"],
+                    "isFolder": True,
+                    "modified": "just now",
+                    "modifiedTimeFull": expected_date,
+                    "path": new_name,
+                    "location": user_folder,
+                    "owners": [{"id": t1g, "name": "testuser1"}],
+                    "rights": {
+                        "browse_own_answers": True,
+                        "can_comment": True,
+                        "can_mark_as_read": True,
+                        "copy": True,
+                        "editable": True,
+                        "manage": True,
+                        "owner": True,
+                        "see_answers": True,
+                        "teacher": True,
+                    },
+                    "unpublished": True,
+                    "public": True,
+                },
+                {
+                    "name": "testing2",
+                    "title": "foldertitle",
+                    "id": f3["id"],
+                    "isFolder": True,
+                    "modified": "just now",
+                    "modifiedTimeFull": expected_date2,
+                    "path": fname2,
+                    "location": user_folder,
+                    "owners": [{"id": t1g, "name": "testuser1"}],
+                    "rights": {
+                        "browse_own_answers": True,
+                        "can_comment": True,
+                        "can_mark_as_read": True,
+                        "copy": True,
+                        "editable": True,
+                        "manage": True,
+                        "owner": True,
+                        "see_answers": True,
+                        "teacher": True,
+                    },
+                    "unpublished": False,
+                    "public": True,
+                },
+            ],
         )
         self.logout()
         self.get("/getItems", query_string={"folder": user_folder}, expect_status=403)
@@ -148,43 +143,36 @@ class FolderTest(TimRouteTest):
             self.test_user_1.get_personal_folder(), AccessType.view
         )
         db.session.commit()
-        response_json2 = str(
-            self.get("/getItems", query_string={"folder": user_folder})
-        )
-        self.assertRegex(
+        response_json2 = self.get("/getItems", query_string={"folder": user_folder})
+        expected_date3 = response_json2[0]["modifiedTimeFull"]
+        self.assertEqual(
             response_json2,
-            rf"""
-\[
-    {{
-        'name': 'testing2', 
-        'path': '{fname2}', 
-        'title': 'foldertitle', 
-        'location': '{user_folder}', 
-        'id': {f3["id"]}, 
-        'modified': 'just now', 
-        'modifiedTimeFull': '{date_re}', 
-        'owners': \[{{'id': {t1g}, 'name': 'testuser1'}}\], 
-        'rights': {{
-            'editable': False, 
-            'can_mark_as_read': False, 
-            'can_comment': False, 
-            'copy': False, 
-            'browse_own_answers': False, 
-            'teacher': False, 
-            'see_answers': False, 
-            'manage': False, 
-            'owner': False
-        }}, 
-        'unpublished': False, 
-        'public': True, 
-        'isFolder': True
-    }}
-\]
-""".replace(
-                "\n", ""
-            ).replace(
-                "    ", ""
-            ),
+            [
+                {
+                    "name": "testing2",
+                    "title": "foldertitle",
+                    "id": f3["id"],
+                    "isFolder": True,
+                    "modified": "just now",
+                    "modifiedTimeFull": expected_date3,
+                    "path": fname2,
+                    "location": user_folder,
+                    "owners": [{"id": t1g, "name": "testuser1"}],
+                    "rights": {
+                        "browse_own_answers": False,
+                        "can_comment": False,
+                        "can_mark_as_read": False,
+                        "copy": False,
+                        "editable": False,
+                        "manage": False,
+                        "owner": False,
+                        "see_answers": False,
+                        "teacher": False,
+                    },
+                    "unpublished": False,
+                    "public": True,
+                }
+            ],
         )
 
     def test_folder_view_perf(self):
@@ -675,45 +663,39 @@ class FolderContentTest(TimRouteTest):
         User.get_anon().grant_access(d, AccessType.view)
         db.session.commit()
 
-        date_re = r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\+\d{2}:\d{2}"
-        response_json = str(self.get("/getItems", query_string={"folder": folderpath}))
-        self.assertRegex(
+        response_json = self.get("/getItems", query_string={"folder": folderpath})
+        expected_date = response_json[0]["modifiedTimeFull"]
+        self.assertEqual(
             response_json,
-            rf"""
-\[
-    {{
-        'name': '{docname}', 
-        'path': '{docpath}', 
-        'title': '{doctitle}', 
-        'location': '{folderpath}', 
-        'id': {d.id}, 
-        'modified': 'just now', 
-        'modifiedTimeFull': '{date_re}', 
-        'owners': \[
-            {{
-                'id': {self.get_test_user_1_group_id()}, 
-                'name': '{self.test_user_1.name}'
-            }}
-        \], 
-        'rights': {{
-            'editable': False, 
-            'can_mark_as_read': True, 
-            'can_comment': True, 
-            'copy': False, 
-            'browse_own_answers': True, 
-            'teacher': False, 
-            'see_answers': False, 
-            'manage': False, 
-            'owner': False
-        }}, 
-        'unpublished': False, 
-        'public': True, 
-        'isFolder': False
-    }}
-\]
-""".replace(
-                "\n", ""
-            ).replace(
-                "    ", ""
-            ),
+            [
+                {
+                    "id": d_id,
+                    "isFolder": False,
+                    "location": folderpath,
+                    "modified": "just now",
+                    "modifiedTimeFull": expected_date,
+                    "name": docname,
+                    "owners": [
+                        {
+                            "id": self.get_test_user_1_group_id(),
+                            "name": self.test_user_1.name,
+                        }
+                    ],
+                    "path": docpath,
+                    "public": True,
+                    "rights": {
+                        "browse_own_answers": True,
+                        "can_comment": True,
+                        "can_mark_as_read": True,
+                        "copy": False,
+                        "editable": False,
+                        "manage": False,
+                        "owner": False,
+                        "see_answers": False,
+                        "teacher": False,
+                    },
+                    "title": doctitle,
+                    "unpublished": False,
+                }
+            ],
         )

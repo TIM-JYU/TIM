@@ -5,6 +5,7 @@ import {isAdmin, Users} from "tim/user/userService";
 import {folderglobals, genericglobals} from "tim/util/globals";
 import {toPromise} from "tim/util/utils";
 import {HttpClient} from "@angular/common/http";
+import {TEACHERS_GROUPNAME} from "tim/user/IUser";
 
 const MESSAGE_LIST_ARCHIVE_FOLDER_PREFIX = "archives/";
 const TIM_MESSAGES_FOLDER_PREFIX = "messages/tim-messages";
@@ -194,7 +195,12 @@ export class DirectoryListComponent {
             });
         }
 
-        if (isAdmin() || Users.belongsToGroup("teachers")) {
+        if (
+            isAdmin() ||
+            Users.belongsToGroup(TEACHERS_GROUPNAME) ||
+            this.item.rights.manage ||
+            this.item.rights.owner
+        ) {
             this.showId = true;
         }
     }

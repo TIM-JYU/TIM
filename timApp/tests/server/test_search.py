@@ -5,8 +5,6 @@ from timApp.timdb.sqa import db
 
 
 class SearchTest(TimRouteTest):
-    date_re = r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\+\d{2}:\d{2}"
-
     def test_search(self):
         u = self.test_user_1
         self.make_admin(u)
@@ -18,73 +16,68 @@ class SearchTest(TimRouteTest):
         self.get(f"search/createContentFile")
         url = f"search?ignoreRelevance=true&caseSensitive=false&folder=&ignorePlugins=false&query={text_to_search}&regex=false&searchContent=true&searchTitles=true&searchPaths=true&searchTags=true"
 
-        response_json = str(self.get(url, expect_status=200))
-        self.assertRegex(
+        response_json = self.get(url, expect_status=200)
+        expected_date = response_json["content_results"][0]["doc"]["modifiedTimeFull"]
+        self.assertEqual(
             response_json,
-            rf"""
-{{
-    'content_results': \[
-        {{
-            'doc': {{
-                'name': '{d.short_name}', 
-                'path': '{d.path}', 
-                'title': '{d.title}', 
-                'location': '{d.location}', 
-                'id': {d.id}, 
-                'modified': 'just now', 
-                'modifiedTimeFull': '{self.date_re}', 
-                'owners': \[
-                    {{'id': {self.get_test_user_1_group_id()}, 'name': '{u.name}'}}
-                \], 
-                'rights': {{
-                    'editable': True, 
-                    'can_mark_as_read': True, 
-                    'can_comment': True, 
-                    'copy': True, 
-                    'browse_own_answers': True, 
-                    'teacher': True, 
-                    'see_answers': True, 
-                    'manage': True, 
-                    'owner': True
-                }}, 
-                'unpublished': True, 
-                'public': True, 
-                'relevance': None, 
-                'isFolder': False
-            }}, 
-            'incomplete': False, 
-            'title_results': \[\], 
-            'num_title_results': 0, 
-            'tag_results': \[\], 
-            'num_tag_results': 0, 
-            'path_results': \[\], 
-            'num_path_results': 0, 
-            'par_results': \[
-                {{
-                    'par_id': '{d.document.get_paragraphs()[0].get_id()}', 
-                    'preview': 'House cats like to hunt too.', 
-                    'results': \[\], 
-                    'num_results': 1
-                }}
-            \], 
-            'num_par_results': 1
-        }}
-    \], 
-    'errors': \[\], 
-    'incomplete_search_reason': '', 
-    'paths_result_count': 0, 
-    'paths_results': \[\], 
-    'tags_result_count': 0, 
-    'tags_results': \[\], 
-    'title_result_count': 0, 
-    'title_results': \[\], 
-    'word_result_count': 1
-}}
-""".replace(
-                "\n", ""
-            ).replace(
-                "    ", ""
-            ),
+            {
+                "content_results": [
+                    {
+                        "doc": {
+                            "id": d.id,
+                            "isFolder": False,
+                            "location": d.location,
+                            "modified": "just now",
+                            "modifiedTimeFull": expected_date,
+                            "name": d.short_name,
+                            "owners": [
+                                {"id": self.get_test_user_1_group_id(), "name": u_name}
+                            ],
+                            "path": d.path,
+                            "public": True,
+                            "relevance": None,
+                            "rights": {
+                                "browse_own_answers": True,
+                                "can_comment": True,
+                                "can_mark_as_read": True,
+                                "copy": True,
+                                "editable": True,
+                                "manage": True,
+                                "owner": True,
+                                "see_answers": True,
+                                "teacher": True,
+                            },
+                            "title": d.title,
+                            "unpublished": True,
+                        },
+                        "incomplete": False,
+                        "num_par_results": 1,
+                        "num_path_results": 0,
+                        "num_tag_results": 0,
+                        "num_title_results": 0,
+                        "par_results": [
+                            {
+                                "num_results": 1,
+                                "par_id": d.document.get_paragraphs()[0].get_id(),
+                                "preview": "House cats like to hunt " "too.",
+                                "results": [],
+                            }
+                        ],
+                        "path_results": [],
+                        "tag_results": [],
+                        "title_results": [],
+                    }
+                ],
+                "incomplete_search_reason": "",
+                "errors": [],
+                "title_results": [],
+                "title_result_count": 0,
+                "word_result_count": 1,
+                "paths_result_count": 0,
+                "paths_results": [],
+                "tags_result_count": 0,
+                "tags_results": [],
+            },
         )
 
     def test_too_short_search(self):
@@ -202,73 +195,70 @@ class SearchTest(TimRouteTest):
         )
         self.get(f"search/createContentFile")
         # User is the doc owner, search results from paragraphs with visibility-condition are always shown.
-        response_json = str(self.get(url, expect_status=200))
-        self.assertRegex(
+        response_json = self.get(url, expect_status=200)
+        expected_date = response_json["content_results"][0]["doc"]["modifiedTimeFull"]
+        self.assertEqual(
             response_json,
-            rf"""
-{{
-    'content_results': \[
-        {{
-            'doc': {{
-                'name': '{d.short_name}', 
-                'path': '{d.path}', 
-                'title': '{d.title}', 
-                'location': '{d.location}', 
-                'id': {d.id}, 
-                'modified': 'just now', 
-                'modifiedTimeFull': '{self.date_re}', 
-                'owners': \[
-                    {{'id': {self.get_test_user_1_group_id()}, 'name': '{u1_name}'}}
-                \], 
-                'rights': {{
-                    'editable': True, 
-                    'can_mark_as_read': True, 
-                    'can_comment': True, 
-                    'copy': True, 
-                    'browse_own_answers': True, 
-                    'teacher': True, 
-                    'see_answers': True, 
-                    'manage': True, 
-                    'owner': True
-                }}, 
-                'unpublished': True, 
-                'public': True, 
-                'relevance': None, 
-                'isFolder': False
-            }}, 
-            'incomplete': False, 
-            'title_results': \[\], 
-            'num_title_results': 0, 
-            'tag_results': \[\], 
-            'num_tag_results': 0, 
-            'path_results': \[\], 
-            'num_path_results': 0, 
-            'par_results': \[
-                {{
-                    'par_id': '{d.document.get_paragraphs()[0].get_id()}', 
-                    'preview': '\.\.\.visible="%%username in \[\\'akuankka\\'\]%%"}} hidden text', 
-                    'results': \[\], 
-                    'num_results': 1
-                }}
-            \], 
-            'num_par_results': 1
-        }}
-    \], 
-    'errors': \[\], 
-    'incomplete_search_reason': '', 
-    'paths_result_count': 0, 
-    'paths_results': \[\], 
-    'tags_result_count': 0, 
-    'tags_results': \[\], 
-    'title_result_count': 0, 
-    'title_results': \[\], 
-    'word_result_count': 1
-}}
-""".replace(
-                "\n", ""
-            ).replace(
-                "    ", ""
-            ),
+            {
+                "content_results": [
+                    {
+                        "doc": {
+                            "id": d.id,
+                            "isFolder": False,
+                            "location": d.location,
+                            "modified": "just now",
+                            "modifiedTimeFull": expected_date,
+                            "name": d.short_name,
+                            "owners": [
+                                {"id": self.get_test_user_1_group_id(), "name": u1_name}
+                            ],
+                            "path": d.path,
+                            "public": True,
+                            "relevance": None,
+                            "rights": {
+                                "browse_own_answers": True,
+                                "can_comment": True,
+                                "can_mark_as_read": True,
+                                "copy": True,
+                                "editable": True,
+                                "manage": True,
+                                "owner": True,
+                                "see_answers": True,
+                                "teacher": True,
+                            },
+                            "title": d.title,
+                            "unpublished": True,
+                        },
+                        "incomplete": False,
+                        "num_par_results": 1,
+                        "num_path_results": 0,
+                        "num_tag_results": 0,
+                        "num_title_results": 0,
+                        "par_results": [
+                            {
+                                "num_results": 1,
+                                "par_id": d.document.get_paragraphs()[0].get_id(),
+                                "preview": '...visible="%%username in '
+                                "['akuankka']%%\"} hidden "
+                                "text",
+                                "results": [],
+                            }
+                        ],
+                        "path_results": [],
+                        "tag_results": [],
+                        "title_results": [],
+                    }
+                ],
+                "incomplete_search_reason": "",
+                "errors": [],
+                "title_results": [],
+                "title_result_count": 0,
+                "word_result_count": 1,
+                "paths_result_count": 0,
+                "paths_results": [],
+                "tags_result_count": 0,
+                "tags_results": [],
+            },
         )
         self.login_test2()
         # User is not the doc owner, paragraphs with visibility-condition are always skipped.
@@ -301,81 +291,76 @@ class SearchTest(TimRouteTest):
         self.get(f"search/createContentFile")
         self.test_user_1.grant_access(d, AccessType.edit)
         db.session.commit()
-        response_json = str(
-            self.get(
-                f"search?ignoreRelevance=true&folder=&query={text_to_search}&searchContent=true",
-                expect_status=200,
-            )
+        response_json = self.get(
+            f"search?ignoreRelevance=true&folder=&query={text_to_search}&searchContent=true",
+            expect_status=200,
         )
-        self.assertRegex(
-            response_json.replace("    ", ""),
-            rf"""
-{{
-    'content_results': \[
-        {{
-            'doc': {{
-                'name': '{d.short_name}', 
-                'path': '{d.path}', 
-                'title': '{d.title}', 
-                'location': '{d.location}', 
-                'id': {d.id}, 
-                'modified': 'just now', 
-                'modifiedTimeFull': '{self.date_re}', 
-                'owners': \[
-                    {{
-                        'id': {self.get_test_user_1_group_id()}, 
-                        'name': '{self.test_user_1.name}'
-                    }}
-                \], 
-                'rights': {{
-                    'editable': True, 
-                    'can_mark_as_read': True, 
-                    'can_comment': True, 
-                    'copy': True, 
-                    'browse_own_answers': True, 
-                    'teacher': True, 
-                    'see_answers': True, 
-                    'manage': True, 
-                    'owner': True
-                }}, 
-                'unpublished': False, 
-                'public': True, 
-                'relevance': None, 
-                'isFolder': False
-            }}, 
-            'incomplete': False, 
-            'title_results': \[\], 
-            'num_title_results': 0, 
-            'tag_results': \[\], 
-            'num_tag_results': 0, 
-            'path_results': \[\], 
-            'num_path_results': 0, 
-            'par_results': \[
-                {{
-                    'par_id': '{d.document.get_paragraphs()[0].get_id()}', 
-                    'preview': '\.\.\.stion: What cats like the most\?         answer: Catnip\.         ``` ```', 
-                    'results': \[\], 
-                    'num_results': 1
-                }}
-            \], 
-            'num_par_results': 1
-        }}
-    \], 
-    'errors': \[\], 
-    'incomplete_search_reason': '', 
-    'paths_result_count': 0, 
-    'paths_results': \[\], 
-    'tags_result_count': 0, 
-    'tags_results': \[\], 
-    'title_result_count': 0, 
-    'title_results': \[\], 
-    'word_result_count': 1
-}}
-""".replace(
-                "\n", ""
-            ).replace(
-                "    ", ""
-            ),
+        expected_date = response_json["content_results"][0]["doc"]["modifiedTimeFull"]
+        self.assertEqual(
+            response_json,
+            {
+                "content_results": [
+                    {
+                        "doc": {
+                            "id": d.id,
+                            "isFolder": False,
+                            "location": d.location,
+                            "modified": "just now",
+                            "modifiedTimeFull": expected_date,
+                            "name": d.short_name,
+                            "owners": [
+                                {
+                                    "id": self.get_test_user_1_group_id(),
+                                    "name": self.test_user_1.name,
+                                }
+                            ],
+                            "path": d.path,
+                            "public": True,
+                            "relevance": None,
+                            "rights": {
+                                "browse_own_answers": True,
+                                "can_comment": True,
+                                "can_mark_as_read": True,
+                                "copy": True,
+                                "editable": True,
+                                "manage": True,
+                                "owner": True,
+                                "see_answers": True,
+                                "teacher": True,
+                            },
+                            "title": d.title,
+                            "unpublished": False,
+                        },
+                        "incomplete": False,
+                        "num_par_results": 1,
+                        "num_path_results": 0,
+                        "num_tag_results": 0,
+                        "num_title_results": 0,
+                        "par_results": [
+                            {
+                                "num_results": 1,
+                                "par_id": d.document.get_paragraphs()[0].get_id(),
+                                "preview": "...stion: What cats like "
+                                "the most?         answer: "
+                                "Catnip.         ``` ```",
+                                "results": [],
+                            }
+                        ],
+                        "path_results": [],
+                        "tag_results": [],
+                        "title_results": [],
+                    }
+                ],
+                "errors": [],
+                "incomplete_search_reason": "",
+                "title_result_count": 0,
+                "title_results": [],
+                "word_result_count": 1,
+                "paths_result_count": 0,
+                "paths_results": [],
+                "tags_result_count": 0,
+                "tags_results": [],
+            },
         )
 
         self.get(
@@ -426,69 +411,64 @@ class SearchTest(TimRouteTest):
         self.get(f"search/createContentFile")
         url = f"search?ignoreRelevance=true&folder=&query={search_word}&searchContent=false&searchTitles=true"
 
-        response_json = str(self.get(url, expect_status=200))
-        self.assertRegex(
+        response_json = self.get(url, expect_status=200)
+        expected_date = response_json["title_results"][0]["doc"]["modifiedTimeFull"]
+        self.assertEqual(
             response_json,
-            rf"""
-{{
-    'content_results': \[\], 
-    'errors': \[\], 
-    'incomplete_search_reason': '', 
-    'paths_result_count': 0, 
-    'paths_results': \[\], 
-    'tags_result_count': 0, 
-    'tags_results': \[\], 
-    'title_result_count': 1, 
-    'title_results': \[
-        {{
-            'doc': {{
-                'name': '{d.short_name}', 
-                'path': '{d.path}', 
-                'title': '{d.title}', 
-                'location': '{d.location}', 
-                'id': {d.id}, 
-                'modified': 'just now', 
-                'modifiedTimeFull': '{self.date_re}', 
-                'owners': \[
-                    {{
-                        'id': {self.get_test_user_1_group_id()}, 
-                        'name': '{self.test_user_1.name}'
-                    }}
-                \], 
-                'rights': {{
-                    'editable': True, 
-                    'can_mark_as_read': True, 
-                    'can_comment': True, 
-                    'copy': True, 
-                    'browse_own_answers': True, 
-                    'teacher': True, 
-                    'see_answers': True, 
-                    'manage': True, 
-                    'owner': True
-                }}, 
-                'unpublished': True, 
-                'public': True, 
-                'relevance': None, 
-                'isFolder': False
-            }}, 
-            'incomplete': False, 
-            'title_results': \[{{'results': \[\], 'num_results': 1}}\], 
-            'num_title_results': 1, 
-            'tag_results': \[\], 
-            'num_tag_results': 0, 
-            'path_results': \[\], 
-            'num_path_results': 0, 
-            'par_results': \[\], 
-            'num_par_results': 0
-        }}
-    \], 
-    'word_result_count': 0
-}}
-""".replace(
-                "\n", ""
-            ).replace(
-                "    ", ""
-            ),
+            {
+                "content_results": [],
+                "errors": [],
+                "incomplete_search_reason": "",
+                "paths_result_count": 0,
+                "paths_results": [],
+                "tags_result_count": 0,
+                "tags_results": [],
+                "title_result_count": 1,
+                "title_results": [
+                    {
+                        "doc": {
+                            "id": d.id,
+                            "isFolder": False,
+                            "location": d.location,
+                            "modified": "just now",
+                            "modifiedTimeFull": expected_date,
+                            "name": d.short_name,
+                            "owners": [
+                                {
+                                    "id": self.get_test_user_1_group_id(),
+                                    "name": self.test_user_1.name,
+                                }
+                            ],
+                            "path": d.path,
+                            "public": True,
+                            "relevance": None,
+                            "rights": {
+                                "browse_own_answers": True,
+                                "can_comment": True,
+                                "can_mark_as_read": True,
+                                "copy": True,
+                                "editable": True,
+                                "manage": True,
+                                "owner": True,
+                                "see_answers": True,
+                                "teacher": True,
+                            },
+                            "title": d.title,
+                            "unpublished": True,
+                        },
+                        "incomplete": False,
+                        "num_par_results": 0,
+                        "num_path_results": 0,
+                        "num_tag_results": 0,
+                        "num_title_results": 1,
+                        "par_results": [],
+                        "path_results": [],
+                        "tag_results": [],
+                        "title_results": [{"num_results": 1, "results": []}],
+                    }
+                ],
+                "word_result_count": 0,
+            },
         )
 
     def test_tag_search(self):
@@ -511,66 +491,61 @@ class SearchTest(TimRouteTest):
         tag_to_search = "dog"
         url = f"search?caseSensitive=true&folder=&query={tag_to_search}&regex=false&searchContent=false&searchTitles=false&searchTags=true&searchPaths=false"
 
-        response_json = str(self.get(url, expect_status=200))
-        self.assertRegex(
+        response_json = self.get(url, expect_status=200)
+        expected_date = response_json["tags_results"][0]["doc"]["modifiedTimeFull"]
+        self.assertEqual(
             response_json,
-            rf"""
-{{
-    'content_results': \[\], 
-    'errors': \[\], 
-    'incomplete_search_reason': '', 
-    'paths_result_count': 0, 
-    'paths_results': \[\], 
-    'tags_result_count': 2, 
-    'tags_results': \[
-        {{
-            'doc': {{
-                'name': '{d.short_name}', 
-                'path': '{d.path}', 
-                'title': '{d.title}', 
-                'location': '{d.location}', 
-                'id': {d.id}, 
-                'modified': 'just now', 
-                'modifiedTimeFull': '{self.date_re}', 
-                'owners': \[
-                    {{'id': {self.get_test_user_1_group_id()}, 'name': '{u.name}'}}
-                \], 
-                'rights': {{
-                    'editable': True, 
-                    'can_mark_as_read': True, 
-                    'can_comment': True, 
-                    'copy': True, 
-                    'browse_own_answers': True, 
-                    'teacher': True, 
-                    'see_answers': True, 
-                    'manage': True, 
-                    'owner': True
-                }}, 
-                'unpublished': True, 
-                'public': True, 
-                'relevance': None, 
-                'isFolder': False
-            }}, 
-            'incomplete': False, 
-            'title_results': \[\], 
-            'num_title_results': 0, 
-            'tag_results': \[{{'results': \[\], 'num_results': 2}}\], 
-            'num_tag_results': 2, 
-            'path_results': \[\], 
-            'num_path_results': 0, 
-            'par_results': \[\], 
-            'num_par_results': 0
-        }}
-    \], 
-    'title_result_count': 0, 
-    'title_results': \[\], 
-    'word_result_count': 0
-}}
-""".replace(
-                "\n", ""
-            ).replace(
-                "    ", ""
-            ),
+            {
+                "content_results": [],
+                "errors": [],
+                "incomplete_search_reason": "",
+                "paths_result_count": 0,
+                "paths_results": [],
+                "tags_result_count": 2,
+                "tags_results": [
+                    {
+                        "doc": {
+                            "id": d.id,
+                            "isFolder": False,
+                            "location": d.location,
+                            "modified": "just now",
+                            "modifiedTimeFull": expected_date,
+                            "name": d.short_name,
+                            "owners": [
+                                {"id": self.get_test_user_1_group_id(), "name": u.name}
+                            ],
+                            "path": d.path,
+                            "public": True,
+                            "relevance": None,
+                            "rights": {
+                                "browse_own_answers": True,
+                                "can_comment": True,
+                                "can_mark_as_read": True,
+                                "copy": True,
+                                "editable": True,
+                                "manage": True,
+                                "owner": True,
+                                "see_answers": True,
+                                "teacher": True,
+                            },
+                            "title": d.title,
+                            "unpublished": True,
+                        },
+                        "incomplete": False,
+                        "num_par_results": 0,
+                        "num_path_results": 0,
+                        "num_tag_results": 2,
+                        "num_title_results": 0,
+                        "par_results": [],
+                        "path_results": [],
+                        "tag_results": [{"num_results": 2, "results": []}],
+                        "title_results": [],
+                    }
+                ],
+                "title_result_count": 0,
+                "title_results": [],
+                "word_result_count": 0,
+            },
         )
 
     def test_path_search(self):
@@ -583,66 +558,61 @@ class SearchTest(TimRouteTest):
         self.get(f"search/createContentFile")
         url = f"search?folder=&query={search_word}&regex=false&searchContent=false&searchTitles=false&searchTags=false&searchPaths=true"
 
-        response_json = str(self.get(url, expect_status=200))
-        self.assertRegex(
+        response_json = self.get(url, expect_status=200)
+        expected_date = response_json["paths_results"][0]["doc"]["modifiedTimeFull"]
+        self.assertEqual(
             response_json,
-            rf"""
-{{
-    'content_results': \[\], 
-    'errors': \[\], 
-    'incomplete_search_reason': '', 
-    'paths_result_count': 1, 
-    'paths_results': \[
-        {{
-            'doc': {{
-                'name': '{d.short_name}', 
-                'path': '{d.path}', 
-                'title': '{d.title}', 
-                'location': '{d.location}', 
-                'id': {d.id}, 
-                'modified': 'just now', 
-                'modifiedTimeFull': '{self.date_re}', 
-                'owners': \[
-                    {{'id': {self.get_test_user_1_group_id()}, 'name': '{u.name}'}}
-                \], 
-                'rights': {{
-                    'editable': True, 
-                    'can_mark_as_read': True, 
-                    'can_comment': True, 
-                    'copy': True, 
-                    'browse_own_answers': True, 
-                    'teacher': True, 
-                    'see_answers': True, 
-                    'manage': True, 
-                    'owner': True
-                }}, 
-                'unpublished': True, 
-                'public': True, 
-                'relevance': None, 
-                'isFolder': False
-            }}, 
-            'incomplete': False, 
-            'title_results': \[\], 
-            'num_title_results': 0, 
-            'tag_results': \[\], 
-            'num_tag_results': 0, 
-            'path_results': \[{{'results': \[\], 'num_results': 1}}\], 
-            'num_path_results': 1, 
-            'par_results': \[\], 
-            'num_par_results': 0
-        }}
-    \], 
-    'tags_result_count': 0, 
-    'tags_results': \[\], 
-    'title_result_count': 0, 
-    'title_results': \[\], 
-    'word_result_count': 0
-}}
-""".replace(
-                "\n", ""
-            ).replace(
-                "    ", ""
-            ),
+            {
+                "content_results": [],
+                "errors": [],
+                "incomplete_search_reason": "",
+                "paths_result_count": 1,
+                "paths_results": [
+                    {
+                        "doc": {
+                            "id": d.id,
+                            "isFolder": False,
+                            "location": d.location,
+                            "modified": "just now",
+                            "modifiedTimeFull": expected_date,
+                            "name": d.short_name,
+                            "owners": [
+                                {"id": self.get_test_user_1_group_id(), "name": u.name}
+                            ],
+                            "path": d.path,
+                            "public": True,
+                            "relevance": None,
+                            "rights": {
+                                "browse_own_answers": True,
+                                "can_comment": True,
+                                "can_mark_as_read": True,
+                                "copy": True,
+                                "editable": True,
+                                "manage": True,
+                                "owner": True,
+                                "see_answers": True,
+                                "teacher": True,
+                            },
+                            "title": d.title,
+                            "unpublished": True,
+                        },
+                        "incomplete": False,
+                        "num_par_results": 0,
+                        "num_path_results": 1,
+                        "num_tag_results": 0,
+                        "num_title_results": 0,
+                        "par_results": [],
+                        "path_results": [{"num_results": 1, "results": []}],
+                        "tag_results": [],
+                        "title_results": [],
+                    }
+                ],
+                "tags_result_count": 0,
+                "tags_results": [],
+                "title_result_count": 0,
+                "title_results": [],
+                "word_result_count": 0,
+            },
         )
         url = f"search?folder=&query={search_word}&searchWholeWords=True&searchContent=false&searchTitles=false&searchTags=false&searchPaths=true"
         self.get(
@@ -664,64 +634,59 @@ class SearchTest(TimRouteTest):
         search_word_2 = "dogs"
         url = f"search?folder=&query={search_word_2}&searchWholeWords=True&searchContent=false&searchTitles=false&searchTags=false&searchPaths=true"
 
-        response_json2 = str(self.get(url, expect_status=200))
-        self.assertRegex(
+        response_json2 = self.get(url, expect_status=200)
+        expected_date2 = response_json2["paths_results"][0]["doc"]["modifiedTimeFull"]
+        self.assertEqual(
             response_json2,
-            rf"""
-{{
-    'content_results': \[\], 
-    'errors': \[\], 
-    'incomplete_search_reason': '', 
-    'paths_result_count': 1, 
-    'paths_results': \[
-        {{
-            'doc': {{
-                'name': '{d.short_name}', 
-                'path': '{d.path}', 
-                'title': '{d.title}', 
-                'location': '{d.location}', 
-                'id': {d.id}, 
-                'modified': 'just now', 
-                'modifiedTimeFull': '{self.date_re}', 
-                'owners': \[
-                    {{'id': {self.get_test_user_1_group_id()}, 'name': '{u.name}'}}
-                \], 
-                'rights': {{
-                    'editable': True, 
-                    'can_mark_as_read': True, 
-                    'can_comment': True, 
-                    'copy': True, 
-                    'browse_own_answers': True, 
-                    'teacher': True, 
-                    'see_answers': True, 
-                    'manage': True, 
-                    'owner': True
-                }}, 
-                'unpublished': True, 
-                'public': True, 
-                'relevance': None, 
-                'isFolder': False
-            }}, 
-            'incomplete': False, 
-            'title_results': \[\], 
-            'num_title_results': 0, 
-            'tag_results': \[\], 
-            'num_tag_results': 0, 
-            'path_results': \[{{'results': \[\], 'num_results': 1}}\], 
-            'num_path_results': 1, 
-            'par_results': \[\], 
-            'num_par_results': 0
-        }}
-    \], 
-    'tags_result_count': 0, 
-    'tags_results': \[\], 
-    'title_result_count': 0, 
-    'title_results': \[\], 
-    'word_result_count': 0
-}}
-""".replace(
-                "\n", ""
-            ).replace(
-                "    ", ""
-            ),
+            {
+                "content_results": [],
+                "errors": [],
+                "incomplete_search_reason": "",
+                "paths_result_count": 1,
+                "paths_results": [
+                    {
+                        "doc": {
+                            "id": d.id,
+                            "isFolder": False,
+                            "location": d.location,
+                            "modified": "just now",
+                            "modifiedTimeFull": expected_date2,
+                            "name": d.short_name,
+                            "owners": [
+                                {"id": self.get_test_user_1_group_id(), "name": u.name}
+                            ],
+                            "path": d.path,
+                            "public": True,
+                            "relevance": None,
+                            "rights": {
+                                "browse_own_answers": True,
+                                "can_comment": True,
+                                "can_mark_as_read": True,
+                                "copy": True,
+                                "editable": True,
+                                "manage": True,
+                                "owner": True,
+                                "see_answers": True,
+                                "teacher": True,
+                            },
+                            "title": d.title,
+                            "unpublished": True,
+                        },
+                        "incomplete": False,
+                        "num_par_results": 0,
+                        "num_path_results": 1,
+                        "num_tag_results": 0,
+                        "num_title_results": 0,
+                        "par_results": [],
+                        "path_results": [{"num_results": 1, "results": []}],
+                        "tag_results": [],
+                        "title_results": [],
+                    }
+                ],
+                "tags_result_count": 0,
+                "tags_results": [],
+                "title_result_count": 0,
+                "title_results": [],
+                "word_result_count": 0,
+            },
         )

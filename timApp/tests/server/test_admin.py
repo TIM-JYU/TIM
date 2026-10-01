@@ -72,197 +72,193 @@ class SearchTest(TimRouteTest):
             ],
         )
 
-        date_re = r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\+\d{2}:\d{2}"
-        response_json = str(self.get("/users/search/test?full=true"))
-        self.assertRegex(
+        response_json = self.get("/users/search/test?full=true")
+        expected_date = response_json[0]["folder"]["modifiedTimeFull"]
+        expected_date2 = response_json[1]["folder"]["modifiedTimeFull"]
+        expected_date3 = response_json[2]["folder"]["modifiedTimeFull"]
+        self.assertEqual(
             response_json,
-            rf"""
-\[
-    {{
-        'id': {TEST_USER_1_ID}, 
-        'name': 'testuser1', 
-        'real_name': 'Test user 1', 
-        'email': 'test1@example.com', 
-        'group': {{
-            'id': {self.test_user_1.get_personal_group().id}, 
-            'name': 'testuser1'
-        }}, 
-        'groups': \[
-            {{
-                'id': {self.test_user_1.get_personal_group().id}, 
-                'name': 'testuser1', 
-                'external_id': None
-            }}, 
-            {{
-                'id': {get_admin_group_id()}, 
-                'name': 'Administrators', 
-                'external_id': None
-            }}
-        \], 
-        'folder': {{
-            'name': 'test-user-1', 
-            'path': 'users\/test-user-1', 
-            'title': 'Test user 1', 
-            'location': 'users', 
-            'id': {self.test_user_1.get_personal_folder().id}, 
-            'modified': 'just now', 
-            'modifiedTimeFull': '{date_re}', 
-            'owners': \[
-                {{
-                    'id': {self.test_user_1.get_personal_group().id}, 
-                    'name': 'testuser1'
-                }}
-            \], 
-            'rights': {{
-                'editable': True, 
-                'can_mark_as_read': True, 
-                'can_comment': True, 
-                'copy': True, 
-                'browse_own_answers': True, 
-                'teacher': True, 
-                'see_answers': True, 
-                'manage': True, 
-                'owner': True
-            }}, 
-            'unpublished': True, 
-            'public': True, 
-            'isFolder': True
-        }}, 
-        'consent': None, 
-        'last_name': None, 
-        'tos_accepted_at': None, 
-        'contacts': \[
-            {{
-                'contact': 'test1@example.com', 
-                'channel': 'email', 
-                'verified': True, 
-                'origin': 1, 
-                'primary': True
-            }}
-        \]
-    }}, 
-    {{
-        'id': {TEST_USER_2_ID}, 
-        'name': 'testuser2', 
-        'real_name': 'Test user 2', 
-        'email': 'test2@example.com', 
-        'group': {{
-            'id': {self.test_user_2.get_personal_group().id}, 
-            'name': 'testuser2'
-        }}, 
-        'groups': \[
-            {{
-                'id': {self.test_user_2.get_personal_group().id}, 
-                'name': 'testuser2', 
-                'external_id': None
-            }}
-        \], 
-        'folder': {{
-            'name': 'test-user-2', 
-            'path': 'users\/test-user-2', 
-            'title': 'Test user 2', 
-            'location': 'users', 
-            'id': {self.test_user_2.get_personal_folder().id}, 
-            'modified': 'just now', 
-            'modifiedTimeFull': '{date_re}', 
-            'owners': \[
-                {{
-                    'id': {self.test_user_2.get_personal_group().id}, 
-                    'name': 'testuser2'
-                }}
-            \], 
-            'rights': {{
-                'editable': True, 
-                'can_mark_as_read': True, 
-                'can_comment': True, 
-                'copy': True, 
-                'browse_own_answers': True, 
-                'teacher': True, 
-                'see_answers': True, 
-                'manage': True, 
-                'owner': True
-            }}, 
-            'unpublished': True, 
-            'public': True, 
-            'isFolder': True
-        }}, 
-        'consent': None, 
-        'last_name': None, 
-        'tos_accepted_at': None, 
-        'contacts': \[
-            {{
-                'contact': 'test2@example.com', 
-                'channel': 'email', 
-                'verified': True, 
-                'origin': 1, 
-                'primary': True
-            }}
-        \]
-    }}, 
-    {{
-        'id': {TEST_USER_3_ID}, 
-        'name': 'testuser3', 
-        'real_name': 'Test user 3', 
-        'email': 'test3@example.com', 
-        'group': {{
-            'id': {self.test_user_3.get_personal_group().id}, 
-            'name': 'testuser3'
-        }}, 
-        'groups': \[
-            {{
-                'id': {self.test_user_3.get_personal_group().id}, 
-                'name': 'testuser3', 
-                'external_id': None
-            }}
-        \], 
-        'folder': {{
-            'name': 'test-user-3', 
-            'path': 'users\/test-user-3', 
-            'title': 'Test user 3', 
-            'location': 'users', 
-            'id': {self.test_user_3.get_personal_folder().id}, 
-            'modified': 'just now', 
-            'modifiedTimeFull': '{date_re}', 
-            'owners': \[
-                {{
-                    'id': {self.test_user_3.get_personal_group().id}, 
-                    'name': 'testuser3'
-                }}
-            \], 
-            'rights': {{
-                'editable': True, 
-                'can_mark_as_read': True, 
-                'can_comment': True, 
-                'copy': True, 
-                'browse_own_answers': True, 
-                'teacher': True, 
-                'see_answers': True, 
-                'manage': True, 
-                'owner': True
-            }}, 
-            'unpublished': True, 
-            'public': True, 
-            'isFolder': True
-        }}, 
-        'consent': None, 
-        'last_name': None, 
-        'tos_accepted_at': None, 
-        'contacts': \[
-            {{
-                'contact': 'test3@example.com', 
-                'channel': 'email', 
-                'verified': True, 
-                'origin': 1, 
-                'primary': True
-            }}
-        \]
-    }}
-\]
-""".replace(
-                "\n", ""
-            ).replace(
-                "    ", ""
-            ),
+            [
+                {
+                    "consent": None,
+                    "contacts": [
+                        {
+                            "channel": "email",
+                            "contact": "test1@example.com",
+                            "origin": 1,
+                            "primary": True,
+                            "verified": True,
+                        }
+                    ],
+                    "email": "test1@example.com",
+                    "folder": {
+                        "id": self.test_user_1.get_personal_folder().id,
+                        "isFolder": True,
+                        "location": "users",
+                        "modified": "just now",
+                        "modifiedTimeFull": expected_date,
+                        "name": "test-user-1",
+                        "owners": [
+                            {
+                                "id": self.test_user_1.get_personal_group().id,
+                                "name": "testuser1",
+                            }
+                        ],
+                        "path": "users/test-user-1",
+                        "public": True,
+                        "rights": {
+                            "browse_own_answers": True,
+                            "can_comment": True,
+                            "can_mark_as_read": True,
+                            "copy": True,
+                            "editable": True,
+                            "manage": True,
+                            "owner": True,
+                            "see_answers": True,
+                            "teacher": True,
+                        },
+                        "title": "Test user 1",
+                        "unpublished": True,
+                    },
+                    "group": {
+                        "id": self.test_user_1.get_personal_group().id,
+                        "name": "testuser1",
+                    },
+                    "groups": [
+                        {
+                            "external_id": None,
+                            "id": self.test_user_1.get_personal_group().id,
+                            "name": "testuser1",
+                        },
+                        {
+                            "external_id": None,
+                            "id": get_admin_group_id(),
+                            "name": "Administrators",
+                        },
+                    ],
+                    "id": TEST_USER_1_ID,
+                    "last_name": None,
+                    "name": "testuser1",
+                    "real_name": "Test user 1",
+                    "tos_accepted_at": None,
+                },
+                {
+                    "consent": None,
+                    "contacts": [
+                        {
+                            "channel": "email",
+                            "contact": "test2@example.com",
+                            "origin": 1,
+                            "primary": True,
+                            "verified": True,
+                        }
+                    ],
+                    "email": "test2@example.com",
+                    "folder": {
+                        "id": self.test_user_2.get_personal_folder().id,
+                        "isFolder": True,
+                        "location": "users",
+                        "modified": "just now",
+                        "modifiedTimeFull": expected_date2,
+                        "name": "test-user-2",
+                        "owners": [
+                            {
+                                "id": self.test_user_2.get_personal_group().id,
+                                "name": "testuser2",
+                            }
+                        ],
+                        "path": "users/test-user-2",
+                        "public": True,
+                        "rights": {
+                            "browse_own_answers": True,
+                            "can_comment": True,
+                            "can_mark_as_read": True,
+                            "copy": True,
+                            "editable": True,
+                            "manage": True,
+                            "owner": True,
+                            "see_answers": True,
+                            "teacher": True,
+                        },
+                        "title": "Test user 2",
+                        "unpublished": True,
+                    },
+                    "group": {
+                        "id": self.test_user_2.get_personal_group().id,
+                        "name": "testuser2",
+                    },
+                    "groups": [
+                        {
+                            "external_id": None,
+                            "id": self.test_user_2.get_personal_group().id,
+                            "name": "testuser2",
+                        }
+                    ],
+                    "id": TEST_USER_2_ID,
+                    "last_name": None,
+                    "name": "testuser2",
+                    "real_name": "Test user 2",
+                    "tos_accepted_at": None,
+                },
+                {
+                    "consent": None,
+                    "contacts": [
+                        {
+                            "channel": "email",
+                            "contact": "test3@example.com",
+                            "origin": 1,
+                            "primary": True,
+                            "verified": True,
+                        }
+                    ],
+                    "email": "test3@example.com",
+                    "folder": {
+                        "id": self.test_user_3.get_personal_folder().id,
+                        "isFolder": True,
+                        "location": "users",
+                        "modified": "just now",
+                        "modifiedTimeFull": expected_date3,
+                        "name": "test-user-3",
+                        "owners": [
+                            {
+                                "id": self.test_user_3.get_personal_group().id,
+                                "name": "testuser3",
+                            }
+                        ],
+                        "path": "users/test-user-3",
+                        "public": True,
+                        "rights": {
+                            "browse_own_answers": True,
+                            "can_comment": True,
+                            "can_mark_as_read": True,
+                            "copy": True,
+                            "editable": True,
+                            "manage": True,
+                            "owner": True,
+                            "see_answers": True,
+                            "teacher": True,
+                        },
+                        "title": "Test user 3",
+                        "unpublished": True,
+                    },
+                    "group": {
+                        "id": self.test_user_3.get_personal_group().id,
+                        "name": "testuser3",
+                    },
+                    "groups": [
+                        {
+                            "external_id": None,
+                            "id": self.test_user_3.get_personal_group().id,
+                            "name": "testuser3",
+                        }
+                    ],
+                    "id": TEST_USER_3_ID,
+                    "last_name": None,
+                    "name": "testuser3",
+                    "real_name": "Test user 3",
+                    "tos_accepted_at": None,
+                },
+            ],
         )
 
 

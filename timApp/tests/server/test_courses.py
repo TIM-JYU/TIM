@@ -53,55 +53,50 @@ class CoursesTest(TimRouteTest):
             {"group": "Test bookmarks", "name": "test", "link": d.path},
         )
 
-        date_re = r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\+\d{2}:\d{2}"
-        response_json = str(self.get("/courses/documents/Test bookmarks"))
-        self.assertRegex(
+        response_json = self.get("/courses/documents/Test bookmarks")
+        expected_date = response_json[0]["modifiedTimeFull"]
+        self.assertEqual(
             response_json,
-            rf"""
-\[
-    {{
-        'name': 'test', 
-        'path': '{d.path}', 
-        'title': '{d.title}', 
-        'location': '{d.location}', 
-        'id': {d.id}, 
-        'modified': 'just now', 
-        'modifiedTimeFull': '{date_re}', 
-        'owners': \[{{'id': {self.get_test_user_2_group_id()}, 'name': '{u.name}'}}\], 
-        'rights': {{
-            'editable': True, 
-            'can_mark_as_read': True, 
-            'can_comment': True, 
-            'copy': True, 
-            'browse_own_answers': True, 
-            'teacher': True, 
-            'see_answers': True, 
-            'manage': True, 
-            'owner': True
-        }}, 
-        'unpublished': True, 
-        'public': True, 
-        'tags': \[
-            {{
-                'block_id': {d.id}, 
-                'name': 'TEST123', 
-                'type': {TagType.CourseCode.value}, 
-                'expires': None
-            }}, 
-            {{
-                'block_id': {d.id}, 
-                'name': 'testing subject', 
-                'type': {TagType.Subject.value}, 
-                'expires': None
-            }}
-        \], 
-        'isFolder': False
-    }}
-\]""".replace(
-                "\n", ""
-            ).replace(
-                "    ", ""
-            ),
+            [
+                {
+                    "id": d.id,
+                    "isFolder": False,
+                    "location": d.location,
+                    "modified": "just now",
+                    "modifiedTimeFull": expected_date,
+                    "name": "test",
+                    "owners": [{"id": self.get_test_user_2_group_id(), "name": u.name}],
+                    "path": d.path,
+                    "public": True,
+                    "rights": {
+                        "browse_own_answers": True,
+                        "can_comment": True,
+                        "can_mark_as_read": True,
+                        "copy": True,
+                        "editable": True,
+                        "manage": True,
+                        "owner": True,
+                        "see_answers": True,
+                        "teacher": True,
+                    },
+                    "tags": [
+                        {
+                            "block_id": d.id,
+                            "expires": None,
+                            "name": "TEST123",
+                            "type": TagType.CourseCode.value,
+                        },
+                        {
+                            "block_id": d.id,
+                            "expires": None,
+                            "name": "testing subject",
+                            "type": TagType.Subject.value,
+                        },
+                    ],
+                    "title": d.title,
+                    "unpublished": True,
+                }
+            ],
         )
 
     def test_add_course_route(self):
