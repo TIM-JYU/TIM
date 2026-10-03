@@ -72,9 +72,13 @@ class SearchTest(TimRouteTest):
             ],
         )
 
-        self.get(
-            "/users/search/test?full=true",
-            expect_content=[
+        response_json = self.get("/users/search/test?full=true")
+        expected_date = response_json[0]["folder"]["modifiedTimeFull"]
+        expected_date2 = response_json[1]["folder"]["modifiedTimeFull"]
+        expected_date3 = response_json[2]["folder"]["modifiedTimeFull"]
+        self.assertEqual(
+            response_json,
+            [
                 {
                     "consent": None,
                     "contacts": [
@@ -92,6 +96,7 @@ class SearchTest(TimRouteTest):
                         "isFolder": True,
                         "location": "users",
                         "modified": "just now",
+                        "modifiedTimeFull": expected_date,
                         "name": "test-user-1",
                         "owners": [
                             {
@@ -154,6 +159,7 @@ class SearchTest(TimRouteTest):
                         "isFolder": True,
                         "location": "users",
                         "modified": "just now",
+                        "modifiedTimeFull": expected_date2,
                         "name": "test-user-2",
                         "owners": [
                             {
@@ -211,6 +217,7 @@ class SearchTest(TimRouteTest):
                         "isFolder": True,
                         "location": "users",
                         "modified": "just now",
+                        "modifiedTimeFull": expected_date3,
                         "name": "test-user-3",
                         "owners": [
                             {

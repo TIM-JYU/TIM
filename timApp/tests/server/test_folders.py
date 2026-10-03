@@ -80,16 +80,20 @@ class FolderTest(TimRouteTest):
         User.get_anon().grant_access(Folder.get_by_id(f3["id"]), AccessType.view)
         db.session.commit()
         t1g = self.get_test_user_1_group_id()
-        self.get(
-            "/getItems",
-            query_string={"folder": user_folder},
-            expect_content=[
+
+        response_json = self.get("/getItems", query_string={"folder": user_folder})
+        expected_date = response_json[0]["modifiedTimeFull"]
+        expected_date2 = response_json[1]["modifiedTimeFull"]
+        self.assertEqual(
+            response_json,
+            [
                 {
                     "name": "testing1",
                     "title": "foldertitle",
                     "id": f["id"],
                     "isFolder": True,
                     "modified": "just now",
+                    "modifiedTimeFull": expected_date,
                     "path": new_name,
                     "location": user_folder,
                     "owners": [{"id": t1g, "name": "testuser1"}],
@@ -113,6 +117,7 @@ class FolderTest(TimRouteTest):
                     "id": f3["id"],
                     "isFolder": True,
                     "modified": "just now",
+                    "modifiedTimeFull": expected_date2,
                     "path": fname2,
                     "location": user_folder,
                     "owners": [{"id": t1g, "name": "testuser1"}],
@@ -138,16 +143,18 @@ class FolderTest(TimRouteTest):
             self.test_user_1.get_personal_folder(), AccessType.view
         )
         db.session.commit()
-        self.get(
-            "/getItems",
-            query_string={"folder": user_folder},
-            expect_content=[
+        response_json2 = self.get("/getItems", query_string={"folder": user_folder})
+        expected_date3 = response_json2[0]["modifiedTimeFull"]
+        self.assertEqual(
+            response_json2,
+            [
                 {
                     "name": "testing2",
                     "title": "foldertitle",
                     "id": f3["id"],
                     "isFolder": True,
                     "modified": "just now",
+                    "modifiedTimeFull": expected_date3,
                     "path": fname2,
                     "location": user_folder,
                     "owners": [{"id": t1g, "name": "testuser1"}],
@@ -655,15 +662,18 @@ class FolderContentTest(TimRouteTest):
         self.get("/getItems", query_string={"folder": folderpath}, expect_content=[])
         User.get_anon().grant_access(d, AccessType.view)
         db.session.commit()
-        self.get(
-            "/getItems",
-            query_string={"folder": folderpath},
-            expect_content=[
+
+        response_json = self.get("/getItems", query_string={"folder": folderpath})
+        expected_date = response_json[0]["modifiedTimeFull"]
+        self.assertEqual(
+            response_json,
+            [
                 {
                     "id": d_id,
                     "isFolder": False,
                     "location": folderpath,
                     "modified": "just now",
+                    "modifiedTimeFull": expected_date,
                     "name": docname,
                     "owners": [
                         {

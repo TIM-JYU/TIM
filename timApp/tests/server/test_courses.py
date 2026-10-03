@@ -52,14 +52,18 @@ class CoursesTest(TimRouteTest):
             "/bookmarks/add",
             {"group": "Test bookmarks", "name": "test", "link": d.path},
         )
-        self.get(
-            f"/courses/documents/Test bookmarks",
-            expect_content=[
+
+        response_json = self.get("/courses/documents/Test bookmarks")
+        expected_date = response_json[0]["modifiedTimeFull"]
+        self.assertEqual(
+            response_json,
+            [
                 {
                     "id": d.id,
                     "isFolder": False,
                     "location": d.location,
                     "modified": "just now",
+                    "modifiedTimeFull": expected_date,
                     "name": "test",
                     "owners": [{"id": self.get_test_user_2_group_id(), "name": u.name}],
                     "path": d.path,

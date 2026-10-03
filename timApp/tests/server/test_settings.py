@@ -14,9 +14,12 @@ class SettingsTest(TimRouteTest):
         self.login_test1()
         d = self.create_doc()
         t1id = self.get_test_user_1_group_id()
-        self.get(
-            "/settings/info",
-            expect_content={
+        response_json = self.get("/settings/info")
+        expected_date_doc = response_json["owned_documents"][0]["modifiedTimeFull"]
+        expected_date_folder = response_json["owned_folders"][0]["modifiedTimeFull"]
+        self.assertEqual(
+            response_json,
+            {
                 "annotations": [],
                 "answer_uploads": [],
                 "answers": [],
@@ -29,6 +32,7 @@ class SettingsTest(TimRouteTest):
                         "isFolder": False,
                         "location": "users/test-user-1",
                         "modified": "just now",
+                        "modifiedTimeFull": expected_date_doc,
                         "name": "doc1",
                         "owners": [{"id": t1id, "name": "testuser1"}],
                         "path": "users/test-user-1/doc1",
@@ -54,6 +58,7 @@ class SettingsTest(TimRouteTest):
                         "isFolder": True,
                         "location": "users",
                         "modified": "just now",
+                        "modifiedTimeFull": expected_date_folder,
                         "name": "test-user-1",
                         "owners": [{"id": t1id, "name": "testuser1"}],
                         "path": "users/test-user-1",

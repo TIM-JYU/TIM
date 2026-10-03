@@ -295,13 +295,15 @@ class TagTest(TimRouteTest):
                 ]
             },
         )
-
-        self.get(
-            f"/tags/getDoc/{d.id}",
-            expect_content={
+        response_json = self.get(f"/tags/getDoc/{d.id}")
+        expected_date = response_json["modifiedTimeFull"]
+        self.assertEqual(
+            response_json,
+            {
                 "id": d.id,
                 "isFolder": False,
                 "location": d.location,
+                "modifiedTimeFull": expected_date,
                 "modified": "just now",
                 "name": "doc5",
                 "owners": [{"id": self.get_test_user_1_group_id(), "name": u.name}],

@@ -1,10 +1,11 @@
 import {Component} from "@angular/core";
 import type {DocumentOrFolder, IFolder, IItem, ITag} from "tim/item/IItem";
 import {TagType} from "tim/item/IItem";
-import {Users} from "tim/user/userService";
+import {isAdmin, Users} from "tim/user/userService";
 import {folderglobals, genericglobals} from "tim/util/globals";
 import {toPromise} from "tim/util/utils";
 import {HttpClient} from "@angular/common/http";
+import {TEACHERS_GROUPNAME} from "tim/user/IUser";
 
 const MESSAGE_LIST_ARCHIVE_FOLDER_PREFIX = "archives/";
 const TIM_MESSAGES_FOLDER_PREFIX = "messages/tim-messages";
@@ -32,15 +33,36 @@ const AccessLevelBadgeInfo: Record<AccessLevelBadge, string> = {
     template: `
         <table class="table" *ngIf="itemList.length > 0 || item.path">
             <thead>
+            <ng-template #sortAsc><span class="glyphicon glyphicon-triangle-top" aria-hidden="true"></span>
+            </ng-template>
+            <ng-template #sortDesc><span class="glyphicon glyphicon-triangle-bottom" aria-hidden="true"></span>
+            </ng-template>
             <tr>
                 <th></th>
-                <th>Name</th>
-                <th>Last modified</th>
-                <th *ngIf="displayAccessBadges" (click)="showAccessBadges = !showAccessBadges">{{showAccessBadges ? "Access" : "A" }}</th>
+                <th (click)="sortListing('name')">
+                    Name
+                    <span *ngIf="currentSortOrder === 'name'">
+                        <span *ngIf="sortByNameAsc; then sortDesc else sortAsc"></span>
+                    </span>
+                </th>
+                <th (click)="sortListing('time')">
+                    Last modified
+                    <span *ngIf="currentSortOrder === 'time'">
+                        <span *ngIf="sortByModifiedDesc; then sortAsc else sortDesc"></span>
+                    </span>
+                </th>
+                <th *ngIf="displayAccessBadges"
+                    (click)="showAccessBadges = !showAccessBadges">{{ showAccessBadges ? "Access" : "A" }}
+                </th>
                 <th>Owners</th>
                 <th>Rights</th>
-                <th *ngIf="displayDocumentTags" (click)="showTags = !showTags">{{ showTags ? "Tags" : "T"}}</th>
-                <th class="gray" (click)="showId = !showId">Id</th>
+                <th *ngIf="displayDocumentTags" (click)="showTags = !showTags">{{ showTags ? "Tags" : "T" }}</th>
+                <th *ngIf="showId" class="gray" (click)="sortListing('id')">
+                    Id
+                    <span *ngIf="currentSortOrder === 'id'">
+                        <span *ngIf="sortByIdAsc; then sortDesc else sortAsc"></span>
+                    </span>
+                </th>
             </tr>
             </thead>
             <tbody>
@@ -69,8 +91,8 @@ const AccessLevelBadgeInfo: Record<AccessLevelBadge, string> = {
                 </td>
                 <td>{{ item.modified }}</td>
                 <td *ngIf="displayAccessBadges" class="col-access-badges">
-                    <ng-container  *ngIf="showAccessBadges">
-                        <span class="accessbadge ab-{{ getItemBadgeName(item.id).toLowerCase() }}" 
+                    <ng-container *ngIf="showAccessBadges">
+                        <span class="accessbadge ab-{{ getItemBadgeName(item.id).toLowerCase() }}"
                               title="{{ AccessLevelBadgeInfo[getItemBadge(item.id)] }}">{{ getItemBadgeName(item.id) }}</span>
                     </ng-container>
                 </td>
@@ -80,20 +102,20 @@ const AccessLevelBadgeInfo: Record<AccessLevelBadge, string> = {
                        href="/view/{{ item.path }}"><i
                             class="glyphicon glyphicon-pencil"></i></a>
                     &ngsp;<a title="Manage" *ngIf="item.rights.manage" href="/manage/{{ item.path }}"><i
-                            class="glyphicon glyphicon-cog"></i></a>
+                        class="glyphicon glyphicon-cog"></i></a>
                     &ngsp;<a title="Teacher" *ngIf="item.rights.teacher && !item.isFolder"
-                       href="/teacher/{{ item.path }}"><i class="glyphicon glyphicon-education"></i></a>
+                             href="/teacher/{{ item.path }}"><i class="glyphicon glyphicon-education"></i></a>
                 </td>
                 <td *ngIf="displayDocumentTags" class="col-item-tags">
                     <ng-container *ngIf="showTags">
                         <span class="itemtags" *ngFor="let tag of getItemTags(item)">
-                            <span class="itemtag tagtype-{{ getTagTypeString(tag) }}" 
-                              title="{{ tag.name }} {{ tag.expires ? '(expires on ' + tag.expires!.toDate() + ')' : '' }}">{{ tag.name }}</span>
+                            <span class="itemtag tagtype-{{ getTagTypeString(tag) }}"
+                                  title="{{ tag.name }} {{ tag.expires ? '(expires on ' + tag.expires!.toDate() + ')' : '' }}">{{ tag.name }}</span>
                         </span>
                     </ng-container>
                 </td>
                 <td *ngIf="showId">
-                    {{item.id}}
+                    {{ item.id }}
                 </td>
             </tr>
             </tbody>
@@ -101,17 +123,18 @@ const AccessLevelBadgeInfo: Record<AccessLevelBadge, string> = {
         <p *ngIf="itemList.length == 0">There are no items to show.</p>
         <tabset *ngIf="canCreate">
             <tab [active]="false" (selectTab)="tabSelection(0)">
-                        <ng-template tabHeading>
-                            <span>Create a new document</span>
-                            <span class="glyphicon glyphicon-file icon-inline" aria-hidden="true"></span>
-                        </ng-template>
-                <create-item itemType="document" itemLocation="{{ item.path }}" [enable]="activeTab === 0"></create-item>
+                <ng-template tabHeading>
+                    <span>Create a new document</span>
+                    <span class="glyphicon glyphicon-file icon-inline" aria-hidden="true"></span>
+                </ng-template>
+                <create-item itemType="document" itemLocation="{{ item.path }}"
+                             [enable]="activeTab === 0"></create-item>
             </tab>
             <tab [active]="false" (selectTab)="tabSelection(1)">
-                        <ng-template tabHeading>
-                            <span>Create a new folder</span>
-                            <span class="glyphicon glyphicon-folder-open icon-inline" aria-hidden="true"></span>
-                        </ng-template>
+                <ng-template tabHeading>
+                    <span>Create a new folder</span>
+                    <span class="glyphicon glyphicon-folder-open icon-inline" aria-hidden="true"></span>
+                </ng-template>
                 <create-item itemType="folder" itemLocation="{{ item.path }}" [enable]="activeTab === 1"></create-item>
             </tab>
         </tabset>
@@ -131,6 +154,10 @@ export class DirectoryListComponent {
     displayAccessBadges: boolean;
     displayDocumentTags: boolean;
     activeTab: number = -1;
+    currentSortOrder: string;
+    sortByNameAsc: boolean;
+    sortByModifiedDesc: boolean;
+    sortByIdAsc: boolean;
 
     constructor(private http: HttpClient) {
         const fg = folderglobals();
@@ -139,8 +166,11 @@ export class DirectoryListComponent {
         this.canCreate = Users.isRealUser();
         this.itemBadges = {};
         this.itemTags = {};
+        this.currentSortOrder = "default";
+        this.sortByNameAsc = true;
+        this.sortByModifiedDesc = true;
+        this.sortByIdAsc = true;
 
-        // TODO: Allow to sort all columns instead
         if (
             this.item.path.startsWith(MESSAGE_LIST_ARCHIVE_FOLDER_PREFIX) ||
             this.item.path.startsWith(TIM_MESSAGES_FOLDER_PREFIX)
@@ -164,6 +194,74 @@ export class DirectoryListComponent {
                 this.itemTags = value;
             });
         }
+
+        if (
+            isAdmin() ||
+            Users.belongsToGroup(TEACHERS_GROUPNAME) ||
+            this.item.rights.manage ||
+            this.item.rights.owner
+        ) {
+            this.showId = true;
+        }
+    }
+
+    sortListing(column: string) {
+        let foldersArr = this.itemList.filter((item) => item.isFolder);
+        let docsArr = this.itemList.filter((item) => !item.isFolder);
+        this.currentSortOrder = column;
+
+        if (column === "name") {
+            foldersArr = foldersArr.sort((a, b) =>
+                a.title.localeCompare(b.title, "fi")
+            );
+            docsArr = docsArr.sort((a, b) =>
+                a.title.localeCompare(b.title, "fi")
+            );
+
+            if (!this.sortByNameAsc) {
+                foldersArr.reverse();
+                docsArr.reverse();
+            }
+
+            this.sortByModifiedDesc = true;
+            this.sortByIdAsc = true;
+            this.sortByNameAsc = !this.sortByNameAsc;
+        } else if (column === "time") {
+            foldersArr.sort((a, b) =>
+                new Date(a.modifiedTimeFull).getTime() <
+                new Date(b.modifiedTimeFull).getTime()
+                    ? 1
+                    : -1
+            );
+            docsArr.sort((a, b) =>
+                new Date(a.modifiedTimeFull).getTime() <
+                new Date(b.modifiedTimeFull).getTime()
+                    ? 1
+                    : -1
+            );
+
+            if (!this.sortByModifiedDesc) {
+                foldersArr.reverse();
+                docsArr.reverse();
+            }
+
+            this.sortByNameAsc = true;
+            this.sortByIdAsc = true;
+            this.sortByModifiedDesc = !this.sortByModifiedDesc;
+        } else {
+            foldersArr.sort((a, b) => a.id - b.id);
+            docsArr.sort((a, b) => a.id - b.id);
+
+            if (!this.sortByIdAsc) {
+                foldersArr.reverse();
+                docsArr.reverse();
+            }
+
+            this.sortByNameAsc = true;
+            this.sortByModifiedDesc = true;
+            this.sortByIdAsc = !this.sortByIdAsc;
+        }
+        this.itemList = foldersArr.concat(docsArr);
     }
 
     listOwnerNames(i: IItem) {

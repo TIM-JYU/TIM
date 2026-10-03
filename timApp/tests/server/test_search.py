@@ -15,10 +15,12 @@ class SearchTest(TimRouteTest):
         d = self.create_doc(initial_par=text_in_document)
         self.get(f"search/createContentFile")
         url = f"search?ignoreRelevance=true&caseSensitive=false&folder=&ignorePlugins=false&query={text_to_search}&regex=false&searchContent=true&searchTitles=true&searchPaths=true&searchTags=true"
-        self.get(
-            url,
-            expect_status=200,
-            expect_content={
+
+        response_json = self.get(url, expect_status=200)
+        expected_date = response_json["content_results"][0]["doc"]["modifiedTimeFull"]
+        self.assertEqual(
+            response_json,
+            {
                 "content_results": [
                     {
                         "doc": {
@@ -26,6 +28,7 @@ class SearchTest(TimRouteTest):
                             "isFolder": False,
                             "location": d.location,
                             "modified": "just now",
+                            "modifiedTimeFull": expected_date,
                             "name": d.short_name,
                             "owners": [
                                 {"id": self.get_test_user_1_group_id(), "name": u_name}
@@ -192,10 +195,11 @@ class SearchTest(TimRouteTest):
         )
         self.get(f"search/createContentFile")
         # User is the doc owner, search results from paragraphs with visibility-condition are always shown.
-        self.get(
-            url,
-            expect_status=200,
-            expect_content={
+        response_json = self.get(url, expect_status=200)
+        expected_date = response_json["content_results"][0]["doc"]["modifiedTimeFull"]
+        self.assertEqual(
+            response_json,
+            {
                 "content_results": [
                     {
                         "doc": {
@@ -203,6 +207,7 @@ class SearchTest(TimRouteTest):
                             "isFolder": False,
                             "location": d.location,
                             "modified": "just now",
+                            "modifiedTimeFull": expected_date,
                             "name": d.short_name,
                             "owners": [
                                 {"id": self.get_test_user_1_group_id(), "name": u1_name}
@@ -286,10 +291,14 @@ class SearchTest(TimRouteTest):
         self.get(f"search/createContentFile")
         self.test_user_1.grant_access(d, AccessType.edit)
         db.session.commit()
-        self.get(
+        response_json = self.get(
             f"search?ignoreRelevance=true&folder=&query={text_to_search}&searchContent=true",
             expect_status=200,
-            expect_content={
+        )
+        expected_date = response_json["content_results"][0]["doc"]["modifiedTimeFull"]
+        self.assertEqual(
+            response_json,
+            {
                 "content_results": [
                     {
                         "doc": {
@@ -297,6 +306,7 @@ class SearchTest(TimRouteTest):
                             "isFolder": False,
                             "location": d.location,
                             "modified": "just now",
+                            "modifiedTimeFull": expected_date,
                             "name": d.short_name,
                             "owners": [
                                 {
@@ -400,10 +410,12 @@ class SearchTest(TimRouteTest):
         )
         self.get(f"search/createContentFile")
         url = f"search?ignoreRelevance=true&folder=&query={search_word}&searchContent=false&searchTitles=true"
-        self.get(
-            url,
-            expect_status=200,
-            expect_content={
+
+        response_json = self.get(url, expect_status=200)
+        expected_date = response_json["title_results"][0]["doc"]["modifiedTimeFull"]
+        self.assertEqual(
+            response_json,
+            {
                 "content_results": [],
                 "errors": [],
                 "incomplete_search_reason": "",
@@ -419,6 +431,7 @@ class SearchTest(TimRouteTest):
                             "isFolder": False,
                             "location": d.location,
                             "modified": "just now",
+                            "modifiedTimeFull": expected_date,
                             "name": d.short_name,
                             "owners": [
                                 {
@@ -477,10 +490,12 @@ class SearchTest(TimRouteTest):
         self.get(f"search/createContentFile")
         tag_to_search = "dog"
         url = f"search?caseSensitive=true&folder=&query={tag_to_search}&regex=false&searchContent=false&searchTitles=false&searchTags=true&searchPaths=false"
-        self.get(
-            url,
-            expect_status=200,
-            expect_content={
+
+        response_json = self.get(url, expect_status=200)
+        expected_date = response_json["tags_results"][0]["doc"]["modifiedTimeFull"]
+        self.assertEqual(
+            response_json,
+            {
                 "content_results": [],
                 "errors": [],
                 "incomplete_search_reason": "",
@@ -494,6 +509,7 @@ class SearchTest(TimRouteTest):
                             "isFolder": False,
                             "location": d.location,
                             "modified": "just now",
+                            "modifiedTimeFull": expected_date,
                             "name": d.short_name,
                             "owners": [
                                 {"id": self.get_test_user_1_group_id(), "name": u.name}
@@ -541,10 +557,12 @@ class SearchTest(TimRouteTest):
         d = self.create_doc(initial_par="Test", path=f"{uf}/a/b/dogs-like-bones/c/d")
         self.get(f"search/createContentFile")
         url = f"search?folder=&query={search_word}&regex=false&searchContent=false&searchTitles=false&searchTags=false&searchPaths=true"
-        self.get(
-            url,
-            expect_status=200,
-            expect_content={
+
+        response_json = self.get(url, expect_status=200)
+        expected_date = response_json["paths_results"][0]["doc"]["modifiedTimeFull"]
+        self.assertEqual(
+            response_json,
+            {
                 "content_results": [],
                 "errors": [],
                 "incomplete_search_reason": "",
@@ -556,6 +574,7 @@ class SearchTest(TimRouteTest):
                             "isFolder": False,
                             "location": d.location,
                             "modified": "just now",
+                            "modifiedTimeFull": expected_date,
                             "name": d.short_name,
                             "owners": [
                                 {"id": self.get_test_user_1_group_id(), "name": u.name}
@@ -614,10 +633,12 @@ class SearchTest(TimRouteTest):
         )
         search_word_2 = "dogs"
         url = f"search?folder=&query={search_word_2}&searchWholeWords=True&searchContent=false&searchTitles=false&searchTags=false&searchPaths=true"
-        self.get(
-            url,
-            expect_status=200,
-            expect_content={
+
+        response_json2 = self.get(url, expect_status=200)
+        expected_date2 = response_json2["paths_results"][0]["doc"]["modifiedTimeFull"]
+        self.assertEqual(
+            response_json2,
+            {
                 "content_results": [],
                 "errors": [],
                 "incomplete_search_reason": "",
@@ -629,6 +650,7 @@ class SearchTest(TimRouteTest):
                             "isFolder": False,
                             "location": d.location,
                             "modified": "just now",
+                            "modifiedTimeFull": expected_date2,
                             "name": d.short_name,
                             "owners": [
                                 {"id": self.get_test_user_1_group_id(), "name": u.name}
