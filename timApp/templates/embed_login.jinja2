@@ -92,18 +92,34 @@
         }
 
         // Reload the task once the user comes back from the login tab.
+        // A page may embed several tasks; the frame whose link was clicked also tells the other
+        // logged-out TIM frames (same origin, so they share the channel) to reload.
+        var channel = window.BroadcastChannel ? new BroadcastChannel("tim-embed-login") : null;
+        if (channel) {
+            channel.onmessage = function (e) {
+                if (e.data === "reload") {
+                    window.location.reload();
+                }
+            };
+        }
         var loginClicked = false;
+        function reloadAfterLogin() {
+            if (!loginClicked) {
+                return;
+            }
+            loginClicked = false;
+            if (channel) {
+                channel.postMessage("reload");
+            }
+            window.location.reload();
+        }
         document.getElementById("tim-embed-login-link").addEventListener("click", function () {
             loginClicked = true;
         });
-        window.addEventListener("focus", function () {
-            if (loginClicked) {
-                window.location.reload();
-            }
-        });
+        window.addEventListener("focus", reloadAfterLogin);
         document.addEventListener("visibilitychange", function () {
-            if (loginClicked && document.visibilityState === "visible") {
-                window.location.reload();
+            if (document.visibilityState === "visible") {
+                reloadAfterLogin();
             }
         });
     })();
