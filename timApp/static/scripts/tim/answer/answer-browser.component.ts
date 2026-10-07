@@ -1290,13 +1290,16 @@ export class AnswerBrowserComponent
                   size: 1,
               }
             : {};
+        const urlParams = getUrlParamsJSON();
+        // The links open outside an embedding frame, so they show the normal TIM view.
+        delete urlParams.embed;
         return `/${newroute}/${this.viewctrl.item.path}?${$httpParamSerializer({
             answerNumber:
                 this.answers.length -
                 this.findSelectedAnswerIndexFromUnFiltered(),
             task: this.getTaskName(),
             user: this.user.name,
-            ...getUrlParamsJSON(),
+            ...urlParams,
             ...rangeParams,
         })}`;
     }
