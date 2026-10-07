@@ -184,6 +184,18 @@ msgid "Open TIM"
 msgstr "Avaa TIM"
 
 #: document/embed.py
+msgid "Login successful"
+msgstr "Kirjautuminen onnistui"
+
+#: document/embed.py
+msgid "You are now logged in to TIM."
+msgstr "Olet nyt kirjautunut TIMiin."
+
+#: document/embed.py
+msgid "You can close this tab and return to the page with the task."
+msgstr "Voit sulkea tämän välilehden ja palata sivulle, jolla tehtävä on."
+
+#: document/embed.py
 msgid "Error"
 msgstr "Virhe"
 

@@ -180,7 +180,8 @@ class EmbedTest(TimRouteTest):
         d = self.create_doc(initial_par=TASK_DOC)
         for task in ("t2", "nosuchtask", "a.b.c.d"):
             tree = self.get(f"/view/{d.id}", as_tree=True, query_string={"task": task})
-            self.assertEqual(["t1", "t2"], task_ids(tree))
+            # Text paragraphs are rendered too (None = paragraph without a task)
+            self.assertEqual([None, "t1", None, "t2"], task_ids(tree))
             self.assertIn("Some text before the task", tree.text_content())
         # The plain answer link of the answer browser shows the whole document
         tree = self.get(
@@ -188,7 +189,7 @@ class EmbedTest(TimRouteTest):
             as_tree=True,
             query_string={"answerNumber": 1, "task": "t2", "user": "testuser1"},
         )
-        self.assertEqual(["t1", "t2"], task_ids(tree))
+        self.assertEqual([None, "t1", None, "t2"], task_ids(tree))
 
     def test_embed_mode(self):
         self.login_test1()
@@ -274,7 +275,7 @@ class EmbedTest(TimRouteTest):
             self.assertEqual(CSP, r.headers.get("Content-Security-Policy"))
             html = r.get_data(as_text=True)
             self.assertIn("Log in to TIM to answer this task.", html)
-            self.assertIn(f'href="/view/{d.path}?login=true" target="_blank"', html)
+            self.assertIn(f'href="/embed/login/{d.path}" target="_blank"', html)
             self.assertNotIn("<tim-root>", html)
             self.assertNotIn("tim-login-menu", html)
 
@@ -295,6 +296,53 @@ class EmbedTest(TimRouteTest):
             r = self.get(f"/view/{d.id}", as_response=True)
             self.assertIsNone(r.headers.get("Content-Security-Policy"))
             self.assertNotIn("Log in to TIM to answer", r.get_data(as_text=True))
+
+    def test_embed_login_page(self):
+        self.login_test1()
+        d = self.create_doc(initial_par=TASK_DOC)
+        self.logout()
+
+        # Logged out: the normal TIM login page (not the embed notice, not the document)
+        r = self.get(f"/embed/login/{d.path}", as_response=True, expect_status=403)
+        html = r.get_data(as_text=True)
+        self.assertIn("<tim-root>", html)
+        self.assertIn("requires_login = true", html)
+        self.assertNotIn("Log in to TIM to answer this task.", html)
+        self.assertNotIn('class="par"', html)
+        with self.client.session_transaction() as s:
+            self.assertEqual(f"http://localhost/embed/login/{d.path}", s["came_from"])
+
+        self.get("/embed/login/no/such/document", expect_status=404)
+
+        # Logged in (the login reloads the page): only the "close this tab" page
+        self.login_test1()
+        r = self.get(f"/embed/login/{d.path}", as_response=True)
+        html = r.get_data(as_text=True)
+        self.assertIn("You are now logged in to TIM.", html)
+        self.assertIn("You can close this tab", html)
+        self.assertIn('new BroadcastChannel("tim-embed-login").postMessage("reload")', html)
+        self.assertNotIn("<tim-root>", html)
+        self.assertNotIn('class="par"', html)
+        self.assertEqual("no-store, must-revalidate", r.headers.get("Cache-Control"))
+
+    def test_embed_does_not_save_last_page(self):
+        """An embedded frame must not become the page the user returns to after logging in."""
+        self.login_test1()
+        d = self.create_doc(initial_par=TASK_DOC)
+        self.get(f"/view/{d.path}")
+        with self.client.session_transaction() as s:
+            self.assertEqual(f"/view/{d.path}?", s["last_doc"])
+        self.get(f"/view/{d.path}", query_string={"task": "t1", "embed": True})
+        with self.client.session_transaction() as s:
+            self.assertEqual(f"/view/{d.path}?", s["last_doc"])
+        self.logout()
+        self.get(
+            f"/view/{d.path}",
+            query_string={"task": "t1", "embed": True},
+            expect_status=403,
+        )
+        with self.client.session_transaction() as s:
+            self.assertNotIn("embed", s.get("last_doc", ""))
 
     def test_embed_no_access(self):
         self.login_test1()

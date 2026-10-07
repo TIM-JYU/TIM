@@ -79,6 +79,7 @@ from timApp.document.document import (
 from timApp.document.docviewparams import DocViewParams, ViewModelSchema
 from timApp.document.embed import (
     add_embed_headers,
+    render_embed_login_done,
     find_par_id_by_task,
     get_embed_allowed_origins,
     render_embed_login,
@@ -258,6 +259,24 @@ def view_document(doc_path):
     ret = view(doc_path, ViewRoute.View)
     taketime("route view end")
     return ret
+
+
+@view_page.get("/embed/login/<path:doc_path>")
+def embed_login(doc_path: str) -> FlaskViewResult:
+    """Login page for an embedded task (the "Log in to TIM" link of the embed notice).
+
+    The link opens this page in a new tab. A logged-out user gets the normal TIM login
+    page. The email login reloads the page and Haka returns to it, so once the user is
+    logged in, the page only tells them to close the tab and return to the page with
+    the task. The document itself is not shown; that would be confusing if it has
+    many tasks.
+    """
+    doc_info = DocEntry.find_by_path(doc_path, fallback_to_id=True)
+    if doc_info is None:
+        raise NotExist()
+    if not logged_in():
+        return render_login(doc_info.document)
+    return render_embed_login_done()
 
 
 @view_page.get("/teacher/<path:doc_path>")
@@ -566,7 +585,11 @@ def view(item_path: str, route: ViewRoute, render_doc: bool = True) -> FlaskView
             remove_path_special_chars(request.path) + (f"?{qs}" if qs else "")
         )
 
-    save_last_page()
+    if not m.embed:
+        # An embedded frame is not a page the user can return to after logging in:
+        # the login page uses last_doc as the return address (see save_came_from),
+        # and a frame may reload at any time while the user is logging in.
+        save_last_page()
 
     doc_info = DocEntry.find_by_path(
         item_path,

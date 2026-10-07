@@ -114,20 +114,48 @@ def render_embed_notice(
     return r
 
 
+def embed_login_url(doc_info: DocInfo) -> str:
+    """Returns the URL of the login page for an embedded task of the document.
+
+    See :func:`timApp.item.routes.embed_login`.
+    """
+    return f"/embed/login/{doc_info.path}"
+
+
 def render_embed_login(doc_info: DocInfo, status: int) -> Response:
     """Renders the "log in to answer" notice for a user who is not logged in.
 
     The login link opens TIM in the top-level window because identity providers
-    typically refuse to be framed.
+    typically refuse to be framed. It leads to the embed login page, which after
+    the login only tells the user to close the tab (instead of showing the whole
+    document).
     """
     return render_embed_notice(
         status,
         title=doc_info.title,
         message=gettext("Log in to TIM to answer this task."),
-        link_url=f"/view/{doc_info.path}?login=true",
+        link_url=embed_login_url(doc_info),
         link_text=gettext("Log in to TIM"),
         hint=gettext("Return to this tab after logging in."),
     )
+
+
+def render_embed_login_done() -> Response:
+    """Renders the page that is shown in the login tab after the user has logged in.
+
+    The page tells the user to close the tab and return to the page with the embedded
+    task. It also asks the logged-out TIM frames (same origin) to reload themselves.
+    """
+    r = make_response(
+        render_template(
+            "embed_login_done.jinja2",
+            title=gettext("Login successful"),
+            message=gettext("You are now logged in to TIM."),
+            hint=gettext("You can close this tab and return to the page with the task."),
+        )
+    )
+    add_no_cache_headers(r)
+    return r
 
 
 def render_embed_no_access(doc_info: DocInfo, message: str | None) -> Response:
