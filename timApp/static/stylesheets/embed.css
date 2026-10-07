@@ -9,6 +9,13 @@ html, body {
     min-height: 0;
 }
 
+/* timRoot wraps the page in a flex column with an inline min-height: 100vh (sticky footer).
+   In a frame 100vh is the frame height, so the content could never become shorter than the
+   frame: the reported height would only grow and leave an empty area below the task. */
+tim-root > div[ng-transclude] {
+    min-height: 0 !important;
+}
+
 /* Bootstrap grid: the content column spans the whole width without offsets. */
 .container-fluid {
     padding-left: 0;
@@ -58,6 +65,18 @@ html, body {
 #pars > .par,
 .paragraphs .par {
     margin-left: 0;
+}
+
+/* The host page spaces the frame: no empty strip above the first or below the last paragraph.
+   (#HELP_PAR is an empty paragraph before the first real one; csPlugin's .csRunDiv has
+   margin-bottom: 1.5em.) */
+#pars > .par:first-child,
+#pars > #HELP_PAR + .par {
+    margin-top: 0;
+}
+
+#pars > .par:nth-last-child(1 of .par) .csRunDiv {
+    margin-bottom: 0;
 }
 
 /* Do not show the document task summary even if it is rendered. */
