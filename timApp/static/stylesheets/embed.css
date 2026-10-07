@@ -79,6 +79,15 @@ tim-root > div[ng-transclude] {
     margin-bottom: 0;
 }
 
+/* The note badge, velp badge, notes and annotations live in a container that is positioned
+   outside the paragraph in the right margin (.notes: right: -<note width>). The frame has no
+   margin, so the container would stick out and give the frame a horizontal scrollbar (and,
+   because that bar takes height, a vertical one). Commenting is done in TIM itself. */
+.par .notes,
+.par .speaker {
+    display: none !important;
+}
+
 /* Do not show the document task summary even if it is rendered. */
 .taskSummary,
 .taskSmallSummary,

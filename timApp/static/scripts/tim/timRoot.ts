@@ -39,6 +39,8 @@ export interface IVisibilityVars {
     userMenuOptions?: boolean;
     editLine?: boolean;
     noteBadgeButton?: boolean;
+    /** Paragraph menu: clicking a paragraph neither selects it nor opens the edit menu. */
+    parMenu?: boolean;
     headerNav?: boolean;
     headerDocumentActions?: boolean;
     scoreBoard?: boolean;
@@ -81,6 +83,8 @@ function hideEmbedStuff(hide: IVisibilityVars) {
     hide.headerNav = true;
     hide.headerDocumentActions = true;
     hide.scoreBoard = true;
+    // The host page shows a single task; editing happens in TIM itself.
+    hide.parMenu = true;
 }
 
 function hideTopButtonsStuff(hide: IVisibilityVars) {
