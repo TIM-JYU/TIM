@@ -91,8 +91,12 @@ class EmbedTest(TimRouteTest):
         # Wrong document id
         with self.assertRaises(NotExist):
             find_par_id_by_task(doc, f"{d.id + 1}.t1")
-        # Not a valid task id
-        self.get(f"/view/{d.id}", query_string={"task": "a.b.c.d"}, expect_status=400)
+        # Not a valid task id (only checked in embed mode, see test_task_param_without_embed)
+        self.get(
+            f"/view/{d.id}",
+            query_string={"task": "a.b.c.d", "embed": True},
+            expect_status=400,
+        )
 
     def test_find_par_id_by_task_in_translation(self):
         """A task referenced from another document (e.g. a translation) is found via the referencing paragraph."""
@@ -114,7 +118,9 @@ class EmbedTest(TimRouteTest):
     def test_task_param_renders_only_that_task(self):
         self.login_test1()
         d = self.create_doc(initial_par=TASK_DOC)
-        tree = self.get(f"/view/{d.id}", as_tree=True, query_string={"task": "t2"})
+        tree = self.get(
+            f"/view/{d.id}", as_tree=True, query_string={"task": "t2", "embed": True}
+        )
         self.assertEqual(["t2"], task_ids(tree))
         self.assertNotIn("Some text before the task", tree.text_content())
 
@@ -125,7 +131,7 @@ class EmbedTest(TimRouteTest):
         tree2 = self.get(
             f"/view/{d.id}",
             as_tree=True,
-            query_string={"b": t2_par.get_id(), "size": 1},
+            query_string={"b": t2_par.get_id(), "size": 1, "embed": True},
         )
         self.assertEqual(
             [p.get("id") for p in tree.cssselect("#pars .par")],
@@ -134,21 +140,23 @@ class EmbedTest(TimRouteTest):
 
         # Full task id with doc id
         tree = self.get(
-            f"/view/{d.id}", as_tree=True, query_string={"task": f"{d.id}.t1"}
+            f"/view/{d.id}",
+            as_tree=True,
+            query_string={"task": f"{d.id}.t1", "embed": True},
         )
         self.assertEqual(["t1"], task_ids(tree))
 
         # Not found -> 404 with a clear message
         self.get(
             f"/view/{d.id}",
-            query_string={"task": "nosuchtask"},
+            query_string={"task": "nosuchtask", "embed": True},
             expect_status=404,
             expect_contains="Task 'nosuchtask' was not found in document",
         )
         # Wrong document
         self.get(
             f"/view/{d.id}",
-            query_string={"task": f"{d.id + 1}.t1"},
+            query_string={"task": f"{d.id + 1}.t1", "embed": True},
             expect_status=404,
         )
         # With b/e the range comes from them; task only selects the answer on the client
@@ -165,6 +173,22 @@ class EmbedTest(TimRouteTest):
             },
         )
         self.assertEqual(["t2"], task_ids(tree))
+
+    def test_task_param_without_embed(self):
+        """Without embed=true, task does not restrict the view (answer links use it on the client)."""
+        self.login_test1()
+        d = self.create_doc(initial_par=TASK_DOC)
+        for task in ("t2", "nosuchtask", "a.b.c.d"):
+            tree = self.get(f"/view/{d.id}", as_tree=True, query_string={"task": task})
+            self.assertEqual(["t1", "t2"], task_ids(tree))
+            self.assertIn("Some text before the task", tree.text_content())
+        # The plain answer link of the answer browser shows the whole document
+        tree = self.get(
+            f"/answers/{d.id}",
+            as_tree=True,
+            query_string={"answerNumber": 1, "task": "t2", "user": "testuser1"},
+        )
+        self.assertEqual(["t1", "t2"], task_ids(tree))
 
     def test_embed_mode(self):
         self.login_test1()
@@ -315,10 +339,9 @@ class EmbedTest(TimRouteTest):
 
             # Without embed=true the full error page is used
             r = self.get(
-                f"/view/{d.id}",
+                "/view/no/such/document",
                 as_response=True,
                 expect_status=404,
-                query_string={"task": "nosuchtask"},
                 headers=[("Accept", "text/html")],
             )
             self.assertIn("<tim-root>", r.get_data(as_text=True))

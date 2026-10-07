@@ -38,19 +38,21 @@ class DocViewParams(DocCommonParams):
     as_user: str | None = None
     user: str | None = None
     task: str | None = None
-    """Show only the paragraph whose plugin has this task id.
+    """In embed mode, show only the paragraph whose plugin has this task id.
 
     Either a plain task name (``task=t1``; the document is taken from the URL)
     or a full task id (``task=123.t1``). Equivalent to ``b=<par_id>&size=1``
     for the matching paragraph.
 
-    If ``b`` or ``e`` is given, they define the range and ``task`` only keeps its
-    client-side meaning: answer links (``answerNumber=...&task=...&user=...``,
-    the "only" link also with ``b`` and ``size``) use it to select the answer.
+    Without ``embed=true``, or if ``b`` or ``e`` is given, the view is not restricted:
+    ``task`` then only has its existing client-side meaning, i.e. answer links
+    (``answerNumber=...&task=...&user=...``, the "only" link also with ``b`` and ``size``)
+    use it to select the answer.
     """
     embed: bool = False
     """Render the document for embedding in an <iframe> on an external page.
 
+    Usually combined with ``task`` to show a single task.
     Implies ``pars_only=true``, hides the task summary and the page margins, and
     adds a ``Content-Security-Policy: frame-ancestors`` header built from the
     ``EMBED_ALLOWED_ORIGINS`` config option.
