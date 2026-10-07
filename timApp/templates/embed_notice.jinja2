@@ -1,15 +1,18 @@
 {#
-  Compact notice shown in embed mode (?embed=true) when the user is not logged in.
+  Compact notice shown in embed mode (?embed=true) instead of the task: the user is not logged in,
+  has no access to the document, or the request failed (e.g. the task does not exist).
   This page is intentionally standalone (no TIM layout or Angular): it is shown inside an <iframe>
-  on an external page, and the login must open in a new top-level window because
-  identity providers (e.g. Haka) refuse to be framed.
+  on an external page, and the link must open in a new top-level window because identity
+  providers (e.g. Haka) refuse to be framed.
+
+  Variables: title, message, user_name (optional), link_url, link_text, hint, embed_allowed_origins.
 #}
 <!DOCTYPE html>
 <html lang="{{ locale|default('en') }}">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>{{ item.title }} - TIM</title>
+    <title>{{ title }} - TIM</title>
     <style>
         :root {
             color-scheme: light dark;
@@ -55,9 +58,12 @@
 </head>
 <body>
 <div class="tim-embed-login" role="status">
-    <span>{{ gettext("Log in to TIM to answer this task.") }}</span>
-    <a class="login" id="tim-embed-login-link" href="{{ login_url }}" target="_blank" rel="noopener">{{ gettext("Log in to TIM") }}</a>
-    <span class="hint">{{ gettext("The login opens in a new tab. This task reloads when you return to this page.") }}</span>
+    <span>{{ message }}</span>
+    {% if user_name %}
+        <span class="hint">{{ gettext("You are logged in as %(name)s.", name=user_name) }}</span>
+    {% endif %}
+    <a class="login" id="tim-embed-login-link" href="{{ link_url }}" target="_blank" rel="noopener">{{ link_text }}</a>
+    <span class="hint">{{ hint }}</span>
 </div>
 <script>
     (function () {

@@ -81,6 +81,8 @@ from timApp.document.embed import (
     add_embed_headers,
     find_par_id_by_task,
     get_embed_allowed_origins,
+    render_embed_login,
+    render_embed_no_access,
 )
 from timApp.document.hide_names import is_hide_names, force_hide_names
 from timApp.document.post_process import (
@@ -602,6 +604,8 @@ def view(item_path: str, route: ViewRoute, render_doc: bool = True) -> FlaskView
                 return render_embed_login(doc_info, 403)
             return render_login(doc_info.document)
         adm = doc_info.document.get_settings().access_denied_message()
+        if m.embed:
+            return render_embed_no_access(doc_info, adm)
         raise AccessDenied(*((adm,) if adm else ()))
 
     if vp.login and not logged_in():
@@ -1229,26 +1233,6 @@ def render_doc_view(
         override_theme=override_theme,
         hide_readmarks=hide_readmarks,
     )
-
-
-def render_embed_login(doc_info: DocInfo, status: int) -> FlaskViewResult:
-    """Renders a compact "log in to answer" notice for embed mode.
-
-    The login link opens TIM in the top-level window because identity providers
-    typically refuse to be framed.
-    """
-    r = make_response(
-        render_template(
-            "embed_login.jinja2",
-            item=doc_info,
-            login_url=f"/view/{doc_info.path}?login=true",
-            embed_allowed_origins=get_embed_allowed_origins(),
-        ),
-        status,
-    )
-    add_no_cache_headers(r)
-    add_embed_headers(r)
-    return r
 
 
 def render_login(item: Document | None) -> FlaskViewResult:

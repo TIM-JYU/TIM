@@ -5,14 +5,19 @@ shown inside an <iframe> on an external page, e.g. a course book hosted outside
 TIM. See :class:`timApp.document.docviewparams.DocViewParams` for the related
 URL parameters.
 """
-from flask import Response, current_app
+from flask import Response, current_app, make_response, render_template, request
+from flask_babel import gettext
+from marshmallow import fields
 
+from timApp.auth.sessioninfo import get_current_user_object
+from timApp.document.docinfo import DocInfo
 from timApp.document.docparagraph import DocParagraph
 from timApp.document.document import Document
 from timApp.plugin.pluginexception import PluginException
 from timApp.plugin.taskid import TaskId
 from timApp.timdb.exceptions import TimDbException
 from timApp.util.flask.requesthelper import NotExist, RouteException
+from timApp.util.flask.responsehelper import add_no_cache_headers
 
 EMBED_ALLOWED_ORIGINS_KEY = "EMBED_ALLOWED_ORIGINS"
 
@@ -69,6 +74,96 @@ def add_embed_headers(response: Response) -> Response:
     """
     response.headers["Content-Security-Policy"] = get_embed_frame_ancestors()
     return response
+
+
+def is_embed_request() -> bool:
+    """Returns whether the current request asks for embed mode (``?embed=true``)."""
+    return request.args.get("embed", "") in fields.Boolean.truthy
+
+
+def render_embed_notice(
+    status: int,
+    title: str,
+    message: str,
+    link_url: str,
+    link_text: str,
+    hint: str,
+    user_name: str | None = None,
+) -> Response:
+    """Renders a compact notice that is shown in the frame instead of the task.
+
+    The notice reports its height to the host page like the embedded document does,
+    and its link opens TIM in a new top-level window. The frame reloads when the user
+    returns to the host page after following the link (e.g. after logging in).
+    """
+    r = make_response(
+        render_template(
+            "embed_notice.jinja2",
+            title=title,
+            message=message,
+            user_name=user_name,
+            link_url=link_url,
+            link_text=link_text,
+            hint=hint,
+            embed_allowed_origins=get_embed_allowed_origins(),
+        ),
+        status,
+    )
+    add_no_cache_headers(r)
+    add_embed_headers(r)
+    return r
+
+
+def render_embed_login(doc_info: DocInfo, status: int) -> Response:
+    """Renders the "log in to answer" notice for a user who is not logged in.
+
+    The login link opens TIM in the top-level window because identity providers
+    typically refuse to be framed.
+    """
+    return render_embed_notice(
+        status,
+        title=doc_info.title,
+        message=gettext("Log in to TIM to answer this task."),
+        link_url=f"/view/{doc_info.path}?login=true",
+        link_text=gettext("Log in to TIM"),
+        hint=gettext(
+            "The login opens in a new tab. This task reloads when you return to this page."
+        ),
+    )
+
+
+def render_embed_no_access(doc_info: DocInfo, message: str | None) -> Response:
+    """Renders the notice for a logged-in user who has no access to the document.
+
+    :param message: The access denied message of the document, if it has one.
+    """
+    return render_embed_notice(
+        403,
+        title=doc_info.title,
+        message=message or gettext("You do not have permission to view this task."),
+        user_name=get_current_user_object().name,
+        link_url=f"/view/{doc_info.path}",
+        link_text=gettext("Open in TIM"),
+        hint=gettext(
+            "In TIM you can log in with another account. "
+            "This task reloads when you return to this page."
+        ),
+    )
+
+
+def render_embed_error(message: str, status: int) -> Response:
+    """Renders an error (e.g. an unknown task) as a compact notice for embed mode requests."""
+    return render_embed_notice(
+        status,
+        title=gettext("Error"),
+        message=message,
+        link_url=request.path,
+        link_text=gettext("Open in TIM"),
+        hint=gettext(
+            "The document opens in a new tab. "
+            "This task reloads when you return to this page."
+        ),
+    )
 
 
 def find_par_id_by_task(doc: Document, task: str) -> str:

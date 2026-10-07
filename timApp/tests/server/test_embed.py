@@ -263,3 +263,54 @@ class EmbedTest(TimRouteTest):
             r = self.get(f"/view/{d.id}", as_response=True)
             self.assertIsNone(r.headers.get("Content-Security-Policy"))
             self.assertNotIn("Log in to TIM to answer", r.get_data(as_text=True))
+
+    def test_embed_no_access(self):
+        self.login_test1()
+        d = self.create_doc(initial_par=TASK_DOC)
+        self.login_test2()
+        with self.temp_config({"EMBED_ALLOWED_ORIGINS": ORIGINS}):
+            # Logged in without access: compact notice that names the user, link opens TIM outside the frame
+            r = self.get(
+                f"/view/{d.id}",
+                as_response=True,
+                expect_status=403,
+                query_string={"task": "t1", "embed": True},
+            )
+            self.assertEqual(CSP, r.headers.get("Content-Security-Policy"))
+            html = r.get_data(as_text=True)
+            self.assertIn("You do not have permission to view this task.", html)
+            self.assertIn("You are logged in as testuser2.", html)
+            self.assertIn(f'href="/view/{d.path}" target="_blank"', html)
+            self.assertNotIn("<tim-root>", html)
+
+            # Non-embed view is unchanged
+            r = self.get(f"/view/{d.id}", as_response=True, expect_status=403)
+            self.assertIsNone(r.headers.get("Content-Security-Policy"))
+
+    def test_embed_error_is_compact(self):
+        self.login_test1()
+        d = self.create_doc(initial_par=TASK_DOC)
+        with self.temp_config({"EMBED_ALLOWED_ORIGINS": ORIGINS}):
+            # An error page in the frame is the compact notice, not the full TIM error page
+            r = self.get(
+                f"/view/{d.id}",
+                as_response=True,
+                expect_status=404,
+                query_string={"task": "nosuchtask", "embed": True},
+                headers=[("Accept", "text/html")],
+            )
+            self.assertEqual(CSP, r.headers.get("Content-Security-Policy"))
+            html = r.get_data(as_text=True)
+            self.assertIn("was not found in document", html)
+            self.assertIn(f'href="/view/{d.id}" target="_blank"', html)
+            self.assertNotIn("<tim-root>", html)
+
+            # Without embed=true the full error page is used
+            r = self.get(
+                f"/view/{d.id}",
+                as_response=True,
+                expect_status=404,
+                query_string={"task": "nosuchtask"},
+                headers=[("Accept", "text/html")],
+            )
+            self.assertIn("<tim-root>", r.get_data(as_text=True))

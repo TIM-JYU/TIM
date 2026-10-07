@@ -154,18 +154,51 @@ msgid "Refresh (F5) to recount"
 msgstr "Virkistä laskenta painamalla F5-näppäintä"
 
 
-#: templates/embed_login.jinja2:60
+#: document/embed.py
 msgid "Log in to TIM to answer this task."
 msgstr "Kirjaudu TIMiin vastataksesi tehtävään."
 
-#: templates/embed_login.jinja2:61
+#: document/embed.py
 msgid "Log in to TIM"
 msgstr "Kirjaudu TIMiin"
 
-#: templates/embed_login.jinja2:62
+#: document/embed.py
 msgid ""
 "The login opens in a new tab. This task reloads when you return to this "
 "page."
 msgstr ""
 "Kirjautuminen avautuu uuteen välilehteen. Tehtävä latautuu uudelleen, kun "
+"palaat tälle sivulle."
+
+#: templates/embed_notice.jinja2
+#, python-format
+msgid "You are logged in as %(name)s."
+msgstr "Olet kirjautunut käyttäjänä %(name)s."
+
+#: document/embed.py
+msgid "You do not have permission to view this task."
+msgstr "Sinulla ei ole oikeutta nähdä tätä tehtävää."
+
+#: document/embed.py
+msgid "Open in TIM"
+msgstr "Avaa TIMissä"
+
+#: document/embed.py
+msgid ""
+"In TIM you can log in with another account. This task reloads when you "
+"return to this page."
+msgstr ""
+"TIMissä voit kirjautua toisella tunnuksella. Tehtävä latautuu uudelleen, "
+"kun palaat tälle sivulle."
+
+#: document/embed.py
+msgid "Error"
+msgstr "Virhe"
+
+#: document/embed.py
+msgid ""
+"The document opens in a new tab. This task reloads when you return to this "
+"page."
+msgstr ""
+"Dokumentti avautuu uuteen välilehteen. Tehtävä latautuu uudelleen, kun "
 "palaat tälle sivulle."
