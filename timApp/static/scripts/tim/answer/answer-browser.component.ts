@@ -33,6 +33,7 @@ import {PurifyModule} from "tim/util/purify.module";
 import type {ITimComponent, ViewCtrl} from "tim/document/viewctrl";
 import {isVelpable} from "tim/document/viewctrl";
 import {ParCompiler} from "tim/editor/parCompiler";
+import {isEmbedMode, notifyEmbedAnswerSaved} from "tim/document/embed";
 import type {
     IAnswerBrowserSettings,
     IGenericPluginMarkup,
@@ -334,6 +335,12 @@ export class AnswerBrowserComponent
                     // Refresh selected answer object since points might have changed
                     this.selectedAnswer = this.filteredAnswers[0];
                     this.updatePoints();
+                }
+                if (args.savedNew && isEmbedMode()) {
+                    notifyEmbedAnswerSaved(
+                        this.taskId.docTask().toString(),
+                        this.selectedAnswer?.points ?? null
+                    );
                 }
             });
             // HACK: for some reason the math mode is lost because of the above call, so we restore it here

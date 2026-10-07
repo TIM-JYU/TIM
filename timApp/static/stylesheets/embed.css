@@ -1,0 +1,69 @@
+/*
+ * Embed mode (?embed=true): the document (usually a single task selected with ?task=...)
+ * is shown inside an <iframe> on an external page. Loaded in addition to viewhide.css.
+ * The content fills the whole frame: no centered column, no page margins and no empty
+ * area where the hidden site header would be.
+ */
+
+html, body {
+    min-height: 0;
+}
+
+/* Bootstrap grid: the content column spans the whole width without offsets. */
+.container-fluid {
+    padding-left: 0;
+    padding-right: 0;
+}
+
+.container-fluid > .row {
+    margin-left: 0;
+    margin-right: 0;
+}
+
+.content-container > div,
+.row.main-content > div {
+    width: 100%;
+    margin-left: 0;
+    padding-left: 0;
+    padding-right: 0;
+}
+
+.row.main-content {
+    margin-left: 0;
+    margin-right: 0;
+}
+
+/* The first row holds only the hidden sidebar and site header; it must not reserve space.
+   (The second .hidden-print row holds flash messages and stays visible.) */
+.container-fluid > .row.hidden-print:first-child {
+    display: none;
+}
+
+.material {
+    border: none;
+    box-shadow: none;
+    border-radius: 0;
+    margin: 0;
+}
+
+/* Drop the centered column of fixed preferred width. */
+.paragraphs {
+    max-width: none !important;
+    min-width: 0 !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+}
+
+/* No left margin reserved for the (hidden) edit line. */
+#pars > .par,
+.paragraphs .par {
+    margin-left: 0;
+}
+
+/* Do not show the document task summary even if it is rendered. */
+.taskSummary,
+.taskSmallSummary,
+tim-view-range-navigation,
+.addBottomContainer {
+    display: none !important;
+}

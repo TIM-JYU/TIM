@@ -77,6 +77,11 @@ from timApp.document.document import (
     Document,
 )
 from timApp.document.docviewparams import DocViewParams, ViewModelSchema
+from timApp.document.embed import (
+    add_embed_headers,
+    find_par_id_by_task,
+    get_embed_allowed_origins,
+)
 from timApp.document.hide_names import is_hide_names, force_hide_names
 from timApp.document.post_process import (
     post_process_pars,
@@ -593,12 +598,22 @@ def view(item_path: str, route: ViewRoute, render_doc: bool = True) -> FlaskView
                 pass  # Prevent opening the unlock page; instead force redirect to /view first
             return redirect(f"/view/{item_path}")
         if not logged_in():
+            if m.embed:
+                return render_embed_login(doc_info, 403)
             return render_login(doc_info.document)
         adm = doc_info.document.get_settings().access_denied_message()
         raise AccessDenied(*((adm,) if adm else ()))
 
     if vp.login and not logged_in():
         return render_login(doc_info.document)
+
+    if m.embed and not logged_in():
+        # Answering requires a login, and the TIM login page must not be opened inside the frame.
+        return render_embed_login(doc_info, 200)
+
+    if m.task is not None:
+        par_id = find_par_id_by_task(doc_info.document, m.task)
+        m = dataclasses.replace(m, task=None, b=par_id, size=1)
 
     # Commit here early to ensure the created anonymous user is persisted
     process_anonymous_access(doc_info, commit=True)
@@ -659,9 +674,12 @@ def view(item_path: str, route: ViewRoute, render_doc: bool = True) -> FlaskView
         item=doc_info,
         route=view_ctx.route.value,
         override_theme=result.override_theme if result else None,
+        embed=m.embed,
     )
     r = make_response(final_html)
     add_no_cache_headers(r)
+    if m.embed:
+        add_embed_headers(r)
 
     if app.config["USE_UI_LANGUAGE_FROM_DOCUMENT_LANGUAGE"]:
         update_lang_override_from_doc(doc_info)
@@ -882,7 +900,7 @@ def render_doc_view(
             user_list = add_missing_users_from_groups(
                 user_list, list(set(ugs) - set(ugs_without_access))
             )
-    elif doc_settings.show_task_summary() and current_user.logged_in:
+    elif doc_settings.show_task_summary() and current_user.logged_in and not m.embed:
         task_summary = compute_task_info(
             doc_info,
             current_user,
@@ -1146,7 +1164,11 @@ def render_doc_view(
         teacher_text=teacher_text,
         hide_links=should_hide_links(doc_settings, rights),
         hide_top_buttons=should_hide_top_buttons(doc_settings, rights),
-        pars_only=m.pars_only or should_hide_paragraphs(doc_settings, rights),
+        pars_only=m.pars_only
+        or m.embed
+        or should_hide_paragraphs(doc_settings, rights),
+        embed=m.embed,
+        embed_allowed_origins=get_embed_allowed_origins() if m.embed else [],
         hide_sidemenu=should_hide_sidemenu(doc_settings, rights),
         hide_editmenu=should_hide_editmenu(doc_settings, rights),
         show_unpublished_bg=show_unpublished_bg,
@@ -1207,6 +1229,26 @@ def render_doc_view(
         override_theme=override_theme,
         hide_readmarks=hide_readmarks,
     )
+
+
+def render_embed_login(doc_info: DocInfo, status: int) -> FlaskViewResult:
+    """Renders a compact "log in to answer" notice for embed mode.
+
+    The login link opens TIM in the top-level window because identity providers
+    typically refuse to be framed.
+    """
+    r = make_response(
+        render_template(
+            "embed_login.jinja2",
+            item=doc_info,
+            login_url=f"/view/{doc_info.path}?login=true",
+            embed_allowed_origins=get_embed_allowed_origins(),
+        ),
+        status,
+    )
+    add_no_cache_headers(r)
+    add_embed_headers(r)
+    return r
 
 
 def render_login(item: Document | None) -> FlaskViewResult:

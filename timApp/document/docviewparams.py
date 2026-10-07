@@ -37,6 +37,20 @@ class DocViewParams(DocCommonParams):
     valid_answers_only: bool | None = None
     as_user: str | None = None
     user: str | None = None
+    task: str | None = None
+    """Show only the paragraph whose plugin has this task id.
+
+    Either a plain task name (``task=t1``; the document is taken from the URL)
+    or a full task id (``task=123.t1``). Equivalent to ``b=<par_id>&size=1``
+    for the matching paragraph.
+    """
+    embed: bool = False
+    """Render the document for embedding in an <iframe> on an external page.
+
+    Implies ``pars_only=true``, hides the task summary and the page margins, and
+    adds a ``Content-Security-Policy: frame-ancestors`` header built from the
+    ``EMBED_ALLOWED_ORIGINS`` config option.
+    """
 
     def __post_init__(self) -> None:
         if self.b and self.e:
@@ -45,6 +59,10 @@ class DocViewParams(DocCommonParams):
         if self.e is not None and self.size is not None:
             raise ValidationError(
                 "Cannot provide e and size parameters at the same time."
+            )
+        if self.task is not None and (self.b is not None or self.e is not None):
+            raise ValidationError(
+                "Cannot provide task and b/e parameters at the same time."
             )
 
 
