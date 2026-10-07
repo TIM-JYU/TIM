@@ -598,7 +598,8 @@ export class AnswerBrowserComponent
 
     async ngAfterViewInit() {
         this.loader.showPlaceholder = false;
-        if (this.urlParamMatchesThisTask()) {
+        // An embedded frame shows only this task, and scrollIntoView would also scroll the host page.
+        if (this.urlParamMatchesThisTask() && !isEmbedMode()) {
             await $timeout(0);
             this.element.nativeElement.scrollIntoView();
         }
