@@ -320,7 +320,9 @@ class EmbedTest(TimRouteTest):
         html = r.get_data(as_text=True)
         self.assertIn("You are now logged in to TIM.", html)
         self.assertIn("You can close this tab", html)
-        self.assertIn('new BroadcastChannel("tim-embed-login").postMessage("reload")', html)
+        self.assertIn(
+            'new BroadcastChannel("tim-embed-login").postMessage("reload")', html
+        )
         self.assertNotIn("<tim-root>", html)
         self.assertNotIn('class="par"', html)
         self.assertEqual("no-store, must-revalidate", r.headers.get("Cache-Control"))

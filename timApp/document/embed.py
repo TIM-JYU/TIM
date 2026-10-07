@@ -151,7 +151,9 @@ def render_embed_login_done() -> Response:
             "embed_login_done.jinja2",
             title=gettext("Login successful"),
             message=gettext("You are now logged in to TIM."),
-            hint=gettext("You can close this tab and return to the page with the task."),
+            hint=gettext(
+                "You can close this tab and return to the page with the task."
+            ),
         )
     )
     add_no_cache_headers(r)
