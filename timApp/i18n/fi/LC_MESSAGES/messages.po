@@ -163,12 +163,8 @@ msgid "Log in to TIM"
 msgstr "Kirjaudu TIMiin"
 
 #: document/embed.py
-msgid ""
-"The login opens in a new tab. This task reloads when you return to this "
-"page."
-msgstr ""
-"Kirjautuminen avautuu uuteen välilehteen. Tehtävä latautuu uudelleen, kun "
-"palaat tälle sivulle."
+msgid "Return to this tab after logging in."
+msgstr "Palaa kirjautumisen jälkeen tähän välilehteen."
 
 #: templates/embed_notice.jinja2
 #, python-format

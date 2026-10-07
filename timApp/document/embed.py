@@ -126,9 +126,7 @@ def render_embed_login(doc_info: DocInfo, status: int) -> Response:
         message=gettext("Log in to TIM to answer this task."),
         link_url=f"/view/{doc_info.path}?login=true",
         link_text=gettext("Log in to TIM"),
-        hint=gettext(
-            "The login opens in a new tab. This task reloads when you return to this page."
-        ),
+        hint=gettext("Return to this tab after logging in."),
     )
 
 
