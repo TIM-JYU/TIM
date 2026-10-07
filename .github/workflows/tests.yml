@@ -21,6 +21,11 @@ jobs:
     needs: skip_check
     if: needs.skip_check.outputs.should_skip != 'true'
 
+    # Secrets can't be referenced in step conditions, so expose the username here.
+    # It is empty in pull requests from forks, which don't get the repository secrets.
+    env:
+      DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+
     strategy:
       matrix:
         test_module:
@@ -71,9 +76,10 @@ jobs:
             tim_rust/target
           key: ${{ runner.os }}-tim-rust-cache-${{ hashFiles('tim_rust/Cargo.lock') }}
       - name: Login to Docker Hub
+        if: "${{ env.DOCKERHUB_USERNAME != '' }}"
         uses: docker/login-action@v3
         with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          username: ${{ env.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
       - name: Log info
         run: |
