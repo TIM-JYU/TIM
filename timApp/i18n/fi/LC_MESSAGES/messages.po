@@ -180,12 +180,8 @@ msgid "Open in TIM"
 msgstr "Avaa TIMissä"
 
 #: document/embed.py
-msgid ""
-"In TIM you can log in with another account. This task reloads when you "
-"return to this page."
-msgstr ""
-"TIMissä voit kirjautua toisella tunnuksella. Tehtävä latautuu uudelleen, "
-"kun palaat tälle sivulle."
+msgid "Open TIM"
+msgstr "Avaa TIM"
 
 #: document/embed.py
 msgid "Error"

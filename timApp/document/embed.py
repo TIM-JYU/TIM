@@ -87,7 +87,7 @@ def render_embed_notice(
     message: str,
     link_url: str,
     link_text: str,
-    hint: str,
+    hint: str | None = None,
     user_name: str | None = None,
 ) -> Response:
     """Renders a compact notice that is shown in the frame instead of the task.
@@ -141,11 +141,8 @@ def render_embed_no_access(doc_info: DocInfo, message: str | None) -> Response:
         message=message or gettext("You do not have permission to view this task."),
         user_name=get_current_user_object().name,
         link_url=f"/view/{doc_info.path}",
-        link_text=gettext("Open in TIM"),
-        hint=gettext(
-            "In TIM you can log in with another account. "
-            "This task reloads when you return to this page."
-        ),
+        # In TIM the user can e.g. log out; the frame reloads on return.
+        link_text=gettext("Open TIM"),
     )
 
 

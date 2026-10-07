@@ -5,7 +5,8 @@
   on an external page, and the link must open in a new top-level window because identity
   providers (e.g. Haka) refuse to be framed.
 
-  Variables: title, message, user_name (optional), link_url, link_text, hint, embed_allowed_origins.
+  Variables: title, message, user_name (optional), link_url, link_text, hint (optional),
+  embed_allowed_origins.
 #}
 <!DOCTYPE html>
 <html lang="{{ locale|default('en') }}">
@@ -63,7 +64,9 @@
         <span class="hint">{{ gettext("You are logged in as %(name)s.", name=user_name) }}</span>
     {% endif %}
     <a class="login" id="tim-embed-login-link" href="{{ link_url }}" target="_blank" rel="noopener">{{ link_text }}</a>
-    <span class="hint">{{ hint }}</span>
+    {% if hint %}
+        <span class="hint">{{ hint }}</span>
+    {% endif %}
 </div>
 <script>
     (function () {
