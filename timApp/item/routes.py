@@ -77,6 +77,14 @@ from timApp.document.document import (
     Document,
 )
 from timApp.document.docviewparams import DocViewParams, ViewModelSchema
+from timApp.document.embed import (
+    add_embed_headers,
+    render_embed_login_done,
+    find_par_id_by_task,
+    get_embed_allowed_origins,
+    render_embed_login,
+    render_embed_no_access,
+)
 from timApp.document.hide_names import is_hide_names, force_hide_names
 from timApp.document.post_process import (
     post_process_pars,
@@ -251,6 +259,24 @@ def view_document(doc_path):
     ret = view(doc_path, ViewRoute.View)
     taketime("route view end")
     return ret
+
+
+@view_page.get("/embed/login/<path:doc_path>")
+def embed_login(doc_path: str) -> FlaskViewResult:
+    """Login page for an embedded task (the "Log in to TIM" link of the embed notice).
+
+    The link opens this page in a new tab. A logged-out user gets the normal TIM login
+    page. The email login reloads the page and Haka returns to it, so once the user is
+    logged in, the page only tells them to close the tab and return to the page with
+    the task. The document itself is not shown; that would be confusing if it has
+    many tasks.
+    """
+    doc_info = DocEntry.find_by_path(doc_path, fallback_to_id=True)
+    if doc_info is None:
+        raise NotExist()
+    if not logged_in():
+        return render_login(doc_info.document)
+    return render_embed_login_done()
 
 
 @view_page.get("/teacher/<path:doc_path>")
@@ -559,7 +585,11 @@ def view(item_path: str, route: ViewRoute, render_doc: bool = True) -> FlaskView
             remove_path_special_chars(request.path) + (f"?{qs}" if qs else "")
         )
 
-    save_last_page()
+    if not m.embed:
+        # An embedded frame is not a page the user can return to after logging in:
+        # the login page uses last_doc as the return address (see save_came_from),
+        # and a frame may reload at any time while the user is logging in.
+        save_last_page()
 
     doc_info = DocEntry.find_by_path(
         item_path,
@@ -593,12 +623,27 @@ def view(item_path: str, route: ViewRoute, render_doc: bool = True) -> FlaskView
                 pass  # Prevent opening the unlock page; instead force redirect to /view first
             return redirect(f"/view/{item_path}")
         if not logged_in():
+            if m.embed:
+                return render_embed_login(doc_info, 403)
             return render_login(doc_info.document)
         adm = doc_info.document.get_settings().access_denied_message()
+        if m.embed:
+            return render_embed_no_access(doc_info, adm)
         raise AccessDenied(*((adm,) if adm else ()))
 
     if vp.login and not logged_in():
         return render_login(doc_info.document)
+
+    if m.embed and not logged_in():
+        # Answering requires a login, and the TIM login page must not be opened inside the frame.
+        return render_embed_login(doc_info, 200)
+
+    # task restricts the view only in embed mode. Elsewhere it keeps its client-side meaning:
+    # answer links (answerNumber=...&task=...&user=...) use it to select the answer, and the
+    # "only" link adds b and size.
+    if m.embed and m.task is not None and m.b is None and m.e is None:
+        par_id = find_par_id_by_task(doc_info.document, m.task)
+        m = dataclasses.replace(m, task=None, b=par_id, size=1)
 
     # Commit here early to ensure the created anonymous user is persisted
     process_anonymous_access(doc_info, commit=True)
@@ -659,9 +704,12 @@ def view(item_path: str, route: ViewRoute, render_doc: bool = True) -> FlaskView
         item=doc_info,
         route=view_ctx.route.value,
         override_theme=result.override_theme if result else None,
+        embed=m.embed,
     )
     r = make_response(final_html)
     add_no_cache_headers(r)
+    if m.embed:
+        add_embed_headers(r)
 
     if app.config["USE_UI_LANGUAGE_FROM_DOCUMENT_LANGUAGE"]:
         update_lang_override_from_doc(doc_info)
@@ -882,7 +930,7 @@ def render_doc_view(
             user_list = add_missing_users_from_groups(
                 user_list, list(set(ugs) - set(ugs_without_access))
             )
-    elif doc_settings.show_task_summary() and current_user.logged_in:
+    elif doc_settings.show_task_summary() and current_user.logged_in and not m.embed:
         task_summary = compute_task_info(
             doc_info,
             current_user,
@@ -1146,7 +1194,11 @@ def render_doc_view(
         teacher_text=teacher_text,
         hide_links=should_hide_links(doc_settings, rights),
         hide_top_buttons=should_hide_top_buttons(doc_settings, rights),
-        pars_only=m.pars_only or should_hide_paragraphs(doc_settings, rights),
+        pars_only=m.pars_only
+        or m.embed
+        or should_hide_paragraphs(doc_settings, rights),
+        embed=m.embed,
+        embed_allowed_origins=get_embed_allowed_origins() if m.embed else [],
         hide_sidemenu=should_hide_sidemenu(doc_settings, rights),
         hide_editmenu=should_hide_editmenu(doc_settings, rights),
         show_unpublished_bg=show_unpublished_bg,

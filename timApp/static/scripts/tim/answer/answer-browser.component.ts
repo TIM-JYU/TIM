@@ -33,6 +33,7 @@ import {PurifyModule} from "tim/util/purify.module";
 import type {ITimComponent, ViewCtrl} from "tim/document/viewctrl";
 import {isVelpable} from "tim/document/viewctrl";
 import {ParCompiler} from "tim/editor/parCompiler";
+import {isEmbedMode, notifyEmbedAnswerSaved} from "tim/document/embed";
 import type {
     IAnswerBrowserSettings,
     IGenericPluginMarkup,
@@ -335,6 +336,12 @@ export class AnswerBrowserComponent
                     this.selectedAnswer = this.filteredAnswers[0];
                     this.updatePoints();
                 }
+                if (args.savedNew && isEmbedMode()) {
+                    notifyEmbedAnswerSaved(
+                        this.taskId.docTask().toString(),
+                        this.selectedAnswer?.points ?? null
+                    );
+                }
             });
             // HACK: for some reason the math mode is lost because of the above call, so we restore it here
             ParCompiler.processAllMathDelayed(this.loader.getPluginElement());
@@ -591,7 +598,8 @@ export class AnswerBrowserComponent
 
     async ngAfterViewInit() {
         this.loader.showPlaceholder = false;
-        if (this.urlParamMatchesThisTask()) {
+        // An embedded frame shows only this task, and scrollIntoView would also scroll the host page.
+        if (this.urlParamMatchesThisTask() && !isEmbedMode()) {
             await $timeout(0);
             this.element.nativeElement.scrollIntoView();
         }
@@ -1283,13 +1291,16 @@ export class AnswerBrowserComponent
                   size: 1,
               }
             : {};
+        const urlParams = getUrlParamsJSON();
+        // The links open outside an embedding frame, so they show the normal TIM view.
+        delete urlParams.embed;
         return `/${newroute}/${this.viewctrl.item.path}?${$httpParamSerializer({
             answerNumber:
                 this.answers.length -
                 this.findSelectedAnswerIndexFromUnFiltered(),
             task: this.getTaskName(),
             user: this.user.name,
-            ...getUrlParamsJSON(),
+            ...urlParams,
             ...rangeParams,
         })}`;
     }

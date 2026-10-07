@@ -1,0 +1,73 @@
+{#
+  Page shown in the login tab after a user has logged in through the "Log in to TIM" link of an
+  embedded task (see embed_notice.jinja2 and the /embed/login/<doc> route). The tab was opened
+  from a page that embeds TIM tasks, so instead of the document the page only tells the user to
+  close the tab. It is standalone like the notice: no TIM layout or Angular.
+
+  Variables: title, message, hint.
+#}
+<!DOCTYPE html>
+<html lang="{{ locale|default('en') }}">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{{ title }} - TIM</title>
+    <style>
+        :root {
+            color-scheme: light dark;
+        }
+        body {
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            font-size: 17px;
+            line-height: 1.5;
+        }
+        .tim-embed-login-done {
+            max-width: 32em;
+            margin: 2em 1em;
+            padding: 1.5em 2em;
+            border: 1px solid rgba(128, 128, 128, 0.5);
+            border-radius: 8px;
+            text-align: center;
+        }
+        .tim-embed-login-done h1 {
+            margin: 0 0 0.5em;
+            font-size: 1.4em;
+        }
+        .tim-embed-login-done p {
+            margin: 0.5em 0;
+        }
+        .tim-embed-login-done .hint {
+            opacity: 0.8;
+        }
+    </style>
+</head>
+<body>
+<div class="tim-embed-login-done" role="status">
+    <h1>{{ title }}</h1>
+    <p>{{ message }}</p>
+    <p class="hint">{{ hint }}</p>
+</div>
+<script>
+    (function () {
+        // The logged-out frames on the embedding page listen on this channel (same origin)
+        // and reload themselves, so the tasks are ready when the user returns to the page.
+        if (window.BroadcastChannel) {
+            new BroadcastChannel("tim-embed-login").postMessage("reload");
+        }
+        // Browsers let a page close its tab only if the tab has no other history entries
+        // (e.g. an email login reloads this page in place; Haka adds the IdP pages).
+        // When it works the user is back on the embedding page right away; otherwise
+        // the text above remains visible.
+        try {
+            window.close();
+        } catch (e) {
+        }
+    })();
+</script>
+</body>
+</html>
