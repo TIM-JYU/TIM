@@ -151,12 +151,20 @@ class EmbedTest(TimRouteTest):
             query_string={"task": f"{d.id + 1}.t1"},
             expect_status=404,
         )
-        # task cannot be combined with b/e
-        self.get(
+        # With b/e the range comes from them; task only selects the answer on the client
+        # (the "only" link of the answer browser: answerNumber, task, user, b, size).
+        tree = self.get(
             f"/view/{d.id}",
-            query_string={"task": "t1", "b": t2_par.get_id()},
-            expect_status=400,
+            as_tree=True,
+            query_string={
+                "answerNumber": 1,
+                "task": "t1",
+                "user": "testuser1",
+                "b": t2_par.get_id(),
+                "size": 1,
+            },
         )
+        self.assertEqual(["t2"], task_ids(tree))
 
     def test_embed_mode(self):
         self.login_test1()

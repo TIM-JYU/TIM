@@ -615,7 +615,8 @@ def view(item_path: str, route: ViewRoute, render_doc: bool = True) -> FlaskView
         # Answering requires a login, and the TIM login page must not be opened inside the frame.
         return render_embed_login(doc_info, 200)
 
-    if m.task is not None:
+    # With b/e (e.g. the "only" answer link), task just selects the answer on the client.
+    if m.task is not None and m.b is None and m.e is None:
         par_id = find_par_id_by_task(doc_info.document, m.task)
         m = dataclasses.replace(m, task=None, b=par_id, size=1)
 

@@ -43,6 +43,10 @@ class DocViewParams(DocCommonParams):
     Either a plain task name (``task=t1``; the document is taken from the URL)
     or a full task id (``task=123.t1``). Equivalent to ``b=<par_id>&size=1``
     for the matching paragraph.
+
+    If ``b`` or ``e`` is given, they define the range and ``task`` only keeps its
+    client-side meaning: answer links (``answerNumber=...&task=...&user=...``,
+    the "only" link also with ``b`` and ``size``) use it to select the answer.
     """
     embed: bool = False
     """Render the document for embedding in an <iframe> on an external page.
@@ -59,10 +63,6 @@ class DocViewParams(DocCommonParams):
         if self.e is not None and self.size is not None:
             raise ValidationError(
                 "Cannot provide e and size parameters at the same time."
-            )
-        if self.task is not None and (self.b is not None or self.e is not None):
-            raise ValidationError(
-                "Cannot provide task and b/e parameters at the same time."
             )
 
 
