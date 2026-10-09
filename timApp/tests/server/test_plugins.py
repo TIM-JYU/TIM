@@ -577,6 +577,46 @@ type: upload
             expect_content="Upload has not been associated with any answer; it should be re-uploaded",
         )
 
+    def test_upload_forced_name(self):
+        self.login_test1()
+        d = self.create_doc(from_file=static_tim_doc("upload_plugin.md"))
+        task_name = "testupload"
+        file_content = "test file"
+        _, ur, _ = self.do_plugin_upload(
+            d, file_content, "test.txt", f"{d.id}.{task_name}", task_name
+        )
+
+        def upload_forced(forced_name: str, **kwargs):
+            return self.post(
+                f"/pluginUpload/{d.id}/{task_name}/",
+                query_string={"forceUploadName": forced_name},
+                data={"file": (io.BytesIO(b"forced file"), "other.txt")},
+                **kwargs,
+            )
+
+        self.login_test2()
+        self.current_user.grant_access(d, AccessType.view)
+        db.session.commit()
+
+        # A forced name must not have the form of the path of a normal upload.
+        forced_name_error = {"error": "Illegal parameter value for 'forceUploadName'."}
+        for forced_name in (f"{TEST_USER_1_USERNAME}/1/test", "2/test"):
+            upload_forced(
+                forced_name, expect_status=400, expect_content=forced_name_error
+            )
+        self.login_test1()
+        self.assertEqual(file_content, self.get_no_warn(ur["file"]))
+
+        # Other forced names are saved as before.
+        for forced_name, path in (
+            ("fixed", "0/0/fixed.txt"),
+            ("dir/fixed", "0/dir/fixed.txt"),
+            ("dir/0/fixed", "dir/0/fixed.txt"),
+            ("a/b/1/fixed", "a/b/1/fixed.txt"),
+        ):
+            r = upload_forced(forced_name, expect_status=200)
+            self.assertEqual(f"/uploads/{d.id}/{task_name}/{path}", r[0]["file"])
+
     def do_plugin_upload(
         self, d: DocInfo, file_content, filename, task_id, task_name, expect_version=1
     ):
