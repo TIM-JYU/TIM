@@ -248,7 +248,7 @@ class UploadedFile(ItemBase):
                     and int(dir_parts[1]) >= 1
                 ):
                     raise RouteException(
-                        "The forced upload name must not have the form name/number/filename."
+                        "Illegal parameter value for 'forceUploadName'."
                     )
                 for part in dir_parts:
                     path = path / part
