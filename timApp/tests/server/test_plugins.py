@@ -599,9 +599,7 @@ type: upload
         db.session.commit()
 
         # A forced name must not have the form of the path of a normal upload.
-        forced_name_error = {
-            "error": "The forced upload name must not have the form name/number/filename."
-        }
+        forced_name_error = {"error": "Illegal parameter value for 'forceUploadName'."}
         for forced_name in (f"{TEST_USER_1_USERNAME}/1/test", "2/test"):
             upload_forced(
                 forced_name, expect_status=400, expect_content=forced_name_error
