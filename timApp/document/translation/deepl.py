@@ -24,6 +24,7 @@ from requests.exceptions import JSONDecodeError
 from sqlalchemy import select
 from sqlalchemy.orm import Mapped
 from werkzeug.exceptions import HTTPException
+from werkzeug.wrappers import Response as WZResponse
 
 from timApp.document.translation.language import Language
 from timApp.document.translation.translationparser import TranslateApproval, NoTranslate
@@ -72,10 +73,43 @@ DEEPL_EXCEPTION_MESSAGE: dict[int, str] = {
 }
 
 
+def convert_to_wz_safe_headers(upstream_headers):
+    return [
+        (k, v)
+        for k, v in upstream_headers.items()
+        if isinstance(v, str)
+        and k.lower()
+        not in {
+            "content-encoding",
+            "transfer-encoding",
+            "connection",
+            "keep-alive",
+            "proxy-authenticate",
+            "proxy-authorization",
+            "te",
+            "trailers",
+            "upgrade",
+        }
+    ]
+
+
 @dataclass
 class DeepLException(HTTPException):
-    status: int
-    description: str
+    response: Response
+    description: str | None = None
+
+    def __post_init__(self):
+        response = WZResponse(
+            response=self.response.content,
+            status=self.response.status_code,
+            headers=convert_to_wz_safe_headers(self.response.headers),
+            content_type=self.response.headers.get("Content-Type"),
+        )
+
+        super().__init__(
+            description=self.description,
+            response=response,
+        )
 
 
 class DeeplTranslationService(RegisteredTranslationService):
@@ -191,13 +225,13 @@ class DeeplTranslationService(RegisteredTranslationService):
             if status_code not in DEEPL_EXCEPTION_MESSAGE:
                 # TODO Do not show this to user. Confirm, that wuff is sent.
                 raise DeepLException(
-                    status=status_code,
                     description=f"'{resp.url}' responded with: {status_code}",
+                    response=resp,
                 )
             else:
                 raise DeepLException(
-                    status=status_code,
                     description=DEEPL_EXCEPTION_MESSAGE[status_code],
+                    response=resp,
                 )
 
     def _translate(
