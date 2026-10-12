@@ -44,6 +44,7 @@ from timApp.document.translation.translator import (
     TranslationServiceKey,
 )
 from timApp.folder.folder import Folder
+from timApp.gamification.badge.badges import BadgeTemplate, Badge
 from timApp.item.block import Block
 from timApp.item.blockassociation import BlockAssociation
 from timApp.item.blockrelevance import BlockRelevance
@@ -72,6 +73,9 @@ from timApp.messaging.timMessage.internalmessage_models import (
     InternalMessageDisplay,
     InternalMessageReadReceipt,
 )
+from timApp.modules.asktim.llm_policy import LLMPolicy
+from timApp.modules.asktim.llm_rule import LLMRule
+from timApp.modules.asktim.llm_usage import LLMUsage
 from timApp.note.usernote import UserNote
 from timApp.notification.notification import Notification
 from timApp.notification.pending_notification import (
@@ -153,6 +157,8 @@ all_models = (
     AnswerUpload,
     AskedJson,
     AskedQuestion,
+    BadgeTemplate,
+    Badge,
     Block,
     BlockAccess,
     BlockAssociation,
@@ -182,6 +188,9 @@ all_models = (
     Lecture,
     LectureAnswer,
     LectureUsers,
+    LLMPolicy,
+    LLMRule,
+    LLMUsage,
     Message,
     MessageListDistribution,
     MessageListMember,

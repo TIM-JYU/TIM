@@ -71,6 +71,10 @@ export class PluginMeta {
         }
     }
 
+    public getDocumentId() {
+        return this.getTaskId()?.docId;
+    }
+
     protected getPlugin() {
         let p = this.plugintype ?? this.getParentAttr("plugin-type");
         if (!p) {
