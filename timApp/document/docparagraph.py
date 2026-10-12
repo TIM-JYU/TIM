@@ -135,8 +135,10 @@ class DocParagraph:
         "__is_setting",
         "__setting_type",
         "__rands",
+        "__rnd_saves",
         "__rnd_seed",
         "answer_nr",
+        "answer_info",
         "ask_new",
         "attrs",
         "doc",
@@ -180,11 +182,15 @@ class DocParagraph:
         # get_referenced_pars.
         self.ref_pars = {}
         self.__rands = None  # random number macros for this pg
+        self.__rnd_saves = None
         self.__rnd_seed = 0
         self.attrs: dict[str, str] | None = None
         self.nomacros = None
         self.ref_chain = None
         self.answer_nr: int | None = None  # needed if variable tasks, None = not task at all or not variable task
+        from answer.answers import ExistingAnswersInfo
+
+        self.answer_info: ExistingAnswersInfo | None = None  # needed if variable task
         self.md = ""
         self.id = None
         self.ask_new: bool | None = None  # to send for plugins to force new question
@@ -605,14 +611,21 @@ class DocParagraph:
         """Returns the Markdown of this paragraph."""
         return self.md
 
-    def insert_rnds(self, rnd_seed: SeedType | None) -> bool:
+    def insert_rnds(
+        self, rnd_seed: SeedType | None, rnd_saves: dict | None = None
+    ) -> bool:
         """Inserts Jinja rnd variable as a list of random numbers based to attribute rnd and rnd_seed
         return True if attribute rnd found and OK, else False
         """
         if self.attrs is None:
             return False
-        self.__rands, self.__rnd_seed, state = get_rands_as_dict(
-            self.attrs, rnd_seed, None
+        if self.answer_info and self.answer_info.latest_answer and not rnd_saves:
+            content = self.answer_info.latest_answer.content_as_json
+            rnd_saves = None
+            if isinstance(content, dict):
+                rnd_saves = content.get("rnd_saves", None)
+        self.__rands, self.__rnd_seed, state, self.__rnd_saves = get_rands_as_dict(
+            self.attrs, rnd_seed, None, rnd_saves
         )
         if self.__rands is None:
             return False
@@ -620,6 +633,9 @@ class DocParagraph:
 
     def get_rands(self):
         return self.__rands
+
+    def get_rnd_saves(self):
+        return self.__rnd_saves
 
     def get_nomacros(self):
         if self.nomacros is not None:
