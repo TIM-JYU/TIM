@@ -7,6 +7,26 @@ from lxml.etree import ParserError
 from lxml.html import tostring, fragment_fromstring, document_fromstring
 from lxml.html.clean import Cleaner
 
+SVG_TAGS = ["svg", "defs", "path", "g", "use", "rect", "circle"]
+
+SVG_ATTRS = [
+    "xmlns",
+    "xmlns:xlink",
+    "version",
+    "width",
+    "height",
+    "viewbox",
+    "d",
+    "x",
+    "y",
+    "id",
+    "xlink:href",
+    "fill",
+    "stroke",
+    "stroke-width",
+    "transform",
+]
+
 TIM_SAFE_TAGS = [
     "a",
     "abbr",
@@ -286,19 +306,19 @@ TIM_SAFE_ATTRS = frozenset(
 )
 
 c_no_style = Cleaner(
-    allow_tags=TIM_SAFE_TAGS,
+    allow_tags=TIM_SAFE_TAGS + SVG_TAGS,
     comments=False,
     forms=False,
     remove_unknown_tags=False,
-    safe_attrs=TIM_SAFE_ATTRS,
+    safe_attrs=TIM_SAFE_ATTRS | set(SVG_ATTRS),
 )
 
 c_with_styles = Cleaner(
-    allow_tags=TIM_SAFE_TAGS + ["style"],
+    allow_tags=TIM_SAFE_TAGS + SVG_TAGS + ["style"],
     comments=False,
     forms=False,
     remove_unknown_tags=False,
-    safe_attrs=TIM_SAFE_ATTRS,
+    safe_attrs=TIM_SAFE_ATTRS | set(SVG_ATTRS),
 )
 
 
