@@ -3,7 +3,7 @@ Python program
 ``` {#PLUGINNAMEHERE plugin="csPlugin"}
 type: py
 path: user
-fullprogram: |!!
+fullprogram: |0!!
 # BYCODEBEGIN
 print('Hello world!')
 # BYCODEEND

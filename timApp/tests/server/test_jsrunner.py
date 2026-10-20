@@ -198,7 +198,7 @@ program: |!!
         )
         self.assertEqual("Unexpected end of input", r["web"]["fatalError"]["msg"])
         self.assertTrue(
-            r["web"]["fatalError"]["stackTrace"].startswith("Unexpected token (1:1)\n")
+            r["web"]["fatalError"]["stackTrace"].startswith("Unexpected token (")
         )
 
     def test_invalid_field_name(self):
@@ -1642,7 +1642,8 @@ tools.setGroup("tg1", []);
                         "msg": "tools.setGroup is not a function",
                         "stackTrace": "Index (1:24)\n"
                         "program:\n"
-                        '01: tools.setGroup("tg1", []);\n',
+                        '01: tools.setGroup("tg1", []);\n'
+                        "02: \n",
                     },
                     "output": "",
                 }

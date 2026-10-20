@@ -499,7 +499,9 @@ def expand_macros(
                 if pos >= 0:
                     gm = str(globalmacros.get(gmacro, ""))
                     text = text.replace(macrotext, gm)
-            gm = str(globalmacros.get("ADDFOREVERY", ""))
+            from timApp.document.docsettings import DocSettings, ADDFOREVERY_KEY
+
+            gm = str(globalmacros.get(ADDFOREVERY_KEY, ""))
             if gm:
                 text = gm + "\n" + text
         startstr = env.comment_start_string + "LOCAL"

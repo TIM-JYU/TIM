@@ -4,8 +4,13 @@ from enum import Enum
 from textwrap import shorten
 from typing import Generator
 
+# noinspection PyPackageRequirements
 import yaml
+
+# noinspection PyPackageRequirements
 from yaml import YAMLError, CSafeLoader, Event, AliasEvent, NodeEvent
+
+# noinspection PyPackageRequirements
 from yaml.scanner import ScannerError
 
 from timApp.util.utils import count_chars_from_beginning
@@ -36,7 +41,14 @@ class MergeStyle(Enum):
     Replace = "r"
     Append = "a"
     ReplaceIfNotExist = "r?"
+    ReplaceOnlyIfExists = "r!"
 
+
+MERGE_HINT_VALUES = {m.value for m in MergeStyle}
+
+MERGE_HINT_PATTERN = "|".join(
+    re.escape(m.value) for m in sorted(MergeStyle, key=lambda m: -len(m.value))
+)
 
 YamlMergeInfo = dict[str, MergeStyle]
 
@@ -76,10 +88,15 @@ class YamlBlock:
         values, hints = parse_yaml(md)
         return YamlBlock(values=values, merge_hints=hints)
 
-    def merge_with(self, other: "YamlBlock"):
+    def merge_with(
+        self, other: "YamlBlock", do_merge_hints: bool = False
+    ) -> "YamlBlock":
         new_vals = deepcopy(self.values)
         merge(new_vals, other.values, other.merge_hints)
-        return YamlBlock(values=new_vals, merge_hints=other.merge_hints)
+        merge_hints = other.merge_hints
+        if do_merge_hints:
+            merge_hints = (self.merge_hints or {}) | (other.merge_hints or {})
+        return YamlBlock(values=new_vals, merge_hints=merge_hints)
 
     def to_markdown(self):
         return yaml.dump(self.values, default_flow_style=False)
@@ -89,14 +106,17 @@ missing_space_after_colon = re.compile(
     "^[ \t]*[^ :[\\]()'\"]*:[^ /=:]"
 )  # kissa:istuu mutta ei http://koti tai a:=5
 multiline_unindented_string = re.compile(
-    r"""^( *)([^ :"']+): *(\|[+-]?)([0-9]*) *([^ 0-9+-]+[^ ]*)( (a|r|r\?))? *$"""
-)  # program: ||| or  program: |!!!
+    rf"""^( *)([^ :"']+): *([|>][+-]?)([0-9]*) *([^ 0-9+-]+[^ ]*)( +#?({MERGE_HINT_PATTERN})(?= |$).*| +#.*)? *$"""
+)
 normal_multiline_indented_string = re.compile(
     """^( *)([^ :"']+): *([|>][+-]?)([0-9]*) *$"""
 )  # program: | or  program: |+2
 multiline_unindented_obj_string = re.compile(
     """^( *)([^ :"']+): *@ *([^ 0-9+-]+[^ ]*)$"""
 )  # object: @|| or  object: @!!!
+merge_hint_comment = re.compile(
+    rf"(?:^|\s)#({MERGE_HINT_PATTERN})(?:\s|$)"
+)  # a: 1 #r jotain
 
 
 def strip_code_block(md: str) -> str:
@@ -133,12 +153,12 @@ def compare_same(s1: str, s2: str, n: int) -> bool:
 
 def correct_obj(text: str) -> str:
     """
-    Also gives an other way to write unindented object attributes, by starting
-    the attribute like: `object: @!!`  (`!!` could any combinations of chars except space
+    Also gives another way to write unindented object attributes, by starting
+    the attribute like: `object: @!!`  (`!!` could any combinations of chars except space)
     and ending it by `!!` in first column.
 
-    :param text: Text to convert to proper yaml.
-    :return: Text that is proper yaml obj
+    :param text: Text to convert to proper YAML.
+    :return: Text that is proper YAML obj
     """
     """
      Problem analyze:
@@ -197,7 +217,7 @@ def correct_obj(text: str) -> str:
         multiline = False
         multiline_string = False
         end_str = ""
-        indent = None
+        indent = ""
         multiline_first_indent = None
         original_indent_len = 0
         max_allowed_spaces = 0
@@ -207,7 +227,7 @@ def correct_obj(text: str) -> str:
             r2 = multiline_unindented_string.match(line)
             if (
                 r2 and not multiline
-            ):  # we have multiline string and we do nothing until it ends
+            ):  # we have multiline string, and we do nothing until it ends
                 end_str = r2.group(5)
                 indent = r2.group(1)
                 max_allowed_spaces = original_indent_len = len(indent)
@@ -268,12 +288,12 @@ def correct_obj(text: str) -> str:
 
 def correct_yaml(text: str) -> tuple[str, YamlMergeInfo]:
     """Inserts missing spaces after `:` Like  `width:20` => `width: 20`
-    Also gives an other way to write multiline attributes, by starting
-    the multiline like: `program: |!!`  (`!!` could any combinations of chars except space
+    Also gives another way to write multiline attributes, by starting
+    the multiline like: `program: |!!`  (`!!` could any combinations of chars except space)
     and ending it by `!!` in first column.
 
-    :param text: Text to convert to proper yaml.
-    :return: Text that is proper yaml.
+    :param text: Text to convert to proper YAML.
+    :return: Text that is proper YAML.
     """
     # don't use splitlines here - it loses the possible last trailing newline character, and we don't want that.
     if (
@@ -284,7 +304,7 @@ def correct_yaml(text: str) -> tuple[str, YamlMergeInfo]:
     s = ""
     multiline = False
     end_str = ""
-    indent = None
+    indent = ""
     merge_hints = {}
     encountered_keys = set()
     multiline_first_indent = None
@@ -292,7 +312,9 @@ def correct_yaml(text: str) -> tuple[str, YamlMergeInfo]:
     max_allowed_spaces = 0
     lf = ""
     end_match = None
+    multiline_ended_last = False
     for line in lines:
+        multiline_ended_last = False
         line = line.rstrip()
         if end_match:  # to protect : space insertion while in normal | or >
             if not end_match.match(line):
@@ -316,32 +338,40 @@ def correct_yaml(text: str) -> tuple[str, YamlMergeInfo]:
             continue
         r = multiline_unindented_string.match(line)
         if r and not multiline:
+            block_style_indicator = str(r.group(3)) or ""
             end_str = r.group(5)
             indent = r.group(1)
+            key_indent_len = len(indent)
             multiline_first_indent = None
-            fls = 0
+            indent_indicator = 0
+            indent_indicator_string = ""
             if r.group(4):
-                fls = int(r.group(4))
+                indent_indicator_string = r.group(4)
+                indent_indicator = int(indent_indicator_string)
+                if indent_indicator <= 0:
+                    indent_indicator_string = "1"
                 multiline_first_indent = 0
-                needed_indent_length = max(original_indent_len - fls + 1, 0)
+                needed_indent_length = max(key_indent_len - indent_indicator + 1, 0)
+                # needed_indent_length = original_indent_len + indent_indicator
                 indent = " " * needed_indent_length
             original_indent_len = len(indent)
-            max_allowed_spaces = original_indent_len + fls
+            max_allowed_spaces = original_indent_len + indent_indicator
             multiline = True
-            line, _ = line.split("|", 1)
+            line = line[: r.start(3)]
             key = r.group(2)
             hint = r.group(7)
-            if hint in ("a", "r", "r?"):
+            if hint in MERGE_HINT_VALUES:
                 if key in encountered_keys:
                     raise DuplicateKeyMergeHintError(key)
                 merge_hints[key] = MergeStyle(hint)
-            s = s + lf + line + r.group(3) + r.group(4)
+            s = s + lf + line + block_style_indicator + indent_indicator_string
             lf = "\n"
             encountered_keys.add(key)
             continue
         if multiline:
             if compare_same(line, end_str, max_allowed_spaces):
                 multiline = False
+                multiline_ended_last = True
                 continue
             if multiline_first_indent is None:
                 multiline_first_indent = count_chars_from_beginning(line, " ")
@@ -357,15 +387,19 @@ def correct_yaml(text: str) -> tuple[str, YamlMergeInfo]:
                     raise InvalidIndentError(line)
             line = indent + line
         else:
-            key = line.split(":", 1)[0].strip()
-            if key:
+            key, _, rest = (s.strip() for s in line.partition(":"))
+            if key and not key[0] == "#":  # not a comment
                 if key in encountered_keys and key in merge_hints:
                     raise DuplicateKeyMergeHintError(key)
+                if hm := merge_hint_comment.search(rest):
+                    merge_hints[key] = MergeStyle(hm.group(1))
                 encountered_keys.add(key)
         s = s + lf + line
         lf = "\n"
     if multiline:
         raise BlockEndMissingError(end_str)
+    if multiline_ended_last:
+        s += "\n"
     return s, merge_hints
 
 
@@ -443,34 +477,38 @@ def merge(a: dict, b: dict, merge_info: YamlMergeInfo | None = None):
     :param b: The second dictionary.
 
     """
-    return __merge_helper(a, b, 0, merge_info=merge_info)
+    __merge_helper(a, b, 0, merge_info=merge_info)
 
 
-default_append_keys = {"css", "themes"}
+default_append_keys = {"css", "themes", "globalmacros", "ADDFOREVERY"}
 
 
 def __merge_helper(
     a: dict, b: dict, depth: int = 0, merge_info: YamlMergeInfo | None = None
 ):
     for key in b:
-        if key in a:
-            if isinstance(a[key], dict) and isinstance(b[key], dict):
-                __merge_helper(a[key], b[key], depth + 1, merge_info)
-            elif a[key] == b[key]:
-                pass
-            elif type(a[key]) != type(b[key]):
+        hint = merge_info.get(key) if merge_info else None
+        if key not in a:
+            if hint != MergeStyle.ReplaceOnlyIfExists:
                 a[key] = b[key]
-            else:
-                m = (
-                    MergeStyle.Append
-                    if key in default_append_keys
-                    else MergeStyle.Replace
-                )
-                if merge_info:
-                    m = merge_info.get(key, m)
-                if m == MergeStyle.Replace:
-                    a[key] = b[key]
-                elif m == MergeStyle.Append:
-                    a[key] += b[key]
-        else:
+            continue
+        if hint == MergeStyle.ReplaceIfNotExist:
+            continue  # avain on jo olemassa, joten a:n arvo säilyy
+        if hint == MergeStyle.Replace or hint == MergeStyle.ReplaceOnlyIfExists:
             a[key] = b[key]
+            continue
+        if isinstance(a[key], dict) and isinstance(b[key], dict):
+            __merge_helper(a[key], b[key], depth + 1, merge_info)
+            continue
+        if a[key] == b[key]:
+            continue
+        if type(a[key]) is not type(b[key]):
+            a[key] = b[key]
+            continue
+        if hint == MergeStyle.Append or key in default_append_keys:
+            if isinstance(a[key], set):
+                a[key] |= b[key]
+            else:
+                a[key] += b[key]
+            continue
+        a[key] = b[key]
