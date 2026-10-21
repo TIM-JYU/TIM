@@ -295,6 +295,6 @@ avain: joopa
         self.assertEqual({"a": "x\ny"}, yb.values)
 
     def test_multiline_indicator_twice(self):
-        yb = YamlBlock.from_markdown("a: |1!!\n  x\n y\n!!\nb: |+1aa\n z\naa")
+        yb = YamlBlock.from_markdown("a: |1!!\n  x\n y\n!!\nb: |+1aa\n z\naa\n")
         self.assertEqual(" x\ny\n", yb.values["a"])
         self.assertEqual("z\n", yb.values["b"])

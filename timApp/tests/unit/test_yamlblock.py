@@ -171,7 +171,7 @@ test2
         self.assertEqual({"css": ""}, yb.values)
 
     def test_one_char_terminator(self):
-        yb = YamlBlock.from_markdown("css: |!\nhello\n!")
+        yb = YamlBlock.from_markdown("css: |!\nhello\n!\n")
         self.assertEqual({"css": "hello\n"}, yb)
 
     def test_multiple_multiline(self):

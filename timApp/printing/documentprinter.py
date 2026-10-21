@@ -12,6 +12,7 @@ from flask import current_app
 from pypandoc import _validate_formats
 from sqlalchemy import select
 
+from document.yamlblock import strip_code_block_print
 from timApp.auth.accesshelper import has_view_access
 from timApp.auth.sessioninfo import get_current_user_object
 from timApp.document.docentry import DocEntry
@@ -857,7 +858,7 @@ class DocumentPrinter:
                 exp_md = par.get_expanded_markdown(
                     macroinfo=macroinfo, ignore_errors=True
                 )
-                out_pars.append(strip_code_block(exp_md.strip()))
+                out_pars.append(strip_code_block_print(exp_md.strip()))
 
         return "\n\n".join(out_pars)
 

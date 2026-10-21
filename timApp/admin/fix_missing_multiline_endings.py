@@ -1,6 +1,7 @@
 """Due to 03d73c1f728c4ac38c599cc8d6b711b5fe816684, it is always mandatory to terminate a custom multiline YAML value.
 This script adds any missing ones.
 """
+# noinspection PyPackageRequirements
 from yaml import YAMLError
 
 from timApp.admin.util import (
@@ -28,29 +29,41 @@ def fix_multiline_endings(doc: DocInfo, args: DryrunnableArguments) -> int:
             try:
                 YamlBlock.from_markdown(p.get_expanded_markdown(mi))
             except BlockEndMissingError as e:
-                new_md = p.get_markdown().rstrip()
-                cb = get_code_block_str(new_md)
+                new_md = p.get_markdown()
+                cb, _ = get_code_block_str(new_md)
+
                 if len(cb) >= 3:
-                    new_md = new_md.rstrip(cb).rstrip()
+                    closing_start = new_md.rfind("\n" + cb)
+                    if closing_start >= 0:
+                        new_md = (
+                            new_md[:closing_start]
+                            + "\n"
+                            + e.end_str
+                            + new_md[closing_start:]
+                        )
+                    else:
+                        new_md = new_md.rstrip() + "\n" + e.end_str + "\n" + cb
                 elif len(cb) > 0:
                     print(
-                        f"Too short code block marker encountered at {get_url_for_match(args, d, p)}"
+                        f"Too short code block marker encountered at "
+                        f"{get_url_for_match(args, d, p)}"
                     )
                     continue
                 else:
-                    pass
-                new_md += "\n" + e.end_str + "\n" + cb
+                    new_md = new_md.rstrip() + "\n" + e.end_str + "\n"
+
                 p.set_markdown(new_md)
                 try:
                     YamlBlock.from_markdown(p.get_expanded_markdown(mi))
                 except YAMLError:
                     print(f"Unable to fix YAML for {get_url_for_match(args, d, p)}")
                     continue
+
                 found += 1
                 if not args.dryrun:
                     p.save()
                 print_match(args, d, p, f"missing multiline terminator ({e.end_str})")
-            except YAMLError as e:
+            except YAMLError:
                 print(
                     f"Skipping otherwise broken YAML at {get_url_for_match(args, d, p)}"
                 )

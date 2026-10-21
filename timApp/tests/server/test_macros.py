@@ -361,7 +361,7 @@ css: |!!
                     "verySmallAnimal": "very small Cat",
                     "Cat": "red",
                 },
-                "css": ".red { color: red !important; }",
+                "css": ".red { color: red !important; }\n",
             },
             settings.get_dict().values,
         )

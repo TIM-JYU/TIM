@@ -119,19 +119,85 @@ merge_hint_comment = re.compile(
 )  # a: 1 #r jotain
 
 
+def get_code_block_str(md: str) -> tuple[str, int]:
+    """
+    Find the opening fence marker and its starting position.
+
+    Leading whitespace is skipped. The marker is a run of
+    backticks (`) or tildes (~).
+    This function only identifies the opening marker; it does not validate a
+    matching closing fence.
+
+    :param md: Markdown text to inspect.
+    :return: The marker string and its starting index, or an empty string and -1
+        if no marker is found.
+    """
+    start = 0
+    while start < len(md) and md[start].isspace():
+        start += 1
+
+    if start == len(md) or md[start] not in ("`", "~"):
+        return "", -1
+
+    marker_char = md[start]
+    marker_length = count_chars_from_beginning(md[start:], marker_char)
+    return marker_char * marker_length, start
+
+
 def strip_code_block(md: str) -> str:
-    code_block_marker = get_code_block_str(md)
+    """
+    Remove the opening and closing fences from a Markdown code block.
+
+    The content between the fences is returned, including the newline before
+    the closing fence. If a valid opening or closing fence is not found, the
+    original Markdown is returned.
+
+    :param md: Markdown text that may contain a fenced code block.
+    :return: The code block contents, or the original Markdown if no block is found.
+    """
+    code_block_marker, opening_start = get_code_block_str(md)
     if len(code_block_marker) < 3:
         return md
-    # Strip only after verifying we have a code block, otherwise we might break YAML spacing
+    # Use strip only after verifying we have a code block,
+    # otherwise we might break YAML spacing
+    first_newline = md.find("\n", opening_start)
+    closing_start = md.rfind("\n" + code_block_marker)
+
+    if first_newline == -1 or closing_start == -1:
+        return md
+    # Note: We include the newline after the opening code block marker
+    # and the newline before the closing code block marker in the
+    # returned string, to preserve the original formatting of the YAML content.
+    return md[first_newline + 1 : closing_start + 1]
+
+
+# noinspection GrazieInspection
+def strip_code_block_print(md: str) -> str:
+    """
+    Original version that removes too much whitespace
+    from the end of the code block.  This is not good for YAML.
+    The used rstrip(f"\n{code_block_marker}") all newlines
+    and also the code_block_markers if it is at the end of the string.
+    For example if the code block ends with "a`\n```"
+    then the ` is removed too.  From "```\n\n\n\n```"
+    this will return "" but the correct would be "\n\n\n"  (3 newlines).
+    So this function is not used in the most of code but it is
+    left here for downward compatibility.
+    This function is used only in documentprinter.py because it has worked
+    in the past and changing it will break
+    some tests in timApp/tests/server/test_printing.py
+    that depend on the old behavior (= number of newlines in
+    the end of the merged code blocks).
+
+    :param md: Markdown text that may contain a fenced code block.
+    :return: The code block contents, or the original Markdown if no block is found.
+    """
+    code_block_marker, _ = get_code_block_str(md)
+    if len(code_block_marker) < 3:
+        return md
+        # Strip only after verifying we have a code block, otherwise we might break YAML spacing
     md = md.strip()
     return md.split("\n", 1)[1].rstrip(f"\n{code_block_marker}")
-
-
-def get_code_block_str(md: str) -> str:
-    md = md.lstrip()  # Strip to ensure correct count
-    code_block_marker = "`" * count_chars_from_beginning(md, "`")
-    return code_block_marker
 
 
 def compare_same(s1: str, s2: str, n: int) -> bool:
@@ -312,9 +378,7 @@ def correct_yaml(text: str) -> tuple[str, YamlMergeInfo]:
     max_allowed_spaces = 0
     lf = ""
     end_match = None
-    multiline_ended_last = False
     for line in lines:
-        multiline_ended_last = False
         line = line.rstrip()
         if end_match:  # to protect : space insertion while in normal | or >
             if not end_match.match(line):
@@ -371,7 +435,6 @@ def correct_yaml(text: str) -> tuple[str, YamlMergeInfo]:
         if multiline:
             if compare_same(line, end_str, max_allowed_spaces):
                 multiline = False
-                multiline_ended_last = True
                 continue
             if multiline_first_indent is None:
                 multiline_first_indent = count_chars_from_beginning(line, " ")
@@ -398,8 +461,6 @@ def correct_yaml(text: str) -> tuple[str, YamlMergeInfo]:
         lf = "\n"
     if multiline:
         raise BlockEndMissingError(end_str)
-    if multiline_ended_last:
-        s += "\n"
     return s, merge_hints
 
 

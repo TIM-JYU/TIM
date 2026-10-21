@@ -21,7 +21,7 @@ from timApp.user.usergroupmember import UserGroupMember
 
 class JsRunnerTestBase(TimRouteTest):
     def create_jsrun(self, md):
-        return self.create_doc(
+        return self.try_create_doc(
             initial_par=rf"""
 #- {{#r plugin=jsrunner}}
 {md}"""
@@ -1628,10 +1628,11 @@ tools.setString("t2", tools.getString("t2", "") + "=" + tools.getRealName());
         d = self.create_jsrun(
             """
 fields: []
-group: testuser1
 program: |!!
 tools.setGroup("tg1", []);
-!!"""
+!!
+group: testuser1
+"""
         )
         # Group methods are only usable in postProgram.
         self.do_jsrun(
