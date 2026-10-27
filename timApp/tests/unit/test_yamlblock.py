@@ -1,6 +1,9 @@
 import unittest
 
+# noinspection PyPackageRequirements
 import yaml
+
+# noinspection PyPackageRequirements
 from yaml import YAMLError
 
 from timApp.document.yamlblock import (
@@ -70,48 +73,48 @@ test2
     """
 
     def test_empty(self):
-        self.assertEqual(YamlBlock.from_markdown(""), {})
+        self.assertEqual({}, YamlBlock.from_markdown(""))
 
     def test_parse(self):
         yb = YamlBlock.from_markdown(self.md1)
         self.assertEqual(
-            yb,
             {
                 "macros": {"first": "a", "second": "b"},
                 "css": ".red {\n    color: red;\n}\n",
             },
+            yb,
         )
 
     def test_merge_replace(self):
         yb = YamlBlock.from_markdown(self.md1)
         yb2 = YamlBlock.from_markdown(self.md2)
         ybc = YamlBlock.from_markdown(self.combined_append)
-        self.assertEqual(yb.merge_with(yb2).values, ybc.values)
+        self.assertEqual(ybc.values, yb.merge_with(yb2).values)
 
         yb2 = YamlBlock.from_markdown(self.md2.replace("|!!", "|!! r"))
         self.assertEqual(yb2.merge_hints, {"css": MergeStyle.Replace})
         self.assertEqual(
-            yb.merge_with(yb2).values,
             YamlBlock.from_markdown(self.combined_replace).values,
+            yb.merge_with(yb2).values,
         )
 
     def test_merge_replace_if_not_exist(self):
         yb = YamlBlock.from_markdown(self.md1)
         yb2 = YamlBlock.from_markdown(self.md2.replace("|!!", "|!! r?"))
-        self.assertEqual(yb2.merge_hints, {"css": MergeStyle.ReplaceIfNotExist})
+        self.assertEqual({"css": MergeStyle.ReplaceIfNotExist}, yb2.merge_hints)
         self.assertEqual(
-            yb.merge_with(yb2).values,
             {
                 "css": ".red {\n    color: red;\n}\n",
                 "macros": {"first": "a", "second": "c", "third": "d"},
             },
+            yb.merge_with(yb2).values,
         )
 
     def test_merge_append(self):
         yb = YamlBlock.from_markdown(self.md1)
-        self.assertEqual(yb.merge_hints, {})
+        self.assertEqual({}, yb.merge_hints)
         yb2 = YamlBlock.from_markdown(self.md2.replace("|!!", "|!! a"))
-        self.assertEqual(yb2.merge_hints, {"css": MergeStyle.Append})
+        self.assertEqual({"css": MergeStyle.Append}, yb2.merge_hints)
         ybc = YamlBlock.from_markdown(self.combined_append)
         self.assertEqual(yb.merge_with(yb2).values, ybc.values)
 
@@ -150,30 +153,30 @@ test2
         for md in standard:
             yb = YamlBlock.from_markdown(md)
             self.assertEqual(
-                yb.values,
                 yaml.load(md, yaml_loader),
+                yb.values,
                 msg=f"\nFailed YAML:\n-----\n{md}\n-----",
             )
 
     def test_missing_end(self):
         with self.assertRaises(BlockEndMissingError) as e:
             YamlBlock.from_markdown("css: |!!\ntest\n")
-        self.assertEqual(e.exception.end_str, "!!")
+        self.assertEqual("!!", e.exception.end_str)
         with self.assertRaises(BlockEndMissingError) as e:
             YamlBlock.from_markdown("css: |xx")
-        self.assertEqual(e.exception.end_str, "xx")
+        self.assertEqual("xx", e.exception.end_str)
 
     def test_empty_multiline_key(self):
         yb = YamlBlock.from_markdown("css: |!!\n!!")
-        self.assertEqual(yb.values, {"css": ""})
+        self.assertEqual({"css": ""}, yb.values)
 
     def test_one_char_terminator(self):
-        yb = YamlBlock.from_markdown("css: |!\nhello\n!")
-        self.assertEqual(yb, {"css": "hello"})
+        yb = YamlBlock.from_markdown("css: |!\nhello\n!\n")
+        self.assertEqual({"css": "hello\n"}, yb)
 
     def test_multiple_multiline(self):
         yb = YamlBlock.from_markdown(self.multiple_multiline)
-        self.assertEqual(yb.values, {"a": "test1\n", "b": "test2\n"})
+        self.assertEqual({"a": "test1\n", "b": "test2\n"}, yb.values)
 
     def test_same_key_diff_level(self):
         yb = YamlBlock.from_markdown(
@@ -195,7 +198,7 @@ ing
 !!
  b: test2"""
         )
-        self.assertEqual(yb.values, {"macros": {"a": "test\ning\n", "b": "test2"}})
+        self.assertEqual({"macros": {"a": "test\ning\n", "b": "test2"}}, yb.values)
         yb2 = YamlBlock.from_markdown(
             """
 macros:
@@ -206,7 +209,7 @@ continued
         )
         ybm = yb.merge_with(yb2)
         self.assertEqual(
-            ybm.values, {"macros": {"a": "test\ning\ncontinued\n", "b": "xxx"}}
+            {"macros": {"a": "test\ning\ncontinued\n", "b": "xxx"}}, ybm.values
         )
 
     def test_duplicate_key_append(self):
@@ -333,3 +336,110 @@ i: &i [*h,*h,*h,*h,*h,*h,*h,*h,*h]
         yb2 = YamlBlock.from_markdown("css: 'body {display: none;}'")
         result = yb.merge_with(yb2)
         self.assertEqual({"css": "html {display: none;}body {display: none;}"}, result)
+
+    def test_merge_hint_comment(self):
+        yb = YamlBlock.from_markdown("a: 1 #r\nb: [1,2] #a\nc: x #r?\nd: y #r!\ne: z")
+        self.assertEqual(
+            {
+                "a": MergeStyle.Replace,
+                "b": MergeStyle.Append,
+                "c": MergeStyle.ReplaceIfNotExist,
+                "d": MergeStyle.ReplaceOnlyIfExists,
+            },
+            yb.merge_hints,
+        )
+        self.assertEqual({"a": 1, "b": [1, 2], "c": "x", "d": "y", "e": "z"}, yb.values)
+
+    def test_merge_hint_comment_not_hint(self):
+        yb = YamlBlock.from_markdown("a: 1 #abc\nb: x#a\nc: 'q #a'\nd: 2 # r\n#e: 3 #a")
+        self.assertEqual({}, yb.merge_hints)
+
+    def test_merge_hint_comment_duplicate(self):
+        with self.assertRaises(DuplicateKeyMergeHintError):
+            YamlBlock.from_markdown("a: 1 #r\na: 2")
+
+    def test_merge_list_append_comment(self):
+        yb = YamlBlock.from_markdown("a: [1, 2]")
+        yb2 = YamlBlock.from_markdown("a: [3] #a")
+        self.assertEqual({"a": [1, 2, 3]}, yb.merge_with(yb2).values)
+        yb3 = YamlBlock.from_markdown("a: [3]")
+        self.assertEqual({"a": [3]}, yb.merge_with(yb3).values)
+
+    def test_merge_dict_replace(self):
+        yb = YamlBlock.from_markdown("a:\n  x: 1\n  y: 2")
+        yb2 = YamlBlock.from_markdown("a: #r\n  y: 3\n  z: 4")
+        self.assertEqual({"a": MergeStyle.Replace}, yb2.merge_hints)
+        self.assertEqual(
+            {"a": {"y": 3, "z": 4}},
+            yb.merge_with(yb2).values,
+            "Merge with replace hint failed",
+        )
+        yb3 = YamlBlock.from_markdown("a:\n  y: 3\n  z: 4")
+        self.assertEqual({"a": {"x": 1, "y": 3, "z": 4}}, yb.merge_with(yb3).values)
+
+    def test_merge_dict_replace_if_not_exist(self):
+        yb = YamlBlock.from_markdown("a:\n  x: 1")
+        yb2 = YamlBlock.from_markdown("a: #r?\n  y: 3\nb: #r?\n  z: 4")
+        self.assertEqual({"a": {"x": 1}, "b": {"z": 4}}, yb.merge_with(yb2).values)
+
+    def test_merge_replace_only_if_exists(self):
+        yb = YamlBlock.from_markdown("a: 1\nb:\n  x: 1")
+        yb2 = YamlBlock.from_markdown("a: 2 #r!\nb: #r!\n  y: 2\nc: 3 #r!\nd: 4")
+        self.assertEqual({"a": 2, "b": {"y": 2}, "d": 4}, yb.merge_with(yb2).values)
+
+    def test_merge_different_types_and_equal(self):
+        yb = YamlBlock.from_markdown("a: 1\nb: [1]\nc: x")
+        yb2 = YamlBlock.from_markdown("a: text\nb: [1] #a\nc: x")
+        self.assertEqual({"a": "text", "b": [1], "c": "x"}, yb.merge_with(yb2).values)
+
+    def test_merge_hints_combined(self):
+        yb = YamlBlock.from_markdown("a: 1 #r")
+        yb2 = YamlBlock.from_markdown("b: [1] #a")
+        self.assertEqual(
+            {"a": MergeStyle.Replace, "b": MergeStyle.Append},
+            yb.merge_with(yb2, do_merge_hints=True).merge_hints,
+        )
+
+    def test_merge_set_append(self):
+        yb = YamlBlock.from_markdown("a: !!set {x, y}")
+        yb2 = YamlBlock.from_markdown("a: !!set {z} #a")
+        self.assertEqual({"a": {"x", "y", "z"}}, yb.merge_with(yb2).values)
+
+    def test_merge_set_replace(self):
+        yb = YamlBlock.from_markdown("a: !!set {x, y}")
+        yb2 = YamlBlock.from_markdown("a: !!set {z} #r")
+        self.assertEqual({"a": {"z"}}, yb.merge_with(yb2).values)
+
+    def test_merge_multiline_replace_only_if_exists(self):
+        yb = YamlBlock.from_markdown(self.md1)
+        yb2 = YamlBlock.from_markdown(self.md2.replace("|!!", "|!! r!"))
+        self.assertEqual(yb2.merge_hints, {"css": MergeStyle.ReplaceOnlyIfExists})
+        self.assertEqual(
+            YamlBlock.from_markdown(self.combined_replace).values,
+            yb.merge_with(yb2).values,
+        )
+        yb3 = YamlBlock.from_markdown("macros:\n a: b")
+        self.assertEqual(
+            {"macros": {"a": "b", "second": "c", "third": "d"}},
+            yb3.merge_with(yb2).values,
+        )
+
+    def test_merge_multiline_append_comment_list(self):
+        yb = YamlBlock.from_markdown("a: [1]\ntext: |!!\nx\nx2\n!!\n")
+        yb2 = YamlBlock.from_markdown("a: [2] #a\ntext: |!! #a\ny\ny2\n!!\n")
+        self.assertEqual(
+            {"a": [1, 2], "text": "x\nx2\ny\ny2\n"}, yb.merge_with(yb2).values
+        )
+
+    def test_merge_multiline_hint_with_hash(self):
+        for h, style in (
+            ("a", MergeStyle.Append),
+            ("r", MergeStyle.Replace),
+            ("r?", MergeStyle.ReplaceIfNotExist),
+            ("r!", MergeStyle.ReplaceOnlyIfExists),
+        ):
+            for prefix in ("", "#"):
+                yb = YamlBlock.from_markdown(
+                    self.md2.replace("|!!", f"|!! {prefix}{h}")
+                )
+                self.assertEqual({"css": style}, yb.merge_hints)

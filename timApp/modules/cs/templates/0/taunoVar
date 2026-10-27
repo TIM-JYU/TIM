@@ -11,7 +11,7 @@ indent: 8
 maxrows: 10
 placeholder: Näytä ensin Tauno, tee tehtävä ja kopioi sitten Taunon koodi tähän
 stem: "Sijoita i:n arvo summa-muuttujaan raahaamalla i:n arvo.  Kasvata i:n arvoa vetämälle sen päälle +1 'laatikko'.  Muuttuuko summa-muuttujan arvo kun kasvatat i:tä? "
-fullprogram: |!!
+fullprogram: |0!!
 public class Kasvata
 {
     public static void Main()
