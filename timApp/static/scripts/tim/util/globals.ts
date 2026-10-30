@@ -116,6 +116,8 @@ export interface IMeetingMemoSettings {
 
 export interface IDocumentGlobals extends IItemGlobals {
     parsOnly: boolean;
+    embedMode: boolean;
+    embedAllowedOrigins: string[];
     users: IUserListEntry[];
     startIndex: number;
     docVersion: [number, number];

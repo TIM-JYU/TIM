@@ -178,6 +178,15 @@ def error_generic(
 ):
     help_email = app.config["HELP_EMAIL"]
     if "text/html" in request.headers.get("Accept", ""):
+        # Imported here: embed imports this module.
+        from timApp.document.embed import is_embed_request, render_embed_error
+
+        if is_embed_request():
+            # The page is shown in an <iframe> on an external page: no full TIM error page there.
+            return render_embed_error(
+                error or f"An error occurred ({code}).",
+                code,
+            )
         return (
             render_template(
                 template,

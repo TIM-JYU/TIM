@@ -1,0 +1,137 @@
+{#
+  Compact notice shown in embed mode (?embed=true) instead of the task: the user is not logged in,
+  has no access to the document, or the request failed (e.g. the task does not exist).
+  This page is intentionally standalone (no TIM layout or Angular): it is shown inside an <iframe>
+  on an external page, and the link must open in a new top-level window because identity
+  providers (e.g. Haka) refuse to be framed.
+
+  Variables: title, message, user_name (optional), link_url, link_text, hint (optional),
+  embed_allowed_origins.
+#}
+<!DOCTYPE html>
+<html lang="{{ locale|default('en') }}">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{{ title }} - TIM</title>
+    <style>
+        :root {
+            color-scheme: light dark;
+        }
+        html, body {
+            margin: 0;
+            padding: 0;
+            background: transparent;
+        }
+        body {
+            font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            font-size: 15px;
+            line-height: 1.4;
+        }
+        .tim-embed-login {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 0.5em 1em;
+            margin: 4px;
+            padding: 0.75em 1em;
+            border: 1px solid rgba(128, 128, 128, 0.5);
+            border-radius: 6px;
+        }
+        .tim-embed-login a.login {
+            display: inline-block;
+            padding: 0.4em 1em;
+            border-radius: 4px;
+            background: #0070c0;
+            color: #fff;
+            text-decoration: none;
+            font-weight: 600;
+        }
+        .tim-embed-login a.login:hover,
+        .tim-embed-login a.login:focus {
+            background: #005a9c;
+        }
+        .tim-embed-login .hint {
+            opacity: 0.8;
+            font-size: 0.9em;
+        }
+    </style>
+</head>
+<body>
+<div class="tim-embed-login" role="status">
+    <span>{{ message }}</span>
+    {% if user_name %}
+        <span class="hint">{{ gettext("You are logged in as %(name)s.", name=user_name) }}</span>
+    {% endif %}
+    <a class="login" id="tim-embed-login-link" href="{{ link_url }}" target="_blank" rel="noopener">{{ link_text }}</a>
+    {% if hint %}
+        <span class="hint">{{ hint }}</span>
+    {% endif %}
+</div>
+<script>
+    (function () {
+        var allowedOrigins = {{ embed_allowed_origins|tojson }};
+        var targetOrigin = null;
+        var ancestor = null;
+        if (window.location.ancestorOrigins && window.location.ancestorOrigins.length > 0) {
+            ancestor = window.location.ancestorOrigins[0];
+        } else if (document.referrer) {
+            try {
+                ancestor = new URL(document.referrer).origin;
+            } catch (e) {
+                ancestor = null;
+            }
+        }
+        if (ancestor && (ancestor === window.location.origin || allowedOrigins.indexOf(ancestor) >= 0)) {
+            targetOrigin = ancestor;
+        }
+
+        function postHeight() {
+            if (window.parent === window || !targetOrigin) {
+                return;
+            }
+            var height = Math.ceil(document.documentElement.getBoundingClientRect().height);
+            window.parent.postMessage({type: "tim-embed", event: "resize", height: height}, targetOrigin);
+        }
+
+        window.addEventListener("load", postHeight);
+        window.addEventListener("resize", postHeight);
+        if (window.ResizeObserver) {
+            new ResizeObserver(postHeight).observe(document.documentElement);
+        }
+
+        // Reload the task once the user comes back from the login tab.
+        // A page may embed several tasks; the frame whose link was clicked also tells the other
+        // logged-out TIM frames (same origin, so they share the channel) to reload.
+        var channel = window.BroadcastChannel ? new BroadcastChannel("tim-embed-login") : null;
+        if (channel) {
+            channel.onmessage = function (e) {
+                if (e.data === "reload") {
+                    window.location.reload();
+                }
+            };
+        }
+        var loginClicked = false;
+        function reloadAfterLogin() {
+            if (!loginClicked) {
+                return;
+            }
+            loginClicked = false;
+            if (channel) {
+                channel.postMessage("reload");
+            }
+            window.location.reload();
+        }
+        document.getElementById("tim-embed-login-link").addEventListener("click", function () {
+            loginClicked = true;
+        });
+        window.addEventListener("focus", reloadAfterLogin);
+        document.addEventListener("visibilitychange", function () {
+            if (document.visibilityState === "visible") {
+                reloadAfterLogin();
+            }
+        });
+    })();
+</script>
+</body>
+</html>

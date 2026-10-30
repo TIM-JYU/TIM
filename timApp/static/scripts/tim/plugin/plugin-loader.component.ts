@@ -139,6 +139,7 @@ export class PluginLoaderComponent implements AfterViewInit, OnDestroy, OnInit {
     @ContentChild("contenthtml") contenthtml?: ElementRef<HTMLElement>;
     public defaultload = true;
     loadPluginAfterInit = false;
+    private embedMode = false;
     public showBrowser: boolean = false;
     public hideBrowser: boolean = false;
     private forceBrowser: boolean = false;
@@ -178,6 +179,7 @@ export class PluginLoaderComponent implements AfterViewInit, OnDestroy, OnInit {
         const globals = genericglobals();
         if (isDocumentGlobals(globals)) {
             this.lazyActivated = globals.docSettings.lazyAnswers ?? false;
+            this.embedMode = globals.embedMode;
         }
     }
 
@@ -207,7 +209,12 @@ export class PluginLoaderComponent implements AfterViewInit, OnDestroy, OnInit {
             if (
                 (getURLParameter("task") === this.parsedTaskId.name &&
                     !this.preview) ||
-                getViewName() == "review"
+                getViewName() == "review" ||
+                // An embedded page (?embed=true) shows only a few tasks. Load them right away,
+                // not on the first mouseenter/touchstart, so that the answer browsers exist:
+                // otherwise the points are not shown and no answer-saved message is sent
+                // to the host page when the user answers e.g. with the keyboard.
+                (this.embedMode && !this.preview)
             ) {
                 this.loadPluginAfterInit = true;
             }
