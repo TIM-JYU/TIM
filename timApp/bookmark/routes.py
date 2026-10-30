@@ -7,6 +7,7 @@ from timApp.auth.accesshelper import (
     get_doc_or_abort,
     verify_view_access,
     verify_admin,
+    AccessDenied,
 )
 from timApp.auth.sessioninfo import get_current_user_object
 from timApp.bookmark.bookmarks import (
@@ -125,6 +126,10 @@ def delete_bookmark(bm: BookmarkNoLink) -> Response:
                 try:
                     ug = verify_valid_course(path)
                 except CourseException:
+                    continue
+                except AccessDenied:
+                    # the user must be able to remove the course bookmark
+                    # even if they no longer have active rights to the course document
                     continue
                 self_enrolled_group_membership = next(
                     (

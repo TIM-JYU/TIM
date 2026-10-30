@@ -18,6 +18,7 @@ from timApp.timdb.exceptions import TimDbException
 from timApp.timdb.sqa import db, run_sql
 from timApp.user.user import User
 from timApp.util.file_utils import compute_file_sha1
+from timApp.util.flask.requesthelper import RouteException
 
 DIR_MAPPING = {
     BlockType.File: "files",
@@ -239,6 +240,16 @@ class UploadedFile(ItemBase):
                 if missing > 0:
                     parts = ["0"] * missing + parts
                 dir_parts = [secure_filename(p) or "0" for p in parts[:-1]]
+                # The path of a normal upload has the form user_name/number/filename (see above).
+                # A forced name must not have the same form, so that the two kinds of paths stay apart.
+                if (
+                    len(dir_parts) == 2
+                    and dir_parts[1].isdigit()
+                    and int(dir_parts[1]) >= 1
+                ):
+                    raise RouteException(
+                        "Illegal parameter value for 'forceUploadName'."
+                    )
                 for part in dir_parts:
                     path = path / part
                 secured_name = secure_filename(parts[-1]) or "0"
