@@ -34,6 +34,7 @@ from timApp.user.special_group_names import (
     SPECIAL_GROUPS,
     FUNCTIONSCHEDULER_GROUPNAME,
 )
+from timApp.user.subgroups import SubGroup
 from timApp.user.usergroupdoc import UserGroupDoc
 from timApp.user.usergroupmember import UserGroupMember, membership_current
 from timApp.util.flask.cache import cache
@@ -151,6 +152,23 @@ class UserGroup(db.Model, TimeStampMixin, SCIMEntity):
     internalmessage_display: Mapped[List["InternalMessageDisplay"]] = relationship(
         back_populates="usergroup"
     )
+
+    # For subgroups; see subgroups.py for details
+    subgroups: Mapped[List["SubGroup"]] = relationship(
+        foreign_keys="SubGroup.parent_id",
+        back_populates="parent",
+        cascade="all, delete-orphan",
+    )
+    """Links to the groups that belong to this one. Always empty if this group is
+    itself a subgroup, because the hierarchy is at most one level deep."""
+
+    subgroup_of: Mapped[Optional["SubGroup"]] = relationship(
+        foreign_keys="SubGroup.child_id",
+        back_populates="child",
+        cascade="all, delete-orphan",
+        uselist=False,
+    )
+    """Link to the group this one belongs to, or None if it is not a subgroup."""
 
     def __repr__(self):
         return f"<UserGroup(id={self.id}, name={self.name})>"
@@ -347,6 +365,31 @@ class UserGroup(db.Model, TimeStampMixin, SCIMEntity):
             .scalars()
             .one()
         )
+
+    @property
+    def is_subgroup(self) -> bool:
+        """Whether this group belongs to another group as a subgroup."""
+        return self.subgroup_of is not None
+
+    @property
+    def parent_group(self) -> UserGroup | None:
+        """The group this one is a subgroup of, or None if it is not a subgroup."""
+        link = self.subgroup_of
+        return link.parent if link is not None else None
+
+    @property
+    def subgroup_list(self) -> list[UserGroup]:
+        """The groups that belong to this one as subgroups."""
+        return [link.child for link in self.subgroups]
+
+    @staticmethod
+    def get_subgroups(name: str) -> list[UserGroup] | None:
+        """The subgroups of the named group, or None if no such group exists.
+
+        An empty list means the group exists but has no subgroups.
+        """
+        ug = UserGroup.get_by_name(name)
+        return ug.subgroup_list if ug else None
 
 
 @lru_cache

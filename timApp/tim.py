@@ -44,6 +44,7 @@ from timApp.document.minutes.routes import minutes_blueprint
 from timApp.document.routes import doc_bp
 from timApp.document.translation.routes import tr_bp
 from timApp.gamification.generateMap import generateMap
+from timApp.gamification.badge.routes import badges_blueprint
 from timApp.item.distribute_rights import dist_bp
 from timApp.item.manage import manage_page
 from timApp.item.routes import view_page
@@ -57,6 +58,7 @@ from timApp.messaging.messagelist.mailman_events import (
 )
 from timApp.messaging.messagelist.routes import messagelist
 from timApp.messaging.timMessage.routes import tim_message
+from timApp.modules.asktim.asktim_main import asktim
 from timApp.modules.fields.cbcountfield import cbcountfield_route
 from timApp.note.routes import notes
 from timApp.notification.notify import notify
@@ -120,6 +122,7 @@ blueprints = [
     annotations,
     answers,
     backup,
+    badges_blueprint,
     clipboard,
     contacts,
     course_blueprint,
@@ -181,6 +184,7 @@ blueprints = [
     ide,
     profile_blueprint,
     health_blueprint,
+    asktim,
 ]
 
 if app.config["BOOKMARKS_ENABLED"]:

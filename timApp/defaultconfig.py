@@ -33,7 +33,7 @@ ACCESSIBILITY_STATEMENT_DOC = "tim/saavutettavuusseloste"
 
 # Path to TIM document containing the Terms of service The link to the document is shown in page footer.
 # If None, link to the document is not shown
-TERMS_OF_SERVICE_DOC = None
+TERMS_OF_SERVICE_DOC = "tim/kayttoehdot"
 
 ALLOWED_DOCUMENT_UPLOAD_MIMETYPES = ["text/plain"]
 COMPRESS_DEBUG = True
@@ -52,6 +52,8 @@ LOG_FILE = "timLog.log"
 LOG_LEVEL = logging.INFO
 LOG_LEVEL_STDOUT = logging.INFO
 LOG_PATH = os.path.join(LOG_DIR, LOG_FILE)
+BADGE_LOG_FILE = "badge.log"
+BADGE_LOG_PATH = os.path.join(LOG_DIR, BADGE_LOG_FILE)
 # If True, requests are also logged before they are processed.
 # This is useful sometimes to profile calls that never complete.
 LOG_BEFORE_REQUESTS = False

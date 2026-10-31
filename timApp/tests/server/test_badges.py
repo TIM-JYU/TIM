@@ -1,0 +1,1435 @@
+from timApp.auth.accesstype import AccessType
+from timApp.tests.server.timroutetest import TimRouteTest
+from timApp.timdb.sqa import db
+from timApp.user.groups import do_create_group_impl
+from timApp.user.subgroups import add_subgroup
+from timApp.user.user import User, UserInfo
+from timApp.user.usergroup import UserGroup
+
+
+class BadgeTestAllBadges(TimRouteTest):
+    def test_badge_all_badges(self):
+        # initialization
+        self.login_test1()
+        group1_name = "es_25"
+        group2_name = "es_26"
+        (group1, doc1) = do_create_group_impl(f"{group1_name}", group1_name)
+        (group2, doc2) = do_create_group_impl(f"{group2_name}", group2_name)
+        db.session.commit()
+        self.test_user_1.grant_access(group1.admin_doc, AccessType.teacher)
+        self.test_user_1.grant_access(group2.admin_doc, AccessType.teacher)
+        self.commit_db()
+
+        # fetch all badges when no badges created
+        result_ab_empty = self.get(f"/badges/all_badges/{group1_name}")
+        self.assertEqual([], result_ab_empty)
+
+        # create a badge in 2 different context groups
+        result_cb_1 = self.post(
+            "/badges/create_badge",
+            data={
+                "context_group": group1_name,
+                "title": "Coordinator",
+                "color": "blue",
+                "shape": "hexagon",
+                "image": 1,
+                "description": "Great coordination",
+            },
+        )
+        result_cb_2 = self.post(
+            "/badges/create_badge",
+            data={
+                "context_group": group2_name,
+                "title": "Quick",
+                "color": "orange",
+                "shape": "rectangle",
+                "image": 4,
+                "description": "Very fast",
+            },
+        )
+
+        # fetch all badges in 2 different context groups after creating a badge in both of them
+        result_ab_1 = self.get(f"/badges/all_badges/{group1_name}")
+        self.assertEqual(
+            [
+                {
+                    "active": True,
+                    "color": "blue",
+                    "context_group": 9,
+                    "created": result_cb_1["created"],
+                    "created_by": self.test_user_1.id,
+                    "deleted": None,
+                    "description": "Great coordination",
+                    "id": 1,
+                    "image": 1,
+                    "modified": None,
+                    "shape": "hexagon",
+                    "title": "Coordinator",
+                }
+            ],
+            result_ab_1,
+        )
+        result_ab_2 = self.get(f"/badges/all_badges/{group2_name}")
+        self.assertEqual(
+            [
+                {
+                    "active": True,
+                    "color": "orange",
+                    "context_group": 10,
+                    "created": result_cb_2["created"],
+                    "created_by": self.test_user_1.id,
+                    "deleted": None,
+                    "description": "Very fast",
+                    "id": 2,
+                    "image": 4,
+                    "modified": None,
+                    "shape": "rectangle",
+                    "title": "Quick",
+                }
+            ],
+            result_ab_2,
+        )
+
+        self.login_test2()
+
+        # fetch all badges when user doesn't have teacher access to the context group
+        self.get(
+            f"/badges/all_badges/{group1_name}",
+            expect_content=f'Sorry, you don\'t have permission to use this resource. If you are a teacher of "{group1_name}", please contact TIM admin.',
+            expect_status=403,
+        )
+
+
+class BadgeTestCreate(TimRouteTest):
+    def test_badge_create(self):
+        # initialization
+        self.login_test1()
+        group1_name = "es_25"
+        (group1, doc1) = do_create_group_impl(f"{group1_name}", group1_name)
+        db.session.commit()
+        self.test_user_1.grant_access(group1.admin_doc, AccessType.teacher)
+        self.commit_db()
+
+        # create a badge
+        result_cb = self.post(
+            "/badges/create_badge",
+            data={
+                "context_group": group1_name,
+                "title": "Coordinator",
+                "color": "blue",
+                "shape": "hexagon",
+                "image": 1,
+                "description": "Great coordination",
+            },
+        )
+        self.assertEqual(
+            {
+                "active": True,
+                "color": "blue",
+                "context_group": 9,
+                "created": result_cb["created"],
+                "created_by": self.test_user_1.id,
+                "deleted": None,
+                "description": "Great coordination",
+                "id": 1,
+                "image": 1,
+                "modified": None,
+                "shape": "hexagon",
+                "title": "Coordinator",
+            },
+            result_cb,
+        )
+
+        # fetch all badges after a badge is created
+        result_ab_nonempty = self.get(f"/badges/all_badges/{group1_name}")
+        self.assertEqual(
+            [
+                {
+                    "active": True,
+                    "color": "blue",
+                    "context_group": 9,
+                    "created": result_cb["created"],
+                    "created_by": self.test_user_1.id,
+                    "deleted": None,
+                    "description": "Great coordination",
+                    "id": 1,
+                    "image": 1,
+                    "modified": None,
+                    "shape": "hexagon",
+                    "title": "Coordinator",
+                }
+            ],
+            result_ab_nonempty,
+        )
+
+        self.login_test2()
+
+        # create a badge when user doesn't have teacher access to the context group
+        self.post(
+            f"/badges/create_badge",
+            data={
+                "context_group": group1_name,
+                "title": "The Boss",
+                "color": "gold",
+                "shape": "hexagon",
+                "image": "4",
+                "description": "You are the boss!",
+            },
+            expect_content=f'Sorry, you don\'t have permission to use this resource. If you are a teacher of "{group1_name}", please contact TIM admin.',
+            expect_status=403,
+        )
+
+
+class BadgeTestModify(TimRouteTest):
+    def test_badge_modify(self):
+        # initialization
+        self.login_test1()
+        group1_name = "es_25"
+        (group1, doc1) = do_create_group_impl(f"{group1_name}", group1_name)
+        db.session.commit()
+        self.test_user_1.grant_access(group1.admin_doc, AccessType.teacher)
+        self.commit_db()
+
+        # create a badge
+        result_cb = self.post(
+            "/badges/create_badge",
+            data={
+                "context_group": group1_name,
+                "title": "Coordinator",
+                "color": "blue",
+                "shape": "hexagon",
+                "image": 1,
+                "description": "Great coordination",
+            },
+        )
+
+        # modify a badge
+        result_mb = self.post(
+            "/badges/modify_badge",
+            data={
+                "badge_id": 1,
+                "context_group": group1_name,
+                "title": "MVP",
+                "color": "gold",
+                "shape": "hexagon",
+                "image": 3,
+                "description": "Most valuable player",
+            },
+        )
+        self.assertEqual(
+            {
+                "color": "gold",
+                "context_group": 9,
+                "description": "Most valuable player",
+                "image": 3,
+                "modified": result_mb["modified"],
+                "shape": "hexagon",
+                "title": "MVP",
+            },
+            result_mb,
+        )
+
+        # fetch all badges after a badge is created and modified
+        result_ab_nonempty = self.get(f"/badges/all_badges/{group1_name}")
+        self.assertEqual(
+            [
+                {
+                    "active": True,
+                    "color": "gold",
+                    "context_group": 9,
+                    "created": result_cb["created"],
+                    "created_by": self.test_user_1.id,
+                    "deleted": None,
+                    "description": "Most valuable player",
+                    "id": 1,
+                    "image": 3,
+                    "modified": result_mb["modified"],
+                    "shape": "hexagon",
+                    "title": "MVP",
+                }
+            ],
+            result_ab_nonempty,
+        )
+
+        self.login_test2()
+
+        # modify a badge when user doesn't have teacher access to the context group
+        self.post(
+            f"/badges/modify_badge",
+            data={
+                "badge_id": 1,
+                "context_group": group1_name,
+                "title": "MVP",
+                "color": "gold",
+                "shape": "hexagon",
+                "image": 3,
+                "description": "Most valuable player",
+            },
+            expect_content=f'Sorry, you don\'t have permission to use this resource. If you are a teacher of "{group1_name}", please contact TIM admin.',
+            expect_status=403,
+        )
+
+
+class BadgeTestDelete(TimRouteTest):
+    def test_badge_delete(self):
+        # initialization
+        self.login_test1()
+        group1_name = "es_25"
+        (group1, doc1) = do_create_group_impl(f"{group1_name}", group1_name)
+        db.session.commit()
+        self.test_user_1.grant_access(group1.admin_doc, AccessType.teacher)
+        self.commit_db()
+
+        # create a badge
+        result_cb = self.post(
+            "/badges/create_badge",
+            data={
+                "context_group": group1_name,
+                "title": "Coordinator",
+                "color": "blue",
+                "shape": "hexagon",
+                "image": 1,
+                "description": "Great coordination",
+            },
+        )
+
+        self.login_test2()
+
+        # delete a badge when user doesn't have teacher access to the context group
+        self.post(
+            f"/badges/deactivate_badge",
+            data={
+                "badge_id": 1,
+                "context_group": group1_name,
+            },
+            expect_content=f'Sorry, you don\'t have permission to use this resource. If you are a teacher of "{group1_name}", please contact TIM admin.',
+            expect_status=403,
+        )
+
+        self.login_test1()
+
+        # delete a badge
+        result_db = self.post(
+            "/badges/deactivate_badge",
+            data={
+                "badge_id": 1,
+                "context_group": group1_name,
+            },
+        )
+        self.assertEqual(
+            {
+                "active": False,
+                "deleted": result_db["deleted"],
+            },
+            result_db,
+        )
+
+        # fetch all badges after a badge is created and deleted
+        result_db = self.get(f"/badges/all_badges/{group1_name}")
+        self.assertEqual([], result_db)
+
+
+class BadgeTestDeleteGiven(TimRouteTest):
+    def test_badge_delete_given(self):
+        # initialization
+        self.login_test1()
+        group1_name = "es_25"
+        (group1, doc1) = do_create_group_impl(f"{group1_name}", group1_name)
+        db.session.commit()
+        self.test_user_1.grant_access(group1.admin_doc, AccessType.teacher)
+        self.commit_db()
+
+        # create a badge
+        result_cb = self.post(
+            "/badges/create_badge",
+            data={
+                "context_group": group1_name,
+                "title": "Coordinator",
+                "color": "blue",
+                "shape": "hexagon",
+                "image": 1,
+                "description": "Great coordination",
+            },
+        )
+
+        # give a badge
+        result_giba = self.post(
+            "/badges/give_badge",
+            data={
+                "context_group": group1_name,
+                "group_id": self.test_user_2.get_personal_group().id,
+                "badge_id": 1,
+                "message": "Great work!",
+            },
+        )
+
+        # delete an already given badge and check that it's not given anymore
+        self.post(
+            f"/badges/deactivate_badge",
+            data={
+                "badge_id": 1,
+                "context_group": group1_name,
+            },
+            expect_status=200,
+        )
+        self.get(
+            f"/badges/group_badges/{self.test_user_2.get_personal_group().id}/{group1_name}",
+            expect_content={"badges": [], "templates": []},
+            expect_status=200,
+        )
+
+
+class BadgeTestGroupsBadges(TimRouteTest):
+    def test_badge_groups_badges(self):
+        # initialization
+        self.login_test1()
+        group1_name = "es_25"
+        subgroup1_name = "es_25-cats"
+        group2_name = "es_26"
+        (group1, doc1) = do_create_group_impl(f"{group1_name}", group1_name)
+        (subgroup1, subdoc1) = do_create_group_impl(f"{subgroup1_name}", subgroup1_name)
+        (group2, doc2) = do_create_group_impl(f"{group2_name}", group2_name)
+        db.session.commit()
+        self.test_user_1.grant_access(group1.admin_doc, AccessType.teacher)
+        self.test_user_1.grant_access(subgroup1.admin_doc, AccessType.teacher)
+        self.test_user_1.grant_access(group2.admin_doc, AccessType.teacher)
+        self.commit_db()
+        self.post(
+            f"/groups/addmember/{group1_name}",
+            data={"names": ["testuser2"]},
+        )
+        self.post(
+            f"/groups/addmember/{subgroup1_name}",
+            data={"names": ["testuser2"]},
+        )
+        self.post(
+            f"/groups/addmember/{group2_name}",
+            data={"names": ["testuser2"]},
+        )
+
+        # create 2 badges to different context groups
+        result_cb_1 = self.post(
+            "/badges/create_badge",
+            data={
+                "context_group": group1_name,
+                "title": "Coordinator",
+                "color": "blue",
+                "shape": "hexagon",
+                "image": 1,
+                "description": "Great coordination",
+            },
+            expect_status=200,
+        )
+        result_cb_2 = self.post(
+            "/badges/create_badge",
+            data={
+                "context_group": group2_name,
+                "title": "King",
+                "color": "yellow",
+                "shape": "hexagon",
+                "image": 2,
+                "description": "You rule!",
+            },
+            expect_status=200,
+        )
+
+        # fetch groups badges when no badges given
+        result_grba_empty = self.get(f"/badges/group_badges/10/{group1_name}")
+        self.assertEqual({"badges": [], "templates": []}, result_grba_empty)
+
+        # give 2 badges from different context groups to testuser2
+        result_giba_1 = self.post(
+            f"/badges/give_badge",
+            data={
+                "context_group": group1_name,
+                "group_id": self.test_user_2.get_personal_group().id,
+                "badge_id": 1,
+                "message": "Yippee!",
+            },
+            expect_status=200,
+        )
+        result_giba_2 = self.post(
+            f"/badges/give_badge",
+            data={
+                "context_group": group2_name,
+                "group_id": self.test_user_2.get_personal_group().id,
+                "badge_id": 2,
+                "message": "Yahoo!",
+            },
+            expect_status=200,
+        )
+
+        # fetch personal groups badges of testuser2 from context group es_25
+        self.get(
+            f"/badges/group_badges/{self.test_user_2.get_personal_group().id}/{group1_name}",
+            expect_content={
+                "badges": [
+                    {
+                        "id": 1,
+                        "badge_id": 1,
+                        "group_id": self.test_user_2.get_personal_group().id,
+                        "message": "Yippee!",
+                        "active": True,
+                        "given_by": self.test_user_1.id,
+                        "given_by_name": self.test_user_1.real_name,
+                        "given": result_giba_1["given"],
+                        "withdrawn": None,
+                    }
+                ],
+                "templates": [
+                    {
+                        "id": 1,
+                        "title": "Coordinator",
+                        "description": "Great coordination",
+                        "color": "blue",
+                        "shape": "hexagon",
+                        "image": 1,
+                        "context_group": 9,
+                        "active": True,
+                        "created": result_cb_1["created"],
+                        "created_by": self.test_user_1.id,
+                        "created_by_name": self.test_user_1.real_name,
+                        "modified": None,
+                        "deleted": None,
+                    }
+                ],
+            },
+            expect_status=200,
+        )
+
+        # fetch personal groups badges of testuser2 from context group es_26
+        self.get(
+            f"/badges/group_badges/{self.test_user_2.get_personal_group().id}/{group2_name}",
+            expect_content={
+                "badges": [
+                    {
+                        "id": 2,
+                        "badge_id": 2,
+                        "group_id": self.test_user_2.get_personal_group().id,
+                        "message": "Yahoo!",
+                        "active": True,
+                        "given_by": self.test_user_1.id,
+                        "given_by_name": self.test_user_1.real_name,
+                        "given": result_giba_2["given"],
+                        "withdrawn": None,
+                    }
+                ],
+                "templates": [
+                    {
+                        "id": 2,
+                        "title": "King",
+                        "description": "You rule!",
+                        "color": "yellow",
+                        "shape": "hexagon",
+                        "image": 2,
+                        "context_group": 11,
+                        "active": True,
+                        "created": result_cb_2["created"],
+                        "created_by": self.test_user_1.id,
+                        "created_by_name": self.test_user_1.real_name,
+                        "modified": None,
+                        "deleted": None,
+                    }
+                ],
+            },
+            expect_status=200,
+        )
+
+        # fetch groups badges when user has teacher access to the context group
+        # and is not included in the subgroup
+        self.get(
+            f"/badges/group_badges/10/{group1_name}",
+            expect_content={"badges": [], "templates": []},
+            expect_status=200,
+        )
+
+        self.login_test2()
+
+        # fetch groups badges when user doesn't have teacher access to the context group
+        # and is included in the subgroup
+        self.get(
+            f"/badges/group_badges/10/{group1_name}",
+            expect_content={"badges": [], "templates": []},
+            expect_status=200,
+        )
+
+        self.login_test3()
+
+        # fetch groups badges when user doesn't have teacher access to the context group
+        # and is not included in the context group
+        self.get(
+            f"/badges/group_badges/10/{group1_name}",
+            expect_content=f'Sorry, you don\'t have permission to use this resource. If you are a teacher of "{group1_name}", please contact TIM admin.',
+            expect_status=403,
+        )
+
+
+class BadgeTestGroupsBadgesView(TimRouteTest):
+    def test_badge_groups_badges_view(self):
+        # initialization
+        self.login_test1()
+        group1_name = "es_25"
+        subgroup1_name = "es_25-cats"
+        (group1, doc1) = do_create_group_impl(f"{group1_name}", group1_name)
+        (subgroup1, subdoc1) = do_create_group_impl(f"{subgroup1_name}", subgroup1_name)
+        db.session.commit()
+        add_subgroup(group1, subgroup1)
+        self.test_user_1.grant_access(group1.admin_doc, AccessType.teacher)
+        self.test_user_1.grant_access(subgroup1.admin_doc, AccessType.teacher)
+        self.commit_db()
+        # Every request removes the session, detaching the objects created above.
+        subgroup1_id = subgroup1.id
+
+        # testuser3 joins the subgroup only, which makes them a member of the context
+        # group as well
+        self.post(
+            f"/groups/addmember/{subgroup1_name}",
+            data={"names": ["testuser3"]},
+        )
+
+        self.post(
+            "/badges/create_badge",
+            data={
+                "context_group": group1_name,
+                "title": "Coordinator",
+                "color": "blue",
+                "shape": "hexagon",
+                "image": 1,
+                "description": "Great coordination",
+            },
+        )
+        self.post(
+            "/badges/give_badge",
+            data={
+                "context_group": group1_name,
+                "group_id": subgroup1_id,
+                "badge_id": 1,
+                "message": "Great work guys!",
+            },
+        )
+
+        self.login_test3()
+
+        # a member of a subgroup can read that group's badges, because belonging to a
+        # subgroup makes them a member of the context group
+        result_gb = self.get(f"/badges/group_badges/{subgroup1_id}/{group1_name}")
+        self.assertEqual(1, len(result_gb["badges"]))
+        self.assertEqual(1, len(result_gb["templates"]))
+        self.assertEqual("Great work guys!", result_gb["badges"][0]["message"])
+        # the award refers to its template rather than repeating it
+        self.assertEqual(
+            result_gb["templates"][0]["id"], result_gb["badges"][0]["badge_id"]
+        )
+        self.assertEqual("Coordinator", result_gb["templates"][0]["title"])
+
+        self.login_test2()
+
+        # a user who belongs to neither the context group nor any of its subgroups is
+        # refused, even though the badge itself is the same one
+        self.get(
+            f"/badges/group_badges/{subgroup1_id}/{group1_name}",
+            expect_content=f'Sorry, you don\'t have permission to use this resource. If you are a teacher of "{group1_name}", please contact TIM admin.',
+            expect_status=403,
+        )
+
+
+class BadgeTestBadgeHolders(TimRouteTest):
+    def test_badge_badge_holders(self):
+        # initialization
+        self.login_test1()
+        group1_name = "es_25"
+        subgroup1_name = "es_25-cats"
+        (group1, doc1) = do_create_group_impl(f"{group1_name}", group1_name)
+        (subgroup1, subdoc1) = do_create_group_impl(f"{subgroup1_name}", subgroup1_name)
+        db.session.commit()
+        self.test_user_1.grant_access(group1.admin_doc, AccessType.teacher)
+        self.test_user_1.grant_access(subgroup1.admin_doc, AccessType.teacher)
+        self.commit_db()
+        self.post(
+            f"/groups/addmember/{group1_name}",
+            data={"names": ["testuser2"]},
+        )
+        self.post(
+            f"/groups/addmember/{subgroup1_name}",
+            data={"names": ["testuser2"]},
+        )
+
+        # create a badge
+        result_cb = self.post(
+            "/badges/create_badge",
+            data={
+                "context_group": group1_name,
+                "title": "Coordinator",
+                "color": "blue",
+                "shape": "hexagon",
+                "image": 1,
+                "description": "Great coordination",
+            },
+        )
+
+        # check if a badge is given to some usergroups when no badges given
+        result_bg_empty = self.get("/badges/badge_holders/1")
+        self.assertEqual([[], []], result_bg_empty)
+
+        # give a badge to a group
+        result_giba_g = self.post(
+            "/badges/give_badge",
+            data={
+                "context_group": group1_name,
+                "group_id": 10,
+                "badge_id": 1,
+                "message": "Great work guys!",
+            },
+        )
+
+        # give a badge to a personal group
+        result_giba_pg = self.post(
+            "/badges/give_badge",
+            data={
+                "context_group": group1_name,
+                "group_id": self.test_user_2.get_personal_group().id,
+                "badge_id": 1,
+                "message": "Great work!",
+            },
+        )
+
+        # check if a badge is given to some usergroups after a badge given to a group and to a personal group
+        result_bg_nonempty = self.get("/badges/badge_holders/1")
+        self.assertEqual(
+            [
+                [
+                    {
+                        "email": self.test_user_2.email,
+                        "id": self.test_user_2.id,
+                        "name": self.test_user_2.name,
+                        "real_name": self.test_user_2.real_name,
+                    }
+                ],
+                [
+                    {
+                        "id": 10,
+                        "name": subgroup1_name,
+                        "personal_user": None,
+                    }
+                ],
+            ],
+            result_bg_nonempty,
+        )
+
+        self.login_test2()
+
+        # fetch all usergroups that holds certain badge when user doesn't have teacher access to the context group
+        self.get(
+            "/badges/badge_holders/1",
+            expect_content=f'Sorry, you don\'t have permission to use this resource. If you are a teacher of "{group1_name}", please contact TIM admin.',
+            expect_status=403,
+        )
+
+
+class BadgeTestGiveBadge(TimRouteTest):
+    def test_badge_give_badge(self):
+        # initialization
+        self.login_test1()
+        group1_name = "es_25"
+        subgroup1_name = "es_25-cats"
+        (group1, doc1) = do_create_group_impl(f"{group1_name}", group1_name)
+        (subgroup1, subdoc1) = do_create_group_impl(f"{subgroup1_name}", subgroup1_name)
+        db.session.commit()
+        self.test_user_1.grant_access(group1.admin_doc, AccessType.teacher)
+        self.test_user_1.grant_access(subgroup1.admin_doc, AccessType.teacher)
+        self.commit_db()
+        self.post(
+            f"/groups/addmember/{group1_name}",
+            data={"names": ["testuser2"]},
+        )
+        self.post(
+            f"/groups/addmember/{subgroup1_name}",
+            data={"names": ["testuser2"]},
+        )
+
+        # create a badge
+        result_cb = self.post(
+            "/badges/create_badge",
+            data={
+                "context_group": group1_name,
+                "title": "Coordinator",
+                "color": "blue",
+                "shape": "hexagon",
+                "image": 1,
+                "description": "Great coordination",
+            },
+        )
+
+        # give a badge to a group
+        result_giba = self.post(
+            "/badges/give_badge",
+            data={
+                "context_group": group1_name,
+                "group_id": 10,
+                "badge_id": 1,
+                "message": "Great work!",
+            },
+        )
+        self.assertEqual(
+            {
+                "id": 1,
+                "active": True,
+                "given_by": self.test_user_1.id,
+                "given": result_giba["given"],
+                "withdrawn": None,
+                "group_id": 10,
+                "badge_id": 1,
+                "message": "Great work!",
+            },
+            result_giba,
+        )
+
+        # fetch groups badges after given a badge to it
+        result_grba = self.get(f"/badges/group_badges/10/{group1_name}")
+        self.assertEqual(
+            {
+                "badges": [
+                    {
+                        "id": 1,
+                        "badge_id": 1,
+                        "group_id": 10,
+                        "message": "Great work!",
+                        "active": True,
+                        "given_by": self.test_user_1.id,
+                        "given_by_name": self.test_user_1.real_name,
+                        "given": result_giba["given"],
+                        "withdrawn": None,
+                    }
+                ],
+                "templates": [
+                    {
+                        "id": 1,
+                        "title": "Coordinator",
+                        "description": "Great coordination",
+                        "color": "blue",
+                        "shape": "hexagon",
+                        "image": 1,
+                        "context_group": 9,
+                        "active": True,
+                        "created": result_cb["created"],
+                        "created_by": self.test_user_1.id,
+                        "created_by_name": self.test_user_1.real_name,
+                        "modified": None,
+                        "deleted": None,
+                    }
+                ],
+            },
+            result_grba,
+        )
+
+        self.login_test2()
+
+        # give a badge when user doesn't have teacher access to the context group
+        self.post(
+            f"/badges/give_badge",
+            data={
+                "context_group": group1_name,
+                "group_id": 10,
+                "badge_id": 1,
+                "message": "Awesome!",
+            },
+            expect_content=f'Sorry, you don\'t have permission to use this resource. If you are a teacher of "{group1_name}", please contact TIM admin.',
+            expect_status=403,
+        )
+
+
+class BadgeTestWithdrawBadge(TimRouteTest):
+    def test_badge_withdraw_badge(self):
+        # initialization
+        self.login_test1()
+        group1_name = "es_25"
+        (group1, doc1) = do_create_group_impl(f"{group1_name}", group1_name)
+        db.session.commit()
+        self.test_user_1.grant_access(group1.admin_doc, AccessType.teacher)
+        self.commit_db()
+        self.post(
+            f"/groups/addmember/{group1_name}",
+            data={"names": ["testuser2"]},
+        )
+
+        # create a badge
+        result_cb = self.post(
+            "/badges/create_badge",
+            data={
+                "context_group": group1_name,
+                "title": "Coordinator",
+                "color": "blue",
+                "shape": "hexagon",
+                "image": 1,
+                "description": "Great coordination",
+            },
+        )
+
+        # give a badge to a personal group
+        result_giba = self.post(
+            "/badges/give_badge",
+            data={
+                "context_group": group1_name,
+                "group_id": self.test_user_2.get_personal_group().id,
+                "badge_id": 1,
+                "message": "Great work!",
+            },
+        )
+
+        self.login_test2()
+
+        # withdraw a badge when user doesn't have teacher access to the context group
+        self.post(
+            f"/badges/withdraw_badge",
+            data={
+                "badge_given_id": 1,
+                "context_group": group1_name,
+            },
+            expect_content=f'Sorry, you don\'t have permission to use this resource. If you are a teacher of "{group1_name}", please contact TIM admin.',
+            expect_status=403,
+        )
+
+        self.login_test1()
+
+        # withdraw a badge
+        result_wb = self.post(
+            "/badges/withdraw_badge",
+            data={
+                "badge_given_id": 1,
+                "context_group": group1_name,
+            },
+        )
+        self.assertEqual(
+            {
+                "active": False,
+                "withdrawn": result_wb["withdrawn"],
+            },
+            result_wb,
+        )
+
+        # fetch personal groups badges after given a badge to it and withdrawn the badge
+        result_grba = self.get(
+            f"/badges/group_badges/{self.test_user_2.get_personal_group().id}/{group1_name}"
+        )
+        self.assertEqual(
+            {"badges": [], "templates": []},
+            result_grba,
+        )
+
+
+class BadgeTestPodium(TimRouteTest):
+    def give_badge(self, group_id):
+        self.post(
+            f"/badges/give_badge",
+            data={
+                "context_group": "es_28",
+                "group_id": group_id,
+                "badge_id": 1,
+                "message": "Congratulations!",
+            },
+            expect_status=200,
+        )
+
+    def test_badge_podium(self):
+        # initialization
+        self.login_test1()
+        group1_name = "es_28"
+        (group1, doc1) = do_create_group_impl(f"{group1_name}", group1_name)
+        db.session.commit()
+        self.test_user_1.grant_access(group1.admin_doc, AccessType.teacher)
+        self.commit_db()
+
+        # get podium when no subgroups in context group
+        self.get(f"/badges/podium/{group1_name}", expect_content=[], expect_status=200)
+
+        # create 6 subgroups in es_28
+        subgroup1_name = "es_28-cats"
+        subgroup2_name = "es_28-dogs"
+        subgroup3_name = "es_28-bats"
+        subgroup4_name = "es_28-pigs"
+        subgroup5_name = "es_28-lions"
+        subgroup6_name = "es_28-wolves"
+        # Shares the context group's name prefix but is never linked to it, so it must
+        # not place on the podium no matter how many badges it holds.
+        unlinked_name = "es_28-ghosts"
+        (subgroup1, subdoc1) = do_create_group_impl(f"{subgroup1_name}", subgroup1_name)
+        (subgroup2, subdoc2) = do_create_group_impl(f"{subgroup2_name}", subgroup2_name)
+        (subgroup3, subdoc3) = do_create_group_impl(f"{subgroup3_name}", subgroup3_name)
+        (subgroup4, subdoc4) = do_create_group_impl(f"{subgroup4_name}", subgroup4_name)
+        (subgroup5, subdoc5) = do_create_group_impl(f"{subgroup5_name}", subgroup5_name)
+        (subgroup6, subdoc6) = do_create_group_impl(f"{subgroup6_name}", subgroup6_name)
+        (unlinked, unlinked_doc) = do_create_group_impl(
+            f"{unlinked_name}", unlinked_name
+        )
+        db.session.commit()
+        # The podium request above removed the session, detaching group1.
+        group1 = UserGroup.get_by_name(group1_name)
+        for subgroup in (
+            subgroup1,
+            subgroup2,
+            subgroup3,
+            subgroup4,
+            subgroup5,
+            subgroup6,
+        ):
+            add_subgroup(group1, subgroup)
+        self.test_user_1.grant_access(subgroup1.admin_doc, AccessType.teacher)
+        self.test_user_1.grant_access(subgroup2.admin_doc, AccessType.teacher)
+        self.test_user_1.grant_access(subgroup3.admin_doc, AccessType.teacher)
+        self.test_user_1.grant_access(subgroup4.admin_doc, AccessType.teacher)
+        self.test_user_1.grant_access(subgroup5.admin_doc, AccessType.teacher)
+        self.test_user_1.grant_access(subgroup6.admin_doc, AccessType.teacher)
+        self.commit_db()
+        unlinked_id = unlinked.id
+
+        # create a badge
+        self.post(
+            f"/badges/create_badge",
+            data={
+                "context_group": group1_name,
+                "title": "Coordinator",
+                "color": "blue",
+                "shape": "hexagon",
+                "image": 1,
+                "description": "Great coordination",
+            },
+            expect_status=200,
+        )
+
+        # give badge once to bats and 2 times to cats
+        self.give_badge(12)
+        self.give_badge(10)
+        self.give_badge(10)
+
+        # give the unlinked prefix-sharing group more badges than anyone else; it must
+        # still be absent from every podium below
+        for i in range(10):
+            self.give_badge(unlinked_id)
+
+        # get podium after 6 subgroups created and badges given to some of them
+        self.get(
+            f"/badges/podium/{group1_name}",
+            expect_content=[
+                {"badge_count": 2, "group_name": subgroup1_name},
+                {"badge_count": 1, "group_name": subgroup3_name},
+            ],
+            expect_status=200,
+        )
+
+        # give badges so that all of 6 subgroups have some
+        for i in range(3):
+            self.give_badge(11)
+        for i in range(4):
+            self.give_badge(15)
+        for i in range(5):
+            self.give_badge(14)
+        for i in range(6):
+            self.give_badge(13)
+
+        # get podium after badges given to all of 6 subgroups
+        self.get(
+            f"/badges/podium/{group1_name}",
+            expect_content=[
+                {"badge_count": 6, "group_name": subgroup4_name},
+                {"badge_count": 5, "group_name": subgroup5_name},
+                {"badge_count": 4, "group_name": subgroup6_name},
+                {"badge_count": 3, "group_name": subgroup2_name},
+                {"badge_count": 2, "group_name": subgroup1_name},
+            ],
+            expect_status=200,
+        )
+
+        self.login_test2()
+
+        # get podium when user is not a part of the context group and doesn't have teacher access to context group
+        self.get(
+            f"/badges/podium/{group1_name}",
+            expect_content=f'Sorry, you don\'t have permission to use this resource. If you are a teacher of "{group1_name}", please contact TIM admin.',
+            expect_status=403,
+        )
+
+        self.login_test1()
+
+        # delete an already given badge and get podium after that
+        self.post(
+            f"/badges/deactivate_badge",
+            data={
+                "badge_id": 1,
+                "context_group": group1_name,
+            },
+            expect_status=200,
+        )
+        self.get(
+            f"/badges/podium/{group1_name}",
+            expect_content=[],
+            expect_status=200,
+        )
+
+
+class BadgeTestUserPodium(TimRouteTest):
+    CONTEXT_GROUP = "es_29"
+    OTHER_GROUP = "es_30"
+
+    def give_badge(self, group_id, badge_id=1, context_group=CONTEXT_GROUP):
+        self.post(
+            f"/badges/give_badge",
+            data={
+                "context_group": context_group,
+                "group_id": group_id,
+                "badge_id": badge_id,
+                "message": "Congratulations!",
+            },
+            expect_status=200,
+        )
+
+    def personal_group_id(self, username):
+        """Id of the user group a badge given to this user is recorded against."""
+        user = User.get_by_name(username)
+        self.assertIsNotNone(user, f"{username} was not created")
+        return user.get_personal_group().id
+
+    def create_badge(self, context_group, title):
+        self.post(
+            f"/badges/create_badge",
+            data={
+                "context_group": context_group,
+                "title": title,
+                "color": "blue",
+                "shape": "hexagon",
+                "image": 1,
+                "description": "Great coordination",
+            },
+            expect_status=200,
+        )
+
+    def test_badge_user_podium(self):
+        # initialization
+        self.login_test1()
+        group_name = self.CONTEXT_GROUP
+        other_name = self.OTHER_GROUP
+        (group, doc) = do_create_group_impl(group_name, group_name)
+        (other, other_doc) = do_create_group_impl(other_name, other_name)
+        # A subgroup exists to show that the user podium ignores group badges; the
+        # group podium is what ranks those.
+        subgroup_name = f"{group_name}-cats"
+        (subgroup, subdoc) = do_create_group_impl(subgroup_name, subgroup_name)
+        db.session.commit()
+        self.test_user_1.grant_access(group.admin_doc, AccessType.teacher)
+        self.test_user_1.grant_access(other.admin_doc, AccessType.teacher)
+        self.test_user_1.grant_access(subgroup.admin_doc, AccessType.teacher)
+        self.commit_db()
+        group_obj = UserGroup.get_by_name(group_name)
+        add_subgroup(group_obj, UserGroup.get_by_name(subgroup_name))
+        self.commit_db()
+
+        # get podium when the context group has no members with badges
+        self.get(
+            f"/badges/user_podium/{group_name}", expect_content=[], expect_status=200
+        )
+
+        # 12 members, so that the podium has more candidates than its ten places
+        usernames = [f"podiumuser{i:02d}" for i in range(1, 13)]
+        for i, username in enumerate(usernames, start=1):
+            User.create_with_group(
+                UserInfo(
+                    username=username,
+                    email=f"{username}@example.com",
+                    full_name=f"Podium User {i:02d}",
+                )
+            )
+        db.session.commit()
+        self.post(
+            f"/groups/addmember/{group_name}",
+            data={"names": usernames},
+            expect_status=200,
+        )
+
+        self.create_badge(group_name, "Coordinator")
+        # A second template, in a context group of its own. Personal user groups follow
+        # their owner from course to course, so this is what a member's badges from
+        # somewhere else look like.
+        self.create_badge(other_name, "Outsider")
+
+        personal_group_ids = [self.personal_group_id(name) for name in usernames]
+        subgroup_id = UserGroup.get_by_name(subgroup_name).id
+
+        # the first member gets 12 badges, the second 11, and so on down to 1
+        for i, personal_group_id in enumerate(personal_group_ids):
+            for _ in range(12 - i):
+                self.give_badge(personal_group_id)
+
+        # the last member also collects badges of the other context group; they must
+        # not count here, or that one member would climb from last place to sixth
+        for _ in range(5):
+            self.give_badge(
+                personal_group_ids[-1], badge_id=2, context_group=other_name
+            )
+
+        # the subgroup collects badges of this very context group; those belong on the
+        # group podium, not on this one
+        for _ in range(20):
+            self.give_badge(subgroup_id)
+
+        def place(index, badge_count):
+            return {
+                "user_name": usernames[index],
+                "real_name": f"Podium User {index + 1:02d}",
+                "badge_count": badge_count,
+            }
+
+        # ten places, most badges first; the 11th and 12th members are left out
+        self.get(
+            f"/badges/user_podium/{group_name}",
+            expect_content=[place(i, 12 - i) for i in range(10)],
+            expect_status=200,
+        )
+
+        # a member who has left the group stops placing, and the member below the cut
+        # moves up into the vacated tenth place
+        # /groups/removemember reads its body as JSON, unlike /groups/addmember
+        self.json_post(
+            f"/groups/removemember/{group_name}",
+            {"names": [usernames[0]]},
+            expect_status=200,
+        )
+        self.get(
+            f"/badges/user_podium/{group_name}",
+            expect_content=[place(i, 12 - i) for i in range(1, 11)],
+            expect_status=200,
+        )
+
+        # a plain member of the context group may read the podium
+        self.post(
+            f"/groups/addmember/{group_name}",
+            data={"names": ["testuser3"]},
+            expect_status=200,
+        )
+        self.login_test3()
+        self.get(
+            f"/badges/user_podium/{group_name}",
+            expect_content=[place(i, 12 - i) for i in range(1, 11)],
+            expect_status=200,
+        )
+
+        self.login_test2()
+
+        # get podium when user is not a part of the context group and doesn't have teacher access to context group
+        self.get(
+            f"/badges/user_podium/{group_name}",
+            expect_content=f'Sorry, you don\'t have permission to use this resource. If you are a teacher of "{group_name}", please contact TIM admin.',
+            expect_status=403,
+        )
+
+        self.login_test1()
+
+        # get podium for a context group that does not exist
+        self.get(
+            f"/badges/user_podium/es_31",
+            expect_content='User group "es_31" not found',
+            expect_status=404,
+        )
+
+        # deleting the only badge template of the context group empties the podium
+        self.post(
+            f"/badges/deactivate_badge",
+            data={
+                "badge_id": 1,
+                "context_group": group_name,
+            },
+            expect_status=200,
+        )
+        self.get(
+            f"/badges/user_podium/{group_name}",
+            expect_content=[],
+            expect_status=200,
+        )
+
+
+class BadgeTestErroneousData(TimRouteTest):
+    def test_badge_erroneous_data(self):
+        # initialization
+        self.login_test1()
+        group1_name = "es_27"
+        (group1, doc1) = do_create_group_impl(f"{group1_name}", group1_name)
+        db.session.commit()
+        self.test_user_1.grant_access(group1.admin_doc, AccessType.teacher)
+        self.commit_db()
+        self.post(
+            f"/groups/addmember/{group1_name}",
+            data={"names": ["testuser2"]},
+        )
+        self.post(
+            f"/badges/create_badge",
+            data={
+                "context_group": group1_name,
+                "title": "Coordinator",
+                "color": "blue",
+                "shape": "hexagon",
+                "image": 1,
+                "description": "Great coordination",
+            },
+            expect_status=200,
+        )
+        self.post(
+            f"/badges/give_badge",
+            data={
+                "context_group": group1_name,
+                "group_id": self.test_user_2.get_personal_group().id,
+                "badge_id": 1,
+                "message": "Congratulations!",
+            },
+            expect_status=200,
+        )
+
+        # fetch all badges in context with erroneous data
+        self.get(
+            f"/badges/all_badges/nonexistent_group",
+            expect_status=404,
+            expect_content='User group "nonexistent_group" not found',
+        )
+
+        # create a badge with erroneous data
+        self.post(
+            f"/badges/create_badge",
+            data={
+                "context_group": "nonexistent_group",
+                "title": "Coordinator",
+                "color": "blue",
+                "shape": "hexagon",
+                "image": 1,
+                "description": "Great coordination",
+            },
+            expect_status=404,
+            expect_content='User group "nonexistent_group" not found',
+        )
+
+        # modify a badge with different erroneous data
+        self.post(
+            f"/badges/modify_badge",
+            data={
+                "badge_id": 100,
+                "context_group": group1_name,
+                "title": "Coordinator",
+                "color": "blue",
+                "shape": "hexagon",
+                "image": 1,
+                "description": "Great coordination",
+            },
+            expect_status=404,
+            expect_content='Badge with id "100" not found',
+        )
+        self.post(
+            f"/badges/modify_badge",
+            data={
+                "badge_id": 1,
+                "context_group": "nonexistent_group",
+                "title": "Coordinator",
+                "color": "blue",
+                "shape": "hexagon",
+                "image": 1,
+                "description": "Great coordination",
+            },
+            expect_status=404,
+            expect_content='User group "nonexistent_group" not found',
+        )
+
+        # delete a badge with different erroneous data
+        self.post(
+            f"/badges/deactivate_badge",
+            data={
+                "badge_id": 100,
+                "context_group": group1_name,
+            },
+            expect_status=404,
+            expect_content='Badge with id "100" not found',
+        )
+        self.post(
+            f"/badges/deactivate_badge",
+            data={
+                "badge_id": 1,
+                "context_group": "nonexistent_group",
+            },
+            expect_status=404,
+            expect_content='User group "nonexistent_group" not found',
+        )
+
+        # fetch groups badges with different erroneous data
+        self.get(
+            f"/badges/group_badges/100/{group1_name}",
+            expect_status=404,
+            expect_content='User group with id "100" not found',
+        )
+        self.get(
+            f"/badges/group_badges/{self.test_user_2.get_personal_group().id}/nonexistent_group",
+            expect_status=404,
+            expect_content='User group "nonexistent_group" not found',
+        )
+
+        # check with erroneous data if a badge is given to someone
+        self.get(
+            "/badges/badge_holders/100",
+            expect_status=404,
+            expect_content='Badge with id "100" not found',
+        )
+
+        # give a badge with different erroneous data
+        self.post(
+            f"/badges/give_badge",
+            data={
+                "context_group": "nonexistent_group",
+                "group_id": self.test_user_2.get_personal_group().id,
+                "badge_id": 1,
+                "message": "You've done your best!",
+            },
+            expect_status=404,
+            expect_content='User group "nonexistent_group" not found',
+        )
+        self.post(
+            f"/badges/give_badge",
+            data={
+                "context_group": group1_name,
+                "group_id": 100,
+                "badge_id": 1,
+                "message": "You've done your best!",
+            },
+            expect_status=404,
+            expect_content='User group with id "100" not found',
+        )
+        self.post(
+            f"/badges/give_badge",
+            data={
+                "context_group": group1_name,
+                "group_id": self.test_user_2.get_personal_group().id,
+                "badge_id": 100,
+                "message": "You've done your best!",
+            },
+            expect_status=404,
+            expect_content='Badge with id "100" not found',
+        )
+
+        # withdraw a badge with different erroneous data
+        self.post(
+            f"/badges/withdraw_badge",
+            data={
+                "badge_given_id": 100,
+                "context_group": group1_name,
+            },
+            expect_status=404,
+            expect_content='Given badge with id "100" not found',
+        )
+        self.post(
+            f"/badges/withdraw_badge",
+            data={
+                "badge_given_id": 1,
+                "context_group": "nonexistent_group",
+            },
+            expect_status=404,
+            expect_content='User group "nonexistent_group" not found',
+        )
+
+        # get podium with erroneous data
+        self.get(
+            f"/badges/podium/nonexistent_group",
+            expect_status=404,
+            expect_content='User group "nonexistent_group" not found',
+        )
