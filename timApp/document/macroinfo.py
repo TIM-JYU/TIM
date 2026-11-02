@@ -235,7 +235,7 @@ def get_rnd_macros(
             if rnd_name not in ["seed"]:  # todo put other non rnd names here
                 rndnames.append(rnd_name)
         rndm["rndnames"] = ",".join(rndnames)
-    rands, rnd_seed, state = get_rands_as_dict(rndm, rnd_seed, state)
+    rands, rnd_seed, state, _ = get_rands_as_dict(rndm, rnd_seed, state)
     if rands:
         for rnd_name, rnd in rands.items():
             ret[rnd_name] = rnd

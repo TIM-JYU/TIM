@@ -747,6 +747,7 @@ def get_postanswer_plugin_etc(
         if not ask_new:
             ask_new = answernr == answerinfo.count
             allow_save = ask_new
+        found_plugin.par.answer_info = answerinfo
 
     try:
         vr = verify_task_access(
@@ -953,6 +954,7 @@ def post_answer_impl(
         "input": answerdata,
         "taskID": tid.doc_task,
         "info": info,
+        "rnd_saves": plugin.par.get_rnd_saves(),
     }
 
     result = {}
@@ -1079,6 +1081,11 @@ def post_answer_impl(
     if "save" in jsonresp and not get_task:
         # TODO: RND_SEED: save used rnd_seed for this answer if answer is saved, found from par.get_rnd_seed()
         save_object = jsonresp["save"]
+        rnd_saves = answer_call_data.get("rnd_saves", None)
+        if rnd_saves is not None:
+            if not isinstance(save_object, dict):
+                save_object = {"c": save_object}
+            save_object["rnd_saves"] = rnd_saves
         tags = []
         tim_info = jsonresp.get("tim_info", {})
         if tim_info.get("noupdate", False):
