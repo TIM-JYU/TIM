@@ -591,6 +591,17 @@ extra_canonical_hosts: List of extra canonical hosts for the instance. Used to s
 security_policy_url: URL to the security policy page.
 """
 
+EMBED_ALLOWED_ORIGINS: list[str] = []
+"""
+Origins (scheme://host[:port]) of external pages that are allowed to embed TIM documents
+in an <iframe> using the ``?embed=true`` URL parameter, e.g. ``["https://ohjelmointi1.it.jyu.fi"]``.
+
+The list is used for the ``Content-Security-Policy: frame-ancestors`` header of embed mode
+responses and as the ``targetOrigin`` of the ``postMessage`` calls (frame height, saved answers)
+that the embedded page sends to its host page. TIM's own origin is always allowed.
+Normal (non-embed) document views are not affected.
+"""
+
 GLOBAL_DOCUMENT_CACHING = False
 """
 Global default value for document caching. The value allows globally enabling or disabling document cache.

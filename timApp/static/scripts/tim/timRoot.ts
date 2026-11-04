@@ -12,6 +12,7 @@ import {showMessageDialog} from "tim/ui/showMessageDialog";
 import {timApp} from "tim/app";
 import {showTosAgreementDialog} from "tim/ui/showTosAgreementDialog";
 import type {IDocument} from "tim/item/IItem";
+import {initEmbedMode} from "tim/document/embed";
 
 export interface IVisibilityVars {
     footer?: boolean;
@@ -38,6 +39,8 @@ export interface IVisibilityVars {
     userMenuOptions?: boolean;
     editLine?: boolean;
     noteBadgeButton?: boolean;
+    /** Paragraph menu: clicking a paragraph neither selects it nor opens the edit menu. */
+    parMenu?: boolean;
     headerNav?: boolean;
     headerDocumentActions?: boolean;
     scoreBoard?: boolean;
@@ -70,6 +73,18 @@ function hideParsOnlyStuff(hide: IVisibilityVars) {
     hide.sidebar = true;
     hide.siteheader = Users.isLoggedIn();
     hide.footer = true;
+}
+
+function hideEmbedStuff(hide: IVisibilityVars) {
+    // Embed mode (?embed=true) builds on pars_only: only the document content is shown.
+    hideParsOnlyStuff(hide);
+    hide.login = true;
+    hide.siteheader = true;
+    hide.headerNav = true;
+    hide.headerDocumentActions = true;
+    hide.scoreBoard = true;
+    // The host page shows a single task; editing happens in TIM itself.
+    hide.parMenu = true;
 }
 
 function hideTopButtonsStuff(hide: IVisibilityVars) {
@@ -116,6 +131,9 @@ export function getVisibilityVars() {
         }
         if (g.parsOnly) {
             hideParsOnlyStuff(hide);
+        }
+        if (g.embedMode) {
+            hideEmbedStuff(hide);
         }
         if (g.hideTopButtons) {
             hideTopButtonsStuff(hide);
@@ -167,6 +185,9 @@ export function getVisibilityVars() {
     if (params.get("pars_only")) {
         hideParsOnlyStuff(hide);
     }
+    if (params.get("embed")) {
+        hideEmbedStuff(hide);
+    }
     if (params.get("hide_edit_menu")) {
         hideEditMenu(hide);
     }
@@ -190,6 +211,10 @@ export class RootCtrl {
     $onInit() {
         setRoot(this);
         const g = genericglobals();
+        const sg = someglobals();
+        if (isDocumentGlobals(sg) && sg.embedMode) {
+            initEmbedMode(sg.embedAllowedOrigins ?? []);
+        }
         if (g.config.hosts && Users.isLoggedIn()) {
             if (!g.config.hosts.allowed.includes(location.hostname)) {
                 let message;
