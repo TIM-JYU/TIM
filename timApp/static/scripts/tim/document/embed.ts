@@ -6,7 +6,7 @@
  * the host can show a status. Messages have the shape
  *
  *     {type: "tim-embed", event: "resize", height: number}
- *     {type: "tim-embed", event: "answer-saved", taskId: string, points: number | null}
+ *     {type: "tim-embed", event: "answer-saved", taskId: string}
  *
  * and are only sent to the parent origin when it is TIM's own origin or one of the
  * origins listed in the EMBED_ALLOWED_ORIGINS config option (the same list that is
@@ -23,7 +23,6 @@ export interface IEmbedAnswerSavedMessage {
     type: "tim-embed";
     event: "answer-saved";
     taskId: string;
-    points: number | null;
 }
 
 export type EmbedMessage = IEmbedResizeMessage | IEmbedAnswerSavedMessage;
@@ -96,13 +95,8 @@ export function postEmbedHeight(force = false) {
     postEmbedMessage({type: "tim-embed", event: "resize", height});
 }
 
-export function notifyEmbedAnswerSaved(taskId: string, points: number | null) {
-    postEmbedMessage({
-        type: "tim-embed",
-        event: "answer-saved",
-        taskId,
-        points,
-    });
+export function notifyEmbedAnswerSaved(taskId: string) {
+    postEmbedMessage({type: "tim-embed", event: "answer-saved", taskId});
 }
 
 /**

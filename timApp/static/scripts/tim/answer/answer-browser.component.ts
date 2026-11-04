@@ -337,10 +337,7 @@ export class AnswerBrowserComponent
                     this.updatePoints();
                 }
                 if (args.savedNew && isEmbedMode()) {
-                    notifyEmbedAnswerSaved(
-                        this.taskId.docTask().toString(),
-                        this.selectedAnswer?.points ?? null
-                    );
+                    notifyEmbedAnswerSaved(this.taskId.docTask().toString());
                 }
             });
             // HACK: for some reason the math mode is lost because of the above call, so we restore it here
