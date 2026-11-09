@@ -2144,9 +2144,7 @@ export class ImageXComponent
         // An unchanged board isn't stored either (savedNew is null): the server keeps
         // the previous log, so the save marker is dropped and the session stays in storage.
         const answerStored =
-            r.ok &&
-            !r.result.data.web.error &&
-            r.result.data.savedNew != null;
+            r.ok && !r.result.data.web.error && r.result.data.savedNew != null;
         if (saveMarker && !answerStored) {
             this.removeTrackSaveEvent(saveMarker);
         }

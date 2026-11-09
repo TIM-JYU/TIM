@@ -63,9 +63,11 @@ export function normalizeNewlines(s: string): string {
 export function shortHash(s: string): string {
     let h = 0x811c9dc5;
     for (let i = 0; i < s.length; i++) {
+        // eslint-disable-next-line no-bitwise
         h ^= s.charCodeAt(i);
         h = Math.imul(h, 0x01000193);
     }
+    // eslint-disable-next-line no-bitwise
     return (h >>> 0).toString(16).padStart(8, "0");
 }
 
@@ -191,8 +193,7 @@ export class EditTracker {
     private noteEdit() {
         const now = Date.now();
         if (this.sum.firstEdit === undefined) {
-            this.sum.firstEdit =
-                Math.round(now / 100 - this.startTenths) / 10;
+            this.sum.firstEdit = Math.round(now / 100 - this.startTenths) / 10;
         }
         if (this.lastEditMs !== undefined) {
             const pause =
