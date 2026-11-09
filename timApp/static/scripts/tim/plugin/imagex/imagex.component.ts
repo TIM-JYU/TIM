@@ -14,9 +14,12 @@ import {FormsModule} from "@angular/forms";
 import {$http, $sce} from "tim/util/ngimport";
 import {TimDefer} from "tim/util/timdefer";
 import type {MouseOrTouch} from "tim/util/utils";
+import {Users} from "tim/user/userService";
 import {
     defaultTimeout,
+    getStorage,
     posToRelative,
+    setStorage,
     timeout,
     to,
     touchEventToTouch,
@@ -61,6 +64,9 @@ import type {
     SizeT,
     TargetPropsT,
     TextboxPropsT,
+    TrackEvent,
+    TrackPos,
+    TrackSession,
     TuplePoint,
 } from "tim/plugin/imagex/imagextypes";
 import {ImageXAll, SingleSize, ValidCoord} from "tim/plugin/imagex/imagextypes";
@@ -68,6 +74,33 @@ import {AngularPluginBase} from "tim/plugin/angular-plugin-base.directive";
 import {CommonModule} from "@angular/common";
 
 let globalPreviewColor = "#fff";
+
+function isTrackSession(s: unknown): s is TrackSession {
+    if (typeof s !== "object" || s === null) {
+        return false;
+    }
+    const o = s as Record<string, unknown>;
+    return (
+        typeof o.id === "string" &&
+        typeof o.t === "number" &&
+        Array.isArray(o.e) &&
+        (o.init === undefined || Array.isArray(o.init))
+    );
+}
+
+/** Union of sessions by id; for duplicates keeps the copy with more events. Sorted by start time. */
+function mergeTrackSessions(...logs: TrackSession[][]): TrackSession[] {
+    const byId = new Map<string, TrackSession>();
+    for (const log of logs) {
+        for (const s of log) {
+            const prev = byId.get(s.id);
+            if (!prev || s.e.length > prev.e.length) {
+                byId.set(s.id, s);
+            }
+        }
+    }
+    return [...byId.values()].sort((a, b) => a.t - b.t);
+}
 
 export function tupleToCoords(p: TuplePoint) {
     return {x: p[0], y: p[1]};
@@ -145,6 +178,8 @@ class DragTask {
         obj: DragObject;
         xoffset: number;
         yoffset: number;
+        startX: number;
+        startY: number;
     };
     public drawObjects: DrawObject[];
     public lines?: Line[];
@@ -384,6 +419,8 @@ class DragTask {
                 obj: active,
                 xoffset: this.mousePosition.x - active.x,
                 yoffset: this.mousePosition.y - active.y,
+                startX: active.x,
+                startY: active.y,
             };
             this.drawDragTask();
             this.drawing.redrawAll();
@@ -449,6 +486,21 @@ class DragTask {
                             isTarget.y + isTarget.snapOffset.y;
                     }
                 }
+            }
+
+            if (this.imgx.markup.track) {
+                const {obj, startX, startY} = this.activeDragObject;
+                if (
+                    Math.round(obj.x) !== Math.round(startX) ||
+                    Math.round(obj.y) !== Math.round(startY)
+                ) {
+                    this.imgx.recordMove(obj);
+                }
+                // TODO: temporary debug output, remove later
+                console.log(
+                    "imagex track:",
+                    JSON.stringify(this.imgx.trackLog)
+                );
             }
 
             this.activeDragObject = undefined;
@@ -1445,6 +1497,15 @@ export class ImageXComponent
     private previousDrags: (IPoint & {did: string})[] = [];
     public userHasAnswered = false;
 
+    // Drag tracking (markup option `track`). Never cleared; see TrackSession in imagextypes.ts.
+    public trackLog: TrackSession[] = [];
+    private trackSessionId = Math.random().toString(36).slice(2, 8);
+    // Times in tenths of a second: session start (epoch) and elapsed time at the previous event.
+    private trackStartTenths = Math.round(Date.now() / 100);
+    private lastTrackElapsedTenths = 0;
+    private trackInit: TrackPos[] = [];
+    private currentTrackSession?: TrackSession;
+
     public muokattu: boolean;
     public result: string;
     public error?: string;
@@ -1506,6 +1567,7 @@ export class ImageXComponent
 
     async ngOnInit() {
         super.ngOnInit();
+        this.trackStartTenths = Math.round(Date.now() / 100);
 
         if (!this.attrsall.preview) {
             this.vctrl.addTimComponent(this);
@@ -1636,6 +1698,10 @@ export class ImageXComponent
             }
         }
 
+        // Must run before objects become draggable (below, before awaiting images),
+        // so that no move is recorded before the saved log is loaded.
+        this.initTracking();
+
         dt.drawObjects = [
             ...dt.drawObjects,
             ...fixedobjects,
@@ -1687,6 +1753,189 @@ export class ImageXComponent
         this.undo(e);
     };
 
+    /**
+     * Called at the end of ngOnInit, after objects are placed from the saved answer.
+     * Records the starting board and loads the saved log plus any unsaved sessions from localStorage.
+     */
+    private initTracking() {
+        if (!this.markup.track) {
+            return;
+        }
+        this.trackInit = this.drags
+            .map((d): TrackPos => [d.id, Math.round(d.x), Math.round(d.y)])
+            .filter(
+                ([, x, y], i) =>
+                    x !== Math.round(this.drags[i].values.position[0]) ||
+                    y !== Math.round(this.drags[i].values.position[1])
+            );
+        const saved = (this.attrsall.state?.track ?? []).filter(isTrackSession);
+        const stored: TrackSession[] = [];
+        const prefix = this.trackStoragePrefix();
+        if (prefix) {
+            try {
+                const keys: string[] = [];
+                for (let i = 0; i < window.localStorage.length; i++) {
+                    const key = window.localStorage.key(i);
+                    if (key?.startsWith(prefix)) {
+                        keys.push(key);
+                    }
+                }
+                for (const key of keys) {
+                    const s = getStorage(key);
+                    if (!isTrackSession(s)) {
+                        window.localStorage.removeItem(key);
+                        continue;
+                    }
+                    const inSaved = saved.find((ss) => ss.id === s.id);
+                    if (inSaved && inSaved.e.length >= s.e.length) {
+                        window.localStorage.removeItem(key); // already fully saved
+                    } else {
+                        stored.push(s);
+                    }
+                }
+            } catch (e) {
+                // localStorage unavailable; continue with the saved log only.
+            }
+        }
+        this.trackLog = mergeTrackSessions(saved, stored);
+    }
+
+    /** localStorage key prefix for this user and task, or undefined if storage is not used. */
+    private trackStoragePrefix(): string | undefined {
+        const taskId = this.pluginMeta.getTaskId();
+        if (!taskId || this.attrsall.preview) {
+            return undefined;
+        }
+        return `imagexTrack_${Users.getCurrent().id}_${taskId
+            .docTask()
+            .toString()}_`;
+    }
+
+    /** Backs up this window's session to localStorage so it survives a reload without saving. */
+    private storeTrackSession() {
+        const prefix = this.trackStoragePrefix();
+        if (!prefix || !this.currentTrackSession) {
+            return;
+        }
+        try {
+            setStorage(prefix + this.trackSessionId, this.currentTrackSession);
+        } catch (e) {
+            // Storage unavailable or full; tracking still works in memory.
+        }
+    }
+
+    /** After a successful save, removes localStorage copies of sessions that were sent in full. */
+    private clearSavedTrackSessions(sent: TrackSession[]) {
+        const prefix = this.trackStoragePrefix();
+        if (!prefix) {
+            return;
+        }
+        try {
+            for (const s of sent) {
+                const key = prefix + s.id;
+                const st = getStorage(key);
+                if (isTrackSession(st) && st.e.length <= s.e.length) {
+                    window.localStorage.removeItem(key);
+                }
+            }
+        } catch (e) {
+            // ignore
+        }
+    }
+
+    /**
+     * Adds an event to this window's session, creating the session on the first event.
+     * dt is computed from rounded elapsed time, so t + sum(dt) is exact (no rounding drift).
+     */
+    private pushTrackEvent(makeEvent: (dt: number) => TrackEvent): TrackEvent {
+        const elapsed = Math.round(Date.now() / 100) - this.trackStartTenths;
+        const dt = (elapsed - this.lastTrackElapsedTenths) / 10;
+        this.lastTrackElapsedTenths = elapsed;
+        if (!this.currentTrackSession) {
+            this.currentTrackSession = {
+                id: this.trackSessionId,
+                t: this.trackStartTenths / 10,
+                init: this.trackInit,
+                e: [],
+            };
+            this.trackLog.push(this.currentTrackSession);
+        }
+        const ev = makeEvent(dt);
+        this.currentTrackSession.e.push(ev);
+        this.storeTrackSession();
+        return ev;
+    }
+
+    /**
+     * Removes a save marker whose save failed. Its dt is added to the next event
+     * so that the session's times stay exact.
+     */
+    private removeTrackSaveEvent(ev: TrackEvent) {
+        const e = this.currentTrackSession?.e;
+        const i = e?.indexOf(ev) ?? -1;
+        if (!e || i < 0 || Array.isArray(ev)) {
+            return;
+        }
+        e.splice(i, 1);
+        if (i < e.length) {
+            const next = e[i];
+            if (Array.isArray(next)) {
+                next[3] = Math.round((next[3] + ev.dt) * 10) / 10;
+            } else {
+                next.dt = Math.round((next.dt + ev.dt) * 10) / 10;
+            }
+        } else {
+            this.lastTrackElapsedTenths -= Math.round(ev.dt * 10);
+        }
+        this.storeTrackSession();
+    }
+
+    /**
+     * Tracking log to send with an answer, or undefined if tracking is off.
+     * Returns a deep copy so that later moves don't change what was sent.
+     */
+    private trackData(): TrackSession[] | undefined {
+        if (!this.markup.track) {
+            return undefined;
+        }
+        return JSON.parse(JSON.stringify(this.trackLog)) as TrackSession[];
+    }
+
+    recordMove(obj: DragObject) {
+        this.pushTrackEvent((dt) => [
+            obj.id,
+            Math.round(obj.x),
+            Math.round(obj.y),
+            dt,
+        ]);
+    }
+
+    /**
+     * Runs moveObjects and, if tracking is enabled, records all resulting object moves as one event.
+     */
+    private trackMassMove(type: "undo" | "reset", moveObjects: () => void) {
+        if (!this.markup.track) {
+            moveObjects();
+            return;
+        }
+        const before = this.drags.map((d) => [
+            Math.round(d.x),
+            Math.round(d.y),
+        ]);
+        moveObjects();
+        const moves: TrackPos[] = [];
+        this.drags.forEach((d, i) => {
+            const x = Math.round(d.x);
+            const y = Math.round(d.y);
+            if (x !== before[i][0] || y !== before[i][1]) {
+                moves.push([d.id, x, y]);
+            }
+        });
+        if (moves.length > 0) {
+            this.pushTrackEvent((dt) => ({type, dt, moves}));
+        }
+    }
+
     undo(e?: Event) {
         if (e) {
             e.preventDefault();
@@ -1699,15 +1948,17 @@ export class ImageXComponent
 
     resetChanges() {
         this.drawing.setDrawData([...this.previousDrawing]);
-        for (const o of this.dt.drawObjects) {
-            const prevPos = this.previousDrags.find(
-                (prev) => prev.did == o.did
-            );
-            if (prevPos) {
-                o.x = prevPos.x;
-                o.y = prevPos.y;
+        this.trackMassMove("undo", () => {
+            for (const o of this.dt.drawObjects) {
+                const prevPos = this.previousDrags.find(
+                    (prev) => prev.did == o.did
+                );
+                if (prevPos) {
+                    o.x = prevPos.x;
+                    o.y = prevPos.y;
+                }
             }
-        }
+        });
         this.dt.drawDragTask();
         this.drawing.redrawAll();
         this.prevAnswer = this.getContent();
@@ -1770,6 +2021,7 @@ export class ImageXComponent
                 drags: this.getDragObjectJson(),
                 finalanswerquery: true,
                 drawings: this.drawing.getDrawing(),
+                track: this.trackData(),
             },
         };
         const url = this.pluginMeta.getAnswerUrl();
@@ -1809,10 +2061,12 @@ export class ImageXComponent
         this.error = "";
         this.drawing.resetDrawing();
 
-        for (const obj of this.drags) {
-            obj.overrideColor = undefined;
-            obj.resetPosition();
-        }
+        this.trackMassMove("reset", () => {
+            for (const obj of this.drags) {
+                obj.overrideColor = undefined;
+                obj.resetPosition();
+            }
+        });
 
         this.dt.lines = undefined;
 
@@ -1853,10 +2107,17 @@ export class ImageXComponent
         this.isRunning = true;
         this.result = "";
 
+        // Save marker is added before sending, so the saved answer contains its own marker.
+        // It is removed again if the save fails.
+        const saveMarker =
+            this.markup.track && !nosave
+                ? this.pushTrackEvent((dt) => ({type: "save", dt}))
+                : undefined;
         const params = {
             input: {
                 drags: this.getDragObjectJson(),
                 drawings: this.drawing.getDrawing(),
+                track: this.trackData(),
                 nosave: false,
             },
         };
@@ -1878,8 +2139,15 @@ export class ImageXComponent
             }>({method: "PUT", url, data: params, timeout: defaultTimeout})
         );
         this.isRunning = false;
+        // Backend reports e.g. an exceeded answer limit in web.error without saving.
+        if (saveMarker && (!r.ok || r.result.data.web.error)) {
+            this.removeTrackSaveEvent(saveMarker);
+        }
         if (r.ok) {
             const data = r.result.data;
+            if (params.input.track && !nosave && !data.web.error) {
+                this.clearSavedTrackSessions(params.input.track);
+            }
             this.error = data.web.error;
             this.result = data.web.result;
             this.tries = data.web.tries;

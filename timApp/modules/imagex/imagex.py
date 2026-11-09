@@ -52,6 +52,30 @@ def get_lazy_imagex_html(query: QueryClass) -> str:
     return s
 
 
+def merge_track_sessions(*logs) -> list:
+    """Merges drag tracking logs (lists of sessions) by session id.
+
+    For a session present in several logs, the copy with more events is kept.
+    Entries that are not valid sessions are dropped. Result is sorted by session start time.
+    """
+    by_id = {}
+    for log in logs:
+        if not isinstance(log, list):
+            continue
+        for s in log:
+            if not (
+                isinstance(s, dict)
+                and isinstance(s.get("id"), str)
+                and isinstance(s.get("t"), (int, float))
+                and isinstance(s.get("e"), list)
+            ):
+                continue
+            prev = by_id.get(s["id"])
+            if prev is None or len(s["e"]) > len(prev["e"]):
+                by_id[s["id"]] = s
+    return sorted(by_id.values(), key=lambda s: s["t"])
+
+
 class ImagexServer(TimServer):
     """Class for imagex server that can handle the TIM routes."""
 
@@ -302,6 +326,17 @@ class ImagexServer(TimServer):
         drawings = get_json_param(query.jso, "input", "drawings", None)
         if drawings:
             save["drawings"] = drawings
+        # Drag tracking log (markup option "track"): list of sessions, one per page load.
+        # Read the setting from markup directly: get_param would find input["track"] first.
+        if (query.jso.get("markup") or {}).get("track") is True:
+            prev_state = query.jso.get("state")
+            prev_track = (
+                prev_state.get("track") if isinstance(prev_state, dict) else None
+            )
+            new_track = get_json_param(query.jso, "input", "track", None)
+            merged = merge_track_sessions(prev_track, new_track)
+            if merged:
+                save["track"] = merged
         result["save"] = save
         out = "saved"
         tim_info = {"points": points}

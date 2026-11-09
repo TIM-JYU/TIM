@@ -294,8 +294,35 @@ export const ImageXMarkup = t.intersection([
         freeHandWidth: withDefault(t.number, 2),
         showTimes: withDefault(t.boolean, false),
         showVideoTime: withDefault(t.boolean, true),
+        track: withDefault(t.boolean, false),
     }),
 ]);
+
+// Drag tracking data (markup option `track`).
+// The log is a list of sessions, one per page load (window) that had at least one move.
+// Positions are rounded to integers, dt = seconds since the previous event in the same
+// session (for the first event: since session start), 0.1 s precision.
+export type TrackPos = [string, number, number]; // [object id, x, y]
+export type TrackDragMove = [string, number, number, number]; // [object id, x, y, dt]
+export interface TrackMassMove {
+    type: "undo" | "reset";
+    dt: number;
+    moves: TrackPos[];
+}
+// This window's board was saved as the answer at this point.
+export interface TrackSaveEvent {
+    type: "save";
+    dt: number;
+}
+export type TrackEvent = TrackDragMove | TrackMassMove | TrackSaveEvent;
+export interface TrackSession {
+    id: string; // random id, used for merging sessions
+    // Page load time, epoch seconds with 0.1 s precision. Event time = t + sum of dt so far
+    // (exact: dt values are computed from rounded elapsed time, so they don't drift).
+    t: number;
+    init: TrackPos[]; // objects not at their markup default position at page load
+    e: TrackEvent[];
+}
 
 export const RightAnswer = t.intersection([
     t.type({
@@ -313,6 +340,9 @@ export const ImageXAll = t.intersection([
             t.partial({
                 freeHandData: t.array(LineSegment),
                 drawings: t.array(DrawData),
+                // Drag tracking log (TrackSession[]). Kept loosely typed so that a format
+                // change in the log never prevents the plugin from loading.
+                track: t.array(t.unknown),
                 userAnswer: t.partial({
                     drags: t.array(
                         t.type({
