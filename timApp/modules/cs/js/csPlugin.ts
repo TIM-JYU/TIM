@@ -75,6 +75,8 @@ import type {CellInfo} from "./embedded_sagecell";
 import {getIFrameDataUrl} from "./iframeutils";
 import type {EditorComponent} from "./editor/editor";
 import {CURSOR, EditorFile, Mode} from "./editor/editor";
+import type {EditTrackSummary} from "./editor/edittracker";
+import {EditTracker} from "./editor/edittracker";
 import {CountBoardComponent} from "./editor/countboard";
 import {getInt} from "./util/util";
 import type {IFile, IFileSpecification} from "./util/file-select";
@@ -831,6 +833,7 @@ const CsMarkupDefaults = t.type({
     rows: withDefault(t.number, 1),
     showRuntime: withDefault(t.boolean, false),
     toggleEditor: withDefault(t.union([t.boolean, t.string]), false),
+    track: withDefault(t.boolean, false),
     type: withDefault(t.string, "cs"),
     upload: withDefault(t.boolean, false),
     validityCheck: withDefault(t.string, ""),
@@ -1010,6 +1013,7 @@ type IRunRequestInput = Partial<IExtraMarkup> & {
     nosave: boolean;
     type: string;
     selectedLanguage?: string;
+    trackSummary?: Record<string, EditTrackSummary>;
 };
 
 export interface IRunRequest {
@@ -1277,6 +1281,8 @@ export class CsController extends CsBase implements ITimComponent {
     timeout: number = 0;
     editorModes: Mode[] = [];
     editor?: EditorComponent;
+    // Edit tracking (markup option `track`), see editor/edittracker.ts
+    private tracker?: EditTracker;
     externalEditor?: EditorComponent;
     hasExternalSources: boolean = false;
     fileSelect?: FileSelectManagerComponent;
@@ -1456,6 +1462,19 @@ export class CsController extends CsBase implements ITimComponent {
         }
 
         this.editor.startLineNumber = this.markup.startLineNumber;
+
+        if (
+            !this.tracker &&
+            this.markup.track &&
+            !this.attrsall.preview &&
+            this.pluginMeta.getTaskId()
+        ) {
+            this.tracker = new EditTracker(
+                this.pluginMeta.getTaskId()!.docTask().toString(),
+                this.editor.content
+            );
+        }
+        this.editor.tracker = this.tracker;
     }
 
     @ViewChild(FileSelectManagerComponent)
@@ -1732,7 +1751,12 @@ export class CsController extends CsBase implements ITimComponent {
     }
 
     resetChanges(): void {
-        this.usercode = this.savedvals?.usercode ?? "";
+        const oldCode = this.usercode;
+        const savedCode = this.savedvals?.usercode ?? "";
+        if (this.tracker && oldCode !== savedCode) {
+            this.tracker.revert(oldCode.length, savedCode.length);
+        }
+        this.usercode = savedCode;
         this.userargs = this.savedvals?.args ?? "";
         this.userinput = this.savedvals?.input ?? "";
         this.edited = false;
@@ -2391,6 +2415,7 @@ ${fhtml}
         if (!this.attrsall.preview) {
             this.vctrl.removeTimComponent(this);
         }
+        this.tracker?.destroy();
     }
 
     async ngAfterViewInit() {
@@ -2673,6 +2698,7 @@ ${fhtml}
 
     async runCodeCommon(nosave: boolean, _extraMarkUp?: IExtraMarkup) {
         this.hasBeenRun = true;
+        this.tracker?.run(!(nosave || this.nosave));
         const ty = languageTypes.getRunType(this.selectedLanguage, "cs");
         if (ty === "md") {
             await this.showMD();
@@ -2906,6 +2932,9 @@ ${fhtml}
                 ...extraMarkUp,
                 ...(this.isAll
                     ? {selectedLanguage: this.selectedLanguage}
+                    : {}),
+                ...(this.tracker
+                    ? {trackSummary: this.tracker.summary()}
                     : {}),
             },
         };
@@ -3323,6 +3352,7 @@ ${fhtml}
         this.runError = false;
         this.result = "";
         this.viewCode = this.markup.viewCode;
+        this.tracker?.reset();
         if (this.editor) {
             this.editor?.reset();
         } else {

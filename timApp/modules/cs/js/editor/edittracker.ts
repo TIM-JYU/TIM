@@ -7,6 +7,7 @@
  * is also kept and sent with each answer (see `summary()`).
  *
  * Pasted/copied text itself is never stored, only its length and a short hash.
+ * Line endings are normalized to "\n" first, as editors do when inserting text.
  *
  * Event format: arrays `[type, dt, ...]`, dt = seconds since the previous event in this
  * session (0.1 s precision, computed from rounded elapsed time so that t0 + sum(dt) is exact).
@@ -17,7 +18,9 @@
  *   ["x", dt, len, hash]        cut inside the editor
  *   ["d", dt, len]              drop
  *   ["big", dt, len]            large insert without paste/drop event
- *   ["u", dt]                   undo
+ *   ["u", dt, ins, del]         undo (chars inserted / deleted by it)
+ *   ["r", dt, ins, del]         redo (chars inserted / deleted by it)
+ *   ["revert", dt, old, new]    unsaved changes reverted to the saved answer (text lengths)
  *   ["away", dt] / ["back", dt] window/tab left / returned
  *   ["run", dt, saved]          run (saved = 1 if the answer is saved)
  *   ["reset", dt]               reset code
@@ -28,7 +31,7 @@ import {getCookie} from "tim/util/utils";
 
 type TrackEventT = (string | number)[];
 
-export interface EditTrackSummary {
+export type EditTrackSummary = {
     t: number; // session start, epoch seconds
     n: number; // number of events so far (used for merging on the server)
     firstEdit?: number; // seconds from page load to first edit
@@ -39,16 +42,22 @@ export interface EditTrackSummary {
     ownPaste: number; // pastes of text copied/cut in this editor during the session
     drop: number;
     big: number;
+    undo: number; // undo, redo and revert operations
     away: number;
     awaySec: number;
     maxPause: number; // longest gap between edits while on the page, seconds
-}
+};
 
 const BURST_IDLE_MS = 2000;
 const BIG_INSERT = 20;
 const FLUSH_INTERVAL_MS = 30000; // also flushed immediately on away / pagehide / run
 const MAX_QUEUE = 2000;
 const TRACK_URL = "/trackEvents";
+
+/** Converts "\r\n" and "\r" line endings to "\n". */
+export function normalizeNewlines(s: string): string {
+    return s.replace(/\r\n?/g, "\n");
+}
 
 /** 32-bit FNV-1a hash as 8 hex chars. */
 export function shortHash(s: string): string {
@@ -112,6 +121,7 @@ export class EditTracker {
             ownPaste: 0,
             drop: 0,
             big: 0,
+            undo: 0,
             away: 0,
             awaySec: 0,
             maxPause: 0,
@@ -244,6 +254,7 @@ export class EditTracker {
     }
 
     paste(text: string, expectInsert: boolean) {
+        text = normalizeNewlines(text);
         const h = shortHash(text);
         this.noteEdit();
         this.sum.paste++;
@@ -259,6 +270,7 @@ export class EditTracker {
         if (!text) {
             return;
         }
+        text = normalizeNewlines(text);
         const h = shortHash(text);
         this.copiedHashes.add(h);
         this.event("c", text.length, h);
@@ -268,6 +280,7 @@ export class EditTracker {
         if (!text) {
             return;
         }
+        text = normalizeNewlines(text);
         const h = shortHash(text);
         this.copiedHashes.add(h);
         this.event("x", text.length, h);
@@ -280,9 +293,25 @@ export class EditTracker {
         this.expectedInsert = expectInsert ? len : 0;
     }
 
-    undo() {
+    /** Undo in the editor; its text changes are not counted as typing. */
+    undo(ins: number, del: number) {
         this.noteEdit();
-        this.event("u");
+        this.sum.undo++;
+        this.event("u", ins, del);
+    }
+
+    /** Redo in the editor; its text changes are not counted as typing. */
+    redo(ins: number, del: number) {
+        this.noteEdit();
+        this.sum.undo++;
+        this.event("r", ins, del);
+    }
+
+    /** Unsaved changes were reverted to the saved answer (e.g. the plugin's Undo link). */
+    revert(oldLen: number, newLen: number) {
+        this.noteEdit();
+        this.sum.undo++;
+        this.event("revert", oldLen, newLen);
     }
 
     run(saved: boolean) {

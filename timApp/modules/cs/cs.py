@@ -26,7 +26,12 @@ from typing import Any
 from urllib.request import urlopen
 
 from cs_logging import get_logger
-from cs_utils import replace_code, check_parsons, text_value_replace
+from cs_utils import (
+    replace_code,
+    check_parsons,
+    text_value_replace,
+    merge_track_summaries,
+)
 from file_handler import FileHandler
 from file_util import write_safe, rm, rm_safe
 from languages import dummy_language, sanitize_cmdline
@@ -1490,6 +1495,22 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             )
             if selected_language:
                 save["selectedLanguage"] = selected_language
+
+            # Edit tracking summary (markup option "track"), one entry per tracking session.
+            if get_json_param(query.jso, "markup", "track", False) is True:
+                state = query.jso.get("state")
+                prev_state = state if isinstance(state, dict) else {}
+                track_summary = merge_track_summaries(
+                    prev_state.get("trackSummary"),
+                    # If the code didn't change, keep the previous summary so that an
+                    # unchanged run doesn't create a new answer just for the summary.
+                    get_json_param(query.jso, "input", "trackSummary", None)
+                    if usercode != prev_state.get("usercode")
+                    or submitted_files != prev_state.get("submittedFiles")
+                    else None,
+                )
+                if track_summary:
+                    save["trackSummary"] = track_summary
 
             userargs = get_json_param(query.jso, "input", "userargs", None)
             if userargs is None:

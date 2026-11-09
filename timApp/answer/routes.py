@@ -692,6 +692,44 @@ def log_answer_request(
             f.write(to_json_str(j) + "\n")
 
 
+@answers.post("/trackEvents")
+def post_track_events(
+    task: str, sid: str, t0: float, ev: list[Any], seq: int = 0
+) -> Response:
+    """Appends a batch of editor tracking events (csplugin markup option `track`) to a log file.
+
+    Kept deliberately lightweight: only the config and the current user are checked.
+    Problems are ignored silently so that tracking never disturbs the user.
+
+    :param task: Task id (doc_id.task_name)
+    :param sid: Tracking session id (one per page load)
+    :param t0: Session start time, epoch seconds
+    :param ev: Events, see modules/cs/js/editor/edittracker.ts
+    :param seq: Batch number within the session
+    """
+    log_file = current_app.config["EDIT_TRACK_LOG_FILE"]
+    if not log_file:
+        return ok_response()
+    user = get_current_user_object()
+    if not user.logged_in or len(ev) > 2000:
+        return ok_response()
+    p = Path(current_app.config["FILES_PATH"]) / log_file
+    j = {
+        "time": datetime.now(),
+        "user": user.name,
+        "uid": user.id,
+        "task": task,
+        "sid": sid,
+        "seq": seq,
+        "t0": t0,
+        "ev": ev,
+    }
+    with filelock.FileLock("/tmp/edit_track_log"):
+        with p.open("a") as f:
+            f.write(to_json_str(j) + "\n")
+    return ok_response()
+
+
 @dataclass
 class AnswerRouteResult:
     result: dict[str, Any]

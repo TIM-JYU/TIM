@@ -19,6 +19,7 @@ import {Component, ElementRef, Input, ViewChild} from "@angular/core";
 import {wrapText} from "tim/document/editing/utils";
 import type {IEditor} from "./editor";
 import {CURSOR} from "./editor";
+import type {EditTracker} from "./edittracker";
 
 type IAceEditor = Ace.Editor;
 
@@ -100,7 +101,89 @@ export class AceEditorComponent implements IEditor {
     private editorreadonly: boolean = false;
     private disabled_: boolean = false;
     formulaFunction?: () => void;
+    private tracker?: EditTracker;
+    private trackerListenersAdded = false;
+    // True while content is set from code (load, reset, file switch); such changes aren't tracked.
+    private settingContent = false;
     @ViewChild("area") area!: ElementRef;
+
+    /** Starts reporting user edits to the tracker (markup option `track`). */
+    attachTracker(tracker: EditTracker) {
+        this.tracker = tracker;
+        tracker.attached("ace");
+        this.addTrackerListeners(); // no-op until the editor exists
+    }
+
+    private addTrackerListeners() {
+        const editor = this.aceEditor;
+        if (this.trackerListenersAdded || !this.tracker || !editor) {
+            return;
+        }
+        this.trackerListenersAdded = true;
+        editor.on("paste", (e: {text: string}) => {
+            this.tracker?.paste(e.text ?? "", true);
+        });
+        // ACE signals "copy" also when cutting (to fill the clipboard), then "cut".
+        let lastCopy = "";
+        editor.on("copy", (e: {text: string}) => {
+            lastCopy = e.text ?? "";
+        });
+        editor.on("cut", () => {
+            this.tracker?.cut(lastCopy);
+            lastCopy = "";
+        });
+        editor.container.addEventListener("copy", () => {
+            // DOM copy fires after ACE's "copy" signal; a cut is reported separately.
+            setTimeout(() => {
+                if (lastCopy) {
+                    this.tracker?.copy(lastCopy);
+                    lastCopy = "";
+                }
+            });
+        });
+        editor.container.addEventListener("drop", (e: DragEvent) => {
+            const text = e.dataTransfer?.getData("text") ?? "";
+            this.tracker?.drop(text.length, true);
+        });
+        // Text changes made by undo/redo are collected here and reported as one
+        // undo/redo event instead of typing.
+        let history: {ins: number; del: number} | undefined;
+        editor.on("change", (delta: Ace.Delta) => {
+            if (this.settingContent) {
+                return;
+            }
+            const len = delta.lines.join("\n").length;
+            const ins = delta.action === "insert" ? len : 0;
+            const del = delta.action === "insert" ? 0 : len;
+            if (history) {
+                history.ins += ins;
+                history.del += del;
+            } else {
+                this.tracker?.changed(ins, del);
+            }
+        });
+        const isHistory = (name?: string) => name === "undo" || name === "redo";
+        editor.commands.on("exec", (e: {command: {name?: string}}) => {
+            if (isHistory(e.command.name)) {
+                history = {ins: 0, del: 0};
+            }
+        });
+        editor.commands.on(
+            "afterExec",
+            (e: {command: {name?: string}}) => {
+                if (!isHistory(e.command.name) || !history) {
+                    return;
+                }
+                const {ins, del} = history;
+                history = undefined;
+                if (e.command.name === "undo") {
+                    this.tracker?.undo(ins, del);
+                } else {
+                    this.tracker?.redo(ins, del);
+                }
+            }
+        );
+    }
     @Input() placeholder: string = ""; // TODO: make this work
 
     @Input() aceOptions: IAceEditorOptions | null | undefined;
@@ -239,6 +322,7 @@ export class AceEditorComponent implements IEditor {
         if (this.aceOptions) {
             this.aceEditor.setOptions(this.aceOptions);
         }
+        this.addTrackerListeners();
     }
 
     get content(): string {
@@ -247,7 +331,12 @@ export class AceEditorComponent implements IEditor {
 
     set content(str: string) {
         if (this.aceEditor) {
-            this.aceEditor.setValue(str, 1);
+            this.settingContent = true;
+            try {
+                this.aceEditor.setValue(str, 1);
+            } finally {
+                this.settingContent = false;
+            }
         } else {
             this.content_ = str;
         }

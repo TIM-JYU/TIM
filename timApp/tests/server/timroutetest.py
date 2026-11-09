@@ -1574,6 +1574,7 @@ class TimRouteTestBase(TimDbTest):
             m.add_passthru("http://feedback:5000")  # noqa
             m.add_passthru("http://haskellplugins:5002")
             m.add_passthru("http://showfile:5000")
+            m.add_passthru("http://imagex:5000")
             m.add_passthru("http://mailman-test:8001")
             yield m
 

@@ -7,6 +7,7 @@ import json
 import re
 
 from geometry import is_inside
+from track_utils import merge_track_sessions
 
 # Library for checking if a point is inside a shape.
 from tim_common.fileParams import (
@@ -50,30 +51,6 @@ def get_lazy_imagex_html(query: QueryClass) -> str:
         s += replace_template_params(query, '<p class="stem">{{stem}}</p>', "stem")
     s += "</div>"
     return s
-
-
-def merge_track_sessions(*logs) -> list:
-    """Merges drag tracking logs (lists of sessions) by session id.
-
-    For a session present in several logs, the copy with more events is kept.
-    Entries that are not valid sessions are dropped. Result is sorted by session start time.
-    """
-    by_id = {}
-    for log in logs:
-        if not isinstance(log, list):
-            continue
-        for s in log:
-            if not (
-                isinstance(s, dict)
-                and isinstance(s.get("id"), str)
-                and isinstance(s.get("t"), (int, float))
-                and isinstance(s.get("e"), list)
-            ):
-                continue
-            prev = by_id.get(s["id"])
-            if prev is None or len(s["e"]) > len(prev["e"]):
-                by_id[s["id"]] = s
-    return sorted(by_id.values(), key=lambda s: s["t"])
 
 
 class ImagexServer(TimServer):
@@ -334,6 +311,14 @@ class ImagexServer(TimServer):
                 prev_state.get("track") if isinstance(prev_state, dict) else None
             )
             new_track = get_json_param(query.jso, "input", "track", None)
+            # If the board didn't change, keep the previous log so that the answer is
+            # identical to the previous one and TIM doesn't store a duplicate.
+            if (
+                isinstance(prev_state, dict)
+                and prev_state.get("userAnswer") == save["userAnswer"]
+                and prev_state.get("drawings") == save.get("drawings")
+            ):
+                new_track = None
             merged = merge_track_sessions(prev_track, new_track)
             if merged:
                 save["track"] = merged
