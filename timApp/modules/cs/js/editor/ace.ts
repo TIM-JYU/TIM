@@ -168,21 +168,18 @@ export class AceEditorComponent implements IEditor {
                 history = {ins: 0, del: 0};
             }
         });
-        editor.commands.on(
-            "afterExec",
-            (e: {command: {name?: string}}) => {
-                if (!isHistory(e.command.name) || !history) {
-                    return;
-                }
-                const {ins, del} = history;
-                history = undefined;
-                if (e.command.name === "undo") {
-                    this.tracker?.undo(ins, del);
-                } else {
-                    this.tracker?.redo(ins, del);
-                }
+        editor.commands.on("afterExec", (e: {command: {name?: string}}) => {
+            if (!isHistory(e.command.name) || !history) {
+                return;
             }
-        );
+            const {ins, del} = history;
+            history = undefined;
+            if (e.command.name === "undo") {
+                this.tracker?.undo(ins, del);
+            } else {
+                this.tracker?.redo(ins, del);
+            }
+        });
     }
     @Input() placeholder: string = ""; // TODO: make this work
 

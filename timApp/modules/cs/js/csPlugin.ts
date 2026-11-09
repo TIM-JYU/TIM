@@ -2933,9 +2933,7 @@ ${fhtml}
                 ...(this.isAll
                     ? {selectedLanguage: this.selectedLanguage}
                     : {}),
-                ...(this.tracker
-                    ? {trackSummary: this.tracker.summary()}
-                    : {}),
+                ...(this.tracker ? {trackSummary: this.tracker.summary()} : {}),
             },
         };
 
