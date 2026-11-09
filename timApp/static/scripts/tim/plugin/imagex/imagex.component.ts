@@ -2129,6 +2129,7 @@ export class ImageXComponent
 
         const r = await to(
             $http<{
+                savedNew?: number | null;
                 web: {
                     error?: string;
                     result: string;
@@ -2140,12 +2141,18 @@ export class ImageXComponent
         );
         this.isRunning = false;
         // Backend reports e.g. an exceeded answer limit in web.error without saving.
-        if (saveMarker && (!r.ok || r.result.data.web.error)) {
+        // An unchanged board isn't stored either (savedNew is null): the server keeps
+        // the previous log, so the save marker is dropped and the session stays in storage.
+        const answerStored =
+            r.ok &&
+            !r.result.data.web.error &&
+            r.result.data.savedNew != null;
+        if (saveMarker && !answerStored) {
             this.removeTrackSaveEvent(saveMarker);
         }
         if (r.ok) {
             const data = r.result.data;
-            if (params.input.track && !nosave && !data.web.error) {
+            if (params.input.track && !nosave && answerStored) {
                 this.clearSavedTrackSessions(params.input.track);
             }
             this.error = data.web.error;

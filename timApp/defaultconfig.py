@@ -306,6 +306,12 @@ BACKUP_ANSWER_HOSTS = None
 
 ANSWER_LOG_FILE = None
 
+EDIT_TRACK_LOG_FILE = None
+"""
+File (relative to FILES_PATH) where editor tracking events are appended as JSON lines
+(csplugin markup option `track`). If None, the events are not logged.
+"""
+
 SYNC_USER_GROUPS_SEND_SECRET = None
 """
 Secret to use to when syncing user group info. If None, no user group memberships.

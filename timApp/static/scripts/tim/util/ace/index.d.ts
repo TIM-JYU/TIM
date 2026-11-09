@@ -861,6 +861,8 @@ declare module "ace-builds/src-noconflict/ace" {
                 }) => void
             ): Function;
             on(name: "copy", callback: (obj: {text: string}) => void): Function;
+            // Emitted by the "cut" command with the range about to be removed.
+            on(name: "cut", callback: (range: Range) => void): Function;
             on(name: "focus", callback: (e: Event) => void): Function;
             on(
                 name: "paste",

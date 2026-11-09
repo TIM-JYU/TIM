@@ -132,3 +132,26 @@ def text_value_replace(
         else:
             text = re.sub(text_replace, text_by, text, flags=re.M)
     return text
+
+
+def merge_track_summaries(*summaries) -> dict:
+    """Merges edit tracking summaries ({session id: summary}) from several sources
+    (markup option "track").
+
+    For a session present in several sources, the one with more events ("n") is kept.
+    Invalid entries are dropped.
+    """
+    merged: dict = {}
+    for summary in summaries:
+        if not isinstance(summary, dict):
+            continue
+        for sid, s in summary.items():
+            if not isinstance(sid, str) or not isinstance(s, dict):
+                continue
+            n = s.get("n", 0)
+            if not isinstance(n, (int, float)):
+                continue
+            prev = merged.get(sid)
+            if prev is None or n > prev.get("n", 0):
+                merged[sid] = s
+    return merged

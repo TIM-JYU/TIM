@@ -32,6 +32,7 @@ import {NormalEditorComponent} from "./normal";
 import type {IAceEditorOptions} from "./ace";
 import {AceEditorComponent} from "./ace";
 import {ParsonsEditorComponent} from "./parsons";
+import type {EditTracker} from "./edittracker";
 
 type ModeID = number;
 
@@ -245,6 +246,24 @@ export class EditorComponent implements IMultiEditor {
     private aceEditor?: AceEditorComponent;
     parsonsEditor?: ParsonsEditorComponent;
     editorreadonly: boolean = false;
+    private tracker_?: EditTracker;
+
+    /** Edit tracker (markup option `track`); attached to the textarea and ACE editors. */
+    set tracker(tracker: EditTracker | undefined) {
+        this.tracker_ = tracker;
+        this.attachTrackerToActive();
+    }
+
+    private attachTrackerToActive() {
+        if (!this.tracker_) {
+            return;
+        }
+        if (this.mode == Mode.Normal) {
+            this.normalEditor?.attachTracker(this.tracker_);
+        } else if (this.mode == Mode.ACE) {
+            this.aceEditor?.attachTracker(this.tracker_);
+        }
+    }
 
     @Input() disabled: boolean = false;
     @Input() spellcheck?: boolean;
@@ -352,6 +371,9 @@ export class EditorComponent implements IMultiEditor {
         const oldContent = this.normalEditor?.content ?? this.content;
         this.normalEditor = component;
         this.initEditor(oldContent);
+        if (this.tracker_) {
+            component?.attachTracker(this.tracker_);
+        }
     }
 
     @ViewChild(AceEditorComponent)
@@ -362,6 +384,9 @@ export class EditorComponent implements IMultiEditor {
         const oldContent = this.aceEditor?.content ?? this.content;
         this.aceEditor = component;
         this.initEditor(oldContent);
+        if (this.tracker_) {
+            component?.attachTracker(this.tracker_);
+        }
     }
 
     @ViewChild(ParsonsEditorComponent)

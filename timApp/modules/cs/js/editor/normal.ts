@@ -26,6 +26,7 @@ import {wrapText} from "tim/document/editing/utils";
 import {countChars} from "../util/util";
 import type {IEditor} from "./editor";
 import {CURSOR} from "./editor";
+import type {EditTracker} from "./edittracker";
 
 @Component({
     selector: "cs-normal-editor",
@@ -75,8 +76,78 @@ export class NormalEditorComponent implements IEditor {
     @ViewChild("area") private area!: ElementRef<HTMLTextAreaElement>;
     private editorreadonly: boolean = false;
     formulaFunction?: () => void;
+    private tracker?: EditTracker;
+    private trackerListenersAdded = false;
+    private lastLength = 0;
 
     constructor(private cdr: ChangeDetectorRef) {}
+
+    /** Starts reporting user edits to the tracker (markup option `track`). */
+    attachTracker(tracker: EditTracker) {
+        this.tracker = tracker;
+        tracker.attached("normal");
+        if (this.area) {
+            this.addTrackerListeners();
+        } // otherwise added in ngAfterViewInit
+    }
+
+    private addTrackerListeners() {
+        if (this.trackerListenersAdded || !this.tracker) {
+            return;
+        }
+        this.trackerListenersAdded = true;
+        const el = this.area.nativeElement;
+        const selected = () =>
+            el.value.substring(el.selectionStart, el.selectionEnd);
+        this.lastLength = el.value.length;
+        // Programmatic value changes don't fire these events, so only user actions are counted.
+        el.addEventListener("focus", () => {
+            this.lastLength = el.value.length;
+        });
+        el.addEventListener("paste", (e) => {
+            this.tracker?.paste(e.clipboardData?.getData("text") ?? "", false);
+        });
+        el.addEventListener("copy", () => this.tracker?.copy(selected()));
+        el.addEventListener("cut", () => this.tracker?.cut(selected()));
+        el.addEventListener("drop", (e) => {
+            const text = e.dataTransfer?.getData("text") ?? "";
+            this.tracker?.drop(text.length, false);
+        });
+        let selLength = 0;
+        el.addEventListener("beforeinput", () => {
+            this.lastLength = el.value.length;
+            selLength = el.selectionEnd - el.selectionStart;
+        });
+        el.addEventListener("input", (e) => {
+            const type = (e as InputEvent).inputType ?? "";
+            const len = el.value.length;
+            const oldLen = this.lastLength;
+            this.lastLength = len;
+            if (type === "historyUndo" || type === "historyRedo") {
+                // Only the net length change is known here.
+                const ins = Math.max(len - oldLen, 0);
+                const del = Math.max(oldLen - len, 0);
+                if (type === "historyUndo") {
+                    this.tracker?.undo(ins, del);
+                } else {
+                    this.tracker?.redo(ins, del);
+                }
+                return;
+            }
+            if (type === "insertFromPaste" || type === "insertFromDrop") {
+                return; // recorded by the paste/drop listeners
+            }
+            if (type.startsWith("delete")) {
+                this.tracker?.changed(0, Math.max(oldLen - len, 0));
+            } else {
+                // Typing over a selection replaces it: deleted = selection.
+                this.tracker?.changed(
+                    Math.max(len - oldLen + selLength, 0),
+                    selLength
+                );
+            }
+        });
+    }
 
     private preventContextMenu(event: MouseEvent) {
         event.preventDefault();
@@ -116,6 +187,7 @@ export class NormalEditorComponent implements IEditor {
     }
 
     ngAfterViewInit() {
+        this.addTrackerListeners();
         $(this.area.nativeElement).on("keydown", (event) => {
             // TODO: check that this gets disabled when not used
             if (event.which === 9) {
@@ -161,6 +233,9 @@ export class NormalEditorComponent implements IEditor {
 
         const cont = this.content;
         this.content = cont.slice(0, strPos) + str + cont.slice(endPos);
+        // Tab key / formula inserts set the value programmatically, so report them here.
+        this.tracker?.changed(str.length, endPos - strPos);
+        this.lastLength = this.content.length;
 
         const newPos = strPos + str.length - back;
         if (txtarea.selectionStart >= 0 || back >= 0) {
