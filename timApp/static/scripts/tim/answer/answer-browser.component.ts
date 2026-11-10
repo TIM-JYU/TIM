@@ -15,7 +15,6 @@ import {
     ViewChild,
 } from "@angular/core";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
-import type {IController} from "angular";
 import {timLogTime} from "tim/util/timTiming";
 import {TaskId} from "tim/plugin/taskid";
 import type {DrawCanvasComponent} from "tim/plugin/draw-canvas/draw-canvas.components";
@@ -45,19 +44,20 @@ import {isAdmin, Users} from "tim/user/userService";
 import {documentglobals} from "tim/util/globals";
 import {KEY_DOWN, KEY_LEFT, KEY_RIGHT, KEY_UP} from "tim/util/keycodes";
 import {
-    $filter,
-    $http,
-    $httpParamSerializer,
-    $timeout,
-} from "tim/util/ngimport";
-import type {Require} from "tim/util/utils";
+    getHttpClient,
+    serializeQueryParams,
+    withQueryParams,
+} from "tim/util/http";
+import type {AngularError, Require} from "tim/util/utils";
 import {
     getURLParameter,
     getUrlParamsJSON,
     getViewName,
-    to,
+    withRefresh,
+    timeout,
     to2,
     toPromise,
+    toPromiseAndRefresh,
 } from "tim/util/utils";
 import type {
     IAnswer,
@@ -157,7 +157,7 @@ const DEFAULT_MARKUP_CONFIG: IAnswerBrowserSettings = {
     styles: [],
 })
 export class AnswerBrowserComponent
-    implements AfterViewInit, IController, OnDestroy, OnInit
+    implements AfterViewInit, OnDestroy, OnInit
 {
     @Input() public taskId!: TaskId;
     @ViewChild("modelAnswerDiv") modelAnswerRef?: ElementRef<HTMLDivElement>;
@@ -316,6 +316,13 @@ export class AnswerBrowserComponent
         public http: HttpClient
     ) {
         this.loading = 0;
+    }
+
+    /**
+     * The HttpClient that behaves like AngularJS $http did (date conversion and session verification).
+     */
+    private get appHttp() {
+        return getHttpClient();
     }
 
     registerNewAnswer(args: IAnswerSaveEvent) {
@@ -516,7 +523,7 @@ export class AnswerBrowserComponent
 
         // TODO: Angular throws error if many answerbrowsers resolve around the same time
         //  (e.g awaits above don't happen if were in form mode and don't want separate info reqs)
-        await $timeout(0);
+        await withRefresh(timeout());
         this.loader.abLoad.resolve(this);
     }
 
@@ -592,7 +599,7 @@ export class AnswerBrowserComponent
     async ngAfterViewInit() {
         this.loader.showPlaceholder = false;
         if (this.urlParamMatchesThisTask()) {
-            await $timeout(0);
+            await withRefresh(timeout());
             this.element.nativeElement.scrollIntoView();
         }
     }
@@ -601,8 +608,8 @@ export class AnswerBrowserComponent
         if (!this.selectedAnswer) {
             return;
         }
-        await to(
-            $http.put("/answer/saveValidity", {
+        await toPromiseAndRefresh(
+            this.appHttp.put("/answer/saveValidity", {
                 valid: this.isValidAnswer,
                 answer_id: this.selectedAnswer.id,
             })
@@ -647,10 +654,13 @@ export class AnswerBrowserComponent
         if (!this.selectedAnswer || !this.user) {
             return;
         }
-        const r = await to(
-            $http.put(`/savePoints/${this.user.id}/${this.selectedAnswer.id}`, {
-                points: this.points,
-            })
+        const r = await toPromiseAndRefresh(
+            this.appHttp.put(
+                `/savePoints/${this.user.id}/${this.selectedAnswer.id}`,
+                {
+                    points: this.points,
+                }
+            )
         );
         this.shouldFocus = true;
         if (!r.ok) {
@@ -667,8 +677,8 @@ export class AnswerBrowserComponent
         if (!this.user) {
             return;
         }
-        const r = await to(
-            $http.put<PeerReview>(
+        const r = await toPromiseAndRefresh(
+            this.appHttp.put<PeerReview>(
                 `/saveReview/${this.user.id}/${this.taskId
                     .docTask()
                     .toString()}`,
@@ -682,7 +692,7 @@ export class AnswerBrowserComponent
             this.showError(r.result);
             return;
         }
-        const savedPeerReview = r.result.data;
+        const savedPeerReview = r.result;
         const previousPeerReview = this.viewctrl.reviewCtrl.peerReviews.find(
             (p) => p.id == savedPeerReview.id
         );
@@ -790,14 +800,15 @@ export class AnswerBrowserComponent
             forceUpdate
         ) {
             this.loading++;
-            const r = await to(
-                $http.get<{html: string; reviewHtml: string}>("/getState", {
-                    params: {
-                        ...preParams,
-                        ...taskOrAnswer,
-                        ...getUrlParamsJSON(),
-                    },
-                })
+            const r = await toPromiseAndRefresh(
+                this.appHttp.get<{html: string; reviewHtml: string}>(
+                    "/getState?" +
+                        serializeQueryParams({
+                            ...preParams,
+                            ...taskOrAnswer,
+                            ...getUrlParamsJSON(),
+                        })
+                )
             );
             this.loading--;
             if (!r.ok) {
@@ -822,11 +833,11 @@ export class AnswerBrowserComponent
                 if (this.answerLoader && this.selectedAnswer) {
                     // Do nothing; the answerLoader gets called earlier in this method.
                 } else {
-                    await this.loader.loadFromHtml(r.result.data.html);
+                    await this.loader.loadFromHtml(r.result.html);
                 }
             }
             if (this.review) {
-                let newReviewHtml = r.result.data.reviewHtml;
+                let newReviewHtml = r.result.reviewHtml;
                 // Check if component itself provides review data and try to load it instead
                 const comp = this.viewctrl.getTimComponentByName(
                     this.taskId.docTaskField()
@@ -847,7 +858,9 @@ export class AnswerBrowserComponent
                         .substring(10)
                         .split(";");
                     const promises = this.imageReviewUrls.map((url) =>
-                        to($http.get<Blob>(url, {responseType: "blob"}))
+                        toPromiseAndRefresh(
+                            this.appHttp.get(url, {responseType: "blob"})
+                        )
                     );
                     const ress = await Promise.all(promises);
                     for (const blobRes of ress) {
@@ -857,7 +870,7 @@ export class AnswerBrowserComponent
                             continue;
                         }
                         const base64Data = await this.readAsDataUrl(
-                            blobRes.result.data
+                            blobRes.result
                         );
                         fetchedImages.push(base64Data as string);
                     }
@@ -876,7 +889,7 @@ export class AnswerBrowserComponent
                 } else {
                     this.reviewHtml = undefined;
                 }
-                await $timeout();
+                await withRefresh(timeout());
             }
         }
         // if reviewhtml is image-based, then the image load callback should handle annotation loading
@@ -1220,15 +1233,13 @@ export class AnswerBrowserComponent
             return;
         }
         this.loading++;
-        const r = await to(
-            $http.get<IUser[]>(
-                `/getTaskUsers/${this.taskId.docTask().toString()}`,
-                {
-                    params: {
+        const r = await toPromiseAndRefresh(
+            this.appHttp.get<IUser[]>(
+                `/getTaskUsers/${this.taskId.docTask().toString()}?` +
+                    serializeQueryParams({
                         groups: this.viewctrl.groups,
                         peer_review: this.isPeerReview,
-                    },
-                }
+                    })
             )
         );
         this.loading--;
@@ -1236,7 +1247,7 @@ export class AnswerBrowserComponent
             this.showError(r.result);
             return;
         }
-        this.users = r.result.data;
+        this.users = r.result;
         this.users.sort(sortByRealName);
         // force ui to show selected
         if (this.user) {
@@ -1247,8 +1258,8 @@ export class AnswerBrowserComponent
         }
     }
 
-    showError(response: {data: {error: string}}, id?: string) {
-        const msg = `Error: ${response.data.error ?? response.data}`;
+    showError(response: AngularError, id?: string) {
+        const msg = `Error: ${response.error.error ?? response.error}`;
         const type = "danger";
         if (
             this.alerts.some(
@@ -1283,7 +1294,7 @@ export class AnswerBrowserComponent
                   size: 1,
               }
             : {};
-        return `/${newroute}/${this.viewctrl.item.path}?${$httpParamSerializer({
+        return `/${newroute}/${this.viewctrl.item.path}?${serializeQueryParams({
             answerNumber:
                 this.answers.length -
                 this.findSelectedAnswerIndexFromUnFiltered(),
@@ -1308,11 +1319,11 @@ export class AnswerBrowserComponent
         }
         let blockOrPar;
         if (closestAreaName) {
-            blockOrPar = $httpParamSerializer({
+            blockOrPar = serializeQueryParams({
                 area: closestAreaName,
             });
         } else {
-            blockOrPar = $httpParamSerializer({
+            blockOrPar = serializeQueryParams({
                 b: this.getPar()?.originalPar.id ?? "",
                 size: 1,
             });
@@ -1416,13 +1427,11 @@ export class AnswerBrowserComponent
             };
         }
         this.loading++;
-        const r = await to(
-            $http.get<{answer: string; points_map?: Record<number, number>}>(
-                this.getModelAnswerLink(),
-                {
-                    params: {...parParams},
-                }
-            )
+        const r = await toPromiseAndRefresh(
+            this.appHttp.get<{
+                answer: string;
+                points_map?: Record<number, number>;
+            }>(withQueryParams(this.getModelAnswerLink(), parParams))
         );
         this.loading--;
         if (!r.ok) {
@@ -1437,12 +1446,12 @@ export class AnswerBrowserComponent
                 await plugin?.updateInvalidMarkerState();
             }
         }
-        if (r.result.data.points_map) {
-            this.setPointsToAnswers(r.result.data.points_map);
+        if (r.result.points_map) {
+            this.setPointsToAnswers(r.result.points_map);
         }
         this.modelAnswerFetched = true;
         this.modelAnswerVisible = true;
-        this.modelAnswerHtml = r.result.data.answer;
+        this.modelAnswerHtml = r.result.answer;
         if (this.modelAnswerRef) {
             ParCompiler.processAllMathDelayed(
                 $(this.modelAnswerRef.nativeElement)
@@ -1631,14 +1640,10 @@ export class AnswerBrowserComponent
         }
         this.loading++;
 
-        const r = await to(
-            $http.get<IAnswer[]>(
-                `/getAnswers/${this.taskId.docTask().toString()}/${user.id}`,
-                {
-                    params: {
-                        _: Date.now(),
-                    },
-                }
+        const r = await toPromiseAndRefresh(
+            this.appHttp.get<IAnswer[]>(
+                `/getAnswers/${this.taskId.docTask().toString()}/${user.id}?` +
+                    serializeQueryParams({_: Date.now()})
             )
         );
 
@@ -1646,11 +1651,11 @@ export class AnswerBrowserComponent
         if (!r.ok) {
             const status = r.result.status ?? 0;
             if (status <= 0) {
-                r.result.data = {
+                r.result.error = {
                     error: $localize`Could not load task data. Check your internet connection and try again.`,
                 };
             } else if (status >= 500) {
-                r.result.data = {
+                r.result.error = {
                     error: $localize`There is an issue with the server. Try to save your work and reload the page.`,
                 };
             }
@@ -1660,7 +1665,7 @@ export class AnswerBrowserComponent
         this.clearError("getAnswers");
         this.fetchedUser = user;
         this.isAndSetShowNewTask();
-        return r.result.data;
+        return r.result;
     }
 
     getPluginHtmlAnswerId() {
@@ -1872,23 +1877,23 @@ export class AnswerBrowserComponent
             return;
         }
         this.loading++;
-        const r = await to(
-            $http.get<ITaskInfo>(
-                `/taskinfo/${this.taskId.docTask().toString()}`,
-                {
-                    params: getUrlParamsJSON(),
-                }
+        const r = await toPromiseAndRefresh(
+            this.appHttp.get<ITaskInfo>(
+                withQueryParams(
+                    `/taskinfo/${this.taskId.docTask().toString()}`,
+                    getUrlParamsJSON()
+                )
             )
         );
         this.loading--;
         if (!r.ok) {
             const status = r.result.status ?? 0;
             if (status <= 0) {
-                r.result.data = {
+                r.result.error = {
                     error: $localize`Could not load task data. Check your internet connection and try again.`,
                 };
             } else if (status >= 500) {
-                r.result.data = {
+                r.result.error = {
                     error: $localize`There is an issue with the server. Try to save your work and reload the page.`,
                 };
             }
@@ -1896,9 +1901,9 @@ export class AnswerBrowserComponent
             return;
         }
         this.clearError("taskinfo");
-        this.taskInfo = r.result.data;
-        if (r.result.data.modelAnswer) {
-            this.modelAnswer = r.result.data.modelAnswer;
+        this.taskInfo = r.result;
+        if (r.result.modelAnswer) {
+            this.modelAnswer = r.result.modelAnswer;
             // Don't show "Show model answer" when it's disabled for viewers
             if (
                 (this.modelAnswer.disabled === "unless_review" &&
@@ -2012,16 +2017,13 @@ export class AnswerBrowserComponent
     updateFiltered() {
         this.anyInvalid = false;
         // noinspection JSUnusedLocalSymbols,JSUnusedLocalSymbols
-        this.filteredAnswers = $filter("filter")<IAnswer>(
-            this.answers,
-            (value, index, array) => {
-                if (value.valid) {
-                    return true;
-                }
-                this.anyInvalid = true;
-                return !this.onlyValid;
+        this.filteredAnswers = this.answers.filter((value) => {
+            if (value.valid) {
+                return true;
             }
-        );
+            this.anyInvalid = true;
+            return !this.onlyValid;
+        });
     }
 
     async updateFilteredAndSetNewest() {
@@ -2141,8 +2143,8 @@ export class AnswerBrowserComponent
         ) {
             return;
         }
-        await to(
-            $http.post("/answer/deleteCollaborator", {
+        await toPromiseAndRefresh(
+            this.appHttp.post("/answer/deleteCollaborator", {
                 answer_id: sa.id,
                 user_id: userId,
             })

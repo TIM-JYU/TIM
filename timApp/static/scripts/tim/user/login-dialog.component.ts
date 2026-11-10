@@ -12,13 +12,13 @@ import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import type {JsonValue} from "tim/util/jsonvalue";
 import {saveCurrentScreenPar} from "tim/document/parhelpers";
 import {genericglobals, isDocumentGlobals} from "tim/util/globals";
-import {$http} from "tim/util/ngimport";
-import type {IOkResponse, Result, ToReturn} from "tim/util/utils";
+import {HttpClient} from "@angular/common/http";
+import type {AngularError, IOkResponse, Result} from "tim/util/utils";
 import {
     capitalizeFirstLetter,
     getLangLink,
     mapSuccess,
-    to,
+    toPromise,
 } from "tim/util/utils";
 import type {IDiscoveryFeedEntry} from "tim/user/haka-login.component";
 import {HakaLoginComponent, loadIdPs} from "tim/user/haka-login.component";
@@ -351,6 +351,11 @@ export class LoginDialogComponent extends AngularDialogComponent<
     void
 > {
     hideVars: IVisibilityVars = getVisibilityVars();
+
+    constructor(private http: HttpClient) {
+        super();
+    }
+
     showSignup?: boolean; // Show sign up form instead of log in.
     showSimpleLogin?: boolean; // Show simple email log in
     loginForm = {email: "", password: ""};
@@ -429,7 +434,7 @@ export class LoginDialogComponent extends AngularDialogComponent<
             }
         }
         (async () => {
-            this.idps = await loadIdPs();
+            this.idps = await loadIdPs(this.http);
         })();
 
         this.resetView();
@@ -462,7 +467,7 @@ export class LoginDialogComponent extends AngularDialogComponent<
         this.loggingIn = true;
         let result: Result<
             ISimpleLoginResponse | ISimpleRegistrationResponse,
-            {data: {error: string}}
+            AngularError
         >;
         if (this.simpleEmailLogin) {
             result = mapSuccess(
@@ -473,9 +478,9 @@ export class LoginDialogComponent extends AngularDialogComponent<
                     password: this.loginForm.password,
                 }),
                 (r) =>
-                    r.data.type === "login"
-                        ? {type: r.data.type, data: r.data.data}
-                        : {type: r.data.type, data: r.data.data}
+                    r.type === "login"
+                        ? {type: r.type, data: r.data}
+                        : {type: r.type, data: r.data}
             );
         } else {
             result = mapSuccess(
@@ -484,13 +489,13 @@ export class LoginDialogComponent extends AngularDialogComponent<
                     this.loginForm.password,
                     this.addingToSession
                 ),
-                (r) => ({type: "login", data: r.data})
+                (r) => ({type: "login", data: r})
             );
         }
 
         this.loggingIn = false;
         if (!result.ok) {
-            this.loginError = result.result.data.error;
+            this.loginError = result.result.error.error;
         } else {
             if (result.result.type === "login") {
                 if (!this.addingToSession) {
@@ -525,7 +530,7 @@ export class LoginDialogComponent extends AngularDialogComponent<
             reset_password: this.resetPassword,
         });
         if (!r.ok) {
-            this.signUpError = r.result.data.error;
+            this.signUpError = r.result.error.error;
         } else {
             this.signUpError = undefined;
             this.emailSent = true;
@@ -544,13 +549,13 @@ export class LoginDialogComponent extends AngularDialogComponent<
             }
         );
         if (!r.ok) {
-            this.signUpError = r.result.data.error;
+            this.signUpError = r.result.error.error;
         } else {
             this.signUpError = undefined;
             this.tempPasswordProvided = true;
-            if (r.result.data.status === "name") {
-                this.name = r.result.data.name;
-                this.canChangeName = r.result.data.can_change_name;
+            if (r.result.status === "name") {
+                this.name = r.result.name;
+                this.canChangeName = r.result.can_change_name;
                 if (!this.canChangeName) {
                 }
             } else {
@@ -588,9 +593,9 @@ export class LoginDialogComponent extends AngularDialogComponent<
             }
         );
         if (!r.ok) {
-            this.signUpError = r.result.data.error;
+            this.signUpError = r.result.error.error;
         } else {
-            this.finishStatus = r.result.data.status;
+            this.finishStatus = r.result.status;
             this.signUpError = undefined;
             this.nameProvided = true;
         }
@@ -652,9 +657,12 @@ export class LoginDialogComponent extends AngularDialogComponent<
         this.showSimpleLogin = true;
     }
 
-    private async sendRequest<T>(url: string, data: JsonValue): ToReturn<T> {
+    private async sendRequest<T>(
+        url: string,
+        data: JsonValue
+    ): Promise<Result<T, AngularError>> {
         this.signUpRequestInProgress = true;
-        const r = await to($http.post<T>(url, data));
+        const r = await toPromise(this.http.post<T>(url, data));
         this.signUpRequestInProgress = false;
         return r;
     }
@@ -665,7 +673,7 @@ export class LoginDialogComponent extends AngularDialogComponent<
             email: this.loginForm.email,
         });
         if (!r.ok) {
-            this.loginError = r.result.data.error;
+            this.loginError = r.result.error.error;
             return;
         }
         this.simpleLoginEmailGiven = true;

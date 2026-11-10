@@ -9,8 +9,9 @@ import * as t from "io-ts";
 import type {DocumentOrFolder, IItem, ITaggedItem} from "tim/item/IItem";
 import {relevanceSuggestions} from "tim/item/relevance-edit.component";
 import {someglobals} from "tim/util/globals";
-import {$http} from "tim/util/ngimport";
-import {TimStorage, to} from "tim/util/utils";
+import {HttpClient} from "@angular/common/http";
+import {serializeQueryParams} from "tim/util/http";
+import {TimStorage, toPromise} from "tim/util/utils";
 import type {SearchResultsDialogComponent} from "tim/search/search-results-dialog.component";
 
 /**
@@ -259,6 +260,8 @@ export class SearchBoxComponent implements OnInit, OnDestroy {
     defaultFolderLocation?: string;
     currentFolderLocation?: string;
 
+    constructor(private http: HttpClient) {}
+
     ngOnInit() {
         this.loadLocalStorage();
 
@@ -457,24 +460,23 @@ export class SearchBoxComponent implements OnInit, OnDestroy {
     }
 
     private async combinedSearch() {
-        const r = await to(
-            $http<ISearchResultsInfo>({
-                method: "GET",
-                params: {
-                    ignorePlugins: this.ignorePlugins,
-                    maxDocResults: this.maxDocResults,
-                    searchContent: this.searchContent,
-                    searchTitles: this.searchTitles,
-                    searchTags: this.searchTags,
-                    searchPaths: this.searchPaths,
-                    searchAttrs: true,
-                    ...this.getCommonSearchOptions(),
-                },
-                url: "/search",
-            })
+        const r = await toPromise(
+            this.http.get<ISearchResultsInfo>(
+                "/search?" +
+                    serializeQueryParams({
+                        ignorePlugins: this.ignorePlugins,
+                        maxDocResults: this.maxDocResults,
+                        searchContent: this.searchContent,
+                        searchTitles: this.searchTitles,
+                        searchTags: this.searchTags,
+                        searchPaths: this.searchPaths,
+                        searchAttrs: true,
+                        ...this.getCommonSearchOptions(),
+                    })
+            )
         );
         if (!r.ok) {
-            this.errorMessage = r.result.data.error;
+            this.errorMessage = r.result.error.error;
             this.contentResults = [];
             this.titleResults = [];
             this.tagResults = [];
@@ -482,38 +484,34 @@ export class SearchBoxComponent implements OnInit, OnDestroy {
             return;
         }
         const response = r.result;
-        this.contentResults = response.data.content_results;
-        this.titleResults = response.data.title_results;
-        this.tagResults = response.data.tags_results;
-        this.pathResults = response.data.paths_results;
+        this.contentResults = response.content_results;
+        this.titleResults = response.title_results;
+        this.tagResults = response.tags_results;
+        this.pathResults = response.paths_results;
 
-        if (response.data.incomplete_search_reason) {
-            this.incompleteSearchReason =
-                response.data.incomplete_search_reason;
+        if (response.incomplete_search_reason) {
+            this.incompleteSearchReason = response.incomplete_search_reason;
         }
-        this.wordMatchCount = response.data.word_result_count;
-        this.titleMatchCount = response.data.title_result_count;
-        this.tagMatchCount = response.data.tags_result_count;
-        this.pathMatchCount = response.data.paths_result_count;
+        this.wordMatchCount = response.word_result_count;
+        this.titleMatchCount = response.title_result_count;
+        this.tagMatchCount = response.tags_result_count;
+        this.pathMatchCount = response.paths_result_count;
     }
 
     /**
      * Makes a list of folder paths starting from the current default search folder.
      */
     private async loadFolderSuggestions() {
-        const response = await to(
-            $http<string[]>({
-                method: "GET",
-                params: {
-                    folder: this.folder,
-                },
-                url: "/search/getFolders",
-            })
+        const response = await toPromise(
+            this.http.get<string[]>(
+                "/search/getFolders?" +
+                    serializeQueryParams({folder: this.folder})
+            )
         );
         if (!response.ok) {
             return;
         }
-        this.folderSuggestions = response.result.data;
+        this.folderSuggestions = response.result;
     }
 
     /**

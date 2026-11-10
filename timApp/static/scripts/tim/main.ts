@@ -1,41 +1,42 @@
 import "tim/loadJQueryAndMomentGlobals";
 import "reflect-metadata";
 
-import {enableProdMode} from "@angular/core";
-import angular from "angular";
+import {enableProdMode, NgZone} from "@angular/core";
 import bootstrap from "bootstrap";
-import "eonasdan-bootstrap-datetimepicker";
 import $ from "jquery";
-import * as userlistController from "tim/answer/userlistController";
-import {timApp} from "tim/app";
-import * as viewctrl from "tim/document/viewctrl";
+import {ViewCtrl} from "tim/document/viewctrl";
 import {ViewRangeNavigationComponent} from "tim/document/view-range-navigation.component";
 import {environment} from "tim/environments/environment";
 import {FrontPageComponent} from "tim/frontpage/front-page.component";
 import * as loadMap from "tim/gamification/gamification-map.component";
 import {GamificationMapComponent} from "tim/gamification/gamification-map.component";
-import * as manageCtrl from "tim/item/manageCtrl";
-import * as rightsEditor from "tim/item/rightsEditor";
+import {ManageComponent} from "tim/item/manage/manage.component";
+import {UserListComponent} from "tim/answer/user-list.component";
+import {SpellErrorComponent} from "tim/document/editing/spell-error.component";
+import {RightsEditorComponent} from "tim/item/rights-editor.component";
 import * as markAllAsRead from "tim/ui/mark-all-as-read.component";
 import {MarkAllAsReadComponent} from "tim/ui/mark-all-as-read.component";
 import {BootstrapPanelComponent} from "tim/ui/bootstrap-panel.component";
 import {LogoComponent} from "tim/ui/logo.component";
 import {LoginMenuComponent} from "tim/user/login-menu.component";
-import * as timRoot from "tim/timRoot";
-import {markAsUsed, ModuleArray, StringArray} from "tim/util/utils";
+import {getVisibilityVars, RootCtrl} from "tim/timRoot";
+import {attachDraggables} from "tim/ui/draggable";
+import {markAsUsed} from "tim/util/utils";
+import {
+    createServerComponents,
+    registerServerComponent,
+} from "tim/serverComponents";
+import {refreshUI} from "tim/util/refresh";
 import {AnnotationComponent} from "tim/velp/annotation.component";
-import * as velpSelection from "tim/velp/velpSelection";
 import {staticDynamicImport} from "tim/staticDynamicImport";
 import {AppModule} from "tim/app.module";
 import {HeaderComponent} from "tim/header/header.component";
 import {CreateItemComponent} from "tim/item/create-item.component";
 import {TimAlertComponent} from "tim/ui/tim-alert.component";
-import {createDowngradedModule, doDowngrade} from "tim/downgrade";
+import {defineRegisteredElements, registerElement} from "tim/customElements";
 import {platformBrowserDynamic} from "@angular/platform-browser-dynamic";
-import {setAngularJSGlobal} from "@angular/upgrade/static";
 import {MarkupErrorComponent} from "tim/ui/markup-error.component";
 import {LoadingComponent} from "tim/ui/loading.component";
-import {VelpSummaryComponent} from "tim/velp/velp-summary.component";
 import {DialogComponent} from "tim/ui/dialog.component";
 import {CloseButtonComponent} from "tim/ui/close-button.component";
 import {DialogContainerComponent} from "tim/ui/angulardialog/dialog-container.component";
@@ -56,11 +57,8 @@ import * as selfExpire from "tim/item/self-expire.component";
 import {SelfExpireComponent} from "tim/item/self-expire.component";
 import {HelpParContent} from "tim/document/editing/help-par-content.component";
 import {DurationPickerComponent} from "tim/ui/duration-picker.component";
-import {RelevanceEditComponent} from "tim/item/relevance-edit.component";
 import {TimMessageViewComponent} from "tim/messaging/tim-message-view.component";
 import {ManageReadReceiptComponent} from "tim/messaging/manage-read-receipt.component";
-import {CopyFolderComponent} from "tim/folder/copy-folder.component";
-import {NotificationOptionsComponent} from "tim/item/manage/notification-options.component";
 import {ParRefComponent} from "tim/document/par-ref.component";
 import {SearchButtonComponent} from "tim/search/search-button.component";
 import {UserProfileComponent} from "tim/plugin/user-profile/user-profile.component";
@@ -80,7 +78,6 @@ import {
 import {genericglobals, isErrorGlobals} from "tim/util/globals";
 import {ParCompiler} from "tim/editor/parCompiler";
 import {PrintButtonComponent} from "tim/ui/print-button.component";
-import {FormulaEditorLoaderComponent} from "../../../modules/cs/js/editor/math-editor/formula-editor-loader.component";
 
 BackspaceDisabler.disable();
 
@@ -88,76 +85,72 @@ if (environment.production) {
     enableProdMode();
 }
 
-markAsUsed(
-    bootstrap,
-    loadMap,
-    manageCtrl,
-    rightsEditor,
-    selfExpire,
-    timRoot,
-    userlistController,
-    velpSelection,
-    viewctrl,
-    markAllAsRead
-);
+markAsUsed(bootstrap, loadMap, selfExpire, markAllAsRead);
 
-setAngularJSGlobal(angular);
-
-function createDowngradedAppModule() {
-    const dg = createDowngradedModule((extraProviders) => {
-        const platformRef = platformBrowserDynamic(extraProviders);
-        return platformRef.bootstrapModule(AppModule);
-    });
-    doDowngrade(dg, "timHeader", HeaderComponent);
-    doDowngrade(dg, "createItem", CreateItemComponent);
-    doDowngrade(dg, "timCopyFolder", CopyFolderComponent);
-    doDowngrade(dg, "timAlert", TimAlertComponent);
-    doDowngrade(dg, "timMarkupError", MarkupErrorComponent);
-    doDowngrade(dg, "timLoading", LoadingComponent);
-    doDowngrade(dg, "annotation", AnnotationComponent);
-    doDowngrade(dg, "velpSummary", VelpSummaryComponent);
-    doDowngrade(dg, "timDialog", DialogComponent);
-    doDowngrade(dg, "timCloseButton", CloseButtonComponent);
-    doDowngrade(dg, "timDialogContainer", DialogContainerComponent);
-    doDowngrade(dg, "timAddMember", AddMemberComponent);
-    doDowngrade(dg, "timFooter", FooterComponent);
-    doDowngrade(dg, "timLoginMenu", LoginMenuComponent);
-    doDowngrade(dg, "timLogo", LogoComponent);
-    doDowngrade(dg, "bootstrapPanel", BootstrapPanelComponent);
-    doDowngrade(dg, "timStart", FrontPageComponent);
-    doDowngrade(dg, "timSiteHeader", SiteHeaderComponent);
-    doDowngrade(dg, "timAccessCountdown", AccessCountdownComponent);
-    doDowngrade(dg, "timGotoLink", GotoLinkComponent);
-    doDowngrade(dg, "timPrintButton", PrintButtonComponent);
-    doDowngrade(dg, "timTimeLeft", TimeLeftComponent);
-    doDowngrade(dg, "timCountdown", CountdownComponent);
-    doDowngrade(dg, "timSidebarMenu", SidebarMenuComponent);
-    doDowngrade(dg, "timDrawToolbar", DrawToolbarComponent);
-    doDowngrade(dg, "timPluginLoader", PluginLoaderComponent);
-    doDowngrade(dg, "timDrawCanvas", DrawCanvasComponent);
-    doDowngrade(dg, "timIndex", DirectoryListComponent);
-    doDowngrade(dg, "timTemplateList", TemplateListComponent);
-    doDowngrade(dg, "timViewRangeNavigation", ViewRangeNavigationComponent);
-    doDowngrade(dg, "timHelpParContent", HelpParContent);
-    doDowngrade(dg, "timDurationPicker", DurationPickerComponent);
-    doDowngrade(dg, "timRelevanceEdit", RelevanceEditComponent);
-    doDowngrade(dg, "timMessageView", TimMessageViewComponent);
-    doDowngrade(dg, "manageReadReceipt", ManageReadReceiptComponent);
-    doDowngrade(dg, "timNotificationOptions", NotificationOptionsComponent);
-    doDowngrade(dg, "timParRef", ParRefComponent);
-    doDowngrade(dg, "gamificationMap", GamificationMapComponent);
-    doDowngrade(dg, "timMarkAllAsRead", MarkAllAsReadComponent);
-    doDowngrade(dg, "timSelfExpire", SelfExpireComponent);
-    doDowngrade(dg, "timSearchButton", SearchButtonComponent);
-    doDowngrade(dg, "timRoleInfo", RoleInfoComponent);
-    doDowngrade(dg, "csFormulaEditorLoader", FormulaEditorLoaderComponent);
-    doDowngrade(dg, "timUserProfile", UserProfileComponent);
-    doDowngrade(dg, "timParticipantList", ParticipantListComponent);
-    doDowngrade(dg, "timCourseManager", CourseManagerComponent);
-    return dg;
+/**
+ * Registers the components that can appear in HTML that comes from the server
+ * (page templates and document paragraphs). See serverComponents.ts.
+ */
+function registerServerComponents() {
+    registerServerComponent("tim-dialog-container", DialogContainerComponent);
+    registerServerComponent("tim-header", HeaderComponent);
+    registerServerComponent("create-item", CreateItemComponent);
+    registerServerComponent("tim-alert", TimAlertComponent);
+    registerServerComponent("tim-markup-error", MarkupErrorComponent);
+    registerServerComponent("tim-loading", LoadingComponent);
+    registerServerComponent("annotation", AnnotationComponent);
+    registerServerComponent("tim-dialog", DialogComponent);
+    registerServerComponent("tim-close-button", CloseButtonComponent);
+    registerServerComponent("tim-footer", FooterComponent);
+    registerServerComponent("tim-login-menu", LoginMenuComponent);
+    registerServerComponent("tim-logo", LogoComponent);
+    registerServerComponent("bootstrap-panel", BootstrapPanelComponent);
+    registerServerComponent("tim-start", FrontPageComponent);
+    registerServerComponent("tim-site-header", SiteHeaderComponent);
+    registerServerComponent("tim-access-countdown", AccessCountdownComponent);
+    registerServerComponent("tim-goto-link", GotoLinkComponent);
+    registerServerComponent("tim-print-button", PrintButtonComponent);
+    registerServerComponent("tim-time-left", TimeLeftComponent);
+    registerServerComponent("tim-countdown", CountdownComponent);
+    registerServerComponent("tim-sidebar-menu", SidebarMenuComponent);
+    registerServerComponent("tim-draw-toolbar", DrawToolbarComponent);
+    registerServerComponent("tim-draw-canvas", DrawCanvasComponent);
+    registerServerComponent("tim-index", DirectoryListComponent);
+    registerServerComponent("tim-template-list", TemplateListComponent);
+    registerServerComponent(
+        "tim-view-range-navigation",
+        ViewRangeNavigationComponent
+    );
+    registerServerComponent("tim-help-par-content", HelpParContent);
+    registerServerComponent("tim-duration-picker", DurationPickerComponent);
+    registerServerComponent("tim-message-view", TimMessageViewComponent);
+    registerServerComponent("gamification-map", GamificationMapComponent);
+    registerServerComponent("tim-mark-all-as-read", MarkAllAsReadComponent);
+    registerServerComponent("tim-self-expire", SelfExpireComponent);
+    registerServerComponent("tim-search-button", SearchButtonComponent);
+    registerServerComponent("tim-role-info", RoleInfoComponent);
+    registerServerComponent("tim-participant-list", ParticipantListComponent);
+    registerServerComponent("tim-course-manager", CourseManagerComponent);
+    registerServerComponent("tim-rights-editor", RightsEditorComponent);
+    registerServerComponent("tim-manage", ManageComponent);
+    registerServerComponent("tim-user-list", UserListComponent);
 }
 
-const downgradedModule = createDowngradedAppModule();
+/**
+ * Registers the components that are used as custom elements.
+ * The browser creates these whenever the element appears on the page.
+ */
+function registerCustomElements() {
+    registerElement("tim-plugin-loader", PluginLoaderComponent);
+    registerElement("tim-par-ref", ParRefComponent);
+    registerElement("tim-add-member", AddMemberComponent);
+    registerElement("manage-read-receipt", ManageReadReceiptComponent);
+    registerElement("tim-user-profile", UserProfileComponent);
+    registerElement("tim-spell-error", SpellErrorComponent);
+}
+
+registerServerComponents();
+registerCustomElements();
 
 if (document.location) {
     timLogInit(document.location.search.slice(1));
@@ -176,24 +169,53 @@ $(async () => {
         }
         moduleLoads.push(m);
     }
-    const angularModules: string[] = [];
-    for (const m of moduleLoads) {
-        const loaded = (await m) as {moduleDefs: unknown};
-        const mods = loaded.moduleDefs;
-        if (ModuleArray.is(mods)) {
-            angularModules.push(...mods.map((mm) => mm.name));
-        }
-    }
-    const extraAngularModules = genericglobals().ANGULARMODULES;
-    if (StringArray.is(extraAngularModules)) {
-        angularModules.push(...extraAngularModules);
-    }
-    angular.bootstrap(
-        document,
-        [timApp.name, downgradedModule.name, ...angularModules],
-        {strictDi: false}
-    );
+    await Promise.all(moduleLoads);
+
+    const moduleRef = await platformBrowserDynamic().bootstrapModule(AppModule);
     timLogTime("Angular bootstrap done", "main.ts");
+    const zone = moduleRef.injector.get(NgZone);
+
+    // Remove the parts of the page that are hidden in this view before anything is created in them.
+    const hide = getVisibilityVars() as Record<string, boolean | undefined>;
+    document.querySelectorAll("[data-tim-hide]").forEach((e) => {
+        if (hide[e.getAttribute("data-tim-hide")!]) {
+            e.remove();
+        } else {
+            e.removeAttribute("data-tim-hide");
+        }
+    });
+
+    const itemRights = (globals.curr_item?.rights ?? {}) as unknown as Record<
+        string,
+        boolean | undefined
+    >;
+    document.querySelectorAll("[data-tim-require-right]").forEach((e) => {
+        if (!itemRights[e.getAttribute("data-tim-require-right")!]) {
+            e.remove();
+        }
+    });
+
+    // The document view is plain TypeScript that runs outside the Angular zone;
+    // it asks Angular to update the views with refreshUI when needed.
+    new RootCtrl().$onInit();
+    const isDocumentView = document.querySelector("tim-view") != null;
+    let view: ViewCtrl | undefined;
+    if (isDocumentView) {
+        view = new ViewCtrl();
+        view.$onInit();
+        // The view is set up before any components are created in the document,
+        // so the components can rely on it (e.g. on the paragraph structure).
+        view.$postLink();
+    }
+
+    // The components of the server-rendered HTML must be created before the custom elements are defined:
+    // after that, the page also has elements that Angular has rendered.
+    zone.run(() => {
+        createServerComponents(document.body);
+        defineRegisteredElements(moduleRef.injector);
+        attachDraggables(document.body);
+    });
+    refreshUI();
     ParCompiler.processAllMathDelayed($("body"), 1500);
 
     if (

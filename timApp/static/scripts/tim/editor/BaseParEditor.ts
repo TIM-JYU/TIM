@@ -1,5 +1,5 @@
 import type {Ace as Ace_} from "ace-builds/src-noconflict/ace";
-import {$timeout} from "tim/util/ngimport";
+import {uiTimeout} from "tim/util/refresh";
 import type {AceParEditor} from "tim/editor/AceParEditor";
 import type {TextAreaParEditor} from "tim/editor/TextAreaParEditor";
 type IAceEditor = Ace_.Editor;
@@ -98,7 +98,7 @@ export abstract class BaseParEditor {
         if (this.getWrapValue() <= 0) {
             return;
         }
-        $timeout(() => {
+        uiTimeout(() => {
             // time to let new char happen
             this.forceWrap(false);
         });

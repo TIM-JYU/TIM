@@ -1,7 +1,7 @@
 /**
  * Defines the client-side implementation of a plugin for editing other plugins' answers in a formatted table
  */
-import angular from "angular";
+import deepEqual from "deep-equal";
 import * as t from "io-ts";
 import type {ApplicationRef, DoBootstrap, OnInit} from "@angular/core";
 import {
@@ -49,15 +49,16 @@ import {
 } from "tim/plugin/timTable/tim-table.component";
 import {registerPlugin} from "tim/plugin/pluginRegistry";
 import {TimMessageSendModule} from "tim/messaging/tim-message-send.component";
-import {$http, $httpParamSerializer} from "tim/util/ngimport";
+import {getHttpClient, serializeQueryParams} from "tim/util/http";
+import {withAnswerHandling} from "tim/util/answer.interceptor";
 import {
     clone,
     defaultErrorMessage,
     maxContentOrFitContent,
     splitItems,
-    to,
     to2,
     toPromise,
+    toPromiseAndRefresh,
 } from "tim/util/utils";
 import {CommonModule} from "@angular/common";
 import type {IAddmemberResponse} from "tim/ui/add-member.component";
@@ -514,6 +515,14 @@ export class TableFormComponent
         return false;
     }
 
+    /**
+     * The HttpClient that behaves like AngularJS $http did (date conversion, session verification
+     * and opt-in answer handling). The plugin's own module has none of those interceptors.
+     */
+    private get appHttp() {
+        return getHttpClient();
+    }
+
     constructor(
         el: ElementRef,
         http: HttpClient,
@@ -819,39 +828,41 @@ export class TableFormComponent
         }
         this.loading = true;
         if (this.isPreview()) {
-            prom = $http.get<TableFetchResponse>(
+            prom = this.appHttp.get<TableFetchResponse>(
                 "/tableForm/fetchTableDataPreview?" +
-                    $httpParamSerializer({
+                    serializeQueryParams({
                         taskid: tid.docTask(),
                         fields: this.markup.fields,
                         groups: this.markup.groups,
                         removeDocIds: this.markup.removeDocIds,
                         anonNames: this.markup.anonNames ?? false,
-                    })
+                    }),
+                {context: withAnswerHandling()} // adds the page's URL macros
             );
         } else {
-            prom = $http.get<TableFetchResponse>(
+            prom = this.appHttp.get<TableFetchResponse>(
                 "/tableForm/fetchTableData?" +
-                    $httpParamSerializer({
+                    serializeQueryParams({
                         taskid: tid.docTask(),
-                    })
+                    }),
+                {context: withAnswerHandling()} // adds the page's URL macros
             );
         }
-        const r = await to(prom);
+        const r = await toPromiseAndRefresh(prom);
         this.loading = false;
         if (!r.ok) {
-            this.error = r.result.data.error;
+            this.error = r.result.error.error;
         } else {
             const tableResponse = r.result;
             // TODO: Generic reset function
-            this.aliases = tableResponse.data.aliases || {};
-            this.membershipAdd = tableResponse.data.membership_add;
-            this.membershipEnd = tableResponse.data.membership_end;
-            this.rows = tableResponse.data.rows || {};
-            this.rowKeys = Object.keys(tableResponse.data.rows);
-            this.fields = tableResponse.data.fields || [];
-            this.users = tableResponse.data.users;
-            this.styles = tableResponse.data.styles || {};
+            this.aliases = tableResponse.aliases || {};
+            this.membershipAdd = tableResponse.membership_add;
+            this.membershipEnd = tableResponse.membership_end;
+            this.rows = tableResponse.rows || {};
+            this.rowKeys = Object.keys(tableResponse.rows);
+            this.fields = tableResponse.fields || [];
+            this.users = tableResponse.users;
+            this.styles = tableResponse.styles || {};
             this.userLocations = {};
             this.taskLocations = {};
             this.data.table.countCol = 0;
@@ -902,17 +913,18 @@ export class TableFormComponent
             if (!tid) {
                 return;
             }
-            const r = await to(
-                $http.get<{
+            const r = await toPromiseAndRefresh(
+                this.appHttp.get<{
                     rows: IRowsType;
                     styles: t.TypeOf<typeof Styles>;
                     fields: string[];
                 }>(
                     "/tableForm/updateFields?" +
-                        $httpParamSerializer({
+                        serializeQueryParams({
                             fields: fieldsToUpdate,
                             taskid: tid.docTask(),
-                        })
+                        }),
+                    {context: withAnswerHandling()} // adds the page's URL macros
                 )
             );
             if (!r.ok) {
@@ -920,9 +932,9 @@ export class TableFormComponent
             }
             const tableResponse = r.result;
             // TODO if response status != ok
-            const rows = tableResponse.data.rows || {};
-            const styles = tableResponse.data.styles || {};
-            const tableFields = tableResponse.data.fields || [];
+            const rows = tableResponse.rows || {};
+            const styles = tableResponse.styles || {};
+            const tableFields = tableResponse.fields || [];
 
             // Find out which columns to update
             const taskColumns: Record<string, string> = {};
@@ -941,7 +953,7 @@ export class TableFormComponent
                 for (let y = 0; y < this.rowKeys.length; y++) {
                     if (
                         styles &&
-                        !angular.equals(styles, {}) &&
+                        !deepEqual(styles, {}) &&
                         styles[this.rowKeys[y]]
                     ) {
                         this.data.userdata.cells[taskColumns[f] + (y + 1)] = {
@@ -1062,7 +1074,7 @@ export class TableFormComponent
                     this.taskLocations[colnumToLetters(x + xOffset)] =
                         contentalias;
                     for (y = 0; y < this.rowKeys.length; y++) {
-                        if (this.styles && !angular.equals(this.styles, {})) {
+                        if (this.styles && !deepEqual(this.styles, {})) {
                             this.data.userdata.cells[currentCol + (y + 1)] = {
                                 cell: this.rows[this.rowKeys[y]][
                                     this.fields[x]
@@ -1204,7 +1216,7 @@ export class TableFormComponent
 
         const win = window.open(
             "/tableForm/generateReport?" +
-                $httpParamSerializer({
+                serializeQueryParams({
                     ...reportParams,
                     ...filterParams,
                 }),
@@ -1300,17 +1312,20 @@ export class TableFormComponent
                         "",
                         ","
                     );
-                    const r = await to(
-                        $http.post<unknown>(`/groups/removemember/${group}`, {
-                            names: ulist.split(","),
-                        })
+                    const r = await toPromiseAndRefresh(
+                        this.appHttp.post<unknown>(
+                            `/groups/removemember/${group}`,
+                            {
+                                names: ulist.split(","),
+                            }
+                        )
                     );
                     if (r.ok) {
-                        return {ok: true, result: r.result.data} as const;
+                        return {ok: true, result: r.result} as const;
                     } else {
                         return {
                             ok: false,
-                            result: r.result.data.error,
+                            result: r.result.error.error,
                         } as const;
                     }
                 },
@@ -1574,18 +1589,22 @@ export class TableFormComponent
             },
         };
         const url = this.pluginMeta.getAnswerUrl();
-        const r = await to(
-            $http.put<{web: {result: string; error?: string}}>(url, params)
+        const r = await toPromiseAndRefresh(
+            this.appHttp.put<{web: {result: string; error?: string}}>(
+                url,
+                params,
+                {context: withAnswerHandling()}
+            )
         );
         this.loading = false;
         if (r.ok) {
-            const data = r.result.data;
+            const data = r.result;
             this.error = data.web.error;
             this.saveFailed = false;
             // this.result = "Saved";
         } else {
             this.saveFailed = true;
-            this.error = r.result.data?.error ?? defaultErrorMessage;
+            this.error = r.result.error?.error ?? defaultErrorMessage;
             return;
         }
         const timtab = this.getTimTable();
@@ -1626,8 +1645,8 @@ export class TableFormComponent
             name: timname,
         }));
         this.loading = true;
-        const r = await to(
-            $http.post<{web: {result: string; error?: string}}>(
+        const r = await toPromiseAndRefresh(
+            this.appHttp.post<{web: {result: string; error?: string}}>(
                 "/sisu/createGroupDocs",
                 params
             )
@@ -1637,7 +1656,7 @@ export class TableFormComponent
             timTable.confirmSaved();
             location.reload();
         } else {
-            this.error = r.result.data.error;
+            this.error = r.result.error.error;
         }
     }
 

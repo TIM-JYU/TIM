@@ -81,7 +81,6 @@ export interface IGenericGlobals {
     other_users: IUser[];
     restoreContextUser: string | null;
     bookmarks: IBookmarkGroup[] | null;
-    ANGULARMODULES: unknown[];
     JSMODULES: string[];
     curr_item?: DocumentOrFolder;
     userPrefs: ISettings;

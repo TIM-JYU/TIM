@@ -13,7 +13,9 @@ printf "\n" >~/run/time.txt
 if [ -e run/compile.sh ]
     then
     printf "Compile time:" >>~/run/time.txt
-    (time run/compile.sh) &>> ~/run/time.txt
+    # Run the script with bash instead of executing it directly:
+    # the home directory may be on a filesystem that is mounted with noexec.
+    (time bash run/compile.sh) &>> ~/run/time.txt
     if [ $? -ne 0 ]
     then
        (>&2 echo "Compile error")

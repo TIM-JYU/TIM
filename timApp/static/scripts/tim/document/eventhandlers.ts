@@ -1,6 +1,5 @@
 import $ from "jquery";
 import {KEY_ENTER} from "tim/util/keycodes";
-import {$document, $log} from "tim/util/ngimport";
 import type {Coords} from "tim/util/utils";
 import {dist, isIOS, isTouchEvent} from "tim/util/utils";
 import {EDITOR_CLASS_DOT} from "tim/document/parhelpers";
@@ -65,7 +64,7 @@ export function onClick(
         ) {
             // This is to prevent chaotic behavior from both mouseDown and touchStart
             // events happening at the same coordinates
-            $log.info("Ignoring event:", e);
+            console.info("Ignoring event:", e);
             return;
         }
         if (lastClickElement !== e.target && needsDoubleClick?.(e.target)) {
@@ -78,7 +77,7 @@ export function onClick(
         downCoords = {left: downEvent.pageX, top: downEvent.pageY};
         lastclicktime = new Date().getTime();
     });
-    $document.on("mousemove", className, (e) => {
+    $(document).on("mousemove", className, (e) => {
         // touchmove
         if (downEvent == null) {
             return;
@@ -94,13 +93,13 @@ export function onClick(
             lastClickElement = undefined;
         }
     });
-    $document.on("touchcancel", className, (e) => {
+    $(document).on("touchcancel", className, (e) => {
         downEvent = undefined;
         lastClickElement = undefined;
     });
     // it is wrong to register both events at the same time; see https://stackoverflow.com/questions/8503453
     const endEvent = isIOS() ? "touchend" : "mouseup";
-    $document.on(endEvent, className, (e) => {
+    $(document).on(endEvent, className, (e) => {
         if (downEvent?.originalEvent) {
             func($(e.currentTarget), {
                 originalEvent: downEvent.originalEvent,
@@ -137,14 +136,14 @@ export function onClick(
 }
 
 export function onMouseOver(className: string, func: MouseFn) {
-    $document.on("mouseover", className, (e) => {
+    $(document).on("mouseover", className, (e) => {
         // touchstart
         func($(e.currentTarget), fixPageCoords(e));
     });
 }
 
 export function onMouseOut(className: string, func: MouseFn) {
-    $document.on("mouseout", className, (e) => {
+    $(document).on("mouseout", className, (e) => {
         func($(e.currentTarget), fixPageCoords(e));
     });
 }
@@ -160,11 +159,11 @@ export function onMouseOverOut(className: string, func: MouseOverOutFn) {
     // A combination function with a third parameter
     // true when over, false when out
 
-    $document.on("mouseover", className, (e) => {
+    $(document).on("mouseover", className, (e) => {
         func($(e.currentTarget), fixPageCoords(e), true);
     });
 
-    $document.on("mouseout", className, (e) => {
+    $(document).on("mouseout", className, (e) => {
         func($(e.currentTarget), fixPageCoords(e), false);
     });
 }

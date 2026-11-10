@@ -11,6 +11,8 @@
  */
 
 import ifvisible from "ifvisible.js";
+import {promiseHttp} from "tim/util/promiseHttp";
+import {refreshUI, uiTimeout} from "tim/util/refresh";
 import {
     clone,
     getURLParameter,
@@ -40,7 +42,6 @@ import * as t from "io-ts";
 import type {ViewCtrl} from "tim/document/viewctrl";
 import {Users} from "tim/user/userService";
 import {someglobals} from "tim/util/globals";
-import {$http, $log, $rootScope, $timeout} from "tim/util/ngimport";
 import type {IAnswerQuestionResult} from "tim/lecture/answer-to-question-dialog.component";
 import type {
     IAlreadyAnswered,
@@ -217,7 +218,9 @@ export class LectureController {
      */
     async checkIfInLecture() {
         const response = await to(
-            $http<ILectureResponse | ILectureListResponse | IEmptyResponse>({
+            promiseHttp.request<
+                ILectureResponse | ILectureListResponse | IEmptyResponse
+            >({
                 url: "/checkLecture",
                 method: "GET",
                 params: {
@@ -259,7 +262,7 @@ export class LectureController {
         }
         if (lectureCode != null && lectureCode !== AUTOJOIN_CODE) {
             const r = await to(
-                $http<ILecture>({
+                promiseHttp.request<ILecture>({
                     url: "/getLectureByCode",
                     method: "GET",
                     params: {
@@ -327,7 +330,7 @@ export class LectureController {
             }
         }
         const response = await to(
-            $http<ILectureResponse>({
+            promiseHttp.request<ILectureResponse>({
                 url: "/joinLecture",
                 method: "POST",
                 params: {
@@ -392,7 +395,7 @@ export class LectureController {
      */
     async startFutureLecture(l: ILecture) {
         const response = await to(
-            $http<ILectureResponse>({
+            promiseHttp.request<ILectureResponse>({
                 url: "/startFutureLecture",
                 method: "POST",
                 params: {
@@ -484,10 +487,10 @@ export class LectureController {
     async extendLecture(minutes: number) {
         const lecture = this.lectureOrThrow();
         const endTimeDate = lecture.end_time.clone().add(minutes, "minutes");
-        $log.info("extending lecture");
-        $log.info(endTimeDate);
+        console.info("extending lecture");
+        console.info(endTimeDate);
         const r = await to(
-            $http({
+            promiseHttp.request({
                 url: "/extendLecture",
                 method: "POST",
                 params: {
@@ -502,7 +505,7 @@ export class LectureController {
         lecture.end_time = endTimeDate;
         this.lectureEnded = false;
         this.lectureEndingDialogState = LectureEndingDialogState.NotAnswered;
-        $log.info("Lecture extended");
+        console.info("Lecture extended");
     }
 
     /**
@@ -511,7 +514,7 @@ export class LectureController {
     async editLecture(lectureId: number) {
         const params = {lecture_id: lectureId};
         const response = await to(
-            $http<ILecture>({
+            promiseHttp.request<ILecture>({
                 url: "/showLectureInfoGivenName",
                 method: "GET",
                 params,
@@ -534,7 +537,7 @@ export class LectureController {
         );
         if (confirmAnswer) {
             const response = await to(
-                $http<ILectureListResponse>({
+                promiseHttp.request<ILectureListResponse>({
                     url: "/endLecture",
                     method: "POST",
                     params: {lecture_id: this.lectureOrThrow().lecture_id},
@@ -545,7 +548,7 @@ export class LectureController {
             }
             const answer = response.result.data;
             this.showBasicView(answer);
-            $log.info("Lecture ended, not deleted");
+            console.info("Lecture ended, not deleted");
         }
     }
 
@@ -554,7 +557,7 @@ export class LectureController {
      */
     async leaveLecture() {
         const _ = await to(
-            $http<ILectureListResponse>({
+            promiseHttp.request<ILectureListResponse>({
                 url: "/leaveLecture",
                 method: "POST",
                 params: {
@@ -573,7 +576,7 @@ export class LectureController {
         let lastID = -1;
         while (true) {
             if (this.lecture == null) {
-                await $timeout(5000);
+                await uiTimeout(5000);
                 continue;
             }
 
@@ -581,10 +584,10 @@ export class LectureController {
             if (!ifvisible.now("hidden")) {
                 const [timeout, last] = await this.pollOnce(lastID);
                 lastID = last;
-                $rootScope.$applyAsync();
-                await $timeout(Math.max(timeout, 1000));
+                refreshUI();
+                await uiTimeout(Math.max(timeout, 1000));
             } else {
-                await $timeout(1000);
+                await uiTimeout(1000);
             }
         }
     }
@@ -593,7 +596,7 @@ export class LectureController {
         let buster = "" + new Date().getTime();
         buster = buster.substring(buster.length - 4);
         const r = await to(
-            $http<IUpdateResponse>({
+            promiseHttp.request<IUpdateResponse>({
                 url: "/getUpdates",
                 method: "GET",
                 params: {
@@ -668,7 +671,7 @@ export class LectureController {
                             currentQuestion.close();
                         }
                     } else {
-                        $log.error(
+                        console.error(
                             "got points_closed, but there was no currentQuestion"
                         );
                     }
@@ -735,7 +738,7 @@ export class LectureController {
             if (currentQuestion) {
                 currentQuestion.updateEndTime(answer.question_end_time);
             } else {
-                $log.error(
+                console.error(
                     "currentQuestion was undefined when trying to update end time"
                 );
             }
@@ -783,7 +786,7 @@ export class LectureController {
         }
         if (result.type === "pointsclosed") {
             await to(
-                $http({
+                promiseHttp.request({
                     url: "/closePoints",
                     method: "PUT",
                     params: {
@@ -809,7 +812,7 @@ export class LectureController {
 
     async getQuestionManually() {
         const response = await to(
-            $http<
+            promiseHttp.request<
                 | IAlreadyAnswered
                 | IQuestionAsked
                 | IQuestionHasAnswer

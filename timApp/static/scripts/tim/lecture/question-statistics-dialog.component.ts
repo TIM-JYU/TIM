@@ -13,7 +13,12 @@ import type {
 } from "tim/lecture/lecturetypes";
 import {CommonModule} from "@angular/common";
 
-export type IStatisticsParams = IAskedQuestion;
+export type IStatisticsParams = IAskedQuestion & {
+    /**
+     * Tells whether the question has been ended before its time limit, e.g. by the lecturer.
+     */
+    isEnded?: () => boolean;
+};
 
 export interface IStatisticsResult {}
 
@@ -92,7 +97,10 @@ export class QuestionStatisticsDialogComponent extends AngularDialogComponent<
                         .clone()
                         .add(1, "ms");
                 }
-                if (getQuestionEndTime(this.data) < now) {
+                if (
+                    getQuestionEndTime(this.data) < now ||
+                    this.data.isEnded?.()
+                ) {
                     this.ended = true;
                     return;
                 }

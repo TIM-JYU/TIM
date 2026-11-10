@@ -149,29 +149,29 @@ class PreviewTest(TimRouteTest):
         self.check_spelling(
             d,
             [
-                """<p><tim-spell-error bind-sugg='["koira", "Korria", "koitta"]'>koirra</tim-spell-error></p>""",
+                """<p><tim-spell-error sugg='["koira", "Korria", "koitta"]'>koirra</tim-spell-error></p>""",
             ],
             "koirra",
         )
         self.check_spelling(
             d,
             [
-                """<p><tim-spell-error bind-sugg="[]">koirrra</tim-spell-error></p>""",
+                """<p><tim-spell-error sugg="[]">koirrra</tim-spell-error></p>""",
             ],
             "koirrra",
         )
         self.check_spelling(
             d,
             [
-                r"""<p>astia juusto <tim-spell-error bind-sugg='["leip\u00e4", "Leopa", "Leila", "leipoa"]'>leipa</tim-spell-error> <tim-spell-error bind-sugg='["sieni", "siteeni", "sieneni", "sireeni", "siseni"]'>sieeni</tim-spell-error> omena <tim-spell-error bind-sugg='["kasvi", "kiva", "k\u00e4vi", "kavio", "kahvi"]'>kavi</tim-spell-error> kissa</p>""",
+                r"""<p>astia juusto <tim-spell-error sugg='["leip\u00e4", "Leopa", "Leila", "leipoa"]'>leipa</tim-spell-error> <tim-spell-error sugg='["sieni", "siteeni", "sieneni", "sireeni", "siseni"]'>sieeni</tim-spell-error> omena <tim-spell-error sugg='["kasvi", "kiva", "k\u00e4vi", "kavio", "kahvi"]'>kavi</tim-spell-error> kissa</p>""",
             ],
             "astia juusto leipa sieeni omena kavi kissa",
         )
         self.check_spelling(
             d,
             [
-                """<p><tim-spell-error bind-sugg='["juostu", "juusto", "juutu"]'>juustu</tim-spell-error> <tim-spell-error bind-count="2" bind-sugg='["juostu", "juusto", "juutu"]'>juustu</tim-spell-error></p>""",
-                """<p><tim-spell-error bind-sugg='["juostu", "juusto", "juutu"]'>juustu</tim-spell-error></p>""",
+                """<p><tim-spell-error sugg='["juostu", "juusto", "juutu"]'>juustu</tim-spell-error> <tim-spell-error count="2" sugg='["juostu", "juusto", "juutu"]'>juustu</tim-spell-error></p>""",
+                """<p><tim-spell-error sugg='["juostu", "juusto", "juutu"]'>juustu</tim-spell-error></p>""",
             ],
             "juustu juustu\n#-\njuustu",
         )

@@ -1,6 +1,6 @@
 import type {IAskedQuestion, IUniqueParId} from "tim/lecture/lecturetypes";
-import {to} from "tim/util/utils";
-import {$http} from "tim/util/ngimport";
+import {toPromiseAndRefresh} from "tim/util/utils";
+import {getHttpClient, withQueryParams} from "tim/util/http";
 
 /**
  * FILL WITH SUITABLE TEXT
@@ -38,17 +38,17 @@ export async function askQuestion(p: AskParams) {
               doc_id: p.docId,
               par_id: p.parId,
           };
-    const response = await to(
-        $http.post<IAskedQuestion>(
-            "/askQuestion",
-            {},
-            {
-                params: {buster: new Date().getTime(), ...args},
-            }
+    const response = await toPromiseAndRefresh(
+        getHttpClient().post<IAskedQuestion>(
+            withQueryParams("/askQuestion", {
+                buster: new Date().getTime(),
+                ...args,
+            }),
+            {}
         )
     );
     if (!response.ok) {
         throw Error("askQuestion failed");
     }
-    return response.result.data;
+    return response.result;
 }

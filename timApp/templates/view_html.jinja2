@@ -32,9 +32,7 @@
     {% endif %}
 
     {% if teacher_mode %}
-        <div save="%%PAGEID%%studentList" class="userFixed" tim-draggable-fixed click="true" caption="{{ '{{ $ctrl.users.length }}' }} users with answers">
-            <tim-user-list class="draggable-content" on-user-change="$ctrl.changeUser($USER)" users="$ctrl.users"></tim-user-list>
-        </div>
+        <tim-user-list></tim-user-list>
     {% endif %}
 {% endblock %}
 
@@ -45,15 +43,19 @@
         <input type="hidden" id="page_is_dirty" name="page_is_dirty" value="0" />
     </form>
     {{ doc_content|safe }}
-    <tim-template-list ng-if="$ctrl.item.rights.editable" ng-show="$ctrl.isEmptyDocument()" [doc]="$ctrl.item"></tim-template-list>
-    <bootstrap-panel ng-if="$ctrl.item.rights.manage" ng-show="$ctrl.isEmptyDocument()"
-                     title="Review document permissions"
-                     show-close="true"
-                     ng-cloak>
+    {# The view controller shows the elements with the class empty-document-only only while the document is empty.
+       Elements with data-tim-require-right are removed at startup if the user does not have that right to the document. #}
+    <div class="empty-document-only" data-tim-require-right="editable" style="display: none">
+        <tim-template-list></tim-template-list>
+    </div>
+    <div class="empty-document-only" data-tim-require-right="manage" style="display: none">
+    <bootstrap-panel title="Review document permissions"
+                     show-close="true">
         <p>These are the current permissions for this document; please modify if needed.
             You can always modify these permissions from the manage page.</p>
         <tim-rights-editor
-                item-id="$ctrl.docId">
+                [item-id]="{{ item.id }}">
         </tim-rights-editor>
     </bootstrap-panel>
+    </div>
 {% endblock %}

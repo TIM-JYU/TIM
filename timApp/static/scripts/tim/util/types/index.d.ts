@@ -1,14 +1,12 @@
 // All 3rd party libraries without type definitions should be listed here:
-declare module "angular-messages";
-declare module "angular-ui-grid";
-declare module "angular-eonasdan-datetimepicker";
-declare module "bootstrap-sass";
-declare module "angular-touch";
-declare module "angular-drag-and-drop-lists";
-declare module "angular-diff-match-patch" {
-    const moduleName: string;
-    export = moduleName;
+declare module "diff-match-patch" {
+    type Diff = [number, string];
+    export default class DiffMatchPatch {
+        diff_main(text1: string, text2: string): Diff[];
+        diff_cleanupSemantic(diffs: Diff[]): void;
+    }
 }
+declare module "bootstrap-sass";
 declare module "katex/contrib/auto-render/auto-render" {
     interface Delimiter {
         left: string;
@@ -61,4 +59,3 @@ declare module "reveal.js/plugin/notes/notes.esm" {
 declare module "ace/snippets";
 declare module "rangyinputs";
 declare module "url-search-params-polyfill";
-declare module "eonasdan-bootstrap-datetimepicker";

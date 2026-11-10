@@ -1,21 +1,12 @@
-import type {
-    ApplicationRef,
-    DoBootstrap,
-    OnDestroy,
-    OnInit,
-} from "@angular/core";
-import {Component, ElementRef, Input, NgModule} from "@angular/core";
+import type {OnDestroy} from "@angular/core";
+import {Component, ElementRef, Input} from "@angular/core";
 import {to2} from "tim/util/utils";
-import {platformBrowserDynamic} from "@angular/platform-browser-dynamic";
-import {createDowngradedModule, doDowngrade} from "tim/downgrade";
 import $ from "jquery";
 import {angularDialog} from "tim/ui/angulardialog/dialog.service";
-import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import type {
     ISpellErrorParams,
     SpellErrorDialogComponent as SpellErrorDialogComponentType,
 } from "tim/document/editing/spell-error-dialog.component";
-import {BrowserModule} from "@angular/platform-browser";
 
 @Component({
     selector: "tim-spell-error",
@@ -24,9 +15,10 @@ import {BrowserModule} from "@angular/platform-browser";
     `,
     styleUrls: ["./spell-error.component.scss"],
 })
-export class SpellErrorComponent implements OnInit, OnDestroy {
-    @Input() private sugg!: string[];
-    @Input() private count?: number;
+export class SpellErrorComponent implements OnDestroy {
+    // The element is a custom element (see registerElement), so the inputs come from HTML attributes as strings.
+    @Input() sugg: string[] | string = [];
+    @Input() count?: number | string;
     private dlg?: SpellErrorDialogComponentType;
 
     constructor(private e: ElementRef<HTMLElement>) {}
@@ -37,7 +29,17 @@ export class SpellErrorComponent implements OnInit, OnDestroy {
         }
     }
 
-    ngOnInit() {}
+    private getSuggestions(): string[] {
+        if (typeof this.sugg !== "string") {
+            return this.sugg;
+        }
+        try {
+            const parsed: unknown = JSON.parse(this.sugg);
+            return Array.isArray(parsed) ? (parsed as string[]) : [];
+        } catch {
+            return [];
+        }
+    }
 
     async selectWord(e: MouseEvent) {
         if (this.dlg) {
@@ -47,9 +49,9 @@ export class SpellErrorComponent implements OnInit, OnDestroy {
         this.dlg = await showSpellErrorDialog({
             info: {
                 word: this.e.nativeElement.textContent!,
-                occurrence: this.count ?? 1,
+                occurrence: Number(this.count ?? 1) || 1,
                 blockIndex: par.length > 0 ? par.index() : 0, // In case we're editing a comment, there is no par class.
-                suggestions: this.sugg,
+                suggestions: this.getSuggestions(),
             },
             dialogX: e.clientX,
             dialogY: e.clientY,
@@ -57,14 +59,6 @@ export class SpellErrorComponent implements OnInit, OnDestroy {
         await to2(this.dlg.result);
         this.dlg = undefined;
     }
-}
-
-@NgModule({
-    declarations: [SpellErrorComponent],
-    imports: [BrowserModule, TimUtilityModule],
-})
-export class SpellModule implements DoBootstrap {
-    ngDoBootstrap(appRef: ApplicationRef) {}
 }
 
 async function showSpellErrorDialog(s: ISpellErrorParams) {
@@ -77,10 +71,3 @@ async function showSpellErrorDialog(s: ISpellErrorParams) {
         SpellErrorDialogComponentType
     >(SpellErrorDialogComponent, s);
 }
-
-export const spellModule = createDowngradedModule((extraProviders) => {
-    const platformRef = platformBrowserDynamic(extraProviders);
-    return platformRef.bootstrapModule(SpellModule);
-});
-
-doDowngrade(spellModule, "timSpellError", SpellErrorComponent);

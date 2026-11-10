@@ -26,7 +26,6 @@
 // TODO: Global favorites to toolbar
 // TODO: Save favorites
 // TODO: TableForm does not support md:
-// TODO: Use Angular's HTTP service instead of AngularJS $http
 //
 // TODO: click somewhere lost filters (could not reproduce?)
 // TODO: small editor does not follow cursor in DataView if once moved more than 64 rows
@@ -77,8 +76,9 @@ import {HttpClientModule} from "@angular/common/http";
 import {FormsModule} from "@angular/forms";
 import {vctrlInstance} from "tim/document/viewctrlinstance";
 import type {Subscription} from "rxjs";
+import {timeout as rxTimeout} from "rxjs";
 import {openEditorSimple} from "tim/editor/pareditorOpen";
-import angular from "angular";
+import deepEqual from "deep-equal";
 import {PurifyModule} from "tim/util/purify.module";
 import {DataViewModule} from "tim/plugin/dataview/data-view.module";
 import type {
@@ -115,7 +115,8 @@ import {
     KEY_TAB,
     KEY_UP,
 } from "tim/util/keycodes";
-import {$http} from "tim/util/ngimport";
+import {getHttpClient, serializeQueryParams} from "tim/util/http";
+import {withAnswerHandling} from "tim/util/answer.interceptor";
 import type {CellIndex} from "tim/plugin/dataview/util";
 import {
     clone,
@@ -128,7 +129,7 @@ import {
     scrollToViewInsideParent,
     StringOrNumber,
     timeout,
-    to,
+    toPromiseAndRefresh,
     to2,
 } from "tim/util/utils";
 import {TaskId} from "tim/plugin/taskid";
@@ -1014,6 +1015,14 @@ export class TimTableComponent
     ) {
         this.pluginMeta = new PluginMeta($(el.nativeElement));
         // if ( !this.data.hide ) this.data.hide = {};
+    }
+
+    /**
+     * The HttpClient that behaves like AngularJS $http did (date conversion, session verification
+     * and opt-in answer handling). The table's own module has none of those interceptors.
+     */
+    private get appHttp() {
+        return getHttpClient();
     }
 
     get dataViewVScrolling() {
@@ -2450,13 +2459,15 @@ export class TimTableComponent
             }
         }
 
-        const r = await to(
-            $http.put<{
-                web: {
-                    result: string;
-                    error?: string;
-                };
-            }>(url, params, {timeout: defaultTimeout})
+        const r = await toPromiseAndRefresh(
+            this.appHttp
+                .put<{
+                    web: {
+                        result: string;
+                        error?: string;
+                    };
+                }>(url, params, {context: withAnswerHandling()})
+                .pipe(rxTimeout(defaultTimeout))
         );
         if (r.ok) {
             this.edited = false;
@@ -2465,18 +2476,18 @@ export class TimTableComponent
             this.prevCellDataMatrix = clone(this.cellDataMatrix);
             this.prevUserdata = clone(this.userdata);
             this.prevData = clone(this.data);
-            let result = r.result.data.web.result;
+            let result = r.result.web.result;
             const savedText = this.data.savedText;
             if (result == "Saved" && savedText) {
                 result = savedText;
             }
             this.result = result;
-            this.error = r.result.data.web.error ?? "";
+            this.error = r.result.web.error ?? "";
             // this.result = r.result.data.web.result;
         } else {
             this.saveFailed = true;
             this.connectionErrorMessage =
-                r.result.data?.error ??
+                r.result.error?.error ??
                 this.data.connectionErrorMessage ??
                 defaultErrorMessage;
         }
@@ -2794,8 +2805,8 @@ export class TimTableComponent
             return;
         }
         this.undoStackPush(undoEntry);
-        const response = await to(
-            $http.post<CellResponse[]>("/timTable/saveMultiCell", {
+        const response = await toPromiseAndRefresh(
+            this.appHttp.post<CellResponse[]>("/timTable/saveMultiCell", {
                 docId,
                 parId,
                 cellsToSave: cellsToSave,
@@ -2804,7 +2815,7 @@ export class TimTableComponent
         if (!response.ok) {
             return;
         }
-        const cellHtmls = response.result.data;
+        const cellHtmls = response.result;
         for (const c of cellHtmls) {
             this.cellDataMatrix[c.row][c.col].cell = c.cellHtml;
         }
@@ -2828,17 +2839,16 @@ export class TimTableComponent
         row: number,
         col: number
     ): Promise<string> {
-        const response = await to(
-            $http<CellType[]>({
-                url: "/timTable/getCellData",
-                method: "GET",
-                params: {docId, parId, row, col},
-            })
+        const response = await toPromiseAndRefresh(
+            this.appHttp.get<CellType[]>(
+                "/timTable/getCellData?" +
+                    serializeQueryParams({docId, parId, row, col})
+            )
         );
         if (!response.ok) {
             throw Error("getCellData failed");
         }
-        const data = response.result.data;
+        const data = response.result;
         return this.cellToString(data[0]);
     }
 
@@ -4789,8 +4799,8 @@ export class TimTableComponent
                 this.userdata.cells[coords] = "";
             }
         } else if (this.isInGlobalAppendMode()) {
-            const response = await to(
-                $http.post<TimTable>("/timTable/addUserSpecificRow", {
+            const response = await toPromiseAndRefresh(
+                this.appHttp.post<TimTable>("/timTable/addUserSpecificRow", {
                     docId,
                     parId,
                 })
@@ -4798,18 +4808,18 @@ export class TimTableComponent
             if (!response.ok) {
                 return;
             }
-            this.data = response.result.data;
+            this.data = response.result;
         } else {
             const route = this.isInDataInputMode()
                 ? "/timTable/addDatablockRow"
                 : "/timTable/addRow";
-            const response = await to(
-                $http.post<TimTable>(route, {docId, parId, rowId})
+            const response = await toPromiseAndRefresh(
+                this.appHttp.post<TimTable>(route, {docId, parId, rowId})
             );
             if (!response.ok) {
                 return;
             }
-            this.data = response.result.data;
+            this.data = response.result;
         }
         this.reInitialize();
         await this.openToolbar();
@@ -4854,8 +4864,8 @@ export class TimTableComponent
                 delete this.userdata.cells[coords];
             }
         } else {
-            const response = await to(
-                $http.post<TimTable>("/timTable/removeRow", {
+            const response = await toPromiseAndRefresh(
+                this.appHttp.post<TimTable>("/timTable/removeRow", {
                     docId,
                     parId,
                     rowId,
@@ -4865,7 +4875,7 @@ export class TimTableComponent
             if (!response.ok) {
                 return;
             }
-            this.data = response.result.data;
+            this.data = response.result;
         }
         this.reInitialize(ClearSort.Yes); // It is difficult to keep sort order when rows are removed.
         if (activeRow == this.totalRows) {
@@ -4939,13 +4949,18 @@ export class TimTableComponent
                 ? "/timTable/addDatablockColumn"
                 : "/timTable/addColumn";
 
-            const response = await to(
-                $http.post<TimTable>(route, {docId, parId, colId, rowLen})
+            const response = await toPromiseAndRefresh(
+                this.appHttp.post<TimTable>(route, {
+                    docId,
+                    parId,
+                    colId,
+                    rowLen,
+                })
             );
             if (!response.ok) {
                 return;
             }
-            this.data = response.result.data;
+            this.data = response.result;
         }
 
         this.reInitialize(ClearSort.No);
@@ -4985,8 +5000,8 @@ export class TimTableComponent
                 delete this.userdata.cells[coords];
             }
         } else {
-            const response = await to(
-                $http.post<TimTable>("/timTable/removeColumn", {
+            const response = await toPromiseAndRefresh(
+                this.appHttp.post<TimTable>("/timTable/removeColumn", {
                     docId,
                     parId,
                     colId,
@@ -4996,7 +5011,7 @@ export class TimTableComponent
             if (!response.ok) {
                 return;
             }
-            this.data = response.result.data;
+            this.data = response.result;
         }
         this.reInitialize(ClearSort.No);
         if (activeCol == this.totalCols) {
@@ -5825,7 +5840,7 @@ export class TimTableComponent
             this.data.toolbarTemplates = [];
         }
         for (const ob of this.data.toolbarTemplates) {
-            if (angular.equals(ob, templ)) {
+            if (deepEqual(ob, templ)) {
                 return false;
             }
         }
@@ -6003,8 +6018,8 @@ export class TimTableComponent
         const parId = this.getOwnParId();
         const docId = this.viewctrl.item.id;
 
-        const response = await to(
-            $http.post<TimTable>("/timTable/setCell", {
+        const response = await toPromiseAndRefresh(
+            this.appHttp.post<TimTable>("/timTable/setCell", {
                 docId,
                 parId,
                 cellsToSave,
@@ -6014,7 +6029,7 @@ export class TimTableComponent
             return;
         }
         const toolbarTemplates = this.data.toolbarTemplates;
-        this.data = response.result.data;
+        this.data = response.result;
         this.data.toolbarTemplates = toolbarTemplates;
 
         // Update display

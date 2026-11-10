@@ -24,9 +24,15 @@ import {ParCompiler} from "tim/editor/parCompiler";
 import {parseHexColor, shouldUseDarkText} from "tim/util/colorUtils";
 import type {ViewCtrl} from "tim/document/viewctrl";
 import {KEY_CTRL, KEY_ENTER, KEY_S} from "tim/util/keycodes";
-import {$http} from "tim/util/ngimport";
+import {HttpClient} from "@angular/common/http";
+import {getHttpClient} from "tim/util/http";
 import type {Result} from "tim/util/utils";
-import {clone, isInViewport, scrollToElement, to} from "tim/util/utils";
+import {
+    clone,
+    isInViewport,
+    scrollToElement,
+    toPromiseAndRefresh,
+} from "tim/util/utils";
 import type {
     IAnnotationEditableValues,
     IAnnotationInterval,
@@ -64,13 +70,17 @@ export async function updateAnnotationServer(
         draw_data?: DrawItem[];
     }
 ): Promise<Result<Annotation, string>> {
-    const r2 = await to(
-        $http.post<Record<string, unknown>>("/update_annotation", updatevalues)
+    // This is also called from the review controller, which runs outside the Angular zone.
+    const r2 = await toPromiseAndRefresh(
+        getHttpClient().post<Record<string, unknown>>(
+            "/update_annotation",
+            updatevalues
+        )
     );
     if (!r2.ok) {
-        return {ok: false, result: r2.result.data.error};
+        return {ok: false, result: r2.result.error.error};
     }
-    const annotation = jsonSerializer.deserialize(r2.result.data, Annotation);
+    const annotation = jsonSerializer.deserialize(r2.result, Annotation);
     if (!annotation || Array.isArray(annotation)) {
         return {ok: false, result: "Invalid annotation data"};
     }
@@ -299,7 +309,7 @@ export class AnnotationComponent
         ParCompiler.processAllMath($(el.nativeElement));
     }
 
-    constructor(public e: ElementRef) {
+    constructor(public e: ElementRef, private http: HttpClient) {
         this.element = $(e.nativeElement);
     }
 
@@ -587,17 +597,20 @@ export class AnnotationComponent
 
         // Add comment
         if (this.commentChanged()) {
-            const r = await to(
-                $http.post<Record<string, unknown>>("/add_annotation_comment", {
-                    id: id,
-                    content: this.newcomment,
-                })
+            const r = await toPromiseAndRefresh(
+                this.http.post<Record<string, unknown>>(
+                    "/add_annotation_comment",
+                    {
+                        id: id,
+                        content: this.newcomment,
+                    }
+                )
             );
             if (!r.ok) {
                 return;
             }
             const annotation = jsonSerializer.deserializeObject(
-                r.result.data,
+                r.result,
                 Annotation
             );
             if (!annotation) {

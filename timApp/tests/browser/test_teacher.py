@@ -17,18 +17,6 @@ class TeacherTest(BrowserTest):
     def test_first_answer_loading(self):
         """First loaded answers in teacher view matches the first user that browser selects from a group"""
 
-        def check_col():
-            header_row = self.find_element(".ui-grid-header-cell-row")
-            username_div = header_row.find_element(
-                by=By.XPATH, value=f"//{'span'}[contains(text(),'{'Username'}')]"
-            )
-            col_class = (
-                username_div.find_element(by=By.XPATH, value="./../../..")
-                .get_attribute("class")
-                .split()[-1]
-            )
-            return col_class
-
         self.login_browser_quick_test1()
         self.login_test1()
         nameless_user, _ = User.create_with_group(UserInfo(username="nameless"))
@@ -68,7 +56,7 @@ form: false
 
         self.goto_document(d1, "teacher")
         selected_username = self.find_element(
-            ".ui-grid-row-selected ." + check_col()
+            "tim-user-list tr.selected td.col-name"
         ).text
         selected_answer = self.find_element(
             "#t .textfieldNoSaveDiv input"
@@ -77,7 +65,7 @@ form: false
 
         self.goto_document(d2, "teacher")
         selected_username = self.find_element(
-            ".ui-grid-row-selected ." + check_col()
+            "tim-user-list tr.selected td.col-name"
         ).text
         selected_answer = self.find_element(
             "#t .textfieldNoSaveDiv input"
@@ -115,7 +103,7 @@ initword: empty
                 self.wait_until_present_and_vis("answerbrowser .point-form")
                 velp_hider = self.find_element("velp-selection i.glyphicon-minus")
                 velp_hider.click()
-            tu_2_selector = self.find_element('div[title = "Test user 2"]')
+            tu_2_selector = self.find_element('td[title = "Test user 2"]')
             tu_2_selector.click()
 
             def focus_and_check_task():
@@ -160,7 +148,7 @@ initword: empty
         self.add_answer(d, "t", "tu3", user=self.test_user_3)
         db.session.commit()
         self.goto_document(d, "teacher")
-        self.find_element(".ui-grid-menu-button").click()
+        self.find_element(".user-list-menu-button").click()
         self.find_element_by_text("Answers as plain text").click()
         self.find_element_by_text("Document groups").click()
         self.find_element("tim-dialog-frame .timButton").click()

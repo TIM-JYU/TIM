@@ -1,4 +1,4 @@
-import type {IScope} from "angular";
+import {refreshUI} from "tim/util/refresh";
 import $ from "jquery";
 import {showPopupMenu} from "tim/document/showPopupMenu";
 import {showMessageDialog} from "tim/ui/showMessageDialog";
@@ -40,14 +40,12 @@ function getEditLineOfParOrHelp(par: ParContext | HelpPar) {
 }
 
 export class ParmenuHandler {
-    public sc: IScope;
     public viewctrl: ViewCtrl;
     public lastclicktime: number | undefined;
     public lastclickplace: Coords | undefined;
     public currCtx?: ParContext | HelpPar;
 
-    constructor(sc: IScope, view: ViewCtrl) {
-        this.sc = sc;
+    constructor(view: ViewCtrl) {
         this.viewctrl = view;
         onClick(
             ".paragraphs .parContent",
@@ -118,7 +116,7 @@ export class ParmenuHandler {
                     );
                 }
                 this.viewctrl.reviewCtrl.selectText(par);
-                sc.$apply();
+                refreshUI();
                 return true;
             },
             true

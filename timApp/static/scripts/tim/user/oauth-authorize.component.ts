@@ -1,7 +1,6 @@
 import type {ApplicationRef, DoBootstrap} from "@angular/core";
 import {Component, Input, NgModule} from "@angular/core";
-import {createDowngradedModule, doDowngrade} from "tim/downgrade";
-import {platformBrowserDynamic} from "@angular/platform-browser-dynamic";
+import {registerModuleServerComponents} from "tim/serverComponents";
 import type {IOAuthGlobals} from "tim/util/globals";
 import {oauthglobals} from "tim/util/globals";
 import {getCookie} from "tim/util/utils";
@@ -73,9 +72,6 @@ export class OAuthAuthorizeModule implements DoBootstrap {
     ngDoBootstrap(appRef: ApplicationRef): void {}
 }
 
-export const angularJsModule = createDowngradedModule((extraProviders) => {
-    const platformRef = platformBrowserDynamic(extraProviders);
-    return platformRef.bootstrapModule(OAuthAuthorizeModule);
+registerModuleServerComponents(OAuthAuthorizeModule, {
+    "tim-oauth-authorize": OAuthAuthorizeComponent,
 });
-doDowngrade(angularJsModule, "timOauthAuthorize", OAuthAuthorizeComponent);
-export const moduleDefs = [angularJsModule];

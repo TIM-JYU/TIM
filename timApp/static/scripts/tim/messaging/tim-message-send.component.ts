@@ -14,8 +14,7 @@ import {BsDropdownModule} from "ngx-bootstrap/dropdown";
 import {TimepickerModule} from "ngx-bootstrap/timepicker";
 import {DatetimePickerModule} from "tim/ui/datetime-picker/datetime-picker.component";
 import {TooltipModule} from "ngx-bootstrap/tooltip";
-import {createDowngradedModule, doDowngrade} from "tim/downgrade";
-import {platformBrowserDynamic} from "@angular/platform-browser-dynamic";
+import {registerModuleServerComponents} from "tim/serverComponents";
 import {isAdmin, Users} from "tim/user/userService";
 import {TimStorage, toPromise} from "tim/util/utils";
 import {CommonModule} from "@angular/common";
@@ -526,18 +525,10 @@ export class TimMessageSendModule implements DoBootstrap {
     ],
     exports: [],
 })
-export class TimMessageSendModuleAngularJS implements DoBootstrap {
+export class TimMessageSendPageModule implements DoBootstrap {
     ngDoBootstrap(appRef: ApplicationRef): void {}
 }
 
-export const moduleDefs = [
-    doDowngrade(
-        createDowngradedModule((extraProviders) =>
-            platformBrowserDynamic(extraProviders).bootstrapModule(
-                TimMessageSendModuleAngularJS
-            )
-        ),
-        "timMessageSend",
-        TimMessageSendComponent
-    ),
-];
+registerModuleServerComponents(TimMessageSendPageModule, {
+    "tim-message-send": TimMessageSendComponent,
+});

@@ -3,7 +3,8 @@ import type {OnInit} from "@angular/core";
 import {Component, Input} from "@angular/core";
 import type {Moment} from "moment";
 import moment from "moment";
-import {to, to2, toPromise} from "tim/util/utils";
+import {to2, toPromise} from "tim/util/utils";
+import {serializeQueryParams} from "tim/util/http";
 import type {
     Distribution,
     GroupAndMembers,
@@ -19,7 +20,6 @@ import {
 import {documentglobals} from "tim/util/globals";
 import {showInputDialog} from "tim/ui/showInputDialog";
 import {InputDialogKind} from "tim/ui/input-dialog.kind";
-import {$http} from "tim/util/ngimport";
 import {Users} from "tim/user/userService";
 
 @Component({
@@ -627,13 +627,14 @@ export class MessageListAdminComponent implements OnInit {
                 okText: $localize`Delete`,
                 isInput: InputDialogKind.ValidatorOnly,
                 validator: async () => {
-                    const result = await to(
-                        $http.delete(`/messagelist/deletelist`, {
-                            params: {
-                                listname: this.listname,
-                                permanent: false, // Only non-permanent deletion at this point.
-                            },
-                        })
+                    const result = await toPromise(
+                        this.http.delete(
+                            "/messagelist/deletelist?" +
+                                serializeQueryParams({
+                                    listname: this.listname,
+                                    permanent: false, // Only non-permanent deletion at this point.
+                                })
+                        )
                     );
                     if (result.ok) {
                         // Deletion was successful. Beam us up.
@@ -643,7 +644,7 @@ export class MessageListAdminComponent implements OnInit {
                         this.permanentErrorMessage = $localize`Deleting the list failed.`;
                         return {
                             ok: false,
-                            result: result.result.data.error,
+                            result: result.result.error.error,
                         } as const;
                     }
                 },

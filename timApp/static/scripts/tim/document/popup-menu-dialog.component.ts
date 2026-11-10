@@ -1,11 +1,11 @@
 import $ from "jquery";
+import {refreshUI} from "tim/util/refresh";
 import {AngularDialogComponent} from "tim/ui/angulardialog/angular-dialog-component.directive";
 import {Component, NgModule, NgZone} from "@angular/core";
 import {watchEditMode} from "tim/document/editing/editmode";
 import {DialogModule} from "tim/ui/angulardialog/dialog.module";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {HttpClient, HttpClientModule} from "@angular/common/http";
-import {$rootScope} from "tim/util/ngimport";
 import {PurifyModule} from "tim/util/purify.module";
 import type {HelpPar} from "tim/document/structure/helpPar";
 import type {ParContext} from "tim/document/structure/parContext";
@@ -228,7 +228,7 @@ export class PopupMenuDialogComponent extends AngularDialogComponent<
                 this.labelClickHandlerSet = true;
             }
         }
-        $rootScope.$evalAsync();
+        refreshUI();
     }
 
     doCopyReference(text: string, style: RefStyle): string {

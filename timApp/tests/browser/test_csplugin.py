@@ -2,6 +2,7 @@ import re
 import time
 from time import sleep
 
+from selenium.common.exceptions import StaleElementReferenceException
 from selenium.webdriver.common.by import By
 
 from timApp.tests.browser.browsertest import BrowserTest, PREV_ANSWER
@@ -302,7 +303,16 @@ postprogram: |!!
         cs_input.click()
         self.wait_until_present_and_vis(".answer-index-count")
         # self.assertEqual("Uusi", button_new.text) # how to test that there is no new button
-        self.assertEqual("Laske: 10 + -3", self.find_element(".stem").text)
+        # The plugin is rendered again when the answer browser has loaded the new task,
+        # so the stem element may get replaced while it is being read.
+        stem_text = None
+        for _ in range(10):
+            try:
+                stem_text = self.find_element(".stem").text
+                break
+            except StaleElementReferenceException:
+                sleep(0.2)
+        self.assertEqual("Laske: 10 + -3", stem_text)
         self.assertEqual("4/3", self.find_element(".answer-index-count").text)
 
     def test_missing_taskid_warning(self):

@@ -531,13 +531,3 @@ def find_element_by_text(root: WebElement, text: str, element: str = "*") -> Web
 
 def find_by_attr_name(element: WebElement, model: str, tagname="*") -> WebElement:
     return element.find_element(By.CSS_SELECTOR, f'{tagname}[name="{model}"]')
-
-
-def find_by_ngclick(element: WebElement, value: str, tagname="*") -> WebElement:
-    return element.find_element(By.CSS_SELECTOR, f'{tagname}[ng-click="{value}"]')
-
-
-def find_all_by_ngmodel(
-    element: WebElement, model: str, tagname="*"
-) -> list[WebElement]:
-    return element.find_elements(By.CSS_SELECTOR, f'{tagname}[ng-model="{model}"]')

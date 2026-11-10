@@ -1,4 +1,4 @@
-import type {IScope} from "angular";
+import {uiTimeout} from "tim/util/refresh";
 import $ from "jquery";
 import type {EditPosition} from "tim/document/editing/edittypes";
 import {EditType} from "tim/document/editing/edittypes";
@@ -9,17 +9,14 @@ import type {ParContext} from "tim/document/structure/parContext";
 import {getMinimalUnbrokenSelection} from "tim/document/editing/unbrokenSelection";
 import {to2} from "tim/util/utils";
 import {documentglobals} from "tim/util/globals";
-import {$timeout} from "tim/util/ngimport";
 import type {IQuestionDialogResult} from "tim/document/question/question-edit-dialog.component";
 import type {ViewCtrl} from "tim/document/viewctrl";
 
 export class QuestionHandler {
-    public sc: IScope;
     public noQuestionAutoNumbering: boolean = false;
     public viewctrl: ViewCtrl;
 
-    constructor(sc: IScope, view: ViewCtrl) {
-        this.sc = sc;
+    constructor(view: ViewCtrl) {
         this.viewctrl = view;
         if (view.lectureCtrl.lectureSettings.lectureMode) {
             this.noQuestionAutoNumbering =
@@ -83,7 +80,7 @@ export class QuestionHandler {
         if (this.showQuestions()) {
             let n = 1;
             let separator = ")";
-            await $timeout();
+            await uiTimeout();
             for (let i = 0; i < questions.length; i++) {
                 const par = questions.eq(i);
                 const questionChildren = par.children();

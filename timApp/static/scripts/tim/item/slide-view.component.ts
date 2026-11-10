@@ -2,8 +2,7 @@ import type {ApplicationRef, DoBootstrap, OnInit} from "@angular/core";
 import {Component, NgModule} from "@angular/core";
 import type {SafeResourceUrl} from "@angular/platform-browser";
 import {BrowserModule, DomSanitizer} from "@angular/platform-browser";
-import {platformBrowserDynamic} from "@angular/platform-browser-dynamic";
-import {createDowngradedModule, doDowngrade} from "tim/downgrade";
+import {registerModuleServerComponents} from "tim/serverComponents";
 import {documentglobals} from "tim/util/globals";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 
@@ -38,14 +37,6 @@ export class SlideViewModule implements DoBootstrap {
     ngDoBootstrap(appRef: ApplicationRef): void {}
 }
 
-export const moduleDefs = [
-    doDowngrade(
-        createDowngradedModule((extraProviders) =>
-            platformBrowserDynamic(extraProviders).bootstrapModule(
-                SlideViewModule
-            )
-        ),
-        "timSlideView",
-        SlideViewComponent
-    ),
-];
+registerModuleServerComponents(SlideViewModule, {
+    "tim-slide-view": SlideViewComponent,
+});

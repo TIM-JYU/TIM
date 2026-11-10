@@ -52,32 +52,23 @@ class VelpTest(BrowserTest):
         self.assert_same_screenshot(new_velp_element, "velps/create_new_velp_empty")
 
         velp_content_input: WebElement = new_velp_element.find_element(
-            by=By.CSS_SELECTOR, value='input[ng-model="$ctrl.velp.content"]'
+            by=By.CSS_SELECTOR, value='input[name="velpName"]'
         )
         velp_content_input.send_keys("first velp")
 
         velp_points_input: WebElement = new_velp_element.find_element(
-            by=By.CSS_SELECTOR, value='input[ng-model="$ctrl.velp.points"]'
+            by=By.CSS_SELECTOR, value='input[name="velpPoints"]'
         )
         velp_points_input.send_keys("2")
 
         velp_comment_input: WebElement = new_velp_element.find_element(
-            by=By.CSS_SELECTOR, value='textarea[ng-model="$ctrl.velp.default_comment"]'
+            by=By.CSS_SELECTOR, value='textarea[name="velpComment"]'
         )
         velp_comment_input.send_keys("Just a default comment.")
 
-        # Setting the color does not work well because SystemJS does not find the module for some reason.
-        # velp_color_input: WebElement = new_velp_element.find_element(by=By.CSS_SELECTOR, value='input[ng-model="velp.color"]')
-        # self.drv.execute_script(
-        #     f"""
-        #     arguments[0].value = '#00FF00';
-        #     SystemJS.registry.get("http://tim/static/scripts/tim/ngimport.ts").$rootScope.$apply();
-        #     """,
-        #     velp_color_input)
-
         velp_visible_input = Select(
             new_velp_element.find_element(
-                by=By.CSS_SELECTOR, value='select[ng-model="$ctrl.velp.visible_to"]'
+                by=By.CSS_SELECTOR, value='select[name="velpVisibleTo"]'
             )
         )
         velp_visible_input.select_by_visible_text("Just me")
@@ -286,7 +277,7 @@ saveButton: Tallenna
             -20, -40
         ).release().perform()
         velp_to_use.click()
-        self.wait_until_hidden("span[ng-if='$ctrl.rctrl.selectedElement']")
+        self.wait_until_hidden(".velp-selected-element")
         self.find_element_avoid_staleness(
             "annotation[aid='3'] span.glyphicon-trash"
         ).click()
@@ -331,13 +322,13 @@ saveButton: Tallenna
         )
 
         tab_filter_velps: WebElement = self.find_element_by_text(
-            "Filter velps", "a", advanced_mode_element
+            "Filter velps", "span", parent=advanced_mode_element
         )
         tab_velp_groups: WebElement = self.find_element_by_text(
-            "Velp groups", "a", advanced_mode_element
+            "Velp groups", "span", parent=advanced_mode_element
         )
         tab_velp_summary: WebElement = self.find_element_by_text(
-            "Summary", "a", advanced_mode_element
+            "Summary", "span", parent=advanced_mode_element
         )
 
         tab_filter_velps_content_element: WebElement = (

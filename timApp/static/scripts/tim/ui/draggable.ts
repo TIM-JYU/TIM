@@ -1,12 +1,9 @@
-import type {IController, IScope} from "angular";
 import * as t from "io-ts";
-import {timApp} from "tim/app";
 import {timLogTime} from "tim/util/timTiming";
 import {TimDefer} from "tim/util/timdefer";
 import type {Pos} from "tim/ui/pos";
 import {nullable} from "tim/plugin/attributes";
-import {$compile} from "tim/util/ngimport";
-import type {Binding, IBounds, ISize} from "tim/util/utils";
+import type {IBounds, ISize} from "tim/util/utils";
 import {
     getOutOffsetFully,
     getOutOffsetVisible,
@@ -23,62 +20,16 @@ function getPixels(s: string) {
 }
 
 const draggableTemplate = `
-<div class="draghandle drag"
-     ng-class="{'attached': !d.canDrag(), 'minimized': d.areaMinimized}"
-     ng-mousedown="d.dragClick(); $event.preventDefault()"
-     ng-show="d.dragEnabled"
-     >
-    <p class="drag" ng-show="d.getCaption()" ng-bind="d.getCaption()"></p>
-    <i ng-show="d.detachable"
-       ng-click="d.toggleDetach()"
-       title="{{ d.canDrag() ? 'Attach' : 'Detach' }}"
-       class="glyphicon glyphicon-arrow-{{ d.canDrag() ? 'left' : 'right' }}"></i>
-    <i ng-show="(d.click && d.canDrag()) || d.canMinimize"
-       title="{{ d.areaMinimized ? 'Maximize' : 'Minimize' }} dialog"
-       ng-click="d.toggleMinimize()"
-       class="glyphicon glyphicon-{{ d.areaMinimized ? 'unchecked' : 'minus' }}"></i>
-    <tim-close-button ng-show="d.closeFn"
-                      ng-click="d.closeFn()"></tim-close-button>
+<div class="draghandle drag">
+    <p class="drag"></p>
+    <i class="drag-detach glyphicon"></i>
+    <i class="drag-minimize glyphicon"></i>
+    <i class="drag-close glyphicon glyphicon-remove" title="Close" style="cursor: pointer; float: right"></i>
 </div>
-<div ng-show="d.canResize() && !d.autoWidth"
-     class="resizehandle-r resizehandle"></div>
-<div ng-show="d.canResize() && !d.autoHeight"
-     class="resizehandle-d resizehandle"></div>
-<div ng-show="d.canResize() && !d.autoWidth && !d.autoHeight"
-     class="resizehandle-rd resizehandle"></div>
+<div class="resizehandle-r resizehandle"></div>
+<div class="resizehandle-d resizehandle"></div>
+<div class="resizehandle-rd resizehandle"></div>
     `;
-
-timApp.directive("timDraggableFixed", [
-    () => {
-        return {
-            bindToController: {
-                canMinimize: "<?",
-                absolute: "<?",
-                anchor: "@?",
-                caption: "@?",
-                click: "<?",
-                detachable: "<?",
-                forceMaximized: "<?",
-                resize: "<?",
-                draggable: "<?",
-                save: "@?",
-                initialSize: "<?",
-                slidePars: "<?",
-            },
-            controller: DraggableController,
-            controllerAs: "d", // default $ctrl does not work, possibly because of some ng-init
-            require: {
-                parentDraggable: "?^^timDraggableFixed", // for checking whether we are inside some other draggable
-            },
-            restrict: "A",
-            scope: {},
-            // template: draggableTemplate,
-            // transclude: true,
-            // Using template + transclude here does not work for some reason with uib-modal, so we compile the
-            // template manually in $postLink.
-        };
-    },
-]);
 
 interface IResizeStates {
     up: boolean;
@@ -102,7 +53,32 @@ export interface IResizeCallbackParams {
 
 export type ResizeCallback = (p: IResizeCallbackParams) => void;
 
-type IModalInstanceService = angular.ui.bootstrap.IModalInstanceService;
+/**
+ * The part of a modal that the draggable needs: a promise that resolves when the modal has been rendered.
+ */
+export interface IDraggableModal {
+    rendered: PromiseLike<unknown>;
+}
+
+export type DraggableSize = t.TypeOf<typeof SizeType>;
+
+/**
+ * The options of a draggable. In templates, these are given as attributes of the element.
+ */
+export interface IDraggableOptions {
+    canMinimize?: boolean;
+    absolute?: boolean;
+    anchor?: string;
+    caption?: string;
+    click?: boolean;
+    detachable?: boolean;
+    forceMaximized?: boolean;
+    resize?: boolean;
+    draggable?: boolean;
+    save?: string;
+    initialSize?: DraggableSize;
+    slidePars?: boolean;
+}
 
 const PosType = t.partial({
     left: t.string,
@@ -115,9 +91,12 @@ const SizeType = t.type({
     height: nullable(t.string),
 });
 
-export class DraggableController implements IController {
-    static $inject = ["$scope", "$element"];
-
+/**
+ * Makes an element draggable, resizable, minimizable and optionally detachable.
+ * Does not depend on any UI framework; the wrappers (DraggableDirective for Angular templates and
+ * attachDraggables for HTML that comes from the server) create and drive this.
+ */
+export class DraggableController implements IDraggableOptions {
     private posKey = "draggable";
     private areaMinimized: boolean = false;
     private areaHeight: number = 0;
@@ -138,38 +117,51 @@ export class DraggableController implements IController {
     private lastPageXYPos: Pos = {x: 0, y: 0};
     private handle?: HTMLElement;
     private closeFn?: () => void;
-    private caption?: Binding<string, "<">;
-    private click?: Binding<boolean, "<">;
-    private detachable?: Binding<boolean, "<">;
-    private slidePars?: Binding<boolean, "<">;
-    private resize?: Binding<boolean, "<">;
-    private save?: Binding<string, "<">;
+    caption?: string;
+    click?: boolean;
+    detachable?: boolean;
+    slidePars?: boolean;
+    resize?: boolean;
+    save?: string;
     private dragClick?: () => void;
     private autoHeight?: boolean;
-    private absolute?: Binding<boolean, "<">;
-    private anchor: Binding<string, "<"> = "absolute";
-    private initialSize?: Binding<t.TypeOf<typeof SizeType>, "<">;
-    private parentDraggable?: DraggableController;
-    private forceMaximized?: Binding<boolean, "<">;
-    private modal?: IModalInstanceService;
+    absolute?: boolean;
+    anchor: string = "absolute";
+    initialSize?: DraggableSize;
+    parentDraggable?: DraggableController;
+    forceMaximized?: boolean;
+    private modal?: IDraggableModal;
     private layoutReady = new TimDefer<void>();
     private resizeCallback?: ResizeCallback;
     private captionCb?: () => string;
     private dragEnabled = true;
-    private draggable?: boolean;
+    draggable?: boolean;
     private posStorage!: TimStorage<t.TypeOf<typeof PosType>>;
     private sizeStorage!: TimStorage<t.TypeOf<typeof SizeType>>;
     private minStorage!: TimStorage<boolean>;
     private detachStorage!: TimStorage<boolean>;
-    private canMinimize?: Binding<boolean, "<">;
+    canMinimize?: boolean;
+    private initialized = false;
+    private destroyed = false;
+    protected element: JQuery;
 
-    constructor(private scope: IScope, private element: JQLite) {}
+    constructor(element: HTMLElement) {
+        this.element = $(element);
+    }
+
+    getElement() {
+        return this.element[0];
+    }
+
+    private onWindowResize = () => {
+        void this.restoreSizeAndPosition(VisibilityFix.Full);
+    };
 
     isModal() {
         return this.element.parent(".modal").length === 1;
     }
 
-    $onInit() {
+    init() {
         this.dragEnabled = this.draggable ?? true;
         // hide element temporarily to avoid flashing the dialog in wrong position briefly
         this.setVisibility("hidden");
@@ -182,9 +174,7 @@ export class DraggableController implements IController {
         this.minStorage = new TimStorage(this.posKey + "min", t.boolean);
         this.detachStorage = new TimStorage(this.posKey + "detach", t.boolean);
         // Move element towards an anchor point selected by the user.
-        window.addEventListener("resize", () => {
-            void this.restoreSizeAndPosition(VisibilityFix.Full);
-        });
+        window.addEventListener("resize", this.onWindowResize);
         // User may have refreshed the document after resizing the window.
         void this.restoreSizeAndPosition(VisibilityFix.Full);
     }
@@ -203,7 +193,15 @@ export class DraggableController implements IController {
 
     setCaptionCb(cb: () => string) {
         this.captionCb = cb;
+        this.update();
     }
+
+    /**
+     * Called after the user has finished dragging or resizing the element.
+     */
+    afterRelease?: () => void;
+
+    private autoWidth?: boolean;
 
     async makeHeightAutomatic() {
         // workaround for Chrome issue where the browser jumps to the start of page when opening a dialog that
@@ -214,7 +212,7 @@ export class DraggableController implements IController {
         this.autoHeight = true;
     }
 
-    private toggleDetach() {
+    toggleDetach() {
         const canDrag = this.canDrag();
         if (canDrag) {
             if (this.areaMinimized) {
@@ -244,6 +242,7 @@ export class DraggableController implements IController {
         this.element.css("z-index", this.getVisibleLayer());
 
         this.detachStorage.set(!canDrag);
+        this.update();
     }
 
     private initSlidePars() {
@@ -325,12 +324,82 @@ export class DraggableController implements IController {
 
     setCloseFn(fn: (() => void) | undefined) {
         this.closeFn = fn;
+        this.update();
     }
 
-    async $postLink() {
-        this.element.prepend($compile(draggableTemplate)(this.scope));
-        this.createResizeHandlers();
+    /**
+     * Refreshes the drag handle and the resize handles to match the current state.
+     * The wrappers call this whenever the options or the element's position mode may have changed.
+     */
+    update() {
+        if (!this.handle || this.destroyed) {
+            return;
+        }
+        const canDrag = this.canDrag();
+        const handle = $(this.handle);
+        handle.toggleClass("attached", !canDrag);
+        handle.toggleClass("minimized", this.areaMinimized);
+        handle.toggleClass("hidden", !this.dragEnabled);
+        const caption = this.getCaption();
+        const p = handle.children("p");
+        if (p.text() !== caption) {
+            p.text(caption);
+        }
+        p.toggleClass("hidden", !caption);
+        handle
+            .children(".drag-detach")
+            .toggleClass("hidden", !this.detachable)
+            .toggleClass("glyphicon-arrow-left", canDrag)
+            .toggleClass("glyphicon-arrow-right", !canDrag)
+            .attr("title", canDrag ? "Attach" : "Detach");
+        handle
+            .children(".drag-minimize")
+            .toggleClass(
+                "hidden",
+                !((this.click && canDrag) || this.canMinimize)
+            )
+            .toggleClass("glyphicon-unchecked", this.areaMinimized)
+            .toggleClass("glyphicon-minus", !this.areaMinimized)
+            .attr(
+                "title",
+                (this.areaMinimized ? "Maximize" : "Minimize") + " dialog"
+            );
+        handle.children(".drag-close").toggleClass("hidden", !this.closeFn);
+        const canResize = this.canResize();
+        this.element
+            .children(".resizehandle-r")
+            .toggleClass("hidden", !(canResize && !this.autoWidth));
+        this.element
+            .children(".resizehandle-d")
+            .toggleClass("hidden", !(canResize && !this.autoHeight));
+        this.element
+            .children(".resizehandle-rd")
+            .toggleClass(
+                "hidden",
+                !(canResize && !this.autoWidth && !this.autoHeight)
+            );
+    }
+
+    private buildHandle() {
+        this.element.prepend($(draggableTemplate));
         this.handle = this.element.children(".draghandle")[0];
+        const handle = $(this.handle);
+        handle.on("mousedown", (e) => {
+            this.dragClick?.();
+            e.preventDefault();
+        });
+        handle.children(".drag-detach").on("click", () => this.toggleDetach());
+        handle
+            .children(".drag-minimize")
+            .on("click", () => this.toggleMinimize());
+        handle.children(".drag-close").on("click", () => this.closeFn?.());
+    }
+
+    async postLink() {
+        this.dragEnabled = this.draggable ?? true;
+        this.buildHandle();
+        this.update();
+        this.createResizeHandlers();
 
         const handleResizeBegin = (e: MouseEvent | TouchEvent) => {
             if (!this.canDrag()) {
@@ -365,6 +434,8 @@ export class DraggableController implements IController {
         } else {
             this.element.addClass("draggable-attached");
         }
+        this.initialized = true;
+        this.update();
     }
 
     public async setInitialLayout(vf: VisibilityFix) {
@@ -395,6 +466,7 @@ export class DraggableController implements IController {
             this.setVisibility("inherit");
         }
         this.layoutReady.resolve();
+        this.update();
     }
 
     private async restoreSizeAndPosition(vf: VisibilityFix) {
@@ -510,6 +582,7 @@ export class DraggableController implements IController {
         if (previews) {
             this.movePreviewsProperly(previews);
         }
+        this.update();
     }
 
     /**
@@ -662,7 +735,7 @@ export class DraggableController implements IController {
         handleRightDown.addEventListener("touchstart", listenerRightDown);
     }
 
-    private canDrag() {
+    canDrag() {
         return this.element.css("position") !== "static";
     }
 
@@ -702,7 +775,8 @@ export class DraggableController implements IController {
 
             timLogTime("pos:" + css.left + "," + css.top, "drag");
         }
-        this.scope.$evalAsync();
+        this.update();
+        this.afterRelease?.();
     };
 
     public ensureFullyInViewport() {
@@ -851,11 +925,76 @@ export class DraggableController implements IController {
         this.doMove(p);
     }
 
-    $destroy() {
-        this.element.remove();
+    destroy() {
+        this.destroyed = true;
+        window.removeEventListener("resize", this.onWindowResize);
+        this.removeMouseUp();
+        this.removeMouseMove(this.move);
+        this.removeMouseMove(this.moveResize);
     }
 
-    setModal(modalInstance: IModalInstanceService) {
+    setModal(modalInstance: IDraggableModal) {
         this.modal = modalInstance;
     }
+}
+
+const attached = new WeakMap<Element, DraggableController>();
+
+function boolAttr(el: Element, name: string): boolean | undefined {
+    const v = el.getAttribute(name);
+    if (v == null) {
+        return undefined;
+    }
+    return v !== "false";
+}
+
+/**
+ * Makes the elements that have the attribute tim-draggable-fixed draggable.
+ * This is for HTML that does not come from an Angular template, such as document paragraphs
+ * with the float attribute. The options are read from the attributes of the element.
+ * Elements that are already draggable are skipped.
+ *
+ * @param root The element whose descendants (and the element itself) are checked.
+ */
+export function attachDraggables(root: Element) {
+    const elements = [
+        ...(root.matches("[tim-draggable-fixed]") ? [root] : []),
+        ...root.querySelectorAll("[tim-draggable-fixed]"),
+    ];
+    for (const el of elements) {
+        if (attached.has(el) || !(el instanceof HTMLElement)) {
+            continue;
+        }
+        const ctrl = new DraggableController(el);
+        attached.set(el, ctrl);
+        const parent = el.parentElement?.closest("[tim-draggable-fixed]");
+        ctrl.parentDraggable = parent ? attached.get(parent) : undefined;
+        ctrl.canMinimize = boolAttr(el, "can-minimize");
+        ctrl.absolute = boolAttr(el, "absolute");
+        ctrl.anchor = el.getAttribute("anchor") ?? ctrl.anchor;
+        ctrl.caption = el.getAttribute("caption") ?? undefined;
+        ctrl.click = boolAttr(el, "click");
+        ctrl.detachable = boolAttr(el, "detachable");
+        ctrl.forceMaximized = boolAttr(el, "force-maximized");
+        ctrl.resize = boolAttr(el, "resize");
+        ctrl.draggable = boolAttr(el, "draggable");
+        ctrl.save = el.getAttribute("save") ?? undefined;
+        ctrl.slidePars = boolAttr(el, "slide-pars");
+        ctrl.init();
+        void ctrl.postLink();
+    }
+}
+
+/**
+ * Tells attachDraggables that the element already has a draggable. Used by DraggableDirective.
+ */
+export function markDraggableAttached(el: Element, ctrl: DraggableController) {
+    attached.set(el, ctrl);
+}
+
+/**
+ * Returns the draggable of the element, if any.
+ */
+export function getAttachedDraggable(el: Element) {
+    return attached.get(el);
 }

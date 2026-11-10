@@ -1,12 +1,13 @@
-import type {IController, IFormController, IHttpResponse} from "angular";
-import {timApp} from "tim/app";
+import type {OnInit} from "@angular/core";
+import {Component, ViewChild} from "@angular/core";
+import {HttpClient} from "@angular/common/http";
+import {NgModel} from "@angular/forms";
+import moment from "moment";
 import {
     isManageResponse,
     showRenameDialog,
 } from "tim/document/editing/showRenameDialog";
 import {showMessageDialog} from "tim/ui/showMessageDialog";
-import * as snv from "tim/ui/shortNameValidator";
-import * as tem from "tim/ui/formErrorMessage";
 import type {IChangelogEntry} from "tim/document/editing/IChangelogEntry";
 import {
     updateTranslationData,
@@ -16,89 +17,89 @@ import type {IManageResponse} from "tim/document/editing/edittypes";
 import type {IGroup} from "tim/user/IUser";
 import {Users} from "tim/user/userService";
 import {manageglobals} from "tim/util/globals";
-import {$http} from "tim/util/ngimport";
-import {
-    capitalizeFirstLetter,
-    clone,
-    markAsUsed,
-    to,
-    to2,
-} from "tim/util/utils";
+import {capitalizeFirstLetter, clone, to2, toPromise} from "tim/util/utils";
 import type {
     IDocument,
     IFolder,
     IFullDocument,
-    IItem,
     IEditableTranslation,
     ILanguage,
     ITranslator,
 } from "tim/item/IItem";
 import {redirectToItem, getItemTypeName} from "tim/item/IItem";
-
-markAsUsed(snv, tem);
+import type {IAccessType} from "tim/item/access-role.service";
+import type {ReadonlyMoment} from "tim/util/readonlymoment";
+import {KEY_ENTER, KEY_S} from "tim/util/keycodes";
 
 export interface IAlias {
     name: string;
     location: string;
     path: string;
-    publicChanged: boolean;
-    public: boolean;
+    publicChanged?: boolean;
+    public?: boolean;
 }
 
-export class PermCtrl implements IController {
-    private wikiRoot: string;
-    private newTitle: string;
-    private newFolderName: string;
-    private hasMoreChangelog?: boolean;
-    private translations: IEditableTranslation[] = [];
-    private sourceLanguages: ILanguage[] = [];
-    private targetLanguages: ILanguage[] = [];
-    private documentLanguages: ILanguage[] = [];
-    private translators: ITranslator[] = [];
-    private newTranslation: {
+/**
+ * The manage view of a document or a folder.
+ */
+@Component({
+    selector: "tim-manage",
+    templateUrl: "./manage.component.html",
+    // The layout relies on the whitespace between the inline elements (e.g. buttons).
+    preserveWhitespaces: true,
+})
+export class ManageComponent implements OnInit {
+    wikiRoot: string;
+    newTitle: string;
+    newFolderName: string;
+    hasMoreChangelog?: boolean;
+    translations: IEditableTranslation[] = [];
+    sourceLanguages: ILanguage[] = [];
+    targetLanguages: ILanguage[] = [];
+    documentLanguages: ILanguage[] = [];
+    translators: ITranslator[] = [];
+    newTranslation: {
         language: string;
         title: string;
         translator: string;
     };
-    private mayTranslate = false;
-    private notManual = false;
-    private translatorAvailable = true;
-    private translationInProgress: boolean = false;
-    private deleteButtonText = "";
-    private errorMessage = "";
-    private whyCannotTranslate = "";
-    private availableTranslators: string[] = [];
-    private accessTypes: Array<unknown>; // TODO proper type
-    private orgs: IGroup[];
-    private item: IFullDocument | IFolder;
-    private newName?: string;
-    private oldFolderName?: string;
-    private oldName?: string;
-    private fulltext?: string;
-    private errors?: string;
-    private changelogLoading: boolean = false;
-    private newAlias: {location: string};
-    private copyParams: {copy: number};
-    private citeParams: {cite: number};
-    private aliases: IItem[] = [];
-    private oldTitle?: string;
-    private fileUploadError: string | undefined;
-    private tracWikiText: string = "";
-    private saving: boolean = false;
-    private readUpdating: boolean = false;
-    private file?: File;
-    private newAliasForm!: IFormController; // initialized in the template
-    private objName: string;
-    private progress?: number;
-    private result?: boolean;
+    mayTranslate = false;
+    notManual = false;
+    translatorAvailable = true;
+    translationInProgress: boolean = false;
+    deleteButtonText = "";
+    errorMessage = "";
+    whyCannotTranslate = "";
+    availableTranslators: string[] = [];
+    accessTypes: IAccessType[];
+    orgs: IGroup[];
+    item: IFullDocument | IFolder;
+    newName?: string;
+    oldFolderName?: string;
+    oldName?: string;
+    fulltext?: string;
+    errors?: string;
+    changelogLoading: boolean = false;
+    newAlias: Partial<IAlias> & {location: string};
+    copyParams: {copy: number};
+    aliases: IAlias[] = [];
+    oldTitle?: string;
+    tracWikiText: string = "";
+    showTracWiki = false;
+    saving: boolean = false;
+    readUpdating: boolean = false;
+    objName: string;
 
-    constructor() {
+    @ViewChild("newAliasLoc") private newAliasLoc?: NgModel;
+    @ViewChild("newAliasName") private newAliasName?: NgModel;
+
+    constructor(private http: HttpClient) {
         this.newTranslation = {
             language: "",
             title: "",
             translator: "Manual", // Default
         };
-        this.accessTypes = manageglobals().accessTypes;
+        this.accessTypes = manageglobals().accessTypes as IAccessType[];
         this.orgs = manageglobals().orgs;
         this.item = manageglobals().curr_item;
         this.objName = capitalizeFirstLetter(getItemTypeName(this.item));
@@ -111,11 +112,10 @@ export class PermCtrl implements IController {
         this.hasMoreChangelog = true;
         this.newTitle = this.item.title;
         this.copyParams = {copy: this.item.id};
-        this.citeParams = {cite: this.item.id};
         this.translations = [];
     }
 
-    async $onInit() {
+    async ngOnInit() {
         if (this.item.isFolder) {
             this.newName = this.item.name;
             this.newFolderName = this.item.location;
@@ -147,6 +147,38 @@ export class PermCtrl implements IController {
             this.translatorAvailable = false;
         }
         this.checkCannotTranslate();
+    }
+
+    /**
+     * The version history of the document.
+     */
+    get versions(): IChangelogEntry[] {
+        return this.item.isFolder ? [] : this.item.versions;
+    }
+
+    /**
+     * The id of the source document if the document is a translation.
+     */
+    get srcDocId(): number | undefined {
+        return this.item.isFolder ? undefined : this.item.src_docid;
+    }
+
+    formatTime(time: ReadonlyMoment | string) {
+        return moment(time as moment.MomentInput).format("DD.MM.YYYY HH:mm:ss");
+    }
+
+    /**
+     * The names of the owners (maintainers) of the translation.
+     */
+    ownerNames(tr: IEditableTranslation) {
+        return tr.owners.map((o) => o.name).join(", ");
+    }
+
+    /**
+     * Makes the string URL friendly.
+     */
+    escapePath(str: string | undefined) {
+        return encodeURIComponent(str ?? "").replace(/%2F/g, "/");
     }
 
     /**
@@ -187,42 +219,44 @@ export class PermCtrl implements IController {
         const d = this.itemAsDocument();
         const newLength = d.versions.length + 100;
         this.changelogLoading = true;
-        const r = await to(
-            $http.get<{versions: IChangelogEntry[]}>(
+        const r = await toPromise(
+            this.http.get<{versions: IChangelogEntry[]}>(
                 "/changelog/" + this.item.id + "/" + newLength
             )
         );
         this.changelogLoading = false;
         if (r.ok) {
-            d.versions = r.result.data.versions;
+            d.versions = r.result.versions;
             this.hasMoreChangelog = d.versions.length === newLength;
         } else {
-            await showMessageDialog(r.result.data.error);
+            await showMessageDialog(r.result.error.error);
         }
     }
 
     async showCompleteChangelog() {
         const d = this.itemAsDocument();
         this.changelogLoading = true;
-        const r = await to(
-            $http.get<{versions: IChangelogEntry[]}>(
+        const r = await toPromise(
+            this.http.get<{versions: IChangelogEntry[]}>(
                 "/changelog/" + this.item.id + "/" + "complete"
             )
         );
         if (r.ok) {
             this.changelogLoading = false;
-            d.versions = r.result.data.versions;
+            d.versions = r.result.versions;
             this.hasMoreChangelog = false;
         } else {
             this.changelogLoading = false;
-            await showMessageDialog(r.result.data.error);
+            await showMessageDialog(r.result.error.error);
         }
     }
 
     async getAliases() {
-        const r = await to($http.get<IItem[]>("/alias/" + this.item.id, {}));
+        const r = await toPromise(
+            this.http.get<IAlias[]>("/alias/" + this.item.id)
+        );
         if (r.ok) {
-            const data = r.result.data;
+            const data = r.result;
             if (
                 this.aliases &&
                 this.aliases.length > 0 &&
@@ -234,11 +268,12 @@ export class PermCtrl implements IController {
             } else {
                 this.aliases = data;
             }
-            // mark the form pristine; otherwise it will complain about required field unnecessarily
-            this.newAliasForm.$setPristine();
             this.newAlias = {location: this.item.location};
+            // mark the fields pristine; otherwise they will complain about required field unnecessarily
+            this.newAliasLoc?.control.markAsPristine();
+            this.newAliasName?.control.markAsPristine();
         } else {
-            await showMessageDialog(r.result.data.error);
+            await showMessageDialog(r.result.error.error);
         }
     }
 
@@ -247,14 +282,13 @@ export class PermCtrl implements IController {
             return [];
         }
 
-        const r = await to(
-            $http.get<IEditableTranslation[]>(
-                "/translations/" + this.item.id,
-                {}
+        const r = await toPromise(
+            this.http.get<IEditableTranslation[]>(
+                "/translations/" + this.item.id
             )
         );
         if (r.ok) {
-            const data = r.result.data;
+            const data = r.result;
             this.translations = [];
 
             for (const tr of data) {
@@ -267,7 +301,7 @@ export class PermCtrl implements IController {
             this.oldTitle = this.item.title;
         } else {
             await showMessageDialog(
-                `Error loading translations: ${r.result.data.error}`
+                `Error loading translations: ${r.result.error.error}`
             );
         }
 
@@ -280,8 +314,8 @@ export class PermCtrl implements IController {
 
     async updateTranslation(tr: IEditableTranslation) {
         const old_lang = tr.old_langid;
-        const r = await to(
-            $http.post("/translation/" + tr.id, {
+        const r = await toPromise(
+            this.http.post("/translation/" + tr.id, {
                 new_langid: tr.lang_id,
                 new_title: tr.title,
                 old_title: tr.old_title,
@@ -302,7 +336,7 @@ export class PermCtrl implements IController {
             }
         } else {
             tr.lang_id = old_lang;
-            await showMessageDialog(r.result.data.error);
+            await showMessageDialog(r.result.error.error);
         }
         this.checkTranslatability();
         this.checkCannotTranslate();
@@ -325,41 +359,44 @@ export class PermCtrl implements IController {
             await showMessageDialog("Title not provided.");
             return;
         }
-        const r = await to(
-            $http.put("/changeTitle/" + this.item.id, {
+        if (this.newTitle === this.item.title) {
+            return;
+        }
+        const r = await toPromise(
+            this.http.put("/changeTitle/" + this.item.id, {
                 new_title: this.newTitle,
             })
         );
         if (r.ok) {
             this.syncTitle(this.newTitle);
         } else {
-            await showMessageDialog(r.result.data.error);
+            await showMessageDialog(r.result.error.error);
         }
     }
 
-    async renameFolder(newName: string) {
-        const r = await to(
-            $http.put<{new_name: string}>("/rename/" + this.item.id, {
+    async renameFolder(newName: string | undefined) {
+        const r = await toPromise(
+            this.http.put<{new_name: string}>("/rename/" + this.item.id, {
                 new_name: this.oldFolderName + "/" + newName,
             })
         );
         if (r.ok) {
-            window.location.assign("/manage/" + r.result.data.new_name);
+            window.location.assign("/manage/" + r.result.new_name);
         } else {
-            await showMessageDialog(r.result.data.error);
+            await showMessageDialog(r.result.error.error);
         }
     }
 
     async moveFolder(newLocation: string) {
-        const r = await to(
-            $http.put<{new_name: string}>("/rename/" + this.item.id, {
+        const r = await toPromise(
+            this.http.put<{new_name: string}>("/rename/" + this.item.id, {
                 new_name: newLocation + "/" + this.oldName,
             })
         );
         if (r.ok) {
-            window.location.assign("/manage/" + r.result.data.new_name);
+            window.location.assign("/manage/" + r.result.new_name);
         } else {
-            await showMessageDialog(r.result.data.error);
+            await showMessageDialog(r.result.error.error);
         }
     }
 
@@ -367,49 +404,49 @@ export class PermCtrl implements IController {
         return (folder + "/" + name).replace(/(^\/+)|(\/+$)/, "");
     }
 
-    aliasPublicClicked(alias: IAlias) {
+    aliasPublicClicked(alias: Partial<IAlias>) {
         alias.public = !alias.public;
         alias.publicChanged = !alias.publicChanged;
     }
 
     aliasChanged(alias: IAlias) {
         return (
-            alias.publicChanged ||
+            !!alias.publicChanged ||
             alias.path !== this.combine(alias.location, alias.name)
         );
     }
 
-    async addAlias(newAlias: IAlias) {
+    async addAlias(newAlias: Partial<IAlias>) {
         const path = encodeURIComponent(
-            this.combine(newAlias.location || "", newAlias.name)
+            this.combine(newAlias.location ?? "", newAlias.name ?? "")
         );
-        const r = await to(
-            $http.put(`/alias/${this.item.id}/${path}`, {
+        const r = await toPromise(
+            this.http.put(`/alias/${this.item.id}/${path}`, {
                 public: newAlias.public,
             })
         );
         if (r.ok) {
             await this.getAliases();
         } else {
-            await showMessageDialog(r.result.data.error);
+            await showMessageDialog(r.result.error.error);
         }
     }
 
     async removeAlias(alias: IAlias) {
-        const r = await to(
-            $http.delete("/alias/" + encodeURIComponent(alias.path), {})
+        const r = await toPromise(
+            this.http.delete("/alias/" + encodeURIComponent(alias.path))
         );
         if (r.ok) {
             await this.getAliases();
         } else {
-            await showMessageDialog(r.result.data.error);
+            await showMessageDialog(r.result.error.error);
         }
     }
 
     async updateAlias(alias: IAlias, first: boolean) {
         const newAlias = this.combine(alias.location, alias.name);
-        const r = await to(
-            $http.post("/alias/" + encodeURIComponent(alias.path), {
+        const r = await toPromise(
+            this.http.post("/alias/" + encodeURIComponent(alias.path), {
                 new_name: newAlias,
                 public: alias.public,
             })
@@ -421,7 +458,7 @@ export class PermCtrl implements IController {
                 location.replace("/manage/" + newAlias);
             }
         } else {
-            await showMessageDialog(r.result.data.error);
+            await showMessageDialog(r.result.error.error);
         }
     }
 
@@ -453,7 +490,7 @@ export class PermCtrl implements IController {
                 }? Deletion cannot be undone!`
             )
         ) {
-            const r = await to($http.delete("/documents/" + id));
+            const r = await toPromise(this.http.delete("/documents/" + id));
             if (r.ok) {
                 if (!this.item.isFolder && deletingCurrentDoc) {
                     const originalDoc = this.item.path.substring(
@@ -466,7 +503,7 @@ export class PermCtrl implements IController {
                     location.replace(`/manage/${this.item.path}`);
                 }
             } else {
-                await showMessageDialog(r.result.data.error);
+                await showMessageDialog(r.result.error.error);
             }
         }
     }
@@ -477,28 +514,28 @@ export class PermCtrl implements IController {
                 `Are you sure you want to delete the folder ${this.item.path}?`
             )
         ) {
-            const r = await to($http.delete(`/folders/${this.item.id}`));
+            const r = await toPromise(
+                this.http.delete(`/folders/${this.item.id}`)
+            );
             if (r.ok) {
                 location.replace(`/view/${this.item.location}`);
             } else {
-                await showMessageDialog(r.result.data.error);
+                await showMessageDialog(r.result.error.error);
             }
         }
     }
 
-    async convertDocument(doc: string) {
+    async convertDocument() {
         if (!this.wikiRoot) {
             await showMessageDialog("Wiki root missing.");
             return;
         }
         let text = this.tracWikiText;
         const wikiSource = this.wikiRoot.replace("wiki", "browser");
-        // var text = this.fulltext;
         text = text.replace(/\[\[PageOutline\]\].*\n/g, ""); // remove contents
         text = text.replace(/ !([a-zA-Z])/g, " $1"); // remove cat !IsBig
         text = text.replace(/\r\n/g, "\n"); // change windows nl's
         text = text.replace(/{{{(.*?)}}}/g, "`$1`"); // change verbatim
-        // text = text.replace(/{{{\n(.*?)\n}}}/, "```\n$1\n```"); // change code blocks
         text = text.replace(
             /\n{{{#!comment\n((.|\s|\S)*?)\n}}}\n/g,
             "\n#- {.comment}\n$1\n#-\n"
@@ -509,64 +546,35 @@ export class PermCtrl implements IController {
         text = text.replace(/\n===\s+(.*?)\s+===.*\n/g, "\n#-\n### $1\n");
         text = text.replace(/\n==\s+(.*?)\s+==.*\n/g, "\n#-\n## $1\n");
         text = text.replace(/\n=\s+(.*?)\s+=.*\n/g, "\n#-\n# $1\n");
-        // text = text.replace(/^ \d+. ', r'1.');
         const lines = text.split("\n");
         for (let i = 0; i < lines.length; i++) {
             let line = lines[i];
-            if (true || line.lastIndexOf("    ", 0) !== 0) {
-                line = line.replace(
-                    /\[((https?|mms):\/\/[^\s\[\]]+)\s+([^\[\]]+)\]/g,
-                    "[$3]($1)"
-                ); // ordinary links
-                line = line.replace(
-                    /\[((https?|mms):\/\/[^\s\[\]]+)\s+(\[.*?\])\]/g,
-                    "[$3]($1)"
-                ); // links like [url [text]]
-                line = line.replace(
-                    /\[wiki:([^\s\[\]]+)\]/g,
-                    "[$1](" + (this.wikiRoot || "") + "$1)"
-                ); // [wiki:local] -> [local](URL)
-                line = line.replace(
-                    /\[wiki:([^\s\[\]]+)\s+([^\[\]]+)\]/g,
-                    "[$2](" + (this.wikiRoot || "") + "$1)"
-                ); // [wiki:local text] -> [text](URL)
-                line = line.replace(
-                    /\[source:([^\s\[\]]+)\s+([^\[\]]+)\]/g,
-                    "[$2](" + (wikiSource || "") + "$1)"
-                );
-                line = line.replace(/\!(([A-Z][a-z0-9]+){2,})/, "$1");
-                line = line.replace(/\'\'\'(.*?)\'\'\'/, "**$1**"); // bold
-                line = line.replace(/\'\'(.*?)\'\'/, "*$1*"); // italics
-            }
+            line = line.replace(
+                /\[((https?|mms):\/\/[^\s\[\]]+)\s+([^\[\]]+)\]/g,
+                "[$3]($1)"
+            ); // ordinary links
+            line = line.replace(
+                /\[((https?|mms):\/\/[^\s\[\]]+)\s+(\[.*?\])\]/g,
+                "[$3]($1)"
+            ); // links like [url [text]]
+            line = line.replace(
+                /\[wiki:([^\s\[\]]+)\]/g,
+                "[$1](" + this.wikiRoot + "$1)"
+            ); // [wiki:local] -> [local](URL)
+            line = line.replace(
+                /\[wiki:([^\s\[\]]+)\s+([^\[\]]+)\]/g,
+                "[$2](" + this.wikiRoot + "$1)"
+            ); // [wiki:local text] -> [text](URL)
+            line = line.replace(
+                /\[source:([^\s\[\]]+)\s+([^\[\]]+)\]/g,
+                "[$2](" + wikiSource + "$1)"
+            );
+            line = line.replace(/\!(([A-Z][a-z0-9]+){2,})/, "$1");
+            line = line.replace(/\'\'\'(.*?)\'\'\'/, "**$1**"); // bold
+            line = line.replace(/\'\'(.*?)\'\'/, "*$1*"); // italics
             lines[i] = line;
         }
         text = lines.join("\n");
-
-        /*
-
-         text = re.sub(r'(?m)^====\s+(.*?)\s+====.*$', r'#-\n#### \1', text)
-         text = re.sub(r'(?m)^===\s+(.*?)\s+===.*$', r'#-\n### \1', text)
-         text = re.sub(r'(?m)^==\s+(.*?)\s+==.*$', r'#-\n## \1', text)
-         text = re.sub(r'(?m)^=\s+(.*?)\s+=.*$', r'#-\n# \1', text)
-         #text = re.sub(r'^       * ', r'****', text)
-         #text = re.sub(r'^     * ', r'***', text)
-         #text = re.sub(r'^   * ', r'**', text)
-         #text = re.sub(r'^ * ', r'*', text)
-         text = re.sub(r'^ \d+. ', r'1.', text)
-
-         a = []
-         for line in text.split('\n'):
-         if True or not line.startswith('    '):
-         line = re.sub(r'\[(https?://[^\s\[\]]+)\s([^\[\]]+)\]', r'[\2](\1)', line)
-         line = re.sub(r'\[(wiki:[^\s\[\]]+)\s([^\[\]]+)\]', r'[\2](/\1/)', line)
-         line = re.sub(r'\!(([A-Z][a-z0-9]+){2,})', r'\1', line)
-         line = re.sub(r'\'\'\'(.*?)\'\'\'', r'*\1*', line)
-         line = re.sub(r'\'\'(.*?)\'\'', r'_\1_', line)
-         line = re.sub(r'\(/wiki:', r'(https://trac.cc.jyu.fi/projects/ohj2/wiki/', line)
-         a.append(line)
-         text = '\n'.join(a)
-         */
-        // this.tracWikiText = text;
         this.fulltext = text;
     }
 
@@ -591,6 +599,19 @@ export class PermCtrl implements IController {
         return this.item;
     }
 
+    /**
+     * Saves the document when Ctrl+S or Ctrl+Enter is pressed in the editor.
+     */
+    onEditorKeydown(event: KeyboardEvent) {
+        if (
+            event.ctrlKey &&
+            (event.which === KEY_ENTER || event.which === KEY_S)
+        ) {
+            void this.saveDocument();
+            event.preventDefault();
+        }
+    }
+
     async saveDocument() {
         const d = this.itemAsDocument();
         if (this.saving || !this.hasTextChanged()) {
@@ -598,18 +619,18 @@ export class PermCtrl implements IController {
         }
         this.errors = undefined;
         this.saving = true;
-        const r = await to<
-            IHttpResponse<IManageResponse>,
-            {data: {error: string; is_warning?: boolean}}
+        const r = await toPromise<
+            IManageResponse,
+            {error: {error: string; is_warning?: boolean}}
         >(
-            $http.post<IManageResponse>(`/update/${this.item.id}`, {
+            this.http.post<IManageResponse>(`/update/${this.item.id}`, {
                 fulltext: this.fulltext,
                 original: d.fulltext,
                 version: d.versions[0],
             })
         );
         if (r.ok) {
-            let data = r.result.data;
+            let data = r.result;
             if (data.duplicates.length > 0) {
                 const renameResult = await to2(
                     showRenameDialog({
@@ -624,7 +645,7 @@ export class PermCtrl implements IController {
             d.versions = data.versions;
             this.saving = false;
         } else {
-            const data = r.result.data;
+            const data = r.result.error;
             this.saving = false;
             if (data.is_warning) {
                 if (
@@ -644,8 +665,8 @@ export class PermCtrl implements IController {
     async saveDocumentWithWarnings() {
         const d = this.itemAsDocument();
         this.saving = true;
-        const r = await to(
-            $http.post<IManageResponse>("/update/" + this.item.id, {
+        const r = await toPromise(
+            this.http.post<IManageResponse>("/update/" + this.item.id, {
                 fulltext: this.fulltext,
                 ignore_warnings: true,
                 original: d.fulltext,
@@ -654,17 +675,17 @@ export class PermCtrl implements IController {
         );
         this.saving = false;
         if (r.ok) {
-            const data = r.result.data;
+            const data = r.result;
             this.updateFullText(data.fulltext);
             d.versions = data.versions;
         } else {
-            await showMessageDialog(r.result.data.error);
+            await showMessageDialog(r.result.error.error);
         }
     }
 
     async markAllAsRead() {
         this.readUpdating = true;
-        const r = await to($http.put("/read/" + this.item.id, {}));
+        const r = await toPromise(this.http.put("/read/" + this.item.id, {}));
         this.readUpdating = false;
         if (r.ok) {
             // nothing to do
@@ -701,8 +722,8 @@ export class PermCtrl implements IController {
             this.translationInProgress = true;
         }
 
-        const r = await to(
-            $http.post<IDocument>(
+        const r = await toPromise(
+            this.http.post<IDocument>(
                 `/translate/${this.item.id}/${this.newTranslation.language}/${this.newTranslation.translator}`,
                 {
                     doc_title: this.newTranslation.title,
@@ -710,16 +731,18 @@ export class PermCtrl implements IController {
             )
         );
         if (r.ok) {
-            const data = r.result.data;
+            const data = r.result;
             if (this.newTranslation.translator != "Manual") {
-                await $http.post(`/markTranslated/${data.id}`, {
-                    doc_id: data.id,
-                });
+                await toPromise(
+                    this.http.post(`/markTranslated/${data.id}`, {
+                        doc_id: data.id,
+                    })
+                );
             }
             redirectToItem(data);
         } else {
             this.translationInProgress = false;
-            await showMessageDialog(r.result.data.error);
+            await showMessageDialog(r.result.error.error);
         }
     }
 
@@ -762,7 +785,6 @@ export class PermCtrl implements IController {
      * Checks if the document can be translated automatically.
      * TODO: Change the value of target language dropdown to ILanguage object rather than just the code and
      * handle finding languages with .find or .includes or something?
-     * @returns Whether or not the document can be translated automatically with the selected translator
      */
     checkTranslatability() {
         let targetFound = false;
@@ -805,8 +827,3 @@ export class PermCtrl implements IController {
         );
     }
 }
-
-timApp.component("timManage", {
-    controller: PermCtrl,
-    templateUrl: "/static/templates/manage.html",
-});

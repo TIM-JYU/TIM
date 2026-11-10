@@ -1,5 +1,6 @@
-import type {IScope} from "angular";
-import angular from "angular";
+import {createComponentOnElement} from "tim/serverComponents";
+import {promiseHttp} from "tim/util/promiseHttp";
+import {refreshUI, runInAngularZone} from "tim/util/refresh";
 import $ from "jquery";
 import {Users} from "tim/user/userService";
 import type {IAnnotationBindings} from "tim/velp/annotation.component";
@@ -29,7 +30,6 @@ import {addElementToParagraphMargin} from "tim/document/parhelpers";
 import type {ViewCtrl} from "tim/document/viewctrl";
 import type {IItem} from "tim/item/IItem";
 import {documentglobals} from "tim/util/globals";
-import {$compile, $http, $rootScope} from "tim/util/ngimport";
 import {
     angularWait,
     checkIfElement,
@@ -38,7 +38,7 @@ import {
     to,
     truncate,
 } from "tim/util/utils";
-import type {VelpSelectionController} from "tim/velp/velpSelection";
+import type {VelpSelectionComponent} from "tim/velp/velp-selection.component";
 import type {
     IAnnotationCoordinate,
     IAnnotationInterval,
@@ -104,22 +104,20 @@ export class ReviewController {
     public velpMode: boolean;
     public teacherMode: boolean;
     public velps?: IVelpUI[];
-    private selectedArea?: Range;
-    private selectionIsDrawing = false; // whether the review area is for drawn annotations or not
+    selectedArea?: Range;
+    selectionIsDrawing = false; // whether the review area is for drawn annotations or not
     private selectedCanvas?: DrawCanvasComponent; // drawn annotation area
     private drawMinDimensions = 10; // minimum width/height for drawn velp. If less then add extra padding
-    private annotations: Annotation[];
-    private scope: IScope;
+    annotations: Annotation[];
     private velpBadge?: HTMLInputElement;
     private velpBadgePar?: ParContext;
-    private velpSelection?: VelpSelectionController; // initialized through onInit
+    private velpSelection?: VelpSelectionComponent; // initialized through onInit
     private lastOpenedAnnotation = 0;
     private docSettings: IDocSettings;
 
     public peerReviews: PeerReview[];
 
     constructor(public vctrl: ViewCtrl) {
-        this.scope = vctrl.scope;
         this.velpMode = documentglobals().velpMode;
         this.teacherMode = documentglobals().teacherMode;
         this.item = documentglobals().curr_item;
@@ -129,7 +127,7 @@ export class ReviewController {
         this.zIndex = 3;
     }
 
-    initVelpSelection(velpSelection: VelpSelectionController) {
+    initVelpSelection(velpSelection: VelpSelectionComponent) {
         this.velpSelection = velpSelection;
 
         document.addEventListener("selectionchange", () => {
@@ -148,7 +146,7 @@ export class ReviewController {
                         $(range.startContainer).parents(".par")[0] as Element
                     )
                 );
-                $rootScope.$applyAsync();
+                refreshUI();
             }
         });
     }
@@ -158,7 +156,7 @@ export class ReviewController {
      */
     async loadDocumentAnnotations() {
         const response = await to(
-            $http.get<{
+            promiseHttp.get<{
                 annotations: Record<string, unknown>[];
                 peer_reviews: PeerReview[];
             }>(`/${this.item.id}/get_annotations`, {
@@ -347,7 +345,7 @@ export class ReviewController {
             if (!isNaN(numAid)) {
                 const ann = this.vctrl.getAnnotation("m" + numAid);
                 if (ann?.annotation.answer) {
-                    angular.element(ele).remove();
+                    $(ele).remove();
                 }
             }
         }
@@ -498,7 +496,7 @@ export class ReviewController {
         if (canvas) {
             canvas.setPersistentDrawData(drawings);
         }
-        $rootScope.$applyAsync(); // TODO: run only if we are in Angular zone
+        refreshUI(); // TODO: run only if we are in Angular zone
     }
 
     /**
@@ -611,7 +609,7 @@ export class ReviewController {
             this.selectedArea = undefined;
             return false;
         }
-        $compile(element)(scope);
+        this.createAnnotationComponent(element, scope);
         return true;
     }
 
@@ -636,7 +634,7 @@ export class ReviewController {
         );
         element.appendChild(target);
         container.appendChild(element);
-        $compile(element)(scope);
+        this.createAnnotationComponent(element, scope);
         return element;
     }
 
@@ -663,7 +661,7 @@ export class ReviewController {
         );
         element.appendChild(text);
         addElementToParagraphMargin(el, element);
-        $compile(element)(scope);
+        this.createAnnotationComponent(element, scope);
     }
 
     /**
@@ -749,7 +747,7 @@ export class ReviewController {
             this.vctrl.getAnswerBrowser(tid)?.updateReviewers();
         }
         this.removeAnnotationElement(id);
-        await to($http.post("/invalidate_annotation", {id: id}));
+        await to(promiseHttp.post("/invalidate_annotation", {id: id}));
     }
 
     /**
@@ -1450,6 +1448,22 @@ export class ReviewController {
     }
 
     /**
+     * Creates the annotation component on the element that createPopOverElement returned.
+     * The element must already be in its place in the document.
+     */
+    private createAnnotationComponent(
+        element: Element,
+        bindings: IAnnotationBindings
+    ) {
+        runInAngularZone(() =>
+            createComponentOnElement(AnnotationComponent, element, {
+                ...bindings,
+            })
+        );
+        refreshUI();
+    }
+
+    /**
      * Creates the actual (pop over) annotation element.
      */
     createPopOverElement(
@@ -1468,10 +1482,7 @@ export class ReviewController {
                     ? this.getVelpById(annotation.velp)!.default_comment
                     : "",
         };
-        const scope = Object.assign(this.scope.$new(true), bindings);
-        for (const k of Object.keys(bindings)) {
-            element.setAttribute(`bind-${k}`, k);
-        }
+        const scope = bindings;
 
         // The getNodeNumbers method uses aid attribute, so we include that. Otherwise it's not needed.
         element.setAttribute("aid", annotation.id.toString());
@@ -1693,7 +1704,7 @@ export class ReviewController {
                     this.toggleAnnotationsInList(annCompsInCoord);
                 }
             }
-            this.scope.$digest();
+            refreshUI();
         }
     };
 
@@ -1735,7 +1746,7 @@ export class ReviewController {
             throw Error("Adding non-answer annotations is disabled in UI.");
         }
         const json = await to(
-            $http.post<Record<string, unknown>>("/add_annotation", {
+            promiseHttp.post<Record<string, unknown>>("/add_annotation", {
                 answer_id: newAnnotation.answer_id,
                 coord: coord,
                 doc_id: this.vctrl.item.id,

@@ -9,16 +9,14 @@ import {
     NgModule,
 } from "@angular/core";
 import {DomSanitizer} from "@angular/platform-browser";
-import {HttpClient, HttpClientModule} from "@angular/common/http";
+import {HttpClient, HttpClientModule, HttpHeaders} from "@angular/common/http";
 import {FormsModule} from "@angular/forms";
-import {$http, $sce} from "tim/util/ngimport";
 import {TimDefer} from "tim/util/timdefer";
 import type {MouseOrTouch} from "tim/util/utils";
 import {
     defaultTimeout,
     posToRelative,
     timeout,
-    to,
     touchEventToTouch,
     valueOr,
 } from "tim/util/utils";
@@ -1772,21 +1770,18 @@ export class ImageXComponent
                 drawings: this.drawing.getDrawing(),
             },
         };
-        const url = this.pluginMeta.getAnswerUrl();
-        const r = await to(
-            $http<{
+        const r = await this.postAnswer<{
+            error?: string;
+            web: {
                 error?: string;
-                web: {
-                    error?: string;
-                    result: string;
-                    tries: number;
-                    answer: IAnswerResponse;
-                };
-            }>({method: "PUT", url, data: params, timeout: defaultTimeout})
-        );
+                result: string;
+                tries: number;
+                answer: IAnswerResponse;
+            };
+        }>(params, new HttpHeaders({timeout: `${defaultTimeout}`}));
         this.isRunning = false;
         if (r.ok) {
-            const data = r.result.data;
+            const data = r.result;
             if (data.error?.includes("exceeded")) {
                 data.error = "";
             }
@@ -1823,7 +1818,8 @@ export class ImageXComponent
     }
 
     svgImageSnippet() {
-        return $sce.trustAsHtml(this.replyHTML);
+        // Angular sanitizes the value when it is bound to innerHtml.
+        return this.replyHTML;
     }
 
     videoPlay() {
@@ -1864,22 +1860,18 @@ export class ImageXComponent
         if (nosave) {
             params.input.nosave = true;
         }
-        const url = this.pluginMeta.getAnswerUrl();
-
-        const r = await to(
-            $http<{
-                web: {
-                    error?: string;
-                    result: string;
-                    tries: number;
-                    "-replyImage": string;
-                    "-replyHTML": string;
-                };
-            }>({method: "PUT", url, data: params, timeout: defaultTimeout})
-        );
+        const r = await this.postAnswer<{
+            web: {
+                error?: string;
+                result: string;
+                tries: number;
+                "-replyImage": string;
+                "-replyHTML": string;
+            };
+        }>(params, new HttpHeaders({timeout: `${defaultTimeout}`}));
         this.isRunning = false;
         if (r.ok) {
-            const data = r.result.data;
+            const data = r.result;
             this.error = data.web.error;
             this.result = data.web.result;
             this.tries = data.web.tries;

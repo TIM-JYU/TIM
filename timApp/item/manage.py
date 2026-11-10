@@ -79,7 +79,6 @@ from timApp.util.flask.requesthelper import (
 from timApp.util.flask.responsehelper import (
     json_response,
     ok_response,
-    get_grid_modules,
     safe_redirect,
 )
 from timApp.util.flask.typedblueprint import TypedBlueprint
@@ -130,8 +129,6 @@ def manage(path: str) -> Response | str:
         route="manage",
         translations=item.translations if not is_folder else None,
         item=item,
-        js=["angular-ui-grid"],
-        jsMods=get_grid_modules(),
         orgs=UserGroup.get_organizations(),
         access_types=run_sql(select(AccessTypeModel)).scalars().all(),
     )
@@ -595,7 +592,7 @@ def do_confirm_permission(
                 )
             except RouteException:
                 # TODO Do proper exception management here, user should have a list/dialog shown that specifies
-                #  which permissions were not set (see /static/scripts/tim/item/rightsEditor.ts)
+                #  which permissions were not set (see /static/scripts/tim/item/rights-editor.component.ts)
                 pass
 
     db.session.commit()

@@ -37,7 +37,7 @@ export function getDefaults<
 
 export class PluginMeta {
     constructor(
-        private readonly element: JQLite,
+        private readonly element: JQuery,
         private readonly preview = false,
         private readonly plugintype?: string,
         private readonly taskid?: string

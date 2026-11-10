@@ -97,10 +97,10 @@ def process_spelling_errors(s: str) -> SpellCheckResult:
                 word_occurrence_counts[w.word] = count
                 words.append(w)
                 se = bs.new_tag(
-                    "tim-spell-error", attrs={"bind-sugg": json.dumps(w.suggestions)}
+                    "tim-spell-error", attrs={"sugg": json.dumps(w.suggestions)}
                 )
                 if count > 1:
-                    se["bind-count"] = count
+                    se["count"] = count
                 se.string = w.word
                 parts.append(se)
                 has_errors = True

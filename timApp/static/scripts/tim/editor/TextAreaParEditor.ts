@@ -13,7 +13,6 @@
  */
 
 import {wrapText} from "tim/document/editing/utils";
-import {$log} from "tim/util/ngimport";
 import type {IEditorCallbacks, SelectionRange} from "tim/editor/BaseParEditor";
 import {
     BaseParEditor,
@@ -600,7 +599,7 @@ export class TextAreaParEditor extends BaseParEditor implements IEditor {
             return;
         }
         let character = $($event.target).text();
-        $log.info(char);
+        console.info(char);
         if (typeof char !== "undefined") {
             character = char;
         }

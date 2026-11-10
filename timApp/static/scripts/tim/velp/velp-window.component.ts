@@ -1,11 +1,20 @@
-import type {IController, IFormController, IScope} from "angular";
-import {timApp} from "tim/app";
+import type {DoCheck, OnInit} from "@angular/core";
+import {
+    Component,
+    ElementRef,
+    EventEmitter,
+    forwardRef,
+    Inject,
+    Input,
+    Output,
+} from "@angular/core";
+import type {NgForm} from "@angular/forms";
+import {HttpClient} from "@angular/common/http";
 import {ParCompiler} from "tim/editor/parCompiler";
 import type {ViewCtrl} from "tim/document/viewctrl";
-import {$http, $timeout} from "tim/util/ngimport";
-import type {Binding, Require} from "tim/util/utils";
-import {clone, to} from "tim/util/utils";
-import type {VelpSelectionController} from "tim/velp/velpSelection";
+import {vctrlInstance} from "tim/document/viewctrlinstance";
+import {clone, toPromise} from "tim/util/utils";
+import {VelpSelectionComponent} from "tim/velp/velp-selection.component";
 import type {
     ILabel,
     ILabelUI,
@@ -13,8 +22,8 @@ import type {
     IVelp,
     IVelpGroup,
     IVelpGroupUI,
-    IVelpUI,
 } from "tim/velp/velptypes";
+import {colorPalette, IVelpUI} from "tim/velp/velptypes";
 import {clamp} from "tim/util/math";
 
 /**
@@ -23,17 +32,6 @@ import {clamp} from "tim/util/math";
  * @author Seppo Tarvainen
  * @licence MIT
  */
-
-export const colorPalette = [
-    "blueviolet",
-    "darkcyan",
-    "orange",
-    "darkgray",
-    "cornflowerblue",
-    "coral",
-    "goldenrod",
-    "blue",
-];
 
 // TODO: add keyboard shortcuts to velps
 // TODO: add min and max values for points
@@ -47,36 +45,51 @@ interface IVelpOptionSetting {
     default: number;
 }
 
+let instanceCounter = 0;
+
 /**
- * Controller for velp Window
+ * A single velp in the velp menu. Shows the velp and lets the user edit it.
  */
-export class VelpWindowController implements IController {
-    static $inject = ["$scope", "$element"];
-    private onVelpSelect!: Binding<(params: {$VELP: IVelp}) => void, "&">;
+@Component({
+    selector: "velp-window",
+    // The layout relies on the whitespace between the inline elements.
+    preserveWhitespaces: true,
+    templateUrl: "./velp-window.component.html",
+})
+export class VelpWindowComponent implements OnInit, DoCheck {
+    @Output() velpSelect = new EventEmitter<IVelp>();
+    @Input() velp!: IVelpUI;
+    @Input() new = false;
+    @Input() velpGroups!: IVelpGroupUI[]; // all velpgroups, not just selected ones
+    @Input() labels!: ILabelUI[];
+    @Input() docId!: number;
+    @Input() teacherRight = false;
+    @Input() advancedOn = false;
+    @Input() index = 0;
     private velpLocal!: IVelp;
-    private velp!: Binding<IVelpUI, "<">;
-    private newLabel: INewLabel;
-    private labelToEdit: INewLabel;
-    private visibleOptions: IVelpOptionSetting;
-    private styleOptions: IVelpOptionSetting;
-    private settings: {
+    newLabel: INewLabel;
+    labelToEdit: INewLabel;
+    visibleOptions: IVelpOptionSetting;
+    styleOptions: IVelpOptionSetting;
+    settings: {
         teacherRightsError: string;
         labelContentError: string;
         velpGroupError: string;
         velpGroupWarning: string;
         velpContentError: string;
     };
-    private submitted: boolean;
-    private hasEditAccess: boolean;
-    private new!: Binding<boolean, "<">;
-    private velpGroups!: Binding<IVelpGroupUI[], "<">;
-    private velpSelection!: Require<VelpSelectionController>;
-    private labels!: Binding<ILabelUI[], "<">;
-    private docId!: Binding<number, "<">;
-    private teacherRight!: Binding<boolean, "<">;
+    hasEditAccess: boolean;
+    idSuffix = `-${instanceCounter++}`;
+    visibleToHelp = `Who can see the velp as a default?
+'Just me' means that the annotation is visible only to yourself.
+'Document owner' refers to the person or group who has been named as the document owner.
+'Teachers' refers to the users that have teacher access to this document.
+'Users with access' means that the annotation is visible to everyone who can view the assessed content.`;
     private vctrl!: ViewCtrl;
+    private wasEditing = false;
 
-    $onInit() {
+    ngOnInit() {
+        this.vctrl = vctrlInstance!;
         this.velpLocal = clone(this.velp);
 
         if (this.velp.visible_to == null) {
@@ -98,14 +111,31 @@ export class VelpWindowController implements IController {
                 (g) => (g.edit_access && this.isGroupInVelp(g)) || false
             );
         }
-        $timeout(() => {
-            this.scope.$evalAsync(() => {
-                ParCompiler.processAllMath(this.element.find(".velpContent"));
-            });
+        this.processMath();
+    }
+
+    ngDoCheck() {
+        const editing = !!this.velp.edit;
+        if (!editing && this.wasEditing) {
+            this.processMath();
+        }
+        this.wasEditing = editing;
+    }
+
+    private processMath() {
+        window.setTimeout(() => {
+            ParCompiler.processAllMath(
+                $(this.element.nativeElement).find(".velpContent")
+            );
         });
     }
 
-    constructor(private scope: IScope, private element: JQLite) {
+    constructor(
+        private element: ElementRef<HTMLElement>,
+        private http: HttpClient,
+        @Inject(forwardRef(() => VelpSelectionComponent))
+        private velpSelection: VelpSelectionComponent
+    ) {
         this.newLabel = {content: "", selected: true, valid: true, id: null};
         this.labelToEdit = {
             content: "",
@@ -142,20 +172,7 @@ export class VelpWindowController implements IController {
                 "All selected velp groups are hidden in the current area.",
             velpContentError: "Velp content too short",
         };
-        this.submitted = false;
         this.hasEditAccess = false;
-        scope.$watch(
-            () => this.velp.edit,
-            (newValue, oldValue) => {
-                if (!newValue && oldValue) {
-                    scope.$evalAsync(() => {
-                        ParCompiler.processAllMath(
-                            this.element.find(".velpContent")
-                        );
-                    });
-                }
-            }
-        );
     }
 
     saveButtonText() {
@@ -188,7 +205,7 @@ export class VelpWindowController implements IController {
             this.cancelEdit();
         } else {
             if (!this.new) {
-                this.element.addClass("velp-edit-available");
+                this.element.nativeElement.classList.add("velp-edit-available");
             }
 
             if (this.new) {
@@ -208,11 +225,11 @@ export class VelpWindowController implements IController {
      * Saves velp to database
      * @param form
      */
-    saveVelp(form: IFormController) {
-        if (!form.$valid) {
+    saveVelp(form: NgForm) {
+        if (!form.valid) {
             return;
         }
-        form.$setPristine();
+        form.form.markAsPristine();
         // this.submitted = true;
 
         if (this.new) {
@@ -229,9 +246,14 @@ export class VelpWindowController implements IController {
      * TODO: new velp reset does not work
      */
     cancelEdit() {
-        this.velp = clone(this.velpLocal);
+        // Restore the original values into the same object because the velp list refers to it.
+        const velp = this.velp as unknown as Record<string, unknown>;
+        for (const key of Object.keys(velp)) {
+            delete velp[key];
+        }
+        Object.assign(velp, clone(this.velpLocal));
         this.velp.edit = false;
-        this.element.removeClass("velp-edit-available");
+        this.element.nativeElement.classList.remove("velp-edit-available");
     }
 
     useVelp() {
@@ -239,7 +261,7 @@ export class VelpWindowController implements IController {
             this.velp.visible_to = this.setDefaultVisibility(
                 this.visibleOptions.default
             );
-            this.onVelpSelect({$VELP: this.velp});
+            this.velpSelect.emit(this.velp);
         }
     }
 
@@ -374,8 +396,8 @@ export class VelpWindowController implements IController {
             language_id: "FI", // TODO: Change to user language
         };
 
-        const json = await to(
-            $http.post<{id: number}>("/add_velp_label", data)
+        const json = await toPromise(
+            this.http.post<{id: number}>("/add_velp_label", data)
         );
         if (!json.ok) {
             return;
@@ -383,7 +405,7 @@ export class VelpWindowController implements IController {
         const labelToAdd = {
             ...data,
             selected: false,
-            id: json.result.data.id,
+            id: json.result.id,
         };
         this.resetNewLabel();
         this.labels.push(labelToAdd);
@@ -461,7 +483,7 @@ export class VelpWindowController implements IController {
             }
         }
 
-        $http.post("/update_velp_label", updatedLabel);
+        void toPromise(this.http.post("/update_velp_label", updatedLabel));
     }
 
     /**
@@ -494,8 +516,8 @@ export class VelpWindowController implements IController {
     }
 
     async updateVelpInDatabase() {
-        await to(
-            $http.post(
+        await toPromise(
+            this.http.post(
                 "/{0}/update_velp".replace("{0}", this.docId.toString()),
                 this.velp
             )
@@ -539,15 +561,15 @@ export class VelpWindowController implements IController {
             velp_groups: clone(this.velp.velp_groups),
             style: this.velp.style,
         };
-        const json = await to($http.post<number>("/add_velp", data));
+        const json = await toPromise(this.http.post<number>("/add_velp", data));
         if (!json.ok) {
             return;
         }
         const velpToAdd: IVelp = {
-            id: json.result.data,
+            id: json.result,
             ...data,
         };
-        velpToAdd.id = json.result.data;
+        velpToAdd.id = json.result;
         if (this.velpSelection.rctrl.velps != null) {
             this.velpSelection.rctrl.velps.push(velpToAdd);
         }
@@ -608,26 +630,3 @@ export class VelpWindowController implements IController {
         return this.velp.color;
     }
 }
-
-/**
- * Angular directive for velp selection
- */
-timApp.component("velpWindow", {
-    bindings: {
-        advancedOn: "=",
-        docId: "<",
-        index: "<",
-        labels: "=",
-        new: "<",
-        onVelpSelect: "&",
-        teacherRight: "<",
-        velp: "=",
-        velpGroups: "=", // all velpgroups, not just selected ones
-    },
-    require: {
-        velpSelection: "^velpSelection",
-        vctrl: "^timView",
-    },
-    controller: VelpWindowController,
-    templateUrl: "/static/templates/velpWindow.html",
-});

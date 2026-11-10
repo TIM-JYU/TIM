@@ -28,16 +28,10 @@
           "options": {
             "allowedCommonJsDependencies": [
               "ace-builds/webpack-resolver",
-              "angular",
-              "angular-diff-match-patch",
-              "angular-messages",
-              "angular-sanitize",
-              "angular-ui-bootstrap",
-              "angular-ui-grid",
+              "diff-match-patch",
               "bootstrap",
               "chart.js",
               "deep-equal",
-              "eonasdan-bootstrap-datetimepicker",
               "humanize-duration",
               "ifvisible.js",
               "jquery",
@@ -48,7 +42,6 @@
               "mathjax-full/js/input/tex",
               "mathjax-full/js/mathjax",
               "mathjax-full/js/output/svg",
-              "ng-file-upload",
               "ngstorage",
               "papaparse",
               "reveal.js",
@@ -109,7 +102,6 @@
               }
             ],
             "styles": [
-              "node_modules/angular-ui-grid/ui-grid.min.css",
               "node_modules/katex/dist/katex.min.css",
               "node_modules/mobile-drag-drop/default.css",
               "node_modules/ngx-bootstrap/datepicker/bs-datepicker.css"

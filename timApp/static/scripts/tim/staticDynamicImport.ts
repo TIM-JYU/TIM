@@ -1,7 +1,5 @@
 export function staticDynamicImport(s: string) {
     switch (s) {
-        case "angular-ui-grid":
-            return import("angular-ui-grid");
         case "/jsrunner/javascripts/build/jsrunner.js":
             return import(
                 "modules/jsrunner/client/javascripts/jsrunner-plugin.component"

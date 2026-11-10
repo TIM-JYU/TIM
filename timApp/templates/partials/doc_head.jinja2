@@ -29,7 +29,6 @@
 {% endif %}
 
 <script class="global-vars">
-    ANGULARMODULES.push(...{{ (jsMods or [])|tojson }});
     JSMODULES.push(...{{ (js or [])|tojson }});
 
     var noBrowser = {{ no_browser|tojson }};

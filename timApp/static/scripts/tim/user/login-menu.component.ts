@@ -1,6 +1,6 @@
 import {getURLParameter} from "tim/util/utils";
 import {inIframe} from "tim/plugin/util";
-import {$httpParamSerializer} from "tim/util/ngimport";
+import {serializeQueryParams} from "tim/util/http";
 import type {OnInit} from "@angular/core";
 import {Component} from "@angular/core";
 import {showLoginDialog} from "tim/user/showLoginDialog";
@@ -42,7 +42,7 @@ export class LoginMenuComponent implements OnInit {
             };
             window.open(
                 "/saml/sso?" +
-                    $httpParamSerializer({
+                    serializeQueryParams({
                         addUser: false,
                         entityID:
                             entities[hakaLogin] ??
@@ -50,7 +50,7 @@ export class LoginMenuComponent implements OnInit {
                         return_to:
                             document.location.origin +
                             "?" +
-                            $httpParamSerializer({
+                            serializeQueryParams({
                                 sendLoginSuccessMsg: true,
                             }),
                     })

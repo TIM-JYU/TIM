@@ -1,4 +1,3 @@
-import type {IController} from "angular";
 import {Component} from "@angular/core";
 import type {IBookmarkGroup} from "tim/bookmark/bookmark.service";
 import {showLoginDialog} from "tim/user/showLoginDialog";
@@ -7,8 +6,8 @@ import {showMessageDialog} from "tim/ui/showMessageDialog";
 import type {ICourseSettings} from "tim/item/IItem";
 import {Users} from "tim/user/userService";
 import {genericglobals} from "tim/util/globals";
-import {$http} from "tim/util/ngimport";
-import {to, to2} from "tim/util/utils";
+import {HttpClient} from "@angular/common/http";
+import {to2, toPromise} from "tim/util/utils";
 import type {IVisibilityVars} from "tim/timRoot";
 import {getVisibilityVars} from "tim/timRoot";
 
@@ -109,14 +108,14 @@ import {getVisibilityVars} from "tim/timRoot";
         </div>
     `,
 })
-export class FrontPageComponent implements IController {
+export class FrontPageComponent {
     creatingNew: boolean;
     private docListOpen: boolean;
     bookmarks?: IBookmarkGroup[]; // For My courses.
     settings = genericglobals().userPrefs;
     hideVars: IVisibilityVars = getVisibilityVars();
 
-    constructor() {
+    constructor(private http: HttpClient) {
         this.creatingNew = false;
         this.docListOpen = false;
         this.bookmarks = genericglobals().bookmarks ?? undefined;
@@ -153,13 +152,15 @@ export class FrontPageComponent implements IController {
      * Opens 'Available courses' dialog.
      */
     async openCourseListDialog() {
-        const r = await to($http.get<ICourseSettings>(`/courses/settings`));
+        const r = await toPromise(
+            this.http.get<ICourseSettings>(`/courses/settings`)
+        );
         if (r.ok) {
-            await to2(showCourseListDialog({settings: r.result.data}));
+            await to2(showCourseListDialog({settings: r.result}));
             return;
         }
         void showMessageDialog(
-            `Course settings not found: ${r.result.data.error}`
+            `Course settings not found: ${r.result.error.error}`
         );
     }
 

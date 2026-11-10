@@ -3,11 +3,14 @@
  */
 
 import {AngularDialogComponent} from "tim/ui/angulardialog/angular-dialog-component.directive";
+import {refreshUI} from "tim/util/refresh";
 import {Component, NgModule} from "@angular/core";
-import type {ISpellWordInfo, PareditorController} from "tim/editor/pareditor";
+import type {
+    ISpellWordInfo,
+    PareditorComponent,
+} from "tim/editor/pareditor.component";
 import {copyToClipboard} from "tim/util/utils";
 import {vctrlInstance} from "tim/document/viewctrlinstance";
-import {$rootScope} from "tim/util/ngimport";
 import {DialogModule} from "tim/ui/angulardialog/dialog.module";
 import {getCurrentEditor} from "tim/editor/editorScope";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
@@ -113,7 +116,7 @@ export class SpellErrorDialogComponent extends AngularDialogComponent<
 > {
     protected dialogName = "spellError";
     suggestions: string[] = [];
-    private pare!: PareditorController;
+    private pare!: PareditorComponent;
     private type!: SourceType;
     wordFindError = false;
     copied?: string;
@@ -134,7 +137,7 @@ export class SpellErrorDialogComponent extends AngularDialogComponent<
         }
         this.suggestions = this.data.info.suggestions;
         this.selectWord();
-        $rootScope.$applyAsync();
+        refreshUI();
     }
 
     async ngAfterViewInit() {

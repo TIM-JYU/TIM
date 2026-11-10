@@ -72,7 +72,7 @@ useCurrentUser: true
 
             velp_hider = self.find_element("velp-selection i.glyphicon-minus")
             velp_hider.click()
-            tu_2_selector = self.find_element('div[title = "Test user 2"]')
+            tu_2_selector = self.find_element('td[title = "Test user 2"]')
             tu_2_selector.click()
 
             check_field_content("a", "[tu1view]")

@@ -1,4 +1,4 @@
-import type {IScope} from "angular";
+import {promiseHttp} from "tim/util/promiseHttp";
 import type {MenuFunctionList} from "tim/document/viewutils";
 import {showMessageDialog} from "tim/ui/showMessageDialog";
 import type {UnbrokenSelection} from "tim/document/editing/unbrokenSelection";
@@ -11,7 +11,6 @@ import {
 } from "tim/document/structure/areaContext";
 import {Area} from "tim/document/structure/area";
 import {Users} from "tim/user/userService";
-import {$http} from "tim/util/ngimport";
 import {empty, to} from "tim/util/utils";
 import {getElementByParId} from "tim/document/parhelpers";
 import type {ViewCtrl} from "tim/document/viewctrl";
@@ -42,11 +41,9 @@ interface IClipBoardResponse {
 }
 
 export class ClipboardHandler {
-    public sc: IScope;
     public viewctrl: ViewCtrl;
 
-    constructor(sc: IScope, view: ViewCtrl) {
-        this.sc = sc;
+    constructor(view: ViewCtrl) {
         this.viewctrl = view;
     }
 
@@ -86,7 +83,7 @@ export class ClipboardHandler {
 
     async deleteFromSource(s: ParContext) {
         const r = await to(
-            $http.post<IClipBoardResponse>(
+            promiseHttp.post<IClipBoardResponse>(
                 "/clipboard/deletesrc/" + this.viewctrl.docId,
                 {}
             )
@@ -111,7 +108,7 @@ export class ClipboardHandler {
 
     async moveAbove(e: MouseEvent, parOrArea: ParContext) {
         const r = await to(
-            $http.post<IParResponse>(
+            promiseHttp.post<IParResponse>(
                 "/clipboard/paste/" + this.viewctrl.docId,
                 {
                     par_before: parOrArea.par.id,
@@ -132,7 +129,7 @@ export class ClipboardHandler {
 
     async moveBelow(e: MouseEvent, parOrArea: ParContext) {
         const r = await to(
-            $http.post<IParResponse>(
+            promiseHttp.post<IParResponse>(
                 "/clipboard/paste/" + this.viewctrl.docId,
                 {
                     par_after: parOrArea.par.id,
@@ -157,7 +154,7 @@ export class ClipboardHandler {
         asRef: boolean
     ) {
         const r = await to(
-            $http.post<IParResponse>(
+            promiseHttp.post<IParResponse>(
                 "/clipboard/paste/" + this.viewctrl.docId,
                 {
                     par_before: parOrArea ? parOrArea.originalPar.id : null,
@@ -183,7 +180,7 @@ export class ClipboardHandler {
 
     async pasteBelow(e: MouseEvent, parOrArea: ParContext, asRef: boolean) {
         const r = await to(
-            $http.post<IParResponse>(
+            promiseHttp.post<IParResponse>(
                 "/clipboard/paste/" + this.viewctrl.docId,
                 {
                     par_after: parOrArea.originalPar.id,
@@ -210,7 +207,7 @@ export class ClipboardHandler {
         }
 
         const r = await to(
-            $http.get<ClipboardMetaResponse>("/clipboardstatus", {})
+            promiseHttp.get<ClipboardMetaResponse>("/clipboardstatus", {})
         );
         if (!r.ok) {
             this.viewctrl.clipMeta.allowPasteContent = false;
@@ -312,7 +309,7 @@ export class ClipboardHandler {
         const docParId = [this.viewctrl.docId, par.originalPar.id];
 
         const r = await to(
-            $http.post<IClipBoardResponse>(
+            promiseHttp.post<IClipBoardResponse>(
                 "/clipboard/cut/" +
                     docParId[0] +
                     "/" +
@@ -338,7 +335,7 @@ export class ClipboardHandler {
     async copyPar(e: MouseEvent, par: ParContext) {
         const docParId = [par.par.docId, par.par.id];
         const r = await to(
-            $http.post(
+            promiseHttp.post(
                 "/clipboard/copy/" +
                     docParId[0] +
                     "/" +
@@ -361,7 +358,7 @@ export class ClipboardHandler {
 
         if (cut) {
             const r = await to(
-                $http.post<IClipBoardResponse>(
+                promiseHttp.post<IClipBoardResponse>(
                     `/clipboard/cut/${docId}/${areaStart}/${areaEnd}`,
                     {}
                 )
@@ -386,9 +383,12 @@ export class ClipboardHandler {
                 areaName = unb.start.par.parent.areaname;
             }
             const r = await to(
-                $http.post(`/clipboard/copy/${docId}/${areaStart}/${areaEnd}`, {
-                    area_name: areaName,
-                })
+                promiseHttp.post(
+                    `/clipboard/copy/${docId}/${areaStart}/${areaEnd}`,
+                    {
+                        area_name: areaName,
+                    }
+                )
             );
             if (!r.ok) {
                 await showMessageDialog(r.result.data.error);

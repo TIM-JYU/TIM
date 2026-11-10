@@ -221,7 +221,12 @@ export class AnswerToQuestionDialogComponent
     }
 
     showAnswers() {
-        void to2(showStatisticsDialog(this.question));
+        void to2(
+            showStatisticsDialog({
+                ...this.question,
+                isEnded: () => this.questionEnded,
+            })
+        );
     }
 
     reAsk() {

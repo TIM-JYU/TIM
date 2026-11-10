@@ -11,7 +11,7 @@ import {CommonDialogOptions} from "tim/answer/commondialogoptions";
 import type {ReadonlyMoment} from "tim/util/readonlymoment";
 import {maybeUndefined} from "tim/plugin/attributes";
 import {documentglobals} from "tim/util/globals";
-import {$httpParamSerializer} from "tim/util/ngimport";
+import {serializeQueryParams} from "tim/util/http";
 import {TimStorage, toPromise} from "tim/util/utils";
 import {CommonModule} from "@angular/common";
 
@@ -443,7 +443,7 @@ export class AllAnswersDialogComponent extends AngularDialogComponent<
             toSerialize.salt = undefined;
         }
         window.open(
-            this.data.url + "?" + $httpParamSerializer(toSerialize),
+            this.data.url + "?" + serializeQueryParams(toSerialize),
             "_blank"
         );
         this.close();

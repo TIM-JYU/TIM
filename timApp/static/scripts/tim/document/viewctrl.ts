@@ -1,6 +1,9 @@
-import type {IController, IHttpResponse, IPromise, IScope} from "angular";
+import type {IHttpResponse} from "tim/util/promiseHttp";
+import {promiseHttp} from "tim/util/promiseHttp";
+import {onRefreshUI, runInAngularZone, uiTimeout} from "tim/util/refresh";
+import {createComponentOnElement} from "tim/serverComponents";
+import {VelpSelectionComponent} from "tim/velp/velp-selection.component";
 import $ from "jquery";
-import {timApp} from "tim/app";
 import {setActiveDocument} from "tim/document/activedocument";
 import {AreaHandler} from "tim/document/areas";
 import {TimDocument} from "tim/document/timDocument";
@@ -42,12 +45,12 @@ import {
     createParContext,
     getParContainerElem,
 } from "tim/document/structure/create";
-import type {UserListController} from "tim/answer/userlistController";
+import type {UserListComponent} from "tim/answer/user-list.component";
 import type {AnswerBrowserComponent} from "tim/answer/answer-browser.component";
 import type {PluginLoaderComponent} from "tim/plugin/plugin-loader.component";
 import type {IAnswer} from "tim/answer/IAnswer";
 import type {IPluginInfoResponse} from "tim/editor/parCompiler";
-import {ParCompiler} from "tim/editor/parCompiler";
+import {activateHtml, ParCompiler} from "tim/editor/parCompiler";
 import type {IDocument} from "tim/item/IItem";
 import {LectureController} from "tim/lecture/lectureController";
 import type {
@@ -64,7 +67,6 @@ import type {IUser, IUserListEntry} from "tim/user/IUser";
 import {Users} from "tim/user/userService";
 import {widenFields} from "tim/util/common";
 import {documentglobals, genericglobals} from "tim/util/globals";
-import {$compile, $http, $interval, $timeout} from "tim/util/ngimport";
 import type {AnnotationComponent} from "tim/velp/annotation.component";
 import {ReviewController} from "tim/velp/reviewController";
 import {
@@ -231,7 +233,7 @@ export type EventListeners = {
     docViewInfoUpdate: (info: IDocumentViewInfoStatus) => void;
 };
 
-export class ViewCtrl implements IController {
+export class ViewCtrl {
     private hideVars: IVisibilityVars = getVisibilityVars();
     notification: string = "";
     private videoElements = new Map<string, HTMLVideoElement>();
@@ -242,13 +244,10 @@ export class ViewCtrl implements IController {
     };
     public par: JQuery | undefined;
 
-    static $inject = ["$scope"];
-
     public item: IDocument;
     public docId: number;
 
     public groups?: [string];
-    public scope: IScope;
     public noBrowser: boolean;
     public docVersion: [number, number];
     private startIndex: number;
@@ -278,7 +277,7 @@ export class ViewCtrl implements IController {
     private pendingUpdates: PendingCollection = new Map<string, string>();
     private document?: TimDocument;
     public selectedUser: IUser;
-    public userList?: UserListController;
+    public userList?: UserListComponent;
     public editing: boolean = false;
     public defaultActionStorage = new TimStorage(
         "defAction",
@@ -327,7 +326,7 @@ export class ViewCtrl implements IController {
 
     private editMenuButtonChecked = false;
 
-    constructor(sc: IScope) {
+    constructor() {
         timLogTime("ViewCtrl start", "view");
         const dg = documentglobals();
         this.noBrowser = dg.noBrowser;
@@ -339,7 +338,6 @@ export class ViewCtrl implements IController {
         this.groups = dg.groups;
         this.teacherMode = dg.teacherMode;
         this.velpMode = dg.velpMode;
-        this.scope = sc;
 
         if (Users.isInAnswerReview) {
             document.querySelector("body")?.classList.add("answer-review-mode");
@@ -368,12 +366,12 @@ export class ViewCtrl implements IController {
         });
 
         this.lectureCtrl = LectureController.createAndInit(this);
-        this.questionHandler = new QuestionHandler(sc, this);
-        this.areaHandler = new AreaHandler(sc, this);
-        this.clipboardHandler = new ClipboardHandler(sc, this);
-        this.editingHandler = new EditingHandler(sc, this);
-        this.notesHandler = new NotesHandler(sc, this);
-        this.parmenuHandler = new ParmenuHandler(sc, this);
+        this.questionHandler = new QuestionHandler(this);
+        this.areaHandler = new AreaHandler(this);
+        this.clipboardHandler = new ClipboardHandler(this);
+        this.editingHandler = new EditingHandler(this);
+        this.notesHandler = new NotesHandler(this);
+        this.parmenuHandler = new ParmenuHandler(this);
         this.viewRangeInfo = new ViewRangeInfo(this);
         if (!this.isShowSlideView()) {
             initReadings(this.item);
@@ -507,7 +505,9 @@ export class ViewCtrl implements IController {
     }
 
     private async pullLatestTaskSummary() {
-        const r = await to($http.get<string>(`/taskSummary/${this.docId}`));
+        const r = await to(
+            promiseHttp.get<string>(`/taskSummary/${this.docId}`)
+        );
         if (r.ok) {
             const data = r.result.data;
             const parsed = new DOMParser().parseFromString(data, "text/html");
@@ -541,11 +541,14 @@ export class ViewCtrl implements IController {
                 IHttpResponse<IDocumentViewInfoStatus>,
                 {data: IDocumentViewInfoStatus; status?: number}
             >(
-                $http.get<IDocumentViewInfoStatus>(`/docViewInfo/${docPath}`, {
-                    params: {
-                        require_valid_session: false,
-                    },
-                })
+                promiseHttp.get<IDocumentViewInfoStatus>(
+                    `/docViewInfo/${docPath}`,
+                    {
+                        params: {
+                            require_valid_session: false,
+                        },
+                    }
+                )
             );
 
             // docViewInfo returns 403 to signal missing access, but still returns the info
@@ -553,7 +556,7 @@ export class ViewCtrl implements IController {
                 this.emit("docViewInfoUpdate", r.result.data);
             }
 
-            await $timeout(
+            await uiTimeout(
                 pollRateMs + (Math.random() - 0.5) * pollRateJitterMs
             );
         }
@@ -728,15 +731,14 @@ export class ViewCtrl implements IController {
     }
 
     startLiveUpdates() {
-        const sc = this.scope;
         const origLiveUpdates = this.liveUpdates;
         if (!origLiveUpdates) {
             return;
         }
-        let stop: IPromise<unknown> | undefined;
-        stop = $interval(async () => {
+        let stop: number | undefined;
+        stop = window.setInterval(async () => {
             const r = await to(
-                $http.get<{
+                promiseHttp.get<{
                     version: [number, number];
                     diff: DiffResult[];
                     live: number;
@@ -756,14 +758,14 @@ export class ViewCtrl implements IController {
                     // Pause live updates for now
                     await timeout(Math.max(1000 * this.liveUpdates, 1000) / 2);
                 }
-                const _ = await ParCompiler.compileAndReplace(e, d.content, sc);
+                const _ = await ParCompiler.compileAndReplace(e, d.content);
             };
             const afterFn = async (d: DiffResult, parId: string) => {
                 const e = getElementByParId(parId);
-                const _ = await ParCompiler.compileAndAfter(e, d.content, sc);
+                const _ = await ParCompiler.compileAndAfter(e, d.content);
             };
             const beforeFn = async (d: DiffResult, e: JQuery) => {
-                const _ = await ParCompiler.compileAndBefore(e, d.content, sc);
+                const _ = await ParCompiler.compileAndBefore(e, d.content);
             };
             for (const d of response.data.diff) {
                 if (d.type === "delete") {
@@ -800,21 +802,83 @@ export class ViewCtrl implements IController {
                     replaceFn(d, d.id);
                 }
             }
-            $timeout(() => {
+            uiTimeout(() => {
                 this.document!.rebuildSections();
                 this.processAreaVisibility();
             }, 1000);
             if (this.liveUpdates != origLiveUpdates) {
                 // if value hase changes, stop and start new poll
                 if (stop) {
-                    $interval.cancel(stop);
+                    window.clearInterval(stop);
                     stop = undefined;
                 }
-                $timeout(() => {
+                uiTimeout(() => {
                     this.startLiveUpdates();
                 }, 100);
             }
         }, Math.max(1000 * this.liveUpdates, 1000));
+    }
+
+    private lastWatchedState?: string;
+
+    /**
+     * Updates the things that depend on the editing state. Called on every view refresh (see onRefreshUI).
+     */
+    private checkEditStateChanges() {
+        const state = JSON.stringify([
+            this.lectureCtrl.lectureSettings.lectureMode,
+            this.editing,
+            this.getEditMode(),
+            this.getAllowMove(),
+        ]);
+        if (state === this.lastWatchedState) {
+            return;
+        }
+        this.lastWatchedState = state;
+        if (this.popupmenu && this.parmenuHandler.currCtx) {
+            this.popupmenu.updateAttrs(
+                this.parmenuHandler.getPopupAttrs(this.parmenuHandler.currCtx)
+            );
+        }
+        if (this.editing) {
+            this.notification = "Editor is already open.";
+        } else {
+            this.notification = "";
+        }
+    }
+
+    private velpSelectionElement?: HTMLElement;
+    private lastEmptyDocument?: boolean;
+
+    /**
+     * Updates the parts of the page that the page template leaves for the view controller:
+     * the velp menu, the elements that are only shown for an empty document and the "add paragraph" area.
+     * Called on every view refresh (see onRefreshUI).
+     */
+    private updatePageElements() {
+        const container = document.getElementById("velpSelectionContainer");
+        const showVelps = this.showVelpSelection();
+        if (showVelps && !this.velpSelectionElement && container) {
+            const el = document.createElement("velp-selection");
+            container.appendChild(el);
+            this.velpSelectionElement = el;
+            runInAngularZone(() =>
+                createComponentOnElement(VelpSelectionComponent, el)
+            );
+        } else if (!showVelps && this.velpSelectionElement) {
+            // The component is destroyed when its element is removed.
+            this.velpSelectionElement.remove();
+            this.velpSelectionElement = undefined;
+        }
+
+        if (this.document) {
+            const empty = this.isEmptyDocument();
+            if (empty !== this.lastEmptyDocument) {
+                this.lastEmptyDocument = empty;
+                $(".empty-document-only").toggle(empty);
+            }
+        }
+        $(".addBottomContainer").toggleClass("height-35", this.editing);
     }
 
     $onInit() {
@@ -822,28 +886,11 @@ export class ViewCtrl implements IController {
         if (documentglobals().show_unpublished_bg) {
             document.body.classList.add("bg-unpublished");
         }
-        this.scope.$watchGroup(
-            [
-                () => this.lectureCtrl.lectureSettings.lectureMode,
-                () => this.editing,
-                () => this.getEditMode(),
-                () => this.getAllowMove(),
-            ],
-            (newValues, oldValues, scope) => {
-                if (this.popupmenu && this.parmenuHandler.currCtx) {
-                    this.popupmenu.updateAttrs(
-                        this.parmenuHandler.getPopupAttrs(
-                            this.parmenuHandler.currCtx
-                        )
-                    );
-                }
-                if (this.editing) {
-                    this.notification = "Editor is already open.";
-                } else {
-                    this.notification = "";
-                }
-            }
-        );
+        this.checkEditStateChanges();
+        onRefreshUI(() => {
+            this.checkEditStateChanges();
+            this.updatePageElements();
+        });
         this.reviewCtrl.loadDocumentAnnotations();
 
         // TODO: Inserting help par is currently independent of hideVars.editLine.
@@ -1473,8 +1520,9 @@ export class ViewCtrl implements IController {
         formAnswerBrowsers: Map<DocIdDotName, AnswerBrowserComponent>,
         user: IUser
     ) {
+        const forSelectedUser = user.id === this.selectedUser.id;
         const r = await to(
-            $http.post<{
+            promiseHttp.post<{
                 answers: Record<string, IAnswer | undefined>;
                 userId: number;
             }>("/userAnswersForTasks", {
@@ -1489,6 +1537,11 @@ export class ViewCtrl implements IController {
             return;
         }
         const answerResponse = r.result;
+        // The selected user may have been changed again while the request was in progress;
+        // the answers of the previous user must not replace the ones of the current user.
+        if (forSelectedUser && this.selectedUser.id !== user.id) {
+            return;
+        }
         if (answerResponse.data.userId == user.id) {
             for (const fab of formAnswerBrowsers.values()) {
                 // Note: here docTask() is correct, not docTaskField().
@@ -1603,7 +1656,7 @@ export class ViewCtrl implements IController {
 
     private async updateDocumentImpl() {
         const response = await to(
-            $http.get<{changed_pars: Record<string, string>}>(
+            promiseHttp.get<{changed_pars: Record<string, string>}>(
                 `/getUpdatedPars/${this.docId}`,
                 {
                     params: {
@@ -1678,8 +1731,8 @@ export class ViewCtrl implements IController {
             const par = getElementByParId(key);
             const n = $(val);
             par.replaceWith(n);
-            const compiled = $($compile(n)(this.scope));
-            ParCompiler.processAllMathDelayed(compiled);
+            activateHtml(n);
+            ParCompiler.processAllMathDelayed(n);
         }
         this.document!.rebuildSections();
         this.pendingUpdates.clear();
@@ -2012,9 +2065,3 @@ class EntityRegistry<K, V> {
         return value.promise;
     }
 }
-
-timApp.component("timView", {
-    controller: ViewCtrl,
-    template: "<div ng-transclude></div>",
-    transclude: true,
-});

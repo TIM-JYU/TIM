@@ -11,8 +11,8 @@
 
 import type {ILanguage, ITranslator} from "tim/item/IItem";
 import type {Result} from "tim/util/utils";
-import {to} from "tim/util/utils";
-import {$http} from "tim/util/ngimport";
+import {toPromiseAndRefresh} from "tim/util/utils";
+import {getHttpClient} from "tim/util/http";
 
 type SupportedLanguagesAndTranslators = {
     source: ILanguage[];
@@ -44,15 +44,19 @@ async function fetchData(
 ) {
     let sources;
     if (post) {
-        sources = await to($http.post<ILanguage[]>(url, data));
+        sources = await toPromiseAndRefresh(
+            getHttpClient().post<ILanguage[]>(url, data)
+        );
     } else {
-        sources = await to($http.get<ILanguage[]>(url));
+        sources = await toPromiseAndRefresh(
+            getHttpClient().get<ILanguage[]>(url)
+        );
     }
     if (sources.ok) {
-        list.push(...sources.result.data);
+        list.push(...sources.result);
         return "";
     } else {
-        return sources.result.data.error;
+        return sources.result.error.error;
     }
 }
 
@@ -112,9 +116,11 @@ export async function listTranslators(
     includeManual: boolean
 ): Promise<Result<ITranslator[], string>> {
     const translators = [];
-    const sources = await to($http.get<string[]>("/translations/translators"));
+    const sources = await toPromiseAndRefresh(
+        getHttpClient().get<string[]>("/translations/translators")
+    );
     if (sources.ok) {
-        for (const translator of sources.result.data) {
+        for (const translator of sources.result) {
             if (translator == "Manual" && !includeManual) {
                 continue;
             }
@@ -130,7 +136,7 @@ export async function listTranslators(
         }
         return {
             ok: false,
-            result: sources.result.data.error,
+            result: sources.result.error.error,
         };
     }
 }
@@ -144,14 +150,14 @@ export async function availableTranslators(
     includeManual: boolean
 ): Promise<Result<string[], string>> {
     const translators: string[] = [];
-    const sources = await to(
-        $http.get<string[]>("/translations/myTranslators")
+    const sources = await toPromiseAndRefresh(
+        getHttpClient().get<string[]>("/translations/myTranslators")
     );
     if (includeManual) {
         translators.push("Manual");
     }
     if (sources.ok) {
-        for (const translator of sources.result.data) {
+        for (const translator of sources.result) {
             translators.push(translator);
         }
         return {
@@ -161,7 +167,7 @@ export async function availableTranslators(
     } else {
         return {
             ok: false,
-            result: sources.result.data.error,
+            result: sources.result.error.error,
         };
     }
 }

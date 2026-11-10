@@ -1,10 +1,10 @@
 import type {Moment} from "moment";
 import moment from "moment";
-import {to} from "tim/util/utils";
+import {toPromiseAndRefresh} from "tim/util/utils";
 import type {IChangelogEntry} from "tim/document/editing/IChangelogEntry";
 import type {IRights} from "tim/user/IRights";
 import type {IGroup} from "tim/user/IUser";
-import {$http} from "tim/util/ngimport";
+import {getHttpClient} from "tim/util/http";
 
 export interface IDocument extends IItem {
     isFolder: false;
@@ -74,11 +74,13 @@ export function isTaggedItem(item: IItem): item is ITaggedItem {
 }
 
 export async function getItem(itemId: number) {
-    const i = await to($http.get<IItem>(`/items/${itemId}`));
+    const i = await toPromiseAndRefresh(
+        getHttpClient().get<IItem>(`/items/${itemId}`)
+    );
     if (!i.ok) {
         return;
     }
-    return i.result.data;
+    return i.result;
 }
 
 /**

@@ -1,6 +1,6 @@
 import type {IParResponse} from "tim/document/editing/edittypes";
-import {to} from "tim/util/utils";
-import {$http} from "tim/util/ngimport";
+import {toPromiseAndRefresh} from "tim/util/utils";
+import {getHttpClient, withQueryParams} from "tim/util/http";
 import type {
     IAskedQuestion,
     IQuestionParagraph,
@@ -13,33 +13,33 @@ export async function fetchQuestion(
     parId: string,
     edit: boolean = true
 ): Promise<IQuestionParagraph> {
-    const response = await to(
-        $http<IQuestionParagraph>({
-            url: "/getQuestionByParId",
-            method: "GET",
-            params: {par_id: parId, doc_id: docId, edit},
-        })
+    const response = await toPromiseAndRefresh(
+        getHttpClient().get<IQuestionParagraph>(
+            withQueryParams("/getQuestionByParId", {
+                par_id: parId,
+                doc_id: docId,
+                edit,
+            })
+        )
     );
     if (!response.ok) {
         throw Error("getQuestionByParId failed");
     }
-    return response.result.data;
+    return response.result;
 }
 
 export async function fetchAskedQuestion(
     askedId: number
 ): Promise<IAskedQuestion> {
-    const response = await to(
-        $http<IAskedQuestion>({
-            url: "/getAskedQuestionById",
-            method: "GET",
-            params: {asked_id: askedId},
-        })
+    const response = await toPromiseAndRefresh(
+        getHttpClient().get<IAskedQuestion>(
+            withQueryParams("/getAskedQuestionById", {asked_id: askedId})
+        )
     );
     if (!response.ok) {
         throw Error("getQuestionByParId failed");
     }
-    return response.result.data;
+    return response.result;
 }
 
 export async function deleteQuestionWithConfirm(
@@ -50,13 +50,15 @@ export async function deleteQuestionWithConfirm(
         "Are you sure you want to delete this question?"
     );
     if (confirmDi) {
-        const response = await to(
-            $http.post<IParResponse>(`/deleteParagraph/${docId}`, {par: parId})
+        const response = await toPromiseAndRefresh(
+            getHttpClient().post<IParResponse>(`/deleteParagraph/${docId}`, {
+                par: parId,
+            })
         );
         if (!response.ok) {
             throw Error("getQuestionByParId failed");
         }
-        return response.result.data;
+        return response.result;
     }
     return null;
 }

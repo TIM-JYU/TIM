@@ -21,14 +21,38 @@
  * @date 9.2.2015
  */
 
-import type {IScope} from "angular";
-import angular from "angular";
+import type {AfterViewInit, DoCheck, OnDestroy, OnInit} from "@angular/core";
+import {
+    Component,
+    ElementRef,
+    EventEmitter,
+    Input,
+    NgModule,
+    Output,
+    ViewChild,
+} from "@angular/core";
+import {CommonModule} from "@angular/common";
+import {FormsModule} from "@angular/forms";
+import type {HttpErrorResponse} from "@angular/common/http";
+import {HttpClient, HttpEventType} from "@angular/common/http";
+import type {SafeHtml} from "@angular/platform-browser";
+import {DomSanitizer} from "@angular/platform-browser";
+import {TabsModule} from "ngx-bootstrap/tabs";
+import {BsDropdownModule} from "ngx-bootstrap/dropdown";
+import DiffMatchPatch from "diff-match-patch";
 import * as t from "io-ts";
 import $ from "jquery";
 import rangyinputs from "rangyinputs";
-import {setCurrentEditor} from "tim/editor/editorScope";
-import {markAsUsed, TimStorage, to, to2} from "tim/util/utils";
-import {DialogController} from "tim/ui/dialogController";
+import {getCurrentEditor, setCurrentEditor} from "tim/editor/editorScope";
+import {markAsUsed, timeout, TimStorage, to2, toPromise} from "tim/util/utils";
+import {TimDefer} from "tim/util/timdefer";
+import {TimUtilityModule} from "tim/ui/tim-utility.module";
+import {PurifyModule} from "tim/util/purify.module";
+import {DraggableModule} from "tim/ui/draggable.directive";
+import {DraggableController} from "tim/ui/draggable";
+import {VisibilityFix} from "tim/ui/draggable";
+import {KEY_ESC} from "tim/util/keycodes";
+import {IDialogOptions} from "tim/ui/angulardialog/angular-dialog-component.directive";
 import {showRestampDialog} from "tim/editor/showRestampDialog";
 import {showMessageDialog} from "tim/ui/showMessageDialog";
 import {
@@ -46,17 +70,8 @@ import type {IExtraData, ITags} from "tim/document/editing/edittypes";
 import type {IDocSettings, MeetingDateEntry} from "tim/document/IDocSettings";
 import {getCitePar} from "tim/document/parhelpers";
 import type {ViewCtrl} from "tim/document/viewctrl";
-import {registerDialogComponentForModule} from "tim/ui/dialog";
 import type {IMeetingMemoSettings} from "tim/util/globals";
 import {documentglobals, genericglobals} from "tim/util/globals";
-import {
-    $compile,
-    $http,
-    $injector,
-    $sce,
-    $timeout,
-    $upload,
-} from "tim/util/ngimport";
 import DOMPurify from "dompurify";
 import {AceParEditor} from "tim/editor/AceParEditor";
 import type {SelectionRange} from "tim/editor/BaseParEditor";
@@ -69,6 +84,7 @@ import type {FormulaEvent} from "../../../../modules/cs/js/editor/math-editor/sy
 import {selectFormulaFromPreview} from "../../../../modules/cs/js/editor/math-editor/formula-utils";
 import type {ITemplateButton} from "../../../../modules/cs/js/csPlugin";
 import {createTemplateButtons} from "../../../../modules/cs/js/csPlugin";
+import {EditorModule} from "../../../../modules/cs/js/editor/module";
 
 markAsUsed(rangyinputs);
 
@@ -230,25 +246,45 @@ class DocumentImportHelp {
     images: string = $localize`Images embedded in the document are automatically uploaded. You will find the appropriate image references at the end of the imported content.`;
 }
 
-export class PareditorController extends DialogController<
-    {params: IEditorParams},
-    IEditorResult
-> {
-    static component = "pareditor";
-    static $inject = ["$element", "$scope"] as const;
-    private spellcheck = false;
-    private deleting = false;
-    private editor?: TextAreaParEditor | AceParEditor; // $onInit
-    private file?: File & {progress?: number; error?: string};
-    private isIE: boolean = false;
-    private oldmeta?: HTMLMetaElement;
-    private wrap!: {n: number; auto: boolean}; // $onInit
-    private outofdate: boolean;
-    private parCount: number;
-    private proeditor!: boolean; // $onInit
-    private saving: boolean = false;
-    private scrollPos?: number;
-    private storage!: {
+interface IDiffPart {
+    op: number;
+    text: string;
+}
+
+type UploadFile = File & {progress?: number; error?: string};
+
+/**
+ * The paragraph editor. It is shown inside PareditorDialogComponent, which provides the dialog frame.
+ */
+@Component({
+    selector: "pareditor",
+    templateUrl: "./pareditor.component.html",
+    // The layout relies on the whitespace between the inline buttons and labels.
+    preserveWhitespaces: true,
+})
+export class PareditorComponent
+    implements OnInit, AfterViewInit, DoCheck, OnDestroy
+{
+    @Input() params!: IEditorParams;
+    @Input() draggable!: DraggableController;
+    @Output() closed = new EventEmitter<IEditorResult>();
+    isClosed = false;
+    private element: JQuery;
+    private lastAutocomplete?: boolean;
+    private diffCache?: {old: string; new: string; parts: IDiffPart[]};
+    spellcheck = false;
+    deleting = false;
+    editor?: TextAreaParEditor | AceParEditor; // $onInit
+    file?: UploadFile;
+    isIE: boolean = false;
+    oldmeta?: HTMLMetaElement;
+    wrap!: {n: number; auto: boolean}; // $onInit
+    outofdate: boolean;
+    parCount: number;
+    proeditor!: boolean; // $onInit
+    saving: boolean = false;
+    scrollPos?: number;
+    storage!: {
         noteAccess: TimStorage<string>;
         acebehaviours: TimStorage<boolean>;
         acewrap: TimStorage<boolean>;
@@ -263,60 +299,62 @@ export class PareditorController extends DialogController<
         diffSideBySide: TimStorage<boolean>;
         translator: TimStorage<string>;
     };
-    private touchDevice: boolean;
-    private autocomplete!: boolean; // $onInit
-    private askFilename!: boolean;
-    private useDocumentName!: boolean;
-    private citeText!: string; // $onInit
-    private docSettings?: IDocSettings;
-    private memoMinutesSettings?: IMeetingMemoSettings;
-    private uploadedFile?: string;
-    private fileURL?: string;
-    private fileURLLatest?: string;
-    private activeTab?: string;
-    private lastTab?: string;
-    private tabs: IEditorTab[];
-    private trdiff?: {old: string; new: string};
-    private activeAttachments?: IAttachmentData[]; // Attachments (with stamps) currently in the editor.
-    private liiteMacroStringBegin = "%%liite("; // Attachment macro with stamping.
-    private liiteMacroStringEnd = ")%%"; // TODO: May be confused with other macro endings.
-    private perusliiteMacroStringBegin = "%%perusliite("; // Attachment macro without stamping.
-    private perusliiteMacroStringEnd = ")%%";
-    private lastKnownDialogHeight?: number;
-    private sourceLanguages: ILanguage[] = [];
-    private targetLanguages: ILanguage[] = [];
-    private documentLanguages: ILanguage[] = [];
-    private translators: ITranslator[] = [];
-    private docTranslator: string = "";
-    private translatorAvailable = true;
-    private sideBySide: boolean = false;
-    private hideDiff: boolean = true;
-    private hidePreview: boolean = false;
-    private hideOriginalPreview: boolean = false;
-    private translationInProgress: boolean = false;
-    private nothingSelected: boolean = false;
-    private errorMessage = "";
-    private availableTranslators: string[] = [];
-    private originalDocument: boolean = true;
+    touchDevice: boolean;
+    autocomplete!: boolean; // $onInit
+    askFilename!: boolean;
+    useDocumentName!: boolean;
+    citeText!: string; // $onInit
+    docSettings?: IDocSettings;
+    memoMinutesSettings?: IMeetingMemoSettings;
+    uploadedFile?: string;
+    fileURL?: string;
+    fileURLLatest?: string;
+    activeTab?: string;
+    lastTab?: string;
+    tabs: IEditorTab[];
+    trdiff?: {old: string; new: string};
+    activeAttachments?: IAttachmentData[]; // Attachments (with stamps) currently in the editor.
+    liiteMacroStringBegin = "%%liite("; // Attachment macro with stamping.
+    liiteMacroStringEnd = ")%%"; // TODO: May be confused with other macro endings.
+    perusliiteMacroStringBegin = "%%perusliite("; // Attachment macro without stamping.
+    perusliiteMacroStringEnd = ")%%";
+    lastKnownDialogHeight?: number;
+    sourceLanguages: ILanguage[] = [];
+    targetLanguages: ILanguage[] = [];
+    documentLanguages: ILanguage[] = [];
+    translators: ITranslator[] = [];
+    docTranslator: string = "";
+    translatorAvailable = true;
+    sideBySide: boolean = false;
+    hideDiff: boolean = true;
+    hidePreview: boolean = false;
+    hideOriginalPreview: boolean = false;
+    translationInProgress: boolean = false;
+    nothingSelected: boolean = false;
+    errorMessage = "";
+    availableTranslators: string[] = [];
+    originalDocument: boolean = true;
 
-    private templateButtons: ITemplateButton[] = [];
+    templateButtons: ITemplateButton[] = [];
 
-    private formulaEditorOpen: boolean = false;
-    private handleFormulaCancel?: () => Promise<boolean>;
-    private currentSymbol: FormulaEvent = {
+    formulaEditorOpen: boolean = false;
+    handleFormulaCancel?: () => Promise<boolean>;
+    currentSymbol: FormulaEvent = {
         text: "",
     };
-    public warnings: string = "";
+    public warnings: SafeHtml | string = "";
     docImportHelp: DocumentImportHelp;
 
-    constructor(protected element: JQLite, protected scope: IScope) {
-        super(element, scope);
+    constructor(
+        elementRef: ElementRef<HTMLElement>,
+        private http: HttpClient,
+        private sanitizer: DomSanitizer
+    ) {
+        this.element = $(elementRef.nativeElement);
 
         if (navigator.userAgent.match(/Trident/i)) {
             this.isIE = true;
         }
-
-        this.getEditorContainer().on("resize", () => this.adjustPreview());
 
         const backTicks = "```";
 
@@ -1114,7 +1152,7 @@ ${backTicks}
         $(document).on(
             "webkitfullscreenchange fullscreenchange MSFullscreenChange",
             (event) => {
-                const editor = element[0];
+                const editor = this.element[0];
                 if (!getFullscreenElement()) {
                     editor.removeAttribute("style");
                 }
@@ -1164,7 +1202,11 @@ ${backTicks}
         return tab.name.toLowerCase();
     }
 
-    $doCheck() {
+    ngDoCheck() {
+        if (this.lastAutocomplete !== this.autocomplete) {
+            this.lastAutocomplete = this.autocomplete;
+            this.isAce()?.setAutoCompletion(this.autocomplete);
+        }
         if (this.lastTab != this.activeTab) {
             this.lastTab = this.activeTab;
             this.wrapFn();
@@ -1203,8 +1245,23 @@ ${backTicks}
         this.refreshEditorSize();
     }
 
-    $onInit() {
-        super.$onInit();
+    handleEscPress = (e: KeyboardEvent) => {
+        if (e.keyCode === KEY_ESC && !this.isClosed) {
+            this.dismiss();
+            e.stopPropagation();
+        }
+    };
+
+    getDraggable() {
+        return this.draggable;
+    }
+
+    ngOnInit() {
+        // The draggable restores the saved position when the dialog has been rendered.
+        this.draggable.setModal({rendered: Promise.resolve()});
+        this.draggable.setCloseFn(() => this.dismiss());
+        this.draggable.setCaptionCb(() => this.getTitle());
+        document.addEventListener("keydown", this.handleEscPress);
         this.docSettings = documentglobals().docSettings;
 
         this.createTemplateButtons();
@@ -1259,7 +1316,6 @@ ${backTicks}
             this.activeTab = "navigation";
         }
         this.sideBySide = this.storage.diffSideBySide.get() ?? true;
-        this.changePositioning();
         this.lastTab = this.activeTab;
         this.citeText = this.getCiteText();
         const sn = this.storage.wrap.get();
@@ -1286,18 +1342,6 @@ ${backTicks}
             this.lastKnownDialogHeight = params.h;
             this.refreshEditorSize();
         });
-        const oldMode =
-            this.storage.oldMode.get() ??
-            (this.getOptions().touchDevice ? "text" : "ace");
-        (async () => {
-            await this.changeEditor(oldMode);
-        })();
-        this.scope.$watch(
-            () => this.autocomplete,
-            () => {
-                this.isAce()?.setAutoCompletion(this.autocomplete);
-            }
-        );
         this.memoMinutesSettings = documentglobals().memoMinutesSettings;
 
         this.activeAttachments = this.updateAttachments(
@@ -1309,6 +1353,7 @@ ${backTicks}
         if (!this.originalDocument) {
             void this.initTranslatorData();
         }
+        this.initCustomTabs();
     }
 
     /**
@@ -1341,7 +1386,7 @@ ${backTicks}
      * translation documents.
      */
     async compileOriginalPreview() {
-        const previewOriginalDiv = angular.element(".previeworiginalcontent");
+        const previewOriginalDiv = $(".previeworiginalcontent");
         // This is called for the first time before this component is created, so this check is needed to avoid
         // needless running of this function.
         if (previewOriginalDiv.length == 0) {
@@ -1354,20 +1399,12 @@ ${backTicks}
             text = this.trdiff.new;
         }
         const spellCheckInEffect = this.spellcheck && this.isFinnishDoc();
-        const data = await this.resolve.params.previewCb(
-            text,
-            spellCheckInEffect
-        );
+        const data = await this.params.previewCb(text, spellCheckInEffect);
 
-        await ParCompiler.compileAndAppendTo(
-            previewOriginalDiv,
-            data,
-            this.scope,
-            this.resolve.params.viewCtrl
-        );
+        await ParCompiler.compileAndAppendTo(previewOriginalDiv, data);
     }
 
-    private refreshEditorSize() {
+    refreshEditorSize() {
         if (this.lastKnownDialogHeight == null) {
             return;
         }
@@ -1394,12 +1431,111 @@ ${backTicks}
         }
     }
 
-    $postLink() {
-        this.initCustomTabs();
+    ngAfterViewInit() {
+        this.getEditorContainer().on("resize", () => this.adjustPreview());
+        void this.draggable.setInitialLayout(VisibilityFix.Full);
+        // The rest of the initialization changes the state that the template shows,
+        // so it must not be done during the change detection.
+        window.setTimeout(async () => {
+            this.changePositioning();
+            const oldMode =
+                this.storage.oldMode.get() ??
+                (this.getOptions().touchDevice ? "text" : "ace");
+            await this.changeEditor(oldMode);
+        });
     }
 
-    $onDestroy() {
-        setCurrentEditor(undefined);
+    ngOnDestroy() {
+        document.removeEventListener("keydown", this.handleEscPress);
+        if (getCurrentEditor() === this) {
+            setCurrentEditor(undefined);
+        }
+    }
+
+    /**
+     * Returns the difference between the old and the new text of the original block in a translation.
+     */
+    getDiff(): IDiffPart[] {
+        const trdiff = this.trdiff;
+        if (!trdiff) {
+            return [];
+        }
+        const cache = this.diffCache;
+        if (cache && cache.old === trdiff.old && cache.new === trdiff.new) {
+            return cache.parts;
+        }
+        const dmp = new DiffMatchPatch();
+        const diffs = dmp.diff_main(trdiff.old, trdiff.new);
+        dmp.diff_cleanupSemantic(diffs);
+        const parts = diffs.map(([op, text]) => ({op, text}));
+        this.diffCache = {old: trdiff.old, new: trdiff.new, parts};
+        return parts;
+    }
+
+    getChoice(name: string) {
+        return (this.getExtraData() as unknown as Record<string, unknown>)[
+            name
+        ];
+    }
+
+    setChoice(name: string, value: string) {
+        (this.getExtraData() as unknown as Record<string, unknown>)[name] =
+            value;
+    }
+
+    onFileInputChange(e: Event) {
+        const input = e.target as HTMLInputElement;
+        void this.onFilesSelect([...(input.files ?? [])]);
+    }
+
+    onPandocFileInputChange(e: Event) {
+        const input = e.target as HTMLInputElement;
+        const file = input.files?.[0];
+        if (file) {
+            void this.onFileSelectForPandoc(file);
+        }
+    }
+
+    /**
+     * Uploads a file and reports the progress to the given file object.
+     */
+    private async upload<T>(
+        url: string,
+        fields: Record<string, string | File>,
+        target: UploadFile | undefined
+    ) {
+        const formData = new FormData();
+        for (const [k, v] of Object.entries(fields)) {
+            formData.append(k, v);
+        }
+        return new Promise<
+            {ok: true; result: T} | {ok: false; result: HttpErrorResponse}
+        >((resolve) => {
+            this.http
+                .post<T>(url, formData, {
+                    reportProgress: true,
+                    observe: "events",
+                })
+                .subscribe({
+                    next: (evt) => {
+                        if (
+                            evt.type === HttpEventType.UploadProgress &&
+                            target &&
+                            evt.total
+                        ) {
+                            target.progress = Math.min(
+                                100,
+                                Math.floor((100.0 * evt.loaded) / evt.total)
+                            );
+                        } else if (evt.type === HttpEventType.Response) {
+                            resolve({ok: true, result: evt.body as T});
+                        }
+                    },
+                    error: (err: HttpErrorResponse) => {
+                        resolve({ok: false, result: err});
+                    },
+                });
+        });
     }
 
     getCiteText(): string {
@@ -1515,7 +1651,7 @@ ${backTicks}
     }
 
     getInitialText() {
-        return this.resolve.params.initialText;
+        return this.params.initialText;
     }
 
     async setInitialText() {
@@ -1524,7 +1660,7 @@ ${backTicks}
             const pos = this.getOptions().cursorPosition;
             const editor = this.editor!;
             editor.setEditorText(initialText);
-            await $timeout(10);
+            await timeout(10);
             if (pos !== undefined) {
                 editor.setPosition([pos, pos]);
             } else {
@@ -1580,7 +1716,7 @@ ${backTicks}
     }
 
     isFinnishDoc() {
-        const item = this.resolve.params.viewCtrl?.item;
+        const item = this.params.viewCtrl?.item;
         if (!item) {
             return true; // Assume Finnish by default.
         }
@@ -1591,58 +1727,31 @@ ${backTicks}
         const editor = this.editor!;
         this.outofdate = true;
         const text = editor.getEditorText();
-        this.scope.$applyAsync();
-        await $timeout(500);
+        await timeout(500);
         if (text !== editor.getEditorText()) {
             return;
         }
-        const previewDiv = angular.element(".previewcontent");
+        const previewDiv = $(".previewcontent");
         this.scrollPos = previewDiv.scrollTop() ?? this.scrollPos;
         this.outofdate = true;
         const spellCheckInEffect = this.spellcheck && this.isFinnishDoc();
-        const data = await this.resolve.params.previewCb(
-            text,
-            spellCheckInEffect
-        );
+        const data = await this.params.previewCb(text, spellCheckInEffect);
         if (data.warnings && data.warnings.length > 0) {
             const clean = DOMPurify.sanitize(data.warnings);
-            this.warnings = $sce.trustAsHtml(
+            this.warnings = this.sanitizer.bypassSecurityTrustHtml(
                 "There are errors! Save may fix them.<br>" + clean
             );
         } else {
             this.warnings = "";
         }
-        if (spellCheckInEffect) {
-            $injector.loadNewModules([
-                (await import("../document/editing/spell-error.component"))
-                    .spellModule.name,
-            ]);
-        }
-        await ParCompiler.compileAndAppendTo(
-            previewDiv,
-            data,
-            this.scope,
-            this.resolve.params.viewCtrl
-        );
-        if (data.trdiff) {
-            const module = await import("angular-diff-match-patch");
-            $injector.loadNewModules([module.default]);
-        }
+        await ParCompiler.compileAndAppendTo(previewDiv, data);
         this.trdiff = data.trdiff;
         this.outofdate = false;
         this.parCount = previewDiv.children().length;
-        if (spellCheckInEffect) {
-            previewDiv
-                .find(".parContent[ng-non-bindable] tim-spell-error")
-                .each((i, e) => {
-                    $compile(e)(this.scope);
-                });
-        }
         if (this.trdiff != undefined) {
             await this.compileOriginalPreview();
         }
         this.getEditorContainer().resize();
-        this.scope.$applyAsync();
     }
 
     wrapFn(func: (() => void) | null = null) {
@@ -1685,7 +1794,7 @@ ${backTicks}
             return;
         }
         this.deleting = true;
-        const result = await this.resolve.params.deleteCb();
+        const result = await this.params.deleteCb();
         if (result.error) {
             await showMessageDialog(result.error);
             this.deleting = false;
@@ -1700,8 +1809,8 @@ ${backTicks}
     }
 
     async unreadClicked() {
-        await this.resolve.params.unreadCb();
-        if (this.resolve.params.initialText === this.editor!.getEditorText()) {
+        await this.params.unreadCb();
+        if (this.params.initialText === this.editor!.getEditorText()) {
             this.close({type: "markunread"});
         }
     }
@@ -1734,9 +1843,9 @@ ${backTicks}
         }
         const trs = documentglobals().translations;
         const orig = trs.find((tab) => tab.id === tab.src_docid);
-        if (orig && this.resolve.params.viewCtrl?.item.lang_id) {
+        if (orig && this.params.viewCtrl?.item.lang_id) {
             const orig_lang = orig.lang_id;
-            const tr_lang = this.resolve.params.viewCtrl.item.lang_id;
+            const tr_lang = this.params.viewCtrl.item.lang_id;
             return this.isTranslationPairSupported(orig_lang, tr_lang);
         }
         return false;
@@ -1774,12 +1883,12 @@ ${backTicks}
      */
     async translateParagraph() {
         const parId = this.getExtraData().par!.originalPar.id;
-        const docId = this.resolve.params.viewCtrl!.item.id;
+        const docId = this.params.viewCtrl!.item.id;
         this.translationInProgress = true;
 
-        const lang = this.resolve.params.viewCtrl!.item.lang_id!;
-        const r = await to(
-            $http.post<IDocument>(
+        const lang = this.params.viewCtrl!.item.lang_id!;
+        const r = await toPromise(
+            this.http.post<IDocument>(
                 `/translate/paragraph/${docId}/${parId}/${lang}/${this.docTranslator}`,
                 {
                     originaltext: this.trdiff!.new,
@@ -1787,16 +1896,16 @@ ${backTicks}
             )
         );
         if (r.ok) {
-            const response = await to(
-                $http.get<{text: string}>(`/getBlock/${docId}/${parId}`)
+            const response = await toPromise(
+                this.http.get<{text: string}>(`/getBlock/${docId}/${parId}`)
             );
             if (response.ok) {
-                this.getEditor()!.setEditorText(response.result.data.text);
+                this.getEditor()!.setEditorText(response.result.text);
             } else {
-                await showMessageDialog(response.result.data.error);
+                await showMessageDialog(response.result.error.error);
             }
         } else {
-            await showMessageDialog(r.result.data.error);
+            await showMessageDialog(r.result.error.error);
         }
     }
 
@@ -1815,11 +1924,11 @@ ${backTicks}
             if (this.nothingSelected) {
                 await this.translateParagraph();
             } else {
-                const lang = this.resolve.params.viewCtrl!.item.lang_id!;
-                const r = await to(
-                    $http.post<string>(
+                const lang = this.params.viewCtrl!.item.lang_id!;
+                const r = await toPromise(
+                    this.http.post<string>(
                         `/translate/${
-                            this.resolve.params.viewCtrl!.item.id
+                            this.params.viewCtrl!.item.id
                         }/${lang}/translate_block/${this.docTranslator}`,
                         {
                             originaltext: translatableText,
@@ -1827,7 +1936,7 @@ ${backTicks}
                     )
                 );
                 if (r.ok) {
-                    const resultText = r.result.data;
+                    const resultText = r.result;
                     if (
                         this.trdiff == undefined ||
                         translatableText != this.trdiff.new
@@ -1836,7 +1945,7 @@ ${backTicks}
                     } else {
                     }
                 } else {
-                    await showMessageDialog(r.result.data.error);
+                    await showMessageDialog(r.result.error.error);
                 }
             }
             this.translationInProgress = false;
@@ -1850,9 +1959,6 @@ ${backTicks}
     onFormulaEditorAddFormula(value: boolean = false) {
         if (this.activeTab == "tex") {
             this.formulaEditorOpen = !this.formulaEditorOpen;
-            if (!value) {
-                this.scope.$digest();
-            }
         }
     }
 
@@ -1872,9 +1978,6 @@ ${backTicks}
                     }
                     this.editor?.focus();
                 }, 0);
-            }
-            if (doDigest) {
-                this.scope.$digest();
             }
         }
     }
@@ -1915,7 +2018,7 @@ ${backTicks}
         // Open different formula
         if (this.formulaEditorOpen) {
             // wait for next render cycle
-            await $timeout();
+            await timeout();
             if (!this.handleFormulaCancel) {
                 return;
             }
@@ -1925,7 +2028,7 @@ ${backTicks}
                 return;
             }
             // wait for UI to update
-            await $timeout();
+            await timeout();
 
             // move to chosen formula
             const success = selectFormulaFromPreview(
@@ -1961,7 +2064,7 @@ ${backTicks}
                 "There is no original text to be translated. Please check the Difference in original document view."
             );
             return false;
-        } else if (!this.resolve.params.viewCtrl?.item.lang_id) {
+        } else if (!this.params.viewCtrl?.item.lang_id) {
             await showMessageDialog(
                 "This document does not have a language set. Please set a language and try again."
             );
@@ -1999,11 +2102,16 @@ ${backTicks}
     }
 
     close(r: IEditorResult) {
+        if (this.isClosed) {
+            return;
+        }
         this.saveOptions();
         if (this.getOptions().touchDevice) {
             this.changeMeta();
         }
-        super.close(r);
+        this.isClosed = true;
+        document.removeEventListener("keydown", this.handleEscPress);
+        this.closed.emit(r);
     }
 
     dismiss() {
@@ -2087,10 +2195,7 @@ ${backTicks}
             this.saving = false;
             return;
         }
-        const result = await this.resolve.params.saveCb(
-            text,
-            this.getExtraData()
-        );
+        const result = await this.params.saveCb(text, this.getExtraData());
         if (result.error) {
             await showMessageDialog(result.error);
             this.saving = false;
@@ -2207,7 +2312,7 @@ ${backTicks}
         return [indexA, selectIndexB + indexB + endStr.length];
     }
 
-    async onFilesSelect(files: File[], invalidFiles: File[]) {
+    async onFilesSelect(files: File[]) {
         for (const file of files) {
             await this.onFileSelect(file);
         }
@@ -2288,29 +2393,21 @@ ${backTicks}
         if (file) {
             this.file.progress = 0;
             this.file.error = undefined;
-            const upload = $upload.upload<{image: string; file: string}>({
-                data: {
-                    attachmentParams: JSON.stringify(attachmentParams),
+            const result = await this.upload<{image: string; file: string}>(
+                "/upload/",
+                {
+                    ...(attachmentParams !== undefined
+                        ? {attachmentParams: JSON.stringify(attachmentParams)}
+                        : {}),
                     doc_id: this.getExtraData().docId.toString(),
                     file,
                 },
-                method: "POST",
-                url: "/upload/",
-            });
-            upload.progress((evt) => {
-                if (this.file) {
-                    this.file.progress = Math.min(
-                        100,
-                        Math.floor((100.0 * evt.loaded) / evt.total)
-                    );
-                }
-            });
-
-            const result = await to(upload);
+                this.file
+            );
 
             if (result.ok) {
                 const response = result.result;
-                $timeout(() => {
+                window.setTimeout(() => {
                     const ed = this.editor!;
                     // This check is needed for uploads in other (non-attachment) plugins.
                     // TODO: Could this be editor.contains(...)?
@@ -2320,16 +2417,16 @@ ${backTicks}
                     let savedir = "/files/";
                     let savename = "";
                     if (
-                        response.data.image ||
-                        response.data.file.toString().includes(".svg")
+                        response.image ||
+                        response.file.toString().includes(".svg")
                     ) {
                         start = "![Image](";
                     }
-                    if (response.data.image) {
+                    if (response.image) {
                         savedir = "/images/";
-                        savename = response.data.image;
+                        savename = response.image;
                     } else {
-                        savename = response.data.file;
+                        savename = response.file;
                     }
                     this.uploadedFile = savedir + savename;
                     // For attachments without stamps (only look for this if stamped version wasn't found):
@@ -2395,7 +2492,9 @@ ${backTicks}
             } else {
                 const response = result.result;
                 if (this.file) {
-                    this.file.error = response.data.error;
+                    this.file.error =
+                        (response.error as {error?: string} | null)?.error ??
+                        response.message;
                 }
             }
         }
@@ -2412,32 +2511,22 @@ ${backTicks}
         if (file) {
             this.file.progress = 0;
             this.file.error = undefined;
-            const upload = $upload.upload<{file: string}>({
-                data: {
+            const result = await this.upload<{file: string}>(
+                "/importDocFile",
+                {
                     doc_id: this.getExtraData().docId.toString(),
                     file,
                 },
-                method: "POST",
-                url: "/importDocFile",
-            });
-            upload.progress((evt) => {
-                if (this.file) {
-                    this.file.progress = Math.min(
-                        100,
-                        Math.floor((100.0 * evt.loaded) / evt.total)
-                    );
-                }
-            });
-
-            const result = await to(upload);
+                this.file
+            );
 
             if (result.ok) {
                 const response = result.result;
-                $timeout(() => {
+                window.setTimeout(() => {
                     // For now, just append the converted file content to the end of the current paragraph
                     // Images embedded in the imported document are automatically uploaded and image links for them
                     // are added to the end of the document
-                    const convertedDoc = response.data.file;
+                    const convertedDoc = response.file;
                     editor.setPosition([
                         editorText.length - 1,
                         editorText.length - 1,
@@ -2447,7 +2536,9 @@ ${backTicks}
             } else {
                 const response = result.result;
                 if (this.file) {
-                    this.file.error = response.data.error;
+                    this.file.error =
+                        (response.error as {error?: string} | null)?.error ??
+                        response.message;
                 }
             }
         }
@@ -2463,13 +2554,15 @@ ${backTicks}
     }
 
     async getTemplate(plugin: string, template: string, index: string) {
-        const response = await to(
-            $http.get<string>(`/${plugin}/template/${template}/${index}`)
+        const response = await toPromise(
+            this.http.get(`/${plugin}/template/${template}/${index}`, {
+                responseType: "text",
+            })
         );
         if (!response.ok) {
             return;
         }
-        let data = response.result.data;
+        let data = response.result;
         data = data.replace(/\\/g, "\\\\");
         data = await replaceTemplateValues(data);
         if (!data) {
@@ -2603,12 +2696,12 @@ ${backTicks}
                 "ace/ext/language_tools"
             ) as ILanguageTools;
 
-            const r = await to(
-                $http.get<{word_list: string}>("/settings/get/word_list", {
-                    params: {_: Date.now()},
+            const r = await toPromise(
+                this.http.get<{word_list: string}>("/settings/get/word_list", {
+                    params: {_: Date.now().toString()},
                 })
             );
-            const wordListStr = r.ok ? r.result.data.word_list : undefined;
+            const wordListStr = r.ok ? r.result.word_list : undefined;
             const userWordList = wordListStr ? wordListStr.split("\n") : [];
             const createCompleter = (wordList: string[], context: string) => ({
                 getCompletions(
@@ -2658,7 +2751,7 @@ ${backTicks}
         this.adjustPreview();
     }
 
-    private getEditorContainer() {
+    getEditorContainer() {
         return this.element.find(".editorContainer");
     }
 
@@ -2690,38 +2783,38 @@ ${backTicks}
         }
     }
 
-    protected getTitle(): string {
-        return this.resolve.params.options.caption;
+    getTitle(): string {
+        return this.params.options.caption;
     }
 
-    protected confirmDismiss() {
+    confirmDismiss() {
         if (this.editor!.getEditorText() === this.getInitialText()) {
             return true;
         }
         return window.confirm("You have unsaved changes. Close editor anyway?");
     }
 
-    private getOptions() {
-        return this.resolve.params.options;
+    getOptions() {
+        return this.params.options;
     }
 
-    private getExtraData() {
-        return this.resolve.params.extraData;
+    getExtraData() {
+        return this.params.extraData;
     }
 
-    private getSaveTag() {
+    getSaveTag() {
         return this.getOptions().localSaveTag;
     }
 
-    private async focusEditor() {
-        await $timeout();
+    async focusEditor() {
+        await timeout();
         const s = $(window).scrollTop();
         this.editor!.focus();
-        await $timeout();
+        await timeout();
         $(window).scrollTop(s ?? this.scrollPos ?? 0);
     }
 
-    private saveOptions() {
+    saveOptions() {
         this.storage.spellcheck.set(this.spellcheck);
         this.storage.editortab.set(this.activeTab ?? "navigation");
         this.storage.autocomplete.set(this.autocomplete);
@@ -2756,7 +2849,7 @@ ${backTicks}
     /**
      * Returns the current meeting date from document settings, if it exists.
      */
-    private getCurrentMeetingDate(): string | undefined {
+    getCurrentMeetingDate(): string | undefined {
         if (this.memoMinutesSettings) {
             // Knro usage starts from 1 but dates starts from 0 but there is dummy item first
             const knro = this.memoMinutesSettings.knro;
@@ -2775,7 +2868,7 @@ ${backTicks}
      * @param previousAttachments Previous check's data (if there's any).
      * @param stamped Attachment-to-stamp (if there's one), which is up-to-date by default.
      */
-    private updateAttachments(
+    updateAttachments(
         firstCheck: boolean,
         previousAttachments: IAttachmentData[] | undefined,
         stamped: IAttachmentData | undefined
@@ -2845,7 +2938,7 @@ ${backTicks}
      * Removes line breaks and parses macro string into a dictionary.
      * @param macroText String in JSON-compatible format.
      */
-    private getMacroParamsFromString(macroText: string): unknown[] {
+    getMacroParamsFromString(macroText: string): unknown[] {
         // Normal line breaks cause exception with JSON.parse, and replacing them with ones parse understands
         // causes exceptions when line breaks are outside parameters, so just remove them before parsing.
         macroText = macroText.replace(/(\r\n|\n|\r)/gm, "");
@@ -2857,7 +2950,7 @@ ${backTicks}
      * Check whether all attachments in open editor are up-to-date.
      * @returns True if none have changed since previous check.
      */
-    private allAttachmentsUpToDate() {
+    allAttachmentsUpToDate() {
         if (this.activeAttachments) {
             return this.activeAttachments.every((att) => att.upToDate);
         }
@@ -2868,9 +2961,7 @@ ${backTicks}
      * Picks data relevant for restamping from an array and returns it as an object.
      * @param macroParams Array with attachment letter at index 1, issue number 2 and upload url 3.
      */
-    private macroParamsToAttachmentData(
-        macroParams: unknown[]
-    ): IAttachmentData {
+    macroParamsToAttachmentData(macroParams: unknown[]): IAttachmentData {
         if (MacroParams.is(macroParams)) {
             return {
                 attachmentLetter: macroParams[1],
@@ -2895,50 +2986,159 @@ const MacroParams = t.tuple([
     t.string,
 ]);
 
-export const parEditorModule = angular.module("timEditor", []);
-
-parEditorModule.component("timEditorMenu", {
-    bindings: {
-        data: "<",
-    },
+/**
+ * A dropdown menu in an editor tab.
+ */
+@Component({
+    selector: "tim-editor-menu",
+    preserveWhitespaces: true,
     template: `
-<div class="btn-group" uib-dropdown>
-    <button type="button" class="editorButton" uib-dropdown-toggle>
-        {{ $ctrl.data.title }} <span class="caret"></span>
+<div class="btn-group" dropdown>
+    <button type="button" class="editorButton" dropdownToggle>
+        {{ data.title }} <span class="caret"></span>
     </button>
     <ul class="dropdown-menu"
-        uib-dropdown-menu
-        role="menu"
-        aria-labelledby="single-button">
-        <li ng-repeat="item in $ctrl.data.items" role="menuitem">
-            <a title="{{ item.title }}"
+        *dropdownMenu
+        role="menu">
+        <li *ngFor="let item of data.items" role="menuitem">
+            <a [title]="item.title"
                href="#"
-               ng-click="item.func($event); $event.preventDefault()"
-               ng-bind-html="item.name"></a>
+               (click)="item.func($event); $event.preventDefault()"
+               [innerHTML]="item.name | purify"></a>
         </li>
     </ul>
 </div>
     `,
-});
+})
+export class EditorMenuComponent {
+    @Input() data!: IEditorMenu;
+}
 
-parEditorModule.component("timEditorEntry", {
-    bindings: {
-        data: "<",
-    },
+/**
+ * A button or a dropdown menu in an editor tab.
+ */
+@Component({
+    selector: "tim-editor-entry",
+    preserveWhitespaces: true,
     template: `
-<div ng-switch on="$ctrl.data.items != null">
-    <button ng-switch-default
+<div>
+    <button *ngIf="!menu"
             type="button"
             class="editorButton"
-            title="{{ $ctrl.data.title }}"
-            ng-click="$ctrl.data.func($event); $event.preventDefault()"
-            ng-bind-html="$ctrl.data.name">
+            [title]="item.title"
+            (click)="item.func($event); $event.preventDefault()"
+            [innerHTML]="item.name | purify">
     </button>
-    <tim-editor-menu ng-switch-when="true" data="$ctrl.data"></tim-editor-menu>
+    <tim-editor-menu *ngIf="menu" [data]="menu"></tim-editor-menu>
 </div>
     `,
-});
+})
+export class EditorEntryComponent {
+    @Input() data!: EditorEntry;
 
-registerDialogComponentForModule(parEditorModule, PareditorController, {
-    templateUrl: "/static/templates/parEditor.html",
-});
+    get menu(): IEditorMenu | undefined {
+        return "items" in this.data ? this.data : undefined;
+    }
+
+    get item(): IEditorMenuItem {
+        return this.data as IEditorMenuItem;
+    }
+}
+
+/**
+ * The dialog frame of the paragraph editor.
+ */
+@Component({
+    selector: "tim-pareditor-dialog",
+    template: `
+<div class="modal no-pointer-events in" role="dialog" tabindex="-1"
+     style="display: block; z-index: 1050"
+     (mousedown)="bringToFront()"
+     #modal>
+    <div tim-draggable-fixed
+         #drag="timDraggable"
+         [click]="true"
+         [resize]="true"
+         [save]="data.params.options.localSaveTag"
+         [absolute]="true"
+         [forceMaximized]="true"
+         style="pointer-events: auto;"
+         class="modal-dialog modal-{{ data.params.defaultSize }}">
+        <div class="draggable-content modal-content">
+            <pareditor [params]="data.params"
+                       [draggable]="drag.ctrl"
+                       (closed)="close($event)"></pareditor>
+        </div>
+    </div>
+</div>
+    `,
+})
+export class PareditorDialogComponent implements AfterViewInit {
+    @Input() data!: {params: IEditorParams};
+    @Input() dialogOptions?: IDialogOptions;
+    @Output() closeWithResult = new EventEmitter<IEditorResult>();
+    @ViewChild(PareditorComponent) private editorComponent!: PareditorComponent;
+    @ViewChild("modal") private modal!: ElementRef<HTMLElement>;
+    private resultDefer = new TimDefer<IEditorResult>();
+    private editorDefer = new TimDefer<PareditorComponent>();
+
+    /**
+     * Resolves when the editor is closed. The editor never rejects this: cancelling gives the result "cancel".
+     */
+    get result() {
+        return this.resultDefer.promise;
+    }
+
+    /**
+     * Resolves to the editor component when it has been created.
+     */
+    get editor() {
+        return this.editorDefer.promise;
+    }
+
+    ngAfterViewInit() {
+        this.editorDefer.resolve(this.editorComponent);
+        this.bringToFront();
+    }
+
+    /**
+     * Moves the editor above the other open dialogs.
+     */
+    bringToFront() {
+        let maxIndex = 1050;
+        document.querySelectorAll<HTMLElement>(".modal").forEach((m) => {
+            if (m !== this.modal.nativeElement) {
+                const z = parseInt(m.style.zIndex, 10);
+                if (!isNaN(z)) {
+                    maxIndex = Math.max(maxIndex, z + 10);
+                }
+            }
+        });
+        this.modal.nativeElement.style.zIndex = maxIndex.toString();
+    }
+
+    close(r: IEditorResult) {
+        this.closeWithResult.emit(r);
+        this.resultDefer.resolve(r);
+    }
+}
+
+@NgModule({
+    declarations: [
+        PareditorComponent,
+        PareditorDialogComponent,
+        EditorMenuComponent,
+        EditorEntryComponent,
+    ],
+    imports: [
+        CommonModule,
+        FormsModule,
+        TimUtilityModule,
+        PurifyModule,
+        DraggableModule,
+        EditorModule,
+        TabsModule.forRoot(),
+        BsDropdownModule.forRoot(),
+    ],
+})
+export class PareditorModule {}

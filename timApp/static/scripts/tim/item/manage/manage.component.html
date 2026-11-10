@@ -1,0 +1,468 @@
+<div *ngIf="!loggedIn()">
+    Using manage view requires you to be logged in.
+</div>
+<div *ngIf="item.rights.manage" class="panel panel-default">
+    <div class="panel-heading" id="rights">{{ objName }} rights
+        <span class="headerlink">
+            <a href="#rights" title="Permanent link to paragraph" class="">
+                <span class="header-anchor">#</span>
+            </a>
+        </span>
+    </div>
+    <div class="panel-body">
+        <tabset>
+            <tab heading="Rights for this {{ objName }}">
+                <tim-rights-editor
+                        [itemId]="item.id"
+                        [accessTypes]="accessTypes"
+                        [orgs]="orgs">
+                </tim-rights-editor>
+            </tab>
+            <tab *ngIf="item.isFolder" heading="Default rights for new documents">
+                <tim-rights-editor
+                        [itemId]="item.id"
+                        defaultItem="document"
+                        [accessTypes]="accessTypes"
+                        [orgs]="orgs">
+                </tim-rights-editor>
+            </tab>
+            <tab *ngIf="item.isFolder" heading="Default rights for new folders">
+                <tim-rights-editor
+                        [itemId]="item.id"
+                        defaultItem="folder"
+                        [accessTypes]="accessTypes"
+                        [orgs]="orgs">
+                </tim-rights-editor>
+            </tab>
+            <tab *ngIf="item.isFolder" heading="Rights of subitems">
+                <p>On this tab you can edit rights for many documents/folders at once.
+                    From the table below, you can only select items to which you have manage right.</p>
+                <tim-rights-editor
+                        [itemId]="item.id"
+                        [allowSelectAction]="true"
+                        [massMode]="true"
+                        [accessTypes]="accessTypes"
+                        [orgs]="orgs">
+                </tim-rights-editor>
+            </tab>
+        </tabset>
+    </div>
+</div>
+<div *ngIf="item.rights.editable" class="panel panel-default">
+    <div class="panel-heading" id="title">{{ objName }} title
+        <span class="headerlink">
+            <a href="#title" title="Permanent link to paragraph" class="">
+                <span class="header-anchor">#</span>
+            </a>
+        </span>
+    </div>
+    <div class="panel-body">
+        <form ngNoForm (submit)="$event.preventDefault(); changeTitle()">
+            <div class="form-group">
+                <div class="input-group">
+                    <input class="form-control" id="newTitle" type="text" [(ngModel)]="newTitle">
+                    <span class="input-group-btn">
+                            <button type="submit" class="timButton"
+                                    [disabled]="newTitle === item.title">
+                            Update
+                        </button>
+                        </span>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="panel panel-default" *ngIf="loggedIn()">
+    <div class="panel-heading" id="notifications">Notifications
+        <span class="headerlink">
+            <a href="#notifications" title="Permanent link to paragraph" class="">
+                <span class="header-anchor">#</span>
+            </a>
+        </span>
+    </div>
+    <div class="panel-body">
+        <tim-alert severity="info" *ngIf="!item.isFolder">
+            Want to quickly get notifications from multiple documents?
+            Subscribe to <a href=".">the entire folder</a>.
+        </tim-alert>
+        <tim-notification-options></tim-notification-options>
+    </div>
+</div>
+
+<bootstrap-panel title="Relevance" *ngIf="item.rights.editable" [showHeadingAnchors]="true" anchorId="relevance">
+        <tim-relevance-edit [item]="item"></tim-relevance-edit>
+</bootstrap-panel>
+
+<div *ngIf="!item.isFolder">
+    <div *ngIf="item.rights.manage" class="panel panel-default">
+        <div class="panel-heading" id="location">Short names
+            <span class="headerlink">
+            <a href="#location" title="Permanent link to paragraph" class="">
+                <span class="header-anchor">#</span>
+            </a>
+            </span>
+        </div>
+        <div class="panel-body">
+            <div class="form-horizontal">
+                <div class="row">
+                    <div class="col-md-1"></div>
+                    <div class="col-md-5">Visible in index, location</div>
+                    <div class="col-md-5">Short name</div>
+                </div>
+                <div class="form-group alias-row" *ngFor="let alias of aliases; let first = first">
+                        <div class="col-md-1">
+                            <button type="button" title="Remove this alias" class="btn btn-danger btn-sm"
+                                    (click)="removeAlias(alias)">
+                                <span class="glyphicon glyphicon-remove"></span>
+                            </button>
+                        </div>
+                        <div class="col-md-5">
+                            <div class="input-group input-group-sm" timErrorState>
+                                <span (click)="aliasPublicClicked(alias)" class="input-group-addon">
+                                    <input type="checkbox" [checked]="alias.public">
+                                </span>
+                                <input class="form-control aliasLoc" timLocation type="text"
+                                       #aliasLoc="ngModel"
+                                       [(ngModel)]="alias.location"/>
+                                <span class="input-group-btn">
+                                    <a class="timButton" href="/view/{{ escapePath(alias.location) }}">View</a>
+                                </span>
+                            </div>
+                            <tim-error-message [for]="aliasLoc"></tim-error-message>
+                        </div>
+                        <div class="col-md-5">
+                            <div class="input-group input-group-sm" timErrorState>
+                                <input class="form-control aliasName" required type="text" timShortName
+                                       #aliasName="ngModel"
+                                       [(ngModel)]="alias.name"
+                                       placeholder="Short name"/>
+                                <span class="input-group-btn">
+                                    <a class="timButton" href="/view/{{ escapePath(alias.path) }}">View</a>
+                                </span>
+                            </div>
+                            <tim-error-message [for]="aliasName"></tim-error-message>
+                        </div>
+                        <div class="col-md-1">
+                            <button type="button" class="timButton btn-sm"
+                                    (click)="updateAlias(alias, first)"
+                                    [disabled]="!aliasChanged(alias) || !!aliasLoc.invalid || !!aliasName.invalid">
+                                <span class="glyphicon glyphicon-ok"></span>
+                            </button>
+                        </div>
+                </div>
+                <div class="form-group new-alias-row">
+                        <div class="col-md-1"></div>
+                        <div class="col-md-5">
+                            <div class="input-group input-group-sm" timErrorState>
+                                <span (click)="aliasPublicClicked(newAlias)" class="input-group-addon">
+                                    <input type="checkbox" [checked]="newAlias.public">
+                                </span>
+                                <input class="form-control newAliasLoc" timLocation type="text"
+                                       #newAliasLoc="ngModel"
+                                       [(ngModel)]="newAlias.location"/>
+                                <span class="input-group-btn">
+                                    <a class="timButton" href="/view/{{ escapePath(newAlias.location) }}">View</a>
+                                </span>
+                            </div>
+                            <tim-error-message [for]="newAliasLoc"></tim-error-message>
+                        </div>
+                        <div class="col-md-5">
+                            <div class="input-group input-group-sm" timErrorState>
+                                <input class="form-control newAliasName" required timShortName type="text"
+                                       #newAliasName="ngModel"
+                                       [(ngModel)]="newAlias.name"
+                                       placeholder="Enter new short name"/>
+                                <span class="input-group-btn"><a class="timButton" disabled>View</a></span>
+                            </div>
+                            <tim-error-message [for]="newAliasName"></tim-error-message>
+                        </div>
+                        <div class="col-md-1">
+                            <button type="button" class="timButton btn-sm" (click)="addAlias(newAlias)"
+                                    [disabled]="!!newAliasLoc.invalid || !!newAliasName.invalid">
+                                <span class="glyphicon glyphicon-plus"></span>
+                            </button>
+                        </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div *ngIf="item.rights.manage" class="panel panel-default">
+        <div class="panel-heading" id="translations">
+            Translations (see <a href="https://tim.jyu.fi/view/tim/TIM-ohjeet#translations">help in
+            Finnish</a>)
+            <span class="headerlink">
+                <a href="#translations" title="Permanent link to paragraph" class="">
+                    <span class="header-anchor">#</span>
+                </a>
+            </span>
+        </div>
+        <div class="panel-body">
+            <table class="table">
+                <tbody>
+                <tr>
+                    <th>Language</th>
+                    <th>Title</th>
+                    <th>Maintainer</th>
+                    <th>Document id</th>
+                    <th>Actions</th>
+                </tr>
+                <tr *ngFor="let tr of translations">
+                    <td>
+                        <select class="form-control old-document-language"
+                               [(ngModel)]="tr.lang_id" (ngModelChange)="updateTranslation(tr)" >
+                            <option *ngFor="let option of documentLanguages" [value]="option.code">{{option.name}} ({{option.code}})</option>
+                        </select>
+                    </td>
+                    <td>
+                        <input type="text" class="form-control" [(ngModel)]="tr.title" placeholder="Title"/>
+                    </td>
+                    <td>{{ ownerNames(tr) }}</td>
+                    <td>{{tr.id}}
+                        <a href="/view/{{getTranslationPath(tr.id)}}">
+                            <i class="glyphicon glyphicon-link"></i>
+                        </a>
+                    </td>
+                    <td>
+                        <button type="button" class="timButton" (click)="updateTranslation(tr)"
+                                [disabled]="!trChanged(tr)">Update
+                        </button>
+                    </td>
+                    <td [hidden]="!item.rights.owner">
+                        <button type="button" [hidden]="!item.rights.owner" class="btn btn-danger"
+                        (click)="deleteDocument(tr.id)">
+                            <i class="glyphicon glyphicon-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+            <span></span>
+
+            <tabset>
+                <tab heading="Create a translation" [active]="false">
+                    <div class="form-group"><label for="translationTitle">Title:</label>
+                        <input id="translationTitle" class="form-control" type="text"
+                               [(ngModel)]="newTranslation.title" (ngModelChange)="checkCannotTranslate()" />
+                    </div>
+                    <div class="languageLists">
+                        <div>
+                            <label for="document-language">Target language:</label>
+                            <select id="document-language" class="form-control"
+                                   [(ngModel)]="newTranslation.language" (ngModelChange)="checkTranslatability()">
+                                <option *ngFor="let option of documentLanguages" [value]="option.code">{{option.name}} ({{option.code}})</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="translator">Translator:
+                                 <a href="https://tim.jyu.fi/view/tim/ohjeita/dokumenttien-konekaantaminen/en-GB">
+                                    <span class="glyphicon glyphicon-question-sign" style="margin-left: 0.2em;" title="Help with machine translation"></span>
+                                </a>
+                            </label>
+                            <select id="translator" class="form-control"
+                                   [(ngModel)]="newTranslation.translator" (ngModelChange)="updateManageTranslatorLanguages()">
+                                <option *ngFor="let option of translators" [disabled]="!option.available" [value]="option.name">{{option.name}}</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div [hidden]="!(mayTranslate && newTranslation.title)">
+                        <p>This document will be automatically translated on creation. Note: A human should check the translation for any errors and fix them!</p>
+                    </div>
+                    <div [hidden]="!(!mayTranslate || !newTranslation.title)">
+                        <b [hidden]="!whyCannotTranslate">{{whyCannotTranslate}}</b>
+                        <b [hidden]="translatorAvailable">{{errorMessage}} </b>
+                        <p>This document will not be automatically translated on creation{{notManual ? "" : " because you have not chosen a machine translator"}}.</p>
+                    </div>
+                    <button type="button" [disabled]="!newTranslation.language || !newTranslation.title ||
+                        translationInProgress || (!mayTranslate && notManual) || !translatorAvailable"
+                        class="timButton" (click)="createTranslation()" id="createbutton">Create
+                    </button>
+                    <p [hidden]="!translationInProgress"><tim-loading></tim-loading> Translating... This may take a while.</p>
+                </tab>
+            </tabset>
+        </div>
+    </div>
+
+    <bootstrap-panel *ngIf="item.rights.copy" title="Copy this document" [showHeadingAnchors]="true" anchorId="copy">
+        <create-item itemType="document"
+                     [itemLocation]="item.location"
+                     [params]="copyParams"></create-item>
+    </bootstrap-panel>
+
+    <div *ngIf="item.rights.editable" class="panel panel-default">
+        <div class="panel-heading" id="edit">Edit the full document
+            <span class="headerlink">
+                <a href="#edit" title="Permanent link to paragraph" class="">
+                    <span class="header-anchor">#</span>
+                </a>
+            </span>
+        </div>
+        <div class="panel-body">
+            <div id="fullDocumentEditor">
+                <div id="documentEditorDiv">
+                    <div class="doc-error" *ngIf="errors" [innerHTML]="errors"></div>
+                    <textarea (keydown)="onEditorKeydown($event)" id="doctext" class="form-control" [(ngModel)]="fulltext" rows="50"></textarea>
+                    <button type="button" id="documentEditorSaveButton" class="timButton"
+                            [disabled]="!hasTextChanged() || saving"
+                            (click)="saveDocument()">Save
+                    </button>
+                    <span [hidden]="!saving">Saving...</span>
+                </div>
+                <div id="tracWikiDiv">
+                    <label>Import TracWiki <input type="checkbox" [(ngModel)]="showTracWiki"></label>
+                    <div [hidden]="!showTracWiki">
+                        <p>Write the wiki root address to replace "wiki:" from URL's and then copy paste
+                            TracWiki page below and then press "Convert TracWiki" button to get the text converted
+                            above as MarkDown. Then you can edit the MarkDown before pressing Save.
+                            You may need to add extra empty lines before lists.</p>
+                        <div class="form-group">
+                            <label for="wikiRoot">Wiki root: </label>
+                            <input id="wikiRoot" class="form-control" [(ngModel)]="wikiRoot" size="50"/>
+                        </div>
+                        <div class="form-group">
+                            <label for="tracWikiText">TracWiki content:</label>
+                            <textarea rows="50" id="tracWikiText" class="form-control"
+                                      [(ngModel)]="tracWikiText"></textarea>
+                        </div>
+
+                        <button type="button" class="timButton" (click)="convertDocument()">Convert
+                            TracWiki
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="panel panel-default">
+        <div class="panel-heading" id="misc">Other actions
+            <span class="headerlink">
+                <a href="#misc" title="Permanent link to paragraph" class="">
+                    <span class="header-anchor">#</span>
+                </a>
+            </span>
+        </div>
+        <div class="panel-body">
+            <a [hidden]="!item.rights.copy" class="timButton"
+               href="/download/{{ item.id }}">Download document markdown</a>
+            <a [hidden]="!(item.rights.copy && srcDocId)" class="timButton"
+               href="/download/{{ item.id }}?with_tl=true"
+               title="Export document and all untranslated text as markdown">Export document with original text</a>
+            <button type="button" class="timButton" (click)="markAllAsRead()">Mark document as read</button>
+            <button type="button" [hidden]="!item.rights.owner" class="btn btn-danger"
+                    (click)="deleteDocument(item.id)">
+                {{deleteButtonText}}
+            </button>
+            <span [hidden]="!readUpdating">Marking document as read...</span>
+        </div>
+    </div>
+    <div *ngIf="item.rights.editable" class="panel panel-default">
+        <div class="panel-heading" id="history">Document version history
+            <span class="headerlink">
+                <a href="#history" title="Permanent link to paragraph" class="">
+                    <span class="header-anchor">#</span>
+                </a>
+            </span>
+        </div>
+        <div class="panel-body">
+            <table class="table table-condensed">
+                <thead>
+                <tr>
+                    <th>Time</th>
+                    <th>User / group</th>
+                    <th>Paragraph</th>
+                    <th>Event</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr *ngFor="let version of versions; let i = index; let last = last">
+                    <td><a href="/download/{{ item.id }}/{{ version.ver[0] }}/{{ version.ver[1] }}">{{ formatTime(version.time) }}</a></td>
+                    <td>{{ version.group }}</td>
+                    <td><a href="/view/{{ item.path }}#{{ version.par_id }}">{{ version.par_id }}</a></td>
+                    <td>
+                        <a *ngIf="!last"
+                           href="/diff/{{ item.id }}/{{ versions[i+1].ver[0] }}/{{ versions[i+1].ver[1] }}/{{ version.ver[0] }}/{{ version.ver[1] }}">{{ version.op }}</a>
+                        <span *ngIf="last">{{ version.op }}</span>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+            <p [hidden]="!hasMoreChangelog">Showing {{ versions.length }} latest
+                entries.</p>
+            <p [hidden]="hasMoreChangelog">Showing all {{ versions.length }}
+                entries.</p>
+            <button type="button" [disabled]="changelogLoading" class="timButton"
+                    [hidden]="!hasMoreChangelog"
+                    (click)="showMoreChangelog()">Show more entries
+            </button>
+            <button type="button" [disabled]="changelogLoading" class="timButton"
+                    [hidden]="!hasMoreChangelog"
+                    (click)="showCompleteChangelog()">Show complete document history
+            </button>
+            <p [hidden]="!changelogLoading"><tim-loading></tim-loading> Loading document history, please wait...</p>
+        </div>
+    </div>
+</div>
+
+<div *ngIf="item.isFolder">
+    <div *ngIf="item.rights.manage" class="panel panel-default">
+        <div class="panel-heading" id="location">Short name and location
+            <span class="headerlink">
+                <a href="#location" title="Permanent link to paragraph" class="">
+                    <span class="header-anchor">#</span>
+                </a>
+            </span>
+        </div>
+        <div class="panel-body">
+            <div>
+                <div class="form-group" timErrorState>
+                    <label for="newName" class="control-label">Short name:</label>
+                    <div class="input-group">
+                        <input class="form-control" required timShortName id="newName" type="text"
+                               #newNameModel="ngModel"
+                               (keydown.enter)="newName !== oldName && !newNameModel.invalid && renameFolder(newName)"
+                               [(ngModel)]="newName">
+                        <span class="input-group-btn">
+                            <button type="button" (click)="renameFolder(newName)" class="timButton"
+                                    [disabled]="newName === oldName || !!newNameModel.invalid">
+                            Update
+                        </button>
+                        </span>
+                    </div>
+                    <tim-error-message></tim-error-message>
+                </div>
+                <div class="form-group" timErrorState>
+                    <label for="newFolderName" class="control-label">Location:</label>
+                    <div class="input-group">
+                        <input size="50" class="form-control" timLocation id="newFolderName" type="text"
+                               #newLocationModel="ngModel"
+                               (keydown.enter)="newFolderName !== oldFolderName && !newLocationModel.invalid && moveFolder(newFolderName)"
+                               [(ngModel)]="newFolderName">
+                        <span class="input-group-btn">
+                            <button type="button" (click)="moveFolder(newFolderName)" class="timButton"
+                                    [disabled]="newFolderName === oldFolderName || !!newLocationModel.invalid">Update
+                        </button>
+                        </span>
+                    </div>
+                    <tim-error-message></tim-error-message>
+                </div>
+            </div>
+        </div>
+    </div>
+    <bootstrap-panel title="Copy contents" *ngIf="item.rights.copy" [showHeadingAnchors]="true" anchorId="copy">
+        <tim-copy-folder></tim-copy-folder>
+    </bootstrap-panel>
+    <div *ngIf="item.rights.manage" class="panel panel-default">
+        <div class="panel-heading" id="misc">Other actions
+            <span class="headerlink">
+                <a href="#misc" title="Permanent link to paragraph" class="">
+                    <span class="header-anchor">#</span>
+                </a>
+            </span>
+        </div>
+        <div class="panel-body">
+            <button type="button" class="btn btn-danger" (click)="deleteFolder()">Delete folder
+            </button>
+        </div>
+    </div>
+</div>

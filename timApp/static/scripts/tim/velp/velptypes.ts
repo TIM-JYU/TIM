@@ -215,3 +215,14 @@ export type IVelpGroupCollection = Record<
     string,
     Array<{id: number; selected?: boolean}>
 >;
+
+export const colorPalette = [
+    "blueviolet",
+    "darkcyan",
+    "orange",
+    "darkgray",
+    "cornflowerblue",
+    "coral",
+    "goldenrod",
+    "blue",
+];

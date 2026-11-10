@@ -11,8 +11,8 @@ export interface NotRemovableElement extends Element {
 
 /**
  * A modified HTMLElement interface to make sure we never call remove() directly.
- * We need to use jQuery for removing elements at least as long as AngularJS is used.
- * Otherwise the components won't get cleaned up properly.
+ * We need to use jQuery for removing elements so that the data and event handlers
+ * that jQuery has attached to them get cleaned up properly.
  */
 export interface NotRemovableHTMLElement extends HTMLElement {
     parentElement: NotRemovableHTMLElement | null;

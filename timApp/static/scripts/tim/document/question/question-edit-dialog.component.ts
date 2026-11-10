@@ -11,7 +11,8 @@ import {
     makePreview,
     minimizeJson,
 } from "tim/document/question/answer-sheet.component";
-import {numOrStringToNumber, TimStorage, to, toPromise} from "tim/util/utils";
+import {numOrStringToNumber, TimStorage, toPromise} from "tim/util/utils";
+import {serializeQueryParams} from "tim/util/http";
 import {
     KEY_DOWN,
     KEY_ENTER,
@@ -34,7 +35,6 @@ import type {
     QuestionType,
 } from "tim/lecture/lecturetypes";
 import type {IGenericPluginMarkup} from "tim/plugin/attributes";
-import {$http} from "tim/util/ngimport";
 import {FormsModule, NgForm} from "@angular/forms";
 import {QuestionMatrixComponent} from "tim/document/question/question-matrix.component";
 import {HttpClient} from "@angular/common/http";
@@ -1097,16 +1097,16 @@ export class QuestionEditDialogComponent extends AngularDialogComponent<
     private async updatePoints(a: IAskedQuestion) {
         const points = this.createPoints();
         const expl = this.createExplanation();
-        await to(
-            $http({
-                method: "POST",
-                url: "/updatePoints/",
-                params: {
-                    asked_id: a.asked_id,
-                    expl,
-                    points,
-                },
-            })
+        await toPromise(
+            this.http.post(
+                "/updatePoints/?" +
+                    serializeQueryParams({
+                        asked_id: a.asked_id,
+                        expl,
+                        points,
+                    }),
+                null
+            )
         );
     }
 

@@ -1,11 +1,12 @@
 import $ from "jquery";
+import {promiseHttp} from "tim/util/promiseHttp";
+import {uiTimeout} from "tim/util/refresh";
 import type {IOkResponse} from "tim/util/utils";
 import {getURLParameter, injectStyle, to} from "tim/util/utils";
 import {environment} from "tim/environments/environment";
 import type {IDocument, IItem} from "tim/item/IItem";
 import type {ISlideGlobals} from "tim/util/globals";
 import {documentglobals, slideglobals} from "tim/util/globals";
-import {$http, $log, $timeout} from "tim/util/ngimport";
 
 const pollInterval = 500;
 let receiving = true;
@@ -26,8 +27,7 @@ async function refresh(rv: IFixedReveal) {
     const item: IItem = documentglobals().curr_item;
     while (true) {
         const r = await to(
-            $http.get<null | ISlideStatus>("/getslidestatus", {
-                cache: false,
+            promiseHttp.get<null | ISlideStatus>("/getslidestatus", {
                 params: {doc_id: item.id},
             })
         );
@@ -44,7 +44,7 @@ async function refresh(rv: IFixedReveal) {
                 oldv = oldstate.indexv;
             }
             const data = r.result.data;
-            $log.info(data);
+            console.info(data);
             if (data != null) {
                 if (data.indexh != null) {
                     newh = data.indexh;
@@ -58,14 +58,14 @@ async function refresh(rv: IFixedReveal) {
                         data.indexf != oldstate.indexf) &&
                     receiving
                 ) {
-                    $log.info("Change slide");
+                    console.info("Change slide");
                     rv.slide(newh, newv, data.indexf, "remote");
                 }
             }
         } else {
             console.error("Failed to get slide status");
         }
-        await $timeout(pollInterval);
+        await uiTimeout(pollInterval);
     }
 }
 
@@ -77,7 +77,7 @@ async function updateSlideStatus(h: number, v: number, f: number) {
     receiving = false;
     const item: IItem = documentglobals().curr_item;
     const r = await to(
-        $http.post<IOkResponse>("/setslidestatus", {
+        promiseHttp.post<IOkResponse>("/setslidestatus", {
             doc_id: item.id,
             indexf: f,
             indexh: h,

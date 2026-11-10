@@ -263,29 +263,3 @@ export class ComparatorFilter {
         return this.negate ? !res : res;
     }
 }
-
-export function withComparatorFilters<T>(
-    params: Array<uiGrid.IColumnDefOf<T>>
-) {
-    const matchFn = (
-        searchTerm: string,
-        cellValue: string | number | null | undefined,
-        _row: uiGrid.IGridRowOf<T>,
-        _column: uiGrid.IGridColumnOf<T>
-    ) => {
-        if (cellValue == null) {
-            return searchTerm === "" || searchTerm === "=";
-        }
-        cellValue = cellValue.toString();
-        const comp = ComparatorFilter.makeNumFilter(searchTerm);
-        return comp.test(cellValue);
-    };
-    return params.map((param) => ({
-        ...param,
-        filter: {
-            ...param.filter,
-            condition: matchFn,
-            rawTerm: true,
-        },
-    }));
-}

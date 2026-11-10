@@ -1,4 +1,3 @@
-import type {IController} from "angular";
 import {Component, ChangeDetectorRef, ElementRef} from "@angular/core";
 import {HttpClient} from "@angular/common/http";
 import {DomSanitizer} from "@angular/platform-browser";
@@ -53,7 +52,7 @@ function trackByIndex(index: number, o: unknown) {
         </div>
     </div>`,
 })
-export class CsConsoleComponent extends CsBase implements IController {
+export class CsConsoleComponent extends CsBase {
     trackByIndex = trackByIndex;
     // isShell: boolean; method
     cursor: number;

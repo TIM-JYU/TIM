@@ -1,5 +1,4 @@
-import type {IHttpResponse, IPromise} from "angular";
-import angular from "angular";
+import {refreshUI, uiTimeout} from "tim/util/refresh";
 import type {Props} from "io-ts";
 import * as t from "io-ts";
 import moment from "moment";
@@ -12,7 +11,6 @@ import type {Observable} from "rxjs";
 import {lastValueFrom} from "rxjs";
 import {HttpErrorResponse, HttpParams} from "@angular/common/http";
 import type {IGroup} from "tim/user/IUser";
-import {$rootScope, $timeout} from "tim/util/ngimport";
 import {Users} from "tim/user/userService";
 
 const blacklist = new Set([
@@ -77,8 +75,8 @@ export function convertDateStringsToMoments(input: unknown): unknown {
     return converted;
 }
 
-export function angularWait(): IPromise<void> {
-    return $timeout(() => {}, 100);
+export function angularWait(): Promise<void> {
+    return uiTimeout(() => {}, 100);
 }
 
 export function isText(n: Node): n is Text {
@@ -285,17 +283,17 @@ export function dist(coords1: Coords, coords2: Coords) {
 }
 
 export function markPageDirty() {
-    const e = angular.element("#page_is_dirty");
+    const e = $("#page_is_dirty");
     e.val("1");
 }
 
 export function markPageNotDirty() {
-    const e = angular.element("#page_is_dirty");
+    const e = $("#page_is_dirty");
     e.val("0");
 }
 
 export function isPageDirty() {
-    const e = angular.element("#page_is_dirty");
+    const e = $("#page_is_dirty");
     return e.val() === "1";
 }
 
@@ -322,8 +320,7 @@ export function getUrlHttpParams() {
 /**
  * Marks seemingly unused imports as used so that TypeScript compiler won't optimize them out when compiling.
  *
- * For example, timApp module needs ngSanitize, but it is specified as a string reference in the angular.module(...)
- * call, which is why TypeScript compiler cannot see the connection to the import statement. See app.ts.
+ * This is needed for modules that are imported only for their side effects.
  *
  * @param modules The modules to mark as used.
  */
@@ -351,7 +348,8 @@ export interface Failure<T> {
 
 export type Result<T, U> = Success<T> | Failure<U>;
 
-type AngularJSError = {data: {error: string}; status?: number};
+// The error of a failed promiseHttp request.
+type PromiseHttpError = {data: {error: string}; status?: number};
 export type AngularError = {error: {error: string}; status?: number};
 
 export function mapSuccess<T, U, M>(
@@ -366,16 +364,16 @@ export function mapSuccess<T, U, M>(
 
 /**
  * Wraps the given promise so that it always gets fulfilled.
- * Additionally, calls $rootScope.$applyAsync() to force AngularJS update. We can't override global Promise object
- * because new Angular overrides it.
+ * Additionally, refreshes the views afterwards (see refreshUI), because this is meant for code that
+ * runs outside the Angular zone.
  * Adapted from await-to-js library: https://github.com/scopsy/await-to-js
  * @param promise Promise to wrap.
  * @returns A promise that resolves to either a success or error.
  */
-export function to<T, U = AngularJSError>(
-    promise: Promise<T> | IPromise<T>
+export function to<T, U = PromiseHttpError>(
+    promise: Promise<T> | PromiseLike<T>
 ): Promise<Result<T, U>> {
-    return refreshAngularJS(to2<T, U>(promise as Promise<T>));
+    return withRefresh(to2<T, U>(promise as Promise<T>));
 }
 
 /**
@@ -411,9 +409,19 @@ export function toPromise<T, U = AngularError>(
         });
 }
 
-export function refreshAngularJS<T>(p: Promise<T> | IPromise<T>): Promise<T> {
+/**
+ * Same as "toPromise", but also refreshes the views afterwards like "to" does.
+ * Meant for code that runs outside the Angular zone (the document view and its helper classes).
+ */
+export function toPromiseAndRefresh<T, U = AngularError>(
+    observable: Observable<T>
+): Promise<Result<T, U>> {
+    return withRefresh(toPromise<T, U>(observable));
+}
+
+export function withRefresh<T>(p: Promise<T> | PromiseLike<T>): Promise<T> {
     return (p as Promise<T>).finally(() => {
-        $rootScope.$applyAsync();
+        refreshUI();
     });
 }
 
@@ -655,11 +663,6 @@ export function capitalizeFirstLetter<T extends string>(s: T): Capitalize<T> {
     }
     return (s.charAt(0).toUpperCase() + s.slice(1)) as Capitalize<T>;
 }
-
-export type ToReturn<T, U = {data: {error: string}}> = Promise<
-    Result<IHttpResponse<T>, U>
->;
-export const ToReturn = Promise;
 
 export function injectStyle(url: string) {
     const links = document.getElementsByTagName("link");

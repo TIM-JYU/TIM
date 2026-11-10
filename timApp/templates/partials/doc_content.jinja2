@@ -18,15 +18,15 @@
     {% endif %}
     <div id="pars" role="main" {% if lang_id %}lang="{{ lang_id }}"{% endif %}>
         {% include 'partials/paragraphs.jinja2' %}
-        <div ng-cloak class="addBottomContainer hidden-print" ng-show="$ctrl.item.rights.editable"
-             ng-class="{'height-35': $ctrl.editing}">
+        {# The view controller adds the class height-35 while the editor is open. #}
+        <div class="addBottomContainer hidden-print"{% if not rights.editable %} style="display: none"{% endif %}>
             {% set btntext = doc_settings.add_par_button_text() %}
             {% if btntext and not nav_ranges %}
             <button class="addBottom timButton">{{ btntext }}</button>
             {% endif %}
         </div>
     </div>
-    <velp-selection ng-if="$ctrl.showVelpSelection()">
-    </velp-selection>
+    {# The view controller creates the velp menu here when it is needed. #}
+    <div id="velpSelectionContainer"></div>
     <tim-view-range-navigation></tim-view-range-navigation>
 </div>

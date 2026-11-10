@@ -1,9 +1,15 @@
 import {BrowserModule} from "@angular/platform-browser";
 import type {ApplicationRef, DoBootstrap} from "@angular/core";
-import {NgModule} from "@angular/core";
+import {EnvironmentInjector, NgModule, NgZone} from "@angular/core";
+import {setApplicationRef} from "tim/util/refresh";
+import {initServerComponents} from "tim/serverComponents";
 import {FormsModule} from "@angular/forms";
 import {HeaderComponent} from "tim/header/header.component";
-import {HTTP_INTERCEPTORS, HttpClientModule} from "@angular/common/http";
+import {
+    HTTP_INTERCEPTORS,
+    HttpClient,
+    HttpClientModule,
+} from "@angular/common/http";
 import {ErrorStateDirective} from "tim/ui/error-state.directive";
 import {ShortNameDirective} from "tim/ui/short-name.directive";
 import {LocationDirective} from "tim/ui/location.directive";
@@ -40,8 +46,32 @@ import {ParRefComponent} from "tim/document/par-ref.component";
 import {GamificationMapComponent} from "tim/gamification/gamification-map.component";
 import {SelfExpireComponent} from "tim/item/self-expire.component";
 import {SearchButtonComponent} from "tim/search/search-button.component";
-import {SessionVerify} from "tim/util/session-verify.interceptor";
+import {
+    SessionVerify,
+    SessionVerifyInterceptor,
+} from "tim/util/session-verify.interceptor";
 import {RoleInfoComponent} from "tim/header/role-info.component";
+import {
+    AnswerInterceptor,
+    AnswerInterceptorProvider,
+} from "tim/util/answer.interceptor";
+import {setHttpClient, setStandaloneHttpInterceptors} from "tim/util/http";
+import {ManageComponent} from "tim/item/manage/manage.component";
+import {UserListComponent} from "tim/answer/user-list.component";
+import {VelpSelectionComponent} from "tim/velp/velp-selection.component";
+import {VelpWindowComponent} from "tim/velp/velp-window.component";
+import {DraggableModule} from "tim/ui/draggable.directive";
+import {SpellErrorComponent} from "tim/document/editing/spell-error.component";
+import {PopoverModule} from "ngx-bootstrap/popover";
+import {RelevanceEditDialogModule} from "tim/item/relevance-edit-dialog.component";
+
+// Code that runs before this module is bootstrapped gets a standalone HttpClient from getHttpClient.
+// Keep this list the same as the HTTP_INTERCEPTORS providers below.
+setStandaloneHttpInterceptors(() => [
+    new AnswerInterceptor(),
+    new SessionVerifyInterceptor(),
+    new TimeStampToMomentConverter(),
+]);
 
 @NgModule({
     declarations: [
@@ -72,6 +102,11 @@ import {RoleInfoComponent} from "tim/header/role-info.component";
         GamificationMapComponent,
         SelfExpireComponent,
         RoleInfoComponent,
+        ManageComponent,
+        UserListComponent,
+        VelpSelectionComponent,
+        VelpWindowComponent,
+        SpellErrorComponent,
     ],
     imports: [
         BrowserModule,
@@ -81,12 +116,16 @@ import {RoleInfoComponent} from "tim/header/role-info.component";
         NoopAnimationsModule,
         SideBarMenuModule,
         TimManageModule,
+        RelevanceEditDialogModule,
         BsDropdownModule.forRoot(),
         TypeaheadModule.forRoot(),
         TooltipModule.forRoot(),
         TabsModule.forRoot(),
+        PopoverModule.forRoot(),
+        DraggableModule,
     ],
     providers: [
+        AnswerInterceptorProvider,
         SessionVerify,
         {
             provide: HTTP_INTERCEPTORS,
@@ -97,7 +136,17 @@ import {RoleInfoComponent} from "tim/header/role-info.component";
     ],
 })
 export class AppModule implements DoBootstrap {
+    constructor(
+        http: HttpClient,
+        private injector: EnvironmentInjector,
+        private zone: NgZone
+    ) {
+        setHttpClient(http);
+    }
+
     ngDoBootstrap(appRef: ApplicationRef) {
         setTheme("bs3");
+        setApplicationRef(appRef, this.zone);
+        initServerComponents(appRef, this.injector);
     }
 }

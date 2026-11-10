@@ -4,6 +4,7 @@ import type {OnInit} from "@angular/core";
 import {Component, Input} from "@angular/core";
 import {HttpClient} from "@angular/common/http";
 import {showMessageDialog} from "tim/ui/showMessageDialog";
+import {documentglobals} from "tim/util/globals";
 
 @Component({
     selector: "tim-template-list",
@@ -27,7 +28,8 @@ import {showMessageDialog} from "tim/ui/showMessageDialog";
     `,
 })
 export class TemplateListComponent implements OnInit {
-    @Input() private doc!: IItem;
+    // The document to which the template is applied. The current document by default.
+    @Input() doc: IItem = documentglobals().curr_item;
     templateList: IItem[] = [];
 
     constructor(private http: HttpClient) {}

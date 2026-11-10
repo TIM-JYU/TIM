@@ -95,7 +95,7 @@ formulaEditor: true
         self.find_element_avoid_staleness(".addBottom", click=True)
         self.wait_for_editor_load()
         self.wait_until_present_and_vis(".ace_content")
-        tex_button = self.find_element_by_text("TeX", "a")
+        tex_button = self.find_element_by_text("TeX", "span")
         tex_button.click()
         open_formula_button = self.find_element(xpath="//button[@title='Ctrl+e']")
         open_formula_button.click()

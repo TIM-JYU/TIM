@@ -20,8 +20,7 @@ import {
     ViewContainerRef,
 } from "@angular/core";
 import {FormsModule} from "@angular/forms";
-import {platformBrowserDynamic} from "@angular/platform-browser-dynamic";
-import {createDowngradedModule, doDowngrade} from "tim/downgrade";
+import {attrToBoolean} from "tim/customElements";
 import {vctrlInstance} from "tim/document/viewctrlinstance";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {ParCompiler} from "tim/editor/parCompiler";
@@ -134,7 +133,9 @@ export class PluginLoaderComponent implements AfterViewInit, OnDestroy, OnInit {
     @Input() public wrapper!: "div" | "span";
     @Input() public id!: string;
     @Input() public pluginType!: string;
-    @Input() public preview?: boolean;
+    // The component is used as a custom element, so the boolean inputs can also be strings ("true" or "false").
+    // They are converted to booleans in ngOnInit.
+    @Input() public preview?: boolean | string;
     @ViewChild("wrapper") pluginWrapper?: ElementRef<HTMLElement>;
     @ContentChild("contenthtml") contenthtml?: ElementRef<HTMLElement>;
     public defaultload = true;
@@ -149,12 +150,12 @@ export class PluginLoaderComponent implements AfterViewInit, OnDestroy, OnInit {
     @Input() public accessEnd?: string;
     @Input() public accessEndText?: string;
     @Input() public accessHeader?: string;
-    @Input() public lockableByPrerequisite?: boolean;
-    @Input() public lockedByPrerequisite?: boolean;
+    @Input() public lockableByPrerequisite?: boolean | string;
+    @Input() public lockedByPrerequisite?: boolean | string;
     @Input() public lockedText?: string;
     @Input() public lockedButtonText?: string;
     @Input() public lockedError?: string;
-    @Input() public eagerlyLoadState?: boolean;
+    @Input() public eagerlyLoadState?: boolean | string;
     error = "";
 
     timed = false;
@@ -190,6 +191,12 @@ export class PluginLoaderComponent implements AfterViewInit, OnDestroy, OnInit {
     }
 
     async ngOnInit() {
+        this.preview = attrToBoolean(this.preview);
+        this.lockableByPrerequisite = attrToBoolean(
+            this.lockableByPrerequisite
+        );
+        this.lockedByPrerequisite = attrToBoolean(this.lockedByPrerequisite);
+        this.eagerlyLoadState = attrToBoolean(this.eagerlyLoadState);
         // Don't activate if it isn't supposed to have a browser in the first place
         if (this.type == "none" || this.type == "lazyonly") {
             this.lazyActivated = false;
@@ -361,7 +368,7 @@ export class PluginLoaderComponent implements AfterViewInit, OnDestroy, OnInit {
         if (this.compiled) {
             return;
         }
-        // PluginLoader is wrapped in AngularJS, so outside calls (e.g. via viewctrl) may not be properly tracked
+        // Outside calls (e.g. via viewctrl) run outside the Angular zone, so they are not tracked.
         // Therefore, ensure the call is run inside the Angular zone to ensure change detection is triggered
         await this.zone.run(async () => {
             this.loadAnswerBrowser();
@@ -676,15 +683,3 @@ export class PluginLoaderComponent implements AfterViewInit, OnDestroy, OnInit {
 export class PluginLoaderModule implements DoBootstrap {
     ngDoBootstrap(appRef: ApplicationRef) {}
 }
-
-export const moduleDefs = [
-    doDowngrade(
-        createDowngradedModule((extraProviders) =>
-            platformBrowserDynamic(extraProviders).bootstrapModule(
-                PluginLoaderModule
-            )
-        ),
-        "timPluginLoader",
-        PluginLoaderComponent
-    ),
-];

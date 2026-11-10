@@ -2,9 +2,9 @@ import {showMessageDialog} from "tim/ui/showMessageDialog";
 import type {Locale} from "tim/util/globals";
 import {isDocumentGlobals} from "tim/util/globals";
 import {genericglobals} from "tim/util/globals";
-import {$http} from "tim/util/ngimport";
-import type {ToReturn} from "tim/util/utils";
-import {to} from "tim/util/utils";
+import {getHttpClient} from "tim/util/http";
+import type {AngularError, Result} from "tim/util/utils";
+import {toPromiseAndRefresh} from "tim/util/utils";
 import type {ICurrentUser, IUser} from "tim/user/IUser";
 import {ADMIN_GROUPNAME, TEACHERS_GROUPNAME} from "tim/user/IUser";
 import {isTaggedItem} from "tim/item/IItem";
@@ -48,16 +48,16 @@ export class UserService {
     }
 
     public async logout(user: IUser) {
-        const r = await to(
-            $http.post<ILoginResponse>("/logout", {user_id: user.id})
+        const r = await toPromiseAndRefresh(
+            getHttpClient().post<ILoginResponse>("/logout", {user_id: user.id})
         );
         if (!r.ok) {
-            void showMessageDialog(r.result.data.error);
+            void showMessageDialog(r.result.error.error);
             return;
         }
         const response = r.result;
-        this.group = response.data.other_users;
-        this.current = response.data.current_user;
+        this.group = response.other_users;
+        this.current = response.current_user;
         if (!this.isLoggedIn() || this.restoreContextUser) {
             window.location.reload();
         }
@@ -119,17 +119,17 @@ export class UserService {
         email: string,
         password: string,
         addUser: boolean
-    ): ToReturn<ILoginResponse> {
-        const r = await to(
-            $http.post<ILoginResponse>("/emailLogin", {
+    ): Promise<Result<ILoginResponse, AngularError>> {
+        const r = await toPromiseAndRefresh(
+            getHttpClient().post<ILoginResponse>("/emailLogin", {
                 email,
                 password,
                 add_user: addUser,
             })
         );
         if (r.ok) {
-            this.group = r.result.data.other_users;
-            this.current = r.result.data.current_user;
+            this.group = r.result.other_users;
+            this.current = r.result.current_user;
         }
         return r;
     }

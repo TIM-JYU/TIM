@@ -1,4 +1,4 @@
-import type {IScope} from "angular";
+import {promiseHttp} from "tim/util/promiseHttp";
 import $ from "jquery";
 import {to, to2} from "tim/util/utils";
 import {showNameAreaDialog} from "tim/document/editing/showNameAreaDialog";
@@ -11,7 +11,6 @@ import type {ParContext} from "tim/document/structure/parContext";
 import {ParSelection} from "tim/document/editing/parSelection";
 import {createParContext} from "tim/document/structure/create";
 import {getContextualAreaInfo} from "tim/document/structure/areaContext";
-import {$http} from "tim/util/ngimport";
 import type {ViewCtrl} from "tim/document/viewctrl";
 import {onClick} from "tim/document/eventhandlers";
 import type {INameAreaOptions} from "tim/document/editing/name-area-dialog.component";
@@ -27,11 +26,9 @@ export function getCollapseControlForElement(elem: Element) {
 
 export class AreaHandler {
     public selectedAreaName: string | undefined;
-    public sc: IScope;
     public viewctrl: ViewCtrl;
 
-    constructor(sc: IScope, view: ViewCtrl) {
-        this.sc = sc;
+    constructor(view: ViewCtrl) {
         this.viewctrl = view;
 
         onClick(".areaexpand, .areacollapse", ($this, e) => {
@@ -143,7 +140,7 @@ export class AreaHandler {
         options: INameAreaOptions
     ) {
         const r = await to(
-            $http.post<IParResponse>(
+            promiseHttp.post<IParResponse>(
                 "/name_area/" + this.viewctrl.docId + "/" + areaName,
                 {
                     area_start: sel.start.originalPar.id,
@@ -173,7 +170,7 @@ export class AreaHandler {
         }
 
         const r = await to(
-            $http.post(
+            promiseHttp.post(
                 "/unwrap_area/" + this.viewctrl.docId + "/" + areaName,
                 {}
             )

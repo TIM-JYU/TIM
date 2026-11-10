@@ -1,5 +1,6 @@
 /* eslint-disable no-bitwise */
-import type {IScope} from "angular";
+import {promiseHttp} from "tim/util/promiseHttp";
+import {uiTimeout} from "tim/util/refresh";
 import $ from "jquery";
 import {CURSOR} from "tim/editor/BaseParEditor";
 import type {IPluginInfoResponse} from "tim/editor/parCompiler";
@@ -10,10 +11,11 @@ import {
     ParCompiler,
     replaceAction,
 } from "tim/editor/parCompiler";
-import type {PareditorController} from "tim/editor/pareditor";
-import type {IModalInstance} from "tim/ui/dialog";
+import type {
+    PareditorComponent,
+    PareditorDialogComponent,
+} from "tim/editor/pareditor.component";
 import {documentglobals, genericglobals} from "tim/util/globals";
-import {$http, $timeout} from "tim/util/ngimport";
 import {
     empty,
     getViewName,
@@ -130,14 +132,12 @@ export function getNextId(params: EditPosition) {
 
 export class EditingHandler {
     public viewctrl: ViewCtrl;
-    public sc: IScope;
-    private currentEditor?: PareditorController;
-    private editorLoad?: Promise<IModalInstance<PareditorController>>;
+    private currentEditor?: PareditorComponent;
+    private editorLoad?: Promise<PareditorDialogComponent>;
     selection?: UserSelection;
     createItemVisible = false;
 
-    constructor(sc: IScope, view: ViewCtrl) {
-        this.sc = sc;
+    constructor(view: ViewCtrl) {
         this.viewctrl = view;
         this.viewctrl.editing = false;
 
@@ -375,7 +375,7 @@ export class EditingHandler {
             pars: selection,
         };
         const r = await to(
-            $http.post<IParResponse>("/postParagraph/", {
+            promiseHttp.post<IParResponse>("/postParagraph/", {
                 text: text,
                 par: parId,
                 docId: docId,
@@ -598,7 +598,7 @@ This will delete the whole ${
             },
             deleteCb: async () => {
                 const r = await to(
-                    $http.post<IParResponse>(
+                    promiseHttp.post<IParResponse>(
                         `/deleteParagraph/${this.viewctrl.docId}`,
                         extraDataForServer(extraData)
                     )
@@ -612,7 +612,7 @@ This will delete the whole ${
             },
             previewCb: async (text, proofread) => {
                 const r = await to(
-                    $http.post<IPluginInfoResponse>(
+                    promiseHttp.post<IPluginInfoResponse>(
                         `/preview/${this.viewctrl.docId}`,
                         {
                             text,
@@ -640,7 +640,7 @@ This will delete the whole ${
                     text = text + this.getEditButtonsText();
                 }
                 const r = await to(
-                    $http.post<IParResponse>(url, {
+                    promiseHttp.post<IParResponse>(url, {
                         text,
                         ...extraDataForServer(data),
                         view: getViewName(),
@@ -683,7 +683,7 @@ This will delete the whole ${
             },
         });
         const awaited = await this.editorLoad;
-        this.currentEditor = await awaited.dialogInstance.promise;
+        this.currentEditor = await awaited.editor;
         await to(awaited.result);
         this.currentEditor = undefined;
         this.editorLoad = undefined;
@@ -692,7 +692,7 @@ This will delete the whole ${
 
     private async getBlock(sel: ParSelection, forceIds: boolean = false) {
         return await to(
-            $http.get<{text: string}>(
+            promiseHttp.get<{text: string}>(
                 `/getBlock/${this.viewctrl.docId}/${sel.start.originalPar.id}`,
                 {
                     params:
@@ -750,7 +750,7 @@ This will delete the whole ${
     }
 
     async insertHelpPar() {
-        await $timeout();
+        await uiTimeout();
         const helpPar = $(`
 <div class="par"
      id="HELP_PAR"
@@ -764,7 +764,7 @@ This will delete the whole ${
 </div>
 `);
         getParContainerElem()!.prepend(helpPar[0]);
-        await compileWithViewctrl(helpPar, this.viewctrl.scope, this.viewctrl);
+        await compileWithViewctrl(helpPar);
     }
 
     async editSettingsPars() {
@@ -839,7 +839,7 @@ auto_number_headings: 0${CURSOR}
             },
         };
         const r = await to(
-            $http.post<IParResponse>("/newParagraph/", {
+            promiseHttp.post<IParResponse>("/newParagraph/", {
                 text,
                 ...extraDataForServer(data),
                 view: getViewName(),
@@ -901,13 +901,7 @@ auto_number_headings: 0${CURSOR}
                     break;
             }
 
-            await ParCompiler.compileAndDOMAction(
-                action,
-                par,
-                data,
-                this.viewctrl.scope,
-                this.viewctrl
-            );
+            await ParCompiler.compileAndDOMAction(action, par, data);
 
             this.viewctrl.docVersion = data.version;
             this.viewctrl.areaHandler.cancelSelection();
@@ -916,7 +910,7 @@ auto_number_headings: 0${CURSOR}
         });
     }
 
-    getParEditor(): PareditorController | undefined {
+    getParEditor(): PareditorComponent | undefined {
         return this.currentEditor;
     }
 
@@ -1280,7 +1274,7 @@ auto_number_headings: 0${CURSOR}
         const pos = value
             ? ParMenuHandlePosition.Left
             : ParMenuHandlePosition.Right;
-        await to($http.post(`/settings/save/parmenupos/${pos}`, {}));
+        await to(promiseHttp.post(`/settings/save/parmenupos/${pos}`, {}));
     }
 
     updateEditBarState() {
@@ -1332,7 +1326,7 @@ auto_number_headings: 0${CURSOR}
         const parId = par.originalPar.id;
         const docId = this.viewctrl.item.id;
         const r = await to(
-            $http.post<IParResponse>(`/markChecked/${docId}/${parId}`, {})
+            promiseHttp.post<IParResponse>(`/markChecked/${docId}/${parId}`, {})
         );
         if (r.ok) {
             this.addSavedParToDom(r.result.data, {

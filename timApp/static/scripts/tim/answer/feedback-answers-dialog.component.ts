@@ -6,7 +6,7 @@ import {FormsModule} from "@angular/forms";
 import {CommonDialogOptions} from "tim/answer/commondialogoptions";
 import * as t from "io-ts";
 import {TimStorage} from "tim/util/utils";
-import {$httpParamSerializer} from "tim/util/ngimport";
+import {serializeQueryParams} from "tim/util/http";
 import type {IUser} from "tim/user/IUser";
 import {CommonModule} from "@angular/common";
 
@@ -259,7 +259,7 @@ export class FeedbackAnswersDialogComponent extends AngularDialogComponent<
         }
         this.storage.set(this.options);
         window.open(
-            this.data.url + "?" + $httpParamSerializer(this.options),
+            this.data.url + "?" + serializeQueryParams(this.options),
             "_blank"
         );
         this.close();

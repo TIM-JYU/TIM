@@ -3,8 +3,8 @@ import {Component, NgModule} from "@angular/core";
 import {DialogModule} from "tim/ui/angulardialog/dialog.module";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {FormsModule} from "@angular/forms";
-import {defaultWuffMessage, to} from "tim/util/utils";
-import {$http} from "tim/util/ngimport";
+import {defaultWuffMessage, toPromise} from "tim/util/utils";
+import {HttpClient} from "@angular/common/http";
 import {CommonModule} from "@angular/common";
 import type {IUser} from "tim/user/IUser";
 import {sortByEmail, sortByRealName, sortLang} from "tim/user/IUser";
@@ -99,6 +99,10 @@ export class ResetTaskLockDialogComponent extends AngularDialogComponent<
 > {
     protected dialogName = "ResetTaskLock";
 
+    constructor(private http: HttpClient) {
+        super();
+    }
+
     searchInput = "";
     responseMessage = "";
     fetchError = "";
@@ -181,17 +185,17 @@ export class ResetTaskLockDialogComponent extends AngularDialogComponent<
     }
 
     async fetchData() {
-        const r = await to(
-            $http.get<{user: IUser; time: moment.Moment}[]>(
+        const r = await toPromise(
+            this.http.get<{user: IUser; time: moment.Moment}[]>(
                 `/getTaskBlocks/${this.data.taskId}`
             )
         );
         if (!r.ok) {
             this.userData = [];
-            this.fetchError = $localize`Failed to fetch data: \n${r.result.data.error}`;
+            this.fetchError = $localize`Failed to fetch data: \n${r.result.error.error}`;
             return;
         }
-        const uData = r.result.data;
+        const uData = r.result;
         if (uData.length == 0) {
             this.fetchError = $localize`No locks found`;
             return;
@@ -225,24 +229,24 @@ export class ResetTaskLockDialogComponent extends AngularDialogComponent<
             return;
         }
 
-        const r = await to(
-            $http.post<{cleared: {name: string; id: number}[]; error?: string}>(
-                `/clearTaskBlock`,
-                {
-                    userids: userids,
-                    task_id: this.data.taskId,
-                }
-            )
+        const r = await toPromise(
+            this.http.post<{
+                cleared: {name: string; id: number}[];
+                error?: string;
+            }>(`/clearTaskBlock`, {
+                userids: userids,
+                task_id: this.data.taskId,
+            })
         );
         if (r.ok) {
-            const cl = r.result.data.cleared;
+            const cl = r.result.cleared;
             if (cl.length > 1) {
                 this.responseMessage = $localize`Cleared locks for ${cl.length} users`;
-            } else if (r.result.data.cleared.length == 1) {
+            } else if (r.result.cleared.length == 1) {
                 this.responseMessage = $localize`Cleared lock for ${cl[0].name}`;
             } else {
                 this.responseMessage =
-                    r.result.data.error ??
+                    r.result.error ??
                     $localize`No locks found for selected targets`;
             }
             this.userData = this.userData.filter(
@@ -252,7 +256,7 @@ export class ResetTaskLockDialogComponent extends AngularDialogComponent<
             if (r.result.status == 500) {
                 this.responseMessage = defaultWuffMessage;
             } else {
-                this.responseMessage = r.result.data.error;
+                this.responseMessage = r.result.error.error;
             }
         }
     }

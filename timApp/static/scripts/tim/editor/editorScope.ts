@@ -1,6 +1,6 @@
-import type {PareditorController} from "tim/editor/pareditor";
+import type {PareditorComponent} from "tim/editor/pareditor.component";
 
-let currentEditor: PareditorController | undefined;
+let currentEditor: PareditorComponent | undefined;
 
 export function editorChangeValue(attributes: string[], text: string) {
     if (!currentEditor) {
@@ -9,7 +9,7 @@ export function editorChangeValue(attributes: string[], text: string) {
     currentEditor.getEditor()!.changeValue(attributes, text);
 }
 
-export function setCurrentEditor(e: PareditorController | undefined) {
+export function setCurrentEditor(e: PareditorComponent | undefined) {
     currentEditor = e;
 }
 

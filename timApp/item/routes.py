@@ -152,7 +152,6 @@ from timApp.util.flask.responsehelper import add_no_cache_headers
 from timApp.util.flask.responsehelper import (
     json_response,
     ok_response,
-    get_grid_modules,
 )
 from timApp.util.flask.typedblueprint import TypedBlueprint
 from timApp.util.locale import KNOWN_LANGUAGES, update_locale_lang, get_locale
@@ -1071,10 +1070,6 @@ def render_doc_view(
         reqs["usertemps"] = doctemps
     if is_slide:
         post_process_result.js_paths.append("tim/document/slide")
-    angular_module_names = []
-    if teacher_or_see_answers or view_ctx.route.is_review:
-        post_process_result.js_paths.append("angular-ui-grid")
-        angular_module_names += get_grid_modules()
     post_process_result.js_paths += get_additional_angular_modules(doc_info)
 
     taketime("before render")
@@ -1161,7 +1156,6 @@ def render_doc_view(
         version=doc.get_version(),
         js=post_process_result.js_paths,
         cssFiles=post_process_result.css_paths,
-        jsMods=angular_module_names,
         doc_css=doc_css,
         start_index=view_range.start_index,
         groups=usergroups,

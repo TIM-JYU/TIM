@@ -100,7 +100,7 @@ program: |!!
 
         # initial answerbrowser load triggers dimming
         check_opacities()
-        tu_3_selector = self.find_element('div[title = "Test user 3"]')
+        tu_3_selector = self.find_element('td[title = "Test user 3"]')
         tu_3_selector.click()
         # user change triggers dimming
         check_opacities()

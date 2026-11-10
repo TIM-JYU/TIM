@@ -8,13 +8,14 @@ import type {
 import {ChangeType} from "tim/document/viewctrl";
 import {GenericPluginMarkup, Info, withDefault} from "tim/plugin/attributes";
 import type {IUser} from "tim/user/IUser";
-import {$http} from "tim/util/ngimport";
 import {
     defaultErrorMessage,
     defaultTimeout,
     parseIframeopts,
-    to,
+    toPromise,
 } from "tim/util/utils";
+import type {AngularError, Result} from "tim/util/utils";
+import type {JsonValue} from "tim/util/jsonvalue";
 import {AngularPluginBase} from "tim/plugin/angular-plugin-base.directive";
 import type {ApplicationRef, DoBootstrap} from "@angular/core";
 import {
@@ -27,7 +28,7 @@ import {
 } from "@angular/core";
 import type {SafeResourceUrl} from "@angular/platform-browser";
 import {DomSanitizer} from "@angular/platform-browser";
-import {HttpClient, HttpClientModule} from "@angular/common/http";
+import {HttpClient, HttpClientModule, HttpHeaders} from "@angular/common/http";
 import {FormsModule} from "@angular/forms";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {vctrlInstance} from "tim/document/viewctrlinstance";
@@ -445,19 +446,17 @@ export class JsframeComponent
         if (!tid) {
             return;
         }
-        const res = await to(
-            $http.get<unknown>(
-                `/jsframe/userChange/${tid.docTask().toString()}/${user.id}`
-            )
+        const res = await this.httpGet<unknown>(
+            `/jsframe/userChange/${tid.docTask().toString()}/${user.id}`
         );
         this.initData = "";
         let data: JSFrameData = this.getDataFromMarkup();
-        if (res.result.data) {
+        if (res.ok && res.result) {
             // there is no more fielddata-attribute
             if (!data) {
                 data = {c: undefined};
             }
-            data.fielddata = res.result.data;
+            data.fielddata = res.result;
         }
         if (data) {
             this.setData(data);
@@ -564,41 +563,48 @@ export class JsframeComponent
         }
         this.error = "";
         this.isRunning = true;
-        let url = "";
-        let params;
+        type SaveResponse = {web: {error?: string; console?: string}};
+        let request: () => Promise<Result<SaveResponse, AngularError>>;
         if (this.isTask()) {
             if (!this.getTaskId()) {
                 this.error = "Task-mode on but TaskId is missing!";
                 this.c();
                 return saveResponse;
             }
-            url = this.pluginMeta.getAnswerUrl();
-            params = {
+            const params = {
                 input: {
                     ...unwrapAllC(data), // Unwrap just in case there is a double "c".
                     type: "jsframe",
                 },
             };
+            request = () =>
+                this.postAnswer<SaveResponse>(
+                    params as {input: JsonValue},
+                    new HttpHeaders({timeout: `${defaultTimeout}`})
+                );
         } else {
-            url = "/jsframe/drawIOData";
-            params = {
+            const params = {
                 data: unwrapAllC(data).c,
                 par_id: this.getPar()!.originalPar.id,
                 doc_id: this.viewctrl.docId,
             };
+            request = () =>
+                toPromise(
+                    this.http.put<SaveResponse>("/jsframe/drawIOData", params, {
+                        headers: new HttpHeaders({
+                            timeout: `${defaultTimeout}`,
+                        }),
+                    })
+                );
         }
 
         this.console = "";
 
-        const r = await to(
-            $http<{
-                web: {error?: string; console?: string};
-            }>({method: "PUT", url: url, data: params, timeout: defaultTimeout})
-        );
+        const r = await request();
         this.isRunning = false;
 
         if (!r.ok) {
-            this.error = r.result.data?.error;
+            this.error = r.result.error?.error;
             this.connectionErrorMessage =
                 this.error ??
                 this.attrsall.markup.connectionErrorMessage ??
@@ -607,13 +613,13 @@ export class JsframeComponent
             return saveResponse;
         }
         if (this.isTask()) {
-            if (!r.result.data.web) {
+            if (!r.result.web) {
                 this.error = "No web reply from csPlugin!";
                 this.c();
                 return saveResponse;
             }
-            if (r.result.data.web.error) {
-                this.error = r.result.data.web.error;
+            if (r.result.web.error) {
+                this.error = r.result.web.error;
                 this.c();
                 return saveResponse;
             }
@@ -623,8 +629,8 @@ export class JsframeComponent
             this.isUnSaved() ? ChangeType.Modified : ChangeType.Saved
         );
         this.prevdata = unwrapAllC(data);
-        if (this.isTask() && r.result.data.web.console) {
-            this.console = r.result.data.web.console;
+        if (this.isTask() && r.result.web.console) {
+            this.console = r.result.web.console;
         }
         saveResponse.saved = true;
         this.c();

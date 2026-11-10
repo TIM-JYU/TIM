@@ -290,7 +290,7 @@ type MatrixElement = string | number;
     `,
 })
 export class AnswerSheetComponent implements OnChanges {
-    private readonly element: JQLite;
+    private readonly element: JQuery;
     @Input() questiondata?: IPreviewParams;
     @Input() customHeader?: string;
     json!: IAskedJsonJson; // TODO decide if undefined should be valid

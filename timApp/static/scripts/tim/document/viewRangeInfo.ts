@@ -1,6 +1,6 @@
 import {documentglobals} from "tim/util/globals";
-import {$http} from "tim/util/ngimport";
-import {getCookie, getUrlParams, to} from "tim/util/utils";
+import {getHttpClient} from "tim/util/http";
+import {getCookie, getUrlParams, toPromiseAndRefresh} from "tim/util/utils";
 import type {ViewCtrl} from "tim/document/viewctrl";
 
 export interface IViewRangeUnnamed {
@@ -74,7 +74,9 @@ export function partitionDocument(range: IViewRange, loadPreamble: boolean) {
 }
 
 export async function unsetPieceSize() {
-    const r = await to($http.get<number>(`/viewrange/unset/piecesize`));
+    const r = await toPromiseAndRefresh(
+        getHttpClient().get<number>(`/viewrange/unset/piecesize`)
+    );
     if (!r.ok) {
         console.error("Failed to remove view range cookie!");
     }
@@ -82,7 +84,9 @@ export async function unsetPieceSize() {
 
 export async function setPieceSize(pieceSize: number) {
     const data = {pieceSize: pieceSize};
-    const r = await to($http.post(`/viewrange/set/piecesize`, data));
+    const r = await toPromiseAndRefresh(
+        getHttpClient().post(`/viewrange/set/piecesize`, data)
+    );
     if (!r.ok) {
         console.error("Failed to set view range cookie!");
     }
@@ -121,13 +125,15 @@ export async function getViewRange(
     if (!forwards) {
         forwardsInt = 0;
     }
-    const r = await to(
-        $http.get<IViewRange>(`/viewrange/get/${docId}/${index}/${forwardsInt}`)
+    const r = await toPromiseAndRefresh(
+        getHttpClient().get<IViewRange>(
+            `/viewrange/get/${docId}/${index}/${forwardsInt}`
+        )
     );
     if (!r.ok) {
         return undefined;
     } else {
-        return r.result.data;
+        return r.result;
     }
 }
 
@@ -140,13 +146,15 @@ export async function getViewRangeWithHeaderId(
     docId: number,
     headerId: string
 ) {
-    const r = await to(
-        $http.get<IViewRange>(`/viewrange/getWithHeaderId/${docId}/${headerId}`)
+    const r = await toPromiseAndRefresh(
+        getHttpClient().get<IViewRange>(
+            `/viewrange/getWithHeaderId/${docId}/${headerId}`
+        )
     );
     if (!r.ok) {
         return undefined;
     } else {
-        return r.result.data;
+        return r.result;
     }
 }
 

@@ -20,11 +20,10 @@ import {
     VerificationType,
 } from "tim/util/globals";
 import {HttpClient, HttpClientModule} from "@angular/common/http";
-import {platformBrowserDynamic} from "@angular/platform-browser-dynamic";
 import * as t from "io-ts";
 import {isRight} from "fp-ts/Either";
 import type {AlertSeverity} from "tim/ui/formErrorMessage";
-import {createDowngradedModule, doDowngrade} from "tim/downgrade";
+import {registerModuleServerComponents} from "tim/serverComponents";
 import {Channel} from "tim/messaging/listOptionTypes";
 import {toPromise} from "tim/util/utils";
 import {BrowserModule} from "@angular/platform-browser";
@@ -259,9 +258,6 @@ export class UserActionVerifyModule implements DoBootstrap {
     ngDoBootstrap(appRef: ApplicationRef): void {}
 }
 
-export const angularJsModule = createDowngradedModule((extraProviders) => {
-    const platformRef = platformBrowserDynamic(extraProviders);
-    return platformRef.bootstrapModule(UserActionVerifyModule);
+registerModuleServerComponents(UserActionVerifyModule, {
+    "tim-user-action-verify": UserActionVerifyComponent,
 });
-doDowngrade(angularJsModule, "timUserActionVerify", UserActionVerifyComponent);
-export const moduleDefs = [angularJsModule];

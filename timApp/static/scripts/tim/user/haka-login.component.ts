@@ -2,17 +2,20 @@ import type {OnChanges, SimpleChanges} from "@angular/core";
 import {Component, Input} from "@angular/core";
 import {Users} from "tim/user/userService";
 import * as t from "io-ts";
-import {$http, $httpParamSerializer} from "tim/util/ngimport";
-import {TimStorage, to} from "tim/util/utils";
+import type {HttpClient} from "@angular/common/http";
+import {serializeQueryParams} from "tim/util/http";
+import {TimStorage, toPromise} from "tim/util/utils";
 
 function redirectTo(url: string) {
     window.location.href = url;
 }
 
-export async function loadIdPs() {
-    const result = await to($http.get<IDiscoveryFeedEntry[]>("/saml/feed"));
+export async function loadIdPs(http: HttpClient) {
+    const result = await toPromise(
+        http.get<IDiscoveryFeedEntry[]>("/saml/feed")
+    );
     if (result.ok) {
-        return result.result.data.sort((a, b) =>
+        return result.result.sort((a, b) =>
             getDisplayNameForCurrLang(a).localeCompare(
                 getDisplayNameForCurrLang(b)
             )
@@ -36,7 +39,7 @@ export interface IDiscoveryFeedEntry {
 export function ssoLogin(entityID: string, addUser?: boolean) {
     redirectTo(
         "/saml/sso?" +
-            $httpParamSerializer({
+            serializeQueryParams({
                 entityID: entityID,
                 return_to: document.location.toString(),
                 addUser: addUser,

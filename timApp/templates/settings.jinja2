@@ -3,7 +3,6 @@
 {% block head %}
     {{ super() }}
     <script>
-        ANGULARMODULES = [];
         JSMODULES = ["userSettings"];
         var notifications = {{ notifications|tojson }};
         var notificationLimit = {{ notification_limit|tojson }};

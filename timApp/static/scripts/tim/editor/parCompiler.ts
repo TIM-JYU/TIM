@@ -1,10 +1,10 @@
-import type {IScope} from "angular";
+import {createServerComponents} from "tim/serverComponents";
+import {attachDraggables} from "tim/ui/draggable";
+import {refreshUI, runInAngularZone} from "tim/util/refresh";
 import {staticDynamicImport} from "tim/staticDynamicImport";
-import {$compile, $injector, $log, $timeout} from "tim/util/ngimport";
 import {timLogTime} from "tim/util/timTiming";
 import type {MathDocument} from "mathjax-full/js/core/MathDocument";
-import type {ViewCtrl} from "tim/document/viewctrl";
-import {injectStyle, ModuleArray, timeout} from "tim/util/utils";
+import {injectStyle, timeout} from "tim/util/utils";
 import type renderMathInElement from "katex/contrib/auto-render/auto-render";
 
 export interface IPluginInfoResponse {
@@ -15,26 +15,37 @@ export interface IPluginInfoResponse {
     warnings?: string;
 }
 
+/**
+ * Brings to life HTML that has come from the server: creates the Angular components for the elements
+ * that are registered as server components and makes the floating blocks draggable.
+ * Plugins and other custom elements start by themselves when the HTML is added to the page.
+ *
+ * @param html The HTML as a string or as elements. If the elements are already on the page,
+ *  the components are created right away. Otherwise call {@link activateHtml} after adding them.
+ * @returns The elements.
+ */
 export async function compileWithViewctrl(
-    html: string | Element | JQuery<HTMLElement>,
-    scope: IScope,
-    view: ViewCtrl | undefined,
-    extraCtrls: Record<string, {instance: unknown}> = {}
+    html: string | Element | JQuery<HTMLElement>
 ) {
-    const result = $compile(html)(
-        scope,
-        undefined,
-        view
-            ? {
-                  transcludeControllers: {
-                      timView: {instance: view},
-                      ...extraCtrls,
-                  },
-              }
-            : {}
-    );
-    await $timeout();
+    const result = $(html as string);
+    activateHtml(result);
+    await timeout();
     return result;
+}
+
+/**
+ * Creates the server components and the draggables for elements that are on the page.
+ */
+export function activateHtml(elements: JQuery) {
+    runInAngularZone(() => {
+        elements.each((_, e) => {
+            if (e instanceof Element && e.isConnected) {
+                createServerComponents(e);
+                attachDraggables(e);
+            }
+        });
+    });
+    refreshUI();
 }
 
 export const replaceAction = (e: JQuery, c: JQuery) => e.replaceWith(c);
@@ -45,99 +56,48 @@ export const appendToAction = (e: JQuery, c: JQuery) => e.empty().append(c);
 export class ParagraphCompiler {
     /**
      * Private function. Use one of: compileAnd{AppendTo,Replace,After,Before}.
+     * Loads the scripts and styles that the HTML needs and parses the HTML.
      * @param data
-     * @param scope
-     * @param view
      */
-    private async compile(
-        data: IPluginInfoResponse,
-        scope: IScope,
-        view?: ViewCtrl
-    ) {
+    private async compile(data: IPluginInfoResponse) {
         for (const m of data.js) {
             const modLoad = staticDynamicImport(m);
             if (!modLoad) {
                 continue;
             }
-            const mod = (await modLoad) as {moduleDefs?: unknown};
-            const defs = mod.moduleDefs;
-            if (ModuleArray.is(defs)) {
-                $injector.loadNewModules(defs.map((d) => d.name));
-            }
+            await modLoad;
         }
         data.css.forEach((s) => injectStyle(s));
-        return compileWithViewctrl(data.texts, scope, view);
+        return $(data.texts);
     }
 
     public async compileAndAppendTo(
         element: JQuery,
-        data: IPluginInfoResponse,
-        scope: IScope,
-        view?: ViewCtrl
+        data: IPluginInfoResponse
     ) {
-        return this.compileAndDOMAction(
-            appendToAction,
-            element,
-            data,
-            scope,
-            view
-        );
+        return this.compileAndDOMAction(appendToAction, element, data);
     }
 
-    public async compileAndReplace(
-        element: JQuery,
-        data: IPluginInfoResponse,
-        scope: IScope,
-        view?: ViewCtrl
-    ) {
-        return this.compileAndDOMAction(
-            replaceAction,
-            element,
-            data,
-            scope,
-            view
-        );
+    public async compileAndReplace(element: JQuery, data: IPluginInfoResponse) {
+        return this.compileAndDOMAction(replaceAction, element, data);
     }
 
-    public async compileAndAfter(
-        element: JQuery,
-        data: IPluginInfoResponse,
-        scope: IScope,
-        view?: ViewCtrl
-    ) {
-        return this.compileAndDOMAction(
-            afterAction,
-            element,
-            data,
-            scope,
-            view
-        );
+    public async compileAndAfter(element: JQuery, data: IPluginInfoResponse) {
+        return this.compileAndDOMAction(afterAction, element, data);
     }
 
-    public async compileAndBefore(
-        element: JQuery,
-        data: IPluginInfoResponse,
-        scope: IScope,
-        view?: ViewCtrl
-    ) {
-        return this.compileAndDOMAction(
-            beforeAction,
-            element,
-            data,
-            scope,
-            view
-        );
+    public async compileAndBefore(element: JQuery, data: IPluginInfoResponse) {
+        return this.compileAndDOMAction(beforeAction, element, data);
     }
 
     public async compileAndDOMAction(
         action: (target: JQuery, compiled: JQuery) => void,
         element: JQuery,
-        data: IPluginInfoResponse,
-        scope: IScope,
-        view?: ViewCtrl
+        data: IPluginInfoResponse
     ) {
-        const compiled = await this.compile(data, scope, view);
+        const compiled = await this.compile(data);
         action(element, compiled);
+        activateHtml(compiled);
         await this.processAllMath(compiled);
         return compiled;
     }
@@ -267,7 +227,7 @@ export class ParagraphCompiler {
         if (!lastError) {
             return null;
         }
-        $log.warn(lastError);
+        console.warn(lastError);
         if (tryMathJax) {
             this.processMathJaxTeX(elem);
         }

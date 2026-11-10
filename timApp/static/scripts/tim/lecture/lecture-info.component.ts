@@ -9,13 +9,12 @@ import moment from "moment";
 import {to2, toPromise} from "tim/util/utils";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {AnswerChartModule} from "tim/lecture/answer-chart.component";
-import {platformBrowserDynamic} from "@angular/platform-browser-dynamic";
 import {FormsModule} from "@angular/forms";
 import {AngularDraggableModule} from "angular2-draggable";
 import type {IUser} from "tim/user/IUser";
 import {isAdmin, Users} from "tim/user/userService";
 import {lectureinfoglobals} from "tim/util/globals";
-import {createDowngradedModule, doDowngrade} from "tim/downgrade";
+import {registerModuleServerComponents} from "tim/serverComponents";
 import {TimeStampToMomentConverter} from "tim/util/time-stamp-to-moment-converter.service";
 import {showQuestionEditDialog} from "tim/document/question/showQuestionEditDialog";
 import {showLectureDialog} from "tim/lecture/showLectureDialogs";
@@ -294,14 +293,6 @@ export class LectureInfoModule implements DoBootstrap {
     ngDoBootstrap(appRef: ApplicationRef) {}
 }
 
-export const moduleDefs = [
-    doDowngrade(
-        createDowngradedModule((extraProviders) =>
-            platformBrowserDynamic(extraProviders).bootstrapModule(
-                LectureInfoModule
-            )
-        ),
-        "timLectureInfo",
-        LectureInfoComponent
-    ),
-];
+registerModuleServerComponents(LectureInfoModule, {
+    "tim-lecture-info": LectureInfoComponent,
+});

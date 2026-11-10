@@ -1,4 +1,4 @@
-import type {IScope} from "angular";
+import {promiseHttp} from "tim/util/promiseHttp";
 import $ from "jquery";
 import type {Moment} from "moment";
 import {openEditor} from "tim/editor/pareditorOpen";
@@ -12,10 +12,11 @@ import {fromParents} from "tim/document/structure/create";
 import type {IGroup} from "tim/user/IUser";
 import {Users} from "tim/user/userService";
 import type {IPluginInfoResponse} from "tim/editor/parCompiler";
-import type {PareditorController} from "tim/editor/pareditor";
-import type {IModalInstance} from "tim/ui/dialog";
+import type {
+    PareditorComponent,
+    PareditorDialogComponent,
+} from "tim/editor/pareditor.component";
 import {documentglobals} from "tim/util/globals";
-import {$compile, $http} from "tim/util/ngimport";
 import {getViewName, isMobileDevice, TimStorage, to} from "tim/util/utils";
 import type {
     EditPosition,
@@ -55,16 +56,14 @@ const NOTES_TEACHERS_TITLE = "Only note writer and teachers can see the note!";
 
 export class NotesHandler {
     private hideVars: IVisibilityVars = getVisibilityVars();
-    public sc: IScope;
     public viewctrl: ViewCtrl;
     public noteBadgePar: ParContext | undefined;
     public noteBadge: HTMLElement | undefined;
-    private editorInstance?: IModalInstance<PareditorController>;
-    public editor?: PareditorController;
-    private editorLoad?: Promise<IModalInstance<PareditorController>>;
+    private editorInstance?: PareditorDialogComponent;
+    public editor?: PareditorComponent;
+    private editorLoad?: Promise<PareditorDialogComponent>;
 
-    constructor(sc: IScope, view: ViewCtrl) {
-        this.sc = sc;
+    constructor(view: ViewCtrl) {
         this.viewctrl = view;
         onClick(".note", ($this, e) => {
             if (!$this.hasClass("editable")) {
@@ -88,7 +87,7 @@ export class NotesHandler {
             // Double-clicking a comment will trigger this message, but it seems like on Chrome, the message dialog
             // interferes with the editor dialog if it opens first, making the editor invisible.
             // Awaiting for editor render helps.
-            await this.editorInstance?.rendered;
+            await this.editorInstance?.editor;
             await showMessageDialog("Some editor is already open.");
             return;
         }
@@ -114,7 +113,7 @@ export class NotesHandler {
         } else {
             url = "/editNote";
             const r = await to(
-                $http.get<{text: string; extraData: INote}>(
+                promiseHttp.get<{text: string; extraData: INote}>(
                     "/note/" + options.noteData.id
                 )
             );
@@ -193,7 +192,7 @@ export class NotesHandler {
             },
             deleteCb: async () => {
                 const r = await to(
-                    $http.post<IParResponse>(`/deleteNote`, {
+                    promiseHttp.post<IParResponse>(`/deleteNote`, {
                         id: options.noteData?.id,
                         ctx: par.getJsonForServer(),
                         view: getViewName(),
@@ -211,7 +210,7 @@ export class NotesHandler {
             },
             previewCb: async (text, proofread) => {
                 const r = await to(
-                    $http.post<IPluginInfoResponse>(
+                    promiseHttp.post<IPluginInfoResponse>(
                         `/preview/${this.viewctrl.docId}`,
                         {text, proofread, ...extraDataForServer(extraData)}
                     )
@@ -223,7 +222,7 @@ export class NotesHandler {
             },
             saveCb: async (text, eData) => {
                 const r = await to(
-                    $http.post<IParResponse>(url, {
+                    promiseHttp.post<IParResponse>(url, {
                         id: options.noteData?.id,
                         text: text,
                         access: eData.access,
@@ -247,7 +246,7 @@ export class NotesHandler {
             },
         });
         this.editorInstance = await this.editorLoad;
-        this.editor = await this.editorInstance.dialogInstance.promise;
+        this.editor = await this.editorInstance.editor;
         await to(this.editorInstance.result);
         this.editorInstance = undefined;
         this.editor = undefined;
@@ -300,7 +299,6 @@ export class NotesHandler {
             this.addNote();
         };
         this.updateBadgeState();
-        $compile(btn)(this.sc);
         return btn;
     }
 

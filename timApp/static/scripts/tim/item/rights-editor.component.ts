@@ -1,20 +1,20 @@
-import type {IController, IHttpResponse, IScope} from "angular";
+import type {OnInit} from "@angular/core";
+import {Component, ElementRef, Input, ViewChild} from "@angular/core";
+import {HttpClient} from "@angular/common/http";
 import moment from "moment";
-import {timApp} from "tim/app";
-import * as focusMe from "tim/ui/focusMe";
-import type {Binding, Result} from "tim/util/utils";
+import humanizeDuration from "humanize-duration";
+import type {AngularError, Result} from "tim/util/utils";
 import {
     capitalizeFirstLetter,
-    dateFormat,
     getGroupDesc,
-    markAsUsed,
-    to,
+    timeout,
+    toPromise,
 } from "tim/util/utils";
-
+import {withQueryParams} from "tim/util/http";
+import type {DurationChoice} from "tim/ui/duration-picker.component";
 import {durationTypes} from "tim/ui/duration-picker.component";
 import type {IGroup} from "tim/user/IUser";
 import {genericglobals, itemglobals} from "tim/util/globals";
-import {$http, $timeout} from "tim/util/ngimport";
 import type {
     IAccessType,
     IItemWithRights,
@@ -22,9 +22,7 @@ import type {
 } from "tim/item/access-role.service";
 import {accessOrder} from "tim/item/access-role.service";
 
-markAsUsed(focusMe);
-
-const tips = {
+const tips: Record<string, string | undefined> = {
     teacher: "Teacher right does not give edit right by itself.",
     "see answers": "Seeing answers does not give edit right by itself.",
 };
@@ -40,132 +38,284 @@ interface IPermissionEditResponse {
     not_exist: string[];
 }
 
-class RightsEditorController implements IController {
-    static $inject = ["$scope", "$element"];
-    private durOpt: {
-        durationType: moment.unitOfTime.Base;
-        durationAmount: number;
-        accessTo?: moment.Moment;
-    };
-    private timeOpt: {
-        type: string;
-        duration?: moment.Duration;
-        to?: moment.Moment;
-        from?: moment.Moment;
-        durationTo?: moment.Moment;
-        durationFrom?: moment.Moment;
-    };
-    private grouprights?: IRight[];
-    private showActiveOnly: boolean;
-    private editVelpGroupPermissions: boolean;
-    private editTranslationPermissions: boolean;
-    private selectedRight: IRight | null;
-    private datePickerOptionsFrom: EonasdanBootstrapDatetimepicker.SetOptions;
-    private datePickerOptionsTo: EonasdanBootstrapDatetimepicker.SetOptions;
-    private datePickerOptionsDurationFrom: EonasdanBootstrapDatetimepicker.SetOptions;
-    private datePickerOptionsDurationTo: EonasdanBootstrapDatetimepicker.SetOptions;
-    private datePickerOptionsDurationAccessTo: EonasdanBootstrapDatetimepicker.SetOptions;
-    private accessTypes!: IAccessType[];
-    private massMode: Binding<boolean | undefined, "<">;
-    private accessType: IAccessType | undefined;
-    private addingRight: boolean = false;
-    private focusEditor: boolean = false;
-    private itemId: Binding<number | undefined, "<">;
-    private listMode: boolean = false;
-    private groupName: string | undefined;
-    private gridOptions?: uiGrid.IGridOptionsOf<IItemWithRights>;
-    private action?: ActionOption;
-    private actionOption = ActionOption.Add;
-    private grid?: uiGrid.IGridApiOf<IItemWithRights>;
-    private gridReady = false;
-    private errMsg?: string;
-    private successMsg?: string;
-    private loading = false;
-    private orgs?: IGroup[];
-    private selectedOrg?: IGroup;
-    private requireConfirm = false;
-    private defaultItem?: string;
-    private barcodeMode?: boolean;
-    private restrictRights?: string[];
-    private hideRemove?: boolean;
-    private forceDuration?: number;
-    private forceDurationStart?: string;
-    private forceDurationEnd?: string;
-    private forceDurationAccessTo?: string;
-    private forceConfirm?: boolean;
-    private hideEdit?: boolean;
-    private hideExpire?: boolean;
-    private lastEdited?: IRight;
-    private confirmingRight?: IRight;
-    private expiringRight?: IRight;
-    private removingRight?: IRight;
-    private confirmExpire?: boolean;
-    private clearInput?: boolean;
-    private activeBoxLoading = false;
-    private tips = tips;
+/**
+ * An item row in the table of mass mode.
+ */
+interface IItemRow extends IItemWithRights {
+    relPath: string;
+    rightsStr: string;
+}
 
-    constructor(private scope: IScope, private element: JQLite) {
-        this.timeOpt = {type: "always"};
+type GridField = "title" | "relPath" | "rightsStr";
+
+let instanceCounter = 0;
+
+/**
+ * Converts an input value that may have been given as a plain HTML attribute, i.e. as a string.
+ *
+ * The editor can be put in a document as HTML with its options as attributes (e.g. `force-duration="4"`,
+ * `barcode-mode="true"`, `restrict-rights="['view']"`), in which case every value arrives as a string.
+ */
+function attrValue<T>(value: T | string | undefined): T | undefined {
+    if (typeof value !== "string") {
+        return value;
+    }
+    const s = value.trim();
+    if (s === "") {
+        return undefined;
+    }
+    if (s === "true" || s === "false") {
+        return (s === "true") as unknown as T;
+    }
+    if (/^-?\d+(\.\d+)?$/.test(s)) {
+        return Number(s) as unknown as T;
+    }
+    if (s.startsWith("[") && s.endsWith("]")) {
+        try {
+            return JSON.parse(s.replace(/'/g, '"')) as T;
+        } catch {
+            return undefined;
+        }
+    }
+    if (s.length >= 2 && /^(['"]).*\1$/.test(s)) {
+        return s.slice(1, -1) as unknown as T;
+    }
+    return s as unknown as T;
+}
+
+type Sortable = string | null | undefined;
+
+/**
+ * Compares the values the same way as the AngularJS orderBy filter did:
+ * strings case-insensitively, null values after strings and undefined values last.
+ */
+function compareLikeOrderBy(a: Sortable, b: Sortable): number {
+    const rank = (v: Sortable) => (v === undefined ? 2 : v === null ? 1 : 0);
+    const ra = rank(a);
+    const rb = rank(b);
+    if (ra !== rb) {
+        return ra - rb;
+    }
+    if (typeof a !== "string" || typeof b !== "string") {
+        return 0;
+    }
+    const la = a.toLowerCase();
+    const lb = b.toLowerCase();
+    return la < lb ? -1 : la > lb ? 1 : 0;
+}
+
+/**
+ * A component for viewing and editing the rights of an item (or the rights of many items at once in mass mode).
+ */
+@Component({
+    selector: "tim-rights-editor",
+    templateUrl: "./rights-editor.component.html",
+    // The layout relies on the whitespace between the inline elements (e.g. buttons).
+    preserveWhitespaces: true,
+    styles: [
+        `
+            .rights-item-table {
+                max-height: 40em;
+                overflow-y: auto;
+                margin-bottom: 1em;
+            }
+
+            .rights-item-table table {
+                margin-bottom: 0;
+            }
+
+            .rights-item-table thead th {
+                position: sticky;
+                top: 0;
+                background-color: #f3f3f3;
+                z-index: 1;
+            }
+
+            .rights-item-table thead tr:nth-child(2) th {
+                top: 2.2em;
+                font-weight: normal;
+            }
+
+            .rights-item-table .select-col {
+                width: 2em;
+                text-align: center;
+            }
+
+            .rights-item-table .sort-header {
+                cursor: pointer;
+                color: inherit;
+            }
+
+            .rights-item-table tbody tr {
+                cursor: pointer;
+            }
+
+            .rights-item-table tbody tr.selected {
+                background-color: #d9edf7;
+            }
+
+            .picker-disabled {
+                pointer-events: none;
+                opacity: 0.6;
+            }
+        `,
+    ],
+})
+export class RightsEditorComponent implements OnInit {
+    @Input() accessTypes?: IAccessType[];
+    @Input() action?: ActionOption;
+    @Input() allowSelectAction?: boolean | string;
+    @Input() barcodeMode?: boolean | string;
+    @Input() clearInput?: boolean | string;
+    @Input() confirmExpire?: boolean | string;
+    @Input() defaultItem?: string;
+    @Input() forceConfirm?: boolean | string;
+    @Input() forceDuration?: number | string;
+    @Input() forceDurationEnd?: string;
+    @Input() forceDurationStart?: string;
+    @Input() forceDurationAccessTo?: string;
+    @Input() hideEdit?: boolean | string;
+    @Input() hideExpire?: boolean | string;
+    @Input() hideRemove?: boolean | string;
+    @Input() itemId?: number | string;
+    @Input() massMode?: boolean | string;
+    @Input() orgs?: IGroup[];
+    @Input() restrictRights?: string[] | string;
+
+    @ViewChild("groupNameInput")
+    private groupNameInput?: ElementRef<HTMLInputElement>;
+    @ViewChild("groupNameArea")
+    private groupNameArea?: ElementRef<HTMLTextAreaElement>;
+    @ViewChild("editArea") private editArea?: ElementRef<HTMLElement>;
+
+    durOpt: {
+        durationType: DurationChoice;
+        durationAmount: number;
+        accessTo?: Date;
+    };
+    timeOpt: {
+        type: string;
+        to?: Date;
+        from?: Date;
+        durationTo?: Date;
+        durationFrom?: Date;
+    };
+    grouprights?: IRight[];
+    showActiveOnly = true;
+    editVelpGroupPermissions = true;
+    editTranslationPermissions = true;
+    selectedRight: IRight | null = null;
+    accessType: IAccessType | undefined;
+    addingRight = false;
+    listMode = false;
+    groupName: string | undefined;
+    actionOption = ActionOption.Add;
+    gridReady = false;
+    errMsg?: string;
+    successMsg?: string;
+    loading = false;
+    selectedOrg?: IGroup;
+    requireConfirm = false;
+    lastEdited?: IRight;
+    confirmingRight?: IRight;
+    expiringRight?: IRight;
+    removingRight?: IRight;
+    activeBoxLoading = false;
+    tips = tips;
+    idPrefix = `rightsEditor${instanceCounter++}-`;
+
+    // The rights of each access type that are currently shown, in display order.
+    private shownRights = new Map<number, IRight[]>();
+
+    // Mass mode
+    gridColumns: {field: GridField; name: string}[] = [
+        {field: "title", name: "Title"},
+        {field: "relPath", name: "Relative path"},
+        {field: "rightsStr", name: "Rights"},
+    ];
+    gridFilters: Record<GridField, string> = {
+        title: "",
+        relPath: "",
+        rightsStr: "",
+    };
+    sortField: GridField = "relPath";
+    sortAscending = true;
+    private items: IItemRow[] = [];
+    visibleItems: IItemRow[] = [];
+    selectedIds = new Set<number>();
+
+    constructor(
+        private http: HttpClient,
+        private element: ElementRef<HTMLElement>
+    ) {
+        // The start and end time of a range are the current time by default.
+        const now = moment().milliseconds(0).toDate();
+        this.timeOpt = {type: "always", from: now, to: new Date(now)};
         this.durOpt = {durationType: "hours", durationAmount: 4};
-        this.selectedRight = null;
-        this.showActiveOnly = true;
-        this.editVelpGroupPermissions = true;
-        this.editTranslationPermissions = true;
-        this.datePickerOptionsFrom = {
-            format: dateFormat,
-            defaultDate: moment(),
-            showTodayButton: true,
-        };
-        this.datePickerOptionsTo = {
-            format: dateFormat,
-            defaultDate: moment(),
-            showTodayButton: true,
-        };
-        this.datePickerOptionsDurationFrom = {
-            format: dateFormat,
-            showTodayButton: true,
-        };
-        this.datePickerOptionsDurationTo = {
-            format: dateFormat,
-            showTodayButton: true,
-        };
-        this.datePickerOptionsDurationAccessTo = {
-            format: dateFormat,
-            showTodayButton: true,
-        };
+    }
+
+    private normalizeInputs() {
+        this.allowSelectAction = attrValue<boolean>(this.allowSelectAction);
+        this.barcodeMode = attrValue<boolean>(this.barcodeMode);
+        this.clearInput = attrValue<boolean>(this.clearInput);
+        this.confirmExpire = attrValue<boolean>(this.confirmExpire);
+        this.defaultItem = attrValue<string>(this.defaultItem);
+        this.forceConfirm = attrValue<boolean>(this.forceConfirm);
+        this.forceDuration = attrValue<number>(this.forceDuration);
+        this.forceDurationEnd = attrValue<string>(this.forceDurationEnd);
+        this.forceDurationStart = attrValue<string>(this.forceDurationStart);
+        this.forceDurationAccessTo = attrValue<string>(
+            this.forceDurationAccessTo
+        );
+        this.hideEdit = attrValue<boolean>(this.hideEdit);
+        this.hideExpire = attrValue<boolean>(this.hideExpire);
+        this.hideRemove = attrValue<boolean>(this.hideRemove);
+        this.itemId = attrValue<number>(this.itemId);
+        this.massMode = attrValue<boolean>(this.massMode);
+        this.restrictRights = attrValue<string[]>(this.restrictRights);
+        this.action = attrValue<ActionOption>(this.action);
     }
 
     relPath(item: IItemWithRights) {
         return item.path.slice(itemglobals().curr_item.path.length + 1);
     }
 
-    async $onInit() {
+    async ngOnInit() {
+        this.normalizeInputs();
         this.actionOption = this.action ?? ActionOption.Add;
         if (!this.accessTypes || !this.massMode) {
             await this.getPermissions();
         }
         if (this.forceDuration) {
             this.timeOpt.type = "duration";
-            this.durOpt.durationAmount = this.forceDuration;
+            this.durOpt.durationAmount = this.forceDuration as number;
             this.durOpt.durationType = "hours";
             if (this.forceDurationStart) {
-                this.timeOpt.durationFrom = moment(this.forceDurationStart);
+                this.timeOpt.durationFrom = moment(
+                    this.forceDurationStart
+                ).toDate();
             }
             if (this.forceDurationEnd) {
-                this.timeOpt.durationTo = moment(this.forceDurationEnd);
+                this.timeOpt.durationTo = moment(
+                    this.forceDurationEnd
+                ).toDate();
             }
             if (this.forceDurationAccessTo) {
-                this.durOpt.accessTo = moment(this.forceDurationAccessTo);
+                this.durOpt.accessTo = moment(
+                    this.forceDurationAccessTo
+                ).toDate();
             }
         }
         if (this.forceConfirm != null) {
-            this.requireConfirm = this.forceConfirm;
+            this.requireConfirm = this.forceConfirm as boolean;
         }
-        this.accessType = this.accessTypes[0];
+        this.accessType = this.accessTypes?.[0];
         if (!this.orgs) {
-            const r = await to($http.get<IGroup[]>("/groups/getOrgs"));
+            const r = await toPromise(
+                this.http.get<IGroup[]>("/groups/getOrgs")
+            );
             if (r.ok) {
-                this.orgs = r.result.data;
+                this.orgs = r.result;
             }
         }
         if (this.orgs) {
@@ -176,66 +326,14 @@ class RightsEditorController implements IController {
 
         if (this.massMode) {
             this.addingRight = true;
-            const data = await this.getItemsAndPreprocess();
-            this.gridOptions = {
-                onRegisterApi: (gridApi) => {
-                    this.grid = gridApi;
-                },
-                data: data,
-                enableSorting: true,
-                enableFiltering: true,
-                enableFullRowSelection: true,
-                minRowsToShow: Math.min(data.length, 20),
-                enableGridMenu: true,
-                enableHorizontalScrollbar: false,
-                isRowSelectable: (row) => {
-                    const i = (
-                        row as unknown as uiGrid.IGridRowOf<IItemWithRights>
-                    ).entity;
-                    return i.rights.manage;
-                },
-                columnDefs: [
-                    {
-                        field: "title",
-                        name: "Title",
-                        allowCellFocus: false,
-                    },
-                    {
-                        name: "Relative path",
-                        allowCellFocus: false,
-                        field: "relPath",
-                        sort: {direction: "asc"},
-                        cellTemplate: `<div class="ui-grid-cell-contents"
-                                            title="TOOLTIP">
-                                            <i ng-if="row.entity.isFolder" class="glyphicon glyphicon-folder-open"></i>
-                                            <a href="/manage/{{grid.appScope.$ctrl.manageLink(row)}}">
-                                                {{row.entity.relPath}}
-                                            </a>
-                                       </div>`,
-                    },
-                    {
-                        field: "rightsStr",
-                        name: "Rights",
-                        allowCellFocus: false,
-                        cellTooltip: true,
-                    },
-                ],
-            };
+            this.setItems(await this.getItemsAndPreprocess());
             this.gridReady = true;
         }
-
-        this.scope.$watchGroup(
-            [() => this.durOpt.durationAmount, () => this.durOpt.durationType],
-            (newValues, oldValues, scope) => {
-                this.timeOpt.duration = moment.duration(
-                    this.durOpt.durationAmount,
-                    this.durOpt.durationType
-                );
-            }
-        );
     }
 
-    private async getItemsAndPreprocess() {
+    // region Mass mode item table
+
+    private async getItemsAndPreprocess(): Promise<IItemRow[]> {
         return (await this.getItems()).map((i) => ({
             ...i,
             relPath: this.relPath(i),
@@ -243,24 +341,141 @@ class RightsEditorController implements IController {
         }));
     }
 
+    private setItems(items: IItemRow[]) {
+        this.items = items;
+        // The selection is cleared whenever the items are reloaded.
+        this.selectedIds.clear();
+        this.updateVisibleItems();
+    }
+
+    updateVisibleItems() {
+        const filters = this.gridColumns
+            .map((c) => ({
+                field: c.field,
+                text: this.gridFilters[c.field].trim().toLowerCase(),
+            }))
+            .filter((f) => f.text !== "");
+        const shown = this.items.filter((i) =>
+            filters.every((f) => i[f.field].toLowerCase().includes(f.text))
+        );
+        const field = this.sortField;
+        const dir = this.sortAscending ? 1 : -1;
+        shown.sort(
+            (a, b) =>
+                dir *
+                a[field].localeCompare(b[field], undefined, {
+                    sensitivity: "base",
+                    numeric: true,
+                })
+        );
+        this.visibleItems = shown;
+    }
+
+    sortBy(field: GridField) {
+        if (this.sortField === field) {
+            this.sortAscending = !this.sortAscending;
+        } else {
+            this.sortField = field;
+            this.sortAscending = true;
+        }
+        this.updateVisibleItems();
+    }
+
+    trackItem(index: number, item: IItemRow) {
+        return item.id;
+    }
+
+    toggleSelected(item: IItemRow) {
+        if (!item.rights.manage) {
+            return;
+        }
+        if (this.selectedIds.has(item.id)) {
+            this.selectedIds.delete(item.id);
+        } else {
+            this.selectedIds.add(item.id);
+        }
+    }
+
+    private selectableVisibleItems() {
+        return this.visibleItems.filter((i) => i.rights.manage);
+    }
+
+    allVisibleSelected() {
+        const selectable = this.selectableVisibleItems();
+        return (
+            selectable.length > 0 &&
+            selectable.every((i) => this.selectedIds.has(i.id))
+        );
+    }
+
+    toggleSelectAll(select: boolean) {
+        for (const i of this.selectableVisibleItems()) {
+            if (select) {
+                this.selectedIds.add(i.id);
+            } else {
+                this.selectedIds.delete(i.id);
+            }
+        }
+    }
+
     async activeBoxChanged() {
-        if (!this.massMode || !this.gridOptions) {
+        this.updateShownRights();
+        if (!this.massMode || !this.gridReady) {
             return;
         }
         this.activeBoxLoading = true;
-        this.gridOptions.data = await this.getItemsAndPreprocess();
+        this.setItems(await this.getItemsAndPreprocess());
         this.activeBoxLoading = false;
     }
 
-    manageLink(row: uiGrid.IGridRowOf<IItemWithRights>) {
-        return row.entity.path;
+    // endregion
+
+    /**
+     * Returns the rights of the given type that should be shown, sorted by the name of the user or group.
+     */
+    rightsOfType(type: IAccessType): IRight[] {
+        return this.shownRights.get(type.id) ?? [];
     }
 
-    showAddRightFn(type: IAccessType, e: Event) {
+    private updateShownRights() {
+        this.shownRights.clear();
+        for (const right of this.grouprights ?? []) {
+            if (this.showActiveOnly && this.isObsolete(right)) {
+                continue;
+            }
+            const list = this.shownRights.get(right.type);
+            if (list) {
+                list.push(right);
+            } else {
+                this.shownRights.set(right.type, [right]);
+            }
+        }
+        for (const list of this.shownRights.values()) {
+            list.sort(
+                (a, b) =>
+                    compareLikeOrderBy(
+                        a.usergroup.personal_user?.real_name,
+                        b.usergroup.personal_user?.real_name
+                    ) || compareLikeOrderBy(a.usergroup.name, b.usergroup.name)
+            );
+        }
+    }
+
+    private focusEditor() {
+        // The edit area becomes visible only after the next change detection.
+        setTimeout(() => {
+            const el = this.listMode
+                ? this.groupNameArea?.nativeElement
+                : this.groupNameInput?.nativeElement;
+            el?.focus();
+        });
+    }
+
+    showAddRightFn(type: IAccessType | undefined, e: Event) {
         this.accessType = type;
         this.selectedRight = null;
         this.addingRight = true;
-        this.focusEditor = true;
+        this.focusEditor();
         e.preventDefault();
     }
 
@@ -297,25 +512,28 @@ class RightsEditorController implements IController {
             return;
         }
         this.loading = true;
-        const r = await to(
-            $http.get<{grouprights: IRight[]; accesstypes: IAccessType[]}>(
+        const r = await toPromise(
+            this.http.get<{grouprights: IRight[]; accesstypes: IAccessType[]}>(
                 `/${this.urlRootGet}/get/${this.itemId}`
             )
         );
         this.loading = false;
         if (r.ok) {
-            const data = r.result.data;
+            const data = r.result;
             this.grouprights = data.grouprights;
+            this.updateShownRights();
             if (data.accesstypes) {
-                this.accessTypes = data.accesstypes;
-                this.accessTypes.sort(
+                let accessTypes = data.accesstypes;
+                accessTypes.sort(
                     (a1, a2) => accessOrder[a1.name] - accessOrder[a2.name]
                 );
-                if (this.restrictRights) {
-                    this.accessTypes = this.accessTypes.filter((a) =>
-                        this.restrictRights!.includes(a.name)
+                const restrict = this.restrictRights;
+                if (Array.isArray(restrict)) {
+                    accessTypes = accessTypes.filter((a) =>
+                        restrict.includes(a.name)
                     );
                 }
+                this.accessTypes = accessTypes;
                 if (!this.accessType) {
                     this.accessType = this.accessTypes[0];
                 }
@@ -326,8 +544,8 @@ class RightsEditorController implements IController {
     }
 
     async removeRight(right: IRight, refresh = true) {
-        const r = await to(
-            $http.put(`/${this.urlRootModify}/remove`, {
+        const r = await toPromise(
+            this.http.put(`/${this.urlRootModify}/remove`, {
                 group: right.usergroup.id,
                 id: this.itemId,
                 item_type: this.defaultItem,
@@ -340,7 +558,7 @@ class RightsEditorController implements IController {
     }
 
     private async handleResult(
-        r: Result<IHttpResponse<unknown>, {data: {error: string}}>,
+        r: Result<unknown, AngularError>,
         refresh: boolean
     ) {
         let result;
@@ -350,7 +568,7 @@ class RightsEditorController implements IController {
             }
             result = true;
         } else {
-            this.reportError(r.result.data.error);
+            this.reportError(r.result.error.error);
             result = false;
         }
         this.selectedRight = null;
@@ -382,9 +600,7 @@ class RightsEditorController implements IController {
     addDisabled() {
         return (
             this.loading ||
-            (this.massMode &&
-                this.grid &&
-                this.grid.selection.getSelectedRows().length === 0)
+            (!!this.massMode && this.gridReady && this.selectedIds.size === 0)
         );
     }
 
@@ -393,39 +609,57 @@ class RightsEditorController implements IController {
      * but could not read clipboard, so just clearInput
      */
     paste() {
-        // navigator.permissions.query({name: "clipboard-read"});  // does not compile
         if (!this.confirmExpire) {
             return;
         } // clearInput did not work?
         this.groupName = "";
-        /*
-        const input = this.element.filter("#groupName");
-        input.focus();
-        document.execCommand("selectAll");
-        document.execCommand("paste");
-        // if (!navigator.clipboard) { return; }
-        // const text = await navigator.clipboard.readText();
-        const text = this.groupName;
-        if (!this.accessType || !text) { return; }
-        // this.addOrEditPermission(text, this.accessType);
-         */
     }
 
-    async addOrEditPermission(groupname: string, type: IAccessType) {
+    sameAccessType(a: IAccessType | undefined, b: IAccessType | undefined) {
+        return a?.id === b?.id;
+    }
+
+    submitForm(e: Event) {
+        e.preventDefault();
+        void this.addOrEditPermission(this.groupName, this.accessType);
+    }
+
+    /**
+     * The time options in the form that the server expects.
+     */
+    private getTimeOpt() {
+        return {
+            ...this.timeOpt,
+            duration: moment.duration(
+                this.durOpt.durationAmount,
+                this.durOpt.durationType
+            ),
+        };
+    }
+
+    async addOrEditPermission(
+        groupname: string | undefined,
+        type: IAccessType | undefined
+    ) {
+        if (!groupname || !type) {
+            return;
+        }
         this.clearMessages();
-        const timeOpt = {...this.timeOpt};
+        const timeOpt = this.getTimeOpt();
         if (this.durationSelected()) {
             timeOpt.to = this.durOpt.accessTo;
         }
         if (this.massMode) {
-            if (!this.grid || !this.gridOptions) {
+            if (!this.gridReady) {
                 console.error("grid not initialized");
                 return;
             }
-            const ids = this.grid.selection.getSelectedRows().map((i) => i.id);
+            const ids = this.items
+                .filter((i) => this.selectedIds.has(i.id))
+                .map((i) => i.id);
             this.loading = true;
-            const r = await to(
-                $http.put<IPermissionEditResponse>(`/permissions/edit`, {
+            const r = await toPromise(
+                this.http.put<IPermissionEditResponse>(`/permissions/edit`, {
                     ids: ids,
                     time: timeOpt,
                     type: type.id,
@@ -437,11 +671,11 @@ class RightsEditorController implements IController {
                 })
             );
             if (r.ok) {
-                this.showNotExistWarning(r.result.data.not_exist);
-                this.gridOptions.data = await this.getItemsAndPreprocess();
+                this.showNotExistWarning(r.result.not_exist);
+                this.setItems(await this.getItemsAndPreprocess());
                 this.successMsg = "Rights updated.";
             } else {
-                this.errMsg = r.result.data.error;
+                this.errMsg = r.result.error.error;
             }
             this.loading = false;
         } else {
@@ -456,8 +690,8 @@ class RightsEditorController implements IController {
             }
             if (this.actionOption === ActionOption.Add) {
                 this.loading = true;
-                const r = await to(
-                    $http.put<IPermissionEditResponse>(
+                const r = await toPromise(
+                    this.http.put<IPermissionEditResponse>(
                         `/${this.urlRootModify}/add`,
                         {
                             time: timeOpt,
@@ -475,13 +709,13 @@ class RightsEditorController implements IController {
                 );
                 this.loading = false;
                 if (r.ok) {
-                    this.showNotExistWarning(r.result.data.not_exist);
+                    this.showNotExistWarning(r.result.not_exist);
                     await this.getPermissions();
                     if (this.barcodeMode) {
                         this.handleSuccessBarcode(
                             type,
                             groups,
-                            r.result.data.not_exist
+                            r.result.not_exist
                         );
                     } else {
                         if (!this.errMsg) {
@@ -489,7 +723,7 @@ class RightsEditorController implements IController {
                         }
                     }
                 } else {
-                    this.reportError(r.result.data.error);
+                    this.reportError(r.result.error.error);
                 }
             } else {
                 let func;
@@ -539,8 +773,10 @@ class RightsEditorController implements IController {
                 }
             }
             if (!this.barcodeMode && !this.errMsg) {
-                await $timeout();
-                this.element.find(".rights-list a").first().focus();
+                await timeout();
+                this.element.nativeElement
+                    .querySelector<HTMLElement>(".rights-list a")
+                    ?.focus();
             }
             if (this.editingRight()) {
                 this.selectedRight = null;
@@ -604,6 +840,22 @@ class RightsEditorController implements IController {
         return getGroupDesc(group.usergroup);
     }
 
+    formatDate(date: moment.MomentInput) {
+        return date ? moment(date).format("DD.MM.YYYY HH:mm:ss") : "";
+    }
+
+    formatRelative(date: moment.MomentInput) {
+        return date ? moment(date).fromNow() : "";
+    }
+
+    formatDuration(duration: moment.Duration | string | null) {
+        return moment.duration(duration).humanize();
+    }
+
+    formatPreciseDuration(duration: moment.Duration | string | null) {
+        return humanizeDuration(moment.duration(duration).asMilliseconds());
+    }
+
     shouldShowBeginTime(group: IRight) {
         // having -1 here (instead of 0) avoids "begins in a few seconds" right after adding a right
         return moment().diff(group.accessible_from, "seconds") < -1;
@@ -661,10 +913,6 @@ class RightsEditorController implements IController {
         );
     }
 
-    obsoleteFilterFn = (group: IRight) => {
-        return !this.showActiveOnly || !this.isObsolete(group);
-    };
-
     async expireRight(group: IRight, refresh = true) {
         if (!this.accessType) {
             this.reportError("Access type not selected.");
@@ -688,21 +936,24 @@ class RightsEditorController implements IController {
         }
         this.loading = true;
         this.expiringRight = group;
-        const r = await to(
-            $http.put<IPermissionEditResponse>(`/${this.urlRootModify}/add`, {
-                time: {
-                    ...this.timeOpt,
-                    to: moment(),
-                    type: "range",
-                },
-                id: this.itemId,
-                groups: [group.usergroup.name],
-                type: group.type,
-                confirm: false,
-                item_type: this.defaultItem,
-                edit_velp_group_perms: this.editVelpGroupPermissions,
-                edit_translation_perms: this.editTranslationPermissions,
-            })
+        const r = await toPromise(
+            this.http.put<IPermissionEditResponse>(
+                `/${this.urlRootModify}/add`,
+                {
+                    time: {
+                        ...this.getTimeOpt(),
+                        to: moment(),
+                        type: "range",
+                    },
+                    id: this.itemId,
+                    groups: [group.usergroup.name],
+                    type: group.type,
+                    confirm: false,
+                    item_type: this.defaultItem,
+                    edit_velp_group_perms: this.editVelpGroupPermissions,
+                    edit_translation_perms: this.editTranslationPermissions,
+                }
+            )
         );
         this.loading = false;
         this.expiringRight = undefined;
@@ -712,8 +963,8 @@ class RightsEditorController implements IController {
     async confirmRight(group: IRight, refresh = true) {
         this.confirmingRight = group;
         this.loading = true;
-        const r = await to(
-            $http.put("/permissions/confirm", {
+        const r = await toPromise(
+            this.http.put("/permissions/confirm", {
                 group: group.usergroup.id,
                 id: this.itemId,
                 type: group.type,
@@ -734,9 +985,9 @@ class RightsEditorController implements IController {
 
     async editRight(group: IRight) {
         this.setEditFields(group);
-        const section = this.element.find(".rights-edit-area")[0];
+        const section = this.editArea?.nativeElement;
         if (section) {
-            await $timeout();
+            await timeout();
             section.scrollIntoView({block: "nearest"});
         }
     }
@@ -748,27 +999,12 @@ class RightsEditorController implements IController {
         this.selectedRight = group;
         this.lastEdited = group;
 
-        if (group.duration_from) {
-            this.timeOpt.durationFrom = moment(group.duration_from);
-        } else {
-            this.timeOpt.durationFrom = undefined;
-        }
-        if (group.duration_to) {
-            this.timeOpt.durationTo = moment(group.duration_to);
-        } else {
-            this.timeOpt.durationTo = undefined;
-        }
-
-        if (group.accessible_from) {
-            this.timeOpt.from = moment(group.accessible_from);
-        } else {
-            this.timeOpt.from = undefined;
-        }
-        if (group.accessible_to) {
-            this.timeOpt.to = moment(group.accessible_to);
-        } else {
-            this.timeOpt.to = undefined;
-        }
+        const toDate = (m: moment.MomentInput) =>
+            m ? moment(m).toDate() : undefined;
+        this.timeOpt.durationFrom = toDate(group.duration_from);
+        this.timeOpt.durationTo = toDate(group.duration_to);
+        this.timeOpt.from = toDate(group.accessible_from);
+        this.timeOpt.to = toDate(group.accessible_to);
         this.requireConfirm = group.require_confirm ?? false;
 
         if (group.duration && group.accessible_from == null) {
@@ -792,19 +1028,19 @@ class RightsEditorController implements IController {
     }
 
     private async getItems() {
-        const r = await to(
-            $http.get<IItemWithRights[]>("/getItems", {
-                params: {
+        const r = await toPromise(
+            this.http.get<IItemWithRights[]>(
+                withQueryParams("/getItems", {
                     folder_id: this.itemId,
                     recursive: true,
                     include_rights: true,
-                },
-            })
+                })
+            )
         );
         if (!r.ok) {
             throw Error("getItems failed");
         }
-        return r.result.data;
+        return r.result;
     }
 
     private formatRights(i: IItemWithRights) {
@@ -846,29 +1082,3 @@ class RightsEditorController implements IController {
         this.errMsg = s;
     }
 }
-
-timApp.component("timRightsEditor", {
-    bindings: {
-        accessTypes: "<?",
-        action: "@?",
-        allowSelectAction: "<?",
-        barcodeMode: "<?",
-        clearInput: "<?",
-        confirmExpire: "<?",
-        defaultItem: "@?",
-        forceConfirm: "<?",
-        forceDuration: "<?",
-        forceDurationEnd: "<?",
-        forceDurationStart: "<?",
-        forceDurationAccessTo: "<?",
-        hideEdit: "<?",
-        hideExpire: "<?",
-        hideRemove: "<?",
-        itemId: "<?",
-        massMode: "<?",
-        orgs: "<?",
-        restrictRights: "<?",
-    },
-    controller: RightsEditorController,
-    templateUrl: "/static/templates/rightsEditor.html",
-});

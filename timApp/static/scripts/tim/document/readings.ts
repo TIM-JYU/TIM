@@ -1,7 +1,12 @@
-import type {IPromise} from "angular";
+import {promiseHttp} from "tim/util/promiseHttp";
+import type {ITimeoutPromise} from "tim/util/refresh";
+import {uiTimeout} from "tim/util/refresh";
 import $ from "jquery";
 import moment from "moment";
-import {getActiveDocument} from "tim/document/activedocument";
+import {
+    getActiveDocument,
+    hasActiveDocument,
+} from "tim/document/activedocument";
 import {documentglobals, genericglobals} from "tim/util/globals";
 import {
     diffDialog,
@@ -18,7 +23,6 @@ import {
 import type {HelpPar} from "tim/document/structure/helpPar";
 import type {IItem} from "tim/item/IItem";
 import {Users} from "tim/user/userService";
-import {$http, $log, $timeout} from "tim/util/ngimport";
 import type {IOkResponse} from "tim/util/utils";
 import {
     getViewName,
@@ -88,7 +92,9 @@ export async function markParRead(par: ParContext, readingType: ReadingType) {
     if (!Users.isLoggedIn() || !docId) {
         return;
     }
-    const r = await to($http.put(`/read/${docId}/${parId}/${readingType}`, {}));
+    const r = await to(
+        promiseHttp.put(`/read/${docId}/${parId}/${readingType}`, {})
+    );
     if (!r.ok) {
         readline.classList.remove(readClassName);
         return;
@@ -111,22 +117,26 @@ async function markParsRead(pars: ParContext[], item: IItem) {
         p.getReadline()?.classList.add(readClasses[ReadingType.ClickRed])
     );
     const r = await to(
-        $http.put(
+        promiseHttp.put(
             "/read/" + item.id + "/" + "null" + "/" + ReadingType.ClickRed,
             {pars: parIds}
         )
     );
     if (!r.ok) {
-        $log.error("Could not save the read markings");
+        console.error("Could not save the read markings");
         return;
     }
     markPageDirty();
 }
 
-let readPromise: IPromise<unknown> | null = null;
+let readPromise: ITimeoutPromise<unknown> | null = null;
 let readingParId: string | undefined;
 
 function queueParagraphForReading() {
+    // The readings are initialized before the document structure is built.
+    if (!hasActiveDocument()) {
+        return;
+    }
     // Filter out yet unprocessed paragraphs because section builder might not yet been run
     const isRead = (
         e: HelpPar | ParContext | undefined
@@ -147,7 +157,7 @@ function queueParagraphForReading() {
     const parId = parToRead.originalPar.id;
 
     if (readPromise != null && readingParId !== parId) {
-        $timeout.cancel(readPromise);
+        uiTimeout.cancel(readPromise);
     } else if (readingParId === parId) {
         return;
     }
@@ -157,7 +167,7 @@ function queueParagraphForReading() {
             .textContent()
             ?.trim()
             .split(/[\s\n]+/).length ?? 1;
-    readPromise = $timeout(async () => {
+    readPromise = uiTimeout(async () => {
         await markParRead(parToRead, ReadingType.OnScreen);
         queueParagraphForReading();
     }, 300 * numWords);
@@ -167,18 +177,18 @@ async function handleSeeChanges(elem: JQuery, e: OnClickArg) {
     const par = fromParents(elem).readLineCtx;
     const [id, blockId, t] = [par.par.docId, par.par.id, par.par.hash];
     const parData = await to(
-        $http.get<Array<{par_hash: string}>>(`/read/${id}/${blockId}`)
+        promiseHttp.get<Array<{par_hash: string}>>(`/read/${id}/${blockId}`)
     );
     if (!parData.ok) {
     } else {
-        const oldb = $http.get<{text: string}>("/getBlock", {
+        const oldb = promiseHttp.get<{text: string}>("/getBlock", {
             params: {
                 doc_id: id,
                 par_hash: parData.result.data[0].par_hash,
                 par_id: blockId,
             },
         });
-        const newb = $http.get<{text: string}>("/getBlock", {
+        const newb = promiseHttp.get<{text: string}>("/getBlock", {
             params: {
                 doc_id: id,
                 par_hash: t,
@@ -277,9 +287,9 @@ export async function initReadings(item: IItem) {
     );
 
     if (Users.isLoggedIn() && genericglobals().bookmarks != null) {
-        await $timeout(10000);
+        await uiTimeout(10000);
         await to(
-            $http.post("/bookmarks/markLastRead/" + item.id, {
+            promiseHttp.post("/bookmarks/markLastRead/" + item.id, {
                 view: getViewName(),
             })
         );
@@ -293,7 +303,7 @@ export async function handleUnread(pos: EditPosition) {
     const first = pos.type === EditType.Edit ? pos.pars.start : pos.par;
     const [docid, parid] = [first.par.docId, first.par.id];
     const result = await to(
-        $http.put<IOkResponse & {latest?: unknown}>(
+        promiseHttp.put<IOkResponse & {latest?: unknown}>(
             `/unread/${docid}/${parid}`,
             {}
         )

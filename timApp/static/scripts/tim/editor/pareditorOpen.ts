@@ -1,23 +1,26 @@
-import {showDialog} from "tim/ui/dialog";
-import {to} from "tim/util/utils";
-import {$http, $injector} from "tim/util/ngimport";
+import {toPromiseAndRefresh} from "tim/util/utils";
+import {getHttpClient} from "tim/util/http";
+import {angularDialog} from "tim/ui/angulardialog/dialog.service";
 import type {IPluginInfoResponse} from "tim/editor/parCompiler";
-import type {IEditorParams} from "tim/editor/pareditor";
+import type {
+    IEditorParams,
+    PareditorDialogComponent,
+} from "tim/editor/pareditor.component";
 
-export async function openEditor(p: IEditorParams) {
-    const parEd = await import("tim/editor/pareditor");
-    const ctrl = parEd.PareditorController;
-    $injector.loadNewModules([parEd.parEditorModule.name]);
-    return showDialog(
-        ctrl,
-        {params: () => p},
-        {
-            saveKey: p.options.localSaveTag,
-            absolute: true,
-            size: p.defaultSize,
-            forceMaximized: true,
-        }
-    );
+/**
+ * Opens the paragraph editor.
+ *
+ * @returns The dialog of the editor. Its "result" promise resolves when the editor is closed.
+ */
+export async function openEditor(
+    p: IEditorParams
+): Promise<PareditorDialogComponent> {
+    const parEd = await import("tim/editor/pareditor.component");
+    // The editor has its own dialog frame, so it only implements the part of AngularDialogComponent
+    // that the dialog container uses.
+    return (await angularDialog.open(parEd.PareditorDialogComponent as never, {
+        params: p,
+    })) as unknown as PareditorDialogComponent;
 }
 
 export async function openEditorSimple(
@@ -45,17 +48,20 @@ export async function openEditorSimple(
                 touchDevice: false,
             },
             previewCb: async (txt, proofread) => {
-                const resp = await to(
-                    $http.post<IPluginInfoResponse>(`/preview/${docId}`, {
-                        text: txt,
-                        proofread,
-                        isComment: true,
-                    })
+                const resp = await toPromiseAndRefresh(
+                    getHttpClient().post<IPluginInfoResponse>(
+                        `/preview/${docId}`,
+                        {
+                            text: txt,
+                            proofread,
+                            isComment: true,
+                        }
+                    )
                 );
                 if (!resp.ok) {
                     throw new Error("preview route failed");
                 }
-                return resp.result.data;
+                return resp.result;
             },
             saveCb: async (txt, data) => {
                 return await {};

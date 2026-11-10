@@ -42,13 +42,12 @@ import {
     withDefault,
 } from "tim/plugin/attributes";
 import {getFormBehavior} from "tim/plugin/util";
-import {$http} from "tim/util/ngimport";
+import {serializeQueryParams} from "tim/util/http";
 import {
     copyToClipboard,
     defaultErrorMessage,
     defaultTimeout,
     timeout,
-    to,
     toPromise,
     valueDefu,
     valueOr,
@@ -64,7 +63,6 @@ import {
 import {InputDialogKind} from "tim/ui/input-dialog.kind";
 import {showInputDialog} from "tim/ui/showInputDialog";
 import html2canvas from "html2canvas";
-import {vctrlInstance} from "tim/document/viewctrlinstance";
 import type {
     SimcirConnectorDef,
     SimcirDeviceInstance,
@@ -3687,19 +3685,32 @@ ${fhtml}
         }
 
         const params = this.attrsall;
-        const r = await to(
-            $http<{msg: string; error: string} | string>({
-                method: "POST",
-                url: "/cs/",
-                params: {
-                    print: 1,
-                    replace: "",
-                },
-                data: params,
-            })
+        // The reply is read as text and parsed as JSON only if it looks like JSON, like AngularJS $http did.
+        const parseIfJson = (text: string): unknown => {
+            const s = text.trim();
+            if (
+                (s.startsWith("{") && s.endsWith("}")) ||
+                (s.startsWith("[") && s.endsWith("]"))
+            ) {
+                try {
+                    return JSON.parse(s);
+                } catch {
+                    return text;
+                }
+            }
+            return text;
+        };
+        const r = await toPromise<string, {error: unknown}>(
+            this.http.post(
+                "/cs/?" + serializeQueryParams({print: 1, replace: ""}),
+                params,
+                {responseType: "text"}
+            )
         );
         if (r.ok) {
-            const data = r.result.data;
+            const data = parseIfJson(r.result) as
+                | {msg: string; error: string}
+                | string;
 
             // Server always seems to give text/plain as result, so prepare for it.
             if (typeof data === "string") {
@@ -3714,8 +3725,12 @@ ${fhtml}
                 this.postcode = "";
             }
         } else {
-            const status = r.result.data.error;
-            this.errors.push(status);
+            const err =
+                typeof r.result.error === "string"
+                    ? parseIfJson(r.result.error)
+                    : r.result.error;
+            const status = (err as {error?: string} | undefined)?.error;
+            this.errors.push(status ?? String(err));
             this.precode = "";
             this.postcode = "";
         }
@@ -3838,16 +3853,7 @@ ${fhtml}
             element.addClass("mdPreviewDiv");
 
             data.texts = element.wrapAll("<div>").parent().html();
-            const viewCtrl = vctrlInstance;
-            if (!viewCtrl) {
-                // TODO: remove this when ParCompiler is updated to Angular 2+
-                throw new Error("ViewCtrl was undefined");
-            }
-            await ParCompiler.compileAndAppendTo(
-                this.preview,
-                data,
-                viewCtrl.scope
-            );
+            await ParCompiler.compileAndAppendTo(this.preview, data);
         } else {
             const data = r.result;
             this.runError = true;

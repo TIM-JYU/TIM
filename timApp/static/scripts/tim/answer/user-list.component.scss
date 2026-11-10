@@ -1,0 +1,129 @@
+.user-list-content {
+    height: 100%;
+    min-height: 0;
+}
+
+.userlist {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+}
+
+.user-list-menu {
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    z-index: 3;
+}
+
+.user-list-menu-button {
+    border: 1px solid #d4d4d4;
+    background: #f3f3f3;
+    padding: 2px 6px;
+    line-height: 1.2;
+    cursor: pointer;
+}
+
+.user-list-menu-items {
+    display: block;
+    max-height: 60vh;
+    overflow-y: auto;
+
+    a {
+        cursor: pointer;
+    }
+}
+
+.user-list-table {
+    flex: 1;
+    min-height: 0;
+    overflow: auto;
+    background-color: white;
+    border: 1px solid #d4d4d4;
+
+    &:focus {
+        outline: none;
+    }
+}
+
+table {
+    width: 100%;
+    table-layout: fixed;
+    border-collapse: separate;
+    border-spacing: 0;
+    font-size: small;
+}
+
+th, td {
+    padding: 4px 5px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    border-right: 1px solid #d4d4d4;
+    border-bottom: 1px solid #d4d4d4;
+
+    &.narrow {
+        width: 59px;
+    }
+}
+
+thead th {
+    position: sticky;
+    z-index: 2;
+    background: #f3f3f3;
+    font-weight: bold;
+}
+
+.user-list-header-row th {
+    top: 0;
+    height: 30px;
+}
+
+// leave room for the menu button
+th:last-child, td:last-child {
+    &.narrow {
+        width: 87px;
+    }
+}
+
+.user-list-header-row th:last-child {
+    padding-right: 28px;
+}
+
+.user-list-filter-row th {
+    top: 30px;
+
+    input {
+        width: 100%;
+        padding: 0 3px;
+        border: 1px solid #d4d4d4;
+        border-radius: 3px;
+        font-weight: normal;
+    }
+}
+
+.sort-header {
+    color: inherit;
+    cursor: pointer;
+    text-decoration: none;
+
+    .glyphicon {
+        font-size: x-small;
+    }
+}
+
+.user-list-row {
+    cursor: pointer;
+
+    &:nth-child(even) td {
+        background-color: #f3f3f3;
+    }
+
+    &:hover td {
+        background-color: #e9eef1;
+    }
+
+    &.selected td {
+        background-color: #c9dde1;
+    }
+}

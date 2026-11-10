@@ -214,17 +214,6 @@ def html_error(
     )
 
 
-def get_grid_modules():
-    return [
-        "ui.grid",
-        "ui.grid.cellNav",
-        "ui.grid.selection",
-        "ui.grid.exporter",
-        "ui.grid.autoResize",
-        "ui.grid.saveState",
-    ]
-
-
 def flash_if_visible(message: str, view_ctx: ViewContext) -> None:
     if not view_ctx.preview and not view_ctx.partial:
         flash(message)

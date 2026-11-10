@@ -9,7 +9,6 @@ import {Users} from "tim/user/userService";
 import type {BookmarksComponent} from "tim/sidebarmenu/util/bookmarks.component";
 import {setRoot} from "tim/rootinstance";
 import {showMessageDialog} from "tim/ui/showMessageDialog";
-import {timApp} from "tim/app";
 import {showTosAgreementDialog} from "tim/ui/showTosAgreementDialog";
 import type {IDocument} from "tim/item/IItem";
 
@@ -264,9 +263,3 @@ export class RootCtrl {
         await to2(showTosAgreementDialog());
     }
 }
-
-timApp.component("timRoot", {
-    controller: RootCtrl,
-    template: `<div ng-transclude style="display: flex; min-height: 100vh; flex-direction: column"></div>`,
-    transclude: true,
-});

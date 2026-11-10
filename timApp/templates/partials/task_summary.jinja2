@@ -20,6 +20,6 @@
         {{ gettext("total tasks") }}: {{ task_info.tasks_done }}&nbsp;/&nbsp;{{ task_info.total_tasks }}
         {% endif -%}
     </span>
-    <span class="refresh-notice" style="font-size: x-small;" ng-click="reload()">{{ gettext("Refresh (F5) to recount") }}</span>
+    <span class="refresh-notice" style="font-size: x-small;" onclick="location.reload()">{{ gettext("Refresh (F5) to recount") }}</span>
 </div>
 <div class="taskSmallSummary" id="task-point-summary-small"><p>{{ task_info.total_points }} p</p></div>

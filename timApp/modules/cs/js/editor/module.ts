@@ -36,6 +36,7 @@ import {FormulaEditorLoaderComponent} from "./math-editor/formula-editor-loader.
         EditorComponent,
         AceEditorComponent,
         FormulaEditorComponent,
+        FormulaEditorLoaderComponent,
         SymbolsPipe,
     ],
 })

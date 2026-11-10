@@ -4,13 +4,12 @@ import {BrowserModule} from "@angular/platform-browser";
 import {AccordionModule} from "ngx-bootstrap/accordion";
 import {vctrlInstance} from "tim/document/viewctrlinstance";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
-import {platformBrowserDynamic} from "@angular/platform-browser-dynamic";
 import {NoopAnimationsModule} from "@angular/platform-browser/animations";
 import type {ViewCtrl} from "tim/document/viewctrl";
 import type {IItem} from "tim/item/IItem";
 import {getItem} from "tim/item/IItem";
 import {isScreenSizeOrLower} from "tim/util/utils";
-import {createDowngradedModule, Digest, doDowngrade} from "tim/downgrade";
+import {registerModuleServerComponents} from "tim/serverComponents";
 import {LectureController} from "tim/lecture/lectureController";
 
 @Component({
@@ -164,15 +163,6 @@ export class LectureMenuModule implements DoBootstrap {
     ngDoBootstrap(appRef: ApplicationRef) {}
 }
 
-export const moduleDefs = [
-    doDowngrade(
-        createDowngradedModule((extraProviders) =>
-            platformBrowserDynamic(extraProviders).bootstrapModule(
-                LectureMenuModule
-            )
-        ),
-        "timLectureMenu",
-        LectureMenuComponent,
-        Digest.Propagate
-    ),
-];
+registerModuleServerComponents(LectureMenuModule, {
+    "tim-lecture-menu": LectureMenuComponent,
+});

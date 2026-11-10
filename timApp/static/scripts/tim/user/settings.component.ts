@@ -19,8 +19,7 @@ import {showAddContactDialog} from "tim/user/showAddContactDialog";
 import {showAddAPIKeyDialog} from "tim/user/showAddAPIDialog";
 import {Channel} from "tim/messaging/listOptionTypes";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
-import {createDowngradedModule, doDowngrade} from "tim/downgrade";
-import {platformBrowserDynamic} from "@angular/platform-browser-dynamic";
+import {registerModuleServerComponents} from "tim/serverComponents";
 import {BrowserModule} from "@angular/platform-browser";
 import {FormsModule} from "@angular/forms";
 import {CommonModule} from "@angular/common";
@@ -1519,9 +1518,6 @@ export class SettingsModule implements DoBootstrap {
     ngDoBootstrap(appRef: ApplicationRef): void {}
 }
 
-export const angularJsModule = createDowngradedModule((extraProviders) => {
-    const platformRef = platformBrowserDynamic(extraProviders);
-    return platformRef.bootstrapModule(SettingsModule);
+registerModuleServerComponents(SettingsModule, {
+    "tim-settings": SettingsComponent,
 });
-doDowngrade(angularJsModule, "timSettings", SettingsComponent);
-export const moduleDefs = [angularJsModule];
