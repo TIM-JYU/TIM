@@ -19,9 +19,7 @@ def get_change_editor_button(pareditor) -> WebElement:
 
 def get_cancel_button(pareditor) -> WebElement:
     # The page can have other (hidden) Cancel buttons, so search only inside the editor.
-    button = pareditor.find_element(
-        By.XPATH, ".//button[contains(text(),'Cancel')]"
-    )
+    button = pareditor.find_element(By.XPATH, ".//button[contains(text(),'Cancel')]")
     return button
 
 
