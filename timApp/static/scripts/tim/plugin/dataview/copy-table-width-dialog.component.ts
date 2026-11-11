@@ -28,6 +28,7 @@ export interface ICopyTableWidthsParams {
         </tim-dialog-frame>
     `,
     styleUrls: ["./copy-table-width-dialog.component.scss"],
+    standalone: false,
 })
 export class CopyTableWidthDialogComponent
     extends AngularDialogComponent<ICopyTableWidthsParams, void>

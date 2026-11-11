@@ -15,6 +15,7 @@ export interface TabEntry {
 
 @Directive({
     selector: "[timMenuTab]",
+    standalone: false,
 })
 export class MenuTabDirective {
     constructor(public vcr: ViewContainerRef) {}

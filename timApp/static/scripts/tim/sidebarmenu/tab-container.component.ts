@@ -1,10 +1,5 @@
 import type {ComponentRef} from "@angular/core";
-import {
-    Component,
-    ComponentFactoryResolver,
-    Input,
-    ViewChild,
-} from "@angular/core";
+import {Component, Input, ViewChild} from "@angular/core";
 import type {OnTabSelect} from "tim/sidebarmenu/menu-tab.directive";
 import {TabEntry, MenuTabDirective} from "tim/sidebarmenu/menu-tab.directive";
 
@@ -13,19 +8,17 @@ import {TabEntry, MenuTabDirective} from "tim/sidebarmenu/menu-tab.directive";
     template: `
         <ng-template timMenuTab></ng-template>
     `,
+    standalone: false,
 })
 export class TabContainerComponent {
     @Input() tabItem!: TabEntry;
     @ViewChild(MenuTabDirective, {static: true}) timMenuTab!: MenuTabDirective;
     private tabComponent?: ComponentRef<unknown>;
 
-    constructor(private cfr: ComponentFactoryResolver) {}
-
     private initComponent() {
-        const factory = this.cfr.resolveComponentFactory(
+        this.tabComponent = this.timMenuTab.vcr.createComponent(
             this.tabItem.component
         );
-        this.tabComponent = this.timMenuTab.vcr.createComponent(factory);
     }
 
     private static hasOnSelect(inst: unknown): inst is OnTabSelect {

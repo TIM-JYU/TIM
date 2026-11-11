@@ -1,0 +1,94 @@
+// ngx-bootstrap 10 and later support only Bootstrap 4 and 5, while TIM uses Bootstrap 3.
+// The components still mostly produce markup that works with Bootstrap 3.
+// These rules cover the cases where they do not.
+
+// An open dropdown gets the class "show", which in Bootstrap 3 is a utility class
+// that forces "display: block".
+.btn-group.show {
+    display: inline-block !important;
+}
+
+.btn-group-vertical > .btn-group.show {
+    display: block !important;
+}
+
+li.show[dropdown] {
+    display: list-item !important;
+}
+
+// Tooltip and popover position adjustments that ngx-bootstrap used to apply in Bootstrap 3 mode.
+bs-tooltip-container.tooltip {
+    &.top > .arrow {
+        margin-left: -2px;
+    }
+
+    &.bottom {
+        margin-top: 0;
+    }
+
+    &.bs-tooltip-left, &.bs-tooltip-right {
+        margin: 0;
+
+        .arrow {
+            margin: .3rem 0;
+        }
+    }
+}
+
+popover-container.popover {
+    &.popover-top, &.top {
+        margin-bottom: 10px;
+    }
+
+    &.top > .arrow {
+        margin-left: -2px;
+    }
+
+    &.bs-popover-left {
+        margin-right: .5rem;
+    }
+
+    &.bs-popover-left, &.bs-popover-right {
+        .arrow {
+            margin: .3rem 0;
+        }
+    }
+}
+
+// The typeahead list is now made of ".dropdown-item" buttons instead of "li > a".
+typeahead-container.dropdown-menu {
+    > .dropdown-item {
+        display: block;
+        width: 100%;
+        padding: 3px 20px;
+        clear: both;
+        font-weight: normal;
+        line-height: $line-height-base;
+        color: $dropdown-link-color;
+        text-align: left;
+        white-space: nowrap;
+        background: none;
+        border: 0;
+
+        &:hover, &:focus {
+            color: $dropdown-link-hover-color;
+            text-decoration: none;
+            background-color: $dropdown-link-hover-bg;
+        }
+
+        &.active, &.active:hover, &.active:focus {
+            color: $dropdown-link-active-color;
+            background-color: $dropdown-link-active-bg;
+            outline: 0;
+        }
+    }
+
+    > .dropdown-header {
+        margin: 0;
+    }
+}
+
+// An animated progress bar used to get the Bootstrap 3 class "active".
+.progress-bar.progress-bar-animated {
+    animation: progress-bar-stripes 2s linear infinite;
+}

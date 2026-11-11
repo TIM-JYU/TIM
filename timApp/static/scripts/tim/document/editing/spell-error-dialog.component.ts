@@ -109,6 +109,7 @@ function computeSourcePosition(
             </ng-container>
         </tim-dialog-frame>
     `,
+    standalone: false,
 })
 export class SpellErrorDialogComponent extends AngularDialogComponent<
     ISpellErrorParams,

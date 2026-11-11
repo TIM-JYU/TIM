@@ -10,6 +10,7 @@ import {
 
 @Directive({
     selector: "[offClick]",
+    standalone: false,
 })
 export class OffClickDirective implements OnInit, OnDestroy {
     @Output()

@@ -9,7 +9,12 @@ import {
     NgModule,
 } from "@angular/core";
 import {DomSanitizer} from "@angular/platform-browser";
-import {HttpClient, HttpClientModule, HttpHeaders} from "@angular/common/http";
+import {
+    HttpClient,
+    HttpHeaders,
+    provideHttpClient,
+    withInterceptorsFromDi,
+} from "@angular/common/http";
 import {FormsModule} from "@angular/forms";
 import {TimDefer} from "tim/util/timdefer";
 import type {MouseOrTouch} from "tim/util/utils";
@@ -1342,6 +1347,7 @@ interface IAnswerResponse {
         </div>
     `,
     styleUrls: ["./imagex.component.scss"],
+    standalone: false,
 })
 export class ImageXComponent
     extends AngularPluginBase<
@@ -1964,13 +1970,8 @@ export class ImageXComponent
 
 @NgModule({
     declarations: [ImageXComponent],
-    imports: [
-        CommonModule,
-        DrawToolbarModule,
-        HttpClientModule,
-        FormsModule,
-        TimUtilityModule,
-    ],
+    imports: [CommonModule, DrawToolbarModule, FormsModule, TimUtilityModule],
+    providers: [provideHttpClient(withInterceptorsFromDi())],
 })
 export class ImagexModule implements DoBootstrap {
     ngDoBootstrap(appRef: ApplicationRef) {}

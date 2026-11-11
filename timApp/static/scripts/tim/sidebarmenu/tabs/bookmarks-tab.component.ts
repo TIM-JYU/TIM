@@ -7,6 +7,7 @@ import {Component} from "@angular/core";
         <h5 i18n>Bookmarks</h5>
         <bookmarks-list></bookmarks-list>
     `,
+    standalone: false,
 })
 export class BookmarksTabComponent {
     constructor() {}

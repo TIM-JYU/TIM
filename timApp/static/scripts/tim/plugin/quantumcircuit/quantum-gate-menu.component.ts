@@ -105,6 +105,7 @@ interface MenuGate {
 
     `,
     styleUrls: ["./quantum-gate-menu.component.scss"],
+    standalone: false,
 })
 export class QuantumGateMenuComponent implements OnInit, OnDestroy {
     gates: MenuGate[] = [];

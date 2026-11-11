@@ -1,7 +1,6 @@
 import type {OnInit} from "@angular/core";
 import {
     ChangeDetectorRef,
-    ComponentFactoryResolver,
     Directive,
     EventEmitter,
     Input,
@@ -23,6 +22,7 @@ export interface IDialogInstanceEvent {
 
 @Directive({
     selector: "[timDialogHost]",
+    standalone: false,
 })
 export class DialogHostDirective implements OnInit {
     @Input() timDialogHost!: DialogConstructor;
@@ -33,7 +33,6 @@ export class DialogHostDirective implements OnInit {
     @Output() instanceClosed = new EventEmitter<IDialogInstanceEvent>();
 
     constructor(
-        private componentFactoryResolver: ComponentFactoryResolver,
         private viewContainerRef: ViewContainerRef,
         private cdr: ChangeDetectorRef
     ) {}

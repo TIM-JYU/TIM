@@ -165,10 +165,10 @@
           },
           "configurations": {
             "production": {
-              "browserTarget": "tim:build:production"
+              "buildTarget": "tim:build:production"
             },
             "development": {
-              "browserTarget": "tim:build:development"
+              "buildTarget": "tim:build:development"
             }
           },
           "defaultConfiguration": "development"
@@ -176,7 +176,7 @@
         "extract-i18n": {
           "builder": "@angular-devkit/build-angular:extract-i18n",
           "options": {
-            "browserTarget": "tim:build"
+            "buildTarget": "tim:build"
           }
         }
       }

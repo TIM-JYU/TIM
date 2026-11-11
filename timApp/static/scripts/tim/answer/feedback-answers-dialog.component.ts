@@ -214,6 +214,7 @@ export interface IFeedbackAnswersParams {
                 <button class="btn btn-default" type="button" (click)="cancel()">Cancel</button>
             </ng-container>
         </tim-dialog-frame>`,
+    standalone: false,
 })
 export class FeedbackAnswersDialogComponent extends AngularDialogComponent<
     IFeedbackAnswersParams,

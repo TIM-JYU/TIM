@@ -11,7 +11,11 @@
  */
 import {Component, NgModule} from "@angular/core";
 import {FormsModule} from "@angular/forms";
-import {HttpClient, HttpClientModule} from "@angular/common/http";
+import {
+    HttpClient,
+    provideHttpClient,
+    withInterceptorsFromDi,
+} from "@angular/common/http";
 import {TooltipModule} from "ngx-bootstrap/tooltip";
 import {DialogModule} from "tim/ui/angulardialog/dialog.module";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
@@ -324,6 +328,7 @@ import {PurifyModule} from "tim/util/purify.module";
         </tim-dialog-frame>
     `,
     styleUrls: ["./calendar-event-dialog.component.scss"],
+    standalone: false,
 })
 export class CalendarEventDialogComponent extends AngularDialogComponent<
     TIMCalendarEvent,
@@ -889,16 +894,16 @@ export class CalendarEventDialogComponent extends AngularDialogComponent<
 
 @NgModule({
     declarations: [CalendarEventDialogComponent],
+    exports: [CalendarEventDialogComponent],
     imports: [
         DialogModule,
         FormsModule,
         TimUtilityModule,
         CommonModule,
-        HttpClientModule,
         TimCalendarModule,
         TooltipModule.forRoot(),
         PurifyModule,
     ],
-    exports: [CalendarEventDialogComponent],
+    providers: [provideHttpClient(withInterceptorsFromDi())],
 })
 export class CalendarEventDialogModule {}

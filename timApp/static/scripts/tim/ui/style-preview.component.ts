@@ -1,7 +1,11 @@
 import type {ApplicationRef, DoBootstrap} from "@angular/core";
 import {Component, NgModule} from "@angular/core";
 import {toPromise} from "tim/util/utils";
-import {HttpClient, HttpClientModule} from "@angular/common/http";
+import {
+    HttpClient,
+    provideHttpClient,
+    withInterceptorsFromDi,
+} from "@angular/common/http";
 import {registerModuleServerComponents} from "tim/serverComponents";
 import {documentglobals} from "tim/util/globals";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
@@ -27,6 +31,7 @@ import {BrowserModule} from "@angular/platform-browser";
     </div>
   `,
     styleUrls: ["./style-preview.component.scss"],
+    standalone: false,
 })
 export class StylePreviewComponent {
     error?: {title?: string; message?: string; code?: string} = undefined;
@@ -106,7 +111,8 @@ export class StylePreviewComponent {
 @NgModule({
     declarations: [StylePreviewComponent],
     exports: [StylePreviewComponent],
-    imports: [BrowserModule, TimUtilityModule, HttpClientModule],
+    imports: [BrowserModule, TimUtilityModule],
+    providers: [provideHttpClient(withInterceptorsFromDi())],
 })
 export class StylePreviewModule implements DoBootstrap {
     ngDoBootstrap(appRef: ApplicationRef): void {}

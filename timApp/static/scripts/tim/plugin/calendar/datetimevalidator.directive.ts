@@ -28,6 +28,7 @@ import {NG_VALIDATORS} from "@angular/forms";
             multi: true,
         },
     ],
+    standalone: false,
 })
 
 /**

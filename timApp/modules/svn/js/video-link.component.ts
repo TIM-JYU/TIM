@@ -8,6 +8,7 @@ import {Component, Input} from "@angular/core";
            [target]="target">
             <i class="glyphicon glyphicon-book"></i>&ngsp;<span [innerHTML]="doctext | purify"></span></a>
     `,
+    standalone: false,
 })
 export class VideoLinkComponent {
     @Input() doclink!: string;

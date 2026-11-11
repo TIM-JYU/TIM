@@ -73,6 +73,7 @@ export interface UserImportDialogParams {
         </tim-dialog-frame>
     `,
     styleUrls: ["user-import-dialog.component.scss"],
+    standalone: false,
 })
 export class UserImportDialogComponent extends AngularDialogComponent<
     UserImportDialogParams,

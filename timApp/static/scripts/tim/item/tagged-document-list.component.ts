@@ -38,6 +38,7 @@ import {tagStyleClass} from "tim/item/IItem";
         </ul>
         <span *ngIf="docList.length == 0">No documents found!</span>
     `,
+    standalone: false,
 })
 export class TaggedDocumentListComponent {
     @Input() tagFilter!: string;

@@ -68,7 +68,7 @@ const NAME_RULES: Record<AnnotatedNameRequirements, string> = {
                                     <input type="text" class="form-control" name="list-name" id="list-name"
                                            [(ngModel)]="listName"
                                            (ngModelChange)="nameTyped.next($event)"/>
-                                    <div class="input-group-addon">@</div>
+                                    <div class="input-group-addon">&#64;</div>
                                     <select id="domain-select" class="form-control" name="domain-select"
                                             [(ngModel)]="domain">
                                         <option [disabled]="domains.length"
@@ -126,6 +126,7 @@ const NAME_RULES: Record<AnnotatedNameRequirements, string> = {
         </tim-dialog-frame>
     `,
     styleUrls: ["message-list-create-dialog.component.scss"],
+    standalone: false,
 })
 export class MessageListCreateDialogComponent extends AngularDialogComponent<
     unknown,

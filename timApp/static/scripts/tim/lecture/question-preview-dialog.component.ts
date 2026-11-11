@@ -56,6 +56,7 @@ export interface IQuestionPreviewDialogResult {
             </ng-container>
         </tim-dialog-frame>
     `,
+    standalone: false,
 })
 export class QuestionPreviewDialogComponent extends AngularDialogComponent<
     QuestionPreviewParams,

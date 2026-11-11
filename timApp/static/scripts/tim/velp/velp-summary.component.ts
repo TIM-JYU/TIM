@@ -52,6 +52,7 @@ import type {Annotation} from "tim/velp/velptypes";
         </div>
     `,
     styleUrls: ["./velp-summary.component.scss"],
+    standalone: false,
 })
 export class VelpSummaryComponent implements OnChanges {
     @Input() annotations!: Array<Annotation>;

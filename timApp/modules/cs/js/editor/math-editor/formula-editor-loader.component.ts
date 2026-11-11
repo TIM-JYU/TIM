@@ -27,6 +27,7 @@ import type {FormulaEditorComponent} from "./formula-editor.component";
     template: `
         <ng-container #formulaEditor></ng-container>
     `,
+    standalone: false,
 })
 export class FormulaEditorLoaderComponent implements OnDestroy, AfterViewInit {
     private parEditor!: IEditor;

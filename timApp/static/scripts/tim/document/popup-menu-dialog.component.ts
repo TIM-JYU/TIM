@@ -5,7 +5,11 @@ import {Component, NgModule, NgZone} from "@angular/core";
 import {watchEditMode} from "tim/document/editing/editmode";
 import {DialogModule} from "tim/ui/angulardialog/dialog.module";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
-import {HttpClient, HttpClientModule} from "@angular/common/http";
+import {
+    HttpClient,
+    provideHttpClient,
+    withInterceptorsFromDi,
+} from "@angular/common/http";
 import {PurifyModule} from "tim/util/purify.module";
 import type {HelpPar} from "tim/document/structure/helpPar";
 import type {ParContext} from "tim/document/structure/parContext";
@@ -89,6 +93,7 @@ enum RefStyle {
             </ng-container>
         </tim-dialog-frame>
     `,
+    standalone: false,
 })
 export class PopupMenuDialogComponent extends AngularDialogComponent<
     IPopupParams,
@@ -281,12 +286,7 @@ export class PopupMenuDialogComponent extends AngularDialogComponent<
 
 @NgModule({
     declarations: [PopupMenuDialogComponent],
-    imports: [
-        CommonModule,
-        DialogModule,
-        TimUtilityModule,
-        HttpClientModule,
-        PurifyModule,
-    ],
+    imports: [CommonModule, DialogModule, TimUtilityModule, PurifyModule],
+    providers: [provideHttpClient(withInterceptorsFromDi())],
 })
 export class PopupMenuDialogModule {}

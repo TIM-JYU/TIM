@@ -404,6 +404,7 @@ import {Users} from "tim/user/userService";
         </ng-container>
     `,
     styleUrls: ["message-list-admin.component.scss"],
+    standalone: false,
 })
 export class MessageListAdminComponent implements OnInit {
     @Input() list?: string;

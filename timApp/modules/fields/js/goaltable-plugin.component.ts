@@ -12,7 +12,11 @@ import {
     withDefault,
 } from "tim/plugin/attributes";
 import {DomSanitizer} from "@angular/platform-browser";
-import {HttpClient, HttpClientModule} from "@angular/common/http";
+import {
+    HttpClient,
+    provideHttpClient,
+    withInterceptorsFromDi,
+} from "@angular/common/http";
 import {FormsModule} from "@angular/forms";
 import {TooltipModule} from "ngx-bootstrap/tooltip";
 import {AngularPluginBase} from "tim/plugin/angular-plugin-base.directive";
@@ -127,6 +131,7 @@ const scaleValueWords: Word[] = [
         </div>
 `,
     styleUrls: ["goaltable-plugin.component.scss"],
+    standalone: false,
 })
 export class GoalTablePluginComponent
     extends AngularPluginBase<
@@ -401,12 +406,12 @@ export class GoalTablePluginComponent
     declarations: [GoalTablePluginComponent],
     imports: [
         CommonModule,
-        HttpClientModule,
         TimUtilityModule,
         FormsModule,
         TooltipModule.forRoot(),
         PurifyModule,
     ],
+    providers: [provideHttpClient(withInterceptorsFromDi())],
 })
 export class GoalTableModule implements DoBootstrap {
     ngDoBootstrap(appRef: ApplicationRef) {}

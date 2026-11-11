@@ -235,6 +235,7 @@ export interface IDrawOptions extends t.TypeOf<typeof DrawOptions> {}
         </div>
     `,
     styleUrls: ["./draw-toolbar.component.scss"],
+    standalone: false,
 })
 export class DrawToolbarComponent implements AfterViewInit {
     @Input() drawVisibleOptions: IDrawVisibleOptions = {

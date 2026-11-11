@@ -26,6 +26,7 @@ import type {ICreateItemDialogParams} from "tim/item/showCreateItemDialog";
             </ng-container>
         </tim-dialog-frame>
     `,
+    standalone: false,
 })
 export class CreateItemDialogComponent
     extends AngularDialogComponent<ICreateItemDialogParams | undefined, unknown>

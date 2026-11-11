@@ -9,6 +9,7 @@ import {Directive, ElementRef, Input} from "@angular/core";
  */
 @Directive({
     selector: "[scriptedInnerHTML]",
+    standalone: false,
 })
 export class ScriptedInnerHTMLDirective implements OnChanges {
     @Input() scriptedInnerHTML!: string;

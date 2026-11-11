@@ -13,7 +13,11 @@ import {
 } from "@angular/core";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {DomSanitizer} from "@angular/platform-browser";
-import {HttpClient, HttpClientModule} from "@angular/common/http";
+import {
+    HttpClient,
+    provideHttpClient,
+    withInterceptorsFromDi,
+} from "@angular/common/http";
 import {FormsModule} from "@angular/forms";
 import {AngularPluginBase} from "tim/plugin/angular-plugin-base.directive";
 import {vctrlInstance} from "tim/document/viewctrlinstance";
@@ -353,6 +357,7 @@ const sortLang = "fi";
         </div>
     `,
     styleUrls: ["./table-form.component.scss"],
+    standalone: false,
 })
 export class TableFormComponent
     extends AngularPluginBase<
@@ -1807,13 +1812,13 @@ Separate multiple addresses with commas or write each address on a new line.`;
     declarations: [TableFormComponent],
     imports: [
         CommonModule,
-        HttpClientModule,
         FormsModule,
         TimUtilityModule,
         TimTableModule,
         TimMessageSendModule,
         PurifyModule,
     ],
+    providers: [provideHttpClient(withInterceptorsFromDi())],
 })
 export class TableFormModule implements DoBootstrap {
     ngDoBootstrap(_appRef: ApplicationRef) {}

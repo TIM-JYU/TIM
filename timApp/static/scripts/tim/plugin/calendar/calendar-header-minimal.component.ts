@@ -47,6 +47,7 @@ import {Users} from "tim/user/userService";
         </div>
   `,
     styleUrls: ["calendar.component.scss"],
+    standalone: false,
 })
 export class CalendarHeaderMinimalComponent {
     @Input() view: CalendarView = CalendarView.Week;

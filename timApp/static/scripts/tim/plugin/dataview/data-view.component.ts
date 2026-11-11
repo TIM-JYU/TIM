@@ -306,6 +306,7 @@ const SLOW_SIZE_MEASURE_THRESHOLD = 0;
         </div>
     `,
     styleUrls: ["./data-view.component.scss", "../timTable/table-common.scss"],
+    standalone: false,
 })
 export class DataViewComponent implements AfterViewInit, OnInit {
     // region Fields

@@ -16,5 +16,6 @@ import {Component} from "@angular/core";
         </div>
     `,
     styleUrls: ["./dialog.component.scss"],
+    standalone: false,
 })
 export class DialogComponent {}

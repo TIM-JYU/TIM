@@ -7,7 +7,11 @@ import {
     Output,
     ViewChild,
 } from "@angular/core";
-import {HttpClient, HttpClientModule} from "@angular/common/http";
+import {
+    HttpClient,
+    provideHttpClient,
+    withInterceptorsFromDi,
+} from "@angular/common/http";
 import {FormsModule, NgForm} from "@angular/forms";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {BsDropdownModule} from "ngx-bootstrap/dropdown";
@@ -193,6 +197,7 @@ interface TimMessageOptions extends t.TypeOf<typeof TimSavedMessageOptions> {
         </div>
     `,
     styleUrls: ["./tim-message-send.scss"],
+    standalone: false,
 })
 export class TimMessageSendComponent {
     /**
@@ -493,9 +498,9 @@ export class TimMessageSendComponent {
 
 @NgModule({
     declarations: [TimMessageSendComponent],
+    exports: [TimMessageSendComponent],
     imports: [
         CommonModule,
-        HttpClientModule,
         FormsModule,
         TimUtilityModule,
         BsDropdownModule.forRoot(),
@@ -503,7 +508,7 @@ export class TimMessageSendComponent {
         TooltipModule.forRoot(),
         DatetimePickerModule,
     ],
-    exports: [TimMessageSendComponent],
+    providers: [provideHttpClient(withInterceptorsFromDi())],
 })
 export class TimMessageSendModule implements DoBootstrap {
     ngDoBootstrap(appRef: ApplicationRef): void {}
@@ -512,10 +517,10 @@ export class TimMessageSendModule implements DoBootstrap {
 // Needed because doDowngrade doesn't include BrowserModule by default
 @NgModule({
     declarations: [],
+    exports: [],
     imports: [
         BrowserModule,
         NoopAnimationsModule,
-        HttpClientModule,
         FormsModule,
         TimUtilityModule,
         BsDropdownModule.forRoot(),
@@ -523,7 +528,7 @@ export class TimMessageSendModule implements DoBootstrap {
         TooltipModule.forRoot(),
         DatetimePickerModule,
     ],
-    exports: [],
+    providers: [provideHttpClient(withInterceptorsFromDi())],
 })
 export class TimMessageSendPageModule implements DoBootstrap {
     ngDoBootstrap(appRef: ApplicationRef): void {}

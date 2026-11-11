@@ -1,6 +1,10 @@
 import {AngularDialogComponent} from "tim/ui/angulardialog/angular-dialog-component.directive";
 import {Component, NgModule} from "@angular/core";
-import {HttpClient, HttpClientModule} from "@angular/common/http";
+import {
+    HttpClient,
+    provideHttpClient,
+    withInterceptorsFromDi,
+} from "@angular/common/http";
 import {KEY_S} from "tim/util/keycodes";
 import {DialogModule} from "tim/ui/angulardialog/dialog.module";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
@@ -87,6 +91,7 @@ export type RenameResult = IParResponse | IManageResponse;
             </ng-container>
         </tim-dialog-frame>
     `,
+    standalone: false,
 })
 export class PluginRenameDialogComponent extends AngularDialogComponent<
     IRenameParams,
@@ -197,9 +202,9 @@ export class PluginRenameDialogComponent extends AngularDialogComponent<
         CommonModule,
         DialogModule,
         TimUtilityModule,
-        HttpClientModule,
         TooltipModule.forRoot(),
         FormsModule,
     ],
+    providers: [provideHttpClient(withInterceptorsFromDi())],
 })
 export class PluginRenameDialogModule {}

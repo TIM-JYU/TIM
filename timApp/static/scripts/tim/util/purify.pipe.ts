@@ -5,6 +5,7 @@ import DOMPurify from "dompurify";
 
 @Pipe({
     name: "purify",
+    standalone: false,
 })
 export class PurifyPipe implements PipeTransform {
     constructor(protected sanitizer: DomSanitizer) {}

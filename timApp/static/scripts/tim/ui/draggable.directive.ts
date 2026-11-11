@@ -30,6 +30,7 @@ function toBool(v: BoolInput): boolean | undefined {
 @Directive({
     selector: "[tim-draggable-fixed]",
     exportAs: "timDraggable",
+    standalone: false,
 })
 export class DraggableDirective
     implements OnInit, AfterViewInit, DoCheck, OnDestroy

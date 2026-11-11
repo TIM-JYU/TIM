@@ -33,6 +33,8 @@ import {PrintButtonComponent} from "tim/ui/print-button.component";
 import {CreateItemComponent} from "tim/item/create-item.component";
 import {PurifyModule} from "tim/util/purify.module";
 
+import {IframeSettingsDirective} from "tim/ui/iframe-settings.directive";
+
 @NgModule({
     providers: [SessionVerify],
     declarations: [
@@ -41,6 +43,7 @@ import {PurifyModule} from "tim/util/purify.module";
         PluginFrameComponent,
         PluginHeaderComponent,
         FocusMeDirective,
+        IframeSettingsDirective,
         DialogComponent,
         CloseButtonComponent,
         AddMemberComponent,
@@ -70,6 +73,7 @@ import {PurifyModule} from "tim/util/purify.module";
         PluginFrameComponent,
         PluginHeaderComponent,
         FocusMeDirective,
+        IframeSettingsDirective,
         DialogComponent,
         CloseButtonComponent,
         AddMemberComponent,

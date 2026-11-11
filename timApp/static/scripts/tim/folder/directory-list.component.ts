@@ -140,6 +140,7 @@ const AccessLevelBadgeInfo: Record<AccessLevelBadge, string> = {
         </tabset>
     `,
     styleUrls: ["directory-list.component.scss"],
+    standalone: false,
 })
 export class DirectoryListComponent {
     itemList: DocumentOrFolder[];
@@ -261,7 +262,7 @@ export class DirectoryListComponent {
             this.sortByModifiedDesc = true;
             this.sortByIdAsc = !this.sortByIdAsc;
         }
-        this.itemList = foldersArr.concat(docsArr);
+        this.itemList = [...foldersArr, ...docsArr];
     }
 
     listOwnerNames(i: IItem) {

@@ -25,6 +25,7 @@ interface MessageDialogData {
             </ng-container>
         </tim-dialog-frame>
     `,
+    standalone: false,
 })
 export class MessageDialogComponent extends AngularDialogComponent<
     MessageDialogData,

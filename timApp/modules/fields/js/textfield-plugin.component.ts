@@ -21,7 +21,11 @@ import {
     valueOr,
 } from "tim/util/utils";
 import {DomSanitizer} from "@angular/platform-browser";
-import {HttpClient, HttpClientModule} from "@angular/common/http";
+import {
+    HttpClient,
+    provideHttpClient,
+    withInterceptorsFromDi,
+} from "@angular/common/http";
 import {FormsModule} from "@angular/forms";
 import {TooltipModule} from "ngx-bootstrap/tooltip";
 import {AngularPluginBase} from "tim/plugin/angular-plugin-base.directive";
@@ -181,6 +185,7 @@ export type TFieldContent = t.TypeOf<typeof FieldContent>;
 </div>
 `,
     styleUrls: ["textfield-plugin.component.scss"],
+    standalone: false,
 })
 export class TextfieldPluginComponent
     extends AngularPluginBase<
@@ -725,12 +730,12 @@ export class TextfieldPluginComponent
     declarations: [TextfieldPluginComponent],
     imports: [
         CommonModule,
-        HttpClientModule,
         TimUtilityModule,
         FormsModule,
         PurifyModule,
         TooltipModule.forRoot(),
     ],
+    providers: [provideHttpClient(withInterceptorsFromDi())],
 })
 export class TextfieldModule implements DoBootstrap {
     ngDoBootstrap(_appRef: ApplicationRef) {}

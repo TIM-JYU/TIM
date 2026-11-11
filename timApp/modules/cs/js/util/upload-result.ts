@@ -26,6 +26,7 @@ import {DomSanitizer} from "@angular/platform-browser";
             </div>
         </ng-container>
     </ng-container>`,
+    standalone: false,
 })
 export class UploadResultComponent {
     // TODO: test

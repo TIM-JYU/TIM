@@ -4,7 +4,11 @@ import moment from "moment";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {DialogModule} from "tim/ui/angulardialog/dialog.module";
 import {FormsModule, NgForm} from "@angular/forms";
-import {HttpClient, HttpClientModule} from "@angular/common/http";
+import {
+    HttpClient,
+    provideHttpClient,
+    withInterceptorsFromDi,
+} from "@angular/common/http";
 import {TypeaheadModule} from "ngx-bootstrap/typeahead";
 import {TooltipModule} from "ngx-bootstrap/tooltip";
 import {SessionVerify} from "tim/util/session-verify.interceptor";
@@ -95,6 +99,7 @@ const tagParsingSeparator = ",";
             </ng-container>
         </tim-dialog-frame>
     `,
+    standalone: false,
 })
 export class EditTagsDialogComponent extends AngularDialogComponent<
     IItem,
@@ -330,18 +335,17 @@ export class EditTagsDialogComponent extends AngularDialogComponent<
 }
 
 @NgModule({
-    providers: [SessionVerify],
     declarations: [EditTagsDialogComponent],
     imports: [
         CommonModule,
         FormsModule,
-        HttpClientModule,
         TimUtilityModule,
         DialogModule,
         TypeaheadModule.forRoot(),
         TooltipModule.forRoot(),
         DatetimePickerModule,
     ],
+    providers: [SessionVerify, provideHttpClient(withInterceptorsFromDi())],
 })
 export class EditTagsDialogModule {}
 

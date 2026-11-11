@@ -11,7 +11,7 @@ import {
 } from "tim/plugin/attributes";
 import {windowAsAny} from "tim/util/utils";
 import type {ITimComponent, ViewCtrl} from "tim/document/viewctrl";
-import {HttpClientModule} from "@angular/common/http";
+import {provideHttpClient, withInterceptorsFromDi} from "@angular/common/http";
 import {FormsModule} from "@angular/forms";
 import {AngularPluginBase} from "tim/plugin/angular-plugin-base.directive";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
@@ -145,6 +145,7 @@ interface IStackData {
             <p class="plgfooter" *ngIf="footer" [innerHtml]="footer | purify"></p>
         </div>
     `,
+    standalone: false,
 })
 export class StackPluginComponent
     extends AngularPluginBase<
@@ -653,12 +654,12 @@ export class StackPluginComponent
     declarations: [StackPluginComponent],
     imports: [
         CommonModule,
-        HttpClientModule,
         TimUtilityModule,
         PurifyModule,
         FormsModule,
         ScriptedInnerHTMLModule,
     ],
+    providers: [provideHttpClient(withInterceptorsFromDi())],
 })
 export class StackModule implements DoBootstrap {
     ngDoBootstrap(appRef: ApplicationRef) {}

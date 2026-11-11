@@ -47,6 +47,7 @@ import {Component, EventEmitter, Output} from "@angular/core";
     </table>
   `,
     styleUrls: ["./t9-keyboard.component.scss"],
+    standalone: false,
 })
 export class T9KeyboardComponent {
     @Output() applyT9 = new EventEmitter<string>();

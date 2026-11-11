@@ -19,6 +19,7 @@ const TICK_TENTH_SECOND = 100;
 @Component({
     selector: "tim-countdown",
     template: `{{timeLeftText}}`,
+    standalone: false,
 })
 export class CountdownComponent implements OnInit, OnChanges {
     @Input() endTime?: ReadonlyMoment;

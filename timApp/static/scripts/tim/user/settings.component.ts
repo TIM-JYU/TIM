@@ -1,4 +1,8 @@
-import {HttpClient, HttpClientModule} from "@angular/common/http";
+import {
+    HttpClient,
+    provideHttpClient,
+    withInterceptorsFromDi,
+} from "@angular/common/http";
 import type {
     AfterViewInit,
     ApplicationRef,
@@ -54,6 +58,7 @@ import {notifyUserPrefsChanged} from "tim/sidebarmenu/tabs/settings-tab.componen
         <ng-content></ng-content>
     `,
     styleUrls: ["settings-button-panel.component.scss"],
+    standalone: false,
 })
 export class SettingsButtonPanelComponent {
     saving = false;
@@ -656,6 +661,7 @@ type StyleSelectionType =
         </div>
     `,
     styleUrls: ["settings.component.scss"],
+    standalone: false,
 })
 export class SettingsComponent implements DoCheck, AfterViewInit {
     saving = false;
@@ -1506,13 +1512,13 @@ export class SettingsComponent implements DoCheck, AfterViewInit {
         TimTableModule,
         BrowserModule,
         TimUtilityModule,
-        HttpClientModule,
         FormsModule,
         DndModule,
         TooltipModule.forRoot(),
         TabsModule.forRoot(),
         ProgressbarModule.forRoot(),
     ],
+    providers: [provideHttpClient(withInterceptorsFromDi())],
 })
 export class SettingsModule implements DoBootstrap {
     ngDoBootstrap(appRef: ApplicationRef): void {}

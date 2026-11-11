@@ -109,6 +109,7 @@ const ERROR_MESSAGE_DELAY = 1000;
         </div>
     `,
     styleUrls: ["./formula-field.component.scss"],
+    standalone: false,
 })
 export class FormulaFieldComponent implements AfterViewInit, OnDestroy {
     latexInput = "";

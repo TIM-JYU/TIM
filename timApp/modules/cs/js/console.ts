@@ -51,6 +51,7 @@ function trackByIndex(index: number, o: unknown) {
             <button (click)="up()">↑</button>&nbsp;<button (click)="down()">↓</button>&nbsp;<button (click)="handler()">Enter</button>&nbsp;
         </div>
     </div>`,
+    standalone: false,
 })
 export class CsConsoleComponent extends CsBase {
     trackByIndex = trackByIndex;

@@ -118,6 +118,7 @@ export type IAnswerQuestionResult =
             </ng-container>
         </tim-dialog-frame>
     `,
+    standalone: false,
 })
 export class AnswerToQuestionDialogComponent
     extends AngularDialogComponent<IAnswerQuestionParams, IAnswerQuestionResult>

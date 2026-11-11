@@ -1,6 +1,10 @@
 import {Component, NgModule} from "@angular/core";
 import {FormsModule} from "@angular/forms";
-import {HttpClient, HttpClientModule} from "@angular/common/http";
+import {
+    HttpClient,
+    provideHttpClient,
+    withInterceptorsFromDi,
+} from "@angular/common/http";
 import {AngularDialogComponent} from "tim/ui/angulardialog/angular-dialog-component.directive";
 import type {IDocument} from "tim/item/IItem";
 import {toPromise} from "tim/util/utils";
@@ -97,6 +101,7 @@ export interface UserGroupDialogParams {
             </ng-container>
         </tim-dialog-frame>
     `,
+    standalone: false,
 })
 export class UserGroupDialogComponent extends AngularDialogComponent<
     UserGroupDialogParams,
@@ -159,13 +164,8 @@ export class UserGroupDialogComponent extends AngularDialogComponent<
 
 @NgModule({
     declarations: [UserGroupDialogComponent],
-    imports: [
-        DialogModule,
-        FormsModule,
-        TimUtilityModule,
-        CommonModule,
-        HttpClientModule,
-    ],
     exports: [UserGroupDialogComponent],
+    imports: [DialogModule, FormsModule, TimUtilityModule, CommonModule],
+    providers: [provideHttpClient(withInterceptorsFromDi())],
 })
 export class UserGroupDialogModule {}

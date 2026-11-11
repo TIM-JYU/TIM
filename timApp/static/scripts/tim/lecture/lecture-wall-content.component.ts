@@ -15,6 +15,7 @@ import {CommonModule} from "@angular/common";
             </li>
         </ul>
     `,
+    standalone: false,
 })
 export class LectureWallContentComponent {
     @Input() messages!: ILectureMessage[];

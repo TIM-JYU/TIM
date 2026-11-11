@@ -24,6 +24,7 @@ const OAUTH_SCOPES: Record<string, string> = {
             <input class="btn btn-{{type}}" type="submit" [value]="name">
         </form>
     `,
+    standalone: false,
 })
 export class OAuthButtonComponent {
     @Input() confirm: boolean = false;
@@ -56,6 +57,7 @@ export class OAuthButtonComponent {
             </ng-template>
         </div>
     `,
+    standalone: false,
 })
 export class OAuthAuthorizeComponent {
     data: IOAuthGlobals = oauthglobals();

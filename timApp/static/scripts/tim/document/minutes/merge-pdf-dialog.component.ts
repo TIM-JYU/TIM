@@ -6,7 +6,11 @@ import {Component, NgModule} from "@angular/core";
 import {DialogModule} from "tim/ui/angulardialog/dialog.module";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {FormsModule} from "@angular/forms";
-import {HttpClient, HttpClientModule} from "@angular/common/http";
+import {
+    HttpClient,
+    provideHttpClient,
+    withInterceptorsFromDi,
+} from "@angular/common/http";
 import {TooltipModule} from "ngx-bootstrap/tooltip";
 import {toPromise} from "tim/util/utils";
 import type {IItem} from "tim/item/IItem";
@@ -98,6 +102,7 @@ export interface IAttachment {
             </ng-container>
         </tim-dialog-frame>
     `,
+    standalone: false,
 })
 export class MergePdfDialogComponent extends AngularDialogComponent<
     IMergeParams,
@@ -193,8 +198,8 @@ export class MergePdfDialogComponent extends AngularDialogComponent<
         DialogModule,
         TimUtilityModule,
         FormsModule,
-        HttpClientModule,
         TooltipModule.forRoot(),
     ],
+    providers: [provideHttpClient(withInterceptorsFromDi())],
 })
 export class MergePdfDialogModule {}

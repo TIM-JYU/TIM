@@ -49,6 +49,7 @@ import {CommonModule} from "@angular/common";
         </div>
     `,
     styleUrls: ["manage-read-receipt.component.scss"],
+    standalone: false,
 })
 export class ManageReadReceiptComponent implements OnInit {
     canManage = false;

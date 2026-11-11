@@ -20,6 +20,7 @@ import {getISOWeek} from "date-fns";
         <span i18n > Week: {{getWeekNumberFromDate(viewDate)}} </span>
         </ng-container>`,
     styleUrls: ["calendar.component.scss"],
+    standalone: false,
 })
 export class ShowWeekComponent {
     @Input() view: CalendarView = CalendarView.Week;

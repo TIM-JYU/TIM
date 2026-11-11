@@ -11,6 +11,7 @@ import {AlertSeverity} from "tim/ui/formErrorMessage";
         </div>
     `,
     styleUrls: ["tim-alert.component.scss"],
+    standalone: false,
 })
 export class TimAlertComponent {
     @Input() severity: AlertSeverity = "danger";

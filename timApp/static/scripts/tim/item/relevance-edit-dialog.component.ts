@@ -27,6 +27,7 @@ import {CommonModule} from "@angular/common";
             </ng-container>
         </tim-dialog-frame>
     `,
+    standalone: false,
 })
 export class RelevanceEditDialogComponent extends AngularDialogComponent<
     IItem,

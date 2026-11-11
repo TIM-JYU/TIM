@@ -35,6 +35,7 @@ interface ICountOptions {
         <div *ngIf="countError" class="csPluginCountError">
             <p>{{countError}}</p>
         </div>`,
+    standalone: false,
 })
 export class CountBoardComponent {
     options_?: ICountOptions;

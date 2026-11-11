@@ -1,6 +1,6 @@
 import type {ApplicationRef, DoBootstrap} from "@angular/core";
 import {Component, NgModule} from "@angular/core";
-import {HttpClientModule} from "@angular/common/http";
+import {provideHttpClient, withInterceptorsFromDi} from "@angular/common/http";
 import {FormsModule} from "@angular/forms";
 import * as t from "io-ts";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
@@ -84,6 +84,7 @@ type JoinGroupResult = {ok: boolean; result: Record<string, string>};
         </tim-alert>
   `,
     styleUrls: ["./group-join.component.scss"],
+    standalone: false,
 })
 export class GroupJoinComponent extends AngularPluginBase<
     t.TypeOf<typeof PluginMarkup>,
@@ -250,7 +251,8 @@ export class GroupJoinComponent extends AngularPluginBase<
 
 @NgModule({
     declarations: [GroupJoinComponent],
-    imports: [CommonModule, HttpClientModule, FormsModule, TimUtilityModule],
+    imports: [CommonModule, FormsModule, TimUtilityModule],
+    providers: [provideHttpClient(withInterceptorsFromDi())],
 })
 export class GroupJoinModule implements DoBootstrap {
     ngDoBootstrap(appRef: ApplicationRef): void {}

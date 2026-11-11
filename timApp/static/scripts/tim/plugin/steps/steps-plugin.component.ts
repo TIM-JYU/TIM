@@ -2,7 +2,7 @@ import * as t from "io-ts";
 import type {ApplicationRef, DoBootstrap} from "@angular/core";
 import {Component, NgModule} from "@angular/core";
 import {CommonModule} from "@angular/common";
-import {HttpClientModule} from "@angular/common/http";
+import {provideHttpClient, withInterceptorsFromDi} from "@angular/common/http";
 import {FormsModule} from "@angular/forms";
 import {PurifyModule} from "tim/util/purify.module";
 import {
@@ -84,6 +84,7 @@ const PluginFields = t.intersection([
         </div>
     `,
     styleUrls: ["./steps.component.scss"],
+    standalone: false,
 })
 export class StepsPluginComponent extends AngularPluginBase<
     t.TypeOf<typeof PluginMarkupFields>,
@@ -136,7 +137,8 @@ export class StepsPluginComponent extends AngularPluginBase<
 
 @NgModule({
     declarations: [StepsPluginComponent],
-    imports: [CommonModule, HttpClientModule, FormsModule, PurifyModule],
+    imports: [CommonModule, FormsModule, PurifyModule],
+    providers: [provideHttpClient(withInterceptorsFromDi())],
 })
 export class StepsPluginModule implements DoBootstrap {
     ngDoBootstrap(appRef: ApplicationRef): void {}

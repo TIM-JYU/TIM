@@ -14,6 +14,7 @@ import type {
         <span class="dropdown-error" (click)="selectWord($event)"><ng-content></ng-content></span>
     `,
     styleUrls: ["./spell-error.component.scss"],
+    standalone: false,
 })
 export class SpellErrorComponent implements OnDestroy {
     // The element is a custom element (see registerElement), so the inputs come from HTML attributes as strings.

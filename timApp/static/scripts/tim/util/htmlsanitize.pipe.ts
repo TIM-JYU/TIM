@@ -12,6 +12,7 @@ import {DomSanitizer} from "@angular/platform-browser";
 
 @Pipe({
     name: "htmlSanitize",
+    standalone: false,
 })
 export class HTMLSanitizePipe implements PipeTransform {
     constructor(protected sanitizer: DomSanitizer) {}

@@ -7,6 +7,7 @@ import {Component, Input} from "@angular/core";
         <ng-content></ng-content>
     </a>
   `,
+    standalone: false,
 })
 export class PrintButtonComponent {
     @Input() isButton = false;

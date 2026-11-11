@@ -67,6 +67,7 @@ const sizeBreakpoint = "md";
             </tabset>
         </div>
     `,
+    standalone: false,
 })
 export class SidebarMenuComponent implements OnInit, AfterViewInit, DoCheck {
     private lastUsedTabStorage = new TimStorage(

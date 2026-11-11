@@ -22,6 +22,7 @@ const webBrowser = "UseWebBrowser";
         </label>
     `,
     styleUrls: ["./language-selector.component.scss"],
+    standalone: false,
 })
 export class LanguageSelectorComponent {
     @Input() saveOnChange = false;

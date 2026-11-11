@@ -13,6 +13,7 @@ export function isValidShortName(val: string) {
     providers: [
         {provide: NG_VALIDATORS, useExisting: ShortNameDirective, multi: true},
     ],
+    standalone: false,
 })
 export class ShortNameDirective implements Validator {
     validate(control: AbstractControl) {

@@ -18,7 +18,11 @@ import {
     ViewChild,
     ViewChildren,
 } from "@angular/core";
-import {HttpClientModule, HttpHeaders} from "@angular/common/http";
+import {
+    HttpHeaders,
+    provideHttpClient,
+    withInterceptorsFromDi,
+} from "@angular/common/http";
 import {FormsModule} from "@angular/forms";
 import type {Subscription} from "rxjs";
 import {Subject} from "rxjs";
@@ -170,6 +174,7 @@ const PluginFields = t.intersection([
         <p footer *ngIf="footer" [textContent]="footer"></p>
     `,
     styleUrls: ["./review-canvas.component.scss"],
+    standalone: false,
 })
 export class ReviewCanvasComponent
     extends AngularPluginBase<
@@ -639,13 +644,13 @@ export class ReviewCanvasComponent
     declarations: [ReviewCanvasComponent],
     imports: [
         CommonModule,
-        HttpClientModule,
         FormsModule,
         TimUtilityModule,
         CsUtilityModule,
         PurifyModule,
         TooltipModule.forRoot(),
     ],
+    providers: [provideHttpClient(withInterceptorsFromDi())],
 })
 export class ReviewCanvasModule implements DoBootstrap {
     ngDoBootstrap(appRef: ApplicationRef) {}

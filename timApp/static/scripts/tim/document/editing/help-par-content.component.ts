@@ -18,6 +18,7 @@ import type {ViewCtrl} from "tim/document/viewctrl";
             </div>
         </div>
     `,
+    standalone: false,
 })
 export class HelpParContent {
     private vctrl!: ViewCtrl;

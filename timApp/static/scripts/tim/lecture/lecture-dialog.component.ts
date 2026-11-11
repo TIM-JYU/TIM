@@ -2,7 +2,11 @@ import moment from "moment";
 import {AngularDialogComponent} from "tim/ui/angulardialog/angular-dialog-component.directive";
 import {Component, NgModule} from "@angular/core";
 import {KEY_S} from "tim/util/keycodes";
-import {HttpClient, HttpClientModule} from "@angular/common/http";
+import {
+    HttpClient,
+    provideHttpClient,
+    withInterceptorsFromDi,
+} from "@angular/common/http";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {FormsModule} from "@angular/forms";
 import {DialogModule} from "tim/ui/angulardialog/dialog.module";
@@ -176,6 +180,7 @@ function isLecture(item: unknown): item is ILecture {
             </ng-container>
         </tim-dialog-frame>
     `,
+    standalone: false,
 })
 export class LectureDialogComponent extends AngularDialogComponent<
     ILectureFormParams,
@@ -379,12 +384,12 @@ export class LectureDialogComponent extends AngularDialogComponent<
     declarations: [LectureDialogComponent],
     imports: [
         CommonModule,
-        HttpClientModule,
         FormsModule,
         TimUtilityModule,
         DialogModule,
         AccordionModule.forRoot(),
         DatetimePickerModule,
     ],
+    providers: [provideHttpClient(withInterceptorsFromDi())],
 })
 export class LectureDialogModule {}

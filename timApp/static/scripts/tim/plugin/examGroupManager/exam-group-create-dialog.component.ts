@@ -66,6 +66,7 @@ export interface ExamGroupDialogParams {
             </ng-container>
         </tim-dialog-frame>
     `,
+    standalone: false,
 })
 export class ExamGroupCreateDialogComponent extends AngularDialogComponent<
     ExamGroupDialogParams,

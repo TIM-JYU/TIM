@@ -188,6 +188,7 @@ interface IRunResult {
             <extcheck-output-container *ngFor="let container of containers" [data]="container"></extcheck-output-container>
             <p class="footer" [innerHTML]="markup.footer"></p>
         </div>`,
+    standalone: false,
 })
 export class ExtcheckComponent extends CsController {
     containers?: IOutputContainer[];
@@ -234,6 +235,7 @@ export class ExtcheckComponent extends CsController {
 
 @Directive({
     selector: "[custom-data]",
+    standalone: false,
 })
 export class CustomOutputDirective {
     constructor(public viewContainerRef: ViewContainerRef) {}
@@ -253,6 +255,7 @@ export class CustomOutputBase {
             <div *ngIf="htmlContent" class="centermargin {{htmlContent.classes}}" [innerHTML]="htmlContent.content | purify"></div>
             <pre *ngIf="textContent" class="centermargin {{textContent.classes}}">{{textContent.content}}</pre>
         </ng-container>`,
+    standalone: false,
 })
 export class OutputContainerComponent implements IOutputContainer {
     private static components: Record<string, Type<unknown>>;

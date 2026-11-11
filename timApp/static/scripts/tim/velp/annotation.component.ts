@@ -240,6 +240,7 @@ export async function updateAnnotationServer(
         </span>
     `,
     styleUrls: ["./annotation.component.scss"],
+    standalone: false,
 })
 export class AnnotationComponent
     implements OnDestroy, OnInit, AfterViewInit, IAnnotationBindings

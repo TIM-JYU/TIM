@@ -4,7 +4,11 @@ import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {DialogModule} from "tim/ui/angulardialog/dialog.module";
 import {FormsModule} from "@angular/forms";
 import {AngularDialogComponent} from "tim/ui/angulardialog/angular-dialog-component.directive";
-import {HttpClient, HttpClientModule} from "@angular/common/http";
+import {
+    HttpClient,
+    provideHttpClient,
+    withInterceptorsFromDi,
+} from "@angular/common/http";
 import {toPromise} from "tim/util/utils";
 import {TooltipModule} from "ngx-bootstrap/tooltip";
 import {Users} from "tim/user/userService";
@@ -137,6 +141,7 @@ export interface IContentReport {
         </tim-dialog-frame>
     `,
     styleUrls: ["./report-content-dialog.component.scss"],
+    standalone: false,
 })
 export class ReportContentDialogComponent extends AngularDialogComponent<
     IReportContentParams,
@@ -225,8 +230,8 @@ export class ReportContentDialogComponent extends AngularDialogComponent<
         TimUtilityModule,
         DialogModule,
         FormsModule,
-        HttpClientModule,
         TooltipModule,
     ],
+    providers: [provideHttpClient(withInterceptorsFromDi())],
 })
 export class ReportContentDialogModule {}

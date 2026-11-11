@@ -30,6 +30,7 @@ import {Component, Input} from "@angular/core";
             </label>
         </div>
     `,
+    standalone: false,
 })
 export class ConsentChoiceComponent {
     @Input() consent?: number;

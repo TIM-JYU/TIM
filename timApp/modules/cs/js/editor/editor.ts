@@ -168,6 +168,7 @@ export class EditorFile {
 @Component({
     selector: "cs-jsparsons-editor",
     template: `NOT IMPLEMENTED`,
+    standalone: false,
 })
 export class JSParsonsEditorComponent implements IEditor {
     content: string = "";
@@ -235,6 +236,7 @@ export class JSParsonsEditorComponent implements IEditor {
                 </button>
             </div>
         </ng-container>`,
+    standalone: false,
 })
 export class EditorComponent implements IMultiEditor {
     static readonly defaultMode = Mode.Normal;

@@ -72,6 +72,7 @@ import {ScoreboardService} from "tim/sidebarmenu/services/scoreboard.service";
         </div>
     `,
     styleUrls: ["./score-info-tab.component.scss"],
+    standalone: false,
 })
 export class ScoreInfoTabComponent implements OnInit {
     scoreBoard: ScoreboardService;

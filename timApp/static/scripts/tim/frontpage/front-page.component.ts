@@ -107,6 +107,7 @@ import {getVisibilityVars} from "tim/timRoot";
             </div>
         </div>
     `,
+    standalone: false,
 })
 export class FrontPageComponent {
     creatingNew: boolean;

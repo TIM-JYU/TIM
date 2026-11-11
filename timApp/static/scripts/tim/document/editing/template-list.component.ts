@@ -26,6 +26,7 @@ import {documentglobals} from "tim/util/globals";
             </ul>
         </bootstrap-panel>
     `,
+    standalone: false,
 })
 export class TemplateListComponent implements OnInit {
     // The document to which the template is applied. The current document by default.

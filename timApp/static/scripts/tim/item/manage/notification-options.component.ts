@@ -49,6 +49,7 @@ interface INotificationSettings {
             </fieldset>
         </form>
     `,
+    standalone: false,
 })
 export class NotificationOptionsComponent implements OnInit {
     curItem: IDocument;

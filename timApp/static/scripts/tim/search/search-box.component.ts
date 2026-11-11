@@ -206,6 +206,7 @@ export interface IPathSearchResult {
         </div>
     `,
     styleUrls: ["./search-box.component.scss"],
+    standalone: false,
 })
 export class SearchBoxComponent implements OnInit, OnDestroy {
     // Results and variables search results dialog needs to know:

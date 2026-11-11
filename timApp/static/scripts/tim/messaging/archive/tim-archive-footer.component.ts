@@ -18,6 +18,7 @@ import {ArchivedMessageStateService} from "tim/messaging/archive/archived-messag
     `,
     styleUrls: ["./tim-archive-footer.component.scss"],
     encapsulation: ViewEncapsulation.None,
+    standalone: false,
 })
 export class TimArchiveFooterComponent implements OnInit {
     @Input() message?: string;

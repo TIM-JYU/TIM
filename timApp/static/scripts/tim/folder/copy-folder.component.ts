@@ -122,6 +122,7 @@ const COPY_HELP_ADDRESS: string = "/view/tim/TIM-ohjeet#hakemistonkopionti";
         </form>
     `,
     styleUrls: ["copy-folder.component.scss"],
+    standalone: false,
 })
 export class CopyFolderComponent implements OnInit {
     copyingFolder: "notcopying" | "copying" | "finished";

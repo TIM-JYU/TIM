@@ -30,6 +30,7 @@ interface IDialogEntry {
              (instanceCreated)="created($event)"
              (instanceClosed)="closed($event)"></div>
     `,
+    standalone: false,
 })
 export class DialogContainerComponent {
     dialogs: IDialogEntry[] = [];

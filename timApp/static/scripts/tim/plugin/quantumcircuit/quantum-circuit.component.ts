@@ -2,7 +2,11 @@ import * as t from "io-ts";
 import type {TypeOf} from "io-ts";
 import type {AfterViewInit, DoBootstrap, OnInit} from "@angular/core";
 import {Component, NgModule, ViewChild, ElementRef} from "@angular/core";
-import {HttpClient, HttpClientModule} from "@angular/common/http";
+import {
+    HttpClient,
+    provideHttpClient,
+    withInterceptorsFromDi,
+} from "@angular/common/http";
 import {CommonModule} from "@angular/common";
 import {registerPlugin} from "tim/plugin/pluginRegistry";
 import {AngularPluginBase} from "tim/plugin/angular-plugin-base.directive";
@@ -22,7 +26,11 @@ import type {
 import {QuantumCircuitBoardComponent} from "tim/plugin/quantumcircuit/quantum-circuit-board.component";
 import type {QuantumChartData} from "tim/plugin/quantumcircuit/quantum-stats.component";
 import {QuantumStatsComponent} from "tim/plugin/quantumcircuit/quantum-stats.component";
-import {NgChartsModule} from "ng2-charts";
+import {
+    BaseChartDirective,
+    provideCharts,
+    withDefaultRegisterables,
+} from "ng2-charts";
 import type {QuantumCircuitSimulator} from "tim/plugin/quantumcircuit/quantum-simulation";
 import {
     BrowserQuantumCircuitSimulator,
@@ -399,6 +407,7 @@ export interface CircuitOptions {
     `,
     styleUrls: ["./quantum-circuit.component.scss"],
     providers: [GateService, SerializerService],
+    standalone: false,
 })
 export class QuantumCircuitComponent
     extends AngularPluginBase<
@@ -1579,12 +1588,15 @@ export class QuantumCircuitComponent
     exports: [QuantumCircuitComponent],
     imports: [
         CommonModule,
-        HttpClientModule,
-        NgChartsModule,
+        BaseChartDirective,
         TimUtilityModule,
         FormsModule,
         PurifyModule,
         InstanceofModule,
+    ],
+    providers: [
+        provideCharts(withDefaultRegisterables()),
+        provideHttpClient(withInterceptorsFromDi()),
     ],
 })
 export class QuantumCircuitModule implements DoBootstrap {

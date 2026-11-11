@@ -222,6 +222,7 @@ const DEFAULT_CELL_BGCOLOR = "#FFFF00";
             </ng-container>
         </tim-dialog-frame>
     `,
+    standalone: false,
 })
 export class TimTableEditorToolbarDialogComponent extends AngularDialogComponent<
     ITimTableEditorToolbarParams,

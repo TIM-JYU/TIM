@@ -10,6 +10,7 @@ type AbstractType<T> = abstract new (...args: never[]) => T;
 @Pipe({
     name: "instanceof",
     pure: true,
+    standalone: false,
 })
 export class InstanceofPipe implements PipeTransform {
     public transform<V, R>(value: V, type: AbstractType<R>): R | undefined {

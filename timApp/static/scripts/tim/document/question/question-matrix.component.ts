@@ -119,6 +119,7 @@ import {QuestionEditDialogComponent} from "tim/document/question/question-edit-d
             </tbody>
         </table>
     `,
+    standalone: false,
 })
 export class QuestionMatrixComponent {
     @Input() qctrl!: QuestionEditDialogComponent;

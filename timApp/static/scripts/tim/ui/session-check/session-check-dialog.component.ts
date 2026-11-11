@@ -1,5 +1,9 @@
 import {Component, ElementRef, NgModule, ViewChild} from "@angular/core";
-import {HttpClient, HttpClientModule} from "@angular/common/http";
+import {
+    HttpClient,
+    provideHttpClient,
+    withInterceptorsFromDi,
+} from "@angular/common/http";
 import {BrowserQRCodeSvgWriter} from "@zxing/browser";
 import {
     EncodeHintType,
@@ -56,6 +60,7 @@ const QR_CODE_SIZE = 350;
         </tim-dialog-frame>
   `,
     styleUrls: ["./session-check-dialog.component.scss"],
+    standalone: false,
 })
 export class SessionCheckDialogComponent extends AngularDialogComponent<
     unknown,
@@ -121,6 +126,7 @@ export class SessionCheckDialogComponent extends AngularDialogComponent<
 
 @NgModule({
     declarations: [SessionCheckDialogComponent],
-    imports: [CommonModule, TimUtilityModule, DialogModule, HttpClientModule],
+    imports: [CommonModule, TimUtilityModule, DialogModule],
+    providers: [provideHttpClient(withInterceptorsFromDi())],
 })
 export class SessionCheckDialogModule {}

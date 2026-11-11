@@ -1,5 +1,5 @@
 import {NgModule} from "@angular/core";
-import {HttpClientModule} from "@angular/common/http";
+import {provideHttpClient, withInterceptorsFromDi} from "@angular/common/http";
 import {FormsModule} from "@angular/forms";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {CommonModule} from "@angular/common";
@@ -20,6 +20,7 @@ import {NotificationComponent} from "./notification";
         FileSelectComponent,
         NotificationComponent,
     ],
-    imports: [CommonModule, HttpClientModule, FormsModule, TimUtilityModule],
+    imports: [CommonModule, FormsModule, TimUtilityModule],
+    providers: [provideHttpClient(withInterceptorsFromDi())],
 })
 export class CsUtilityModule {}

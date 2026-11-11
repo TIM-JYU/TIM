@@ -97,15 +97,20 @@ function getModuleRef(moduleType: Type<unknown>) {
     let ref = moduleRefs.get(moduleType);
     if (!ref) {
         // Each module is its own Angular application with its own zone, like the main application.
-        ref = platformBrowserDynamic()
-            .bootstrapModule(moduleType)
-            .then((moduleRef) => {
-                addRefreshTarget(
-                    moduleRef.injector.get(ApplicationRef),
-                    moduleRef.injector.get(NgZone)
-                );
-                return moduleRef;
-            });
+        const bootstrap = () =>
+            platformBrowserDynamic()
+                .bootstrapModule(moduleType)
+                .then((moduleRef) => {
+                    addRefreshTarget(
+                        moduleRef.injector.get(ApplicationRef),
+                        moduleRef.injector.get(NgZone)
+                    );
+                    return moduleRef;
+                });
+        // The new zone must not be created inside the zone of the main application.
+        // Otherwise its events would run inside that zone, which Angular does not allow.
+        const mainZone = appRef?.injector.get(NgZone);
+        ref = mainZone ? mainZone.runOutsideAngular(bootstrap) : bootstrap();
         moduleRefs.set(moduleType, ref);
     }
     return ref;

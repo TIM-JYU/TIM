@@ -1,7 +1,7 @@
 import {AngularDialogComponent} from "tim/ui/angulardialog/angular-dialog-component.directive";
 import {Component, NgModule} from "@angular/core";
 import {DialogModule} from "tim/ui/angulardialog/dialog.module";
-import {NgxTextDiffModule} from "ngx-text-diff";
+import {TextDiffModule} from "tim/document/text-diff.component";
 import type {Pos} from "tim/ui/pos";
 import {copyToClipboard, timeout} from "tim/util/utils";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
@@ -23,12 +23,11 @@ export interface IDiffParams {
                 {{data.title}}
             </ng-container>
             <ng-container body>
-                <td-ngx-text-diff [left]="data.left"
-                                  [right]="data.right"
-                                  outerContainerClass="view-source"
-                                  format="LineByLine"
-                                  [showToolbar]="data.showToolbar">
-                </td-ngx-text-diff>
+                <tim-text-diff [left]="data.left"
+                               [right]="data.right"
+                               format="LineByLine"
+                               [showToolbar]="data.showToolbar">
+                </tim-text-diff>
             </ng-container>
             <div footer style="text-align: left">
                 <button class="btn btn-default"
@@ -49,6 +48,7 @@ export interface IDiffParams {
             </div>
         </tim-dialog-frame>
     `,
+    standalone: false,
 })
 export class DiffDialogComponent extends AngularDialogComponent<
     IDiffParams,
@@ -71,6 +71,6 @@ export class DiffDialogComponent extends AngularDialogComponent<
 
 @NgModule({
     declarations: [DiffDialogComponent],
-    imports: [CommonModule, DialogModule, NgxTextDiffModule, TimUtilityModule],
+    imports: [CommonModule, DialogModule, TextDiffModule, TimUtilityModule],
 })
 export class DiffDialogModule {}

@@ -13,6 +13,7 @@ import type setData from "../../../../../modules/cs/static/dfa/vars.js";
 </div>
     `,
     styleUrls: ["./variables.component.scss"],
+    standalone: false,
 })
 export class VariablesComponent implements OnInit, AfterViewInit {
     error?: string;

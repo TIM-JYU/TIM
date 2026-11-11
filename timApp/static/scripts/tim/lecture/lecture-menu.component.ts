@@ -117,6 +117,7 @@ import {LectureController} from "tim/lecture/lectureController";
             </accordion-group>
         </accordion>
     `,
+    standalone: false,
 })
 export class LectureMenuComponent {
     vctrl?: ViewCtrl;

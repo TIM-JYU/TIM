@@ -35,6 +35,7 @@ import * as t from "io-ts";
         </tim-alert>
     `,
     styleUrls: ["./role-info.component.scss"],
+    standalone: false,
 })
 export class RoleInfoComponent implements OnInit {
     activeGroups?: number[];

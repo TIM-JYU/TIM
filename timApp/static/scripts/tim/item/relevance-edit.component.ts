@@ -61,6 +61,7 @@ export interface IRelevanceResponse {
             </button>
         </div>
     `,
+    standalone: false,
 })
 export class RelevanceEditComponent {
     @Input() item!: IItem;

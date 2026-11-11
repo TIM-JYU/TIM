@@ -35,6 +35,7 @@ const TIME_LEFT_DEFAULTS: ITimeLeftSettings = {
         </div>
     `,
     styleUrls: ["./time-left.component.scss"],
+    standalone: false,
 })
 export class TimeLeftComponent implements OnChanges, OnInit {
     @Input() endTime?: string;

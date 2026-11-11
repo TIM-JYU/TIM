@@ -89,6 +89,7 @@ export type IAceEditorOptions = {
     template: `
         <pre #area style="width: 100%;" [style.display]="null">
         </pre>`,
+    standalone: false,
 })
 export class AceEditorComponent implements IEditor {
     private aceEditor?: IAceEditor;

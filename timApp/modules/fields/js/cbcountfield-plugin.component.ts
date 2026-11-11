@@ -15,7 +15,11 @@ import {
 import {getFormBehavior} from "tim/plugin/util";
 import {valueOr} from "tim/util/utils";
 import {AngularPluginBase} from "tim/plugin/angular-plugin-base.directive";
-import {HttpClient, HttpClientModule} from "@angular/common/http";
+import {
+    HttpClient,
+    provideHttpClient,
+    withInterceptorsFromDi,
+} from "@angular/common/http";
 import {DomSanitizer} from "@angular/platform-browser";
 import {FormsModule} from "@angular/forms";
 import {TooltipModule} from "ngx-bootstrap/tooltip";
@@ -96,6 +100,7 @@ const CbcountfieldAll = t.intersection([
 </div>
 `,
     styleUrls: ["./cbcountfield-plugin.component.scss"],
+    standalone: false,
 })
 export class CbcountfieldPluginComponent
     extends AngularPluginBase<
@@ -447,12 +452,12 @@ export class CbcountfieldPluginComponent
     declarations: [CbcountfieldPluginComponent],
     imports: [
         CommonModule,
-        HttpClientModule,
         TimUtilityModule,
         FormsModule,
         TooltipModule.forRoot(),
         PurifyModule,
     ],
+    providers: [provideHttpClient(withInterceptorsFromDi())],
 })
 export class CbcountfieldModule implements DoBootstrap {
     ngDoBootstrap(appRef: ApplicationRef) {}

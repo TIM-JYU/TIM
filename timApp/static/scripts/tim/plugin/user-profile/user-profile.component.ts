@@ -54,7 +54,6 @@ interface IUploadedFile extends t.TypeOf<typeof UploadedFile> {}
     selector: "tim-user-profile",
     styleUrls: ["./user-profile.component.scss"],
     imports: [CsUtilityModule, FormsModule, CommonModule],
-    standalone: true,
     template: `
         <div *ngIf="profileVisible" class="tim-user-profile-container">
             <div class="profile-heading">

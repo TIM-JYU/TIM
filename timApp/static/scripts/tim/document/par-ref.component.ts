@@ -32,6 +32,7 @@ interface IParInfo {
             ></i>
         </a>
     `,
+    standalone: false,
 })
 export class ParRefComponent {
     loading = false;

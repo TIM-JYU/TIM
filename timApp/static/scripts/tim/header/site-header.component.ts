@@ -35,6 +35,7 @@ import {isDocumentGlobals, someglobals} from "tim/util/globals";
         </div>
     `,
     styleUrls: ["./site-header.component.scss"],
+    standalone: false,
 })
 export class SiteHeaderComponent implements OnInit {
     hide = getVisibilityVars();

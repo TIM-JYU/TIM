@@ -58,6 +58,7 @@ import {ContactOrigin} from "tim/user/IUser";
             </ng-container>
         </tim-dialog-frame>
     `,
+    standalone: false,
 })
 export class AddContactDialogComponent extends AngularDialogComponent<
     {onAdd: (contact: IUserContact) => void},

@@ -3,7 +3,11 @@ import {AngularDialogComponent} from "tim/ui/angulardialog/angular-dialog-compon
 import {Component, NgModule} from "@angular/core";
 import {DialogModule} from "tim/ui/angulardialog/dialog.module";
 import {FormsModule} from "@angular/forms";
-import {HttpClient, HttpClientModule} from "@angular/common/http";
+import {
+    HttpClient,
+    provideHttpClient,
+    withInterceptorsFromDi,
+} from "@angular/common/http";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {DatetimePickerModule} from "tim/ui/datetime-picker/datetime-picker.component";
 import * as t from "io-ts";
@@ -355,6 +359,7 @@ export interface IAllAnswersParams {
         </tim-dialog-frame>
     `,
     styleUrls: ["all-answers-dialog.component.scss"],
+    standalone: false,
 })
 export class AllAnswersDialogComponent extends AngularDialogComponent<
     IAllAnswersParams,
@@ -460,9 +465,9 @@ export class AllAnswersDialogComponent extends AngularDialogComponent<
         CommonModule,
         DialogModule,
         FormsModule,
-        HttpClientModule,
         TimUtilityModule,
         DatetimePickerModule,
     ],
+    providers: [provideHttpClient(withInterceptorsFromDi())],
 })
 export class AllAnswersDialogModule {}

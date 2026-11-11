@@ -1102,6 +1102,7 @@ const MAX_CANVAS_AREA = 8000000;
         </div>
     `,
     styleUrls: ["./draw-canvas.component.scss"],
+    standalone: false,
 })
 export class DrawCanvasComponent
     implements OnInit, OnChanges, OnDestroy, IUnsavedComponent

@@ -16,7 +16,7 @@ import type {
     OnInit,
 } from "@angular/core";
 import {Component, NgModule} from "@angular/core";
-import {HttpClientModule} from "@angular/common/http";
+import {provideHttpClient, withInterceptorsFromDi} from "@angular/common/http";
 import {FormsModule} from "@angular/forms";
 import type {Subscription} from "rxjs";
 import {Subject} from "rxjs";
@@ -96,6 +96,7 @@ function isPalindrome(s: string) {
         </tim-plugin-frame>
     `,
     styleUrls: ["./pali.scss"],
+    standalone: false,
 })
 export class PaliComponent
     extends AngularPluginBase<
@@ -211,13 +212,8 @@ export class PaliComponent
 
 @NgModule({
     declarations: [PaliComponent],
-    imports: [
-        CommonModule,
-        HttpClientModule,
-        FormsModule,
-        TimUtilityModule,
-        PurifyModule,
-    ],
+    imports: [CommonModule, FormsModule, TimUtilityModule, PurifyModule],
+    providers: [provideHttpClient(withInterceptorsFromDi())],
 })
 export class PaliModule implements DoBootstrap {
     ngDoBootstrap(appRef: ApplicationRef) {}

@@ -29,6 +29,7 @@ const datetimeFormat = "DD.MM.YYYY HH:mm:ss";
         </div>
     `,
     styleUrls: ["./datetime-picker.component.scss"],
+    standalone: false,
 })
 export class DatetimePickerComponent implements OnInit, OnChanges {
     showPicker = false;

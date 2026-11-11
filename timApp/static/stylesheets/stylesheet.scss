@@ -1556,18 +1556,6 @@ tim-user-list {
     color: $text-color;
 }
 
-td-ngx-text-diff .view-source {
-    td {
-        &.line-number-col, &.line-number-col-left, &.prefix-col {
-            display: none;
-        }
-        &.content-col {
-            font-family: "courier new", courier, monospace;
-            line-height: unset;
-        }
-    }
-}
-
 .normalLabel {
     font-weight: normal;
 }

@@ -30,6 +30,7 @@ import {AlertSeverity} from "tim/ui/formErrorMessage";
             </div>
         </div>
     `,
+    standalone: false,
 })
 export class BootstrapPanelComponent {
     @Input() severity?: AlertSeverity;
@@ -61,6 +62,7 @@ export class BootstrapPanelComponent {
         </bootstrap-panel>
     `,
     styles: [` :host { display: block; } `],
+    standalone: false,
 })
 export class BootstrapFormPanelComponent {
     @Input() disabled: boolean = false;

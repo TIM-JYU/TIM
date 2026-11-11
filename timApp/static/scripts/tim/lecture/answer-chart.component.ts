@@ -4,7 +4,11 @@ import type {ChartData, ChartDataset, ChartOptions, ChartType} from "chart.js";
 import {fixQuestionJson} from "tim/document/question/answer-sheet.component";
 import type {Overwrite} from "type-zoo";
 import type {Changes} from "tim/util/angularchanges";
-import {NgChartsModule} from "ng2-charts";
+import {
+    BaseChartDirective,
+    provideCharts,
+    withDefaultRegisterables,
+} from "ng2-charts";
 import * as t from "io-ts";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {clone, TimStorage, truncate} from "tim/util/utils";
@@ -179,6 +183,7 @@ interface ChartConfig {
         </div>
     `,
     styleUrls: ["./answer-chart.component.scss"],
+    standalone: false,
 })
 export class AnswerChartComponent implements OnChanges {
     isText = false;
@@ -533,7 +538,8 @@ export class AnswerChartComponent implements OnChanges {
 
 @NgModule({
     declarations: [AnswerChartComponent],
-    imports: [CommonModule, NgChartsModule, TimUtilityModule],
+    imports: [CommonModule, BaseChartDirective, TimUtilityModule],
     exports: [AnswerChartComponent],
+    providers: [provideCharts(withDefaultRegisterables())],
 })
 export class AnswerChartModule {}

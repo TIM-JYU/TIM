@@ -116,6 +116,7 @@ interface AnswerIncorrectRow {
         </div>
     `,
     styleUrls: ["quantum-error.component.scss"],
+    standalone: false,
 })
 export class QuantumErrorComponent implements OnChanges {
     @Input()

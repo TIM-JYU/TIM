@@ -58,6 +58,7 @@ import {showMessageDialog} from "tim/ui/showMessageDialog";
         </button>
     `,
     styleUrls: ["./bookmarks.component.scss"],
+    standalone: false,
 })
 export class BookmarksComponent implements OnInit {
     groups?: IBookmarkGroup[];

@@ -287,6 +287,7 @@ export function notifyUserPrefsChanged(settings: ISettings) {
         </ng-container>
     `,
     styleUrls: ["./settings-tab.component.scss"],
+    standalone: false,
 })
 export class SettingsTabComponent implements OnInit {
     hideVars: IVisibilityVars = getVisibilityVars();

@@ -47,6 +47,7 @@ export interface IAlias {
     templateUrl: "./manage.component.html",
     // The layout relies on the whitespace between the inline elements (e.g. buttons).
     preserveWhitespaces: true,
+    standalone: false,
 })
 export class ManageComponent implements OnInit {
     wikiRoot: string;

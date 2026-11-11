@@ -24,6 +24,7 @@ import * as t from "io-ts";
         </ng-container>
     `,
     styleUrls: ["./switch-button.component.scss"],
+    standalone: false,
 })
 export class SwitchButtonComponent {
     public isOn = false;

@@ -32,6 +32,7 @@ import {TimMessageModule} from "tim/messaging/tim-message.component";
 
     `,
     styleUrls: ["tim-message-view.component.scss"],
+    standalone: false,
 })
 export class TimMessageViewComponent implements OnInit {
     @ViewChild("messageContainerNormal", {read: ViewContainerRef, static: true})

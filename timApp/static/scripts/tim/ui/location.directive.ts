@@ -14,6 +14,7 @@ export function isValidLocation(viewValue: string) {
     providers: [
         {provide: NG_VALIDATORS, useExisting: LocationDirective, multi: true},
     ],
+    standalone: false,
 })
 export class LocationDirective implements Validator {
     validate(control: AbstractControl) {

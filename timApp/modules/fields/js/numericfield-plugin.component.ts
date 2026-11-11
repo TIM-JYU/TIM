@@ -21,7 +21,11 @@ import {
 import {getFormBehavior, parseStyles} from "tim/plugin/util";
 import {defaultErrorMessage, valueOr} from "tim/util/utils";
 import {DomSanitizer} from "@angular/platform-browser";
-import {HttpClient, HttpClientModule} from "@angular/common/http";
+import {
+    HttpClient,
+    provideHttpClient,
+    withInterceptorsFromDi,
+} from "@angular/common/http";
 import {FormsModule} from "@angular/forms";
 import {TooltipModule} from "ngx-bootstrap/tooltip";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
@@ -125,6 +129,7 @@ const NumericfieldAll = t.intersection([
     <p *ngIf="footer" [innerHtml]="footer | purify" class="plgfooter"></p>
 </div> `,
     styleUrls: ["./numericfield-plugin.component.scss"],
+    standalone: false,
 })
 export class NumericfieldPluginComponent
     extends AngularPluginBase<
@@ -597,12 +602,12 @@ export class NumericfieldPluginComponent
     declarations: [NumericfieldPluginComponent],
     imports: [
         CommonModule,
-        HttpClientModule,
         TimUtilityModule,
         FormsModule,
         PurifyModule,
         TooltipModule.forRoot(),
     ],
+    providers: [provideHttpClient(withInterceptorsFromDi())],
 })
 export class NumericfieldModule implements DoBootstrap {
     ngDoBootstrap(_appRef: ApplicationRef) {}

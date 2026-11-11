@@ -58,6 +58,7 @@ import {
         </div>
     `,
     styleUrls: ["./quantum-toolbox.component.scss"],
+    standalone: false,
 })
 export class QuantumToolboxComponent implements OnInit, OnChanges {
     @Input()

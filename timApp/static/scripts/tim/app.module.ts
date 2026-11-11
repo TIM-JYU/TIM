@@ -8,7 +8,8 @@ import {HeaderComponent} from "tim/header/header.component";
 import {
     HTTP_INTERCEPTORS,
     HttpClient,
-    HttpClientModule,
+    provideHttpClient,
+    withInterceptorsFromDi,
 } from "@angular/common/http";
 import {ErrorStateDirective} from "tim/ui/error-state.directive";
 import {ShortNameDirective} from "tim/ui/short-name.directive";
@@ -110,7 +111,6 @@ setStandaloneHttpInterceptors(() => [
     ],
     imports: [
         BrowserModule,
-        HttpClientModule,
         FormsModule,
         TimUtilityModule,
         NoopAnimationsModule,
@@ -133,6 +133,7 @@ setStandaloneHttpInterceptors(() => [
             multi: true,
         },
         TimepickerActions,
+        provideHttpClient(withInterceptorsFromDi()),
     ],
 })
 export class AppModule implements DoBootstrap {
@@ -145,7 +146,8 @@ export class AppModule implements DoBootstrap {
     }
 
     ngDoBootstrap(appRef: ApplicationRef) {
-        setTheme("bs3");
+        // ngx-bootstrap has no Bootstrap 3 mode anymore; see ngxBootstrapCompat.scss.
+        setTheme("bs4");
         setApplicationRef(appRef, this.zone);
         initServerComponents(appRef, this.injector);
     }

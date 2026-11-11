@@ -10,7 +10,11 @@ import {
     ElementRef,
     NgModule,
 } from "@angular/core";
-import {HttpClient, HttpClientModule} from "@angular/common/http";
+import {
+    HttpClient,
+    provideHttpClient,
+    withInterceptorsFromDi,
+} from "@angular/common/http";
 import {FormsModule} from "@angular/forms";
 import type {OnClickArg} from "tim/document/eventhandlers";
 import {onClick} from "tim/document/eventhandlers";
@@ -163,6 +167,7 @@ const TimMenuAll = t.intersection([
         </div>
     `,
     styleUrls: ["tim-menu-plugin.component.scss"],
+    standalone: false,
 })
 export class TimMenuPluginComponent
     extends AngularPluginBase<
@@ -620,13 +625,13 @@ export class TimMenuPluginComponent
     declarations: [TimMenuPluginComponent],
     imports: [
         CommonModule,
-        HttpClientModule,
         FormsModule,
         TimUtilityModule,
         AnswerSheetModule,
         PurifyModule,
         TooltipModule.forRoot(),
     ],
+    providers: [provideHttpClient(withInterceptorsFromDi())],
 })
 export class TimMenuPluginModule implements DoBootstrap {
     ngDoBootstrap(appRef: ApplicationRef) {}

@@ -243,6 +243,7 @@ function isAskedQuestion(
             </ng-container>
         </tim-dialog-frame>
     `,
+    standalone: false,
 })
 export class QuestionEditDialogComponent extends AngularDialogComponent<
     IQuestionDialogParams,

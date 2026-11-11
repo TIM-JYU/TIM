@@ -43,6 +43,7 @@ export const SPLIT_EVERY = 4;
         </form>
     `,
     styleUrls: ["./user-code-login.component.scss"],
+    standalone: false,
 })
 export class UserCodeLoginComponent {
     maxLength = CODE_LENGTH;

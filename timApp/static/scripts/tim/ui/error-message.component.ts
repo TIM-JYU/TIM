@@ -10,6 +10,7 @@ import {formErrorMessages} from "tim/ui/formErrorMessages";
             {{ getMessage() }}
         </tim-alert>
     `,
+    standalone: false,
 })
 export class ErrorMessageComponent {
     constructor(@Optional() private inputService?: InputService) {

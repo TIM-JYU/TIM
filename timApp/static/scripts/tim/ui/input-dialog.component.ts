@@ -149,6 +149,7 @@ export type InputDialogParams<T> = {
         </tim-dialog-frame>
     `,
     styleUrls: ["./input-dialog.component.scss"],
+    standalone: false,
 })
 export class InputDialogComponent<T> extends AngularDialogComponent<
     InputDialogParams<T>,

@@ -4,7 +4,7 @@
 import * as t from "io-ts";
 import type {ApplicationRef, DoBootstrap} from "@angular/core";
 import {Component, NgModule} from "@angular/core";
-import {HttpClientModule} from "@angular/common/http";
+import {provideHttpClient, withInterceptorsFromDi} from "@angular/common/http";
 import {FormsModule} from "@angular/forms";
 import {registerPlugin} from "tim/plugin/pluginRegistry";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
@@ -182,6 +182,7 @@ interface IFieldSaveResult {
         </tim-plugin-frame>
     `,
     styleUrls: ["./import-data.component.scss"],
+    standalone: false,
 })
 export class ImportDataComponent extends AngularPluginBase<
     t.TypeOf<typeof ImportDataMarkup>,
@@ -344,7 +345,8 @@ export class ImportDataComponent extends AngularPluginBase<
 
 @NgModule({
     declarations: [ImportDataComponent],
-    imports: [CommonModule, HttpClientModule, FormsModule, TimUtilityModule],
+    imports: [CommonModule, FormsModule, TimUtilityModule],
+    providers: [provideHttpClient(withInterceptorsFromDi())],
 })
 export class ImportDataModule implements DoBootstrap {
     ngDoBootstrap(appRef: ApplicationRef) {}

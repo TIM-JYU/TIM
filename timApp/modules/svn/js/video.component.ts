@@ -20,7 +20,7 @@ import {
 import {AngularPluginBase} from "tim/plugin/angular-plugin-base.directive";
 import {FormsModule} from "@angular/forms";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
-import {HttpClientModule} from "@angular/common/http";
+import {provideHttpClient, withInterceptorsFromDi} from "@angular/common/http";
 import {PurifyModule} from "tim/util/purify.module";
 import {getKeyCode, KEY_LEFT, KEY_RIGHT} from "tim/util/keycodes";
 import {registerPlugin} from "tim/plugin/pluginRegistry";
@@ -206,21 +206,19 @@ const ShowFileAll = t.type({
                 <iframe *ngIf="iframesettings && isPdf"
                         class="showVideo"
                         allowfullscreen
-                        [src]="iframesettings.src"
+                        [timIframeSettings]="iframesettings"
+                        [timIframeSandbox]="false"
                         [style.width.px]="width"
                         [style.height.px]="height"
-                        [attr.allow]="iframesettings.allow"
                 >
                 </iframe>
                 <span class="videoRow" *ngIf="iframesettings && !isPdf">
                     <iframe 
                             class="showVideo"
                             allowfullscreen
-                            [src]="iframesettings.src"
+                            [timIframeSettings]="iframesettings"
                             [style.width.px]="width"
                             [style.height.px]="height"
-                            [sandbox]="iframesettings.sandbox"
-                            [attr.allow]="iframesettings.allow"
                     >
                     </iframe>
                   <!-- <button class="settings-btn" (click)="toggleSettings()" type="button" title="More settings">⋮</button> -->
@@ -388,6 +386,7 @@ const ShowFileAll = t.type({
         </div>
     `,
     styleUrls: ["./video.component.scss"],
+    standalone: false,
 })
 export class VideoComponent extends AngularPluginBase<
     t.TypeOf<typeof ShowFileMarkup>,
@@ -1088,13 +1087,8 @@ export class VideoComponent extends AngularPluginBase<
 
 @NgModule({
     declarations: [VideoComponent, VideoLinkComponent],
-    imports: [
-        CommonModule,
-        TimUtilityModule,
-        HttpClientModule,
-        FormsModule,
-        PurifyModule,
-    ],
+    imports: [CommonModule, TimUtilityModule, FormsModule, PurifyModule],
+    providers: [provideHttpClient(withInterceptorsFromDi())],
 })
 export class VideoModule implements DoBootstrap {
     ngDoBootstrap(_appRef: ApplicationRef) {}

@@ -34,7 +34,10 @@ interface IScheduledFunction {
     enabled: boolean;
 }
 
-@Pipe({name: "timinterval"})
+@Pipe({
+    name: "timinterval",
+    standalone: false,
+})
 class IntervalPipe {
     transform(value: IInterval): string {
         return humanizeDuration(
@@ -43,7 +46,10 @@ class IntervalPipe {
     }
 }
 
-@Pipe({name: "timownerstr"})
+@Pipe({
+    name: "timownerstr",
+    standalone: false,
+})
 class OwnerPipe {
     transform(value: IGroup[]): string {
         return value.map((g) => g.name).join(", ");
@@ -120,6 +126,7 @@ class OwnerPipe {
         </tim-dialog-frame>
     `,
     styleUrls: ["./schedule-dialog.component.scss"],
+    standalone: false,
 })
 export class ScheduleDialogComponent extends AngularDialogComponent<
     IItem,

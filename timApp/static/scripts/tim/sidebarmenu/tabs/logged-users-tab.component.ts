@@ -30,6 +30,7 @@ import {LectureController} from "tim/lecture/lectureController";
         </ng-template>
     `,
     styles: [],
+    standalone: false,
 })
 export class LoggedUsersTabComponent {
     lctrl: LectureController = LectureController.instance;

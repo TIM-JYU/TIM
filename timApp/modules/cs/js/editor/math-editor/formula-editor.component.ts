@@ -134,6 +134,7 @@ export type FieldType = {
 
     `,
     styleUrls: ["./formula-editor.component.scss"],
+    standalone: false,
 })
 export class FormulaEditorComponent {
     oldContent: OldContent = {before: "", editing: "", after: ""};

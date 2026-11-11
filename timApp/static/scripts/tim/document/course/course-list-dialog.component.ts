@@ -10,7 +10,8 @@ import {getCourseCode, tagIsExpired, TagType} from "tim/item/IItem";
 import {
     HTTP_INTERCEPTORS,
     HttpClient,
-    HttpClientModule,
+    provideHttpClient,
+    withInterceptorsFromDi,
 } from "@angular/common/http";
 import {DialogModule} from "tim/ui/angulardialog/dialog.module";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
@@ -88,6 +89,7 @@ export interface IGroupedCourses {
             </ng-container>
         </tim-dialog-frame>
     `,
+    standalone: false,
 })
 export class CourseListDialogComponent extends AngularDialogComponent<
     ICourseListParams,
@@ -303,19 +305,14 @@ export class CourseListDialogComponent extends AngularDialogComponent<
 
 @NgModule({
     declarations: [CourseListDialogComponent],
-    imports: [
-        CommonModule,
-        HttpClientModule,
-        FormsModule,
-        TimUtilityModule,
-        DialogModule,
-    ],
+    imports: [CommonModule, FormsModule, TimUtilityModule, DialogModule],
     providers: [
         {
             provide: HTTP_INTERCEPTORS,
             useClass: TimeStampToMomentConverter,
             multi: true,
         },
+        provideHttpClient(withInterceptorsFromDi()),
     ],
 })
 export class CourseListDialogModule {}

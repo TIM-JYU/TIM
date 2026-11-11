@@ -8,7 +8,11 @@ import {
     NgZone,
 } from "@angular/core";
 import {FormsModule} from "@angular/forms";
-import {HttpClient, HttpClientModule} from "@angular/common/http";
+import {
+    HttpClient,
+    provideHttpClient,
+    withInterceptorsFromDi,
+} from "@angular/common/http";
 import {DomSanitizer} from "@angular/platform-browser";
 import * as t from "io-ts";
 import {registerPlugin} from "tim/plugin/pluginRegistry";
@@ -106,6 +110,7 @@ const PluginFields = t.intersection([
         </div>
         <div *ngIf="log" class="qstLog" [innerHtml]="log"></div>
     `,
+    standalone: false,
 })
 export class QstComponent
     extends AngularPluginBase<
@@ -409,13 +414,13 @@ export class QstComponent
     declarations: [QstComponent],
     imports: [
         CommonModule,
-        HttpClientModule,
         FormsModule,
         TimUtilityModule,
         AnswerSheetModule,
         PurifyModule,
         TooltipModule,
     ],
+    providers: [provideHttpClient(withInterceptorsFromDi())],
 })
 export class QstModule implements DoBootstrap {
     ngDoBootstrap(appRef: ApplicationRef) {}

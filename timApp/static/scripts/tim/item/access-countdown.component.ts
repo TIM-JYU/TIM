@@ -17,6 +17,7 @@ import {documentglobals} from "tim/util/globals";
             <tim-goto-link href="" [maxWait]="waitOffset" [autoOpen]="true">Refresh the page</tim-goto-link>
         </ng-template>
     `,
+    standalone: false,
 })
 export class AccessCountdownComponent {
     item = documentglobals().curr_item;

@@ -28,7 +28,12 @@ import {
 } from "@angular/core";
 import type {SafeResourceUrl} from "@angular/platform-browser";
 import {DomSanitizer} from "@angular/platform-browser";
-import {HttpClient, HttpClientModule, HttpHeaders} from "@angular/common/http";
+import {
+    HttpClient,
+    HttpHeaders,
+    provideHttpClient,
+    withInterceptorsFromDi,
+} from "@angular/common/http";
 import {FormsModule} from "@angular/forms";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {vctrlInstance} from "tim/document/viewctrlinstance";
@@ -212,9 +217,7 @@ export interface Iframesettings {
                                display: block; border: none;'
                         [style.width]="this.getDesiredSize(iframesettings.width)"
                         [style.height]="this.getDesiredSize(iframesettings.height)"
-                        [src]="iframesettings.src"
-                        [sandbox]="iframesettings.sandbox"
-                        [attr.allow]="iframesettings.allow"
+                        [timIframeSettings]="iframesettings"
                         (load)="iframeloaded($event)"
                         [ngClass]="{fullScreen: fullScreen}"
                 >
@@ -253,6 +256,7 @@ export interface Iframesettings {
             <p class="plgfooter" *ngIf="footer" [innerHtml]="footer | purify"></p>
         </div>
     `,
+    standalone: false,
 })
 export class JsframeComponent
     extends AngularPluginBase<
@@ -833,13 +837,8 @@ export class JsframeComponent
 
 @NgModule({
     declarations: [JsframeComponent],
-    imports: [
-        CommonModule,
-        HttpClientModule,
-        FormsModule,
-        TimUtilityModule,
-        PurifyModule,
-    ],
+    imports: [CommonModule, FormsModule, TimUtilityModule, PurifyModule],
+    providers: [provideHttpClient(withInterceptorsFromDi())],
 })
 export class JsframeModule implements DoBootstrap {
     ngDoBootstrap(appRef: ApplicationRef) {}

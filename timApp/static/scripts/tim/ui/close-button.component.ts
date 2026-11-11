@@ -7,5 +7,6 @@ import {Component} from "@angular/core";
                   class="glyphicon glyphicon-remove"></i>
     `,
     styleUrls: ["./close-button.component.scss"],
+    standalone: false,
 })
 export class CloseButtonComponent {}

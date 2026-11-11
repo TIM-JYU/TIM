@@ -35,7 +35,11 @@ import {adapterFactory} from "angular-calendar/date-adapters/date-fns";
 import {CommonModule, registerLocaleData} from "@angular/common";
 import localeFi from "@angular/common/locales/fi";
 import localeSv from "@angular/common/locales/sv";
-import {HttpClient, HttpClientModule} from "@angular/common/http";
+import {
+    HttpClient,
+    provideHttpClient,
+    withInterceptorsFromDi,
+} from "@angular/common/http";
 import {FormsModule} from "@angular/forms";
 import {DomSanitizer} from "@angular/platform-browser";
 import {finalize, fromEvent, takeUntil} from "rxjs";
@@ -396,6 +400,7 @@ export function postProcessCalendarEvent(
         "calendar.component.scss",
         "../../../../../node_modules/angular-calendar/css/angular-calendar.css",
     ],
+    standalone: false,
 })
 export class CalendarComponent
     extends AngularPluginBase<
@@ -1131,15 +1136,6 @@ export class CalendarComponent
 }
 
 @NgModule({
-    imports: [
-        CommonModule,
-        HttpClientModule,
-        FormsModule,
-        CalendarModule.forRoot({
-            provide: DateAdapter,
-            useFactory: adapterFactory,
-        }),
-    ],
     declarations: [
         CalendarComponent,
         TimeViewSelectorComponent,
@@ -1149,11 +1145,20 @@ export class CalendarComponent
         ShowWeekComponent,
     ],
     exports: [CalendarComponent, DateTimeValidatorDirective],
+    imports: [
+        CommonModule,
+        FormsModule,
+        CalendarModule.forRoot({
+            provide: DateAdapter,
+            useFactory: adapterFactory,
+        }),
+    ],
     providers: [
         {
             provide: CalendarDateFormatter,
             useClass: CustomDateFormatter,
         },
+        provideHttpClient(withInterceptorsFromDi()),
     ],
 })
 export class TimCalendarModule implements DoBootstrap {

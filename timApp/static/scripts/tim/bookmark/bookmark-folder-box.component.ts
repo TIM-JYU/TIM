@@ -64,6 +64,7 @@ export interface ITaggedBookmarkedItem {
             </ul>
         </div>
     `,
+    standalone: false,
 })
 export class BookmarkFolderBoxComponent implements OnInit {
     bookmarkFolder: IBookmarkGroup | undefined;

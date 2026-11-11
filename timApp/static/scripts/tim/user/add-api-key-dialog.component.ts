@@ -71,6 +71,7 @@ import type {IUserApiKey} from "tim/user/IUser";
             </ng-container>
         </tim-dialog-frame>
     `,
+    standalone: false,
 })
 export class AddAPIKeyDialogComponent extends AngularDialogComponent<
     {onAdd: (key: IUserApiKey) => void},

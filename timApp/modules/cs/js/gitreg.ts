@@ -43,6 +43,7 @@ import {CsController} from "./csPlugin";
             <pre *ngIf="isRegistered && !error">You are registered</pre>
             <p *ngIf="markup.footer" class="footer" [innerHTML]="markup.footer"></p>
         </div>`,
+    standalone: false,
 })
 export class GitRegComponent extends CsController {
     preventRun: boolean = false;

@@ -1,7 +1,7 @@
 import type {ApplicationRef, DoBootstrap} from "@angular/core";
 import {Component, ElementRef, NgModule, ViewChild} from "@angular/core";
 import * as t from "io-ts";
-import {HttpClientModule} from "@angular/common/http";
+import {provideHttpClient, withInterceptorsFromDi} from "@angular/common/http";
 import {FormsModule, NgForm} from "@angular/forms";
 import type {Subscription} from "rxjs";
 import {race, Subject} from "rxjs";
@@ -324,6 +324,7 @@ class ToggleOption {
         <tim-t9-keyboard (applyT9)="applyT9($event)" *ngIf="t9Mode.value"></tim-t9-keyboard>
     `,
     styleUrls: ["user-select.component.scss"],
+    standalone: false,
 })
 export class UserSelectComponent extends AngularPluginBase<
     t.TypeOf<typeof PluginMarkup>,
@@ -954,11 +955,11 @@ export class UserSelectComponent extends AngularPluginBase<
     ],
     imports: [
         CommonModule,
-        HttpClientModule,
         FormsModule,
         TimUtilityModule,
         BsDropdownModule.forRoot(),
     ],
+    providers: [provideHttpClient(withInterceptorsFromDi())],
 })
 export class UserSelectModule implements DoBootstrap {
     ngDoBootstrap(appRef: ApplicationRef): void {}

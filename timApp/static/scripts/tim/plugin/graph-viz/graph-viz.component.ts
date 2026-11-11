@@ -10,6 +10,7 @@ import {to2} from "tim/util/utils";
 <div *ngIf="svg" [innerHTML]="svg|purify"></div>
     `,
     styleUrls: ["./graph-viz.component.scss"],
+    standalone: false,
 })
 export class GraphVizComponent implements OnInit {
     error?: string;

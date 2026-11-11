@@ -20,6 +20,7 @@ import {Input, Component} from "@angular/core";
             <ng-container *ngSwitchDefault i18n>Error: <span [innerHTML]="error | purify"></span></ng-container>
         </ng-container>
     `,
+    standalone: false,
 })
 export class ErrorDescriptionComponent {
     @Input() error!: string;

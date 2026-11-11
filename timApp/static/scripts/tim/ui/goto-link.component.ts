@@ -67,6 +67,7 @@ const VIEW_PATH = "/view/";
         </div>
     `,
     styleUrls: ["./goto-link.component.scss"],
+    standalone: false,
 })
 export class GotoLinkComponent implements OnInit {
     @Input() href = "";

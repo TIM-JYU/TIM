@@ -92,6 +92,7 @@ type sortOption = "name" | "username" | "email" | "time";
         </tim-dialog-frame>
     `,
     styleUrls: ["reset-task-lock-dialog.component.scss"],
+    standalone: false,
 })
 export class ResetTaskLockDialogComponent extends AngularDialogComponent<
     {currentUser: string; taskId: string},

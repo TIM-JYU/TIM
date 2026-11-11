@@ -7,7 +7,6 @@ import type {
 } from "@angular/core";
 import {
     Component,
-    ComponentFactoryResolver,
     Directive,
     NgModule,
     ViewChild,
@@ -19,7 +18,11 @@ import {
     verificationglobals,
     VerificationType,
 } from "tim/util/globals";
-import {HttpClient, HttpClientModule} from "@angular/common/http";
+import {
+    HttpClient,
+    provideHttpClient,
+    withInterceptorsFromDi,
+} from "@angular/common/http";
 import * as t from "io-ts";
 import {isRight} from "fp-ts/Either";
 import type {AlertSeverity} from "tim/ui/formErrorMessage";
@@ -73,6 +76,7 @@ const TYPE_NAMES: Record<ContactChannels, string> = {
             <li i18n>Contact information: <code>{{info.contact}}</code></li>
         </ul>
     `,
+    standalone: false,
 })
 export class ContactOwnershipInfoComponent
     extends InfoComponentBase<t.TypeOf<typeof ContactInfoMarkup>>
@@ -96,6 +100,7 @@ export class ContactOwnershipInfoComponent
     template: `
         <p i18n><strong><code>{{info.contact}}</code></strong> will be made your primary {{contactType.toLowerCase()}}.</p>
     `,
+    standalone: false,
 })
 export class SetPrimaryContactInfoComponent
     extends InfoComponentBase<t.TypeOf<typeof ContactInfoMarkup>>
@@ -157,6 +162,7 @@ const VERIFY_RETURN_URLS: Record<VerificationType, string | undefined> = {
         </bootstrap-panel>
     `,
     styleUrls: ["user-action-verify.component.scss"],
+    standalone: false,
 })
 export class UserActionVerifyComponent implements AfterViewInit {
     verifyGlobals = verificationglobals();
@@ -172,10 +178,7 @@ export class UserActionVerifyComponent implements AfterViewInit {
     };
     verifyType?: VerificationType;
 
-    constructor(
-        private http: HttpClient,
-        private cfr: ComponentFactoryResolver
-    ) {
+    constructor(private http: HttpClient) {
         if (this.verifyGlobals.verifyInfo) {
             this.verifyType = this.verifyGlobals.verifyInfo
                 .type as VerificationType;
@@ -198,8 +201,7 @@ export class UserActionVerifyComponent implements AfterViewInit {
             this.verifyGlobals.verifyError = $localize`This verification type is not yet supported.`;
             return;
         }
-        const factory = this.cfr.resolveComponentFactory(infoType);
-        const componentRef = this.infoContainer.createComponent(factory);
+        const componentRef = this.infoContainer.createComponent(infoType);
         // Trigger ngOnInit on dynamic component
         componentRef.changeDetectorRef.detectChanges();
     }
@@ -252,7 +254,8 @@ export class UserActionVerifyComponent implements AfterViewInit {
         SetPrimaryContactInfoComponent,
     ],
     exports: [UserActionVerifyComponent],
-    imports: [BrowserModule, TimUtilityModule, HttpClientModule],
+    imports: [BrowserModule, TimUtilityModule],
+    providers: [provideHttpClient(withInterceptorsFromDi())],
 })
 export class UserActionVerifyModule implements DoBootstrap {
     ngDoBootstrap(appRef: ApplicationRef): void {}

@@ -71,6 +71,7 @@ const defaultButtonText: string = $localize`Show map`;
     </div>
 </div>
 `,
+    standalone: false,
 })
 export class GamificationMapComponent {
     @Input() private data!: string;

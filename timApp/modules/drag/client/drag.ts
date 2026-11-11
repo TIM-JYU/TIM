@@ -3,7 +3,11 @@
  */
 import * as t from "io-ts";
 import {polyfill} from "mobile-drag-drop";
-import {HttpClient, HttpClientModule} from "@angular/common/http";
+import {
+    HttpClient,
+    provideHttpClient,
+    withInterceptorsFromDi,
+} from "@angular/common/http";
 import {FormsModule} from "@angular/forms";
 import type {DndDropEvent, EffectAllowed} from "ngx-drag-drop";
 import {DndModule} from "ngx-drag-drop";
@@ -136,6 +140,7 @@ interface WordObject {
         <div *ngIf="footer" class="plgfooter" [textContent]="footer"></div>
     `,
     styleUrls: ["./drag.scss"],
+    standalone: false,
 })
 export class DragComponent
     extends AngularPluginBase<
@@ -378,17 +383,16 @@ export class DragComponent
 }
 
 @NgModule({
-    providers: [SessionVerify],
     declarations: [DragComponent],
     imports: [
         CommonModule,
-        HttpClientModule,
         DndModule,
         TimUtilityModule,
         PurifyModule,
         FormsModule,
         TooltipModule.forRoot(),
     ],
+    providers: [SessionVerify, provideHttpClient(withInterceptorsFromDi())],
 })
 export class DragModule implements DoBootstrap {
     ngDoBootstrap(appRef: ApplicationRef): void {}

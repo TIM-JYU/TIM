@@ -72,6 +72,7 @@ import {CommonModule} from "@angular/common";
             </ng-container>
         </tim-dialog-frame>
     `,
+    standalone: false,
 })
 export class BookmarkDialogComponent extends AngularDialogComponent<
     IBookmark,

@@ -10,6 +10,7 @@ import {CsBase} from "./csPlugin";
         <pre *ngIf="error">{{error}}</pre>
         <pre *ngIf="own_error">{{own_error}}</pre>
     </div>`,
+    standalone: false,
 })
 export class CsErrorComponent extends CsBase {
     error?: string;

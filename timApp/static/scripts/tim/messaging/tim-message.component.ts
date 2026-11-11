@@ -82,6 +82,7 @@ const MAX_DISPLAY_LENGTH = 210;
         </ng-container>
     `,
     styleUrls: ["tim-message.component.scss"],
+    standalone: false,
 })
 export class TimMessageComponent implements OnInit {
     @Input()

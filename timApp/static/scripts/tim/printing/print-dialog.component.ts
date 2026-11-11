@@ -2,7 +2,11 @@ import {AngularDialogComponent} from "tim/ui/angulardialog/angular-dialog-compon
 import {Component, NgModule} from "@angular/core";
 import {DialogModule} from "tim/ui/angulardialog/dialog.module";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
-import {HttpClient, HttpClientModule} from "@angular/common/http";
+import {
+    HttpClient,
+    provideHttpClient,
+    withInterceptorsFromDi,
+} from "@angular/common/http";
 import * as t from "io-ts";
 import {FormsModule} from "@angular/forms";
 import {getUrlParamsJSON, TimStorage, toPromise} from "tim/util/utils";
@@ -146,6 +150,7 @@ export interface IPrintParams {
         </tim-dialog-frame>
     `,
     styleUrls: ["./print-dialog.component.scss"],
+    standalone: false,
 })
 export class PrintDialogComponent extends AngularDialogComponent<
     IPrintParams,
@@ -285,12 +290,7 @@ export class PrintDialogComponent extends AngularDialogComponent<
 
 @NgModule({
     declarations: [PrintDialogComponent],
-    imports: [
-        CommonModule,
-        DialogModule,
-        TimUtilityModule,
-        HttpClientModule,
-        FormsModule,
-    ],
+    imports: [CommonModule, DialogModule, TimUtilityModule, FormsModule],
+    providers: [provideHttpClient(withInterceptorsFromDi())],
 })
 export class PrintDialogModule {}

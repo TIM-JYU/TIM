@@ -1,4 +1,4 @@
-import {HttpClientModule} from "@angular/common/http";
+import {provideHttpClient, withInterceptorsFromDi} from "@angular/common/http";
 import type {OnInit, PipeTransform} from "@angular/core";
 import {EventEmitter, Output} from "@angular/core";
 import {Pipe} from "@angular/core";
@@ -159,6 +159,7 @@ const ExamManagerFields = t.intersection([
 @Pipe({
     name: "formatLoginCode",
     pure: true,
+    standalone: false,
 })
 class FormatLoginCodePipe implements PipeTransform {
     transform(value?: string): string | undefined {
@@ -208,6 +209,7 @@ class FormatLoginCodePipe implements PipeTransform {
             }
         `,
     ],
+    standalone: false,
 })
 export class ToggleComponent {
     @Input() value: boolean = false;
@@ -802,6 +804,7 @@ export class ToggleComponent {
         </form>
     `,
     styleUrls: ["exam-group-manager.component.scss"],
+    standalone: false,
 })
 export class ExamGroupManagerComponent
     extends AngularPluginBase<
@@ -1826,7 +1829,6 @@ export class ExamGroupManagerComponent
     exports: [ExamGroupManagerComponent],
     imports: [
         CommonModule,
-        HttpClientModule,
         FormsModule,
         TimUtilityModule,
         // TimTableModule,
@@ -1835,6 +1837,7 @@ export class ExamGroupManagerComponent
         PurifyModule,
         ButtonsModule,
     ],
+    providers: [provideHttpClient(withInterceptorsFromDi())],
 })
 export class ExamGroupManagerModule implements DoBootstrap {
     ngDoBootstrap(appRef: ApplicationRef): void {}

@@ -20,7 +20,7 @@ import {
 import {documentglobals} from "tim/util/globals";
 import {injectStyle} from "tim/util/utils";
 import type {EditMode} from "tim/document/popup-menu-dialog.component";
-import {HttpClientModule} from "@angular/common/http";
+import {provideHttpClient, withInterceptorsFromDi} from "@angular/common/http";
 import {AngularPluginBase} from "tim/plugin/angular-plugin-base.directive";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {PurifyModule} from "tim/util/purify.module";
@@ -147,6 +147,7 @@ const FeedbackAll = t.intersection([
     <p *ngIf="footer" [innerHtml]="footer | purify"></p>
 </div>
 `,
+    standalone: false,
 })
 export class FeedbackPluginComponent
     extends AngularPluginBase<
@@ -1326,7 +1327,8 @@ export class FeedbackPluginComponent
 
 @NgModule({
     declarations: [FeedbackPluginComponent],
-    imports: [CommonModule, HttpClientModule, TimUtilityModule, PurifyModule],
+    imports: [CommonModule, TimUtilityModule, PurifyModule],
+    providers: [provideHttpClient(withInterceptorsFromDi())],
 })
 export class FeedbackModule implements DoBootstrap {
     ngDoBootstrap(appRef: ApplicationRef) {}

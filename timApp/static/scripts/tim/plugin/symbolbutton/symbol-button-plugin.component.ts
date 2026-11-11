@@ -12,7 +12,7 @@ import type {
     OnInit,
 } from "@angular/core";
 import {Component, NgModule, ViewChild, ViewContainerRef} from "@angular/core";
-import {HttpClientModule} from "@angular/common/http";
+import {provideHttpClient, withInterceptorsFromDi} from "@angular/common/http";
 import {FormsModule} from "@angular/forms";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {AngularPluginBase} from "tim/plugin/angular-plugin-base.directive";
@@ -60,6 +60,7 @@ const SymbolButtonFields = t.intersection([
         </div>
     `,
     styleUrls: ["./symbol-button-plugin.component.scss"],
+    standalone: false,
 })
 export class SymbolButtonPluginComponent
     extends AngularPluginBase<
@@ -195,12 +196,12 @@ export class SymbolButtonPluginComponent
     declarations: [SymbolButtonPluginComponent],
     imports: [
         CommonModule,
-        HttpClientModule,
         FormsModule,
         TimUtilityModule,
         PurifyModule,
         EditorModule,
     ],
+    providers: [provideHttpClient(withInterceptorsFromDi())],
 })
 export class SymbolButtonPluginModule implements DoBootstrap {
     ngDoBootstrap(appRef: ApplicationRef) {}

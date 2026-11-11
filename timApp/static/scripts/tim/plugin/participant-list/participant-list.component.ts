@@ -10,7 +10,6 @@ import {CsUtilityModule} from "../../../../../modules/cs/js/util/module";
     selector: "tim-participant-list",
     styleUrls: ["./participant-list.component.scss"],
     imports: [CsUtilityModule, FormsModule, CommonModule],
-    standalone: true,
     template: `
         <div class="tim-user-list-container">
             <div class="heading">

@@ -20,7 +20,7 @@ import type {
 } from "tim/lecture/lecturetypes";
 import {RowCodec} from "tim/lecture/lecturetypes";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
-import {HttpClientModule} from "@angular/common/http";
+import {provideHttpClient, withInterceptorsFromDi} from "@angular/common/http";
 import {FormsModule} from "@angular/forms";
 import {PurifyModule} from "tim/util/purify.module";
 import {HTMLSanitizeModule} from "tim/util/htmlsanitize.module";
@@ -237,7 +237,7 @@ type MatrixElement = string | number;
                         <div *ngIf="isRadio()" [ngClass]="radioClass(rowi, coli)">
                             <label>
                                 <input
-                                        [attr.disabled]="disabled || null"
+                                        [disabled]="disabled"
                                         type="radio"
                                         [(ngModel)]="answerMatrix[isMatrix() ? rowi : 0][0]"
                                         (ngModelChange)="signalUpdate()"
@@ -261,7 +261,7 @@ type MatrixElement = string | number;
                             <label>
                             <textarea
                                     class="form-control"
-                                    [attr.disabled]="disabled || null"
+                                    [disabled]="disabled"
                                     [(ngModel)]="answerMatrix[rowi][coli]"
                                     [ngModelOptions]="{standalone: true}"
                                     (ngModelChange)="signalUpdate()"></textarea>
@@ -272,7 +272,7 @@ type MatrixElement = string | number;
                             <label>
                                 <input
                                         [ngClass]="getInputClass(rowi, coli, -1)"
-                                        [attr.disabled]="disabled || null"
+                                        [disabled]="disabled"
                                         [(ngModel)]="answerMatrix[rowi][coli]"
                                         [ngModelOptions]="{standalone: true}"
                                         (ngModelChange)="signalUpdate()"
@@ -288,6 +288,7 @@ type MatrixElement = string | number;
             </table>
         </form>
     `,
+    standalone: false,
 })
 export class AnswerSheetComponent implements OnChanges {
     private readonly element: JQuery;
@@ -638,14 +639,14 @@ export class AnswerSheetComponent implements OnChanges {
 
 @NgModule({
     declarations: [AnswerSheetComponent],
+    exports: [AnswerSheetComponent],
     imports: [
         CommonModule,
-        HttpClientModule,
         FormsModule,
         TimUtilityModule,
         HTMLSanitizeModule,
         PurifyModule,
     ],
-    exports: [AnswerSheetComponent],
+    providers: [provideHttpClient(withInterceptorsFromDi())],
 })
 export class AnswerSheetModule {}

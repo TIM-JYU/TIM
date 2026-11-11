@@ -38,6 +38,7 @@ export const TIME_VIEW_EVENING_HOURS: number[] = TIME_VIEW_MORNING_HOURS.map(
             </select>
         </ng-container>`,
     styleUrls: ["calendar.component.scss"],
+    standalone: false,
 })
 export class TimeViewSelectorComponent {
     @Input() segmentDuration: number = 20;

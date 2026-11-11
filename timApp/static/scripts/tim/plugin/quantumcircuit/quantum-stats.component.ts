@@ -103,6 +103,7 @@ export interface QuantumChartData {
         </div>
     `,
     styleUrls: ["./quantum-stats.component.scss"],
+    standalone: false,
 })
 export class QuantumStatsComponent implements OnInit, AfterViewInit, OnChanges {
     hideZeroRows: boolean = false;

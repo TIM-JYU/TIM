@@ -101,6 +101,7 @@ import {HttpClient} from "@angular/common/http";
         </div>
     `,
     styleUrls: ["./user-menu.component.scss"],
+    standalone: false,
 })
 export class UserMenuComponent implements OnInit {
     hideOptions: IVisibilityVars = getVisibilityVars();

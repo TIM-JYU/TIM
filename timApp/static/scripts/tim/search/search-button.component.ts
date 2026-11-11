@@ -22,6 +22,7 @@ import {Component, HostBinding, Input} from "@angular/core";
     `,
     host: {},
     styleUrls: ["search-button.component.scss"],
+    standalone: false,
 })
 export class SearchButtonComponent {
     displaySearch = false;

@@ -12,6 +12,7 @@ class Notification {
     selector: "notification",
     template: `
         <p *ngFor="let notif of notifications">{{notif.content}}</p>`,
+    standalone: false,
 })
 export class NotificationComponent {
     // TODO: test

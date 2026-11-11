@@ -49,6 +49,7 @@ import {
         <video [class.hidden]="!codeReaderStream" #barcodeOutput></video>
     `,
     styleUrls: ["./code-scanner.component.scss"],
+    standalone: false,
 })
 export class CodeScannerComponent implements OnInit, OnDestroy {
     @ViewChild("barcodeOutput") barcodeOutput!: ElementRef<HTMLVideoElement>;

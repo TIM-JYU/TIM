@@ -4,6 +4,7 @@ import type {Changes} from "tim/util/angularchanges";
 
 @Directive({
     selector: "[focusMe]",
+    standalone: false,
 })
 export class FocusMeDirective implements OnInit, OnChanges {
     @Input() enable = true;

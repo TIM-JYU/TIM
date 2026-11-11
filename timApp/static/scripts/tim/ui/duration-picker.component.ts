@@ -27,6 +27,7 @@ import {Component, EventEmitter, Input, Output} from "@angular/core";
         </div>
     `,
     styleUrls: ["./duration-picker.component.scss"],
+    standalone: false,
 })
 export class DurationPickerComponent {
     durationTypes: moment.unitOfTime.Base[];

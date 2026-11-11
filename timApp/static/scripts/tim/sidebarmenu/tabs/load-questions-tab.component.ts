@@ -8,6 +8,7 @@ import {LectureController} from "tim/lecture/lectureController";
         <ng-template i18n>Get question</ng-template>
         <ng-container i18n>Loading question manually...</ng-container>
     `,
+    standalone: false,
 })
 export class LoadQuestionsTabComponent implements OnTabSelect {
     constructor() {}

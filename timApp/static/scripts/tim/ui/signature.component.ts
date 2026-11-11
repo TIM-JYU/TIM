@@ -14,6 +14,7 @@ import {IUser} from "tim/user/IUser";
         </span>
     `,
     styleUrls: ["./signature.component.scss"],
+    standalone: false,
 })
 export class SignatureComponent {
     @Input() user!: IUser;

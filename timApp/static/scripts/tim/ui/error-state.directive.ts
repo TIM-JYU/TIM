@@ -7,6 +7,7 @@ import {InputService} from "tim/ui/input.service";
 @Directive({
     selector: "[timErrorState]",
     providers: [InputService],
+    standalone: false,
 })
 export class ErrorStateDirective implements AfterContentInit, OnDestroy {
     @ContentChild(NgModel, {static: false}) c?: NgModel;

@@ -16,7 +16,6 @@ interface TemplateData {
     selector: "tim-course-manager",
     styleUrls: ["./course-manager.component.scss"],
     imports: [CsUtilityModule, FormsModule, CommonModule],
-    standalone: true,
     template: `
         <div class="tim-course-manager-container">
             <div class="container">

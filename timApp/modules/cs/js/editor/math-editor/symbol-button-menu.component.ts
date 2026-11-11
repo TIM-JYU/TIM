@@ -52,7 +52,10 @@ type Point = {
 /**
  * Filters buttons by type.
  */
-@Pipe({name: "symbols"})
+@Pipe({
+    name: "symbols",
+    standalone: false,
+})
 export class SymbolsPipe implements PipeTransform {
     /**
      * Filters buttons by type.
@@ -163,6 +166,7 @@ export class SymbolsPipe implements PipeTransform {
 
     `,
     styleUrls: ["./symbol-button-menu.component.scss"],
+    standalone: false,
 })
 export class SymbolButtonMenuComponent implements AfterViewInit {
     buttonMenuState: ButtonMenuState = ButtonMenuState.Closed;

@@ -91,6 +91,7 @@ class ResizableDraggableWrapper {
         "../../../../../node_modules/angular2-draggable/css/resizable.min.css",
         "./dialog-frame.component.scss",
     ],
+    standalone: false,
 })
 export class DialogFrame {
     detachable = false;

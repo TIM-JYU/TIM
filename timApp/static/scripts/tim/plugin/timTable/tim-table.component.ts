@@ -72,7 +72,7 @@ import {
     ViewChild,
     ViewChildren,
 } from "@angular/core";
-import {HttpClientModule} from "@angular/common/http";
+import {provideHttpClient, withInterceptorsFromDi} from "@angular/common/http";
 import {FormsModule} from "@angular/forms";
 import {vctrlInstance} from "tim/document/viewctrlinstance";
 import type {Subscription} from "rxjs";
@@ -877,6 +877,7 @@ export enum ClearSort {
         </div>
     `,
     styleUrls: ["./tim-table.component.scss", "./table-common.scss"],
+    standalone: false,
 })
 export class TimTableComponent
     implements
@@ -6323,7 +6324,7 @@ export class TimTableComponent
             return this.cacheRowHeight;
         }
         let n = parseInt(
-            "" + this.dataView?.rowHeight ?? defaultDataViewRowHeight,
+            "" + (this.dataView?.rowHeight ?? defaultDataViewRowHeight),
             10
         );
         if (Number.isNaN(n)) {
@@ -6533,15 +6534,15 @@ export class TimTableComponent
 
 @NgModule({
     declarations: [TimTableComponent],
+    exports: [TimTableComponent],
     imports: [
         CommonModule,
-        HttpClientModule,
         FormsModule,
         TimUtilityModule,
         PurifyModule,
         DataViewModule,
     ],
-    exports: [TimTableComponent],
+    providers: [provideHttpClient(withInterceptorsFromDi())],
 })
 export class TimTableModule implements DoBootstrap {
     ngDoBootstrap(_appRef: ApplicationRef) {}

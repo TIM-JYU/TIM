@@ -113,6 +113,7 @@ let nextId = 0;
         </ng-container>
         <p *ngIf="!isValidUploadTarget" i18n class="error">No file upload or observers present, the upload may not work. This is a programming/configuration error.</p>
 `,
+    standalone: false,
 })
 export class FileSelectComponent {
     // TODO: translations
@@ -442,6 +443,7 @@ export class FileSelectComponent {
             [accept]="accept"
             [maxSize]="maxSize">
         </file-select>`,
+    standalone: false,
 })
 export class FileSelectManagerComponent {
     // TODO: translations

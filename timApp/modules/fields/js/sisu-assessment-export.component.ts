@@ -13,7 +13,11 @@ import {
 import moment from "moment";
 import {showMessageDialog} from "tim/ui/showMessageDialog";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
-import {HttpClient, HttpClientModule} from "@angular/common/http";
+import {
+    HttpClient,
+    provideHttpClient,
+    withInterceptorsFromDi,
+} from "@angular/common/http";
 import {DataViewModule} from "tim/plugin/dataview/data-view.module";
 import type {DataModelProvider} from "tim/plugin/dataview/data-view.component";
 import {DataViewComponent} from "tim/plugin/dataview/data-view.component";
@@ -472,6 +476,7 @@ class AssessmentTableModel implements DataModelProvider {
             </ng-container>
         </div>
     `,
+    standalone: false,
 })
 export class SisuAssessmentExportComponent {
     completionDate = new Date();
@@ -660,13 +665,13 @@ export class SisuAssessmentExportComponent {
 
 @NgModule({
     declarations: [SisuAssessmentExportComponent],
+    exports: [SisuAssessmentExportComponent],
     imports: [
         CommonModule,
         TimUtilityModule,
-        HttpClientModule,
         BsDatepickerModule.forRoot(),
         DataViewModule,
     ],
-    exports: [SisuAssessmentExportComponent],
+    providers: [provideHttpClient(withInterceptorsFromDi())],
 })
 export class SisuAssessmentExportModule {}

@@ -51,6 +51,7 @@ export interface IAddmemberResponse {
         </tim-plugin-frame>
     `,
     styleUrls: [],
+    standalone: false,
 })
 export class AddMemberComponent {
     users = "";

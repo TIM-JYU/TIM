@@ -42,6 +42,7 @@ import {showMessageDialog} from "tim/ui/showMessageDialog";
             <li *ngIf="pastLecturesList.length == 0"><p i18n>No past lectures</p></li>
         </ul>
     `,
+    standalone: false,
 })
 export class LectureInfoTabComponent implements OnTabSelect {
     currentLecturesList: ILecture[] = [];

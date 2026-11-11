@@ -52,6 +52,7 @@ function errorText(e: AngularError) {
     // The layout relies on the whitespace between the inline elements.
     preserveWhitespaces: true,
     templateUrl: "./velp-selection.component.html",
+    standalone: false,
 })
 export class VelpSelectionComponent implements OnInit, DoCheck {
     initialized = false;

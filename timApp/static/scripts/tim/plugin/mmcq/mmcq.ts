@@ -1,6 +1,10 @@
 import type {ApplicationRef, DoBootstrap} from "@angular/core";
 import {Component, Directive, ElementRef, Input, NgModule} from "@angular/core";
-import {HttpClient, HttpClientModule} from "@angular/common/http";
+import {
+    HttpClient,
+    provideHttpClient,
+    withInterceptorsFromDi,
+} from "@angular/common/http";
 import {FormsModule} from "@angular/forms";
 import {showMessageDialog} from "tim/ui/showMessageDialog";
 import {toPromise} from "tim/util/utils";
@@ -114,6 +118,7 @@ export class MCQBase<State> implements PluginJson {
     </div>
 </div>
 `,
+    standalone: false,
 })
 export class MMCQ extends MCQBase<null | boolean[]> {
     private active: boolean = false;
@@ -227,6 +232,7 @@ export class MMCQ extends MCQBase<null | boolean[]> {
     </div>
 </div>
 `,
+    standalone: false,
 })
 export class MCQ extends MCQBase<number | null> {
     userSelection: number | undefined;
@@ -284,12 +290,12 @@ export class MCQ extends MCQBase<number | null> {
     declarations: [MCQ, MMCQ],
     imports: [
         CommonModule,
-        HttpClientModule,
         FormsModule,
         TimUtilityModule,
         AnswerSheetModule,
         PurifyModule,
     ],
+    providers: [provideHttpClient(withInterceptorsFromDi())],
 })
 export class MCQModule implements DoBootstrap {
     ngDoBootstrap(appRef: ApplicationRef) {}

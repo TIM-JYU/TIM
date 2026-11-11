@@ -18,7 +18,7 @@ import {valueDefu} from "tim/util/utils";
 import {AngularPluginBase} from "tim/plugin/angular-plugin-base.directive";
 import {FormsModule} from "@angular/forms";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
-import {HttpClientModule} from "@angular/common/http";
+import {provideHttpClient, withInterceptorsFromDi} from "@angular/common/http";
 import {PurifyModule} from "tim/util/purify.module";
 import {registerPlugin} from "tim/plugin/pluginRegistry";
 import {CommonModule} from "@angular/common";
@@ -141,6 +141,7 @@ const ShowFileAll = t.type({
             <p class="plgfooter" *ngIf="footer" [innerHtml]="footer | purify"></p>
         </div>
     `,
+    standalone: false,
 })
 export class ImagesComponent extends AngularPluginBase<
     t.TypeOf<typeof ShowFileMarkup>,
@@ -332,13 +333,8 @@ export class ImagesComponent extends AngularPluginBase<
 
 @NgModule({
     declarations: [ImagesComponent],
-    imports: [
-        CommonModule,
-        TimUtilityModule,
-        HttpClientModule,
-        FormsModule,
-        PurifyModule,
-    ],
+    imports: [CommonModule, TimUtilityModule, FormsModule, PurifyModule],
+    providers: [provideHttpClient(withInterceptorsFromDi())],
 })
 export class ImagesModule implements DoBootstrap {
     ngDoBootstrap(_appRef: ApplicationRef) {}

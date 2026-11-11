@@ -15,7 +15,11 @@ import {
 import {getFormBehavior, parseStyles} from "tim/plugin/util";
 import {defaultErrorMessage} from "tim/util/utils";
 import {DomSanitizer} from "@angular/platform-browser";
-import {HttpClient, HttpClientModule} from "@angular/common/http";
+import {
+    HttpClient,
+    provideHttpClient,
+    withInterceptorsFromDi,
+} from "@angular/common/http";
 import {FormsModule} from "@angular/forms";
 import {TooltipModule} from "ngx-bootstrap/tooltip";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
@@ -108,6 +112,7 @@ const DropdownAll = t.intersection([
     <p *ngIf="footer" [innerHtml]="footer | purify" class="plgfooter"></p>
 </div>`,
     styleUrls: ["./dropdown-plugin.component.scss"],
+    standalone: false,
 })
 export class DropdownPluginComponent
     extends AngularPluginBase<
@@ -367,12 +372,12 @@ export class DropdownPluginComponent
     declarations: [DropdownPluginComponent],
     imports: [
         CommonModule,
-        HttpClientModule,
         TimUtilityModule,
         FormsModule,
         TooltipModule.forRoot(),
         PurifyModule,
     ],
+    providers: [provideHttpClient(withInterceptorsFromDi())],
 })
 export class DropdownModule implements DoBootstrap {
     ngDoBootstrap(appRef: ApplicationRef) {}

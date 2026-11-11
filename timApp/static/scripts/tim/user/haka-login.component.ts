@@ -97,6 +97,7 @@ function getDisplayNameForCurrLang(idp: IDiscoveryFeedEntry) {
         </div>
     `,
     styleUrls: ["./haka-login.component.scss"],
+    standalone: false,
 })
 export class HakaLoginComponent implements OnChanges {
     selectedIdp?: IDiscoveryFeedEntry;

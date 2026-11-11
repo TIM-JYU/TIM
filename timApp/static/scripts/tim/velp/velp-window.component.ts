@@ -55,6 +55,7 @@ let instanceCounter = 0;
     // The layout relies on the whitespace between the inline elements.
     preserveWhitespaces: true,
     templateUrl: "./velp-window.component.html",
+    standalone: false,
 })
 export class VelpWindowComponent implements OnInit, DoCheck {
     @Output() velpSelect = new EventEmitter<IVelp>();

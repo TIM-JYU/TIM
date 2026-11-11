@@ -9,6 +9,7 @@ import type {IEditor} from "./editor";
 @Component({
     selector: "cs-parsons-editor",
     template: `<div #area class="no-popup-menu"></div>`,
+    standalone: false,
 })
 export class ParsonsEditorComponent implements IEditor {
     private parson?: {

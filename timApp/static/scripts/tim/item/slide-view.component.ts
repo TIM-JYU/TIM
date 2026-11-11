@@ -15,6 +15,7 @@ import {TimUtilityModule} from "tim/ui/tim-utility.module";
         <a id="showSlidesLink" [href]="itemUrl">Show slides only</a>
     `,
     styleUrls: ["./slide-view.component.scss"],
+    standalone: false,
 })
 export class SlideViewComponent implements OnInit {
     item = documentglobals().curr_item;

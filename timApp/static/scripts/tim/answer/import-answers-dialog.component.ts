@@ -1,4 +1,8 @@
-import {HttpClient, HttpClientModule} from "@angular/common/http";
+import {
+    HttpClient,
+    provideHttpClient,
+    withInterceptorsFromDi,
+} from "@angular/common/http";
 import {Component, NgModule, ViewChild} from "@angular/core";
 import {FormsModule} from "@angular/forms";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
@@ -75,6 +79,7 @@ interface IImportResults {
             </div>
         </tim-dialog-frame>
     `,
+    standalone: false,
 })
 export class ImportAnswersDialogComponent extends AngularDialogComponent<
     undefined,
@@ -150,9 +155,9 @@ export class ImportAnswersDialogComponent extends AngularDialogComponent<
         DialogModule,
         TimUtilityModule,
         EditorModule,
-        HttpClientModule,
         PurifyModule,
         FormsModule,
     ],
+    providers: [provideHttpClient(withInterceptorsFromDi())],
 })
 export class EditJsonEventDialogModule {}

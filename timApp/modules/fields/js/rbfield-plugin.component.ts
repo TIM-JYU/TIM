@@ -15,7 +15,11 @@ import {
 import {getFormBehavior} from "tim/plugin/util";
 import {valueOr} from "tim/util/utils";
 import {DomSanitizer} from "@angular/platform-browser";
-import {HttpClient, HttpClientModule} from "@angular/common/http";
+import {
+    HttpClient,
+    provideHttpClient,
+    withInterceptorsFromDi,
+} from "@angular/common/http";
 import {FormsModule} from "@angular/forms";
 import {TooltipModule} from "ngx-bootstrap/tooltip";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
@@ -95,6 +99,7 @@ const RbfieldAll = t.intersection([
 </div>
 `,
     styleUrls: ["./rbfield-plugin.component.scss"],
+    standalone: false,
 })
 export class RbfieldPluginComponent
     extends AngularPluginBase<
@@ -437,12 +442,12 @@ export class RbfieldPluginComponent
     declarations: [RbfieldPluginComponent],
     imports: [
         CommonModule,
-        HttpClientModule,
         TimUtilityModule,
         FormsModule,
         TooltipModule.forRoot(),
         PurifyModule,
     ],
+    providers: [provideHttpClient(withInterceptorsFromDi())],
 })
 export class RbfieldModule implements DoBootstrap {
     ngDoBootstrap(appRef: ApplicationRef) {}

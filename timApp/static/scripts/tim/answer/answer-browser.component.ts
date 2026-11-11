@@ -65,7 +65,11 @@ import type {
     IModelAnswerSettings,
 } from "tim/answer/IAnswer";
 import {CommonModule} from "@angular/common";
-import {HttpClient, HttpClientModule} from "@angular/common/http";
+import {
+    HttpClient,
+    provideHttpClient,
+    withInterceptorsFromDi,
+} from "@angular/common/http";
 import type {PeerReview} from "tim/velp/velptypes";
 
 /*
@@ -155,6 +159,7 @@ const DEFAULT_MARKUP_CONFIG: IAnswerBrowserSettings = {
     selector: "answerbrowser",
     templateUrl: "../../../templates/answerBrowser.html",
     styles: [],
+    standalone: false,
 })
 export class AnswerBrowserComponent
     implements AfterViewInit, OnDestroy, OnInit
@@ -2168,15 +2173,15 @@ export class AnswerBrowserComponent
 }
 @NgModule({
     declarations: [AnswerBrowserComponent],
+    exports: [AnswerBrowserComponent],
     imports: [
         CommonModule,
         FormsModule,
         TimUtilityModule,
         DrawCanvasModule,
         PurifyModule,
-        HttpClientModule,
     ],
-    exports: [AnswerBrowserComponent],
+    providers: [provideHttpClient(withInterceptorsFromDi())],
 })
 export class AnswerBrowserModule implements DoBootstrap {
     ngDoBootstrap(appRef: ApplicationRef) {}

@@ -10,6 +10,7 @@ import {Component, EventEmitter, Input, Output} from "@angular/core";
         </a>
         </li>
     `,
+    standalone: false,
 })
 export class DropdownCheckboxComponent {
     @Input() for!: boolean;

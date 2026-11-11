@@ -91,6 +91,7 @@ const groupTagPrefix = "group:";
             </ng-container>
         </tim-dialog-frame>
     `,
+    standalone: false,
 })
 export class CourseDialogComponent extends AngularDialogComponent<IItem, void> {
     protected dialogName = "Course";

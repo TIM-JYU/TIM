@@ -45,6 +45,7 @@ import {vctrlInstance} from "tim/document/viewctrlinstance";
         </ul>
     `,
     styleUrls: ["./index-tab.component.scss"],
+    standalone: false,
 })
 export class IndexTabComponent implements OnInit {
     @Input() entry!: TabEntry;

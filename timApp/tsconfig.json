@@ -19,7 +19,7 @@
         "static/scripts/vendor/*"
       ]
     },
-    "target": "es2020",
+    "target": "ES2022",
     "lib": [
       "dom",
       "es2019",
@@ -40,7 +40,8 @@
       "node",
       "reveal",
       "jqueryui"
-     ]
+    ],
+    "useDefineForClassFields": false
   },
   "angularCompilerOptions": {
     "fullTemplateTypeCheck": true,

@@ -10,6 +10,7 @@ const COMMON_BOOKMARK_GROUPS: Record<string, string> = {
 
 @Pipe({
     name: "bookmarkName",
+    standalone: false,
 })
 export class BookmarkNamePipe implements PipeTransform {
     transform(value: string): string {

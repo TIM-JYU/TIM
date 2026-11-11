@@ -40,6 +40,7 @@ import {CURSOR} from "./editor";
                   [attr.autocorrect]="spellcheck === false ? 'off' : null"
                   [attr.autocapitalize]="spellcheck === false ? 'off' : null">
         </textarea>`,
+    standalone: false,
 })
 export class NormalEditorComponent implements IEditor {
     private content_: string = "";

@@ -8,5 +8,6 @@ import {Component} from "@angular/core";
         </h4>
     `,
     styleUrls: ["./plugin-header.component.scss"],
+    standalone: false,
 })
 export class PluginHeaderComponent {}

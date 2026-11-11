@@ -19,6 +19,7 @@ import {Users} from "tim/user/userService";
         class="btn btn-default" i18n>Log in</button>
 <tim-user-menu *ngIf="isLoggedIn()"></tim-user-menu>
     `,
+    standalone: false,
 })
 export class LoginMenuComponent implements OnInit {
     isLoggedIn() {

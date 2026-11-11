@@ -1,7 +1,8 @@
 import {
     HTTP_INTERCEPTORS,
     HttpClient,
-    HttpClientModule,
+    provideHttpClient,
+    withInterceptorsFromDi,
 } from "@angular/common/http";
 import type {ApplicationRef, DoBootstrap} from "@angular/core";
 import {Component, NgModule, NgZone} from "@angular/core";
@@ -132,6 +133,7 @@ import {BrowserModule} from "@angular/platform-browser";
     styleUrls: [
         "../../../../node_modules/angular2-draggable/css/resizable.min.css",
     ],
+    standalone: false,
 })
 export class LectureInfoComponent {
     lecture: ILecture;
@@ -275,7 +277,6 @@ export class LectureInfoComponent {
     imports: [
         BrowserModule,
         FormsModule,
-        HttpClientModule,
         TimUtilityModule,
         AnswerChartModule,
         LectureWallContentModule,
@@ -287,6 +288,7 @@ export class LectureInfoComponent {
             useClass: TimeStampToMomentConverter,
             multi: true,
         },
+        provideHttpClient(withInterceptorsFromDi()),
     ],
 })
 export class LectureInfoModule implements DoBootstrap {

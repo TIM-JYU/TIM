@@ -1,5 +1,5 @@
 import {NgModule} from "@angular/core";
-import {HttpClientModule} from "@angular/common/http";
+import {provideHttpClient, withInterceptorsFromDi} from "@angular/common/http";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {FormsModule} from "@angular/forms";
 import {NotificationOptionsComponent} from "tim/item/manage/notification-options.component";
@@ -10,14 +10,14 @@ import {RightsEditorComponent} from "tim/item/rights-editor.component";
 
 @NgModule({
     declarations: [NotificationOptionsComponent, RightsEditorComponent],
+    exports: [NotificationOptionsComponent, RightsEditorComponent],
     imports: [
         CommonModule,
-        HttpClientModule,
         TimUtilityModule,
         FormsModule,
         TooltipModule,
         DatetimePickerModule,
     ],
-    exports: [NotificationOptionsComponent, RightsEditorComponent],
+    providers: [provideHttpClient(withInterceptorsFromDi())],
 })
 export class TimManageModule {}

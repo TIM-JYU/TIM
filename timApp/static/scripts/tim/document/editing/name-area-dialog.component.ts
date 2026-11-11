@@ -127,6 +127,7 @@ export type INameAreaOptions = {
             </ng-container>
         </tim-dialog-frame>
     `,
+    standalone: false,
 })
 export class NameAreaDialogComponent extends AngularDialogComponent<
     void,

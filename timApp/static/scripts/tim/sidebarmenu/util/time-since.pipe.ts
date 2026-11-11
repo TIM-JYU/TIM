@@ -5,6 +5,7 @@ import {Users} from "tim/user/userService";
 
 @Pipe({
     name: "timeSince",
+    standalone: false,
 })
 export class TimeSincePipe implements PipeTransform {
     transform(diffSeconds: number): string {

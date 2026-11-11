@@ -139,6 +139,7 @@ export interface UserCreationDialogParams {
         </tim-dialog-frame>
     `,
     styleUrls: ["user-creation-dialog.component.scss"],
+    standalone: false,
 })
 export class UserCreationDialogComponent extends AngularDialogComponent<
     UserCreationDialogParams,

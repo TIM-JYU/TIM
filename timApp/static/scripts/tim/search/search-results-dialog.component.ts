@@ -117,6 +117,7 @@ enum SortOption {
         </tim-dialog-frame>
     `,
     styleUrls: ["search-results-dialog.component.scss"],
+    standalone: false,
 })
 export class SearchResultsDialogComponent extends AngularDialogComponent<
     SearchBoxComponent,

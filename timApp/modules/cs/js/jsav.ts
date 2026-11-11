@@ -9,7 +9,7 @@ import {Component, ElementRef, NgModule, ViewChild} from "@angular/core";
 import type {ViewCtrl} from "tim/document/viewctrl";
 import {GenericPluginMarkup, Info, withDefault} from "tim/plugin/attributes";
 import {timeout} from "tim/util/utils";
-import {HttpClientModule} from "@angular/common/http";
+import {provideHttpClient, withInterceptorsFromDi} from "@angular/common/http";
 import {AngularPluginBase} from "tim/plugin/angular-plugin-base.directive";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {vctrlInstance} from "tim/document/viewctrlinstance";
@@ -94,9 +94,7 @@ interface CustomFrame<T extends Window> extends HTMLIFrameElement {
                 class="jsavFrame"
                 [style.width.px]="iframesettings.width"
                 [style.height.px]="iframesettings.height"
-                [sandbox]="iframesettings.sandbox"
-                [attr.allow]="iframesettings.allow"
-                [src]="iframesettings.src">
+                [timIframeSettings]="iframesettings">
         </iframe>
     </div>
 
@@ -129,6 +127,7 @@ interface CustomFrame<T extends Window> extends HTMLIFrameElement {
     </p>
 </div>
 `,
+    standalone: false,
 })
 export class JsavPluginComponent extends AngularPluginBase<
     t.TypeOf<typeof JsavMarkup>,
@@ -313,7 +312,8 @@ export class JsavPluginComponent extends AngularPluginBase<
 
 @NgModule({
     declarations: [JsavPluginComponent],
-    imports: [CommonModule, HttpClientModule, TimUtilityModule, PurifyModule],
+    imports: [CommonModule, TimUtilityModule, PurifyModule],
+    providers: [provideHttpClient(withInterceptorsFromDi())],
 })
 export class JsavModule implements DoBootstrap {
     ngDoBootstrap(appRef: ApplicationRef) {}

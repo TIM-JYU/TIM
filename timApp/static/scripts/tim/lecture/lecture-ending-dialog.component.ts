@@ -40,6 +40,7 @@ export interface ILectureEndingDialogResult {
             </ng-container>
         </tim-dialog-frame>
     `,
+    standalone: false,
 })
 export class LectureEndingDialogComponent extends AngularDialogComponent<
     ILecture,

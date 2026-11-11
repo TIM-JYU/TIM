@@ -228,6 +228,7 @@ export interface GateBeingDragged {
 
     `,
     styleUrls: ["./quantum-circuit-board.component.scss"],
+    standalone: false,
 })
 export class QuantumCircuitBoardComponent implements OnInit {
     protected readonly Control = Control;

@@ -345,6 +345,7 @@ interface ISimpleRegistrationResponse {
         </tim-dialog-frame>
     `,
     styleUrls: ["./login-dialog.component.scss"],
+    standalone: false,
 })
 export class LoginDialogComponent extends AngularDialogComponent<
     ILoginParams,

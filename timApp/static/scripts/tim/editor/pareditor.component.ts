@@ -261,6 +261,7 @@ type UploadFile = File & {progress?: number; error?: string};
     templateUrl: "./pareditor.component.html",
     // The layout relies on the whitespace between the inline buttons and labels.
     preserveWhitespaces: true,
+    standalone: false,
 })
 export class PareditorComponent
     implements OnInit, AfterViewInit, DoCheck, OnDestroy
@@ -3009,6 +3010,7 @@ const MacroParams = t.tuple([
     </ul>
 </div>
     `,
+    standalone: false,
 })
 export class EditorMenuComponent {
     @Input() data!: IEditorMenu;
@@ -3032,6 +3034,7 @@ export class EditorMenuComponent {
     <tim-editor-menu *ngIf="menu" [data]="menu"></tim-editor-menu>
 </div>
     `,
+    standalone: false,
 })
 export class EditorEntryComponent {
     @Input() data!: EditorEntry;
@@ -3072,6 +3075,7 @@ export class EditorEntryComponent {
     </div>
 </div>
     `,
+    standalone: false,
 })
 export class PareditorDialogComponent implements AfterViewInit {
     @Input() data!: {params: IEditorParams};

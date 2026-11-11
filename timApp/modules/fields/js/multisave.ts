@@ -20,7 +20,11 @@ import {escapeRegExp, scrollToElement, timeout} from "tim/util/utils";
 import type {TaskId} from "tim/plugin/taskid";
 import {AngularPluginBase} from "tim/plugin/angular-plugin-base.directive";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
-import {HttpClient, HttpClientModule} from "@angular/common/http";
+import {
+    HttpClient,
+    provideHttpClient,
+    withInterceptorsFromDi,
+} from "@angular/common/http";
 import {FormsModule} from "@angular/forms";
 import {DomSanitizer} from "@angular/platform-browser";
 import {showConfirm} from "tim/ui/showConfirmDialog";
@@ -128,6 +132,7 @@ const multisaveAll = t.intersection([
 </span>
     `,
     styleUrls: ["./multisave.component.scss"],
+    standalone: false,
 })
 export class MultisaveComponent
     extends AngularPluginBase<
@@ -510,12 +515,12 @@ export class MultisaveComponent
     declarations: [MultisaveComponent],
     imports: [
         CommonModule,
-        HttpClientModule,
         FormsModule,
         TimUtilityModule,
         SisuAssessmentExportModule,
         PurifyModule,
     ],
+    providers: [provideHttpClient(withInterceptorsFromDi())],
 })
 export class MultisaveModule implements DoBootstrap {
     ngDoBootstrap(appRef: ApplicationRef) {}

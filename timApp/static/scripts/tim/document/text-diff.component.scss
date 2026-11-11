@@ -1,0 +1,62 @@
+:host {
+    display: block;
+    background-color: #fff;
+    color: #444;
+}
+
+.diff-toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.diff-table-container {
+    width: 100%;
+    overflow-x: auto;
+}
+
+.diff-table {
+    border: 1px solid #a9a9a9;
+    width: 100%;
+
+    &.side-by-side {
+        table-layout: fixed;
+
+        td {
+            width: 50%;
+            overflow-x: auto;
+        }
+
+        td + td {
+            border-left: 1px solid #a9a9a9;
+        }
+    }
+
+    td.content-col {
+        padding: 0;
+        margin: 0;
+        white-space: pre;
+        font-family: "courier new", courier, monospace;
+    }
+}
+
+.insert-row {
+    background-color: #dfd;
+
+    > .highlight {
+        background-color: #acf2bd;
+    }
+}
+
+.delete-row {
+    background-color: #fee8e9;
+
+    > .highlight {
+        background-color: #fdb8c0;
+    }
+}
+
+.empty-row {
+    background-color: #f7f7f7;
+}

@@ -28,6 +28,7 @@ import {partitionDocument} from "tim/document/viewRangeInfo";
             </div>
         </div>
     `,
+    standalone: false,
 })
 export class ViewRangeNavigationComponent {
     private vctrl!: ViewCtrl;

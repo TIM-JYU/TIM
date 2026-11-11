@@ -15,6 +15,7 @@ import {PluginMarkupErrors} from "tim/plugin/util";
         </div>
     `,
     styleUrls: ["./plugin-frame.component.scss"],
+    standalone: false,
 })
 export class PluginFrameComponent {
     @Input() markupError?: PluginMarkupErrors;

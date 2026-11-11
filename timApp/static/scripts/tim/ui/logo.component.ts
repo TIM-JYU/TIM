@@ -7,5 +7,6 @@ import {Component} from "@angular/core";
              src="/static/images/tim-logo.svg"/>
     `,
     styleUrls: ["./logo.component.scss"],
+    standalone: false,
 })
 export class LogoComponent {}

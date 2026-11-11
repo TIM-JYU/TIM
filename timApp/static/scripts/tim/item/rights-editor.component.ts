@@ -160,6 +160,7 @@ function compareLikeOrderBy(a: Sortable, b: Sortable): number {
             }
         `,
     ],
+    standalone: false,
 })
 export class RightsEditorComponent implements OnInit {
     @Input() accessTypes?: IAccessType[];

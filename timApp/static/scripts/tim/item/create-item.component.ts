@@ -63,6 +63,7 @@ import {NgModel} from "@angular/forms";
             <span *ngIf="creating">Creating...</span>
         </form>
     `,
+    standalone: false,
 })
 export class CreateItemComponent implements OnInit {
     @Input() private fullPath?: string;

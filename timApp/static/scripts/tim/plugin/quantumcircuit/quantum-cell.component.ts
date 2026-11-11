@@ -106,6 +106,7 @@ import {GateService} from "tim/plugin/quantumcircuit/gate.service";
 
     `,
     styleUrls: ["./quantum-circuit-board.component.scss"],
+    standalone: false,
 })
 export class QuantumCellComponent implements OnInit, AfterViewInit, OnChanges {
     protected readonly Gate = Gate;

@@ -2616,7 +2616,6 @@ ${fhtml}
                     },
                     text: "Enter image caption",
                     title: "Caption",
-                    okValue: "",
                 })
                     .then((caption) => {
                         // write image tag to editor
@@ -3980,7 +3979,10 @@ ${fhtml}
                         return;
                     }
                     const mu = self.markup;
-                    if (iframe.height && (!mu.height || mu.height < 0)) {
+                    if (
+                        iframe.height &&
+                        (!mu.height || Number(mu.height) < 0)
+                    ) {
                         self.iframesettings.height = iframe.height;
                     }
                     if (iframe.width && !mu.width) {
@@ -4018,7 +4020,7 @@ ${fhtml}
                     return;
                 }
                 const mu = self.markup;
-                if (iframe.height && (!mu.height || mu.height < 0)) {
+                if (iframe.height && (!mu.height || Number(mu.height) < 0)) {
                     self.iframesettings.height = iframe.height;
                 }
                 if (iframe.width && !mu.width) {
@@ -4195,7 +4197,7 @@ ${fhtml}
         );
         */
 
-        for (let i = 0; i < iframes.files?.length ?? 0; i++) {
+        for (let i = 0; i < (iframes.files?.length ?? 0); i++) {
             const iframe = iframes.files[i];
             const wset = iframe.width ?? iframes.defaults?.width;
             const w = wset ?? iframesContainer.offsetWidth;
@@ -4577,6 +4579,7 @@ ${fhtml}
             <p class="footer" [innerHTML]="footer | purify"></p>
         </div>`,
     styleUrls: ["./csPlugin.scss"],
+    standalone: false,
 })
 export class CsRunnerComponent extends CsController {
     constructor(

@@ -193,6 +193,7 @@ function csvCell(value: CellValue) {
         </div>
     `,
     styleUrls: ["./user-list.component.scss"],
+    standalone: false,
 })
 export class UserListComponent implements OnInit {
     columns: IColumn[] = [];

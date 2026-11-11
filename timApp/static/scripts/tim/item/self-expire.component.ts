@@ -9,6 +9,7 @@ import {documentglobals} from "tim/util/globals";
     template: `
         <button class="timButton" (click)="clicked()" [disabled]="itemId === undefined">{{ buttonText }}</button>
     `,
+    standalone: false,
 })
 export class SelfExpireComponent {
     @Input() confirm?: string;

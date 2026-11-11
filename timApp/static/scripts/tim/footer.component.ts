@@ -68,6 +68,7 @@ import {getLangLink, to2} from "tim/util/utils";
         </footer>
     `,
     styleUrls: ["./footer.component.scss"],
+    standalone: false,
 })
 export class FooterComponent {
     hide = getVisibilityVars();

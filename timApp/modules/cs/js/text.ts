@@ -46,6 +46,7 @@ import {CsController} from "./csPlugin";
                 <span [innerHTML]="htmlresult | purify"></span>
             </div>
         </div>`,
+    standalone: false,
 })
 export class CsTextComponent extends CsController {
     constructor(

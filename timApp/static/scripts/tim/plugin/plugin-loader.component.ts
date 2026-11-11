@@ -36,7 +36,11 @@ import {AnswerBrowserModule} from "tim/answer/answer-browser.component";
 import type {IGenericPluginMarkup} from "tim/plugin/attributes";
 import {TaskId, TaskIdWithDefaultDocId} from "tim/plugin/taskid";
 import type {PluginJson} from "tim/plugin/angular-plugin-base.directive";
-import {HttpClient, HttpClientModule} from "@angular/common/http";
+import {
+    HttpClient,
+    provideHttpClient,
+    withInterceptorsFromDi,
+} from "@angular/common/http";
 import type {IRegisteredPlugin} from "tim/plugin/pluginRegistry";
 import {getPlugin} from "tim/plugin/pluginRegistry";
 import {BrowserModule} from "@angular/platform-browser";
@@ -106,6 +110,7 @@ function isElement(n: Node): n is Element {
     host: {
         "[class.lazy-answer-inactive]": "lazyActivated && !activated",
     },
+    standalone: false,
 })
 export class PluginLoaderComponent implements AfterViewInit, OnDestroy, OnInit {
     @ViewChild("pluginPlacement", {read: ViewContainerRef, static: false})
@@ -384,11 +389,11 @@ export class PluginLoaderComponent implements AfterViewInit, OnDestroy, OnInit {
     async loadFromHtml(html: string) {
         const elementToCompile = $(html)[0];
         this.defaultload = false;
-        await this.determineAndSetComponent(elementToCompile);
+        this.determineAndSetComponent(elementToCompile);
         await this.refreshMath();
     }
 
-    async determineAndSetComponent(component: HTMLElement) {
+    determineAndSetComponent(component: HTMLElement) {
         if (component.nodeType === Node.COMMENT_NODE) {
             // empty loader, do nothing
             return;
@@ -416,7 +421,7 @@ export class PluginLoaderComponent implements AfterViewInit, OnDestroy, OnInit {
             this.error = $localize`Component ${runnername} is missing attribute json`;
             return;
         }
-        await this.setComponent(registeredPlugin, json);
+        this.setComponent(registeredPlugin, json);
     }
 
     setInnerHtml(element: HTMLElement) {
@@ -450,12 +455,14 @@ export class PluginLoaderComponent implements AfterViewInit, OnDestroy, OnInit {
         return this.currentModRef;
     }
 
-    async setComponent(registeredPlugin: IRegisteredPlugin, json: string) {
+    setComponent(registeredPlugin: IRegisteredPlugin, json: string) {
         const viewContainerRef = this.pluginPlacement;
         viewContainerRef.clear();
 
         const modRef = this.createModule(registeredPlugin.module);
-        const componentRef = await viewContainerRef.createComponent<PluginJson>(
+        // The JSON must be set before Angular runs change detection for the new component,
+        // so there must not be anything asynchronous between these statements.
+        const componentRef = viewContainerRef.createComponent<PluginJson>(
             registeredPlugin.component,
             {ngModuleRef: modRef}
         );
@@ -670,15 +677,15 @@ export class PluginLoaderComponent implements AfterViewInit, OnDestroy, OnInit {
 }
 @NgModule({
     declarations: [PluginLoaderComponent],
+    exports: [PluginLoaderComponent],
     imports: [
         AnswerBrowserModule,
         BrowserModule,
         FormsModule,
         PurifyModule,
         TimUtilityModule,
-        HttpClientModule,
     ],
-    exports: [PluginLoaderComponent],
+    providers: [provideHttpClient(withInterceptorsFromDi())],
 })
 export class PluginLoaderModule implements DoBootstrap {
     ngDoBootstrap(appRef: ApplicationRef) {}

@@ -2,7 +2,11 @@ import moment from "moment";
 import {AngularDialogComponent} from "tim/ui/angulardialog/angular-dialog-component.directive";
 import {Component, NgModule} from "@angular/core";
 import {timeout, toPromise} from "tim/util/utils";
-import {HttpClient, HttpClientModule} from "@angular/common/http";
+import {
+    HttpClient,
+    provideHttpClient,
+    withInterceptorsFromDi,
+} from "@angular/common/http";
 import {DialogModule} from "tim/ui/angulardialog/dialog.module";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {FormsModule} from "@angular/forms";
@@ -48,6 +52,7 @@ function getQuestionEndTime(q: IAskedQuestion) {
             </ng-container>
         </tim-dialog-frame>
     `,
+    standalone: false,
 })
 export class QuestionStatisticsDialogComponent extends AngularDialogComponent<
     IStatisticsParams,
@@ -117,11 +122,11 @@ export class QuestionStatisticsDialogComponent extends AngularDialogComponent<
     declarations: [QuestionStatisticsDialogComponent],
     imports: [
         CommonModule,
-        HttpClientModule,
         FormsModule,
         TimUtilityModule,
         DialogModule,
         AnswerChartModule,
     ],
+    providers: [provideHttpClient(withInterceptorsFromDi())],
 })
 export class QuestionStatisticsDialogModule {}

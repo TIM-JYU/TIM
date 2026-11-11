@@ -8,7 +8,7 @@ import {AngularPluginBase} from "tim/plugin/angular-plugin-base.directive";
 import {vctrlInstance} from "tim/document/viewctrlinstance";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {PurifyModule} from "tim/util/purify.module";
-import {HttpClientModule} from "@angular/common/http";
+import {provideHttpClient, withInterceptorsFromDi} from "@angular/common/http";
 import {FormsModule} from "@angular/forms";
 import {registerPlugin} from "tim/plugin/pluginRegistry";
 import type {AnswerBrowserComponent} from "tim/answer/answer-browser.component";
@@ -69,11 +69,9 @@ interface CustomFrame<T extends Window> extends HTMLIFrameElement {
                     #frame
                     class="showGeoGebra"
                     style="border: none"
-                    [src]="iframesettings.src"
-                    [sandbox]="iframesettings.sandbox"
+                    [timIframeSettings]="iframesettings"
                     [style.width.px]="iframesettings.width"
                     [style.height.px]="iframesettings.height"
-                    [attr.allow]="iframesettings.allow"
             >
             </iframe>
             <p class="csRunMenu">
@@ -104,6 +102,7 @@ interface CustomFrame<T extends Window> extends HTMLIFrameElement {
             <p class="plgfooter" *ngIf="footer" [innerHtml]="footer | purify"></p>
         </div>
     `,
+    standalone: false,
 })
 export class GeogebraComponent extends AngularPluginBase<
     t.TypeOf<typeof GeogebraMarkup>,
@@ -267,13 +266,8 @@ export class GeogebraComponent extends AngularPluginBase<
 
 @NgModule({
     declarations: [GeogebraComponent],
-    imports: [
-        CommonModule,
-        HttpClientModule,
-        FormsModule,
-        TimUtilityModule,
-        PurifyModule,
-    ],
+    imports: [CommonModule, FormsModule, TimUtilityModule, PurifyModule],
+    providers: [provideHttpClient(withInterceptorsFromDi())],
 })
 export class GeogebraModule implements DoBootstrap {
     ngDoBootstrap(appRef: ApplicationRef) {}

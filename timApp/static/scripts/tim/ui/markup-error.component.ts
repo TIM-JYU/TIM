@@ -13,6 +13,7 @@ import {PluginMarkupErrors} from "tim/plugin/util";
             </ul>
         </div>
     `,
+    standalone: false,
 })
 export class MarkupErrorComponent {
     @Input() data!: PluginMarkupErrors;

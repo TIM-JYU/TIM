@@ -20,6 +20,7 @@ import {getActiveDocument} from "tim/document/activedocument";
             }
         `,
     ],
+    standalone: false,
 })
 export class MarkAllAsReadComponent {
     @Input() buttonText?: string;

@@ -80,6 +80,7 @@ function isExpired(tag: ITag) {
         </div>
     `,
     styleUrls: ["./header.component.scss"],
+    standalone: false,
 })
 export class HeaderComponent implements OnInit {
     public hideVars: IVisibilityVars = getVisibilityVars();
