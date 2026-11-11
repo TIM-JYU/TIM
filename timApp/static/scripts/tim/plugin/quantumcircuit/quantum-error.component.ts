@@ -113,6 +113,12 @@ interface AnswerIncorrectRow {
                 <p i18n>Couldn't interpret circuits</p>
                 <p>{{error.message}}</p>
             </div>
+            
+            <div *ngIf="error.errorType === 'invalid-ignore-qubits'">
+                <p i18n>Couldn't ignore qubits</p>
+                <p>{{error.message}}</p>
+            </div>
+            
         </div>
     `,
     styleUrls: ["quantum-error.component.scss"],

@@ -269,6 +269,10 @@ export const ServerError = t.union([
         message: t.string,
         errorType: t.literal("circuit-uninterpretable"),
     }),
+    t.type({
+        message: t.string,
+        errorType: t.literal("invalid-ignore-qubits"),
+    }),
 ]);
 
 export type IServerError = t.TypeOf<typeof ServerError>;
