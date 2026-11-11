@@ -325,18 +325,31 @@ class QuestionTest(BrowserTest):
         for point, point_elem in zip(points, point_elems):
             point_elem.send_keys(point)
         for header, elem in zip(headers, header_elems):
-            elem.clear()
             # For some reason, sending the keys in one batch causes the screenshot test (a few lines below) to fail
             # frequently in CI because the last 1-2 letters are missing, so we send the keys one by one which seems
-            # to work more reliably.
-            for k in header:
-                elem.send_keys(k)
+            # to work more reliably. Letters can still get lost occasionally, so check the result and retype if needed.
+            for _ in range(3):
+                elem.clear()
+                for k in header:
+                    elem.send_keys(k)
+                if elem.get_attribute("value") == header:
+                    break
+            self.assertEqual(header, elem.get_attribute("value"))
         matrix = self.drv.find_element(By.CSS_SELECTOR, "tim-question-matrix")
         answersheet = self.drv.find_element(By.CSS_SELECTOR, "tim-answer-sheet")
 
         # Avoid hovering the header row (otherwise the +/- buttons will show up)
         # or focusing any text boxes to get consistent screenshots.
         self.scroll_into_view(answersheet)
+        # Bootstrap animates the border colour and shadow of a text box when it loses focus. Without this, the
+        # screenshot can be taken mid-animation, leaving the border of the last edited header slightly blue.
+        self.drv.execute_script(
+            """
+            const s = document.createElement("style");
+            s.textContent = "tim-edit-question-dialog * { transition: none !important; }";
+            document.head.appendChild(s);
+            """
+        )
         ActionChains(self.drv).move_to_element(answersheet).click().perform()
 
         self.assert_same_screenshot(
