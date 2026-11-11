@@ -2,6 +2,7 @@ from configparser import ConfigParser
 from typing import Dict, Tuple, List, Any, TYPE_CHECKING, Optional
 
 from cli.docker.service_variables import (
+    tim_image_name,
     tim_image_tag,
     csplugin_target,
     csplugin_image_tag,
@@ -83,6 +84,7 @@ class TIMConfig(ConfigParser):
 
         profile = profile or self.get("compose", "profile")
         var_dict["compose"].set("profile", profile)
+        var_dict["tim"].set("image_name", tim_image_name())
         var_dict["tim"].set("image_tag", tim_image_tag())
         var_dict["csplugin"].set("image_tag", csplugin_image_tag())
         var_dict["tim"].set("is_dev", profile == "dev")

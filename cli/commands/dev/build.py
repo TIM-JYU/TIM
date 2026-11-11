@@ -4,7 +4,11 @@ from typing import List, Optional, Callable, Dict, NamedTuple
 
 from cli.config import get_config
 from cli.docker.run import run_docker
-from cli.docker.service_variables import tim_image_tag, csplugin_image_tag
+from cli.docker.service_variables import (
+    tim_image_name,
+    tim_image_tag,
+    csplugin_image_tag,
+)
 from cli.util.logging import log_info
 
 info = {
@@ -33,7 +37,7 @@ def build_tim(
     assert tag is not None
     config = get_config()
     image_suffix = "-base" if tag == "base" else ""
-    image_name = f"{config.images_repository}/tim{image_suffix}"
+    image_name = f"{config.images_repository}/{tim_image_name()}{image_suffix}"
     image_name_specific = f"{image_name}:{tim_image_tag()}"
     image_name_latest = f"{image_name}:latest"
     cwd = Path.cwd()
@@ -148,7 +152,7 @@ def init(parser: ArgumentParser) -> None:
                 choices.append(f"{name}:{tag}")
     parser.add_argument(
         "--push",
-        help="Push TIM Docker images to Docker Hub.",
+        help="Push the built Docker images to the images repository (compose.images_repository in tim.conf).",
         action="store_true",
     )
     parser.add_argument(
