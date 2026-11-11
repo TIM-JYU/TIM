@@ -663,13 +663,15 @@ def parse_ignored(
     try:
         ignored = [int(q) for q in (qubits_to_ignore or [])]
     except (ValueError, TypeError):
-        return InvalidIgnoreQubitsError("Invalid value for ignored qubits")
+        return InvalidIgnoreQubitsError(gettext("Invalid value for ignored qubits."))
     if len(set(ignored)) != len(ignored) or not all(0 <= k < n_qubits for k in ignored):
         return InvalidIgnoreQubitsError(
-            "Could not set ignored qubits. Check that there are no duplicates and that index refers to existing qubits"
+            gettext(
+                "Could not set ignored qubits. Check that there are no duplicate indices and that all indices refer to existing qubits."
+            )
         )
     if len(ignored) == n_qubits:
-        return InvalidIgnoreQubitsError("All qubits are ignored")
+        return InvalidIgnoreQubitsError(gettext("All qubits are marked to be ignored."))
     return ignored
 
 

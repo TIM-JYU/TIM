@@ -115,7 +115,7 @@ interface AnswerIncorrectRow {
             </div>
             
             <div *ngIf="error.errorType === 'invalid-ignore-qubits'">
-                <p i18n>Couldn't ignore qubits</p>
+                <p i18n>Could not set helper qubits.</p>
                 <p>{{error.message}}</p>
             </div>
             

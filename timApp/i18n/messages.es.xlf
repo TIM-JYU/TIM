@@ -5562,8 +5562,7 @@
         </context-group>
       </trans-unit>
       <trans-unit id="3773241316574942521" datatype="html">
-        <source>Ask students to log in to the exam page using their login codes: <x id="START_LINK" ctype="x-a" equiv-text="&lt;a
-                                        [href]=&quot;getExamUrl(examByDocId.get(group.examDocId!))&quot;&gt;"/><x id="START_TAG_CODE" ctype="x-code" equiv-text="{{ getExa"/><x id="INTERPOLATION" equiv-text="yDocId.get(group.examDocId!)) }}"/><x id="CLOSE_TAG_CODE" ctype="x-code" equiv-text="&lt;/a&gt;"/><x id="CLOSE_LINK" ctype="x-a"/></source>
+        <source>Ask students to log in to the exam page using their login codes: <x id="START_LINK" ctype="x-a" equiv-text="&lt;a                                         [href]=&quot;getExamUrl(examByDocId.get(group.examDocId!))&quot;>"/><x id="START_TAG_CODE" ctype="x-code" equiv-text="{{ getExa"/><x id="INTERPOLATION" equiv-text="yDocId.get(group.examDocId!)) }}"/><x id="CLOSE_TAG_CODE" ctype="x-code" equiv-text="&lt;/a>"/><x id="CLOSE_LINK" ctype="x-a"/></source>
         <target state="new">Pida a los estudiantes que inicien sesión en la página del examen utilizando sus códigos de inicio de sesión:</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
@@ -11470,7 +11469,7 @@ Separate multiple addresses with commas or write each address on a new line.</so
       </trans-unit>
       <trans-unit id="856792486484034703" datatype="html">
         <source>You can only show answers for the main exam </source>
-        <target state="new">>Solo se pueden mostrar las respuestas del examen principal </target>
+        <target state="new">&gt;Solo se pueden mostrar las respuestas del examen principal </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
           <context context-type="linenumber">737,738</context>
@@ -11493,8 +11492,8 @@ Separate multiple addresses with commas or write each address on a new line.</so
         </context-group>
       </trans-unit>
       <trans-unit id="824586679107177391" datatype="html">
-        <source>Press the <x id="START_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;i&gt;"/>&apos;Begin showing answers to students&apos;<x id="CLOSE_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;/i&gt;"/> button to allow students to review their answers for 1 hour. </source>
-        <target state="new">Press the <x id="START_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;i&gt;"/>&apos;Begin showing answers to students&apos;<x id="CLOSE_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;/i&gt;"/> button to allow students to review their answers for 1 hour. </target>
+        <source>Press the <x id="START_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;i>"/>'Begin showing answers to students'<x id="CLOSE_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;/i>"/> button to allow students to review their answers for 1 hour. </source>
+        <target state="new">Press the <x id="START_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;i>"/>'Begin showing answers to students'<x id="CLOSE_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;/i>"/> button to allow students to review their answers for 1 hour. </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
           <context context-type="linenumber">788,789</context>
@@ -11509,7 +11508,7 @@ Separate multiple addresses with commas or write each address on a new line.</so
         </context-group>
       </trans-unit>
       <trans-unit id="5269168991544835375" datatype="html">
-        <source>To end the view right, press the <x id="START_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;i&gt;"/>&apos;End showing answers to students button&apos;<x id="CLOSE_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;/i&gt;"/>. The right is automatically disabled in 1 hour. </source>
+        <source>To end the view right, press the <x id="START_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;i>"/>'End showing answers to students button'<x id="CLOSE_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;/i>"/>. The right is automatically disabled in 1 hour. </source>
         <target state="new">Para finalizar la vista a la derecha, pulse el botón </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
@@ -11517,16 +11516,16 @@ Separate multiple addresses with commas or write each address on a new line.</so
         </context-group>
       </trans-unit>
       <trans-unit id="3881453063873243566" datatype="html">
-        <source> The exam has started! Students can now access the exam. Audio and video materials can be accessed via the <x id="START_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;i&gt;"/>View exam document<x id="CLOSE_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;/i&gt;"/> link. </source>
-        <target state="new"> ¡El examen ha comenzado! Los estudiantes ya pueden acceder al examen. Se puede acceder a los materiales de audio y vídeo a través del enlace <x id="START_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;i&gt;"/>Ver documento del examen<x id="CLOSE_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;/i&gt;"/>. </target>
+        <source> The exam has started! Students can now access the exam. Audio and video materials can be accessed via the <x id="START_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;i>"/>View exam document<x id="CLOSE_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;/i>"/> link. </source>
+        <target state="new"> ¡El examen ha comenzado! Los estudiantes ya pueden acceder al examen. Se puede acceder a los materiales de audio y vídeo a través del enlace <x id="START_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;i>"/>Ver documento del examen<x id="CLOSE_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;/i>"/>. </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/examGroupManager/exam-group-manager.component.ts</context>
           <context context-type="linenumber">618,620</context>
         </context-group>
       </trans-unit>
       <trans-unit id="5792644276297781479" datatype="html">
-        <source>Gate counts don&apos;t match:</source>
-        <target state="new">Gate counts don&apos;t match:</target>
+        <source>Gate counts don't match:</source>
+        <target state="new">Gate counts don't match:</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/quantum-error.component.ts</context>
           <context context-type="linenumber">26</context>
@@ -11554,6 +11553,14 @@ Separate multiple addresses with commas or write each address on a new line.</so
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/document/editing/editing.ts</context>
           <context context-type="linenumber">313,312</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="7427707969011543133" datatype="html">
+        <source>Could not set helper qubits.</source>
+        <target state="translated">No se pudieron establecer los cúbits auxiliares.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/quantum-error.component.ts</context>
+          <context context-type="linenumber">118</context>
         </context-group>
       </trans-unit>
     </body>
