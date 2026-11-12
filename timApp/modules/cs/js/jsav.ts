@@ -5,11 +5,21 @@
  */
 import * as t from "io-ts";
 import type {ApplicationRef, DoBootstrap} from "@angular/core";
-import {Component, ElementRef, NgModule, ViewChild} from "@angular/core";
+import {
+    Component,
+    ElementRef,
+    NgModule,
+    ViewChild,
+    ChangeDetectionStrategy,
+} from "@angular/core";
 import type {ViewCtrl} from "tim/document/viewctrl";
 import {GenericPluginMarkup, Info, withDefault} from "tim/plugin/attributes";
 import {timeout} from "tim/util/utils";
-import {provideHttpClient, withInterceptorsFromDi} from "@angular/common/http";
+import {
+    provideHttpClient,
+    withInterceptorsFromDi,
+    withXhr,
+} from "@angular/common/http";
 import {AngularPluginBase} from "tim/plugin/angular-plugin-base.directive";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {vctrlInstance} from "tim/document/viewctrlinstance";
@@ -143,6 +153,7 @@ interface CustomFrame<T extends Window> extends HTMLIFrameElement {
   </p>
 </div>
 `,
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false,
 })
 export class JsavPluginComponent extends AngularPluginBase<
@@ -329,7 +340,7 @@ export class JsavPluginComponent extends AngularPluginBase<
 @NgModule({
     declarations: [JsavPluginComponent],
     imports: [CommonModule, TimUtilityModule, PurifyModule],
-    providers: [provideHttpClient(withInterceptorsFromDi())],
+    providers: [provideHttpClient(withXhr(), withInterceptorsFromDi())],
 })
 export class JsavModule implements DoBootstrap {
     ngDoBootstrap(appRef: ApplicationRef) {}

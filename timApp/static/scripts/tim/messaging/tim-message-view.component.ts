@@ -5,6 +5,7 @@ import {
     ViewChild,
     ViewContainerRef,
     ChangeDetectorRef,
+    ChangeDetectionStrategy,
 } from "@angular/core";
 import {itemglobals, someglobals} from "tim/util/globals";
 import {toPromise} from "tim/util/utils";
@@ -36,6 +37,7 @@ import {TimMessageModule} from "tim/messaging/tim-message.component";
         
         `,
     styleUrls: ["tim-message-view.component.scss"],
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false,
 })
 export class TimMessageViewComponent implements OnInit {

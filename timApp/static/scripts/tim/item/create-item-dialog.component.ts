@@ -1,5 +1,10 @@
 import type {OnInit} from "@angular/core";
-import {Component, NgModule, ViewChild} from "@angular/core";
+import {
+    Component,
+    NgModule,
+    ViewChild,
+    ChangeDetectionStrategy,
+} from "@angular/core";
 import {CommonModule} from "@angular/common";
 import {DialogModule} from "tim/ui/angulardialog/dialog.module";
 import {AngularDialogComponent} from "tim/ui/angulardialog/angular-dialog-component.directive";
@@ -26,6 +31,7 @@ import type {ICreateItemDialogParams} from "tim/item/showCreateItemDialog";
             </ng-container>
         </tim-dialog-frame>
     `,
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false,
 })
 export class CreateItemDialogComponent

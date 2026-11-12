@@ -1,5 +1,11 @@
 import type {OnInit} from "@angular/core";
-import {Component, ElementRef, Input, ViewChild} from "@angular/core";
+import {
+    Component,
+    ElementRef,
+    Input,
+    ViewChild,
+    ChangeDetectionStrategy,
+} from "@angular/core";
 import {HttpClient} from "@angular/common/http";
 import moment from "moment";
 import humanizeDuration from "humanize-duration";
@@ -160,6 +166,7 @@ function compareLikeOrderBy(a: Sortable, b: Sortable): number {
             }
         `,
     ],
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false,
 })
 export class RightsEditorComponent implements OnInit {

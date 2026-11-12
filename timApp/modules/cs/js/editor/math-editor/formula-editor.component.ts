@@ -19,6 +19,7 @@ import {
     QueryList,
     ViewChild,
     ViewChildren,
+    ChangeDetectionStrategy,
 } from "@angular/core";
 import {showConfirm} from "tim/ui/showConfirmDialog";
 import {CURSOR, IEditor} from "../editor";
@@ -135,6 +136,7 @@ export type FieldType = {
         
         `,
     styleUrls: ["./formula-editor.component.scss"],
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false,
 })
 export class FormulaEditorComponent {

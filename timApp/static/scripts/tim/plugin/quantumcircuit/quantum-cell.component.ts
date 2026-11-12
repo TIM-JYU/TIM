@@ -4,7 +4,7 @@ import type {
     OnInit,
     SimpleChanges,
 } from "@angular/core";
-import {Component, Input} from "@angular/core";
+import {Component, Input, ChangeDetectionStrategy} from "@angular/core";
 import {
     Cell,
     Control,
@@ -118,6 +118,7 @@ import {GateService} from "tim/plugin/quantumcircuit/gate.service";
         
         `,
     styleUrls: ["./quantum-circuit-board.component.scss"],
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false,
 })
 export class QuantumCellComponent implements OnInit, AfterViewInit, OnChanges {

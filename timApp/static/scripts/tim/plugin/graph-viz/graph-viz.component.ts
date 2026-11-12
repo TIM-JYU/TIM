@@ -1,5 +1,5 @@
 import type {OnInit} from "@angular/core";
-import {Component, Input} from "@angular/core";
+import {Component, Input, ChangeDetectionStrategy} from "@angular/core";
 import type {Changes} from "tim/util/angularchanges";
 import {to2} from "tim/util/utils";
 
@@ -14,6 +14,7 @@ import {to2} from "tim/util/utils";
 }
 `,
     styleUrls: ["./graph-viz.component.scss"],
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false,
 })
 export class GraphVizComponent implements OnInit {

@@ -1,5 +1,11 @@
 import * as t from "io-ts";
-import {Component, Input, NgModule, ViewChild} from "@angular/core";
+import {
+    Component,
+    Input,
+    NgModule,
+    ViewChild,
+    ChangeDetectionStrategy,
+} from "@angular/core";
 import type {IncludeUsersOption} from "tim/plugin/attributes";
 import type {IUser} from "tim/user/IUser";
 import {sortLang} from "tim/user/IUser";
@@ -17,6 +23,7 @@ import {
     HttpClient,
     provideHttpClient,
     withInterceptorsFromDi,
+    withXhr,
 } from "@angular/common/http";
 import {DataViewModule} from "tim/plugin/dataview/data-view.module";
 import type {DataModelProvider} from "tim/plugin/dataview/data-view.component";
@@ -488,6 +495,7 @@ class AssessmentTableModel implements DataModelProvider {
         </div>
         }
         `,
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false,
 })
 export class SisuAssessmentExportComponent {
@@ -684,6 +692,6 @@ export class SisuAssessmentExportComponent {
         BsDatepickerModule,
         DataViewModule,
     ],
-    providers: [provideHttpClient(withInterceptorsFromDi())],
+    providers: [provideHttpClient(withXhr(), withInterceptorsFromDi())],
 })
 export class SisuAssessmentExportModule {}

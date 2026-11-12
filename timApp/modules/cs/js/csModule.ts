@@ -1,6 +1,10 @@
 import type {ApplicationRef, DoBootstrap} from "@angular/core";
 import {NgModule} from "@angular/core";
-import {provideHttpClient, withInterceptorsFromDi} from "@angular/common/http";
+import {
+    provideHttpClient,
+    withInterceptorsFromDi,
+    withXhr,
+} from "@angular/common/http";
 import {FormsModule} from "@angular/forms";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {PurifyModule} from "tim/util/purify.module";
@@ -53,7 +57,7 @@ import {EditorModule} from "./editor/module";
         PurifyModule,
         TooltipModule,
     ],
-    providers: [provideHttpClient(withInterceptorsFromDi())],
+    providers: [provideHttpClient(withXhr(), withInterceptorsFromDi())],
 })
 export class CsPluginModule implements DoBootstrap {
     ngDoBootstrap(appRef: ApplicationRef) {}

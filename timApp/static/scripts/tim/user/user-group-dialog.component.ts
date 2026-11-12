@@ -1,9 +1,10 @@
-import {Component, NgModule} from "@angular/core";
+import {Component, NgModule, ChangeDetectionStrategy} from "@angular/core";
 import {FormsModule} from "@angular/forms";
 import {
     HttpClient,
     provideHttpClient,
     withInterceptorsFromDi,
+    withXhr,
 } from "@angular/common/http";
 import {AngularDialogComponent} from "tim/ui/angulardialog/angular-dialog-component.directive";
 import type {IDocument} from "tim/item/IItem";
@@ -109,6 +110,7 @@ export interface UserGroupDialogParams {
           </ng-container>
         </tim-dialog-frame>
         `,
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false,
 })
 export class UserGroupDialogComponent extends AngularDialogComponent<
@@ -174,6 +176,6 @@ export class UserGroupDialogComponent extends AngularDialogComponent<
     declarations: [UserGroupDialogComponent],
     exports: [UserGroupDialogComponent],
     imports: [DialogModule, FormsModule, TimUtilityModule, CommonModule],
-    providers: [provideHttpClient(withInterceptorsFromDi())],
+    providers: [provideHttpClient(withXhr(), withInterceptorsFromDi())],
 })
 export class UserGroupDialogModule {}

@@ -1,6 +1,17 @@
 import type {ApplicationRef, DoBootstrap} from "@angular/core";
-import {Component, ElementRef, Input, NgModule, ViewChild} from "@angular/core";
-import {provideHttpClient, withInterceptorsFromDi} from "@angular/common/http";
+import {
+    Component,
+    ElementRef,
+    Input,
+    NgModule,
+    ViewChild,
+    ChangeDetectionStrategy,
+} from "@angular/core";
+import {
+    provideHttpClient,
+    withInterceptorsFromDi,
+    withXhr,
+} from "@angular/common/http";
 import {FormsModule} from "@angular/forms";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {AnswerSheetModule} from "tim/document/question/answer-sheet.component";
@@ -540,6 +551,7 @@ function scrollElementVisibleInParent(
         </div>
         `,
     styleUrls: ["tape-plugin.component.scss"],
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false,
 })
 export class TapePluginContent implements PluginJson {
@@ -1156,7 +1168,7 @@ export class TapePluginContent implements PluginJson {
         AnswerSheetModule,
         PurifyModule,
     ],
-    providers: [provideHttpClient(withInterceptorsFromDi())],
+    providers: [provideHttpClient(withXhr(), withInterceptorsFromDi())],
 })
 export class TapePluginModule implements DoBootstrap {
     ngDoBootstrap(appRef: ApplicationRef) {}

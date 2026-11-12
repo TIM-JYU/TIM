@@ -1,5 +1,5 @@
 /* eslint no-underscore-dangle: ["error", { "allow": ["type_", "src_"] }] */
-import {Component, Input} from "@angular/core";
+import {Component, Input, ChangeDetectionStrategy} from "@angular/core";
 import type {SafeResourceUrl} from "@angular/platform-browser";
 import {DomSanitizer} from "@angular/platform-browser";
 
@@ -40,6 +40,7 @@ import {DomSanitizer} from "@angular/platform-browser";
         }
       }
     }`,
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false,
 })
 export class UploadResultComponent {

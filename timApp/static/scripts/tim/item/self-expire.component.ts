@@ -1,4 +1,4 @@
-import {Component, Input} from "@angular/core";
+import {Component, Input, ChangeDetectionStrategy} from "@angular/core";
 import {showMessageDialog} from "tim/ui/showMessageDialog";
 import {HttpClient} from "@angular/common/http";
 import {toPromise} from "tim/util/utils";
@@ -9,6 +9,7 @@ import {documentglobals} from "tim/util/globals";
     template: `
         <button class="timButton" (click)="clicked()" [disabled]="itemId === undefined">{{ buttonText }}</button>
     `,
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false,
 })
 export class SelfExpireComponent {

@@ -1,4 +1,4 @@
-import {Component} from "@angular/core";
+import {Component, ChangeDetectionStrategy} from "@angular/core";
 import type {OnTabSelect} from "tim/sidebarmenu/menu-tab.directive";
 import type {ILecture, ILectureListResponse2} from "tim/lecture/lecturetypes";
 import type {ViewCtrl} from "tim/document/viewctrl";
@@ -56,6 +56,7 @@ import {showMessageDialog} from "tim/ui/showMessageDialog";
           }
         </ul>
         `,
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false,
 })
 export class LectureInfoTabComponent implements OnTabSelect {

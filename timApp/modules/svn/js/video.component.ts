@@ -3,7 +3,13 @@
 import * as t from "io-ts";
 import {firstValueFrom} from "rxjs";
 import type {ApplicationRef, DoBootstrap} from "@angular/core";
-import {Component, ElementRef, NgModule, ViewChild} from "@angular/core";
+import {
+    Component,
+    ElementRef,
+    NgModule,
+    ViewChild,
+    ChangeDetectionStrategy,
+} from "@angular/core";
 import {
     GenericPluginMarkup,
     Info,
@@ -20,7 +26,11 @@ import {
 import {AngularPluginBase} from "tim/plugin/angular-plugin-base.directive";
 import {FormsModule} from "@angular/forms";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
-import {provideHttpClient, withInterceptorsFromDi} from "@angular/common/http";
+import {
+    provideHttpClient,
+    withInterceptorsFromDi,
+    withXhr,
+} from "@angular/common/http";
 import {PurifyModule} from "tim/util/purify.module";
 import {getKeyCode, KEY_LEFT, KEY_RIGHT} from "tim/util/keycodes";
 import {registerPlugin} from "tim/plugin/pluginRegistry";
@@ -453,6 +463,7 @@ const ShowFileAll = t.type({
         </div>
         `,
     styleUrls: ["./video.component.scss"],
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false,
 })
 export class VideoComponent extends AngularPluginBase<
@@ -1155,7 +1166,7 @@ export class VideoComponent extends AngularPluginBase<
 @NgModule({
     declarations: [VideoComponent, VideoLinkComponent],
     imports: [CommonModule, TimUtilityModule, FormsModule, PurifyModule],
-    providers: [provideHttpClient(withInterceptorsFromDi())],
+    providers: [provideHttpClient(withXhr(), withInterceptorsFromDi())],
 })
 export class VideoModule implements DoBootstrap {
     ngDoBootstrap(_appRef: ApplicationRef) {}

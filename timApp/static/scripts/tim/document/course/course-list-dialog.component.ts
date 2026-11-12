@@ -3,7 +3,7 @@
  */
 
 import {AngularDialogComponent} from "tim/ui/angulardialog/angular-dialog-component.directive";
-import {Component, NgModule} from "@angular/core";
+import {Component, NgModule, ChangeDetectionStrategy} from "@angular/core";
 import {TimStorage, toPromise} from "tim/util/utils";
 import type {ICourseSettings, ISubjectList, ITaggedItem} from "tim/item/IItem";
 import {getCourseCode, tagIsExpired, TagType} from "tim/item/IItem";
@@ -12,6 +12,7 @@ import {
     HttpClient,
     provideHttpClient,
     withInterceptorsFromDi,
+    withXhr,
 } from "@angular/common/http";
 import {DialogModule} from "tim/ui/angulardialog/dialog.module";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
@@ -99,6 +100,7 @@ export interface IGroupedCourses {
               </ng-container>
             </tim-dialog-frame>
         `,
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false,
 })
 export class CourseListDialogComponent extends AngularDialogComponent<
@@ -322,7 +324,7 @@ export class CourseListDialogComponent extends AngularDialogComponent<
             useClass: TimeStampToMomentConverter,
             multi: true,
         },
-        provideHttpClient(withInterceptorsFromDi()),
+        provideHttpClient(withXhr(), withInterceptorsFromDi()),
     ],
 })
 export class CourseListDialogModule {}

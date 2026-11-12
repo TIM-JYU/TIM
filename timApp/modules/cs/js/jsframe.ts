@@ -25,6 +25,7 @@ import {
     NgModule,
     NgZone,
     ViewChild,
+    ChangeDetectionStrategy,
 } from "@angular/core";
 import type {SafeResourceUrl} from "@angular/platform-browser";
 import {DomSanitizer} from "@angular/platform-browser";
@@ -33,6 +34,7 @@ import {
     HttpHeaders,
     provideHttpClient,
     withInterceptorsFromDi,
+    withXhr,
 } from "@angular/common/http";
 import {FormsModule} from "@angular/forms";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
@@ -281,6 +283,7 @@ export interface Iframesettings {
           }
         </div>
         `,
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false,
 })
 export class JsframeComponent
@@ -863,7 +866,7 @@ export class JsframeComponent
 @NgModule({
     declarations: [JsframeComponent],
     imports: [CommonModule, FormsModule, TimUtilityModule, PurifyModule],
-    providers: [provideHttpClient(withInterceptorsFromDi())],
+    providers: [provideHttpClient(withXhr(), withInterceptorsFromDi())],
 })
 export class JsframeModule implements DoBootstrap {
     ngDoBootstrap(appRef: ApplicationRef) {}

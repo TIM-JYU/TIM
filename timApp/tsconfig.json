@@ -11,6 +11,7 @@
     "outDir": "./dist/tsc",
     "moduleResolution": "bundler",
     "baseUrl": ".",
+    "ignoreDeprecations": "6.0",
     "paths": {
       "tim/*": [
         "static/scripts/tim/*"
@@ -22,7 +23,6 @@
     "target": "ES2022",
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
-    "downlevelIteration": true,
     "declaration": false,
     "noEmit": true,
     "importHelpers": true,

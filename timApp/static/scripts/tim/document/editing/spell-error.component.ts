@@ -1,5 +1,10 @@
 import type {OnDestroy} from "@angular/core";
-import {Component, ElementRef, Input} from "@angular/core";
+import {
+    Component,
+    ElementRef,
+    Input,
+    ChangeDetectionStrategy,
+} from "@angular/core";
 import {to2} from "tim/util/utils";
 import $ from "jquery";
 import {angularDialog} from "tim/ui/angulardialog/dialog.service";
@@ -14,6 +19,7 @@ import type {
         <span class="dropdown-error" (click)="selectWord($event)"><ng-content></ng-content></span>
     `,
     styleUrls: ["./spell-error.component.scss"],
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false,
 })
 export class SpellErrorComponent implements OnDestroy {

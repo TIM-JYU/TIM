@@ -15,7 +15,13 @@
 
 import $ from "jquery";
 import type {Ace} from "ace-builds/src-noconflict/ace";
-import {Component, ElementRef, Input, ViewChild} from "@angular/core";
+import {
+    Component,
+    ElementRef,
+    Input,
+    ViewChild,
+    ChangeDetectionStrategy,
+} from "@angular/core";
 import {wrapText} from "tim/document/editing/utils";
 import type {IEditor} from "./editor";
 import {CURSOR} from "./editor";
@@ -89,6 +95,7 @@ export type IAceEditorOptions = {
     template: `
         <pre #area style="width: 100%;" [style.display]="null">
         </pre>`,
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false,
 })
 export class AceEditorComponent implements IEditor {

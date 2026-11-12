@@ -3,7 +3,7 @@
  */
 
 import {AngularDialogComponent} from "tim/ui/angulardialog/angular-dialog-component.directive";
-import {Component, NgModule} from "@angular/core";
+import {Component, NgModule, ChangeDetectionStrategy} from "@angular/core";
 import {DialogModule} from "tim/ui/angulardialog/dialog.module";
 import {FormsModule} from "@angular/forms";
 import * as t from "io-ts";
@@ -54,6 +54,7 @@ import {CommonModule} from "@angular/common";
             </ng-container>
           </tim-dialog-frame>
         `,
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false,
 })
 export class ViewRangeEditDialogComponent extends AngularDialogComponent<

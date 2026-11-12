@@ -3,7 +3,7 @@
  */
 
 import {AngularDialogComponent} from "tim/ui/angulardialog/angular-dialog-component.directive";
-import {Component, NgModule} from "@angular/core";
+import {Component, NgModule, ChangeDetectionStrategy} from "@angular/core";
 import {DialogModule} from "tim/ui/angulardialog/dialog.module";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {FormsModule} from "@angular/forms";
@@ -143,6 +143,7 @@ enum SortOption {
         </tim-dialog-frame>
         `,
     styleUrls: ["search-results-dialog.component.scss"],
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false,
 })
 export class SearchResultsDialogComponent extends AngularDialogComponent<

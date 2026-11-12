@@ -1,4 +1,4 @@
-import {Component} from "@angular/core";
+import {Component, ChangeDetectionStrategy} from "@angular/core";
 import type {OnTabSelect} from "tim/sidebarmenu/menu-tab.directive";
 import {LectureController} from "tim/lecture/lectureController";
 
@@ -8,6 +8,7 @@ import {LectureController} from "tim/lecture/lectureController";
         <ng-template i18n>Get question</ng-template>
         <ng-container i18n>Loading question manually...</ng-container>
     `,
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false,
 })
 export class LoadQuestionsTabComponent implements OnTabSelect {

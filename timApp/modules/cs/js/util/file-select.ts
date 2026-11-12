@@ -9,6 +9,7 @@ import {
     Output,
     ViewChild,
     ViewChildren,
+    ChangeDetectionStrategy,
 } from "@angular/core";
 import type {HttpErrorResponse} from "@angular/common/http";
 import {HttpClient, HttpEventType} from "@angular/common/http";
@@ -125,6 +126,7 @@ let nextId = 0;
       <p i18n class="error">No file upload or observers present, the upload may not work. This is a programming/configuration error.</p>
     }
     `,
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false,
 })
 export class FileSelectComponent {
@@ -457,6 +459,7 @@ export class FileSelectComponent {
             [maxSize]="maxSize">
           </file-select>
         }`,
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false,
 })
 export class FileSelectManagerComponent {

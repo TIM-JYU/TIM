@@ -1,5 +1,11 @@
 import type {ElementRef} from "@angular/core";
-import {Component, Input, QueryList, ViewChildren} from "@angular/core";
+import {
+    Component,
+    Input,
+    QueryList,
+    ViewChildren,
+    ChangeDetectionStrategy,
+} from "@angular/core";
 import {QuestionEditDialogComponent} from "tim/document/question/question-edit-dialog.component";
 
 // noinspection JSConstantReassignment
@@ -152,6 +158,7 @@ import {QuestionEditDialogComponent} from "tim/document/question/question-edit-d
               </tbody>
             </table>
         `,
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false,
 })
 export class QuestionMatrixComponent {

@@ -1,11 +1,12 @@
 import moment from "moment";
 import {AngularDialogComponent} from "tim/ui/angulardialog/angular-dialog-component.directive";
-import {Component, NgModule} from "@angular/core";
+import {Component, NgModule, ChangeDetectionStrategy} from "@angular/core";
 import {KEY_S} from "tim/util/keycodes";
 import {
     HttpClient,
     provideHttpClient,
     withInterceptorsFromDi,
+    withXhr,
 } from "@angular/common/http";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {FormsModule} from "@angular/forms";
@@ -190,6 +191,7 @@ function isLecture(item: unknown): item is ILecture {
           </ng-container>
         </tim-dialog-frame>
         `,
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false,
 })
 export class LectureDialogComponent extends AngularDialogComponent<
@@ -400,6 +402,6 @@ export class LectureDialogComponent extends AngularDialogComponent<
         AccordionModule,
         DatetimePickerModule,
     ],
-    providers: [provideHttpClient(withInterceptorsFromDi())],
+    providers: [provideHttpClient(withXhr(), withInterceptorsFromDi())],
 })
 export class LectureDialogModule {}

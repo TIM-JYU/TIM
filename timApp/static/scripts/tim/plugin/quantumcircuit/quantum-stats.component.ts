@@ -11,6 +11,7 @@ import {
     Output,
     ViewChild,
     ElementRef,
+    ChangeDetectionStrategy,
 } from "@angular/core";
 import type {Measurement} from "tim/plugin/quantumcircuit/quantum-circuit.component";
 import type {ChartData, ChartOptions} from "chart.js";
@@ -121,6 +122,7 @@ export interface QuantumChartData {
         </div>
         `,
     styleUrls: ["./quantum-stats.component.scss"],
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false,
 })
 export class QuantumStatsComponent implements OnInit, AfterViewInit, OnChanges {

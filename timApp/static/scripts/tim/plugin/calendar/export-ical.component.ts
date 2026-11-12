@@ -1,4 +1,4 @@
-import {Component, NgModule} from "@angular/core";
+import {Component, NgModule, ChangeDetectionStrategy} from "@angular/core";
 import {FormsModule} from "@angular/forms";
 import {HttpClient} from "@angular/common/http";
 import {AngularDialogComponent} from "tim/ui/angulardialog/angular-dialog-component.directive";
@@ -52,6 +52,7 @@ import {DialogModule} from "tim/ui/angulardialog/dialog.module";
         </tim-dialog-frame>
         `,
     styleUrls: ["export-ical.component.scss"],
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false,
 })
 export class ExportIcalComponent extends AngularDialogComponent<

@@ -3,7 +3,12 @@
  */
 
 import {AngularDialogComponent} from "tim/ui/angulardialog/angular-dialog-component.directive";
-import {Component, NgModule, ViewChild} from "@angular/core";
+import {
+    Component,
+    NgModule,
+    ViewChild,
+    ChangeDetectionStrategy,
+} from "@angular/core";
 import type {ICourseSettings, IItem, ISubjectList, ITag} from "tim/item/IItem";
 import {TagType} from "tim/item/IItem";
 import {toPromise} from "tim/util/utils";
@@ -97,6 +102,7 @@ const groupTagPrefix = "group:";
             </ng-container>
           </tim-dialog-frame>
         `,
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false,
 })
 export class CourseDialogComponent extends AngularDialogComponent<IItem, void> {

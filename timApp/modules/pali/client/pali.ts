@@ -15,8 +15,12 @@ import type {
     OnDestroy,
     OnInit,
 } from "@angular/core";
-import {Component, NgModule} from "@angular/core";
-import {provideHttpClient, withInterceptorsFromDi} from "@angular/common/http";
+import {Component, NgModule, ChangeDetectionStrategy} from "@angular/core";
+import {
+    provideHttpClient,
+    withInterceptorsFromDi,
+    withXhr,
+} from "@angular/common/http";
 import {FormsModule} from "@angular/forms";
 import type {Subscription} from "rxjs";
 import {Subject} from "rxjs";
@@ -114,6 +118,7 @@ function isPalindrome(s: string) {
         </tim-plugin-frame>
         `,
     styleUrls: ["./pali.scss"],
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false,
 })
 export class PaliComponent
@@ -231,7 +236,7 @@ export class PaliComponent
 @NgModule({
     declarations: [PaliComponent],
     imports: [CommonModule, FormsModule, TimUtilityModule, PurifyModule],
-    providers: [provideHttpClient(withInterceptorsFromDi())],
+    providers: [provideHttpClient(withXhr(), withInterceptorsFromDi())],
 })
 export class PaliModule implements DoBootstrap {
     ngDoBootstrap(appRef: ApplicationRef) {}

@@ -3,7 +3,13 @@
  */
 import * as t from "io-ts";
 import type {ApplicationRef, DoBootstrap} from "@angular/core";
-import {Component, ElementRef, NgModule, NgZone} from "@angular/core";
+import {
+    Component,
+    ElementRef,
+    NgModule,
+    NgZone,
+    ChangeDetectionStrategy,
+} from "@angular/core";
 import type {ITimComponent} from "tim/document/viewctrl";
 import {
     GenericPluginMarkup,
@@ -16,6 +22,7 @@ import {
     HttpClient,
     provideHttpClient,
     withInterceptorsFromDi,
+    withXhr,
 } from "@angular/common/http";
 import {FormsModule} from "@angular/forms";
 import {TooltipModule} from "ngx-bootstrap/tooltip";
@@ -153,6 +160,7 @@ const scaleValueWords: Word[] = [
             </div>
         `,
     styleUrls: ["goaltable-plugin.component.scss"],
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false,
 })
 export class GoalTablePluginComponent
@@ -433,7 +441,7 @@ export class GoalTablePluginComponent
         TooltipModule,
         PurifyModule,
     ],
-    providers: [provideHttpClient(withInterceptorsFromDi())],
+    providers: [provideHttpClient(withXhr(), withInterceptorsFromDi())],
 })
 export class GoalTableModule implements DoBootstrap {
     ngDoBootstrap(appRef: ApplicationRef) {}

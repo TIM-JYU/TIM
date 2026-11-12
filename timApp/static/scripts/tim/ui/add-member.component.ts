@@ -1,4 +1,4 @@
-import {Component, Input} from "@angular/core";
+import {Component, Input, ChangeDetectionStrategy} from "@angular/core";
 import {HttpClient} from "@angular/common/http";
 import {splitItems, toPromise} from "tim/util/utils";
 
@@ -61,6 +61,7 @@ export interface IAddmemberResponse {
         </tim-plugin-frame>
         `,
     styleUrls: [],
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false,
 })
 export class AddMemberComponent {

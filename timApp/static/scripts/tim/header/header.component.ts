@@ -1,6 +1,6 @@
 import moment from "moment";
 import type {OnInit} from "@angular/core";
-import {Component} from "@angular/core";
+import {Component, ChangeDetectionStrategy} from "@angular/core";
 import type {IBookmarkGroup} from "tim/bookmark/bookmark.service";
 import {BookmarkService} from "tim/bookmark/bookmark.service";
 import {TagService} from "tim/item/tag.service";
@@ -92,6 +92,7 @@ function isExpired(tag: ITag) {
         }
         `,
     styleUrls: ["./header.component.scss"],
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false,
 })
 export class HeaderComponent implements OnInit {

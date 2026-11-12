@@ -3,11 +3,15 @@
  */
 
 import {AngularDialogComponent} from "tim/ui/angulardialog/angular-dialog-component.directive";
-import {Component, NgModule} from "@angular/core";
+import {Component, NgModule, ChangeDetectionStrategy} from "@angular/core";
 import {DialogModule} from "tim/ui/angulardialog/dialog.module";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {FormsModule} from "@angular/forms";
-import {provideHttpClient, withInterceptorsFromDi} from "@angular/common/http";
+import {
+    provideHttpClient,
+    withInterceptorsFromDi,
+    withXhr,
+} from "@angular/common/http";
 import {TaggedDocumentListComponent} from "tim/item/tagged-document-list.component";
 import {TypeaheadModule} from "ngx-bootstrap/typeahead";
 import * as t from "io-ts";
@@ -49,6 +53,7 @@ import {CommonModule} from "@angular/common";
           </ng-container>
         </tim-dialog-frame>
         `,
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false,
 })
 export class SearchTagsDialogComponent extends AngularDialogComponent<
@@ -100,6 +105,6 @@ export class SearchTagsDialogComponent extends AngularDialogComponent<
         DialogModule,
         TypeaheadModule,
     ],
-    providers: [provideHttpClient(withInterceptorsFromDi())],
+    providers: [provideHttpClient(withXhr(), withInterceptorsFromDi())],
 })
 export class TagSearchDialogModule {}

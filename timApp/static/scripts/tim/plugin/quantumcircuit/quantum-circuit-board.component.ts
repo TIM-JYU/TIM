@@ -10,6 +10,7 @@ import {
     Output,
     ViewChild,
     ElementRef,
+    ChangeDetectionStrategy,
 } from "@angular/core";
 import {CircuitOptions} from "tim/plugin/quantumcircuit/quantum-circuit.component";
 import type {QubitOutput} from "tim/plugin/quantumcircuit/quantum-circuit.component";
@@ -277,6 +278,7 @@ export interface GateBeingDragged {
         
         `,
     styleUrls: ["./quantum-circuit-board.component.scss"],
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false,
 })
 export class QuantumCircuitBoardComponent implements OnInit {

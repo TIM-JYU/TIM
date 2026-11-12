@@ -1,5 +1,11 @@
 import type {OnDestroy, OnInit, SimpleChanges} from "@angular/core";
-import {Component, EventEmitter, Input, Output} from "@angular/core";
+import {
+    Component,
+    EventEmitter,
+    Input,
+    Output,
+    ChangeDetectionStrategy,
+} from "@angular/core";
 import type {Color} from "tim/plugin/quantumcircuit/quantum-circuit.component";
 import {CircuitOptions} from "tim/plugin/quantumcircuit/quantum-circuit.component";
 import type {ServiceGate} from "tim/plugin/quantumcircuit/gate.service";
@@ -114,6 +120,7 @@ interface MenuGate {
         
         `,
     styleUrls: ["./quantum-gate-menu.component.scss"],
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false,
 })
 export class QuantumGateMenuComponent implements OnInit, OnDestroy {

@@ -4,7 +4,7 @@
 
 import {AngularDialogComponent} from "tim/ui/angulardialog/angular-dialog-component.directive";
 import {refreshUI} from "tim/util/refresh";
-import {Component, NgModule} from "@angular/core";
+import {Component, NgModule, ChangeDetectionStrategy} from "@angular/core";
 import type {
     ISpellWordInfo,
     PareditorComponent,
@@ -119,6 +119,7 @@ function computeSourcePosition(
           </ng-container>
         </tim-dialog-frame>
         `,
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false,
 })
 export class SpellErrorDialogComponent extends AngularDialogComponent<

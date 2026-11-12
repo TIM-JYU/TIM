@@ -1,4 +1,9 @@
-import {Component, EventEmitter, Output} from "@angular/core";
+import {
+    Component,
+    EventEmitter,
+    Output,
+    ChangeDetectionStrategy,
+} from "@angular/core";
 
 @Component({
     selector: "tim-t9-keyboard",
@@ -47,6 +52,7 @@ import {Component, EventEmitter, Output} from "@angular/core";
     </table>
   `,
     styleUrls: ["./t9-keyboard.component.scss"],
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false,
 })
 export class T9KeyboardComponent {

@@ -1,5 +1,5 @@
 import type {OnInit} from "@angular/core";
-import {Component} from "@angular/core";
+import {Component, ChangeDetectionStrategy} from "@angular/core";
 import {genericglobals} from "tim/util/globals";
 import {to2, toPromise} from "tim/util/utils";
 import {HttpClient} from "@angular/common/http";
@@ -74,6 +74,7 @@ import {showMessageDialog} from "tim/ui/showMessageDialog";
         </button>
         `,
     styleUrls: ["./bookmarks.component.scss"],
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false,
 })
 export class BookmarksComponent implements OnInit {

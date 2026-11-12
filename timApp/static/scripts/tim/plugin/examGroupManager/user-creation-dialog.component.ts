@@ -1,4 +1,4 @@
-import {Component} from "@angular/core";
+import {Component, ChangeDetectionStrategy} from "@angular/core";
 import {HttpClient} from "@angular/common/http";
 import {AngularDialogComponent} from "tim/ui/angulardialog/angular-dialog-component.directive";
 import {toPromise} from "tim/util/utils";
@@ -159,6 +159,7 @@ export interface UserCreationDialogParams {
         </tim-dialog-frame>
         `,
     styleUrls: ["user-creation-dialog.component.scss"],
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false,
 })
 export class UserCreationDialogComponent extends AngularDialogComponent<

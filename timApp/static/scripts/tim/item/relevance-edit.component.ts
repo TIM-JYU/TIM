@@ -6,7 +6,7 @@
  * the relevance threshold value can be changed by user.
  */
 
-import {Component, Input} from "@angular/core";
+import {Component, Input, ChangeDetectionStrategy} from "@angular/core";
 import {toPromise} from "tim/util/utils";
 import {HttpClient} from "@angular/common/http";
 import type {IRelevance} from "tim/item/IItem";
@@ -67,6 +67,7 @@ export interface IRelevanceResponse {
           </button>
         </div>
         `,
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false,
 })
 export class RelevanceEditComponent {

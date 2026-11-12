@@ -1,4 +1,4 @@
-import {Component} from "@angular/core";
+import {Component, ChangeDetectionStrategy} from "@angular/core";
 import {getVisibilityVars} from "tim/timRoot";
 import {documentglobals, genericglobals} from "tim/util/globals";
 import {showReportContentDialog} from "tim/ui/showReportContentDialog";
@@ -75,6 +75,7 @@ import {getLangLink, to2} from "tim/util/utils";
                   </footer>
         `,
     styleUrls: ["./footer.component.scss"],
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false,
 })
 export class FooterComponent {

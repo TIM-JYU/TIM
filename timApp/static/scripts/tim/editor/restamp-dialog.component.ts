@@ -1,10 +1,11 @@
 import {AngularDialogComponent} from "tim/ui/angulardialog/angular-dialog-component.directive";
-import {Component, NgModule} from "@angular/core";
+import {Component, NgModule, ChangeDetectionStrategy} from "@angular/core";
 import {DialogModule} from "tim/ui/angulardialog/dialog.module";
 import {
     HttpClient,
     provideHttpClient,
     withInterceptorsFromDi,
+    withXhr,
 } from "@angular/common/http";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {toPromise} from "tim/util/utils";
@@ -63,6 +64,7 @@ export enum RestampDialogClose {
         </ng-container>
         </tim-dialog-frame>
         `,
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false,
 })
 export class RestampDialogComponent extends AngularDialogComponent<
@@ -152,6 +154,6 @@ export class RestampDialogComponent extends AngularDialogComponent<
 @NgModule({
     declarations: [RestampDialogComponent],
     imports: [CommonModule, DialogModule, TimUtilityModule],
-    providers: [provideHttpClient(withInterceptorsFromDi())],
+    providers: [provideHttpClient(withXhr(), withInterceptorsFromDi())],
 })
 export class RestampDialogModule {}

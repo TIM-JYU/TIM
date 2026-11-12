@@ -1,6 +1,10 @@
-import {provideHttpClient, withInterceptorsFromDi} from "@angular/common/http";
+import {
+    provideHttpClient,
+    withInterceptorsFromDi,
+    withXhr,
+} from "@angular/common/http";
 import type {OnInit, PipeTransform} from "@angular/core";
-import {EventEmitter, Output} from "@angular/core";
+import {EventEmitter, Output, ChangeDetectionStrategy} from "@angular/core";
 import {Pipe} from "@angular/core";
 import {
     type ApplicationRef,
@@ -208,6 +212,7 @@ class FormatLoginCodePipe implements PipeTransform {
             }
         `,
     ],
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false,
 })
 export class ToggleComponent {
@@ -527,7 +532,7 @@ export class ToggleComponent {
                     }
                     @if (group.examDocId && examByDocId.get(group.examDocId)) {
                       <option
-                        [ngValue]="examByDocId.get(group.examDocId)?.docId">
+                        [ngValue]="$safeNavigationMigration(examByDocId.get(group.examDocId)?.docId)">
                         {{ examByDocId.get(group.examDocId)?.name }}
                       </option>
                     }
@@ -910,6 +915,7 @@ export class ToggleComponent {
         </form>
         `,
     styleUrls: ["exam-group-manager.component.scss"],
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false,
 })
 export class ExamGroupManagerComponent
@@ -1943,7 +1949,7 @@ export class ExamGroupManagerComponent
         PurifyModule,
         ButtonsModule,
     ],
-    providers: [provideHttpClient(withInterceptorsFromDi())],
+    providers: [provideHttpClient(withXhr(), withInterceptorsFromDi())],
 })
 export class ExamGroupManagerModule implements DoBootstrap {
     ngDoBootstrap(appRef: ApplicationRef): void {}

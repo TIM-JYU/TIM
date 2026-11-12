@@ -7,6 +7,7 @@ import {
     Inject,
     Input,
     Output,
+    ChangeDetectionStrategy,
 } from "@angular/core";
 import type {NgForm} from "@angular/forms";
 import {HttpClient} from "@angular/common/http";
@@ -55,6 +56,7 @@ let instanceCounter = 0;
     // The layout relies on the whitespace between the inline elements.
     preserveWhitespaces: true,
     templateUrl: "./velp-window.component.html",
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false,
 })
 export class VelpWindowComponent implements OnInit, DoCheck {

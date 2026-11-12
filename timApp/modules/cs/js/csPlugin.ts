@@ -20,6 +20,7 @@ import {
     ElementRef,
     HostListener,
     ViewChild,
+    ChangeDetectionStrategy,
 } from "@angular/core";
 
 import {HttpClient, HttpHeaders} from "@angular/common/http";
@@ -4729,6 +4730,7 @@ ${fhtml}
                 <p class="footer" [innerHTML]="footer | purify"></p>
               </div>`,
     styleUrls: ["./csPlugin.scss"],
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false,
 })
 export class CsRunnerComponent extends CsController {

@@ -6,6 +6,7 @@ import {
     Input,
     Output,
     ViewChild,
+    ChangeDetectionStrategy,
 } from "@angular/core";
 import * as t from "io-ts";
 import type {Exception, Result} from "@zxing/library";
@@ -66,6 +67,7 @@ import {
         <video [class.hidden]="!codeReaderStream" #barcodeOutput></video>
         `,
     styleUrls: ["./code-scanner.component.scss"],
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false,
 })
 export class CodeScannerComponent implements OnInit, OnDestroy {

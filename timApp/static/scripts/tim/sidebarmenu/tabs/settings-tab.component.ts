@@ -1,5 +1,5 @@
 import type {OnInit} from "@angular/core";
-import {Component, EventEmitter} from "@angular/core";
+import {Component, EventEmitter, ChangeDetectionStrategy} from "@angular/core";
 import type {UserService} from "tim/user/userService";
 import {Users} from "tim/user/userService";
 import type {ViewCtrl} from "tim/document/viewctrl";
@@ -326,6 +326,7 @@ export function notifyUserPrefsChanged(settings: ISettings) {
         }
         `,
     styleUrls: ["./settings-tab.component.scss"],
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false,
 })
 export class SettingsTabComponent implements OnInit {

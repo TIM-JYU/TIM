@@ -1,5 +1,5 @@
 import type {OnChanges, SimpleChanges} from "@angular/core";
-import {Component, Input} from "@angular/core";
+import {Component, Input, ChangeDetectionStrategy} from "@angular/core";
 import {Users} from "tim/user/userService";
 import * as t from "io-ts";
 import type {HttpClient} from "@angular/common/http";
@@ -101,6 +101,7 @@ function getDisplayNameForCurrLang(idp: IDiscoveryFeedEntry) {
         </div>
         `,
     styleUrls: ["./haka-login.component.scss"],
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false,
 })
 export class HakaLoginComponent implements OnChanges {

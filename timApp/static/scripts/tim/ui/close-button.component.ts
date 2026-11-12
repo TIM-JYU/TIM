@@ -1,4 +1,4 @@
-import {Component} from "@angular/core";
+import {Component, ChangeDetectionStrategy} from "@angular/core";
 
 @Component({
     selector: "tim-close-button",
@@ -7,6 +7,7 @@ import {Component} from "@angular/core";
                   class="glyphicon glyphicon-remove"></i>
     `,
     styleUrls: ["./close-button.component.scss"],
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false,
 })
 export class CloseButtonComponent {}

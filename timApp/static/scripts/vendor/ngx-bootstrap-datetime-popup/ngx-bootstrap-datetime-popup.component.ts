@@ -8,6 +8,7 @@ import {
     OnChanges,
     Output,
     ViewChild,
+    ChangeDetectionStrategy,
 } from "@angular/core";
 import {IDatetimePopupButtonOptions} from "./ngx-bootstrap-datetime-popup-botton-options.interface";
 import {BsDropdownDirective} from "ngx-bootstrap/dropdown";
@@ -16,6 +17,7 @@ import {BsDropdownDirective} from "ngx-bootstrap/dropdown";
     selector: "datetime-popup",
     templateUrl: "./ngx-bootstrap-datetime-popup.component.html",
     styleUrls: ["./ngx-bootstrap-datetime-popup.component.scss"],
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false,
 })
 export class DatetimePopupComponent implements OnChanges {

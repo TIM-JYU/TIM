@@ -1,5 +1,10 @@
 import type {ApplicationRef, DoBootstrap} from "@angular/core";
-import {Component, Input, NgModule} from "@angular/core";
+import {
+    Component,
+    Input,
+    NgModule,
+    ChangeDetectionStrategy,
+} from "@angular/core";
 import {registerModuleServerComponents} from "tim/serverComponents";
 import type {IOAuthGlobals} from "tim/util/globals";
 import {oauthglobals} from "tim/util/globals";
@@ -24,6 +29,7 @@ const OAUTH_SCOPES: Record<string, string> = {
             <input class="btn btn-{{type}}" type="submit" [value]="name">
         </form>
     `,
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false,
 })
 export class OAuthButtonComponent {
@@ -58,6 +64,7 @@ export class OAuthButtonComponent {
           }
         </div>
         `,
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false,
 })
 export class OAuthAuthorizeComponent {

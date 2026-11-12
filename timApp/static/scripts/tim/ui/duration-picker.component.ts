@@ -1,5 +1,11 @@
 import type moment from "moment";
-import {Component, EventEmitter, Input, Output} from "@angular/core";
+import {
+    Component,
+    EventEmitter,
+    Input,
+    Output,
+    ChangeDetectionStrategy,
+} from "@angular/core";
 
 @Component({
     selector: "tim-duration-picker",
@@ -29,6 +35,7 @@ import {Component, EventEmitter, Input, Output} from "@angular/core";
         </div>
         `,
     styleUrls: ["./duration-picker.component.scss"],
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false,
 })
 export class DurationPickerComponent {

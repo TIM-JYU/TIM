@@ -1,5 +1,5 @@
 import type {OnInit} from "@angular/core";
-import {Component} from "@angular/core";
+import {Component, ChangeDetectionStrategy} from "@angular/core";
 import {AngularDialogComponent} from "tim/ui/angulardialog/angular-dialog-component.directive";
 import {angularDialog} from "tim/ui/angulardialog/dialog.service";
 import {copyToClipboard, to2} from "tim/util/utils";
@@ -30,6 +30,7 @@ export interface ICopyTableWidthsParams {
         </tim-dialog-frame>
         `,
     styleUrls: ["./copy-table-width-dialog.component.scss"],
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false,
 })
 export class CopyTableWidthDialogComponent

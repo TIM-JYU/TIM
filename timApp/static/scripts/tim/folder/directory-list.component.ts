@@ -1,4 +1,4 @@
-import {Component} from "@angular/core";
+import {Component, ChangeDetectionStrategy} from "@angular/core";
 import type {DocumentOrFolder, IFolder, IItem, ITag} from "tim/item/IItem";
 import {TagType} from "tim/item/IItem";
 import {isAdmin, Users} from "tim/user/userService";
@@ -190,6 +190,7 @@ const AccessLevelBadgeInfo: Record<AccessLevelBadge, string> = {
         }
         `,
     styleUrls: ["directory-list.component.scss"],
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false,
 })
 export class DirectoryListComponent {

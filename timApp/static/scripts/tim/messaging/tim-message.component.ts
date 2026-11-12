@@ -1,5 +1,11 @@
 import type {OnInit} from "@angular/core";
-import {Component, HostBinding, Input, NgModule} from "@angular/core";
+import {
+    Component,
+    HostBinding,
+    Input,
+    NgModule,
+    ChangeDetectionStrategy,
+} from "@angular/core";
 import {HttpClient} from "@angular/common/http";
 import {markAsRead} from "tim/messaging/messagingUtils";
 import {FormsModule} from "@angular/forms";
@@ -7,7 +13,7 @@ import {toPromise} from "tim/util/utils";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {TimMessageData} from "tim/messaging/tim-message-view.component";
 import {CommonModule} from "@angular/common";
-import * as moment from "moment";
+import moment from "moment";
 
 interface ReplyOptions {
     archive: boolean;
@@ -111,6 +117,7 @@ const MAX_DISPLAY_LENGTH = 210;
         }
         `,
     styleUrls: ["tim-message.component.scss"],
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false,
 })
 export class TimMessageComponent implements OnInit {

@@ -9,7 +9,13 @@
  */
 
 import type {OnChanges, SimpleChanges} from "@angular/core";
-import {Component, EventEmitter, Input, Output} from "@angular/core";
+import {
+    Component,
+    EventEmitter,
+    Input,
+    Output,
+    ChangeDetectionStrategy,
+} from "@angular/core";
 import {IUser} from "tim/user/IUser";
 import type {Annotation} from "tim/velp/velptypes";
 
@@ -56,6 +62,7 @@ import type {Annotation} from "tim/velp/velptypes";
         </div>
         `,
     styleUrls: ["./velp-summary.component.scss"],
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false,
 })
 export class VelpSummaryComponent implements OnChanges {

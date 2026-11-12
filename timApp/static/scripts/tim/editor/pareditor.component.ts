@@ -30,6 +30,7 @@ import {
     NgModule,
     Output,
     ViewChild,
+    ChangeDetectionStrategy,
 } from "@angular/core";
 import {CommonModule} from "@angular/common";
 import {FormsModule} from "@angular/forms";
@@ -261,6 +262,7 @@ type UploadFile = File & {progress?: number; error?: string};
     templateUrl: "./pareditor.component.html",
     // The layout relies on the whitespace between the inline buttons and labels.
     preserveWhitespaces: true,
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false,
 })
 export class PareditorComponent
@@ -3012,6 +3014,7 @@ const MacroParams = t.tuple([
   </ul>
 </div>
 `,
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false,
 })
 export class EditorMenuComponent {
@@ -3040,6 +3043,7 @@ export class EditorMenuComponent {
   }
 </div>
 `,
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false,
 })
 export class EditorEntryComponent {
@@ -3081,6 +3085,7 @@ export class EditorEntryComponent {
     </div>
 </div>
     `,
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false,
 })
 export class PareditorDialogComponent implements AfterViewInit {

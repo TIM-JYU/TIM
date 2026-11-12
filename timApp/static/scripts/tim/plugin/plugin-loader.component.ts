@@ -18,6 +18,7 @@ import {
     NgZone,
     ViewChild,
     ViewContainerRef,
+    ChangeDetectionStrategy,
 } from "@angular/core";
 import {FormsModule} from "@angular/forms";
 import {attrToBoolean} from "tim/customElements";
@@ -40,6 +41,7 @@ import {
     HttpClient,
     provideHttpClient,
     withInterceptorsFromDi,
+    withXhr,
 } from "@angular/common/http";
 import type {IRegisteredPlugin} from "tim/plugin/pluginRegistry";
 import {getPlugin} from "tim/plugin/pluginRegistry";
@@ -142,6 +144,7 @@ function isElement(n: Node): n is Element {
     host: {
         "[class.lazy-answer-inactive]": "lazyActivated && !activated",
     },
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false,
 })
 export class PluginLoaderComponent implements AfterViewInit, OnDestroy, OnInit {
@@ -717,7 +720,7 @@ export class PluginLoaderComponent implements AfterViewInit, OnDestroy, OnInit {
         PurifyModule,
         TimUtilityModule,
     ],
-    providers: [provideHttpClient(withInterceptorsFromDi())],
+    providers: [provideHttpClient(withXhr(), withInterceptorsFromDi())],
 })
 export class PluginLoaderModule implements DoBootstrap {
     ngDoBootstrap(appRef: ApplicationRef) {}

@@ -1,4 +1,4 @@
-import {Component, Input} from "@angular/core";
+import {Component, Input, ChangeDetectionStrategy} from "@angular/core";
 
 @Component({
     selector: "tim-video-link",
@@ -8,6 +8,7 @@ import {Component, Input} from "@angular/core";
            [target]="target">
             <i class="glyphicon glyphicon-book"></i>&ngsp;<span [innerHTML]="doctext | purify"></span></a>
     `,
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false,
 })
 export class VideoLinkComponent {

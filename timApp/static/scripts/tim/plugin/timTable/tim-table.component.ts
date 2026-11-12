@@ -72,7 +72,11 @@ import {
     ViewChild,
     ViewChildren,
 } from "@angular/core";
-import {provideHttpClient, withInterceptorsFromDi} from "@angular/common/http";
+import {
+    provideHttpClient,
+    withInterceptorsFromDi,
+    withXhr,
+} from "@angular/common/http";
 import {FormsModule} from "@angular/forms";
 import {vctrlInstance} from "tim/document/viewctrlinstance";
 import type {Subscription} from "rxjs";
@@ -6614,7 +6618,7 @@ export class TimTableComponent
         PurifyModule,
         DataViewModule,
     ],
-    providers: [provideHttpClient(withInterceptorsFromDi())],
+    providers: [provideHttpClient(withXhr(), withInterceptorsFromDi())],
 })
 export class TimTableModule implements DoBootstrap {
     ngDoBootstrap(_appRef: ApplicationRef) {}

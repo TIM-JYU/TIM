@@ -1,5 +1,10 @@
 import type {OnChanges} from "@angular/core";
-import {Component, Input, NgModule} from "@angular/core";
+import {
+    Component,
+    Input,
+    NgModule,
+    ChangeDetectionStrategy,
+} from "@angular/core";
 import {CommonModule} from "@angular/common";
 import {FormsModule} from "@angular/forms";
 import DiffMatchPatch from "diff-match-patch";
@@ -230,6 +235,7 @@ export function computeDiffRows(left: string, right: string): IDiffRow[] {
         </ng-template>
         `,
     styleUrls: ["./text-diff.component.scss"],
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false,
 })
 export class TextDiffComponent implements OnChanges {

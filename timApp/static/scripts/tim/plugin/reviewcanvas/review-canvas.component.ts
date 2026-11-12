@@ -17,11 +17,13 @@ import {
     QueryList,
     ViewChild,
     ViewChildren,
+    ChangeDetectionStrategy,
 } from "@angular/core";
 import {
     HttpHeaders,
     provideHttpClient,
     withInterceptorsFromDi,
+    withXhr,
 } from "@angular/common/http";
 import {FormsModule} from "@angular/forms";
 import type {Subscription} from "rxjs";
@@ -202,6 +204,7 @@ const PluginFields = t.intersection([
         }
         `,
     styleUrls: ["./review-canvas.component.scss"],
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false,
 })
 export class ReviewCanvasComponent
@@ -678,7 +681,7 @@ export class ReviewCanvasComponent
         PurifyModule,
         TooltipModule,
     ],
-    providers: [provideHttpClient(withInterceptorsFromDi())],
+    providers: [provideHttpClient(withXhr(), withInterceptorsFromDi())],
 })
 export class ReviewCanvasModule implements DoBootstrap {
     ngDoBootstrap(appRef: ApplicationRef) {}

@@ -1,5 +1,5 @@
 import type {OnInit} from "@angular/core";
-import {Component} from "@angular/core";
+import {Component, ChangeDetectionStrategy} from "@angular/core";
 import {toPromise} from "tim/util/utils";
 import {Users} from "tim/user/userService";
 import {documentglobals} from "tim/util/globals";
@@ -53,6 +53,7 @@ interface INotificationSettings {
                       </fieldset>
                     </form>
         `,
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false,
 })
 export class NotificationOptionsComponent implements OnInit {

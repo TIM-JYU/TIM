@@ -1,4 +1,4 @@
-import {Component, NgModule} from "@angular/core";
+import {Component, NgModule, ChangeDetectionStrategy} from "@angular/core";
 import {CommonModule} from "@angular/common";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {DialogModule} from "tim/ui/angulardialog/dialog.module";
@@ -8,6 +8,7 @@ import {
     HttpClient,
     provideHttpClient,
     withInterceptorsFromDi,
+    withXhr,
 } from "@angular/common/http";
 import {toPromise} from "tim/util/utils";
 import {TooltipModule} from "ngx-bootstrap/tooltip";
@@ -163,6 +164,7 @@ export interface IContentReport {
                                     </tim-dialog-frame>
         `,
     styleUrls: ["./report-content-dialog.component.scss"],
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false,
 })
 export class ReportContentDialogComponent extends AngularDialogComponent<
@@ -254,6 +256,6 @@ export class ReportContentDialogComponent extends AngularDialogComponent<
         FormsModule,
         TooltipModule,
     ],
-    providers: [provideHttpClient(withInterceptorsFromDi())],
+    providers: [provideHttpClient(withXhr(), withInterceptorsFromDi())],
 })
 export class ReportContentDialogModule {}

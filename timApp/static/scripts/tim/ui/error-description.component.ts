@@ -1,4 +1,4 @@
-import {Input, Component} from "@angular/core";
+import {Input, Component, ChangeDetectionStrategy} from "@angular/core";
 
 @Component({
     selector: "tim-error-description",
@@ -40,6 +40,7 @@ import {Input, Component} from "@angular/core";
   }
 }
 `,
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false,
 })
 export class ErrorDescriptionComponent {

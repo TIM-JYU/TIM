@@ -1,5 +1,12 @@
 import type {OnChanges, OnInit, SimpleChanges} from "@angular/core";
-import {Component, EventEmitter, Input, NgModule, Output} from "@angular/core";
+import {
+    Component,
+    EventEmitter,
+    Input,
+    NgModule,
+    Output,
+    ChangeDetectionStrategy,
+} from "@angular/core";
 import {FormsModule} from "@angular/forms";
 import moment from "moment";
 import {DatetimePopupModule} from "vendor/ngx-bootstrap-datetime-popup/ngx-bootstrap-datetime-popup.module";
@@ -29,6 +36,7 @@ const datetimeFormat = "DD.MM.YYYY HH:mm:ss";
         </div>
     `,
     styleUrls: ["./datetime-picker.component.scss"],
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false,
 })
 export class DatetimePickerComponent implements OnInit, OnChanges {

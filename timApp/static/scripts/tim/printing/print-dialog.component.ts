@@ -1,11 +1,12 @@
 import {AngularDialogComponent} from "tim/ui/angulardialog/angular-dialog-component.directive";
-import {Component, NgModule} from "@angular/core";
+import {Component, NgModule, ChangeDetectionStrategy} from "@angular/core";
 import {DialogModule} from "tim/ui/angulardialog/dialog.module";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {
     HttpClient,
     provideHttpClient,
     withInterceptorsFromDi,
+    withXhr,
 } from "@angular/common/http";
 import * as t from "io-ts";
 import {FormsModule} from "@angular/forms";
@@ -194,6 +195,7 @@ export interface IPrintParams {
             </tim-dialog-frame>
         `,
     styleUrls: ["./print-dialog.component.scss"],
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false,
 })
 export class PrintDialogComponent extends AngularDialogComponent<
@@ -335,6 +337,6 @@ export class PrintDialogComponent extends AngularDialogComponent<
 @NgModule({
     declarations: [PrintDialogComponent],
     imports: [CommonModule, DialogModule, TimUtilityModule, FormsModule],
-    providers: [provideHttpClient(withInterceptorsFromDi())],
+    providers: [provideHttpClient(withXhr(), withInterceptorsFromDi())],
 })
 export class PrintDialogModule {}

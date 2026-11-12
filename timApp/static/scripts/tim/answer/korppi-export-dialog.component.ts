@@ -1,5 +1,5 @@
 import {AngularDialogComponent} from "tim/ui/angulardialog/angular-dialog-component.directive";
-import {Component, NgModule} from "@angular/core";
+import {Component, NgModule, ChangeDetectionStrategy} from "@angular/core";
 import type {IExportOptions} from "tim/answer/user-list.component";
 import {DialogModule} from "tim/ui/angulardialog/dialog.module";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
@@ -62,6 +62,7 @@ import {CommonModule} from "@angular/common";
             </ng-container>
         </tim-dialog-frame>
     `,
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false,
 })
 export class KorppiExportDialogComponent extends AngularDialogComponent<

@@ -1,5 +1,5 @@
 import type {OnInit} from "@angular/core";
-import {Component, NgModule} from "@angular/core";
+import {Component, NgModule, ChangeDetectionStrategy} from "@angular/core";
 import {itemglobals} from "tim/util/globals";
 import {timeout, toPromise} from "tim/util/utils";
 import {HttpClient, HttpParams} from "@angular/common/http";
@@ -65,6 +65,7 @@ import {CommonModule} from "@angular/common";
           }
         `,
     styleUrls: ["manage-read-receipt.component.scss"],
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false,
 })
 export class ManageReadReceiptComponent implements OnInit {

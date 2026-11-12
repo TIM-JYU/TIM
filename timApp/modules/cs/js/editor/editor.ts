@@ -21,6 +21,7 @@ import {
     Input,
     Output,
     ViewChild,
+    ChangeDetectionStrategy,
 } from "@angular/core";
 
 import {TimStorage} from "tim/util/utils";
@@ -168,6 +169,7 @@ export class EditorFile {
 @Component({
     selector: "cs-jsparsons-editor",
     template: `NOT IMPLEMENTED`,
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false,
 })
 export class JSParsonsEditorComponent implements IEditor {
@@ -254,6 +256,7 @@ export class JSParsonsEditorComponent implements IEditor {
               </div>
             }
           }`,
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false,
 })
 export class EditorComponent implements IMultiEditor {

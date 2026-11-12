@@ -11,7 +11,13 @@
  * @date 24.5.2022
  */
 
-import {Component, EventEmitter, Input, Output} from "@angular/core";
+import {
+    Component,
+    EventEmitter,
+    Input,
+    Output,
+    ChangeDetectionStrategy,
+} from "@angular/core";
 import {CalendarView} from "angular-calendar";
 import {Users} from "tim/user/userService";
 
@@ -90,6 +96,7 @@ import {Users} from "tim/user/userService";
     <br />
   `,
     styleUrls: ["calendar.component.scss"],
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false,
 })
 export class CalendarHeaderComponent {

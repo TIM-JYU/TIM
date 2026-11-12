@@ -11,6 +11,7 @@ import {
     NgModule,
     ViewChild,
     ViewContainerRef,
+    ChangeDetectionStrategy,
 } from "@angular/core";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {
@@ -22,6 +23,7 @@ import {
     HttpClient,
     provideHttpClient,
     withInterceptorsFromDi,
+    withXhr,
 } from "@angular/common/http";
 import * as t from "io-ts";
 import {isRight} from "fp-ts/Either";
@@ -76,6 +78,7 @@ const TYPE_NAMES: Record<ContactChannels, string> = {
             <li i18n>Contact information: <code>{{info.contact}}</code></li>
         </ul>
     `,
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false,
 })
 export class ContactOwnershipInfoComponent
@@ -100,6 +103,7 @@ export class ContactOwnershipInfoComponent
     template: `
         <p i18n><strong><code>{{info.contact}}</code></strong> will be made your primary {{contactType.toLowerCase()}}.</p>
     `,
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false,
 })
 export class SetPrimaryContactInfoComponent
@@ -170,6 +174,7 @@ const VERIFY_RETURN_URLS: Record<VerificationType, string | undefined> = {
         </bootstrap-panel>
         `,
     styleUrls: ["user-action-verify.component.scss"],
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false,
 })
 export class UserActionVerifyComponent implements AfterViewInit {
@@ -263,7 +268,7 @@ export class UserActionVerifyComponent implements AfterViewInit {
     ],
     exports: [UserActionVerifyComponent],
     imports: [BrowserModule, TimUtilityModule],
-    providers: [provideHttpClient(withInterceptorsFromDi())],
+    providers: [provideHttpClient(withXhr(), withInterceptorsFromDi())],
 })
 export class UserActionVerifyModule implements DoBootstrap {
     ngDoBootstrap(appRef: ApplicationRef): void {}

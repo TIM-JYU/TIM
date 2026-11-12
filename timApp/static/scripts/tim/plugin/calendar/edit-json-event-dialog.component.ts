@@ -1,11 +1,17 @@
 import {AngularDialogComponent} from "tim/ui/angulardialog/angular-dialog-component.directive";
-import {Component, NgModule, ViewChild} from "@angular/core";
+import {
+    Component,
+    NgModule,
+    ViewChild,
+    ChangeDetectionStrategy,
+} from "@angular/core";
 import {DialogModule} from "tim/ui/angulardialog/dialog.module";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {
     HttpClient,
     provideHttpClient,
     withInterceptorsFromDi,
+    withXhr,
 } from "@angular/common/http";
 import {toPromise} from "tim/util/utils";
 import {PurifyModule} from "tim/util/purify.module";
@@ -55,6 +61,7 @@ export interface IEditJsonEventOptions {
           </div>
         </tim-dialog-frame>
         `,
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false,
 })
 export class EditJsonEventDialogComponent extends AngularDialogComponent<
@@ -142,6 +149,6 @@ export class EditJsonEventDialogComponent extends AngularDialogComponent<
         EditorModule,
         PurifyModule,
     ],
-    providers: [provideHttpClient(withInterceptorsFromDi())],
+    providers: [provideHttpClient(withXhr(), withInterceptorsFromDi())],
 })
 export class EditJsonEventDialogModule {}

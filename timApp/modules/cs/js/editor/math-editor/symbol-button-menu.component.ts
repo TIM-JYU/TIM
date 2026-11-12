@@ -16,6 +16,7 @@ import {
     Input,
     Output,
     Pipe,
+    ChangeDetectionStrategy,
 } from "@angular/core";
 import {ParCompiler} from "tim/editor/parCompiler";
 import type {ITemplateButton} from "../../csPlugin";
@@ -172,6 +173,7 @@ export class SymbolsPipe implements PipeTransform {
         
         `,
     styleUrls: ["./symbol-button-menu.component.scss"],
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false,
 })
 export class SymbolButtonMenuComponent implements AfterViewInit {

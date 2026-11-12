@@ -1,5 +1,5 @@
 /* eslint no-underscore-dangle: ["error", { "allow": ["options_"] }] */
-import {Component, Input} from "@angular/core";
+import {Component, Input, ChangeDetectionStrategy} from "@angular/core";
 
 import {countLines, countWords} from "../util/util";
 
@@ -45,6 +45,7 @@ interface ICountOptions {
             <p>{{countError}}</p>
           </div>
         }`,
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false,
 })
 export class CountBoardComponent {

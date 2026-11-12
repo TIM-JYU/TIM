@@ -1,6 +1,6 @@
 import {HttpClient} from "@angular/common/http";
 import type {OnInit} from "@angular/core";
-import {Component, Input} from "@angular/core";
+import {Component, Input, ChangeDetectionStrategy} from "@angular/core";
 import type {Moment} from "moment";
 import moment from "moment";
 import {to2, toPromise} from "tim/util/utils";
@@ -450,6 +450,7 @@ import {Users} from "tim/user/userService";
           }
         `,
     styleUrls: ["message-list-admin.component.scss"],
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false,
 })
 export class MessageListAdminComponent implements OnInit {

@@ -1,4 +1,4 @@
-import {Component} from "@angular/core";
+import {Component, ChangeDetectionStrategy} from "@angular/core";
 import {LectureController} from "tim/lecture/lectureController";
 
 @Component({
@@ -32,6 +32,7 @@ import {LectureController} from "tim/lecture/lectureController";
         }
         `,
     styles: [],
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false,
 })
 export class LoggedUsersTabComponent {

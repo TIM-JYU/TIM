@@ -1,4 +1,9 @@
-import {Component, HostBinding, Input} from "@angular/core";
+import {
+    Component,
+    HostBinding,
+    Input,
+    ChangeDetectionStrategy,
+} from "@angular/core";
 
 @Component({
     selector: "tim-search-button",
@@ -27,6 +32,7 @@ import {Component, HostBinding, Input} from "@angular/core";
         `,
     host: {},
     styleUrls: ["search-button.component.scss"],
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false,
 })
 export class SearchButtonComponent {

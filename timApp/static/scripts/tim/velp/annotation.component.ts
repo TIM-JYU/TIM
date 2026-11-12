@@ -16,7 +16,13 @@ import type {
     OnInit,
     SimpleChanges,
 } from "@angular/core";
-import {Component, ElementRef, Input, ViewChild} from "@angular/core";
+import {
+    Component,
+    ElementRef,
+    Input,
+    ViewChild,
+    ChangeDetectionStrategy,
+} from "@angular/core";
 import {vctrlInstance} from "tim/document/viewctrlinstance";
 import type {DrawItem} from "tim/plugin/draw-canvas/draw-canvas.components";
 import {showMessageDialog} from "tim/ui/showMessageDialog";
@@ -267,6 +273,7 @@ export async function updateAnnotationServer(
           </span>
         `,
     styleUrls: ["./annotation.component.scss"],
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false,
 })
 export class AnnotationComponent

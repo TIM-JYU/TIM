@@ -1,5 +1,10 @@
 import {AngularDialogComponent} from "tim/ui/angulardialog/angular-dialog-component.directive";
-import {Component, NgModule, Pipe} from "@angular/core";
+import {
+    Component,
+    NgModule,
+    Pipe,
+    ChangeDetectionStrategy,
+} from "@angular/core";
 import {DialogModule} from "tim/ui/angulardialog/dialog.module";
 import {HttpClient} from "@angular/common/http";
 import {FormsModule} from "@angular/forms";
@@ -134,6 +139,7 @@ class OwnerPipe {
           </tim-dialog-frame>
         `,
     styleUrls: ["./schedule-dialog.component.scss"],
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false,
 })
 export class ScheduleDialogComponent extends AngularDialogComponent<

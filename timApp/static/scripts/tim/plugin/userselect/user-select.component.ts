@@ -1,7 +1,17 @@
 import type {ApplicationRef, DoBootstrap} from "@angular/core";
-import {Component, ElementRef, NgModule, ViewChild} from "@angular/core";
+import {
+    Component,
+    ElementRef,
+    NgModule,
+    ViewChild,
+    ChangeDetectionStrategy,
+} from "@angular/core";
 import * as t from "io-ts";
-import {provideHttpClient, withInterceptorsFromDi} from "@angular/common/http";
+import {
+    provideHttpClient,
+    withInterceptorsFromDi,
+    withXhr,
+} from "@angular/common/http";
 import {FormsModule, NgForm} from "@angular/forms";
 import type {Subscription} from "rxjs";
 import {race, Subject} from "rxjs";
@@ -382,6 +392,7 @@ class ToggleOption {
         }
         `,
     styleUrls: ["user-select.component.scss"],
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false,
 })
 export class UserSelectComponent extends AngularPluginBase<
@@ -1012,7 +1023,7 @@ export class UserSelectComponent extends AngularPluginBase<
         T9KeyboardComponent,
     ],
     imports: [CommonModule, FormsModule, TimUtilityModule, BsDropdownModule],
-    providers: [provideHttpClient(withInterceptorsFromDi())],
+    providers: [provideHttpClient(withXhr(), withInterceptorsFromDi())],
 })
 export class UserSelectModule implements DoBootstrap {
     ngDoBootstrap(appRef: ApplicationRef): void {}

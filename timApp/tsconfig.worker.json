@@ -1,7 +1,6 @@
 {
   "compileOnSave": false,
   "compilerOptions": {
-    "baseUrl": ".",
     "outDir": "./static/scripts/build/tsc/app",
     "strict": true,
     "allowUnreachableCode": true,
@@ -10,12 +9,11 @@
     "preserveConstEnums": true,
     "sourceMap": true,
     "declaration": false,
-    "downlevelIteration": true,
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
     "noEmit": false,
     "skipLibCheck": true,
-    "moduleResolution": "node",
+    "moduleResolution": "bundler",
     "importHelpers": true,
     "module": "ESNext",
     "lib": [

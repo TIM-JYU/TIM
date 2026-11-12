@@ -2,6 +2,7 @@ import {
     HttpClient,
     provideHttpClient,
     withInterceptorsFromDi,
+    withXhr,
 } from "@angular/common/http";
 import type {
     AfterViewInit,
@@ -17,6 +18,7 @@ import {
     QueryList,
     ViewChild,
     ViewChildren,
+    ChangeDetectionStrategy,
 } from "@angular/core";
 import {showMessageDialog} from "tim/ui/showMessageDialog";
 import {showAddContactDialog} from "tim/user/showAddContactDialog";
@@ -60,6 +62,7 @@ import {notifyUserPrefsChanged} from "tim/sidebarmenu/tabs/settings-tab.componen
         <ng-content></ng-content>
         `,
     styleUrls: ["settings-button-panel.component.scss"],
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false,
 })
 export class SettingsButtonPanelComponent {
@@ -755,6 +758,7 @@ type StyleSelectionType =
         </div>
         `,
     styleUrls: ["settings.component.scss"],
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false,
 })
 export class SettingsComponent implements DoCheck, AfterViewInit {
@@ -1612,7 +1616,7 @@ export class SettingsComponent implements DoCheck, AfterViewInit {
         TabsModule,
         ProgressbarModule,
     ],
-    providers: [provideHttpClient(withInterceptorsFromDi())],
+    providers: [provideHttpClient(withXhr(), withInterceptorsFromDi())],
 })
 export class SettingsModule implements DoBootstrap {
     ngDoBootstrap(appRef: ApplicationRef): void {}

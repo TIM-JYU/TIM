@@ -1,6 +1,10 @@
 import type {ApplicationRef, DoBootstrap} from "@angular/core";
 import {NgModule} from "@angular/core";
-import {provideHttpClient, withInterceptorsFromDi} from "@angular/common/http";
+import {
+    provideHttpClient,
+    withInterceptorsFromDi,
+    withXhr,
+} from "@angular/common/http";
 import {TooltipModule} from "ngx-bootstrap/tooltip";
 import {registerModuleServerComponents} from "tim/serverComponents";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
@@ -14,7 +18,7 @@ import {BrowserModule} from "@angular/platform-browser";
     imports: [BrowserModule, TooltipModule, TimUtilityModule],
     providers: [
         ArchivedMessageStateService,
-        provideHttpClient(withInterceptorsFromDi()),
+        provideHttpClient(withXhr(), withInterceptorsFromDi()),
     ],
 })
 export class TimArchiveModule implements DoBootstrap {

@@ -1,4 +1,4 @@
-import {Component} from "@angular/core";
+import {Component, ChangeDetectionStrategy} from "@angular/core";
 import {HttpClient} from "@angular/common/http";
 import {toPromise} from "tim/util/utils";
 import type {
@@ -74,6 +74,7 @@ export interface ExamGroupDialogParams {
           </ng-container>
         </tim-dialog-frame>
         `,
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false,
 })
 export class ExamGroupCreateDialogComponent extends AngularDialogComponent<

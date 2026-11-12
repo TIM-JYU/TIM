@@ -1,4 +1,9 @@
-import {Component, ElementRef, Input} from "@angular/core";
+import {
+    Component,
+    ElementRef,
+    Input,
+    ChangeDetectionStrategy,
+} from "@angular/core";
 import type {ILayerData} from "tim/gamification/ILayerData";
 import type {IMapResponse} from "tim/gamification/IMapResponse";
 import type {ITileSet} from "tim/gamification/ITileSet";
@@ -75,6 +80,7 @@ const defaultButtonText: string = $localize`Show map`;
 </div>
 </div>
 `,
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false,
 })
 export class GamificationMapComponent {

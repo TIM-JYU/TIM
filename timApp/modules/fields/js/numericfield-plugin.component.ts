@@ -9,6 +9,7 @@ import {
     NgModule,
     NgZone,
     ViewChild,
+    ChangeDetectionStrategy,
 } from "@angular/core";
 import type {ISetAnswerResult, ITimComponent} from "tim/document/viewctrl";
 import {ChangeType, FormModeOption} from "tim/document/viewctrl";
@@ -25,6 +26,7 @@ import {
     HttpClient,
     provideHttpClient,
     withInterceptorsFromDi,
+    withXhr,
 } from "@angular/common/http";
 import {FormsModule} from "@angular/forms";
 import {TooltipModule} from "ngx-bootstrap/tooltip";
@@ -150,6 +152,7 @@ const NumericfieldAll = t.intersection([
   }
 </div>`,
     styleUrls: ["./numericfield-plugin.component.scss"],
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false,
 })
 export class NumericfieldPluginComponent
@@ -629,7 +632,7 @@ export class NumericfieldPluginComponent
         TooltipModule,
         TooltipIsOpenDirective,
     ],
-    providers: [provideHttpClient(withInterceptorsFromDi())],
+    providers: [provideHttpClient(withXhr(), withInterceptorsFromDi())],
 })
 export class NumericfieldModule implements DoBootstrap {
     ngDoBootstrap(_appRef: ApplicationRef) {}

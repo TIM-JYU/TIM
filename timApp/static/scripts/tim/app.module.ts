@@ -10,6 +10,7 @@ import {
     HttpClient,
     provideHttpClient,
     withInterceptorsFromDi,
+    withXhr,
 } from "@angular/common/http";
 import {ErrorStateDirective} from "tim/ui/error-state.directive";
 import {ShortNameDirective} from "tim/ui/short-name.directive";
@@ -133,7 +134,7 @@ setStandaloneHttpInterceptors(() => [
             multi: true,
         },
         TimepickerActions,
-        provideHttpClient(withInterceptorsFromDi()),
+        provideHttpClient(withXhr(), withInterceptorsFromDi()),
     ],
 })
 export class AppModule implements DoBootstrap {

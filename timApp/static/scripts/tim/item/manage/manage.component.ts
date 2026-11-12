@@ -1,5 +1,5 @@
 import type {OnInit} from "@angular/core";
-import {Component, ViewChild} from "@angular/core";
+import {Component, ViewChild, ChangeDetectionStrategy} from "@angular/core";
 import {HttpClient} from "@angular/common/http";
 import {NgModel} from "@angular/forms";
 import moment from "moment";
@@ -47,6 +47,7 @@ export interface IAlias {
     templateUrl: "./manage.component.html",
     // The layout relies on the whitespace between the inline elements (e.g. buttons).
     preserveWhitespaces: true,
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false,
 })
 export class ManageComponent implements OnInit {

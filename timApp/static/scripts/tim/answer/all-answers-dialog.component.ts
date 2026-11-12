@@ -1,12 +1,13 @@
 import moment from "moment";
 import {AngularDialogComponent} from "tim/ui/angulardialog/angular-dialog-component.directive";
-import {Component, NgModule} from "@angular/core";
+import {Component, NgModule, ChangeDetectionStrategy} from "@angular/core";
 import {DialogModule} from "tim/ui/angulardialog/dialog.module";
 import {FormsModule} from "@angular/forms";
 import {
     HttpClient,
     provideHttpClient,
     withInterceptorsFromDi,
+    withXhr,
 } from "@angular/common/http";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {DatetimePickerModule} from "tim/ui/datetime-picker/datetime-picker.component";
@@ -373,6 +374,7 @@ export interface IAllAnswersParams {
         </tim-dialog-frame>
         `,
     styleUrls: ["all-answers-dialog.component.scss"],
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false,
 })
 export class AllAnswersDialogComponent extends AngularDialogComponent<
@@ -482,6 +484,6 @@ export class AllAnswersDialogComponent extends AngularDialogComponent<
         TimUtilityModule,
         DatetimePickerModule,
     ],
-    providers: [provideHttpClient(withInterceptorsFromDi())],
+    providers: [provideHttpClient(withXhr(), withInterceptorsFromDi())],
 })
 export class AllAnswersDialogModule {}

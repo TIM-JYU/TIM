@@ -6,12 +6,14 @@ import {
     ElementRef,
     NgModule,
     NgZone,
+    ChangeDetectionStrategy,
 } from "@angular/core";
 import {FormsModule} from "@angular/forms";
 import {
     HttpClient,
     provideHttpClient,
     withInterceptorsFromDi,
+    withXhr,
 } from "@angular/common/http";
 import {DomSanitizer} from "@angular/platform-browser";
 import * as t from "io-ts";
@@ -135,6 +137,7 @@ const PluginFields = t.intersection([
           <div class="qstLog" [innerHtml]="log"></div>
         }
         `,
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false,
 })
 export class QstComponent
@@ -445,7 +448,7 @@ export class QstComponent
         PurifyModule,
         TooltipModule,
     ],
-    providers: [provideHttpClient(withInterceptorsFromDi())],
+    providers: [provideHttpClient(withXhr(), withInterceptorsFromDi())],
 })
 export class QstModule implements DoBootstrap {
     ngDoBootstrap(appRef: ApplicationRef) {}

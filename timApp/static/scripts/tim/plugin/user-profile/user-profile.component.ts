@@ -1,5 +1,10 @@
 import type {ApplicationRef, DoBootstrap, OnInit} from "@angular/core";
-import {Input, NgModule, ViewChild} from "@angular/core";
+import {
+    Input,
+    NgModule,
+    ViewChild,
+    ChangeDetectionStrategy,
+} from "@angular/core";
 import {Component} from "@angular/core";
 import {HttpClient} from "@angular/common/http";
 import {toPromise} from "tim/util/utils";
@@ -54,6 +59,7 @@ interface IUploadedFile extends t.TypeOf<typeof UploadedFile> {}
     selector: "tim-user-profile",
     styleUrls: ["./user-profile.component.scss"],
     imports: [CsUtilityModule, FormsModule],
+    changeDetection: ChangeDetectionStrategy.Eager,
     template: `
         @if (profileVisible) {
           <div class="tim-user-profile-container">

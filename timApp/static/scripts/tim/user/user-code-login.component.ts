@@ -1,5 +1,5 @@
 // import type {OnChanges, SimpleChanges} from "@angular/core";
-import {Component} from "@angular/core";
+import {Component, ChangeDetectionStrategy} from "@angular/core";
 import {HttpClient} from "@angular/common/http";
 import {formatNumberCode, toPromise} from "tim/util/utils";
 import {saveCurrentScreenPar} from "tim/document/parhelpers";
@@ -49,6 +49,7 @@ export const SPLIT_EVERY = 4;
         </form>
         `,
     styleUrls: ["./user-code-login.component.scss"],
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false,
 })
 export class UserCodeLoginComponent {

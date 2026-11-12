@@ -1,5 +1,10 @@
 import type {ApplicationRef, DoBootstrap} from "@angular/core";
-import {Component, NgModule, NgZone} from "@angular/core";
+import {
+    Component,
+    NgModule,
+    NgZone,
+    ChangeDetectionStrategy,
+} from "@angular/core";
 import {BrowserModule} from "@angular/platform-browser";
 import {AccordionModule} from "ngx-bootstrap/accordion";
 import {vctrlInstance} from "tim/document/viewctrlinstance";
@@ -147,6 +152,7 @@ import {LectureController} from "tim/lecture/lectureController";
           </accordion>
         }
         `,
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false,
 })
 export class LectureMenuComponent {

@@ -1,4 +1,4 @@
-import {Component, Input} from "@angular/core";
+import {Component, Input, ChangeDetectionStrategy} from "@angular/core";
 import {PluginMarkupErrors} from "tim/plugin/util";
 
 @Component({
@@ -15,6 +15,7 @@ import {PluginMarkupErrors} from "tim/plugin/util";
           </ul>
         </div>
         `,
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false,
 })
 export class MarkupErrorComponent {

@@ -39,6 +39,7 @@ import {
     HttpClient,
     provideHttpClient,
     withInterceptorsFromDi,
+    withXhr,
 } from "@angular/common/http";
 import {FormsModule} from "@angular/forms";
 import {DomSanitizer} from "@angular/platform-browser";
@@ -1180,7 +1181,7 @@ export class CalendarComponent
             provide: CalendarDateFormatter,
             useClass: CustomDateFormatter,
         },
-        provideHttpClient(withInterceptorsFromDi()),
+        provideHttpClient(withXhr(), withInterceptorsFromDi()),
     ],
 })
 export class TimCalendarModule implements DoBootstrap {

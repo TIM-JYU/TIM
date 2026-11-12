@@ -1,4 +1,4 @@
-import {Component} from "@angular/core";
+import {Component, ChangeDetectionStrategy} from "@angular/core";
 import {vctrlInstance} from "tim/document/viewctrlinstance";
 import type {ViewCtrl} from "tim/document/viewctrl";
 
@@ -24,6 +24,7 @@ import type {ViewCtrl} from "tim/document/viewctrl";
           }
         </div>
         `,
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false,
 })
 export class HelpParContent {

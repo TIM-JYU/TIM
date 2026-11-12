@@ -2,8 +2,8 @@
 import type {ComponentRef, Type} from "@angular/core";
 import {
     ChangeDetectorRef,
-    Compiler,
     Component,
+    createNgModule,
     Directive,
     ElementRef,
     Injector,
@@ -11,6 +11,7 @@ import {
     NgModule,
     ViewChild,
     ViewContainerRef,
+    ChangeDetectionStrategy,
 } from "@angular/core";
 import {CommonModule} from "@angular/common";
 import {HttpClient} from "@angular/common/http";
@@ -264,6 +265,7 @@ interface IRunResult {
             }
             <p class="footer" [innerHTML]="markup.footer"></p>
           </div>`,
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false,
 })
 export class ExtcheckComponent extends CsController {
@@ -337,6 +339,7 @@ export class CustomOutputBase {
             <pre class="centermargin {{textContent.classes}}">{{textContent.content}}</pre>
           }
         }`,
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false,
 })
 export class OutputContainerComponent implements IOutputContainer {
@@ -358,9 +361,9 @@ export class OutputContainerComponent implements IOutputContainer {
 
     caret: string = "<span class='caret'></span>";
 
-    constructor(private injector: Injector, private compiler: Compiler) {}
+    constructor(private injector: Injector) {}
 
-    async ngAfterViewInit() {
+    ngAfterViewInit() {
         if (!this.angularContent) {
             return;
         }
@@ -372,32 +375,37 @@ export class OutputContainerComponent implements IOutputContainer {
             return;
         }
 
-        const components = [];
+        const components: Type<unknown>[] = [];
+        let entryComponent: Type<unknown> | undefined;
         const module = this.angularContent;
         for (const [key, value] of Object.entries(module.components)) {
             const tmpCls = Function(`return ${value.component};`)();
-            const tmpCmp = Component({selector: key, template: value.template})(
-                tmpCls
-            );
+            const tmpCmp = Component({
+                selector: key,
+                template: value.template,
+                changeDetection: ChangeDetectionStrategy.Eager,
+                standalone: false,
+            })(tmpCls) as Type<unknown>;
             components.push(tmpCmp);
+            if (key == module.entry) {
+                entryComponent = tmpCmp;
+            }
         }
         const tmpModule = NgModule({
             declarations: components,
             imports: [CommonModule],
         })(class {});
 
-        const factories =
-            await this.compiler.compileModuleAndAllComponentsAsync(tmpModule);
-        const m = factories.ngModuleFactory.create(this.injector);
-        const factory = factories.componentFactories.find(
-            (e) => e.selector == module.entry
-        );
-        if (!factory) {
+        if (!entryComponent) {
             this.error("");
             return;
         }
-        this.componentRef = factory.create(this.injector, [], null, m);
-        this.customOutput.viewContainerRef.insert(this.componentRef.hostView);
+        // The components are compiled by the JIT compiler when they are first used.
+        const m = createNgModule(tmpModule, this.injector);
+        this.componentRef = this.customOutput.viewContainerRef.createComponent(
+            entryComponent,
+            {injector: this.injector, ngModuleRef: m}
+        );
         this.hide = this.hide; // refresh style.display
     }
 

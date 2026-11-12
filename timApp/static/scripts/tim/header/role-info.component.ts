@@ -1,5 +1,5 @@
 import type {OnInit} from "@angular/core";
-import {Component} from "@angular/core";
+import {Component, ChangeDetectionStrategy} from "@angular/core";
 import {Users} from "tim/user/userService";
 import type {AccessType} from "tim/item/access-role.service";
 import {
@@ -37,6 +37,7 @@ import * as t from "io-ts";
         }
         `,
     styleUrls: ["./role-info.component.scss"],
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false,
 })
 export class RoleInfoComponent implements OnInit {

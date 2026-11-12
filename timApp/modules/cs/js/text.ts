@@ -1,4 +1,9 @@
-import {ChangeDetectorRef, Component, ElementRef} from "@angular/core";
+import {
+    ChangeDetectorRef,
+    Component,
+    ElementRef,
+    ChangeDetectionStrategy,
+} from "@angular/core";
 import {HttpClient} from "@angular/common/http";
 import {DomSanitizer} from "@angular/platform-browser";
 import {CsController} from "./csPlugin";
@@ -65,6 +70,7 @@ import {CsController} from "./csPlugin";
             </div>
           }
         </div>`,
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false,
 })
 export class CsTextComponent extends CsController {

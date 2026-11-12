@@ -1,4 +1,4 @@
-import {Component, Input} from "@angular/core";
+import {Component, Input, ChangeDetectionStrategy} from "@angular/core";
 import {HttpClient} from "@angular/common/http";
 import type {IDocument} from "tim/item/IItem";
 import {getGroupDesc, toPromise} from "tim/util/utils";
@@ -36,6 +36,7 @@ interface IParInfo {
           ></i>
         </a>
         `,
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false,
 })
 export class ParRefComponent {

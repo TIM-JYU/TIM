@@ -4,7 +4,7 @@
  * Contains a search field with visibility and exact/partial word search.
  */
 import {HttpClient} from "@angular/common/http";
-import {Component, Input} from "@angular/core";
+import {Component, Input, ChangeDetectionStrategy} from "@angular/core";
 import {TimStorage, toPromise} from "tim/util/utils";
 import * as t from "io-ts";
 import type {ITag, ITaggedItem} from "tim/item/IItem";
@@ -48,6 +48,7 @@ import {tagStyleClass} from "tim/item/IItem";
           <span>No documents found!</span>
         }
         `,
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false,
 })
 export class TaggedDocumentListComponent {

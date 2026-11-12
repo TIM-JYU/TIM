@@ -16,6 +16,7 @@ import {
     Output,
     ViewChild,
     ViewContainerRef,
+    ChangeDetectionStrategy,
 } from "@angular/core";
 import type {ITemplateButton} from "../../csPlugin";
 import {IEditor} from "../editor";
@@ -27,6 +28,7 @@ import type {FormulaEditorComponent} from "./formula-editor.component";
     template: `
         <ng-container #formulaEditor></ng-container>
     `,
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false,
 })
 export class FormulaEditorLoaderComponent implements OnDestroy, AfterViewInit {

@@ -1,6 +1,11 @@
 import type {OnInit} from "@angular/core";
 import {refreshUI} from "tim/util/refresh";
-import {Component, ElementRef, HostListener} from "@angular/core";
+import {
+    Component,
+    ElementRef,
+    HostListener,
+    ChangeDetectionStrategy,
+} from "@angular/core";
 import {documentglobals} from "tim/util/globals";
 import {showKorppiExportDialog} from "tim/answer/showKorppiExportDialog";
 import {showFeedbackAnswers} from "tim/answer/showFeedbackAnswers";
@@ -209,6 +214,7 @@ function csvCell(value: CellValue) {
         </div>
         `,
     styleUrls: ["./user-list.component.scss"],
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false,
 })
 export class UserListComponent implements OnInit {

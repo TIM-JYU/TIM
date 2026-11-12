@@ -3,7 +3,13 @@
  */
 
 import {AngularDialogComponent} from "tim/ui/angulardialog/angular-dialog-component.directive";
-import {Component, ElementRef, NgModule, ViewChild} from "@angular/core";
+import {
+    Component,
+    ElementRef,
+    NgModule,
+    ViewChild,
+    ChangeDetectionStrategy,
+} from "@angular/core";
 import type {IVisibilityVars} from "tim/timRoot";
 import {getVisibilityVars} from "tim/timRoot";
 import {DialogModule} from "tim/ui/angulardialog/dialog.module";
@@ -385,6 +391,7 @@ interface ISimpleRegistrationResponse {
           </tim-dialog-frame>
         `,
     styleUrls: ["./login-dialog.component.scss"],
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false,
 })
 export class LoginDialogComponent extends AngularDialogComponent<

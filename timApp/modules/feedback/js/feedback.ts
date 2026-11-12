@@ -9,7 +9,7 @@ import type {
     OnDestroy,
     OnInit,
 } from "@angular/core";
-import {Component, NgModule} from "@angular/core";
+import {Component, NgModule, ChangeDetectionStrategy} from "@angular/core";
 import type {ITimComponent} from "tim/document/viewctrl";
 import {
     GenericPluginMarkup,
@@ -20,7 +20,11 @@ import {
 import {documentglobals} from "tim/util/globals";
 import {injectStyle} from "tim/util/utils";
 import type {EditMode} from "tim/document/popup-menu-dialog.component";
-import {provideHttpClient, withInterceptorsFromDi} from "@angular/common/http";
+import {
+    provideHttpClient,
+    withInterceptorsFromDi,
+    withXhr,
+} from "@angular/common/http";
 import {AngularPluginBase} from "tim/plugin/angular-plugin-base.directive";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {PurifyModule} from "tim/util/purify.module";
@@ -160,6 +164,7 @@ const FeedbackAll = t.intersection([
   }
 </div>
 `,
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false,
 })
 export class FeedbackPluginComponent
@@ -1341,7 +1346,7 @@ export class FeedbackPluginComponent
 @NgModule({
     declarations: [FeedbackPluginComponent],
     imports: [CommonModule, TimUtilityModule, PurifyModule],
-    providers: [provideHttpClient(withInterceptorsFromDi())],
+    providers: [provideHttpClient(withXhr(), withInterceptorsFromDi())],
 })
 export class FeedbackModule implements DoBootstrap {
     ngDoBootstrap(appRef: ApplicationRef) {}

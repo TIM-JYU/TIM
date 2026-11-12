@@ -1,5 +1,10 @@
 import {AngularDialogComponent} from "tim/ui/angulardialog/angular-dialog-component.directive";
-import {Component, NgModule, ViewChild} from "@angular/core";
+import {
+    Component,
+    NgModule,
+    ViewChild,
+    ChangeDetectionStrategy,
+} from "@angular/core";
 import * as t from "io-ts";
 import $ from "jquery";
 import moment from "moment";
@@ -266,6 +271,7 @@ function isAskedQuestion(
           </tim-dialog-frame>
         }
         `,
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false,
 })
 export class QuestionEditDialogComponent extends AngularDialogComponent<

@@ -1,5 +1,10 @@
 import {AngularDialogComponent} from "tim/ui/angulardialog/angular-dialog-component.directive";
-import {Component, NgModule, NgZone} from "@angular/core";
+import {
+    Component,
+    NgModule,
+    NgZone,
+    ChangeDetectionStrategy,
+} from "@angular/core";
 import {toPromise} from "tim/util/utils";
 import {HttpClient} from "@angular/common/http";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
@@ -61,6 +66,7 @@ import {CommonModule} from "@angular/common";
             </ng-container>
         </tim-dialog-frame>
     `,
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false,
 })
 export class LectureWallDialogComponent extends AngularDialogComponent<

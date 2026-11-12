@@ -1,4 +1,4 @@
-import {Component, NgZone} from "@angular/core";
+import {Component, NgZone, ChangeDetectionStrategy} from "@angular/core";
 import {TimDefer} from "tim/util/timdefer";
 import {DialogService} from "tim/ui/angulardialog/dialog.service";
 import type {
@@ -32,6 +32,7 @@ interface IDialogEntry {
           (instanceClosed)="closed($event)"></div>
         }
         `,
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false,
 })
 export class DialogContainerComponent {

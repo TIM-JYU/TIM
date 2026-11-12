@@ -1,4 +1,4 @@
-import {Component, Input} from "@angular/core";
+import {Component, Input, ChangeDetectionStrategy} from "@angular/core";
 
 @Component({
     selector: "tim-consent-choice",
@@ -30,6 +30,7 @@ import {Component, Input} from "@angular/core";
             </label>
         </div>
     `,
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false,
 })
 export class ConsentChoiceComponent {

@@ -3,7 +3,13 @@
  */
 import * as t from "io-ts";
 import type {ApplicationRef, DoBootstrap} from "@angular/core";
-import {Component, ElementRef, NgModule, NgZone} from "@angular/core";
+import {
+    Component,
+    ElementRef,
+    NgModule,
+    NgZone,
+    ChangeDetectionStrategy,
+} from "@angular/core";
 import type {
     IChangeListener,
     ITimComponent,
@@ -24,6 +30,7 @@ import {
     HttpClient,
     provideHttpClient,
     withInterceptorsFromDi,
+    withXhr,
 } from "@angular/common/http";
 import {FormsModule} from "@angular/forms";
 import {DomSanitizer} from "@angular/platform-browser";
@@ -157,6 +164,7 @@ const multisaveAll = t.intersection([
           </span>
         `,
     styleUrls: ["./multisave.component.scss"],
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false,
 })
 export class MultisaveComponent
@@ -545,7 +553,7 @@ export class MultisaveComponent
         SisuAssessmentExportModule,
         PurifyModule,
     ],
-    providers: [provideHttpClient(withInterceptorsFromDi())],
+    providers: [provideHttpClient(withXhr(), withInterceptorsFromDi())],
 })
 export class MultisaveModule implements DoBootstrap {
     ngDoBootstrap(appRef: ApplicationRef) {}

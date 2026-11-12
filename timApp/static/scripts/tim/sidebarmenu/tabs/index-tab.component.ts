@@ -1,5 +1,5 @@
 import type {OnInit} from "@angular/core";
-import {Component, Input} from "@angular/core";
+import {Component, Input, ChangeDetectionStrategy} from "@angular/core";
 import {TabEntry} from "tim/sidebarmenu/menu-tab.directive";
 import type {
     IHeader,
@@ -53,6 +53,7 @@ import {vctrlInstance} from "tim/document/viewctrlinstance";
         </ul>
         `,
     styleUrls: ["./index-tab.component.scss"],
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false,
 })
 export class IndexTabComponent implements OnInit {

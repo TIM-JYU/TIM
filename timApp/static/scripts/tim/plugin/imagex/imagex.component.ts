@@ -1,7 +1,7 @@
 import deepmerge from "deepmerge";
 import type * as t from "io-ts";
 import type {ApplicationRef, DoBootstrap, OnInit} from "@angular/core";
-import {ViewChild} from "@angular/core";
+import {ViewChild, ChangeDetectionStrategy} from "@angular/core";
 import {
     ChangeDetectorRef,
     Component,
@@ -14,6 +14,7 @@ import {
     HttpHeaders,
     provideHttpClient,
     withInterceptorsFromDi,
+    withXhr,
 } from "@angular/common/http";
 import {FormsModule} from "@angular/forms";
 import {TimDefer} from "tim/util/timdefer";
@@ -1379,6 +1380,7 @@ interface IAnswerResponse {
         }
         `,
     styleUrls: ["./imagex.component.scss"],
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false,
 })
 export class ImageXComponent
@@ -2003,7 +2005,7 @@ export class ImageXComponent
 @NgModule({
     declarations: [ImageXComponent],
     imports: [CommonModule, DrawToolbarModule, FormsModule, TimUtilityModule],
-    providers: [provideHttpClient(withInterceptorsFromDi())],
+    providers: [provideHttpClient(withXhr(), withInterceptorsFromDi())],
 })
 export class ImagexModule implements DoBootstrap {
     ngDoBootstrap(appRef: ApplicationRef) {}

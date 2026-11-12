@@ -1,5 +1,5 @@
 import {AngularDialogComponent} from "tim/ui/angulardialog/angular-dialog-component.directive";
-import {Component, NgModule} from "@angular/core";
+import {Component, NgModule, ChangeDetectionStrategy} from "@angular/core";
 import {DialogModule} from "tim/ui/angulardialog/dialog.module";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {FormsModule} from "@angular/forms";
@@ -100,6 +100,7 @@ type sortOption = "name" | "username" | "email" | "time";
         </tim-dialog-frame>
         `,
     styleUrls: ["reset-task-lock-dialog.component.scss"],
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false,
 })
 export class ResetTaskLockDialogComponent extends AngularDialogComponent<

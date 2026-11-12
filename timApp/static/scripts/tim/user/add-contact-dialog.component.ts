@@ -1,4 +1,4 @@
-import {Component, NgModule} from "@angular/core";
+import {Component, NgModule, ChangeDetectionStrategy} from "@angular/core";
 import {HttpClient} from "@angular/common/http";
 import {FormsModule} from "@angular/forms";
 import {CommonModule} from "@angular/common";
@@ -66,6 +66,7 @@ import {ContactOrigin} from "tim/user/IUser";
           </ng-container>
         </tim-dialog-frame>
         `,
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false,
 })
 export class AddContactDialogComponent extends AngularDialogComponent<

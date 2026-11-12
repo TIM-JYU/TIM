@@ -2,7 +2,7 @@ import {getURLParameter} from "tim/util/utils";
 import {inIframe} from "tim/plugin/util";
 import {serializeQueryParams} from "tim/util/http";
 import type {OnInit} from "@angular/core";
-import {Component} from "@angular/core";
+import {Component, ChangeDetectionStrategy} from "@angular/core";
 import {showLoginDialog} from "tim/user/showLoginDialog";
 import {Users} from "tim/user/userService";
 
@@ -23,6 +23,7 @@ import {Users} from "tim/user/userService";
   <tim-user-menu></tim-user-menu>
 }
 `,
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false,
 })
 export class LoginMenuComponent implements OnInit {

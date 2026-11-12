@@ -1,5 +1,10 @@
 import type {OnInit} from "@angular/core";
-import {Component, Input, ViewEncapsulation} from "@angular/core";
+import {
+    Component,
+    Input,
+    ViewEncapsulation,
+    ChangeDetectionStrategy,
+} from "@angular/core";
 import {getViewName} from "tim/util/utils";
 import type {
     MessageData,
@@ -56,6 +61,7 @@ import {ArchivedMessageStateService} from "tim/messaging/archive/archived-messag
         `,
     styleUrls: ["./tim-archive-header.component.scss"],
     encapsulation: ViewEncapsulation.None,
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false,
 })
 export class TimArchiveHeaderComponent implements OnInit {

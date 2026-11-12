@@ -1,5 +1,5 @@
 import type {OnInit} from "@angular/core";
-import {Component, Input} from "@angular/core";
+import {Component, Input, ChangeDetectionStrategy} from "@angular/core";
 import type {Moment} from "moment";
 import moment from "moment";
 import {formatString, timeout, toPromise} from "tim/util/utils";
@@ -82,6 +82,7 @@ const VIEW_PATH = "/view/";
         }
         `,
     styleUrls: ["./goto-link.component.scss"],
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false,
 })
 export class GotoLinkComponent implements OnInit {

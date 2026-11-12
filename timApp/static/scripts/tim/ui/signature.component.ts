@@ -1,4 +1,4 @@
-import {Component, Input} from "@angular/core";
+import {Component, Input, ChangeDetectionStrategy} from "@angular/core";
 import {Moment} from "moment";
 import {IUser} from "tim/user/IUser";
 
@@ -14,6 +14,7 @@ import {IUser} from "tim/user/IUser";
         </span>
     `,
     styleUrls: ["./signature.component.scss"],
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false,
 })
 export class SignatureComponent {

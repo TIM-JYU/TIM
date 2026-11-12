@@ -1,4 +1,4 @@
-import {Component, NgModule} from "@angular/core";
+import {Component, NgModule, ChangeDetectionStrategy} from "@angular/core";
 import {FormsModule} from "@angular/forms";
 import {HttpClient} from "@angular/common/http";
 import type {Subscription} from "rxjs";
@@ -138,6 +138,7 @@ const NAME_RULES: Record<AnnotatedNameRequirements, string> = {
         </tim-dialog-frame>
         `,
     styleUrls: ["message-list-create-dialog.component.scss"],
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false,
 })
 export class MessageListCreateDialogComponent extends AngularDialogComponent<

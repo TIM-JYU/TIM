@@ -6,11 +6,13 @@ import {
     NgModule,
     Output,
     ViewChild,
+    ChangeDetectionStrategy,
 } from "@angular/core";
 import {
     HttpClient,
     provideHttpClient,
     withInterceptorsFromDi,
+    withXhr,
 } from "@angular/common/http";
 import {FormsModule, NgForm} from "@angular/forms";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
@@ -226,6 +228,7 @@ interface TimMessageOptions extends t.TypeOf<typeof TimSavedMessageOptions> {
                                         }
         `,
     styleUrls: ["./tim-message-send.scss"],
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false,
 })
 export class TimMessageSendComponent {
@@ -537,7 +540,7 @@ export class TimMessageSendComponent {
         TooltipModule,
         DatetimePickerModule,
     ],
-    providers: [provideHttpClient(withInterceptorsFromDi())],
+    providers: [provideHttpClient(withXhr(), withInterceptorsFromDi())],
 })
 export class TimMessageSendModule implements DoBootstrap {
     ngDoBootstrap(appRef: ApplicationRef): void {}
@@ -557,7 +560,7 @@ export class TimMessageSendModule implements DoBootstrap {
         TooltipModule,
         DatetimePickerModule,
     ],
-    providers: [provideHttpClient(withInterceptorsFromDi())],
+    providers: [provideHttpClient(withXhr(), withInterceptorsFromDi())],
 })
 export class TimMessageSendPageModule implements DoBootstrap {
     ngDoBootstrap(appRef: ApplicationRef): void {}

@@ -6,6 +6,7 @@ import {
     NgModule,
     ViewChild,
     ViewEncapsulation,
+    ChangeDetectionStrategy,
 } from "@angular/core";
 import {
     GenericPluginMarkup,
@@ -18,7 +19,11 @@ import {valueDefu} from "tim/util/utils";
 import {AngularPluginBase} from "tim/plugin/angular-plugin-base.directive";
 import {FormsModule} from "@angular/forms";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
-import {provideHttpClient, withInterceptorsFromDi} from "@angular/common/http";
+import {
+    provideHttpClient,
+    withInterceptorsFromDi,
+    withXhr,
+} from "@angular/common/http";
 import {PurifyModule} from "tim/util/purify.module";
 import {registerPlugin} from "tim/plugin/pluginRegistry";
 import {CommonModule} from "@angular/common";
@@ -166,6 +171,7 @@ const ShowFileAll = t.type({
             }
           </div>
         `,
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false,
 })
 export class ImagesComponent extends AngularPluginBase<
@@ -359,7 +365,7 @@ export class ImagesComponent extends AngularPluginBase<
 @NgModule({
     declarations: [ImagesComponent],
     imports: [CommonModule, TimUtilityModule, FormsModule, PurifyModule],
-    providers: [provideHttpClient(withInterceptorsFromDi())],
+    providers: [provideHttpClient(withXhr(), withInterceptorsFromDi())],
 })
 export class ImagesModule implements DoBootstrap {
     ngDoBootstrap(_appRef: ApplicationRef) {}

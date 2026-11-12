@@ -1,7 +1,12 @@
 import type {AlertSeverity} from "tim/ui/formErrorMessage";
 import {getURLParameter, toPromise} from "tim/util/utils";
 import type {OnInit} from "@angular/core";
-import {Component, Input, ViewChild} from "@angular/core";
+import {
+    Component,
+    Input,
+    ViewChild,
+    ChangeDetectionStrategy,
+} from "@angular/core";
 import {slugify} from "tim/util/slugify";
 import type {ITaggedItem} from "tim/item/IItem";
 import {TagType} from "tim/item/IItem";
@@ -73,6 +78,7 @@ import {NgModel} from "@angular/forms";
           }
         </form>
         `,
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false,
 })
 export class CreateItemComponent implements OnInit {

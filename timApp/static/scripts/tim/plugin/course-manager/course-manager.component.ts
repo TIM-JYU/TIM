@@ -1,5 +1,5 @@
 import type {ApplicationRef, DoBootstrap, OnInit} from "@angular/core";
-import {Input, NgModule} from "@angular/core";
+import {Input, NgModule, ChangeDetectionStrategy} from "@angular/core";
 import {Component} from "@angular/core";
 import {HttpClient} from "@angular/common/http";
 import {FormsModule} from "@angular/forms";
@@ -16,6 +16,7 @@ interface TemplateData {
     selector: "tim-course-manager",
     styleUrls: ["./course-manager.component.scss"],
     imports: [CsUtilityModule, FormsModule],
+    changeDetection: ChangeDetectionStrategy.Eager,
     template: `
         <div class="tim-course-manager-container">
           <div class="container">

@@ -1,11 +1,18 @@
 import * as t from "io-ts";
 import type {TypeOf} from "io-ts";
 import type {AfterViewInit, DoBootstrap, OnInit} from "@angular/core";
-import {Component, NgModule, ViewChild, ElementRef} from "@angular/core";
+import {
+    Component,
+    NgModule,
+    ViewChild,
+    ElementRef,
+    ChangeDetectionStrategy,
+} from "@angular/core";
 import {
     HttpClient,
     provideHttpClient,
     withInterceptorsFromDi,
+    withXhr,
 } from "@angular/common/http";
 import {CommonModule} from "@angular/common";
 import {registerPlugin} from "tim/plugin/pluginRegistry";
@@ -425,6 +432,7 @@ export interface CircuitOptions {
         `,
     styleUrls: ["./quantum-circuit.component.scss"],
     providers: [GateService, SerializerService],
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false,
 })
 export class QuantumCircuitComponent
@@ -1614,7 +1622,7 @@ export class QuantumCircuitComponent
     ],
     providers: [
         provideCharts(withDefaultRegisterables()),
-        provideHttpClient(withInterceptorsFromDi()),
+        provideHttpClient(withXhr(), withInterceptorsFromDi()),
     ],
 })
 export class QuantumCircuitModule implements DoBootstrap {

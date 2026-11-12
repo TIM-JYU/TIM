@@ -4,6 +4,7 @@ import {
     Input,
     Output,
     TemplateRef,
+    ChangeDetectionStrategy,
 } from "@angular/core";
 import {AlertSeverity} from "tim/ui/formErrorMessage";
 
@@ -36,6 +37,7 @@ import {AlertSeverity} from "tim/ui/formErrorMessage";
           </div>
         </div>
         `,
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false,
 })
 export class BootstrapPanelComponent {
@@ -68,6 +70,7 @@ export class BootstrapPanelComponent {
         </bootstrap-panel>
     `,
     styles: [` :host { display: block; } `],
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false,
 })
 export class BootstrapFormPanelComponent {

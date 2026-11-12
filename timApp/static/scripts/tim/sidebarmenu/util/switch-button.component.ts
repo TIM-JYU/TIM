@@ -1,4 +1,4 @@
-import {Component} from "@angular/core";
+import {Component, ChangeDetectionStrategy} from "@angular/core";
 import {TimStorage} from "tim/util/utils";
 import * as t from "io-ts";
 
@@ -24,6 +24,7 @@ import * as t from "io-ts";
         }
         `,
     styleUrls: ["./switch-button.component.scss"],
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false,
 })
 export class SwitchButtonComponent {

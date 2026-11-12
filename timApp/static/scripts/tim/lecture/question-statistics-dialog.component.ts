@@ -1,11 +1,12 @@
 import moment from "moment";
 import {AngularDialogComponent} from "tim/ui/angulardialog/angular-dialog-component.directive";
-import {Component, NgModule} from "@angular/core";
+import {Component, NgModule, ChangeDetectionStrategy} from "@angular/core";
 import {timeout, toPromise} from "tim/util/utils";
 import {
     HttpClient,
     provideHttpClient,
     withInterceptorsFromDi,
+    withXhr,
 } from "@angular/common/http";
 import {DialogModule} from "tim/ui/angulardialog/dialog.module";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
@@ -56,6 +57,7 @@ function getQuestionEndTime(q: IAskedQuestion) {
           </ng-container>
         </tim-dialog-frame>
         `,
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false,
 })
 export class QuestionStatisticsDialogComponent extends AngularDialogComponent<
@@ -131,6 +133,6 @@ export class QuestionStatisticsDialogComponent extends AngularDialogComponent<
         DialogModule,
         AnswerChartModule,
     ],
-    providers: [provideHttpClient(withInterceptorsFromDi())],
+    providers: [provideHttpClient(withXhr(), withInterceptorsFromDi())],
 })
 export class QuestionStatisticsDialogModule {}

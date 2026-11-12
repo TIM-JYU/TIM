@@ -1,6 +1,12 @@
 /* eslint-disable no-underscore-dangle */
 import type {EventEmitter} from "@angular/core";
-import {Component, ElementRef, Input, ViewChild} from "@angular/core";
+import {
+    Component,
+    ElementRef,
+    Input,
+    ViewChild,
+    ChangeDetectionStrategy,
+} from "@angular/core";
 import type {ISize} from "tim/util/utils";
 import type {
     AngularResizableDirective,
@@ -109,6 +115,7 @@ class ResizableDraggableWrapper {
         "../../../../../node_modules/angular2-draggable/css/resizable.min.css",
         "./dialog-frame.component.scss",
     ],
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false,
 })
 export class DialogFrame {

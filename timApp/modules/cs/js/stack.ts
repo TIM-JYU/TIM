@@ -1,6 +1,6 @@
 ﻿import * as t from "io-ts";
 import type {ApplicationRef, DoBootstrap} from "@angular/core";
-import {HostListener} from "@angular/core";
+import {HostListener, ChangeDetectionStrategy} from "@angular/core";
 import {Component, NgModule} from "@angular/core";
 import {ParCompiler} from "tim/editor/parCompiler";
 import {
@@ -11,7 +11,11 @@ import {
 } from "tim/plugin/attributes";
 import {windowAsAny} from "tim/util/utils";
 import type {ITimComponent, ViewCtrl} from "tim/document/viewctrl";
-import {provideHttpClient, withInterceptorsFromDi} from "@angular/common/http";
+import {
+    provideHttpClient,
+    withInterceptorsFromDi,
+    withXhr,
+} from "@angular/common/http";
 import {FormsModule} from "@angular/forms";
 import {AngularPluginBase} from "tim/plugin/angular-plugin-base.directive";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
@@ -174,6 +178,7 @@ interface IStackData {
           }
         </div>
         `,
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false,
 })
 export class StackPluginComponent
@@ -688,7 +693,7 @@ export class StackPluginComponent
         FormsModule,
         ScriptedInnerHTMLModule,
     ],
-    providers: [provideHttpClient(withInterceptorsFromDi())],
+    providers: [provideHttpClient(withXhr(), withInterceptorsFromDi())],
 })
 export class StackModule implements DoBootstrap {
     ngDoBootstrap(appRef: ApplicationRef) {}

@@ -1,5 +1,10 @@
 import {AngularDialogComponent} from "tim/ui/angulardialog/angular-dialog-component.directive";
-import {Component, NgModule, ViewChild} from "@angular/core";
+import {
+    Component,
+    NgModule,
+    ViewChild,
+    ChangeDetectionStrategy,
+} from "@angular/core";
 import moment from "moment";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {DialogModule} from "tim/ui/angulardialog/dialog.module";
@@ -8,6 +13,7 @@ import {
     HttpClient,
     provideHttpClient,
     withInterceptorsFromDi,
+    withXhr,
 } from "@angular/common/http";
 import {TypeaheadModule} from "ngx-bootstrap/typeahead";
 import {TooltipModule} from "ngx-bootstrap/tooltip";
@@ -119,6 +125,7 @@ const tagParsingSeparator = ",";
           </ng-container>
         </tim-dialog-frame>
         `,
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false,
 })
 export class EditTagsDialogComponent extends AngularDialogComponent<
@@ -365,7 +372,10 @@ export class EditTagsDialogComponent extends AngularDialogComponent<
         TooltipModule,
         DatetimePickerModule,
     ],
-    providers: [SessionVerify, provideHttpClient(withInterceptorsFromDi())],
+    providers: [
+        SessionVerify,
+        provideHttpClient(withXhr(), withInterceptorsFromDi()),
+    ],
 })
 export class EditTagsDialogModule {}
 

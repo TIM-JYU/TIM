@@ -1,5 +1,10 @@
 import type {ComponentRef} from "@angular/core";
-import {Component, Input, ViewChild} from "@angular/core";
+import {
+    Component,
+    Input,
+    ViewChild,
+    ChangeDetectionStrategy,
+} from "@angular/core";
 import type {OnTabSelect} from "tim/sidebarmenu/menu-tab.directive";
 import {TabEntry, MenuTabDirective} from "tim/sidebarmenu/menu-tab.directive";
 
@@ -8,6 +13,7 @@ import {TabEntry, MenuTabDirective} from "tim/sidebarmenu/menu-tab.directive";
     template: `
         <ng-template timMenuTab></ng-template>
     `,
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false,
 })
 export class TabContainerComponent {

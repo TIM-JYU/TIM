@@ -4,7 +4,7 @@
  */
 
 import type {OnInit} from "@angular/core";
-import {Component, Input} from "@angular/core";
+import {Component, Input, ChangeDetectionStrategy} from "@angular/core";
 import type {IBookmark, IBookmarkGroup} from "tim/bookmark/bookmark.service";
 import {showBookmarkDialog} from "tim/bookmark/showBookmarkDialog";
 import {HttpClient} from "@angular/common/http";
@@ -70,6 +70,7 @@ export interface ITaggedBookmarkedItem {
         </div>
         }
         `,
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false,
 })
 export class BookmarkFolderBoxComponent implements OnInit {

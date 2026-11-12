@@ -1,5 +1,5 @@
 import type {ApplicationRef, DoBootstrap, OnInit} from "@angular/core";
-import {Component, NgModule} from "@angular/core";
+import {Component, NgModule, ChangeDetectionStrategy} from "@angular/core";
 import type {SafeResourceUrl} from "@angular/platform-browser";
 import {BrowserModule, DomSanitizer} from "@angular/platform-browser";
 import {registerModuleServerComponents} from "tim/serverComponents";
@@ -15,6 +15,7 @@ import {TimUtilityModule} from "tim/ui/tim-utility.module";
         <a id="showSlidesLink" [href]="itemUrl">Show slides only</a>
     `,
     styleUrls: ["./slide-view.component.scss"],
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false,
 })
 export class SlideViewComponent implements OnInit {

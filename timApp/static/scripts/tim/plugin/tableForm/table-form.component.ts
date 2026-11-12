@@ -10,6 +10,7 @@ import {
     ElementRef,
     NgModule,
     ViewChild,
+    ChangeDetectionStrategy,
 } from "@angular/core";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {DomSanitizer} from "@angular/platform-browser";
@@ -17,6 +18,7 @@ import {
     HttpClient,
     provideHttpClient,
     withInterceptorsFromDi,
+    withXhr,
 } from "@angular/common/http";
 import {FormsModule} from "@angular/forms";
 import {AngularPluginBase} from "tim/plugin/angular-plugin-base.directive";
@@ -398,6 +400,7 @@ const sortLang = "fi";
           }
         `,
     styleUrls: ["./table-form.component.scss"],
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false,
 })
 export class TableFormComponent
@@ -1859,7 +1862,7 @@ Separate multiple addresses with commas or write each address on a new line.`;
         TimMessageSendModule,
         PurifyModule,
     ],
-    providers: [provideHttpClient(withInterceptorsFromDi())],
+    providers: [provideHttpClient(withXhr(), withInterceptorsFromDi())],
 })
 export class TableFormModule implements DoBootstrap {
     ngDoBootstrap(_appRef: ApplicationRef) {}

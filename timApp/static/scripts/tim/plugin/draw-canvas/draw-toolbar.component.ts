@@ -7,6 +7,7 @@ import {
     NgModule,
     Output,
     ViewChild,
+    ChangeDetectionStrategy,
 } from "@angular/core";
 import {FormsModule} from "@angular/forms";
 import * as t from "io-ts";
@@ -243,6 +244,7 @@ export interface IDrawOptions extends t.TypeOf<typeof DrawOptions> {}
         </div>
         `,
     styleUrls: ["./draw-toolbar.component.scss"],
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false,
 })
 export class DrawToolbarComponent implements AfterViewInit {

@@ -1,5 +1,5 @@
 import type {ApplicationRef, DoBootstrap, OnInit} from "@angular/core";
-import {Input, NgModule} from "@angular/core";
+import {Input, NgModule, ChangeDetectionStrategy} from "@angular/core";
 import {Component} from "@angular/core";
 import {HttpClient} from "@angular/common/http";
 import {FormsModule} from "@angular/forms";
@@ -10,6 +10,7 @@ import {CsUtilityModule} from "../../../../../modules/cs/js/util/module";
     selector: "tim-participant-list",
     styleUrls: ["./participant-list.component.scss"],
     imports: [CsUtilityModule, FormsModule],
+    changeDetection: ChangeDetectionStrategy.Eager,
     template: `
         <div class="tim-user-list-container">
             <div class="heading">

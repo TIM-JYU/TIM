@@ -1,6 +1,12 @@
 ﻿import * as t from "io-ts";
 import type {ApplicationRef, DoBootstrap} from "@angular/core";
-import {Component, ElementRef, NgModule, ViewChild} from "@angular/core";
+import {
+    Component,
+    ElementRef,
+    NgModule,
+    ViewChild,
+    ChangeDetectionStrategy,
+} from "@angular/core";
 import type {IAnswer} from "tim/answer/IAnswer";
 import type {ViewCtrl} from "tim/document/viewctrl";
 import {GenericPluginMarkup, Info, withDefault} from "tim/plugin/attributes";
@@ -8,7 +14,11 @@ import {AngularPluginBase} from "tim/plugin/angular-plugin-base.directive";
 import {vctrlInstance} from "tim/document/viewctrlinstance";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {PurifyModule} from "tim/util/purify.module";
-import {provideHttpClient, withInterceptorsFromDi} from "@angular/common/http";
+import {
+    provideHttpClient,
+    withInterceptorsFromDi,
+    withXhr,
+} from "@angular/common/http";
 import {FormsModule} from "@angular/forms";
 import {registerPlugin} from "tim/plugin/pluginRegistry";
 import type {AnswerBrowserComponent} from "tim/answer/answer-browser.component";
@@ -120,6 +130,7 @@ interface CustomFrame<T extends Window> extends HTMLIFrameElement {
           }
         </div>
         `,
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false,
 })
 export class GeogebraComponent extends AngularPluginBase<
@@ -285,7 +296,7 @@ export class GeogebraComponent extends AngularPluginBase<
 @NgModule({
     declarations: [GeogebraComponent],
     imports: [CommonModule, FormsModule, TimUtilityModule, PurifyModule],
-    providers: [provideHttpClient(withInterceptorsFromDi())],
+    providers: [provideHttpClient(withXhr(), withInterceptorsFromDi())],
 })
 export class GeogebraModule implements DoBootstrap {
     ngDoBootstrap(appRef: ApplicationRef) {}

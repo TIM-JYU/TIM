@@ -1,4 +1,4 @@
-import {Component, NgModule} from "@angular/core";
+import {Component, NgModule, ChangeDetectionStrategy} from "@angular/core";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {CommonModule} from "@angular/common";
 import {DialogModule} from "tim/ui/angulardialog/dialog.module";
@@ -52,6 +52,7 @@ import {Users} from "tim/user/userService";
         </tim-dialog-frame>
         `,
     styleUrls: ["tos-dialog.component.scss"],
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false,
 })
 export class TosDialogComponent extends AngularDialogComponent<

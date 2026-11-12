@@ -1,4 +1,4 @@
-import {Component} from "@angular/core";
+import {Component, ChangeDetectionStrategy} from "@angular/core";
 
 @Component({
     selector: "bookmarks-tab",
@@ -7,6 +7,7 @@ import {Component} from "@angular/core";
         <h5 i18n>Bookmarks</h5>
         <bookmarks-list></bookmarks-list>
     `,
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false,
 })
 export class BookmarksTabComponent {

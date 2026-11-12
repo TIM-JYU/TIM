@@ -1,5 +1,9 @@
 import {NgModule} from "@angular/core";
-import {provideHttpClient, withInterceptorsFromDi} from "@angular/common/http";
+import {
+    provideHttpClient,
+    withInterceptorsFromDi,
+    withXhr,
+} from "@angular/common/http";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {FormsModule} from "@angular/forms";
 import {NotificationOptionsComponent} from "tim/item/manage/notification-options.component";
@@ -18,6 +22,6 @@ import {RightsEditorComponent} from "tim/item/rights-editor.component";
         TooltipModule,
         DatetimePickerModule,
     ],
-    providers: [provideHttpClient(withInterceptorsFromDi())],
+    providers: [provideHttpClient(withXhr(), withInterceptorsFromDi())],
 })
 export class TimManageModule {}

@@ -1,5 +1,5 @@
 import type {OnInit} from "@angular/core";
-import {Component, Input} from "@angular/core";
+import {Component, Input, ChangeDetectionStrategy} from "@angular/core";
 import {showMessageDialog} from "tim/ui/showMessageDialog";
 import {HttpClient} from "@angular/common/http";
 import type {IFolder} from "tim/item/IItem";
@@ -129,7 +129,7 @@ const COPY_HELP_ADDRESS: string = "/view/tim/TIM-ohjeet#hakemistonkopionti";
               @if (copyingFolder == 'finished') {
                 <span>
                   <ng-container i18n>Folder </ng-container>{{ currentItem.name }}<ng-container i18n> copied to </ng-container>
-                  <a href="/manage/{{ newFolder?.path }}" [innerText]="newFolder?.path"></a>.
+                  <a href="/manage/{{ newFolder?.path }}" [innerText]="$safeNavigationMigration(newFolder?.path)"></a>.
                 </span>
               }
               @if (copyErrors) {
@@ -145,6 +145,7 @@ const COPY_HELP_ADDRESS: string = "/view/tim/TIM-ohjeet#hakemistonkopionti";
             </form>
         `,
     styleUrls: ["copy-folder.component.scss"],
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false,
 })
 export class CopyFolderComponent implements OnInit {

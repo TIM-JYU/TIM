@@ -1,5 +1,5 @@
 import {AngularDialogComponent} from "tim/ui/angulardialog/angular-dialog-component.directive";
-import {Component, NgModule} from "@angular/core";
+import {Component, NgModule, ChangeDetectionStrategy} from "@angular/core";
 import {DialogModule} from "tim/ui/angulardialog/dialog.module";
 import type {AskParams, IShowAsk} from "tim/lecture/askQuestion";
 import {askQuestion, isReasking} from "tim/lecture/askQuestion";
@@ -66,6 +66,7 @@ export interface IQuestionPreviewDialogResult {
             </ng-container>
           </tim-dialog-frame>
         `,
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false,
 })
 export class QuestionPreviewDialogComponent extends AngularDialogComponent<

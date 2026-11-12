@@ -3,9 +3,15 @@ import {
     HttpClient,
     provideHttpClient,
     withInterceptorsFromDi,
+    withXhr,
 } from "@angular/common/http";
 import type {ApplicationRef, DoBootstrap} from "@angular/core";
-import {Component, NgModule, NgZone} from "@angular/core";
+import {
+    Component,
+    NgModule,
+    NgZone,
+    ChangeDetectionStrategy,
+} from "@angular/core";
 import moment from "moment";
 import {to2, toPromise} from "tim/util/utils";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
@@ -149,6 +155,7 @@ import {BrowserModule} from "@angular/platform-browser";
     styleUrls: [
         "../../../../node_modules/angular2-draggable/css/resizable.min.css",
     ],
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false,
 })
 export class LectureInfoComponent {
@@ -304,7 +311,7 @@ export class LectureInfoComponent {
             useClass: TimeStampToMomentConverter,
             multi: true,
         },
-        provideHttpClient(withInterceptorsFromDi()),
+        provideHttpClient(withXhr(), withInterceptorsFromDi()),
     ],
 })
 export class LectureInfoModule implements DoBootstrap {

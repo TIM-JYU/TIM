@@ -248,10 +248,10 @@ export class ServerSyncValues {
         this.inputs[name] = inp;
         input.servname = name;
         input.addEventListener("input", (e) =>
-            this.onChange(e as CustomChange)
+            this.onChange(e as unknown as CustomChange)
         );
         input.addEventListener("change", (e) =>
-            this.onChange(e as CustomChange)
+            this.onChange(e as unknown as CustomChange)
         );
         return inp;
     }

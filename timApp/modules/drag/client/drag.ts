@@ -7,6 +7,7 @@ import {
     HttpClient,
     provideHttpClient,
     withInterceptorsFromDi,
+    withXhr,
 } from "@angular/common/http";
 import {FormsModule} from "@angular/forms";
 import type {DndDropEvent, EffectAllowed} from "ngx-drag-drop";
@@ -17,6 +18,7 @@ import {
     NgModule,
     ChangeDetectorRef,
     ElementRef,
+    ChangeDetectionStrategy,
 } from "@angular/core";
 import {scrollBehaviourDragImageTranslateOverride} from "mobile-drag-drop/scroll-behaviour";
 import {SessionVerify} from "tim/util/session-verify.interceptor";
@@ -155,6 +157,7 @@ interface WordObject {
         }
         `,
     styleUrls: ["./drag.scss"],
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false,
 })
 export class DragComponent
@@ -408,7 +411,10 @@ export class DragComponent
         TooltipModule,
         TooltipIsOpenDirective,
     ],
-    providers: [SessionVerify, provideHttpClient(withInterceptorsFromDi())],
+    providers: [
+        SessionVerify,
+        provideHttpClient(withXhr(), withInterceptorsFromDi()),
+    ],
 })
 export class DragModule implements DoBootstrap {
     ngDoBootstrap(appRef: ApplicationRef): void {}

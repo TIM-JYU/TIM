@@ -1,5 +1,11 @@
 import type {OnChanges, OnInit} from "@angular/core";
-import {Component, EventEmitter, Input, Output} from "@angular/core";
+import {
+    Component,
+    EventEmitter,
+    Input,
+    Output,
+    ChangeDetectionStrategy,
+} from "@angular/core";
 import type humanizeDuration from "humanize-duration";
 import {formatString, secondsToShortTime, toPromise} from "tim/util/utils";
 import {Users} from "tim/user/userService";
@@ -19,6 +25,7 @@ const TICK_TENTH_SECOND = 100;
 @Component({
     selector: "tim-countdown",
     template: `{{timeLeftText}}`,
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false,
 })
 export class CountdownComponent implements OnInit, OnChanges {

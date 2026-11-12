@@ -9,12 +9,13 @@
  * @license MIT
  * @date 24.5.2022
  */
-import {Component, NgModule} from "@angular/core";
+import {Component, NgModule, ChangeDetectionStrategy} from "@angular/core";
 import {FormsModule} from "@angular/forms";
 import {
     HttpClient,
     provideHttpClient,
     withInterceptorsFromDi,
+    withXhr,
 } from "@angular/common/http";
 import {TooltipModule} from "ngx-bootstrap/tooltip";
 import {DialogModule} from "tim/ui/angulardialog/dialog.module";
@@ -352,6 +353,7 @@ import {PurifyModule} from "tim/util/purify.module";
                                                               </tim-dialog-frame>
         `,
     styleUrls: ["./calendar-event-dialog.component.scss"],
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false,
 })
 export class CalendarEventDialogComponent extends AngularDialogComponent<
@@ -928,6 +930,6 @@ export class CalendarEventDialogComponent extends AngularDialogComponent<
         TooltipModule,
         PurifyModule,
     ],
-    providers: [provideHttpClient(withInterceptorsFromDi())],
+    providers: [provideHttpClient(withXhr(), withInterceptorsFromDi())],
 })
 export class CalendarEventDialogModule {}

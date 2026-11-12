@@ -11,8 +11,18 @@ import type {
     DoBootstrap,
     OnInit,
 } from "@angular/core";
-import {Component, NgModule, ViewChild, ViewContainerRef} from "@angular/core";
-import {provideHttpClient, withInterceptorsFromDi} from "@angular/common/http";
+import {
+    Component,
+    NgModule,
+    ViewChild,
+    ViewContainerRef,
+    ChangeDetectionStrategy,
+} from "@angular/core";
+import {
+    provideHttpClient,
+    withInterceptorsFromDi,
+    withXhr,
+} from "@angular/common/http";
 import {FormsModule} from "@angular/forms";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {AngularPluginBase} from "tim/plugin/angular-plugin-base.directive";
@@ -62,6 +72,7 @@ const SymbolButtonFields = t.intersection([
         </div>
         `,
     styleUrls: ["./symbol-button-plugin.component.scss"],
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false,
 })
 export class SymbolButtonPluginComponent
@@ -203,7 +214,7 @@ export class SymbolButtonPluginComponent
         PurifyModule,
         EditorModule,
     ],
-    providers: [provideHttpClient(withInterceptorsFromDi())],
+    providers: [provideHttpClient(withXhr(), withInterceptorsFromDi())],
 })
 export class SymbolButtonPluginModule implements DoBootstrap {
     ngDoBootstrap(appRef: ApplicationRef) {}

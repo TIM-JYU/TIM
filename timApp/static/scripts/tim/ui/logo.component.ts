@@ -1,4 +1,4 @@
-import {Component} from "@angular/core";
+import {Component, ChangeDetectionStrategy} from "@angular/core";
 
 @Component({
     selector: "tim-logo",
@@ -7,6 +7,7 @@ import {Component} from "@angular/core";
              src="/static/images/tim-logo.svg"/>
     `,
     styleUrls: ["./logo.component.scss"],
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false,
 })
 export class LogoComponent {}

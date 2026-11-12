@@ -15,7 +15,7 @@
  * enabled. The size of the entire compiled worker is under 1kB which shouldn't cause any visible loading times.
  */
 
-import * as sanitizeHtml from "sanitize-html";
+import sanitizeHtml from "sanitize-html";
 
 interface PurifyData {
     row: number;

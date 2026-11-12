@@ -1,9 +1,17 @@
 import type {ApplicationRef, DoBootstrap} from "@angular/core";
-import {Component, Directive, ElementRef, Input, NgModule} from "@angular/core";
+import {
+    Component,
+    Directive,
+    ElementRef,
+    Input,
+    NgModule,
+    ChangeDetectionStrategy,
+} from "@angular/core";
 import {
     HttpClient,
     provideHttpClient,
     withInterceptorsFromDi,
+    withXhr,
 } from "@angular/common/http";
 import {FormsModule} from "@angular/forms";
 import {showMessageDialog} from "tim/ui/showMessageDialog";
@@ -130,6 +138,7 @@ export class MCQBase<State> implements PluginJson {
     </div>
   </div>
 `,
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false,
 })
 export class MMCQ extends MCQBase<null | boolean[]> {
@@ -252,6 +261,7 @@ export class MMCQ extends MCQBase<null | boolean[]> {
   </div>
 </div>
 `,
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false,
 })
 export class MCQ extends MCQBase<number | null> {
@@ -315,7 +325,7 @@ export class MCQ extends MCQBase<number | null> {
         AnswerSheetModule,
         PurifyModule,
     ],
-    providers: [provideHttpClient(withInterceptorsFromDi())],
+    providers: [provideHttpClient(withXhr(), withInterceptorsFromDi())],
 })
 export class MCQModule implements DoBootstrap {
     ngDoBootstrap(appRef: ApplicationRef) {}

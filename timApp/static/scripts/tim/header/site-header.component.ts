@@ -1,5 +1,5 @@
 import type {OnInit} from "@angular/core";
-import {Component} from "@angular/core";
+import {Component, ChangeDetectionStrategy} from "@angular/core";
 import {getVisibilityVars} from "tim/timRoot";
 import {getViewName, TimStorage} from "tim/util/utils";
 import {getAvailableViews} from "tim/header/utils";
@@ -50,6 +50,7 @@ import {isDocumentGlobals, someglobals} from "tim/util/globals";
         }
         `,
     styleUrls: ["./site-header.component.scss"],
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false,
 })
 export class SiteHeaderComponent implements OnInit {

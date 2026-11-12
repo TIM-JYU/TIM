@@ -1,5 +1,10 @@
 /* eslint no-underscore-dangle: ["error", { "allow": ["hide_"] }] */
-import {ChangeDetectorRef, Component, ElementRef} from "@angular/core";
+import {
+    ChangeDetectorRef,
+    Component,
+    ElementRef,
+    ChangeDetectionStrategy,
+} from "@angular/core";
 import {HttpClient, HttpHeaders} from "@angular/common/http";
 import {DomSanitizer} from "@angular/platform-browser";
 import {defaultTimeout, toPromise} from "tim/util/utils";
@@ -63,6 +68,7 @@ import {CsController} from "./csPlugin";
             <p class="footer" [innerHTML]="markup.footer"></p>
           }
         </div>`,
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false,
 })
 export class GitRegComponent extends CsController {

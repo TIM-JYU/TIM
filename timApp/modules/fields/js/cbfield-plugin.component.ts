@@ -3,7 +3,13 @@
  */
 import * as t from "io-ts";
 import type {ApplicationRef, DoBootstrap} from "@angular/core";
-import {Component, ElementRef, NgModule, NgZone} from "@angular/core";
+import {
+    Component,
+    ElementRef,
+    NgModule,
+    NgZone,
+    ChangeDetectionStrategy,
+} from "@angular/core";
 import type {ISetAnswerResult, ITimComponent} from "tim/document/viewctrl";
 import {ChangeType, FormModeOption} from "tim/document/viewctrl";
 import {
@@ -19,6 +25,7 @@ import {
     HttpClient,
     provideHttpClient,
     withInterceptorsFromDi,
+    withXhr,
 } from "@angular/common/http";
 import {FormsModule} from "@angular/forms";
 import {TooltipModule} from "ngx-bootstrap/tooltip";
@@ -96,6 +103,7 @@ const CbfieldAll = t.intersection([
 </div>
 `,
     styleUrls: ["./cbfield-plugin.component.scss"],
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false,
 })
 export class CbfieldPluginComponent
@@ -421,7 +429,7 @@ export class CbfieldPluginComponent
         TooltipIsOpenDirective,
         PurifyModule,
     ],
-    providers: [provideHttpClient(withInterceptorsFromDi())],
+    providers: [provideHttpClient(withXhr(), withInterceptorsFromDi())],
 })
 export class CbfieldModule implements DoBootstrap {
     ngDoBootstrap(appRef: ApplicationRef) {}

@@ -6,6 +6,7 @@ import {
     Input,
     NgModule,
     Output,
+    ChangeDetectionStrategy,
 } from "@angular/core";
 import {ParCompiler} from "tim/editor/parCompiler";
 import type {
@@ -20,7 +21,11 @@ import type {
 } from "tim/lecture/lecturetypes";
 import {RowCodec} from "tim/lecture/lecturetypes";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
-import {provideHttpClient, withInterceptorsFromDi} from "@angular/common/http";
+import {
+    provideHttpClient,
+    withInterceptorsFromDi,
+    withXhr,
+} from "@angular/common/http";
 import {FormsModule} from "@angular/forms";
 import {PurifyModule} from "tim/util/purify.module";
 import {HTMLSanitizeModule} from "tim/util/htmlsanitize.module";
@@ -326,6 +331,7 @@ type MatrixElement = string | number;
             </form>
           }
         `,
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false,
 })
 export class AnswerSheetComponent implements OnChanges {
@@ -685,6 +691,6 @@ export class AnswerSheetComponent implements OnChanges {
         HTMLSanitizeModule,
         PurifyModule,
     ],
-    providers: [provideHttpClient(withInterceptorsFromDi())],
+    providers: [provideHttpClient(withXhr(), withInterceptorsFromDi())],
 })
 export class AnswerSheetModule {}

@@ -4,7 +4,7 @@ import type {
     DoCheck,
     OnInit,
 } from "@angular/core";
-import {Component, ViewChild} from "@angular/core";
+import {Component, ViewChild, ChangeDetectionStrategy} from "@angular/core";
 import type {TabDirective} from "ngx-bootstrap/tabs";
 import {TabsetComponent} from "ngx-bootstrap/tabs";
 import type {TabEntry} from "tim/sidebarmenu/menu-tab.directive";
@@ -76,6 +76,7 @@ const sizeBreakpoint = "md";
           </div>
         }
         `,
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false,
 })
 export class SidebarMenuComponent

@@ -1,7 +1,7 @@
 import {toPromise} from "tim/util/utils";
 import {IItem} from "tim/item/IItem";
 import type {OnInit} from "@angular/core";
-import {Component, Input} from "@angular/core";
+import {Component, Input, ChangeDetectionStrategy} from "@angular/core";
 import {HttpClient} from "@angular/common/http";
 import {showMessageDialog} from "tim/ui/showMessageDialog";
 import {documentglobals} from "tim/util/globals";
@@ -28,6 +28,7 @@ import {documentglobals} from "tim/util/globals";
           </bootstrap-panel>
         }
         `,
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false,
 })
 export class TemplateListComponent implements OnInit {

@@ -1,10 +1,11 @@
 import type {ApplicationRef, DoBootstrap} from "@angular/core";
-import {Component, NgModule} from "@angular/core";
+import {Component, NgModule, ChangeDetectionStrategy} from "@angular/core";
 import {toPromise} from "tim/util/utils";
 import {
     HttpClient,
     provideHttpClient,
     withInterceptorsFromDi,
+    withXhr,
 } from "@angular/common/http";
 import {registerModuleServerComponents} from "tim/serverComponents";
 import {documentglobals} from "tim/util/globals";
@@ -45,6 +46,7 @@ import {BrowserModule} from "@angular/platform-browser";
     </div>
     `,
     styleUrls: ["./style-preview.component.scss"],
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false,
 })
 export class StylePreviewComponent {
@@ -126,7 +128,7 @@ export class StylePreviewComponent {
     declarations: [StylePreviewComponent],
     exports: [StylePreviewComponent],
     imports: [BrowserModule, TimUtilityModule],
-    providers: [provideHttpClient(withInterceptorsFromDi())],
+    providers: [provideHttpClient(withXhr(), withInterceptorsFromDi())],
 })
 export class StylePreviewModule implements DoBootstrap {
     ngDoBootstrap(appRef: ApplicationRef): void {}

@@ -1,5 +1,11 @@
 import type {AfterViewInit, OnInit} from "@angular/core";
-import {Component, ElementRef, Input, ViewChild} from "@angular/core";
+import {
+    Component,
+    ElementRef,
+    Input,
+    ViewChild,
+    ChangeDetectionStrategy,
+} from "@angular/core";
 import DOMPurify from "dompurify";
 import type {Changes} from "tim/util/angularchanges";
 import {TimDefer} from "tim/util/timdefer";
@@ -13,6 +19,7 @@ import type setData from "../../../../../modules/cs/static/dfa/vars.js";
 </div>
     `,
     styleUrls: ["./variables.component.scss"],
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false,
 })
 export class VariablesComponent implements OnInit, AfterViewInit {

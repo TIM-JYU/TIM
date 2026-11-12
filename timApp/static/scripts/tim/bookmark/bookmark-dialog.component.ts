@@ -1,5 +1,5 @@
 import {AngularDialogComponent} from "tim/ui/angulardialog/angular-dialog-component.directive";
-import {Component, NgModule} from "@angular/core";
+import {Component, NgModule, ChangeDetectionStrategy} from "@angular/core";
 import type {IBookmark} from "tim/bookmark/bookmark.service";
 import {DialogModule} from "tim/ui/angulardialog/dialog.module";
 import {FormsModule} from "@angular/forms";
@@ -76,6 +76,7 @@ import {CommonModule} from "@angular/common";
           </ng-container>
         </tim-dialog-frame>
         `,
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false,
 })
 export class BookmarkDialogComponent extends AngularDialogComponent<

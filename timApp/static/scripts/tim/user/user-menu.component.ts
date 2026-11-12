@@ -1,5 +1,5 @@
 import type {OnInit} from "@angular/core";
-import {Component} from "@angular/core";
+import {Component, ChangeDetectionStrategy} from "@angular/core";
 import type {IVisibilityVars} from "tim/timRoot";
 import {getVisibilityVars} from "tim/timRoot";
 import {showLoginDialog} from "tim/user/showLoginDialog";
@@ -113,6 +113,7 @@ import {HttpClient} from "@angular/common/http";
         </div>
         `,
     styleUrls: ["./user-menu.component.scss"],
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false,
 })
 export class UserMenuComponent implements OnInit {

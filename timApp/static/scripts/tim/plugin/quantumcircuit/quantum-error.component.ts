@@ -1,5 +1,5 @@
 import type {OnChanges, SimpleChanges} from "@angular/core";
-import {Component, Input} from "@angular/core";
+import {Component, Input, ChangeDetectionStrategy} from "@angular/core";
 import {equal} from "mathjs";
 import {IServerError} from "tim/plugin/quantumcircuit/quantum-circuit.component";
 import {QuantumCircuitSimulator} from "tim/plugin/quantumcircuit/quantum-simulation";
@@ -146,6 +146,7 @@ interface AnswerIncorrectRow {
         </div>
         `,
     styleUrls: ["quantum-error.component.scss"],
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false,
 })
 export class QuantumErrorComponent implements OnChanges {

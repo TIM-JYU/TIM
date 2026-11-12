@@ -7,7 +7,7 @@
 
 import type {PipeTransform} from "@angular/core";
 import {Pipe} from "@angular/core";
-import * as sanitizeHtml from "sanitize-html";
+import sanitizeHtml from "sanitize-html";
 import {DomSanitizer} from "@angular/platform-browser";
 
 @Pipe({

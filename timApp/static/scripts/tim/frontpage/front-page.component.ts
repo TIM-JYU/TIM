@@ -1,4 +1,4 @@
-import {Component} from "@angular/core";
+import {Component, ChangeDetectionStrategy} from "@angular/core";
 import type {IBookmarkGroup} from "tim/bookmark/bookmark.service";
 import {showLoginDialog} from "tim/user/showLoginDialog";
 import {showCourseListDialog} from "tim/document/course/showCourseDialog";
@@ -135,6 +135,7 @@ import {getVisibilityVars} from "tim/timRoot";
           </div>
         }
         `,
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false,
 })
 export class FrontPageComponent {

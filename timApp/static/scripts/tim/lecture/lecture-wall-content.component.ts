@@ -1,4 +1,9 @@
-import {Component, Input, NgModule} from "@angular/core";
+import {
+    Component,
+    Input,
+    NgModule,
+    ChangeDetectionStrategy,
+} from "@angular/core";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import type {ILectureMessage} from "tim/lecture/lecturetypes";
 import {CommonModule} from "@angular/common";
@@ -23,6 +28,7 @@ import {CommonModule} from "@angular/common";
           }
         </ul>
         `,
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false,
 })
 export class LectureWallContentComponent {

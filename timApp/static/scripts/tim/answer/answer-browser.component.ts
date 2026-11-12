@@ -13,6 +13,7 @@ import {
     Input,
     NgModule,
     ViewChild,
+    ChangeDetectionStrategy,
 } from "@angular/core";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {timLogTime} from "tim/util/timTiming";
@@ -69,6 +70,7 @@ import {
     HttpClient,
     provideHttpClient,
     withInterceptorsFromDi,
+    withXhr,
 } from "@angular/common/http";
 import type {PeerReview} from "tim/velp/velptypes";
 
@@ -159,6 +161,7 @@ const DEFAULT_MARKUP_CONFIG: IAnswerBrowserSettings = {
     selector: "answerbrowser",
     templateUrl: "../../../templates/answerBrowser.html",
     styles: [],
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false,
 })
 export class AnswerBrowserComponent
@@ -2181,7 +2184,7 @@ export class AnswerBrowserComponent
         DrawCanvasModule,
         PurifyModule,
     ],
-    providers: [provideHttpClient(withInterceptorsFromDi())],
+    providers: [provideHttpClient(withXhr(), withInterceptorsFromDi())],
 })
 export class AnswerBrowserModule implements DoBootstrap {
     ngDoBootstrap(appRef: ApplicationRef) {}

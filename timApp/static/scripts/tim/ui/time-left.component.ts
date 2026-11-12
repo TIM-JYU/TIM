@@ -1,5 +1,5 @@
 import type {OnChanges, OnInit, SimpleChanges} from "@angular/core";
-import {Component, Input} from "@angular/core";
+import {Component, Input, ChangeDetectionStrategy} from "@angular/core";
 import {documentglobals} from "tim/util/globals";
 import type {ITimeLeftSettings} from "tim/document/IDocSettings";
 import type {Moment} from "moment";
@@ -37,6 +37,7 @@ const TIME_LEFT_DEFAULTS: ITimeLeftSettings = {
         }
         `,
     styleUrls: ["./time-left.component.scss"],
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false,
 })
 export class TimeLeftComponent implements OnChanges, OnInit {

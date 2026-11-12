@@ -5,6 +5,7 @@ import {
     HostListener,
     NgModule,
     ViewChild,
+    ChangeDetectionStrategy,
 } from "@angular/core";
 import {DialogModule} from "tim/ui/angulardialog/dialog.module";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
@@ -167,6 +168,7 @@ export type InputDialogParams<T> = {
         </tim-dialog-frame>
         `,
     styleUrls: ["./input-dialog.component.scss"],
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false,
 })
 export class InputDialogComponent<T> extends AngularDialogComponent<

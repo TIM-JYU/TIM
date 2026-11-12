@@ -3,11 +3,20 @@
  */
 import type * as t from "io-ts";
 import type {ApplicationRef, DoBootstrap} from "@angular/core";
-import {Component, Input, NgModule} from "@angular/core";
+import {
+    Component,
+    Input,
+    NgModule,
+    ChangeDetectionStrategy,
+} from "@angular/core";
 import type {IJsRunner} from "tim/document/viewctrl";
 import {RegexOption} from "tim/document/viewctrl";
 import {copyToClipboard} from "tim/util/utils";
-import {provideHttpClient, withInterceptorsFromDi} from "@angular/common/http";
+import {
+    provideHttpClient,
+    withInterceptorsFromDi,
+    withXhr,
+} from "@angular/common/http";
 import {FormsModule} from "@angular/forms";
 import {TooltipModule} from "ngx-bootstrap/tooltip";
 import {AngularPluginBase} from "tim/plugin/angular-plugin-base.directive";
@@ -109,6 +118,7 @@ import {
     </div>
   }
 `,
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false,
 })
 export class JsRunnerPluginComponent
@@ -409,6 +419,7 @@ export class JsRunnerPluginComponent
   }
 </tim-alert>
 `,
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false,
 })
 export class JsRunnerErrorComponent {
@@ -429,7 +440,7 @@ export class JsRunnerErrorComponent {
         PurifyModule,
         TooltipModule,
     ],
-    providers: [provideHttpClient(withInterceptorsFromDi())],
+    providers: [provideHttpClient(withXhr(), withInterceptorsFromDi())],
 })
 export class JsRunnerModule implements DoBootstrap {
     ngDoBootstrap(_appRef: ApplicationRef) {}

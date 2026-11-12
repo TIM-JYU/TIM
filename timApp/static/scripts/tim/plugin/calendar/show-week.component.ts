@@ -9,7 +9,13 @@
  * @license MIT
  * @date 24.5.2022
  */
-import {Component, EventEmitter, Input, Output} from "@angular/core";
+import {
+    Component,
+    EventEmitter,
+    Input,
+    Output,
+    ChangeDetectionStrategy,
+} from "@angular/core";
 import {CalendarView} from "angular-calendar";
 import {getISOWeek} from "date-fns";
 
@@ -20,6 +26,7 @@ import {getISOWeek} from "date-fns";
         <span i18n > Week: {{getWeekNumberFromDate(viewDate)}} </span>
         </ng-container>`,
     styleUrls: ["calendar.component.scss"],
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false,
 })
 export class ShowWeekComponent {

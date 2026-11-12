@@ -1,5 +1,10 @@
 import type {OnInit} from "@angular/core";
-import {Component, Input, ViewEncapsulation} from "@angular/core";
+import {
+    Component,
+    Input,
+    ViewEncapsulation,
+    ChangeDetectionStrategy,
+} from "@angular/core";
 import {getViewName} from "tim/util/utils";
 import type {SiblingMessages} from "tim/messaging/archive/archived-message-state.service";
 import {ArchivedMessageStateService} from "tim/messaging/archive/archived-message-state.service";
@@ -22,6 +27,7 @@ import {ArchivedMessageStateService} from "tim/messaging/archive/archived-messag
         `,
     styleUrls: ["./tim-archive-footer.component.scss"],
     encapsulation: ViewEncapsulation.None,
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false,
 })
 export class TimArchiveFooterComponent implements OnInit {

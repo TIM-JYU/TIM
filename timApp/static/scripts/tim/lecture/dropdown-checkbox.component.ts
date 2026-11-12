@@ -1,4 +1,10 @@
-import {Component, EventEmitter, Input, Output} from "@angular/core";
+import {
+    Component,
+    EventEmitter,
+    Input,
+    Output,
+    ChangeDetectionStrategy,
+} from "@angular/core";
 
 @Component({
     selector: "tim-dropdown-checkbox",
@@ -10,6 +16,7 @@ import {Component, EventEmitter, Input, Output} from "@angular/core";
         </a>
         </li>
     `,
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false,
 })
 export class DropdownCheckboxComponent {

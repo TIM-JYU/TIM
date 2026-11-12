@@ -14,6 +14,7 @@ import {
     QueryList,
     ViewChild,
     ViewChildren,
+    ChangeDetectionStrategy,
 } from "@angular/core";
 import type {SafeResourceUrl} from "@angular/platform-browser";
 import {DomSanitizer} from "@angular/platform-browser";
@@ -1112,6 +1113,7 @@ const MAX_CANVAS_AREA = 8000000;
         </div>
         `,
     styleUrls: ["./draw-canvas.component.scss"],
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false,
 })
 export class DrawCanvasComponent

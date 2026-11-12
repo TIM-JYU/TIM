@@ -1,8 +1,12 @@
 import * as t from "io-ts";
 import type {ApplicationRef, DoBootstrap} from "@angular/core";
-import {Component, NgModule} from "@angular/core";
+import {Component, NgModule, ChangeDetectionStrategy} from "@angular/core";
 import {CommonModule} from "@angular/common";
-import {provideHttpClient, withInterceptorsFromDi} from "@angular/common/http";
+import {
+    provideHttpClient,
+    withInterceptorsFromDi,
+    withXhr,
+} from "@angular/common/http";
 import {FormsModule} from "@angular/forms";
 import {PurifyModule} from "tim/util/purify.module";
 import {
@@ -78,7 +82,7 @@ const PluginFields = t.intersection([
                   </span>
                   <h3>{{ lastStep?.name }}</h3>
                   @if (lastStep?.description) {
-                    <p [innerHTML]="lastStep?.description | purify"></p>
+                    <p [innerHTML]="$safeNavigationMigration(lastStep?.description) | purify"></p>
                   }
                 </div>
               </div>
@@ -88,6 +92,7 @@ const PluginFields = t.intersection([
         </div>
         `,
     styleUrls: ["./steps.component.scss"],
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false,
 })
 export class StepsPluginComponent extends AngularPluginBase<
@@ -142,7 +147,7 @@ export class StepsPluginComponent extends AngularPluginBase<
 @NgModule({
     declarations: [StepsPluginComponent],
     imports: [CommonModule, FormsModule, PurifyModule],
-    providers: [provideHttpClient(withInterceptorsFromDi())],
+    providers: [provideHttpClient(withXhr(), withInterceptorsFromDi())],
 })
 export class StepsPluginModule implements DoBootstrap {
     ngDoBootstrap(appRef: ApplicationRef): void {}

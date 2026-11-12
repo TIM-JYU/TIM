@@ -1,6 +1,10 @@
 import type {ApplicationRef, DoBootstrap} from "@angular/core";
-import {Component, NgModule} from "@angular/core";
-import {provideHttpClient, withInterceptorsFromDi} from "@angular/common/http";
+import {Component, NgModule, ChangeDetectionStrategy} from "@angular/core";
+import {
+    provideHttpClient,
+    withInterceptorsFromDi,
+    withXhr,
+} from "@angular/common/http";
 import {FormsModule} from "@angular/forms";
 import * as t from "io-ts";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
@@ -98,6 +102,7 @@ type JoinGroupResult = {ok: boolean; result: Record<string, string>};
         }
         `,
     styleUrls: ["./group-join.component.scss"],
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false,
 })
 export class GroupJoinComponent extends AngularPluginBase<
@@ -266,7 +271,7 @@ export class GroupJoinComponent extends AngularPluginBase<
 @NgModule({
     declarations: [GroupJoinComponent],
     imports: [CommonModule, FormsModule, TimUtilityModule],
-    providers: [provideHttpClient(withInterceptorsFromDi())],
+    providers: [provideHttpClient(withXhr(), withInterceptorsFromDi())],
 })
 export class GroupJoinModule implements DoBootstrap {
     ngDoBootstrap(appRef: ApplicationRef): void {}

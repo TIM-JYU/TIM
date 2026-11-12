@@ -1,10 +1,18 @@
 import type {OnChanges, OnInit, SimpleChanges} from "@angular/core";
-import {Component, EventEmitter, Input, NgModule, Output} from "@angular/core";
+import {
+    Component,
+    EventEmitter,
+    Input,
+    NgModule,
+    Output,
+    ChangeDetectionStrategy,
+} from "@angular/core";
 import {FormsModule} from "@angular/forms";
 import {
     HttpClient,
     provideHttpClient,
     withInterceptorsFromDi,
+    withXhr,
 } from "@angular/common/http";
 import {AngularDialogComponent} from "tim/ui/angulardialog/angular-dialog-component.directive";
 import {DialogModule} from "tim/ui/angulardialog/dialog.module";
@@ -69,6 +77,7 @@ interface GroupInfo {
         </div>
         `,
     styleUrls: ["./active-group-lock-dialog.component.scss"],
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false,
 })
 export class GroupSelectListComponent implements OnInit, OnChanges {
@@ -234,6 +243,7 @@ export class GroupSelectListComponent implements OnInit, OnChanges {
         </tim-dialog-frame>
         `,
     styleUrls: ["./active-group-lock-dialog.component.scss"],
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false,
 })
 export class ActiveGroupLockDialogComponent extends AngularDialogComponent<
@@ -365,6 +375,6 @@ export class ActiveGroupLockDialogComponent extends AngularDialogComponent<
 @NgModule({
     declarations: [ActiveGroupLockDialogComponent, GroupSelectListComponent],
     imports: [CommonModule, DialogModule, FormsModule, TimUtilityModule],
-    providers: [provideHttpClient(withInterceptorsFromDi())],
+    providers: [provideHttpClient(withXhr(), withInterceptorsFromDi())],
 })
 export class ActiveGroupLockDialogModule {}

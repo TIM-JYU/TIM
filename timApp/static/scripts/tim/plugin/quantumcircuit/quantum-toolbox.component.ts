@@ -1,5 +1,11 @@
 import type {OnChanges, OnInit} from "@angular/core";
-import {Component, EventEmitter, Input, Output} from "@angular/core";
+import {
+    Component,
+    EventEmitter,
+    Input,
+    Output,
+    ChangeDetectionStrategy,
+} from "@angular/core";
 import type {TableCellData} from "tim/plugin/quantumcircuit/active-gate";
 import {
     CircuitActiveGateInfo,
@@ -72,6 +78,7 @@ import {
           </div>
         `,
     styleUrls: ["./quantum-toolbox.component.scss"],
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false,
 })
 export class QuantumToolboxComponent implements OnInit, OnChanges {

@@ -15,6 +15,7 @@ import {
     Input,
     Output,
     ViewChild,
+    ChangeDetectionStrategy,
 } from "@angular/core";
 import type {
     IMathQuill,
@@ -110,6 +111,7 @@ const ERROR_MESSAGE_DELAY = 1000;
         </div>
         `,
     styleUrls: ["./formula-field.component.scss"],
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false,
 })
 export class FormulaFieldComponent implements AfterViewInit, OnDestroy {

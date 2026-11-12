@@ -1,5 +1,5 @@
 /* eslint no-underscore-dangle: ["error", { "allow": ["type_", "src_"] }] */
-import {Component, Input} from "@angular/core";
+import {Component, Input, ChangeDetectionStrategy} from "@angular/core";
 import {OrderedSet} from "./set";
 
 class Notification {
@@ -14,6 +14,7 @@ class Notification {
         @for (notif of notifications; track notif) {
           <p>{{notif.content}}</p>
         }`,
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false,
 })
 export class NotificationComponent {

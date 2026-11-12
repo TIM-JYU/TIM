@@ -1,4 +1,4 @@
-import {Component} from "@angular/core";
+import {Component, ChangeDetectionStrategy} from "@angular/core";
 
 @Component({
     selector: "tim-plugin-header",
@@ -8,6 +8,7 @@ import {Component} from "@angular/core";
         </h4>
     `,
     styleUrls: ["./plugin-header.component.scss"],
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false,
 })
 export class PluginHeaderComponent {}

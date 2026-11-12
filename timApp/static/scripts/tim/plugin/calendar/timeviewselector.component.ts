@@ -10,7 +10,13 @@
  * @license MIT
  * @date 24.5.2022
  */
-import {Component, EventEmitter, Input, Output} from "@angular/core";
+import {
+    Component,
+    EventEmitter,
+    Input,
+    Output,
+    ChangeDetectionStrategy,
+} from "@angular/core";
 
 export const TIME_VIEW_SLOT_SIZES: number[] = [15, 20, 30, 60, 120];
 export const TIME_VIEW_MORNING_HOURS: number[] = new Array(12)
@@ -44,6 +50,7 @@ export const TIME_VIEW_EVENING_HOURS: number[] = TIME_VIEW_MORNING_HOURS.map(
           </select>
         </ng-container>`,
     styleUrls: ["calendar.component.scss"],
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false,
 })
 export class TimeViewSelectorComponent {

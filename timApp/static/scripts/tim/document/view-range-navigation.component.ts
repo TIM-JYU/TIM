@@ -3,7 +3,7 @@
  * Only shown when view range is active.
  */
 
-import {Component} from "@angular/core";
+import {Component, ChangeDetectionStrategy} from "@angular/core";
 import {vctrlInstance} from "tim/document/viewctrlinstance";
 import {showViewRangeEditDialog} from "tim/document/showViewRangeEditDialog";
 import type {ViewCtrl} from "tim/document/viewctrl";
@@ -38,6 +38,7 @@ import {partitionDocument} from "tim/document/viewRangeInfo";
             </div>
           }
         `,
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false,
 })
 export class ViewRangeNavigationComponent {

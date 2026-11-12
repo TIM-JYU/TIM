@@ -1,4 +1,4 @@
-import {Component} from "@angular/core";
+import {Component, ChangeDetectionStrategy} from "@angular/core";
 
 @Component({
     selector: "tim-dialog",
@@ -16,6 +16,7 @@ import {Component} from "@angular/core";
         </div>
     `,
     styleUrls: ["./dialog.component.scss"],
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false,
 })
 export class DialogComponent {}

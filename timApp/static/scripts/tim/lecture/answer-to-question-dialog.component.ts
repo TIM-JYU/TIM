@@ -1,6 +1,11 @@
 import {AngularDialogComponent} from "tim/ui/angulardialog/angular-dialog-component.directive";
 import type {OnDestroy} from "@angular/core";
-import {Component, NgModule, NgZone} from "@angular/core";
+import {
+    Component,
+    NgModule,
+    NgZone,
+    ChangeDetectionStrategy,
+} from "@angular/core";
 import deepEqual from "deep-equal";
 import {HttpClient} from "@angular/common/http";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
@@ -137,6 +142,7 @@ export type IAnswerQuestionResult =
           </ng-container>
         </tim-dialog-frame>
         `,
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false,
 })
 export class AnswerToQuestionDialogComponent

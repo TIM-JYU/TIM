@@ -1,5 +1,5 @@
 /* eslint no-underscore-dangle: ["error", { "allow": ["content_"] }] */
-import {EventEmitter} from "@angular/core";
+import {EventEmitter, ChangeDetectionStrategy} from "@angular/core";
 import {Output} from "@angular/core";
 import type {SimpleChanges} from "@angular/core";
 import {ElementRef, ViewChild, Component, Input} from "@angular/core";
@@ -9,6 +9,7 @@ import type {IEditor} from "./editor";
 @Component({
     selector: "cs-parsons-editor",
     template: `<div #area class="no-popup-menu"></div>`,
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false,
 })
 export class ParsonsEditorComponent implements IEditor {

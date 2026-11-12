@@ -1,8 +1,15 @@
-import {Component, ElementRef, NgModule, ViewChild} from "@angular/core";
+import {
+    Component,
+    ElementRef,
+    NgModule,
+    ViewChild,
+    ChangeDetectionStrategy,
+} from "@angular/core";
 import {
     HttpClient,
     provideHttpClient,
     withInterceptorsFromDi,
+    withXhr,
 } from "@angular/common/http";
 import {BrowserQRCodeSvgWriter} from "@zxing/browser";
 import {
@@ -64,6 +71,7 @@ const QR_CODE_SIZE = 350;
         </tim-dialog-frame>
         `,
     styleUrls: ["./session-check-dialog.component.scss"],
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false,
 })
 export class SessionCheckDialogComponent extends AngularDialogComponent<
@@ -131,6 +139,6 @@ export class SessionCheckDialogComponent extends AngularDialogComponent<
 @NgModule({
     declarations: [SessionCheckDialogComponent],
     imports: [CommonModule, TimUtilityModule, DialogModule],
-    providers: [provideHttpClient(withInterceptorsFromDi())],
+    providers: [provideHttpClient(withXhr(), withInterceptorsFromDi())],
 })
 export class SessionCheckDialogModule {}

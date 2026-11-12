@@ -1,5 +1,5 @@
 import type {DoCheck, OnInit} from "@angular/core";
-import {Component} from "@angular/core";
+import {Component, ChangeDetectionStrategy} from "@angular/core";
 import type {NgForm} from "@angular/forms";
 import {HttpClient} from "@angular/common/http";
 import * as t from "io-ts";
@@ -52,6 +52,7 @@ function errorText(e: AngularError) {
     // The layout relies on the whitespace between the inline elements.
     preserveWhitespaces: true,
     templateUrl: "./velp-selection.component.html",
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false,
 })
 export class VelpSelectionComponent implements OnInit, DoCheck {

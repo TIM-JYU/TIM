@@ -1,7 +1,12 @@
 import $ from "jquery";
 import {refreshUI} from "tim/util/refresh";
 import {AngularDialogComponent} from "tim/ui/angulardialog/angular-dialog-component.directive";
-import {Component, NgModule, NgZone} from "@angular/core";
+import {
+    Component,
+    NgModule,
+    NgZone,
+    ChangeDetectionStrategy,
+} from "@angular/core";
 import {watchEditMode} from "tim/document/editing/editmode";
 import {DialogModule} from "tim/ui/angulardialog/dialog.module";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
@@ -9,6 +14,7 @@ import {
     HttpClient,
     provideHttpClient,
     withInterceptorsFromDi,
+    withXhr,
 } from "@angular/common/http";
 import {PurifyModule} from "tim/util/purify.module";
 import type {HelpPar} from "tim/document/structure/helpPar";
@@ -100,6 +106,7 @@ enum RefStyle {
           </ng-container>
         </tim-dialog-frame>
         `,
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false,
 })
 export class PopupMenuDialogComponent extends AngularDialogComponent<
@@ -294,6 +301,6 @@ export class PopupMenuDialogComponent extends AngularDialogComponent<
 @NgModule({
     declarations: [PopupMenuDialogComponent],
     imports: [CommonModule, DialogModule, TimUtilityModule, PurifyModule],
-    providers: [provideHttpClient(withInterceptorsFromDi())],
+    providers: [provideHttpClient(withXhr(), withInterceptorsFromDi())],
 })
 export class PopupMenuDialogModule {}

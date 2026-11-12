@@ -1,4 +1,9 @@
-import {Component, Input, Optional} from "@angular/core";
+import {
+    Component,
+    Input,
+    Optional,
+    ChangeDetectionStrategy,
+} from "@angular/core";
 import {NgModel} from "@angular/forms";
 import {InputService} from "tim/ui/input.service";
 import {formErrorMessages} from "tim/ui/formErrorMessages";
@@ -12,6 +17,7 @@ import {formErrorMessages} from "tim/ui/formErrorMessages";
           </tim-alert>
         }
         `,
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false,
 })
 export class ErrorMessageComponent {

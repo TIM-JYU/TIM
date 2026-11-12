@@ -9,11 +9,13 @@ import {
     Component,
     ElementRef,
     NgModule,
+    ChangeDetectionStrategy,
 } from "@angular/core";
 import {
     HttpClient,
     provideHttpClient,
     withInterceptorsFromDi,
+    withXhr,
 } from "@angular/common/http";
 import {FormsModule} from "@angular/forms";
 import type {OnClickArg} from "tim/document/eventhandlers";
@@ -200,6 +202,7 @@ const TimMenuAll = t.intersection([
         </div>
         `,
     styleUrls: ["tim-menu-plugin.component.scss"],
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false,
 })
 export class TimMenuPluginComponent
@@ -664,7 +667,7 @@ export class TimMenuPluginComponent
         PurifyModule,
         TooltipModule,
     ],
-    providers: [provideHttpClient(withInterceptorsFromDi())],
+    providers: [provideHttpClient(withXhr(), withInterceptorsFromDi())],
 })
 export class TimMenuPluginModule implements DoBootstrap {
     ngDoBootstrap(appRef: ApplicationRef) {}

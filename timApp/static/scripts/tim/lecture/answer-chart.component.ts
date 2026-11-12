@@ -1,5 +1,10 @@
 import type {OnChanges} from "@angular/core";
-import {Component, Input, NgModule} from "@angular/core";
+import {
+    Component,
+    Input,
+    NgModule,
+    ChangeDetectionStrategy,
+} from "@angular/core";
 import type {ChartData, ChartDataset, ChartOptions, ChartType} from "chart.js";
 import {fixQuestionJson} from "tim/document/question/answer-sheet.component";
 import type {Overwrite} from "type-zoo";
@@ -195,6 +200,7 @@ interface ChartConfig {
         }
         `,
     styleUrls: ["./answer-chart.component.scss"],
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false,
 })
 export class AnswerChartComponent implements OnChanges {

@@ -21,6 +21,7 @@ import {
     Component,
     Input,
     ChangeDetectorRef,
+    ChangeDetectionStrategy,
 } from "@angular/core";
 import {wrapText} from "tim/document/editing/utils";
 import {countChars} from "../util/util";
@@ -40,6 +41,7 @@ import {CURSOR} from "./editor";
                   [attr.autocorrect]="spellcheck === false ? 'off' : null"
                   [attr.autocapitalize]="spellcheck === false ? 'off' : null">
         </textarea>`,
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false,
 })
 export class NormalEditorComponent implements IEditor {

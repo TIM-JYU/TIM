@@ -1,4 +1,4 @@
-import {Component, Input} from "@angular/core";
+import {Component, Input, ChangeDetectionStrategy} from "@angular/core";
 import {documentglobals} from "tim/util/globals";
 
 // NOTE: It's intentional that the two ICU expressions ({ item.isFolder, ... }) are slightly different in whitespace.
@@ -20,6 +20,7 @@ import {documentglobals} from "tim/util/globals";
         </ng-container>
         }
         `,
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false,
 })
 export class AccessCountdownComponent {

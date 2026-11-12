@@ -1,4 +1,9 @@
-import {Component, ChangeDetectorRef, ElementRef} from "@angular/core";
+import {
+    Component,
+    ChangeDetectorRef,
+    ElementRef,
+    ChangeDetectionStrategy,
+} from "@angular/core";
 import {HttpClient} from "@angular/common/http";
 import {DomSanitizer} from "@angular/platform-browser";
 import type * as t from "io-ts";
@@ -59,6 +64,7 @@ function trackByIndex(index: number, o: unknown) {
         <button (click)="up()">↑</button>&nbsp;<button (click)="down()">↓</button>&nbsp;<button (click)="handler()">Enter</button>&nbsp;
       </div>
     </div>`,
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false,
 })
 export class CsConsoleComponent extends CsBase {
